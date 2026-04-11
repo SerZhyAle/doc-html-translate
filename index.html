@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>doc-html-translate | Fast Book Reading + Free Browser Translation</title>
+  <meta name="description" content="Convert EPUB/PDF/TXT/FB2/RTF/MD/HTML to local HTML, then read in Chrome and translate pages to your language for free.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2efe7;
+      --ink: #0f1a1c;
+      --muted: #46545a;
+      --card: #fffdf8;
+      --line: #c7c1b3;
+      --accent: #0f766e;
+      --accent-2: #ca8a04;
+      --shadow: 0 20px 60px rgba(13, 30, 34, 0.14);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(1300px 520px at 8% -5%, #fff7dd 0%, rgba(255, 247, 221, 0) 70%),
+        radial-gradient(1200px 560px at 100% 0%, #d5efe8 0%, rgba(213, 239, 232, 0) 64%),
+        linear-gradient(180deg, #f9f6ef 0%, var(--bg) 60%, #ece8dd 100%);
+      font-family: "Space Grotesk", "Trebuchet MS", "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    .wrap {
+      width: min(1080px, 92vw);
+      margin: 0 auto;
+      padding: 34px 0 64px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 8px);
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.94), rgba(245, 249, 249, 0.92));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      animation: rise 520ms ease-out;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(85deg, rgba(15, 118, 110, 0.09), rgba(15, 118, 110, 0)),
+        linear-gradient(290deg, rgba(202, 138, 4, 0.13), rgba(202, 138, 4, 0));
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      padding: 34px 32px 30px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 24px;
+    }
+
+    .tag {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid #9ea8a4;
+      color: #2b3d42;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2rem, 4.8vw, 3.1rem);
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      color: var(--muted);
+      max-width: 52ch;
+      margin: 0;
+      font-size: 1.07rem;
+    }
+
+    .cta-row {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: #f8fffd;
+      background: linear-gradient(130deg, #0f766e, #0f5e68);
+      box-shadow: 0 10px 18px rgba(15, 118, 110, 0.24);
+    }
+
+    .btn-alt {
+      color: #18373f;
+      border-color: #88a09a;
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .code-card {
+      border: 1px solid #abc2b9;
+      border-radius: 14px;
+      background: #0f1f21;
+      color: #d9f2ef;
+      padding: 14px;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .free-flow {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      animation: rise 760ms ease-out;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 18px 16px;
+      box-shadow: 0 8px 24px rgba(18, 28, 34, 0.08);
+    }
+
+    .step-num {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .flow-step h3 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+    }
+
+    .flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .section {
+      margin-top: 32px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 20px;
+      animation: rise 900ms ease-out;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.45rem;
+    }
+
+    .formats {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 0.82rem;
+    }
+
+    .formats span {
+      border: 1px solid #b8c7c1;
+      border-radius: 999px;
+      text-align: center;
+      padding: 8px 6px;
+      background: #fbfffe;
+    }
+
+    .small {
+      color: #516269;
+      font-size: 0.88rem;
+    }
+
+    .footer {
+      margin-top: 22px;
+      color: #59707a;
+      font-size: 0.85rem;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+      }
+      .free-flow {
+        grid-template-columns: 1fr;
+      }
+      .formats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .wrap {
+        width: min(1080px, 94vw);
+        padding-top: 20px;
+      }
+      .hero-inner {
+        padding: 22px 18px;
+      }
+      .section {
+        padding: 16px;
+      }
+      .formats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="tag">doc-html-translate • GitHub Pages</div>
+          <h1>Open EPUB/PDF in Chrome and translate to your language for free.</h1>
+          <p class="lead">
+            Convert books and documents to local HTML, keep navigation, then use Chrome page translation.
+            This is the fastest no-cost reading workflow.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate">Open Repository</a>
+            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate/tree/master/build">Download Build Folder</a>
+            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe">Download EXE</a>
+            <a class="btn btn-alt" href="docs.html">Open Documentation</a>
+            <a class="btn btn-alt" href="docs.ru.html">Документация RU</a>
+            <a class="btn btn-alt" href="docs.uk.html">Документація UK</a>
+          </div>
+        </div>
+        <div class="code-card"># Fast free workflow
+
+doc-html-translate.exe -notranslate "book.epub"
+# or
+# doc-html-translate.exe -notranslate "book.pdf"
+
+# tool opens index.html in browser
+# in Chrome: Translate page -> your language</div>
+      </div>
+    </section>
+
+    <section class="free-flow">
+      <article class="flow-step">
+        <div class="step-num">Step 1</div>
+        <h3>Convert Without API</h3>
+        <p>Run with <strong>-notranslate</strong> for instant extraction and clean HTML pages.</p>
+      </article>
+      <article class="flow-step">
+        <div class="step-num">Step 2</div>
+        <h3>Open In Chrome</h3>
+        <p>Read from generated index with TOC and page navigation.</p>
+      </article>
+      <article class="flow-step">
+        <div class="step-num">Step 3</div>
+        <h3>Translate In Browser</h3>
+        <p>Use Chrome built-in page translation to switch to any target language.</p>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>Supported Input Formats</h2>
+      <p class="small">EPUB, PDF, TXT, Markdown, FB2, RTF, HTML are supported.</p>
+      <div class="formats">
+        <span>EPUB</span>
+        <span>PDF</span>
+        <span>TXT</span>
+        <span>MD</span>
+        <span>FB2</span>
+        <span>RTF</span>
+        <span>HTML</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Download</h2>
+      <p class="small">Get the application from GitHub:</p>
+      <p class="small"><a href="https://github.com/SerZhyAle/doc-html-translate/tree/master/build">build folder (all build artifacts)</a></p>
+      <p class="small"><a href="https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe">direct link to doc-html-translate.exe</a></p>
+    </section>
+
+    <section class="section">
+      <h2>Why This Scenario Is Recommended</h2>
+      <p class="small">
+        No API key setup, no paid translation calls, and quick launch from one command.
+        You still keep a comfortable browser reading experience with generated navigation.
+      </p>
+      <p class="footer">Project: SerZhyAle/doc-html-translate</p>
+    </section>
+  </main>
+</body>
+</html>

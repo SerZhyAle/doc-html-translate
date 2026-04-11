@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>doc-html-translate Документація</title>
+  <meta name="description" content="Швидка документація doc-html-translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#f2efe7; --ink:#0f1a1c; --muted:#4d5c62; --card:#fffdf8; --line:#c7c1b3; --accent:#0f766e; --accent-dark:#0f5e68; --mono-bg:#0f1f21; --mono-ink:#d9f2ef; --radius:16px; --shadow:0 20px 55px rgba(13,30,34,.12);}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(1200px 420px at 10% -5%,#fff7dd 0%,rgba(255,247,221,0) 70%),radial-gradient(900px 560px at 100% 0%,#d5efe8 0%,rgba(213,239,232,0) 68%),linear-gradient(180deg,#f9f6ef 0%,#f2efe7 64%,#ece8dd 100%);font-family:"Space Grotesk","Segoe UI",sans-serif;line-height:1.5}.wrap{width:min(1050px,92vw);margin:0 auto;padding:28px 0 56px}.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.brand{font-weight:700;letter-spacing:.02em}.nav{display:flex;gap:8px;flex-wrap:wrap}.btn{text-decoration:none;border-radius:10px;padding:10px 12px;font-weight:600;border:1px solid #8ca49e;color:#1d3b41;background:rgba(255,255,255,.72);transition:transform .16s ease,background .16s ease}.btn:hover{transform:translateY(-1px);background:#fff}.btn.primary{border-color:transparent;color:#f4fffd;background:linear-gradient(130deg,var(--accent),var(--accent-dark))}.hero{border:1px solid var(--line);border-radius:calc(var(--radius) + 6px);background:linear-gradient(155deg,rgba(255,255,255,.95),rgba(245,249,249,.93));box-shadow:var(--shadow);padding:26px 24px;margin-bottom:20px}h1{margin:0 0 8px;font-size:clamp(1.9rem,4.2vw,2.8rem);line-height:1.05;letter-spacing:-.02em}.lead{margin:0;color:var(--muted);max-width:64ch}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:16px}.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:18px;box-shadow:0 8px 24px rgba(18,28,34,.08)}h2{margin:0 0 8px;font-size:1.3rem}h3{margin:12px 0 6px;font-size:1.05rem}p{margin:0 0 8px}ul{margin:6px 0 0;padding-left:18px}li{margin:5px 0}.code{margin-top:10px;border-radius:12px;border:1px solid #abc2b9;background:var(--mono-bg);color:var(--mono-ink);padding:12px;white-space:pre;overflow-x:auto;font-size:.84rem;font-family:"IBM Plex Mono",Consolas,monospace}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}th,td{border:1px solid #d9d2c2;padding:8px;text-align:left;vertical-align:top}th{background:#f8f4ea}.small{color:#5a6f76;font-size:.89rem}@media (max-width:930px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="brand">doc-html-translate Документація (UK)</div>
+      <nav class="nav">
+        <a class="btn" href="index.html">Головна</a>
+        <a class="btn" href="docs.html">EN</a>
+        <a class="btn" href="docs.ru.html">RU</a>
+        <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate">GitHub</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>Швидке локальне читання книг і безкоштовний переклад у Chrome</h1>
+      <p class="lead">Конвертуйте EPUB/PDF та інші формати у локальні HTML-сторінки, потім читайте у Chrome і перекладайте вбудованим перекладачем браузера.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Рекомендований сценарій (безкоштовно)</h2>
+        <p>Найзручніший щоденний варіант:</p>
+        <ul>
+          <li>Конвертація з прапорцем <strong>-notranslate</strong></li>
+          <li>Відкриття згенерованого index у Chrome</li>
+          <li>Переклад сторінки на потрібну мову через вбудований переклад Chrome</li>
+        </ul>
+        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+# або
+# doc-html-translate.exe -notranslate "book.pdf"</div>
+        <p class="small">Переваги: без API-ключа, без платних викликів, дуже швидкий старт.</p>
+      </article>
+
+      <article class="card">
+        <h2>Швидкий старт</h2>
+        <h3>Збірка</h3>
+        <div class="code">go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</div>
+        <h3>Запуск</h3>
+        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+doc-html-translate.exe -src en -dst uk "book.epub"
+doc-html-translate.exe -google "book.epub"
+doc-html-translate.exe -ollama "book.epub"</div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
+      <h2>Підтримувані формати</h2>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML.</p>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
+      <h2>Основні прапорці</h2>
+      <table>
+        <thead><tr><th>Прапорець</th><th>За замовчуванням</th><th>Опис</th></tr></thead>
+        <tbody>
+          <tr><td>-notranslate</td><td>false</td><td>Лише конвертація, без перекладу</td></tr>
+          <tr><td>-noopen</td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
+          <tr><td>-google</td><td>false</td><td>Переклад через Google Cloud Translation API</td></tr>
+          <tr><td>-ollama</td><td>false</td><td>Локальний переклад Ollama</td></tr>
+          <tr><td>-split</td><td>5000</td><td>Розбиття сторінок за кількістю символів, 0 вимикає</td></tr>
+          <tr><td>-folder</td><td>empty</td><td>Папка для результату</td></tr>
+          <tr><td>-src</td><td>en</td><td>Мова джерела</td></tr>
+          <tr><td>-dst</td><td>ru</td><td>Мова перекладу</td></tr>
+          <tr><td>-force</td><td>false</td><td>Перезібрати навіть якщо output вже існує</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
+      <h2>Завантаження застосунку</h2>
+      <ul>
+        <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/master/build">Папка build у GitHub</a></li>
+        <li><a href="https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe">Прямий шлях до exe</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

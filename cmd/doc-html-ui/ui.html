@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOC-HTML-UI</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --surface: #2b2b3d;
+    --text: #cdd6f4;
+    --muted: #6c7086;
+    --accent: #89b4fa;
+    --accent-hover: #74c7ec;
+    --border: #45475a;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --log-bg: #11111b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px 24px;
+    max-width: 720px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+}
+h1 { font-size: 18px; font-weight: 600; }
+.ver { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.section { margin: 14px 0; }
+.stitle {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 6px;
+}
+.row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+input[type="text"], input[type="number"] {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+}
+input:focus { border-color: var(--accent); }
+input::placeholder { color: var(--muted); }
+button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background .15s;
+}
+button:hover { background: var(--border); }
+.btn-run {
+    background: var(--accent);
+    color: #11111b;
+    border: none;
+    font-weight: 700;
+    padding: 10px 40px;
+    font-size: 15px;
+    border-radius: 6px;
+}
+.btn-run:hover { background: var(--accent-hover); }
+.btn-run:disabled { opacity: .45; cursor: not-allowed; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; }
+.chk { display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 3px 0; cursor: pointer; }
+.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.lbl { font-size: 12px; min-width: 95px; color: var(--muted); }
+.log {
+    background: var(--log-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 10px;
+    line-height: 1.35;
+    height: 280px;
+    overflow: auto;
+    white-space: pre;
+    word-break: normal;
+    color: var(--green);
+}
+.log .err { color: var(--red); }
+hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.center { text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>DOC-HTML-UI</h1>
+<div class="ver" id="ver">loading...</div>
+
+<hr>
+
+<div class="section">
+    <div class="stitle">Input File</div>
+    <div class="row">
+        <input type="text" id="inputFile" placeholder="Click Browse to select a document...">
+        <button onclick="browseFile()">Browse...</button>
+    </div>
+    <div class="hint">Tip: drag a file onto this window (or onto doc-html-ui.exe) to pre-fill input.</div>
+</div>
+
+<div class="section">
+    <div class="stitle">Output Folder</div>
+    <div class="row">
+        <input type="text" id="outputFolder" placeholder="Default: same directory as input">
+        <button onclick="browseFolder()">Browse...</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="section">
+    <div class="stitle">Options</div>
+    <div class="checks">
+        <label class="chk"><input type="checkbox" id="chkNoTranslate"> No Translate</label>
+        <label class="chk"><input type="checkbox" id="chkNoOpen"> No Open Browser</label>
+        <label class="chk"><input type="checkbox" id="chkGoogle"> Google Translate</label>
+        <label class="chk"><input type="checkbox" id="chkOllama"> Ollama Local</label>
+        <label class="chk"><input type="checkbox" id="chkForce"> Force Re-process</label>
+        <label class="chk"><input type="checkbox" id="chkVerbose"> Verbose</label>
+    </div>
+</div>
+
+<div class="section">
+    <div class="row"><span class="lbl">Ollama Model:</span><input type="text" id="ollamaModel" value="gemma3:12b"></div>
+    <div class="row"><span class="lbl">Parallel:</span><input type="number" id="ollamaParallel" value="1" min="1"></div>
+    <div class="row"><span class="lbl">Context:</span><input type="number" id="ollamaCtx" value="8192" min="512"></div>
+    <div class="row"><span class="lbl">Split Size:</span><input type="number" id="splitSize" value="0" min="0"></div>
+</div>
+
+<hr>
+
+<div class="section">
+    <div class="stitle">Languages</div>
+    <div class="row">
+        <span class="lbl">Source:</span><input type="text" id="srcLang" value="en" style="max-width:70px">
+        <span class="lbl" style="min-width:55px">Target:</span><input type="text" id="dstLang" value="ru" style="max-width:70px">
+    </div>
+</div>
+
+<hr>
+
+<div class="center" style="margin:16px 0">
+    <button class="btn-run" id="btnRun" onclick="runConvert()">Convert</button>
+</div>
+
+<div class="section">
+    <div class="stitle">Log</div>
+    <div class="log" id="logArea"></div>
+</div>
+
+<script>
+const FIXED_WIDTH = 780;
+const FIXED_HEIGHT = 980;
+
+// Try to keep app window non-resizable for browser app-mode windows.
+function enforceFixedWindowSize() {
+    if (window.outerWidth !== FIXED_WIDTH || window.outerHeight !== FIXED_HEIGHT) {
+        window.resizeTo(FIXED_WIDTH, FIXED_HEIGHT);
+    }
+}
+
+// ── heartbeat ───────────────────────────────────────────
+setInterval(() => fetch('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
+
+// ── fixed window size ───────────────────────────────────
+window.addEventListener('load', () => {
+    enforceFixedWindowSize();
+});
+window.addEventListener('resize', () => {
+    setTimeout(enforceFixedWindowSize, 10);
+});
+
+// ── drag & drop into app window ─────────────────────────
+function fileUriToPath(uri) {
+    let u = uri.trim();
+    if (!u) return '';
+    if (u.startsWith('file:///')) {
+        u = decodeURIComponent(u.replace(/^file:\/\//, ''));
+        // Windows drive path in URI may start with '/': /C:/...
+        if (/^\/[A-Za-z]:\//.test(u)) {
+            u = u.slice(1);
+        }
+        return u.replaceAll('/', '\\');
+    }
+    return '';
+}
+
+function extractDroppedPath(ev) {
+    const dt = ev.dataTransfer;
+    if (!dt) return '';
+
+    const uriList = dt.getData('text/uri-list');
+    if (uriList) {
+        const first = uriList.split(/\r?\n/).find(x => x && !x.startsWith('#')) || '';
+        const p = fileUriToPath(first);
+        if (p) return p;
+    }
+
+    const text = dt.getData('text/plain');
+    if (text) {
+        const p = fileUriToPath(text);
+        if (p) return p;
+    }
+
+    if (dt.files && dt.files.length > 0) {
+        const f = dt.files[0];
+        if (f && typeof f.path === 'string' && f.path) return f.path;
+    }
+    return '';
+}
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
+    window.addEventListener(name, ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+    });
+});
+
+window.addEventListener('drop', ev => {
+    const p = extractDroppedPath(ev);
+    if (p) document.getElementById('inputFile').value = p;
+});
+
+// ── version ─────────────────────────────────────────────
+fetch('/api/version').then(r=>r.json()).then(d=>{
+    document.getElementById('ver').textContent = 'v' + d.version;
+}).catch(()=>{});
+
+// ── initial file from CLI arg ───────────────────────────
+fetch('/api/initial').then(r=>r.json()).then(d=>{
+    if (d.file) document.getElementById('inputFile').value = d.file;
+}).catch(()=>{});
+
+// ── browse buttons ──────────────────────────────────────
+async function browseFile() {
+    try {
+        const r = await fetch('/api/browse-file', {method:'POST'});
+        const d = await r.json();
+        if (d.path) document.getElementById('inputFile').value = d.path;
+    } catch(e) { console.error('browseFile', e); }
+}
+
+async function browseFolder() {
+    try {
+        const r = await fetch('/api/browse-folder', {method:'POST'});
+        const d = await r.json();
+        if (d.path) document.getElementById('outputFolder').value = d.path;
+    } catch(e) { console.error('browseFolder', e); }
+}
+
+// ── run ─────────────────────────────────────────────────
+async function runConvert() {
+    const input = document.getElementById('inputFile').value.trim();
+    if (!input) { alert('Select an input file first.'); return; }
+
+    const cfg = {
+        input:          input,
+        output:         document.getElementById('outputFolder').value.trim(),
+        noTranslate:    document.getElementById('chkNoTranslate').checked,
+        noOpen:         document.getElementById('chkNoOpen').checked,
+        google:         document.getElementById('chkGoogle').checked,
+        ollama:         document.getElementById('chkOllama').checked,
+        ollamaModel:    document.getElementById('ollamaModel').value,
+        ollamaParallel: document.getElementById('ollamaParallel').value,
+        ollamaCtx:      document.getElementById('ollamaCtx').value,
+        splitSize:      document.getElementById('splitSize').value,
+        srcLang:        document.getElementById('srcLang').value,
+        dstLang:        document.getElementById('dstLang').value,
+        force:          document.getElementById('chkForce').checked,
+        verbose:        document.getElementById('chkVerbose').checked,
+    };
+
+    const btn = document.getElementById('btnRun');
+    const log = document.getElementById('logArea');
+    btn.disabled = true;
+    log.textContent = '';
+
+    try {
+        const resp = await fetch('/api/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cfg),
+        });
+
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+
+        while (true) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            const chunk = dec.decode(value, {stream: true});
+            log.textContent += chunk;
+            log.scrollTop = log.scrollHeight;
+        }
+    } catch(e) {
+        log.textContent += '\n[ERROR] ' + e.message + '\n';
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
+</body>
+</html>

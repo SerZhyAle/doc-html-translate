@@ -1,0 +1,11 @@
+temp/
+*.out
+*.test
+coverage.out
+*.exe
+!build/*.exe
+# Extracted EPUB directories in test_epub
+test_epub/
+test_pdf/
+test_txt/
+DEV/private/

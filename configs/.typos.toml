@@ -1,0 +1,11 @@
+[default]
+extend-ignore-re = [
+  "doc-html-translate",
+  "epub2html",
+]
+
+[files]
+extend-exclude = [
+  "temp",
+  "go.sum",
+]
