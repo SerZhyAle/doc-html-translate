@@ -6,6 +6,9 @@ package pdf
 import (
 	"fmt"
 	"html"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"math"
 	"os"
@@ -21,6 +24,7 @@ import (
 
 	pdflib "github.com/ledongthuc/pdf"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"golang.org/x/image/tiff"
 )
 
 // maxPageSize is the safety limit per page text (10 MB).
@@ -261,6 +265,7 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 	sb.WriteString("    h2 { text-align: center; font-size: 1.5em; font-weight: bold; letter-spacing: 0.08em; margin: 1.8em 0 1.2em; text-transform: uppercase; }\n")
 	sb.WriteString("    h3 { text-align: center; font-size: 1.15em; font-style: italic; margin: 1.4em 0 0.8em; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
+	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
 	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
 
@@ -271,7 +276,7 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 	if len(images) > 0 {
 		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 		}
 		sb.WriteString("  </div>\n")
 	}
@@ -545,6 +550,7 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	sb.WriteString("    .pdf-page-header { color: #666; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 0.5em; margin-bottom: 1em; }\n")
 	sb.WriteString("    p { margin: 0.4em 0; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
+	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
@@ -565,7 +571,7 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	if len(images) > 0 {
 		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 		}
 		sb.WriteString("  </div>\n")
 	}
@@ -609,6 +615,9 @@ func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 		logging.Printf("  WARNING: could not read images dir: %v\n", err)
 		return nil
 	}
+	if err := normalizeExtractedPDFImages(imagesDir, entries); err != nil {
+		logging.Printf("  WARNING: could not normalize extracted PDF images: %v\n", err)
+	}
 
 	pageImages := make(map[int][]string)
 	for _, entry := range entries {
@@ -631,6 +640,102 @@ func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 	}
 
 	return pageImages
+}
+
+func normalizeExtractedPDFImages(imagesDir string, entries []os.DirEntry) error {
+	var firstErr error
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		path := filepath.Join(imagesDir, entry.Name())
+		if err := flipImageFileVertically(path); err != nil && firstErr == nil {
+			firstErr = fmt.Errorf("%s: %w", entry.Name(), err)
+		}
+	}
+	return firstErr
+}
+
+func imageHTMLClassAttr(path string) string {
+	ext := strings.ToLower(filepath.Ext(path))
+	if ext == ".tif" || ext == ".tiff" {
+		return ` class="pdf-flip-y"`
+	}
+	return ""
+}
+
+func flipImageFileVertically(path string) error {
+	ext := strings.ToLower(filepath.Ext(path))
+	if ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".tif" && ext != ".tiff" {
+		return nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	var src image.Image
+	switch ext {
+	case ".png":
+		src, err = png.Decode(file)
+	case ".jpg", ".jpeg":
+		src, err = jpeg.Decode(file)
+	case ".tif", ".tiff":
+		src, err = tiff.Decode(file)
+	}
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	bounds := src.Bounds()
+	dst := image.NewNRGBA(bounds)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			dst.Set(x, bounds.Min.Y+bounds.Max.Y-1-y, src.At(x, y))
+		}
+	}
+
+	tmpPath := path + ".tmp"
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		return err
+	}
+
+	success := false
+	defer func() {
+		out.Close()
+		if !success {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	switch ext {
+	case ".png":
+		err = png.Encode(out, dst)
+	case ".jpg", ".jpeg":
+		err = jpeg.Encode(out, dst, &jpeg.Options{Quality: 95})
+	case ".tif", ".tiff":
+		err = tiff.Encode(out, dst, nil)
+	}
+	if err != nil {
+		return err
+	}
+	if err := out.Close(); err != nil {
+		return err
+	}
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+	success = true
+	return nil
 }
 
 // parseImagePageNum extracts the PDF page number from a pdfcpu image filename.
