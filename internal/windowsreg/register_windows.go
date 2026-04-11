@@ -10,7 +10,7 @@ import (
 )
 
 // SupportedExtensions lists all file extensions registered by this program.
-var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf", ".html", ".htm"}
+var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf", ".html", ".htm", ".mobi", ".azw3"}
 
 // legacyProgIDs are old ProgID names left from previous versions; cleaned up on every registration.
 var legacyProgIDs = []string{"epub2html"}

@@ -9,7 +9,9 @@ Developer-oriented README for local builds and maintenance.
 ## Current CLI Snapshot
 
 ```powershell
-doc-html-translate.exe -notranslate "book.epub"
+doc-html-translate.exe "book.epub"
+doc-html-translate.exe "book.mobi"           # requires Calibre
+doc-html-translate.exe "book.azw3"           # requires Calibre
 doc-html-translate.exe -google "book.epub"
 doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"
 doc-html-translate.exe -src en -dst ru "book.epub"
@@ -29,20 +31,22 @@ Use GitHub build folder as the download source:
 
 Default support recommendation for end users:
 
-1. Run conversion without API translation:
+1. Open the file with the app or run the default command:
 
 ```powershell
-doc-html-translate.exe -notranslate "book.epub"
+doc-html-translate.exe "book.epub"
 ```
 
 or
 
 ```powershell
-doc-html-translate.exe -notranslate "book.pdf"
+doc-html-translate.exe "book.pdf"
 ```
 
 2. Open result in Chrome.
 3. Translate the page in Chrome to the user's target language.
+
+`-notranslate` remains available as an explicit convert-only flag, but it matches the default flow unless `-google` or `-ollama` is provided.
 
 Benefits:
 

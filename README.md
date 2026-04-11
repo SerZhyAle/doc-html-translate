@@ -8,13 +8,14 @@ Windows-focused Go CLI that converts documents to local HTML and optionally tran
 
 ## Features
 
-- Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML
+- Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
 - Local HTML output with generated navigation and TOC
 - Optional translation:
   - Google Cloud Translation API (`-google`)
   - Local Ollama (`-ollama`)
 - Re-open existing extracted book instantly (idempotent behavior)
 - Optional Windows file association registration (`-register`)
+- MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 
 ## Installation
 
@@ -43,8 +44,8 @@ Direct expected binary path:
 ## Quick Usage
 
 ```powershell
-# Convert only (no translation)
-doc-html-translate.exe -notranslate "book.epub"
+# Default open flow: convert + open in browser (no translation unless -google or -ollama is set)
+doc-html-translate.exe "book.epub"
 
 # Convert + Google translation
 doc-html-translate.exe -google "book.epub"
@@ -69,20 +70,22 @@ doc-html-translate.exe -register
 
 The most convenient scenario for many users is:
 
-1. Convert book to local HTML without API translation:
+1. Open the file with the app or run the default command:
 
 ```powershell
-doc-html-translate.exe -notranslate "book.epub"
+doc-html-translate.exe "book.epub"
 ```
 
 or
 
 ```powershell
-doc-html-translate.exe -notranslate "book.pdf"
+doc-html-translate.exe "book.pdf"
 ```
 
 2. Let the tool open `index.html` in Chrome.
 3. Use Chrome built-in page translation to your language.
+
+`-notranslate` is still available, but it is only the explicit form of the default non-API flow.
 
 Why this workflow is popular:
 

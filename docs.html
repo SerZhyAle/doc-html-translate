@@ -213,13 +213,13 @@
         <h2>Recommended Workflow (Free)</h2>
         <p>Most convenient everyday scenario:</p>
         <ul>
-          <li>Convert using <strong>-notranslate</strong></li>
+          <li>Open the file with the app or run the plain command</li>
           <li>Open generated index in Chrome</li>
           <li>Use Chrome page translation to your target language</li>
         </ul>
-        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+        <div class="code">doc-html-translate.exe "book.epub"
 # or
-# doc-html-translate.exe -notranslate "book.pdf"</div>
+# doc-html-translate.exe "book.pdf"</div>
         <p class="small">Why: no API key setup, no paid translation calls, very fast startup.</p>
       </article>
 
@@ -228,7 +228,8 @@
         <h3>Build</h3>
         <div class="code">go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</div>
         <h3>Run</h3>
-        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+        <div class="code">doc-html-translate.exe "book.epub"
+      doc-html-translate.exe -notranslate "book.epub"   # explicit convert-only
 doc-html-translate.exe -src en -dst ru "book.epub"
 doc-html-translate.exe -google "book.epub"
 doc-html-translate.exe -ollama "book.epub"</div>
@@ -237,7 +238,8 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Supported Formats</h2>
-      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML.</p>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3.</p>
+      <p class="small">MOBI and AZW3: requires <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported.</p>
     </section>
 
     <section class="card" style="margin-top: 14px;">

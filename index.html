@@ -280,9 +280,9 @@
         </div>
         <div class="code-card"># Fast free workflow
 
-doc-html-translate.exe -notranslate "book.epub"
-# or
-# doc-html-translate.exe -notranslate "book.pdf"
+      doc-html-translate.exe "book.epub"
+      # or
+      # doc-html-translate.exe "book.pdf"
 
 # tool opens index.html in browser
 # in Chrome: Translate page -> your language</div>
@@ -292,8 +292,8 @@ doc-html-translate.exe -notranslate "book.epub"
     <section class="free-flow">
       <article class="flow-step">
         <div class="step-num">Step 1</div>
-        <h3>Convert Without API</h3>
-        <p>Run with <strong>-notranslate</strong> for instant extraction and clean HTML pages.</p>
+        <h3>Open Or Run Default Command</h3>
+        <p>Just open the file with the app or run the plain command. Translation stays off unless you add <strong>-google</strong> or <strong>-ollama</strong>.</p>
       </article>
       <article class="flow-step">
         <div class="step-num">Step 2</div>
@@ -309,7 +309,8 @@ doc-html-translate.exe -notranslate "book.epub"
 
     <section class="section">
       <h2>Supported Input Formats</h2>
-      <p class="small">EPUB, PDF, TXT, Markdown, FB2, RTF, HTML are supported.</p>
+      <p class="small">EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 are supported.</p>
+      <p class="small">MOBI and AZW3 require <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported.</p>
       <div class="formats">
         <span>EPUB</span>
         <span>PDF</span>
@@ -318,6 +319,8 @@ doc-html-translate.exe -notranslate "book.epub"
         <span>FB2</span>
         <span>RTF</span>
         <span>HTML</span>
+        <span>MOBI</span>
+        <span>AZW3</span>
       </div>
     </section>
 

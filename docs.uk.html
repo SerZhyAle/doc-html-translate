@@ -34,13 +34,13 @@
         <h2>Рекомендований сценарій (безкоштовно)</h2>
         <p>Найзручніший щоденний варіант:</p>
         <ul>
-          <li>Конвертація з прапорцем <strong>-notranslate</strong></li>
+          <li>Відкрити файл застосунком або запустити звичайну команду</li>
           <li>Відкриття згенерованого index у Chrome</li>
           <li>Переклад сторінки на потрібну мову через вбудований переклад Chrome</li>
         </ul>
-        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+        <div class="code">doc-html-translate.exe "book.epub"
 # або
-# doc-html-translate.exe -notranslate "book.pdf"</div>
+# doc-html-translate.exe "book.pdf"</div>
         <p class="small">Переваги: без API-ключа, без платних викликів, дуже швидкий старт.</p>
       </article>
 
@@ -49,7 +49,8 @@
         <h3>Збірка</h3>
         <div class="code">go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</div>
         <h3>Запуск</h3>
-        <div class="code">doc-html-translate.exe -notranslate "book.epub"
+        <div class="code">doc-html-translate.exe "book.epub"
+      doc-html-translate.exe -notranslate "book.epub"   # явний режим без перекладу
 doc-html-translate.exe -src en -dst uk "book.epub"
 doc-html-translate.exe -google "book.epub"
 doc-html-translate.exe -ollama "book.epub"</div>
@@ -58,7 +59,8 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Підтримувані формати</h2>
-      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML.</p>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3.</p>
+      <p class="small">MOBI та AZW3: потрібен встановлений <a href="https://calibre-ebook.com">Calibre</a>. Файли з DRM не підтримуються.</p>
     </section>
 
     <section class="card" style="margin-top: 14px;">

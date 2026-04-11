@@ -20,6 +20,7 @@ import (
 	"doc-html-translate/internal/htmlsplit"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/md"
+	"doc-html-translate/internal/mobi"
 	"doc-html-translate/internal/pdf"
 	"doc-html-translate/internal/rtf"
 	"doc-html-translate/internal/translator"
@@ -142,6 +143,13 @@ func (r Runner) Run() (int, error) {
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return ExitParse, fmt.Errorf("extract html: %w", err)
+		}
+	case ".mobi", ".azw3":
+		logging.Println("[1/4] Extracting MOBI...")
+		book, err = mobi.Extract(inputPath, outputDir)
+		if err != nil {
+			_ = os.RemoveAll(outputDir)
+			return ExitParse, fmt.Errorf("extract mobi: %w", err)
 		}
 	default:
 		// Unknown extension — treat as plain text.
