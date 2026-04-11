@@ -195,3 +195,46 @@ func TestExtract_OldMacCRLineEndings(t *testing.T) {
 		t.Errorf("expected 3 paragraphs from old-Mac CR file, got %d", count)
 	}
 }
+
+func TestExtract_UnicodeParagraphSeparators(t *testing.T) {
+	dir := t.TempDir()
+	content := "First paragraph\u2028\u2028Second paragraph\u2029\u2029Third paragraph"
+	txtPath := filepath.Join(dir, "unicode-separators.txt")
+	_ = os.WriteFile(txtPath, []byte(content), 0o644)
+	outDir := filepath.Join(dir, "out")
+	_ = os.MkdirAll(outDir, 0o755)
+
+	_, err := txt.Extract(txtPath, outDir)
+	if err != nil {
+		t.Fatalf("Extract error: %v", err)
+	}
+
+	data, _ := os.ReadFile(filepath.Join(outDir, "page_001.html"))
+	count := strings.Count(string(data), "<p>")
+	if count != 3 {
+		t.Errorf("expected 3 paragraphs from Unicode separators, got %d", count)
+	}
+	if !strings.Contains(string(data), "First paragraph") || !strings.Contains(string(data), "Third paragraph") {
+		t.Errorf("expected Unicode-separated paragraphs to survive conversion")
+	}
+}
+
+func TestExtract_ControlCharacterLineSeparators(t *testing.T) {
+	dir := t.TempDir()
+	content := "Alpha\u0085Beta\vGamma\fDelta"
+	txtPath := filepath.Join(dir, "control-separators.txt")
+	_ = os.WriteFile(txtPath, []byte(content), 0o644)
+	outDir := filepath.Join(dir, "out")
+	_ = os.MkdirAll(outDir, 0o755)
+
+	_, err := txt.Extract(txtPath, outDir)
+	if err != nil {
+		t.Fatalf("Extract error: %v", err)
+	}
+
+	data, _ := os.ReadFile(filepath.Join(outDir, "page_001.html"))
+	count := strings.Count(string(data), "<p>")
+	if count != 4 {
+		t.Errorf("expected 4 paragraphs from control-character separators, got %d", count)
+	}
+}

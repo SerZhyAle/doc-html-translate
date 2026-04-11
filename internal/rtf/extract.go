@@ -13,6 +13,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/textutil"
 
 	"golang.org/x/text/encoding/charmap"
 )
@@ -234,7 +235,7 @@ func decodeCP1251(b byte) string {
 
 // splitParagraphs splits text by double newlines, trims, and filters empty lines.
 func splitParagraphs(text string) []string {
-	raw := strings.Split(text, "\n")
+	raw := strings.Split(textutil.NormalizeLineSeparators(text), "\n")
 	var result []string
 	var current strings.Builder
 

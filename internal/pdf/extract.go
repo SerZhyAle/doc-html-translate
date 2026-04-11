@@ -17,6 +17,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/textutil"
 
 	pdflib "github.com/ledongthuc/pdf"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -24,7 +25,6 @@ import (
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
-
 
 // findPDFToText locates the pdftotext binary via PATH or well-known install paths.
 func findPDFToText() string {
@@ -91,15 +91,25 @@ type pageItem struct {
 // extractWithPDFToText uses pdftotext -layout (Xpdf/Poppler) for extraction.
 // The -layout flag preserves indentation so we can detect headings by centering.
 func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, error) {
-	cmd := exec.Command(pdftotextBin, "-layout", "-enc", "UTF-8", pdfPath, "-")
+	pdfPathForTool := pdfPath
+	cleanup := func() {}
+	if needsPDFToTextPathStaging(pdfPath) {
+		stagedPath, cleanupFn, err := stagePDFForPDFToText(pdfPath)
+		if err != nil {
+			return nil, fmt.Errorf("stage pdf for pdftotext: %w", err)
+		}
+		pdfPathForTool = stagedPath
+		cleanup = cleanupFn
+	}
+	defer cleanup()
+
+	cmd := exec.Command(pdftotextBin, "-layout", "-enc", "UTF-8", pdfPathForTool, "-")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("pdftotext: %w", err)
 	}
 
-	// Normalize CRLF → LF
-	text := strings.ReplaceAll(string(out), "\r\n", "\n")
-	text = strings.ReplaceAll(text, "\r", "\n")
+	text := textutil.NormalizeLineSeparatorsPreserveFormFeed(string(out))
 
 	// Pages are separated by form-feed \f
 	pageTexts := strings.Split(text, "\f")
@@ -441,11 +451,15 @@ func rowsToText(rows pdflib.Rows) string {
 	var rd []rowData
 	for _, row := range rows {
 		var b strings.Builder
-		for i, word := range row.Content {
-			if i > 0 {
+		for _, word := range row.Content {
+			trimmedWord := strings.TrimSpace(word.S)
+			if trimmedWord == "" {
+				continue
+			}
+			if b.Len() > 0 {
 				b.WriteByte(' ')
 			}
-			b.WriteString(word.S)
+			b.WriteString(trimmedWord)
 		}
 		if t := strings.TrimSpace(b.String()); t != "" {
 			y, firstX := 0.0, 0.0
@@ -672,6 +686,33 @@ func buildFallbackPDFHTML(title, pdfFileName string) string {
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")
 	return sb.String()
+}
+
+func needsPDFToTextPathStaging(path string) bool {
+	for _, r := range path {
+		if r > 127 {
+			return true
+		}
+	}
+	return false
+}
+
+func stagePDFForPDFToText(srcPath string) (string, func(), error) {
+	tempDir, err := os.MkdirTemp("", "doc-html-translate-pdftotext-")
+	if err != nil {
+		return "", nil, err
+	}
+
+	stagedPath := filepath.Join(tempDir, "input.pdf")
+	if err := copyFile(srcPath, stagedPath); err != nil {
+		_ = os.RemoveAll(tempDir)
+		return "", nil, err
+	}
+
+	cleanup := func() {
+		_ = os.RemoveAll(tempDir)
+	}
+	return stagedPath, cleanup, nil
 }
 
 func copyFile(srcPath, dstPath string) error {

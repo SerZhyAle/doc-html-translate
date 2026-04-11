@@ -12,6 +12,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/textutil"
 )
 
 // paragraphsPerPage controls how many paragraphs go into one HTML page.
@@ -80,9 +81,7 @@ func parseParagraphs(r io.Reader) []string {
 	if err != nil {
 		return nil
 	}
-	// Normalize: \r\n → \n, then \r → \n
-	normalized := strings.ReplaceAll(string(raw), "\r\n", "\n")
-	normalized = strings.ReplaceAll(normalized, "\r", "\n")
+	normalized := textutil.NormalizeLineSeparators(string(raw))
 
 	hasBlankLine := strings.Contains(normalized, "\n\n")
 

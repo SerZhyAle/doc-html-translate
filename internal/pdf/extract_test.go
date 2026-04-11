@@ -58,8 +58,8 @@ func TestRowsToText(t *testing.T) {
 	// Single row with content
 	rows := pdflib.Rows{
 		{Content: pdflib.TextHorizontal{
-			{S: "Hello "},
-			{S: "World"},
+			{S: "Hello ", X: 10, Y: 100},
+			{S: "World", X: 30, Y: 100},
 		}},
 	}
 	got = rowsToText(rows)
@@ -69,9 +69,9 @@ func TestRowsToText(t *testing.T) {
 
 	// Multiple rows
 	rows = pdflib.Rows{
-		{Content: pdflib.TextHorizontal{{S: "Line one"}}},
-		{Content: pdflib.TextHorizontal{{S: "Line two"}}},
-		{Content: pdflib.TextHorizontal{{S: "Line three"}}},
+		{Content: pdflib.TextHorizontal{{S: "Line one", X: 10, Y: 100}}},
+		{Content: pdflib.TextHorizontal{{S: "Line two", X: 30, Y: 70}}},
+		{Content: pdflib.TextHorizontal{{S: "Line three", X: 50, Y: 40}}},
 	}
 	got = rowsToText(rows)
 	lines := strings.Split(strings.TrimSpace(got), "\n")
@@ -81,8 +81,8 @@ func TestRowsToText(t *testing.T) {
 
 	// Row with only whitespace is skipped
 	rows = pdflib.Rows{
-		{Content: pdflib.TextHorizontal{{S: "  "}}},
-		{Content: pdflib.TextHorizontal{{S: "Real content"}}},
+		{Content: pdflib.TextHorizontal{{S: "  ", X: 10, Y: 100}}},
+		{Content: pdflib.TextHorizontal{{S: "Real content", X: 10, Y: 80}}},
 	}
 	got = rowsToText(rows)
 	if strings.TrimSpace(got) != "Real content" {
@@ -91,7 +91,7 @@ func TestRowsToText(t *testing.T) {
 }
 
 func TestBuildPageHTML(t *testing.T) {
-	html := buildPageHTML("Test Book", 3, 10, "Hello World\nSecond line")
+	html := buildPageHTML("Test Book", 3, 10, "Hello World\nSecond line", nil)
 
 	// Check structure
 	if !strings.Contains(html, "<!DOCTYPE html>") {
@@ -112,7 +112,7 @@ func TestBuildPageHTML(t *testing.T) {
 }
 
 func TestBuildPageHTML_EscapesHTML(t *testing.T) {
-	html := buildPageHTML("Book <script>", 1, 1, "<b>bold</b>")
+	html := buildPageHTML("Book <script>", 1, 1, "<b>bold</b>", nil)
 	if strings.Contains(html, "<script>") {
 		t.Error("title not escaped")
 	}
@@ -215,12 +215,15 @@ func TestExtract_EmptyPDF(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := Extract(pdfPath, outputDir)
-	if err == nil {
-		t.Error("expected error for empty PDF (no text), got nil")
+	book, err := Extract(pdfPath, outputDir)
+	if err != nil {
+		t.Fatalf("expected fallback HTML for empty PDF, got error: %v", err)
 	}
-	if !strings.Contains(err.Error(), "no text content") {
-		t.Errorf("unexpected error: %v", err)
+	if len(book.Spine) != 1 {
+		t.Fatalf("expected 1 fallback page, got %d", len(book.Spine))
+	}
+	if _, statErr := os.Stat(filepath.Join(outputDir, "original.pdf")); statErr != nil {
+		t.Fatalf("expected original.pdf fallback copy, got error: %v", statErr)
 	}
 }
 
@@ -254,5 +257,55 @@ func TestExtract_NonExistentFile(t *testing.T) {
 	_, err := Extract(filepath.Join(tmpDir, "nope.pdf"), outputDir)
 	if err == nil {
 		t.Error("expected error for non-existent file, got nil")
+	}
+}
+
+func TestNeedsPDFToTextPathStaging(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{`C:\Books\plain.pdf`, false},
+		{`C:\Books\with space.pdf`, false},
+		{`C:\Books\Auntie’s Story.pdf`, true},
+		{`C:\Books\M502e – Story.pdf`, true},
+	}
+
+	for _, tt := range tests {
+		if got := needsPDFToTextPathStaging(tt.path); got != tt.want {
+			t.Errorf("needsPDFToTextPathStaging(%q) = %v, want %v", tt.path, got, tt.want)
+		}
+	}
+}
+
+func TestStagePDFForPDFToText(t *testing.T) {
+	tmpDir := t.TempDir()
+	srcPath := filepath.Join(tmpDir, "M502e – Story.pdf")
+	content := []byte("fake pdf content")
+	if err := os.WriteFile(srcPath, content, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	stagedPath, cleanup, err := stagePDFForPDFToText(srcPath)
+	if err != nil {
+		t.Fatalf("stagePDFForPDFToText() error: %v", err)
+	}
+	defer cleanup()
+
+	if filepath.Base(stagedPath) != "input.pdf" {
+		t.Fatalf("expected staged filename input.pdf, got %q", filepath.Base(stagedPath))
+	}
+	for _, r := range stagedPath {
+		if r > 127 {
+			t.Fatalf("expected ASCII-only staged path, got %q", stagedPath)
+		}
+	}
+
+	stagedContent, err := os.ReadFile(stagedPath)
+	if err != nil {
+		t.Fatalf("read staged file: %v", err)
+	}
+	if string(stagedContent) != string(content) {
+		t.Fatalf("staged file content mismatch: got %q want %q", stagedContent, content)
 	}
 }
