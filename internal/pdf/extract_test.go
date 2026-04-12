@@ -3,7 +3,6 @@ package pdf
 import (
 	"image"
 	"image/color"
-	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	pdflib "github.com/ledongthuc/pdf"
 
 	"github.com/go-pdf/fpdf"
+	"golang.org/x/image/tiff"
 )
 
 // createTestPDF generates a minimal PDF with the given pages of text.
@@ -315,7 +315,7 @@ func TestStagePDFForPDFToText(t *testing.T) {
 
 func TestFlipImageFileVertically(t *testing.T) {
 	tmpDir := t.TempDir()
-	imgPath := filepath.Join(tmpDir, "sample.png")
+	imgPath := filepath.Join(tmpDir, "sample.tif")
 
 	img := image.NewNRGBA(image.Rect(0, 0, 1, 2))
 	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
@@ -325,7 +325,7 @@ func TestFlipImageFileVertically(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := png.Encode(file, img); err != nil {
+	if err := tiff.Encode(file, img, nil); err != nil {
 		file.Close()
 		t.Fatal(err)
 	}
@@ -342,7 +342,7 @@ func TestFlipImageFileVertically(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer flippedFile.Close()
-	flipped, err := png.Decode(flippedFile)
+	flipped, err := tiff.Decode(flippedFile)
 	if err != nil {
 		t.Fatal(err)
 	}

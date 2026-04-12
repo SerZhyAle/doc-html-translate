@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"html"
 	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"math"
 	"os"
@@ -664,9 +662,13 @@ func imageHTMLClassAttr(path string) string {
 	return ""
 }
 
+// flipImageFileVertically vertically flips a TIFF image file in place.
+// JPEG and PNG images extracted by pdfcpu are raw embedded streams and are
+// already correctly oriented; only TIFFs (reconstructed from raw PDF pixel
+// data, which uses a bottom-up Y axis) need a Y-flip.
 func flipImageFileVertically(path string) error {
 	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".tif" && ext != ".tiff" {
+	if ext != ".tif" && ext != ".tiff" {
 		return nil
 	}
 
@@ -676,14 +678,7 @@ func flipImageFileVertically(path string) error {
 	}
 
 	var src image.Image
-	switch ext {
-	case ".png":
-		src, err = png.Decode(file)
-	case ".jpg", ".jpeg":
-		src, err = jpeg.Decode(file)
-	case ".tif", ".tiff":
-		src, err = tiff.Decode(file)
-	}
+	src, err = tiff.Decode(file)
 	if err != nil {
 		_ = file.Close()
 		return err
@@ -714,14 +709,7 @@ func flipImageFileVertically(path string) error {
 		}
 	}()
 
-	switch ext {
-	case ".png":
-		err = png.Encode(out, dst)
-	case ".jpg", ".jpeg":
-		err = jpeg.Encode(out, dst, &jpeg.Options{Quality: 95})
-	case ".tif", ".tiff":
-		err = tiff.Encode(out, dst, nil)
-	}
+	err = tiff.Encode(out, dst, nil)
 	if err != nil {
 		return err
 	}
