@@ -13,7 +13,9 @@ var (
 )
 
 const (
+	mbOK           = uintptr(0x00000000)
 	mbYesNo        = uintptr(0x00000004)
+	mbIconWarning  = uintptr(0x00000030)
 	mbIconQuestion = uintptr(0x00000020)
 	idYes          = uintptr(6)
 )
@@ -29,4 +31,16 @@ func ConfirmYesNo(title, message string) bool {
 		mbYesNo|mbIconQuestion,
 	)
 	return ret == idYes
+}
+
+// ShowWarning displays a Windows warning message box with an OK button.
+func ShowWarning(title, message string) {
+	titlePtr, _ := syscall.UTF16PtrFromString(title)
+	msgPtr, _ := syscall.UTF16PtrFromString(message)
+	messageBoxW.Call(
+		0,
+		uintptr(unsafe.Pointer(msgPtr)),
+		uintptr(unsafe.Pointer(titlePtr)),
+		mbOK|mbIconWarning,
+	)
 }

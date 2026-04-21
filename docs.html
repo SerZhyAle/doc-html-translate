@@ -243,6 +243,37 @@ doc-html-translate.exe -ollama "book.epub"</div>
     </section>
 
     <section class="card" style="margin-top: 14px;">
+      <h2>Optional External Tools</h2>
+      <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML, Markdown. Install these tools to get full PDF image support and additional formats.</p>
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>Purpose</th><th>Needed for</th><th>How to install</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>pdftotext</strong><br><span class="small">(Xpdf / Poppler)</span></td>
+            <td>High-quality PDF text extraction — handles complex fonts, ligatures, multi-column layout better than the built-in library</td>
+            <td>PDF files — optional, built-in fallback used when absent</td>
+            <td><a href="https://www.xpdfreader.com/download.html">xpdfreader.com</a> → "Xpdf tools"<br>or already included in <a href="https://git-scm.com">Git for Windows</a></td>
+          </tr>
+          <tr>
+            <td><strong>ffmpeg</strong></td>
+            <td>Converts JPEG 2000 images (.jpx) extracted from PDFs into JPEG — browsers do not support JPEG 2000 natively</td>
+            <td>PDF files that contain JPEG2000-encoded images (common in commercial PDFs)</td>
+            <td><a href="https://www.gyan.dev/ffmpeg/builds/">gyan.dev/ffmpeg</a> → "release essentials"<br>or <code>winget install ffmpeg</code></td>
+          </tr>
+          <tr>
+            <td><strong>Calibre</strong></td>
+            <td>Converts MOBI / AZW3 to EPUB before processing</td>
+            <td>Required for MOBI and AZW3 format support</td>
+            <td><a href="https://calibre-ebook.com/download_windows">calibre-ebook.com</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:10px;">Without <strong>pdftotext</strong>: built-in Go PDF reader is used (slightly lower quality). Without <strong>ffmpeg</strong>: JPEG2000 images in PDFs will not be visible in the browser. Without <strong>Calibre</strong>: MOBI/AZW3 files cannot be opened.</p>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
       <h2>Main Flags</h2>
       <table>
         <thead>

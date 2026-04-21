@@ -16,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 
+	"doc-html-translate/internal/bundledtools"
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
@@ -28,8 +30,12 @@ import (
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
 
-// findPDFToText locates the pdftotext binary via PATH or well-known install paths.
+// findPDFToText locates the pdftotext binary: bundled copy first, then PATH,
+// then well-known install paths.
 func findPDFToText() string {
+	if p, err := bundledtools.PDFToTextPath(); err == nil {
+		return p
+	}
 	if p, err := exec.LookPath("pdftotext"); err == nil {
 		return p
 	}
@@ -615,6 +621,21 @@ func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 	}
 	if err := normalizeExtractedPDFImages(imagesDir, entries); err != nil {
 		logging.Printf("  WARNING: could not normalize extracted PDF images: %v\n", err)
+		if strings.Contains(err.Error(), "no JPX converter found") {
+			dialog.ShowWarning(
+				"PDF Images Not Displayed",
+				"This PDF contains images in JPEG2000 format (.jpx).\n"+
+					"Browsers cannot display JPEG2000 — images will be missing in the result.\n\n"+
+					"To fix, install ffmpeg:\n"+
+					"  winget install ffmpeg\n\n"+
+					"Or download from: https://www.gyan.dev/ffmpeg/builds/\n"+
+					`(choose "release essentials" build)`,
+			)
+		}
+	}
+	// Re-read after normalization: jpx→jpg conversions change file names.
+	if refreshed, err := os.ReadDir(imagesDir); err == nil {
+		entries = refreshed
 	}
 
 	pageImages := make(map[int][]string)
@@ -647,11 +668,61 @@ func normalizeExtractedPDFImages(imagesDir string, entries []os.DirEntry) error 
 			continue
 		}
 		path := filepath.Join(imagesDir, entry.Name())
+		ext := strings.ToLower(filepath.Ext(entry.Name()))
+		if ext == ".jpx" {
+			if _, err := convertJPXFile(path); err != nil && firstErr == nil {
+				firstErr = fmt.Errorf("%s: %w", entry.Name(), err)
+			}
+			continue
+		}
 		if err := flipImageFileVertically(path); err != nil && firstErr == nil {
 			firstErr = fmt.Errorf("%s: %w", entry.Name(), err)
 		}
 	}
 	return firstErr
+}
+
+// findJPXConverter returns the path to a binary that can convert JPEG2000 (.jpx)
+// images to JPEG, along with a tag identifying the tool ("magick" or "ffmpeg").
+// Browsers do not support JPEG2000; pdfcpu extracts JPXDecode PDF streams as .jpx.
+func findJPXConverter() (bin, kind string) {
+	if p, err := exec.LookPath("magick"); err == nil {
+		return p, "magick"
+	}
+	for _, pattern := range []string{
+		`C:\Program Files\ImageMagick-*\magick.exe`,
+		`C:\Program Files (x86)\ImageMagick-*\magick.exe`,
+	} {
+		if matches, _ := filepath.Glob(pattern); len(matches) > 0 {
+			return matches[0], "magick"
+		}
+	}
+	if p, err := exec.LookPath("ffmpeg"); err == nil {
+		return p, "ffmpeg"
+	}
+	return "", ""
+}
+
+// convertJPXFile converts a JPEG 2000 (.jpx) file to JPEG using ImageMagick or
+// ffmpeg, removes the original, and returns the new .jpg path.
+func convertJPXFile(jpxPath string) (string, error) {
+	bin, kind := findJPXConverter()
+	if bin == "" {
+		return "", fmt.Errorf("no JPX converter found (install ImageMagick or ffmpeg)")
+	}
+	jpgPath := strings.TrimSuffix(jpxPath, filepath.Ext(jpxPath)) + ".jpg"
+	var cmd *exec.Cmd
+	switch kind {
+	case "ffmpeg":
+		cmd = exec.Command(bin, "-y", "-i", jpxPath, "-update", "1", jpgPath)
+	default: // magick
+		cmd = exec.Command(bin, jpxPath, jpgPath)
+	}
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("%s: %w\n%s", kind, err, out)
+	}
+	_ = os.Remove(jpxPath)
+	return jpgPath, nil
 }
 
 func imageHTMLClassAttr(path string) string {

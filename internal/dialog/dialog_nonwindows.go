@@ -17,3 +17,8 @@ func ConfirmYesNo(title, message string) bool {
 	ans := strings.TrimSpace(strings.ToLower(scanner.Text()))
 	return ans == "y" || ans == "yes"
 }
+
+// ShowWarning prints a warning message to stderr.
+func ShowWarning(title, message string) {
+	fmt.Fprintf(os.Stderr, "\n⚠ WARNING: %s\n%s\n", title, message)
+}
