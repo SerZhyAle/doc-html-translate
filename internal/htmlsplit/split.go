@@ -60,7 +60,7 @@ func SplitIfNeeded(book *epub.Book, outputDir string, maxChars int) (int, error)
 			continue
 		}
 
-		srcPath := filepath.Join(outputDir, filepath.FromSlash(mItem.Href))
+		srcPath := resolveHref(outputDir, book.BasePath, mItem.Href)
 		chunks, err := chunkHTMLFile(srcPath, maxChars)
 		if err != nil {
 			return added, fmt.Errorf("split %s: %w", mItem.Href, err)
@@ -85,7 +85,7 @@ func SplitIfNeeded(book *epub.Book, outputDir string, maxChars int) (int, error)
 				id = fmt.Sprintf("%s_s%d", mItem.ID, i+1)
 				added++
 			}
-			destPath := filepath.Join(outputDir, filepath.FromSlash(href))
+			destPath := resolveHref(outputDir, book.BasePath, href)
 			if err := os.WriteFile(destPath, []byte(chunk), 0o644); err != nil {
 				return added, fmt.Errorf("write split chunk %d of %s: %w", i+1, mItem.Href, err)
 			}
@@ -238,4 +238,13 @@ func findHeadBody(doc *gohtml.Node) (head, body *gohtml.Node) {
 // isHTMLMedia reports whether mt is an HTML content type.
 func isHTMLMedia(mt string) bool {
 	return mt == "text/html" || mt == "application/xhtml+xml" || mt == ""
+}
+
+// resolveHref joins outputDir with an OPF-relative href, accounting for the
+// EPUB's basePath (the directory containing content.opf).
+func resolveHref(outputDir, basePath, href string) string {
+	if basePath != "" && basePath != "." {
+		return filepath.Join(outputDir, filepath.FromSlash(basePath), filepath.FromSlash(href))
+	}
+	return filepath.Join(outputDir, filepath.FromSlash(href))
 }
