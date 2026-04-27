@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v26.0427.1430)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Resolve version from tag
+        id: ver
+        run: |
+          $tag = if ($env:GITHUB_REF -like 'refs/tags/*') { $env:GITHUB_REF -replace '^refs/tags/','' } else { '${{ inputs.tag }}' }
+          if (-not $tag) { throw "No tag resolved" }
+          $version = $tag -replace '^v',''
+          $parts = $version.Split('.')
+          if ($parts.Count -ne 3) { throw "Expected version yy.MMdd.HHmm, got '$version'" }
+          $major = [int]$parts[0]
+          $mmdd  = $parts[1]
+          if ($mmdd.Length -ne 4) { throw "Expected MMdd to be 4 digits, got '$mmdd'" }
+          $minor = [int]$mmdd.Substring(0,2)
+          $patch = [int]$mmdd.Substring(2,2)
+          $build = [int]$parts[2]
+          "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "major=$major"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "minor=$minor"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "patch=$patch"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "build=$build"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Install goversioninfo
+        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+      - name: Generate icon
+        run: ./scripts/generate-icon.ps1 -Output assets/doc-html-translate.ico
+
+      - name: Build doc-html-translate.exe
+        env:
+          CGO_ENABLED: '0'
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          $version = '${{ steps.ver.outputs.version }}'
+          $major   = [int]'${{ steps.ver.outputs.major }}'
+          $minor   = [int]'${{ steps.ver.outputs.minor }}'
+          $patch   = [int]'${{ steps.ver.outputs.patch }}'
+          $build   = [int]'${{ steps.ver.outputs.build }}'
+          $cmdDir  = 'cmd/doc-html-translate'
+          $json = Get-Content -LiteralPath "$cmdDir/versioninfo.json" -Raw | ConvertFrom-Json
+          $json.FixedFileInfo.FileVersion.Major    = $major
+          $json.FixedFileInfo.FileVersion.Minor    = $minor
+          $json.FixedFileInfo.FileVersion.Patch    = $patch
+          $json.FixedFileInfo.FileVersion.Build    = $build
+          $json.FixedFileInfo.ProductVersion.Major = $major
+          $json.FixedFileInfo.ProductVersion.Minor = $minor
+          $json.FixedFileInfo.ProductVersion.Patch = $patch
+          $json.FixedFileInfo.ProductVersion.Build = $build
+          $json.StringFileInfo.FileVersion         = $version
+          $json.StringFileInfo.ProductVersion      = $version
+          $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath "$cmdDir/versioninfo.generated.json" -Encoding utf8
+          Push-Location $cmdDir
+          try { & goversioninfo -64 -o resource.syso versioninfo.generated.json; if ($LASTEXITCODE -ne 0) { throw "goversioninfo failed" } }
+          finally { Pop-Location }
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          go build -trimpath -ldflags "-s -w -X main.Version=$version" -o build/doc-html-translate.exe ./cmd/doc-html-translate
+          if ($LASTEXITCODE -ne 0) { throw "go build (cli) failed" }
+          Remove-Item "$cmdDir/resource.syso" -ErrorAction SilentlyContinue
+          Remove-Item "$cmdDir/versioninfo.generated.json" -ErrorAction SilentlyContinue
+
+      - name: Build doc-html-ui.exe
+        env:
+          CGO_ENABLED: '0'
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          $version = '${{ steps.ver.outputs.version }}'
+          $major   = [int]'${{ steps.ver.outputs.major }}'
+          $minor   = [int]'${{ steps.ver.outputs.minor }}'
+          $patch   = [int]'${{ steps.ver.outputs.patch }}'
+          $build   = [int]'${{ steps.ver.outputs.build }}'
+          $cmdDir  = 'cmd/doc-html-ui'
+          $json = Get-Content -LiteralPath "$cmdDir/versioninfo.json" -Raw | ConvertFrom-Json
+          $json.FixedFileInfo.FileVersion.Major    = $major
+          $json.FixedFileInfo.FileVersion.Minor    = $minor
+          $json.FixedFileInfo.FileVersion.Patch    = $patch
+          $json.FixedFileInfo.FileVersion.Build    = $build
+          $json.FixedFileInfo.ProductVersion.Major = $major
+          $json.FixedFileInfo.ProductVersion.Minor = $minor
+          $json.FixedFileInfo.ProductVersion.Patch = $patch
+          $json.FixedFileInfo.ProductVersion.Build = $build
+          $json.StringFileInfo.FileVersion         = $version
+          $json.StringFileInfo.ProductVersion      = $version
+          $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath "$cmdDir/versioninfo.generated.json" -Encoding utf8
+          Push-Location $cmdDir
+          try { & goversioninfo -64 -o resource.syso versioninfo.generated.json; if ($LASTEXITCODE -ne 0) { throw "goversioninfo failed" } }
+          finally { Pop-Location }
+          go build -trimpath -ldflags "-s -w -H windowsgui -X main.Version=$version" -o build/doc-html-ui.exe ./cmd/doc-html-ui
+          if ($LASTEXITCODE -ne 0) { throw "go build (ui) failed" }
+          Remove-Item "$cmdDir/resource.syso" -ErrorAction SilentlyContinue
+          Remove-Item "$cmdDir/versioninfo.generated.json" -ErrorAction SilentlyContinue
+
+      - name: Stage release files
+        id: pkg
+        run: |
+          $version = '${{ steps.ver.outputs.version }}'
+          $stage   = "dist/stage"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item build/doc-html-translate.exe $stage/
+          Copy-Item build/doc-html-ui.exe        $stage/
+          Copy-Item LICENSE                      $stage/
+          Copy-Item README.md                    $stage/
+          $name = "doc-html-translate-$version-windows-x64.zip"
+          $zip  = "dist/$name"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "$stage/*" -DestinationPath $zip -CompressionLevel Optimal
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash
+          "$hash  $name" | Set-Content -LiteralPath "dist/$name.sha256" -Encoding ascii
+          "name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Built $name with SHA256 $hash"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: ${{ steps.ver.outputs.tag }}
+          files: |
+            dist/${{ steps.pkg.outputs.name }}
+            dist/${{ steps.pkg.outputs.name }}.sha256
+          body: |
+            doc-html-translate ${{ steps.ver.outputs.version }}
+
+            SHA256: `${{ steps.pkg.outputs.sha256 }}`
