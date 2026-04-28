@@ -168,26 +168,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 </div>
 
 <script>
-const FIXED_WIDTH = 780;
-const FIXED_HEIGHT = 980;
-
-// Try to keep app window non-resizable for browser app-mode windows.
-function enforceFixedWindowSize() {
-    if (window.outerWidth !== FIXED_WIDTH || window.outerHeight !== FIXED_HEIGHT) {
-        window.resizeTo(FIXED_WIDTH, FIXED_HEIGHT);
-    }
-}
-
 // ── heartbeat ───────────────────────────────────────────
 setInterval(() => fetch('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
-
-// ── fixed window size ───────────────────────────────────
-window.addEventListener('load', () => {
-    enforceFixedWindowSize();
-});
-window.addEventListener('resize', () => {
-    setTimeout(enforceFixedWindowSize, 10);
-});
 
 // ── drag & drop into app window ─────────────────────────
 function fileUriToPath(uri) {

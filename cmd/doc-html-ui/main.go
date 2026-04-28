@@ -279,7 +279,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("ProgramFiles"), `Microsoft\Edge\Application\msedge.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				exec.Command(p, "--app="+url, "--window-size=750,950").Start()
+				exec.Command(p, "--app="+url, "--window-size=780,700").Start()
 				return
 			}
 		}
@@ -290,7 +290,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				exec.Command(p, "--app="+url, "--window-size=750,950").Start()
+				exec.Command(p, "--app="+url, "--window-size=780,700").Start()
 				return
 			}
 		}
