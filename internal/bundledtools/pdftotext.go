@@ -13,17 +13,23 @@ import (
 var pdftotextFS embed.FS
 
 var (
-	pdftotextOnce sync.Once
+	pdftotextMu   sync.Mutex
 	pdftotextPath string
 	pdftotextErr  error
 )
 
 // PDFToTextPath returns the path to the bundled pdftotext.exe, extracting it
-// to the user cache directory on first call. Subsequent calls reuse the cache.
+// to the user cache directory on first call. Re-extracts if the cached file
+// has been removed (e.g., quarantined by antivirus after initial extraction).
 func PDFToTextPath() (string, error) {
-	pdftotextOnce.Do(func() {
-		pdftotextPath, pdftotextErr = extractPDFToText()
-	})
+	pdftotextMu.Lock()
+	defer pdftotextMu.Unlock()
+	if pdftotextPath != "" && pdftotextErr == nil {
+		if _, err := os.Stat(pdftotextPath); err == nil {
+			return pdftotextPath, nil
+		}
+	}
+	pdftotextPath, pdftotextErr = extractPDFToText()
 	return pdftotextPath, pdftotextErr
 }
 

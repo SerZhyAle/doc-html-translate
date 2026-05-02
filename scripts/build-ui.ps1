@@ -59,9 +59,14 @@ try {
 }
 
 # ── Step 3: Build (pure Go, no CGO needed; -H windowsgui hides console) ──
+# GOARCH=amd64 must match the -64 goversioninfo resource; without it the 386
+# toolchain would try to link an amd64 COFF .syso and fail with
+# "unknown relocation type 3".
 $absOutput = [System.IO.Path]::GetFullPath($Output)
 $ldflags   = "-s -w -H windowsgui -X main.Version=$version"
 
+$env:GOARCH = "amd64"
+$env:GOOS   = "windows"
 go build -trimpath -ldflags "$ldflags" -o $absOutput ./cmd/doc-html-ui *>&1 | Tee-Object -FilePath "temp/logs/build-ui.log"
 if ($LASTEXITCODE -ne 0) {
     throw "build failed. See temp/logs/build-ui.log"

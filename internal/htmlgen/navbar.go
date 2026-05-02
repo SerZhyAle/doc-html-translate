@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/syslocale"
 )
 
 // NavInfo describes navigation links for a single chapter page.
@@ -303,17 +304,22 @@ const navBarScript = `
 
 // buildNavBarHTML generates the HTML for the navigation bar.
 func buildNavBarHTML(nav NavInfo) string {
-	prevLink := `<a class="disabled">&#9664; Назад</a>`
+	labelPrev, labelNext, labelTOC := "Back", "Forward", "Contents"
+	if syslocale.IsRussian() {
+		labelPrev, labelNext, labelTOC = "Назад", "Вперёд", "Оглавление"
+	}
+
+	prevLink := fmt.Sprintf(`<a class="disabled">&#9664; %s</a>`, labelPrev)
 	if nav.PrevHref != "" {
-		prevLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9664; Назад</a>`, html.EscapeString(nav.PrevHref))
+		prevLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9664; %s</a>`, html.EscapeString(nav.PrevHref), labelPrev)
 	}
 
-	nextLink := `<a class="disabled">Вперёд &#9654;</a>`
+	nextLink := fmt.Sprintf(`<a class="disabled">%s &#9654;</a>`, labelNext)
 	if nav.NextHref != "" {
-		nextLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">Вперёд &#9654;</a>`, html.EscapeString(nav.NextHref))
+		nextLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">%s &#9654;</a>`, html.EscapeString(nav.NextHref), labelNext)
 	}
 
-	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; Оглавление</a>`, html.EscapeString(nav.IndexHref))
+	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
 
 	return fmt.Sprintf(`<div class="dht-navbar"><div class="nav-actions">%s%s%s</div>%s</div>%s`,

@@ -4,6 +4,7 @@
 package pdf
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"image"
@@ -29,6 +30,13 @@ import (
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
+
+// isExecFileNotFound reports whether err came from a failed fork/exec attempt
+// (file missing or access denied — typical when antivirus quarantines the binary).
+func isExecFileNotFound(err error) bool {
+	var pathErr *os.PathError
+	return errors.As(err, &pathErr) && pathErr.Op == "fork/exec"
+}
 
 // findPDFToText locates the pdftotext binary: bundled copy first, then PATH,
 // then well-known install paths.
@@ -64,6 +72,19 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 			return book, nil
 		}
 		logging.Printf("  WARNING: pdftotext failed, falling back to pdflib: %v\n", err)
+		if isExecFileNotFound(err) {
+			dialog.ShowWarning(
+				"PDF Quality Reduced — pdftotext Blocked",
+				"pdftotext could not run (possibly blocked by antivirus).\n"+
+					"Text extraction fell back to a less accurate method — ligatures\n"+
+					"and complex fonts may not render correctly.\n\n"+
+					"To restore full quality, choose one option:\n\n"+
+					"Option 1 — exclude the app cache from antivirus scans:\n"+
+					"  %LOCALAPPDATA%\\doc-html-translate\\pdftotext\\\n\n"+
+					"Option 2 — install Poppler (includes pdftotext):\n"+
+					"  winget install ossia.poppler",
+			)
+		}
 	}
 
 	book, err := extractWithPDFLib(pdfPath, outputDir)
@@ -255,7 +276,13 @@ func isLigaturesArtifact(s string) bool {
 }
 
 // buildPDFPageHTML generates an HTML page from structured pageItems and images.
+// When both text and images are present, uses a sticky side-by-side layout:
+// image panel on the left (sticky), text on the right.
 func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageItem, images []string) string {
+	hasText := len(items) > 0
+	hasImages := len(images) > 0
+	sideBySide := hasText && hasImages
+
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
@@ -270,19 +297,39 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 	sb.WriteString("    h3 { text-align: center; font-size: 1.15em; font-style: italic; margin: 1.4em 0 0.8em; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
 	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
+	if sideBySide {
+		sb.WriteString("    .pdf-page-layout { display: flex; gap: 1.5em; align-items: flex-start; }\n")
+		sb.WriteString("    .pdf-images { flex: 0 0 62%; position: sticky; top: 44px; }\n")
+		sb.WriteString("    .pdf-text { flex: 1; min-width: 0; }\n")
+		sb.WriteString("    @media (max-width: 700px) { .pdf-page-layout { flex-direction: column; } .pdf-images { position: static; flex: none; width: 100%; } }\n")
+	}
 	sb.WriteString("  </style>\n</head>\n<body>\n")
 	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
 
-	for _, item := range items {
-		sb.WriteString(fmt.Sprintf("  <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
-	}
-
-	if len(images) > 0 {
-		sb.WriteString("  <div class=\"pdf-images\">\n")
+	if sideBySide {
+		sb.WriteString("  <div class=\"pdf-page-layout\">\n")
+		sb.WriteString("    <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			sb.WriteString(fmt.Sprintf("      <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 		}
+		sb.WriteString("    </div>\n")
+		sb.WriteString("    <div class=\"pdf-text\">\n")
+		for _, item := range items {
+			sb.WriteString(fmt.Sprintf("      <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
+		}
+		sb.WriteString("    </div>\n")
 		sb.WriteString("  </div>\n")
+	} else {
+		for _, item := range items {
+			sb.WriteString(fmt.Sprintf("  <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
+		}
+		if hasImages {
+			sb.WriteString("  <div class=\"pdf-images\">\n")
+			for _, imgPath := range images {
+				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			}
+			sb.WriteString("  </div>\n")
+		}
 	}
 
 	sb.WriteString("</body>\n</html>\n")
@@ -540,7 +587,13 @@ func rowsToText(rows pdflib.Rows) string {
 }
 
 // buildPageHTML generates an HTML page from extracted PDF text and images.
+// When both text and images are present, uses a sticky side-by-side layout:
+// image panel on the left (sticky), text on the right.
 func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, images []string) string {
+	hasText := strings.TrimSpace(text) != ""
+	hasImages := len(images) > 0
+	sideBySide := hasText && hasImages
+
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
 	sb.WriteString("<html lang=\"en\">\n")
@@ -555,29 +608,49 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	sb.WriteString("    p { margin: 0.4em 0; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
 	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
+	if sideBySide {
+		sb.WriteString("    .pdf-page-layout { display: flex; gap: 1.5em; align-items: flex-start; }\n")
+		sb.WriteString("    .pdf-images { flex: 0 0 62%; position: sticky; top: 44px; }\n")
+		sb.WriteString("    .pdf-text { flex: 1; min-width: 0; }\n")
+		sb.WriteString("    @media (max-width: 700px) { .pdf-page-layout { flex-direction: column; } .pdf-images { position: static; flex: none; width: 100%; } }\n")
+	}
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
 	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
 
-	// Convert text lines to paragraphs
-	if strings.TrimSpace(text) != "" {
+	if sideBySide {
+		sb.WriteString("  <div class=\"pdf-page-layout\">\n")
+		sb.WriteString("    <div class=\"pdf-images\">\n")
+		for _, imgPath := range images {
+			sb.WriteString(fmt.Sprintf("      <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+		}
+		sb.WriteString("    </div>\n")
+		sb.WriteString("    <div class=\"pdf-text\">\n")
 		lines := strings.Split(strings.TrimSpace(text), "\n")
 		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			if trimmed != "" {
-				sb.WriteString(fmt.Sprintf("  <p>%s</p>\n", html.EscapeString(trimmed)))
+			if trimmed := strings.TrimSpace(line); trimmed != "" {
+				sb.WriteString(fmt.Sprintf("      <p>%s</p>\n", html.EscapeString(trimmed)))
 			}
 		}
-	}
-
-	// Embed extracted images
-	if len(images) > 0 {
-		sb.WriteString("  <div class=\"pdf-images\">\n")
-		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
-		}
+		sb.WriteString("    </div>\n")
 		sb.WriteString("  </div>\n")
+	} else {
+		if hasText {
+			lines := strings.Split(strings.TrimSpace(text), "\n")
+			for _, line := range lines {
+				if trimmed := strings.TrimSpace(line); trimmed != "" {
+					sb.WriteString(fmt.Sprintf("  <p>%s</p>\n", html.EscapeString(trimmed)))
+				}
+			}
+		}
+		if hasImages {
+			sb.WriteString("  <div class=\"pdf-images\">\n")
+			for _, imgPath := range images {
+				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			}
+			sb.WriteString("  </div>\n")
+		}
 	}
 
 	sb.WriteString("</body>\n")
