@@ -276,8 +276,9 @@ func isLigaturesArtifact(s string) bool {
 }
 
 // buildPDFPageHTML generates an HTML page from structured pageItems and images.
-// When both text and images are present, uses a sticky side-by-side layout:
-// image panel on the left (sticky), text on the right.
+// When both text and images are present the image floats left and text flows
+// to its right. Text elements stay at body level so htmlsplit can still
+// partition them across pages without creating image-less or text-less chunks.
 func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageItem, images []string) string {
 	hasText := len(items) > 0
 	hasImages := len(images) > 0
@@ -298,27 +299,23 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
 	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	if sideBySide {
-		sb.WriteString("    .pdf-page-layout { display: flex; gap: 1.5em; align-items: flex-start; }\n")
-		sb.WriteString("    .pdf-images { flex: 0 0 62%; position: sticky; top: 44px; }\n")
-		sb.WriteString("    .pdf-text { flex: 1; min-width: 0; }\n")
-		sb.WriteString("    @media (max-width: 700px) { .pdf-page-layout { flex-direction: column; } .pdf-images { position: static; flex: none; width: 100%; } }\n")
+		sb.WriteString("    .pdf-images { float: left; width: 58%; margin-right: 1.5em; margin-bottom: 0.5em; }\n")
+		sb.WriteString("    .pdf-float-clear { clear: both; }\n")
+		sb.WriteString("    @media (max-width: 700px) { .pdf-images { float: none; width: 100%; margin-right: 0; } }\n")
 	}
 	sb.WriteString("  </style>\n</head>\n<body>\n")
 	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
 
 	if sideBySide {
-		sb.WriteString("  <div class=\"pdf-page-layout\">\n")
-		sb.WriteString("    <div class=\"pdf-images\">\n")
+		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("      <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 		}
-		sb.WriteString("    </div>\n")
-		sb.WriteString("    <div class=\"pdf-text\">\n")
-		for _, item := range items {
-			sb.WriteString(fmt.Sprintf("      <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
-		}
-		sb.WriteString("    </div>\n")
 		sb.WriteString("  </div>\n")
+		for _, item := range items {
+			sb.WriteString(fmt.Sprintf("  <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
+		}
+		sb.WriteString("  <div class=\"pdf-float-clear\"></div>\n")
 	} else {
 		for _, item := range items {
 			sb.WriteString(fmt.Sprintf("  <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
@@ -587,8 +584,9 @@ func rowsToText(rows pdflib.Rows) string {
 }
 
 // buildPageHTML generates an HTML page from extracted PDF text and images.
-// When both text and images are present, uses a sticky side-by-side layout:
-// image panel on the left (sticky), text on the right.
+// When both text and images are present the image floats left and text flows
+// to its right. Text elements stay at body level so htmlsplit can still
+// partition them across pages without creating image-less or text-less chunks.
 func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, images []string) string {
 	hasText := strings.TrimSpace(text) != ""
 	hasImages := len(images) > 0
@@ -609,10 +607,9 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
 	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	if sideBySide {
-		sb.WriteString("    .pdf-page-layout { display: flex; gap: 1.5em; align-items: flex-start; }\n")
-		sb.WriteString("    .pdf-images { flex: 0 0 62%; position: sticky; top: 44px; }\n")
-		sb.WriteString("    .pdf-text { flex: 1; min-width: 0; }\n")
-		sb.WriteString("    @media (max-width: 700px) { .pdf-page-layout { flex-direction: column; } .pdf-images { position: static; flex: none; width: 100%; } }\n")
+		sb.WriteString("    .pdf-images { float: left; width: 58%; margin-right: 1.5em; margin-bottom: 0.5em; }\n")
+		sb.WriteString("    .pdf-float-clear { clear: both; }\n")
+		sb.WriteString("    @media (max-width: 700px) { .pdf-images { float: none; width: 100%; margin-right: 0; } }\n")
 	}
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
@@ -620,21 +617,18 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
 
 	if sideBySide {
-		sb.WriteString("  <div class=\"pdf-page-layout\">\n")
-		sb.WriteString("    <div class=\"pdf-images\">\n")
+		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("      <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 		}
-		sb.WriteString("    </div>\n")
-		sb.WriteString("    <div class=\"pdf-text\">\n")
+		sb.WriteString("  </div>\n")
 		lines := strings.Split(strings.TrimSpace(text), "\n")
 		for _, line := range lines {
 			if trimmed := strings.TrimSpace(line); trimmed != "" {
-				sb.WriteString(fmt.Sprintf("      <p>%s</p>\n", html.EscapeString(trimmed)))
+				sb.WriteString(fmt.Sprintf("  <p>%s</p>\n", html.EscapeString(trimmed)))
 			}
 		}
-		sb.WriteString("    </div>\n")
-		sb.WriteString("  </div>\n")
+		sb.WriteString("  <div class=\"pdf-float-clear\"></div>\n")
 	} else {
 		if hasText {
 			lines := strings.Split(strings.TrimSpace(text), "\n")
