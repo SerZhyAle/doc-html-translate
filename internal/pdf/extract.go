@@ -60,6 +60,52 @@ func findPDFToText() string {
 	return ""
 }
 
+// findSystemPDFToText is like findPDFToText but skips the bundled binary.
+// Used after the bundled copy has been blocked by antivirus.
+func findSystemPDFToText() string {
+	if p, err := exec.LookPath("pdftotext"); err == nil {
+		return p
+	}
+	for _, p := range []string{
+		`C:\Program Files\poppler\bin\pdftotext.exe`,
+		`C:\Program Files (x86)\poppler\bin\pdftotext.exe`,
+		`C:\Program Files\Git\mingw64\bin\pdftotext.exe`,
+		`C:\Program Files (x86)\Git\mingw64\bin\pdftotext.exe`,
+		`C:\Program Files\Xpdf\bin64\pdftotext.exe`,
+	} {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	for _, pattern := range []string{
+		`C:\Program Files\poppler*\bin\pdftotext.exe`,
+		`C:\Program Files (x86)\poppler*\bin\pdftotext.exe`,
+	} {
+		if matches, _ := filepath.Glob(pattern); len(matches) > 0 {
+			return matches[0]
+		}
+	}
+	return ""
+}
+
+// tryInstallPoppler runs "winget install ossia.poppler" and returns the path to
+// pdftotext if installation succeeded and the binary can be located.
+func tryInstallPoppler() string {
+	winget, err := exec.LookPath("winget")
+	if err != nil {
+		return ""
+	}
+	logging.Printf("  Installing Poppler via winget...\n")
+	cmd := exec.Command(winget, "install", "--id", "ossia.poppler",
+		"--accept-package-agreements", "--accept-source-agreements")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return ""
+	}
+	return findSystemPDFToText()
+}
+
 // Extract reads a PDF file, generates per-page HTML files in outputDir,
 // and returns an *epub.Book adapter for pipeline compatibility.
 // Tries pdftotext (Xpdf/Poppler) first for best quality; falls back to the pure-Go reader.
@@ -73,16 +119,25 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 		}
 		logging.Printf("  WARNING: pdftotext failed, falling back to pdflib: %v\n", err)
 		if isExecFileNotFound(err) {
+			logging.Printf("  pdftotext blocked (possibly by antivirus) — attempting auto-install...\n")
+			if p := tryInstallPoppler(); p != "" {
+				logging.Printf("  Retrying with system pdftotext: %s\n", p)
+				if book2, err2 := extractWithPDFToText(p, pdfPath, outputDir); err2 == nil {
+					return book2, nil
+				}
+			}
+			logging.Printf("  Auto-install failed. To install manually, run:\n")
+			logging.Printf("    winget install ossia.poppler\n")
 			dialog.ShowWarning(
-				"PDF Quality Reduced — pdftotext Blocked",
-				"pdftotext could not run (possibly blocked by antivirus).\n"+
+				"PDF Quality Reduced — pdftotext Unavailable",
+				"pdftotext could not run (blocked by antivirus or unavailable)\n"+
+					"and automatic installation failed.\n"+
 					"Text extraction fell back to a less accurate method — ligatures\n"+
 					"and complex fonts may not render correctly.\n\n"+
-					"To restore full quality, choose one option:\n\n"+
-					"Option 1 — exclude the app cache from antivirus scans:\n"+
-					"  %LOCALAPPDATA%\\doc-html-translate\\pdftotext\\\n\n"+
-					"Option 2 — install Poppler (includes pdftotext):\n"+
-					"  winget install ossia.poppler",
+					"To restore full quality, run:\n\n"+
+					"  winget install ossia.poppler\n\n"+
+					"Or exclude the app cache from antivirus scans:\n"+
+					"  %LOCALAPPDATA%\\doc-html-translate\\pdftotext\\",
 			)
 		}
 	}
