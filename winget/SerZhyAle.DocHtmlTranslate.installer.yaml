@@ -12,7 +12,7 @@ NestedInstallerFiles:
 Installers:
 - Architecture: x64
   InstallerUrl: https://github.com/SerZhyAle/doc-html-translate/releases/download/v26.0511.0342/doc-html-translate-26.0511.0342-windows-x64.zip
-  InstallerSha256: 2364E0F22BCC6ECB173D47209F9226CC24B12BE5352EF288E267E2895926C6B7
+  InstallerSha256: A94E60E253C7A0A6F4ACC0B1D22AF6EE281687DB453937BBA274DC54F18B8798
 ManifestType: installer
 ManifestVersion: 1.12.0
 ReleaseDate: 2026-05-11
