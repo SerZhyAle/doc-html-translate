@@ -1,10 +1,13 @@
 # doc-html-translate
 
-## Project Links
-- GitHub Pages: https://serzhyale.github.io/doc-html-translate/
-- GitHub Repository: https://github.com/SerZhyAle/doc-html-translate
+Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model.
 
-Windows-focused Go CLI that converts documents to local HTML and optionally translates extracted text.
+Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb2` `ebook` `html-converter` `translation` `ollama`
+
+## Project Links
+- Website: https://serzhyale.github.io/doc-html-translate/
+- Repository: https://github.com/SerZhyAle/doc-html-translate
+- Latest release: https://github.com/SerZhyAle/doc-html-translate/releases/latest
 
 ## Features
 
@@ -33,13 +36,21 @@ Or use project scripts:
 
 ## Download Application
 
-Prebuilt application files are published in the repository build folder:
+Prebuilt Windows x64 binaries are published on the Releases page:
 
-- https://github.com/SerZhyAle/doc-html-translate/tree/master/build
+- https://github.com/SerZhyAle/doc-html-translate/releases/latest
 
-Direct expected binary path:
+Each release contains:
 
-- https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe
+- `doc-html-translate-<version>-windows-x64.exe` - command-line tool
+- `doc-html-ui-<version>-windows-x64.exe` - GUI desktop app
+- `doc-html-translate-<version>-windows-x64.zip` - full archive (both binaries + LICENSE + README)
+
+Install via winget:
+
+```powershell
+winget install SerZhyAle.DocHtmlTranslate
+```
 
 ## Quick Usage
 

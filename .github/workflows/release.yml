@@ -20,6 +20,8 @@ jobs:
         shell: pwsh
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -133,18 +135,75 @@ jobs:
           Compress-Archive -Path "$stage/*" -DestinationPath $zip -CompressionLevel Optimal
           $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash
           "$hash  $name" | Set-Content -LiteralPath "dist/$name.sha256" -Encoding ascii
-          "name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+          # Publish standalone .exe assets so app-store indexers (GitHub-Store,
+          # winget catalogs) can detect installable binaries directly.
+          $cliName = "doc-html-translate-$version-windows-x64.exe"
+          $uiName  = "doc-html-ui-$version-windows-x64.exe"
+          Copy-Item build/doc-html-translate.exe "dist/$cliName"
+          Copy-Item build/doc-html-ui.exe        "dist/$uiName"
+          $cliHash = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$cliName").Hash
+          $uiHash  = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$uiName").Hash
+          "$cliHash  $cliName" | Set-Content -LiteralPath "dist/$cliName.sha256" -Encoding ascii
+          "$uiHash  $uiName"   | Set-Content -LiteralPath "dist/$uiName.sha256"  -Encoding ascii
+
+          "name=$name"          | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "sha256=$hash"        | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "cli_name=$cliName"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "cli_sha256=$cliHash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "ui_name=$uiName"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "ui_sha256=$uiHash"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Write-Host "Built $name with SHA256 $hash"
+          Write-Host "Built $cliName with SHA256 $cliHash"
+          Write-Host "Built $uiName with SHA256 $uiHash"
+
+      - name: Build release notes
+        id: notes
+        run: |
+          $tag = '${{ steps.ver.outputs.tag }}'
+          $version = '${{ steps.ver.outputs.version }}'
+          $prev = & git describe --tags --abbrev=0 "$tag^" 2>$null
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($prev)) {
+            $log = & git log --pretty=format:"- %s" $tag
+          } else {
+            $log = & git log --pretty=format:"- %s" "$prev..$tag"
+          }
+          if ([string]::IsNullOrWhiteSpace($log)) { $log = "- Maintenance release" }
+
+          $cli    = '${{ steps.pkg.outputs.cli_name }}'
+          $ui     = '${{ steps.pkg.outputs.ui_name }}'
+          $pkg    = '${{ steps.pkg.outputs.name }}'
+          $cliSha = '${{ steps.pkg.outputs.cli_sha256 }}'
+          $uiSha  = '${{ steps.pkg.outputs.ui_sha256 }}'
+          $pkgSha = '${{ steps.pkg.outputs.sha256 }}'
+
+          $lines = @()
+          $lines += "doc-html-translate $version"
+          $lines += ""
+          $lines += "## What's new"
+          $lines += $log
+          $lines += ""
+          $lines += "## Downloads"
+          $lines += "- ``$cli`` - command-line tool"
+          $lines += "  SHA256: ``$cliSha``"
+          $lines += "- ``$ui`` - GUI desktop app"
+          $lines += "  SHA256: ``$uiSha``"
+          $lines += "- ``$pkg`` - full archive (both binaries + LICENSE + README)"
+          $lines += "  SHA256: ``$pkgSha``"
+
+          $path = "dist/release-notes.md"
+          Set-Content -LiteralPath $path -Value ($lines -join "`n") -Encoding utf8
+          "path=$path" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.tag }}
           files: |
+            dist/${{ steps.pkg.outputs.cli_name }}
+            dist/${{ steps.pkg.outputs.cli_name }}.sha256
+            dist/${{ steps.pkg.outputs.ui_name }}
+            dist/${{ steps.pkg.outputs.ui_name }}.sha256
             dist/${{ steps.pkg.outputs.name }}
             dist/${{ steps.pkg.outputs.name }}.sha256
-          body: |
-            doc-html-translate ${{ steps.ver.outputs.version }}
-
-            SHA256: `${{ steps.pkg.outputs.sha256 }}`
+          body_path: ${{ steps.notes.outputs.path }}
