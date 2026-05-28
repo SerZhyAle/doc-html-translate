@@ -93,6 +93,64 @@ func TestRowsToText(t *testing.T) {
 	}
 }
 
+func TestParsePDFLayoutPage_DoubleSpacedMerge(t *testing.T) {
+	// Simulate the pdftotext artifact where a blank line follows every wrapped
+	// line, so each physical line is its own block. Paragraph openings carry a
+	// leading indent (zero-width-space marker or spaces); continuations sit at the
+	// left margin and must be glued back on.
+	const zwsp = "\u200b"
+	page := strings.Join([]string{
+		"Body line one that wraps and",
+		"",
+		"continues here at the margin",
+		"",
+		zwsp + "   A brand new indented paragraph",
+		"",
+		"that also wraps onto a second line",
+		"",
+		"            Centered Heading",
+	}, "\n")
+
+	items := parsePDFLayoutPage(page)
+	if len(items) != 3 {
+		t.Fatalf("got %d items, want 3:\n%#v", len(items), items)
+	}
+	if items[0].tag != "p" || items[0].text != "Body line one that wraps and continues here at the margin" {
+		t.Errorf("item 0 = %+v, want merged body paragraph", items[0])
+	}
+	if items[1].tag != "p" || items[1].text != "A brand new indented paragraph that also wraps onto a second line" {
+		t.Errorf("item 1 = %+v, want merged indented paragraph", items[1])
+	}
+	if items[2].tag != "h2" || items[2].text != "Centered Heading" {
+		t.Errorf("item 2 = %+v, want centered h2 kept separate", items[2])
+	}
+	for _, it := range items {
+		if strings.Contains(it.text, zwsp) {
+			t.Errorf("zero-width-space marker leaked into output: %q", it.text)
+		}
+	}
+}
+
+func TestParsePDFLayoutPage_NormalNotMerged(t *testing.T) {
+	// A normally-spaced page keeps whole paragraphs in multi-line blocks separated
+	// by blank lines. These must stay distinct paragraphs, never merged together.
+	blocks := make([]string, 0, 6)
+	for i := 0; i < 6; i++ {
+		blocks = append(blocks, "Paragraph line one here\nand its wrapped second line")
+	}
+	page := strings.Join(blocks, "\n\n")
+
+	items := parsePDFLayoutPage(page)
+	if len(items) != 6 {
+		t.Fatalf("got %d items, want 6 (no merging on normal layout)", len(items))
+	}
+	for i, it := range items {
+		if it.text != "Paragraph line one here and its wrapped second line" {
+			t.Errorf("item %d = %q, want unmerged multi-line paragraph", i, it.text)
+		}
+	}
+}
+
 func TestBuildPageHTML(t *testing.T) {
 	html := buildPageHTML("Test Book", 3, 10, "Hello World\nSecond line", nil)
 

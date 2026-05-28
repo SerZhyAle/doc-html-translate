@@ -243,6 +243,25 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	return book, nil
 }
 
+// zeroWidthSpaceMarker (U+200B) is emitted literally by pdftotext for some PDFs
+// as an invisible first-line indent on paragraph openings. We treat its presence
+// in a line's leading whitespace as a paragraph-start signal and strip it from
+// the rendered text.
+const zeroWidthSpaceMarker = "\u200b"
+
+// paragraphIndentMin is the minimum number of leading spaces (after stripping any
+// zero-width-space marker) that marks the first line of a new paragraph. Wrapped
+// continuation lines sit flush at the left margin (0–1 spaces).
+const paragraphIndentMin = 2
+
+// layoutBlock is one blank-line-delimited block of a pdftotext -layout page.
+type layoutBlock struct {
+	text          string // physical lines joined by single spaces, ZWSP stripped
+	leadingSpaces int    // leading spaces of the first line (ZWSP already stripped)
+	indented      bool   // first line opens a new paragraph (ZWSP marker present or leadingSpaces >= paragraphIndentMin)
+	singleLine    bool   // block held exactly one non-empty physical line
+}
+
 // parsePDFLayoutPage parses one page from pdftotext -layout output into pageItems.
 //
 // In -layout mode:
@@ -250,27 +269,65 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 //   - leading spaces on the first line of a block indicate centering (more spaces = more centered)
 //   - body paragraph first lines have ~1 space indent; centered headings have 8+ spaces
 //   - lines within a block are word-wrapped and must be re-joined with spaces
+//
+// Some PDFs extract "double-spaced": a blank line follows almost every wrapped
+// line, so each physical line lands in its own block and would become its own
+// <p>. When that artifact is detected, non-indented continuation blocks are glued
+// back onto the paragraph they belong to (see isDoubleSpacedLayout).
 func parsePDFLayoutPage(text string) []pageItem {
+	blocks := parseLayoutBlocks(text)
+	if len(blocks) == 0 {
+		return nil
+	}
+
+	merge := isDoubleSpacedLayout(blocks)
+
 	var items []pageItem
+	for _, b := range blocks {
+		// A non-indented, single-line block in double-spaced mode is a wrapped
+		// continuation of the paragraph above it. Only fold into body paragraphs
+		// ("p"), never into headings, so a heading stays on its own line. Multi-line
+		// blocks are paragraphs pdftotext already kept whole — never a continuation.
+		if merge && b.singleLine && !b.indented && len(items) > 0 && items[len(items)-1].tag == "p" {
+			items[len(items)-1].text += " " + b.text
+			continue
+		}
+		items = append(items, pageItem{b.text, classifyBlock(b.text, b.leadingSpaces)})
+	}
+
+	return items
+}
+
+// parseLayoutBlocks splits a page into blank-line-delimited blocks and records,
+// per block, the joined text, first-line indent, and whether it opens a paragraph.
+func parseLayoutBlocks(text string) []layoutBlock {
+	var blocks []layoutBlock
 
 	for _, block := range strings.Split(text, "\n\n") {
 		lines := strings.Split(block, "\n")
 
-		// Collect non-empty lines and measure leading indent of the first one.
+		// Collect non-empty lines and measure the leading indent of the first one.
 		leadingSpaces := 0
+		indented := false
 		firstSeen := false
+		nonEmpty := 0
 		var parts []string
 		for _, line := range lines {
 			// Strip trailing whitespace only; keep leading for indent measurement.
 			rline := strings.TrimRight(line, " \t\r")
-			if rline == "" {
+			if strings.TrimSpace(rline) == "" {
 				continue
 			}
+			nonEmpty++
 			if !firstSeen {
-				leadingSpaces = len(rline) - len(strings.TrimLeft(rline, " \t"))
+				// Leading whitespace may mix spaces, tabs, and the ZWSP marker.
+				trimmed := strings.TrimLeft(rline, " \t"+zeroWidthSpaceMarker)
+				leadWS := rline[:len(rline)-len(trimmed)]
+				leadingSpaces = strings.Count(leadWS, " ")
+				indented = strings.Contains(leadWS, zeroWidthSpaceMarker) || leadingSpaces >= paragraphIndentMin
 				firstSeen = true
 			}
-			parts = append(parts, strings.TrimSpace(rline))
+			parts = append(parts, strings.TrimSpace(strings.ReplaceAll(rline, zeroWidthSpaceMarker, "")))
 		}
 
 		if len(parts) == 0 {
@@ -282,11 +339,33 @@ func parsePDFLayoutPage(text string) []pageItem {
 			continue
 		}
 
-		tag := classifyBlock(joined, leadingSpaces)
-		items = append(items, pageItem{joined, tag})
+		blocks = append(blocks, layoutBlock{
+			text:          joined,
+			leadingSpaces: leadingSpaces,
+			indented:      indented,
+			singleLine:    nonEmpty == 1,
+		})
 	}
 
-	return items
+	return blocks
+}
+
+// isDoubleSpacedLayout reports whether a page exhibits the pdftotext artifact
+// where a blank line follows almost every wrapped line, so each physical line
+// lands in its own single-line block. Detected when single-line blocks dominate;
+// normal PDFs keep whole paragraphs in multi-line blocks and return false, leaving
+// their parsing unchanged.
+func isDoubleSpacedLayout(blocks []layoutBlock) bool {
+	if len(blocks) < 5 {
+		return false
+	}
+	single := 0
+	for _, b := range blocks {
+		if b.singleLine {
+			single++
+		}
+	}
+	return float64(single)/float64(len(blocks)) >= 0.7
 }
 
 // classifyBlock assigns an HTML tag based on text content and indentation.
