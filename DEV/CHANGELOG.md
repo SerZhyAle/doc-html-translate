@@ -6,6 +6,9 @@
 
 | Timestamp | Path | Target | Description |
 |---|---|---|---|
+| 2026-06-12 00:00:00 | internal/htmlgen/htmlgen.go | TOC snippets | Fix: TOC snippets now resolve chapter files through EPUB BasePath (e.g. OEBPS/) and fallback labels are no longer double-numbered |
+| 2026-06-12 00:00:00 | internal/pipeline/pipeline.go | pipeline performance | Optimization: parsed HTML pages are now reused for Google cost estimation, translation, and TOC snippet generation to avoid repeated DOM parsing |
+| 2026-06-12 00:00:00 | cmd/doc-html-ui/main.go, cmd/doc-html-ui/ui.html | GUI split size | Fix: GUI now passes `-split 0` explicitly so disabling split matches CLI behavior; added inline help text |
 | 2026-03-04 01:30:27 | DEV/research/epub2html_research_ru.md | research | Добавлен подробный research по задаче EPUB->HTML+Translate: варианты решения, риски, задачи разработчика |
 | 2026-03-04 01:32:14 | DEV/plan.md | planning | Создан стратегический план разработки: 4 фазы, 11 блоков задач, Q1-Q7 вопросы пользователю |
 | 2026-03-04 01:33:49 | scripts/generate-icon.ps1 | build-assets | Добавлен генератор примитивной иконки EPUB2HTML в формате .ico |

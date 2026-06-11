@@ -18,6 +18,12 @@ import (
 // GenerateIndex creates index.html in outputDir with a table of contents
 // based on the book's spine order. CSS files from the manifest are linked.
 func GenerateIndex(book *epub.Book, outputDir string) (string, error) {
+	return GenerateIndexWithSnippets(book, outputDir, nil)
+}
+
+// GenerateIndexWithSnippets creates index.html in outputDir with a table of contents
+// based on the book's spine order. Precomputed snippets are used when available.
+func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[string]string) (string, error) {
 	indexPath := filepath.Join(outputDir, "index.html")
 
 	// Collect CSS files from manifest
@@ -43,8 +49,14 @@ func GenerateIndex(book *epub.Book, outputDir string) (string, error) {
 		label := chapterLabel(href, i+1)
 
 		// Extract snippet from the page file (translated if available).
-		pagePath := filepath.Join(outputDir, filepath.FromSlash(href))
-		snippet := extractSnippet(pagePath)
+		snippet := ""
+		if snippets != nil {
+			snippet = snippets[href]
+		}
+		if snippet == "" {
+			pagePath := bookPath(outputDir, book.BasePath, href)
+			snippet = extractSnippet(pagePath)
+		}
 
 		if snippet != "" {
 			// Use snippet as the primary label — filename (part0001 etc.) is not informative.
@@ -53,8 +65,8 @@ func GenerateIndex(book *epub.Book, outputDir string) (string, error) {
 				html.EscapeString(fullHref), i+1, html.EscapeString(snippet)))
 		} else {
 			tocEntries = append(tocEntries, fmt.Sprintf(
-				`      <li><a href="%s"><span class="toc-label">%d. %s</span></a></li>`,
-				html.EscapeString(fullHref), i+1, html.EscapeString(label)))
+				`      <li><a href="%s"><span class="toc-label">%s</span></a></li>`,
+				html.EscapeString(fullHref), html.EscapeString(label)))
 		}
 	}
 
@@ -105,6 +117,13 @@ func GenerateIndex(book *epub.Book, outputDir string) (string, error) {
 	return indexPath, nil
 }
 
+func bookPath(outputDir, basePath, href string) string {
+	if basePath != "" && basePath != "." {
+		return filepath.Join(outputDir, filepath.FromSlash(basePath), filepath.FromSlash(href))
+	}
+	return filepath.Join(outputDir, filepath.FromSlash(href))
+}
+
 // extractSnippet reads an HTML page and returns the first meaningful sentence
 // (up to ~150 chars) from its visible text content. Returns "" on any error.
 func extractSnippet(htmlPath string) string {
@@ -116,7 +135,11 @@ func extractSnippet(htmlPath string) string {
 	if err != nil {
 		return ""
 	}
+	return ExtractSnippetFromDoc(doc)
+}
 
+// ExtractSnippetFromDoc returns the first meaningful visible-text snippet from a parsed HTML document.
+func ExtractSnippetFromDoc(doc *gohtml.Node) string {
 	// Collect visible text from <body>, skipping nav/script/style/structural elements.
 	var buf strings.Builder
 	var walk func(*gohtml.Node)

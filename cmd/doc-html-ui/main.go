@@ -204,7 +204,7 @@ func assembleArgs(req runRequest) []string {
 	if req.OllamaCtx != "8192" {
 		a = append(a, "-ollama-ctx", req.OllamaCtx)
 	}
-	if req.SplitSize != "0" && req.SplitSize != "" {
+	if req.SplitSize != "" {
 		a = append(a, "-split", req.SplitSize)
 	}
 	a = append(a, "-src", req.SrcLang, "-dst", req.DstLang)

@@ -141,7 +141,9 @@ If the file is missing/empty, the app logs a warning and skips translation.
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
+- EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - PDF extraction is best-effort and includes fallback flows for difficult files.
+- In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 
 ## Development
 

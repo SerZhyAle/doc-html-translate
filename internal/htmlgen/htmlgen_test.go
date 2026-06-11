@@ -17,6 +17,12 @@ func TestGenerateIndex(t *testing.T) {
 	if err := os.MkdirAll(oebpsDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(oebpsDir, "chapter1.xhtml"), []byte(`<html><body><p>First OEBPS chapter snippet.</p></body></html>`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(oebpsDir, "chapter2.xhtml"), []byte(`<html><body><p>Second OEBPS chapter snippet.</p></body></html>`), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	book := &epub.Book{
 		Title:    "My Test Book",
@@ -64,6 +70,12 @@ func TestGenerateIndex(t *testing.T) {
 	}
 	if !strings.Contains(content, "OEBPS/chapter2.xhtml") {
 		t.Error("index.html should link to chapter2")
+	}
+	if !strings.Contains(content, "First OEBPS chapter snippet") {
+		t.Error("index.html should read snippets from files under BasePath")
+	}
+	if !strings.Contains(content, "Second OEBPS chapter snippet") {
+		t.Error("index.html should read all snippets from files under BasePath")
 	}
 
 	// Check chapters count
@@ -186,5 +198,36 @@ func TestGenerateIndex_WithSnippets(t *testing.T) {
 	// (They still appear in href="page_001.html" attribute, so check label span specifically)
 	if strings.Contains(content, ">page_001<") || strings.Contains(content, ">page_002<") {
 		t.Error("filename labels should be replaced by snippet text in TOC")
+	}
+}
+
+func TestGenerateIndex_FallbackLabelNotDoubleNumbered(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	book := &epub.Book{
+		Title: "Fallback Label Book",
+		Manifest: []epub.ManifestItem{
+			{ID: "p1", Href: "page_001.html", MediaType: "text/html"},
+		},
+		Spine: []epub.SpineItem{
+			{IDRef: "p1"},
+		},
+	}
+
+	indexPath, err := GenerateIndex(book, tmpDir)
+	if err != nil {
+		t.Fatalf("GenerateIndex: %v", err)
+	}
+
+	data, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read index.html: %v", err)
+	}
+	content := string(data)
+	if strings.Contains(content, "1. 1. page 001") {
+		t.Fatal("fallback TOC label should not be double-numbered")
+	}
+	if !strings.Contains(content, "1. page 001") {
+		t.Fatal("fallback TOC label should keep a single chapter number")
 	}
 }

@@ -25,6 +25,8 @@ import (
 	"doc-html-translate/internal/rtf"
 	"doc-html-translate/internal/translator"
 	"doc-html-translate/internal/txt"
+
+	gohtml "golang.org/x/net/html"
 )
 
 // ExitCode constants for structured error handling.
@@ -39,6 +41,15 @@ const (
 
 type Runner struct {
 	cfg config.Config
+}
+
+type contentPage struct {
+	item      epub.ManifestItem
+	filePath  string
+	segments  []*htmlproc.TextSegment
+	doc       *gohtml.Node
+	err       error
+	charCount int
 }
 
 func NewRunner(cfg config.Config) Runner {
@@ -193,6 +204,7 @@ func (r Runner) Run() (int, error) {
 	}
 
 	// Step 3: Translation
+	var tocSnippets map[string]string
 	switch {
 	case r.cfg.NoTranslate:
 		logging.Println("[3/4] Translation skipped (-notranslate)")
@@ -205,7 +217,8 @@ func (r Runner) Run() (int, error) {
 			logging.Printf("       Details: %v\n", keyErr)
 			break
 		}
-		totalChars := countBookChars(book, outputDir)
+		pages := loadContentPages(book, outputDir)
+		totalChars := countLoadedPageChars(pages)
 		if totalChars > 1000 {
 			estCost := float64(totalChars) / 1_000_000 * 20
 			msg := fmt.Sprintf(
@@ -218,8 +231,10 @@ func (r Runner) Run() (int, error) {
 			}
 		}
 		client := translator.NewCachingClient(translator.NewGoogleClient(apiKey))
-		if exitCode, err := r.translateContent(book, outputDir, client); err != nil {
+		if exitCode, snippets, err := r.translateContent(book, client, pages); err != nil {
 			return exitCode, err
+		} else {
+			tocSnippets = snippets
 		}
 	case r.cfg.UseOllama:
 		ollamaWorker := translator.NewOllamaClient(r.cfg.OllamaModel)
@@ -237,8 +252,11 @@ func (r Runner) Run() (int, error) {
 		}()
 		defer signal.Stop(sigCh)
 		client := translator.NewCachingClient(ollamaWorker)
-		if exitCode, err := r.translateContent(book, outputDir, client); err != nil {
+		pages := loadContentPages(book, outputDir)
+		if exitCode, snippets, err := r.translateContent(book, client, pages); err != nil {
 			return exitCode, err
+		} else {
+			tocSnippets = snippets
 		}
 	default:
 		logging.Println("[3/4] Translation skipped (use -google or -ollama to enable)")
@@ -246,7 +264,7 @@ func (r Runner) Run() (int, error) {
 
 	// Generate TOC after translation so snippets reflect translated text.
 	if len(book.Spine) > 1 {
-		generatedIndex, err = htmlgen.GenerateIndex(book, outputDir)
+		generatedIndex, err = htmlgen.GenerateIndexWithSnippets(book, outputDir, tocSnippets)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate index: %w", err)
 		}
@@ -269,32 +287,26 @@ func (r Runner) Run() (int, error) {
 
 // translateContent translates all HTML content files in the book.
 // R5: On error — report error, pause so user sees the message in shell.
-func (r Runner) translateContent(book *epub.Book, outputDir string, client translator.Client) (int, error) {
-	contentFiles := book.ContentFiles()
-	total := len(contentFiles)
+func (r Runner) translateContent(book *epub.Book, client translator.Client, pages []contentPage) (int, map[string]string, error) {
+	total := len(pages)
 	if total == 0 {
 		logging.Println("[3/4] No content files to translate")
-		return ExitOK, nil
+		return ExitOK, nil, nil
 	}
 
 	logging.Printf("[3/4] Translating %d pages...\n", total)
+	tocSnippets := make(map[string]string, total)
 
-	for i, item := range contentFiles {
-		href := item.Href
-		if book.BasePath != "" && book.BasePath != "." {
-			href = book.BasePath + "/" + href
-		}
-		filePath := filepath.Join(outputDir, filepath.FromSlash(href))
-
-		// Extract texts first so we know segment count for ETA.
-		segments, doc, err := htmlproc.ExtractTexts(filePath)
-		if err != nil {
-			logging.Errorf("  WARNING: skip %s: %v\n", item.Href, err)
+	for i, page := range pages {
+		if page.err != nil {
+			logging.Errorf("  WARNING: skip %s: %v\n", page.item.Href, page.err)
 			continue
 		}
 
+		segments := page.segments
 		if len(segments) == 0 {
-			logging.Printf("  [%d/%d] %s (no text)\n", i+1, total, item.Href)
+			tocSnippets[page.item.Href] = htmlgen.ExtractSnippetFromDoc(page.doc)
+			logging.Printf("  [%d/%d] %s (no text)\n", i+1, total, page.item.Href)
 			continue
 		}
 
@@ -307,7 +319,7 @@ func (r Runner) translateContent(book *epub.Book, outputDir string, client trans
 		// Set up per-page progress display (overwrites line with \r).
 		pageStart := time.Now()
 		nSegs := len(segments)
-		pageIdx, pageTotal, pageName := i+1, total, item.Href
+		pageIdx, pageTotal, pageName := i+1, total, page.item.Href
 		if pr, ok := client.(translator.ProgressReporter); ok {
 			pr.SetProgress(func(done, ttl int) {
 				elapsed := time.Since(pageStart).Seconds()
@@ -320,7 +332,7 @@ func (r Runner) translateContent(book *epub.Book, outputDir string, client trans
 					pageIdx, pageTotal, pageName, done, ttl, rate, etaStr)
 			})
 		} else {
-			logging.Printf("  [%d/%d] %s", i+1, total, item.Href)
+			logging.Printf("  [%d/%d] %s", i+1, total, page.item.Href)
 		}
 
 		// Translate.
@@ -334,26 +346,27 @@ func (r Runner) translateContent(book *epub.Book, outputDir string, client trans
 		if err != nil {
 			// R5: Show error, pause for user to see
 			logging.Errorf("\nTRANSLATION ERROR: %v\n", err)
-			logging.Errorf("Translation failed at page %d/%d (%s)\n", i+1, total, item.Href)
+			logging.Errorf("Translation failed at page %d/%d (%s)\n", i+1, total, page.item.Href)
 			logging.Errorf("The book will be opened WITHOUT translation.\n")
 			logging.Errorf("Press Enter to continue...\n")
 			fmt.Scanln()
-			return ExitOK, nil
+			return ExitOK, nil, nil
 		}
 
 		// Replace text nodes with translations
 		htmlproc.ReplaceTexts(segments, translated)
 
 		// Write back
-		if err := htmlproc.RenderToFile(doc, filePath); err != nil {
-			logging.Errorf("  WARNING: write failed %s: %v\n", item.Href, err)
+		if err := htmlproc.RenderToFile(page.doc, page.filePath); err != nil {
+			logging.Errorf("  WARNING: write failed %s: %v\n", page.item.Href, err)
 			continue
 		}
+		tocSnippets[page.item.Href] = htmlgen.ExtractSnippetFromDoc(page.doc)
 
 		elapsed := time.Since(pageStart).Seconds()
 		rate := float64(nSegs) / elapsed
 		logging.Progress("  [%d/%d] %s: %d segs in %s (%.1f/s)\n",
-			i+1, total, item.Href, nSegs, formatDuration(elapsed), rate)
+			i+1, total, page.item.Href, nSegs, formatDuration(elapsed), rate)
 	}
 
 	// Translate book title.
@@ -364,7 +377,7 @@ func (r Runner) translateContent(book *epub.Book, outputDir string, client trans
 	}
 
 	logging.Println("  Translation complete.")
-	return ExitOK, nil
+	return ExitOK, tocSnippets, nil
 }
 
 // outputDirForFile returns the output directory path for a given input file.
@@ -416,22 +429,41 @@ func isWindowsReservedName(name string) bool {
 	return false
 }
 
-// countBookChars returns total number of translatable characters across all content files.
-func countBookChars(book *epub.Book, outputDir string) int {
-	total := 0
-	for _, item := range book.ContentFiles() {
+func loadContentPages(book *epub.Book, outputDir string) []contentPage {
+	contentFiles := book.ContentFiles()
+	pages := make([]contentPage, 0, len(contentFiles))
+	for _, item := range contentFiles {
 		href := item.Href
 		if book.BasePath != "" && book.BasePath != "." {
 			href = book.BasePath + "/" + href
 		}
 		filePath := filepath.Join(outputDir, filepath.FromSlash(href))
-		segments, _, err := htmlproc.ExtractTexts(filePath)
-		if err != nil {
+		segments, doc, err := htmlproc.ExtractTexts(filePath)
+		page := contentPage{
+			item:     item,
+			filePath: filePath,
+			segments: segments,
+			doc:      doc,
+			err:      err,
+		}
+		if err == nil {
+			for _, seg := range segments {
+				page.charCount += len(seg.Text)
+			}
+		}
+		pages = append(pages, page)
+	}
+	return pages
+}
+
+// countLoadedPageChars returns total number of translatable characters across parsed content pages.
+func countLoadedPageChars(pages []contentPage) int {
+	total := 0
+	for _, page := range pages {
+		if page.err != nil {
 			continue
 		}
-		for _, seg := range segments {
-			total += len(seg.Text)
-		}
+		total += page.charCount
 	}
 	return total
 }
