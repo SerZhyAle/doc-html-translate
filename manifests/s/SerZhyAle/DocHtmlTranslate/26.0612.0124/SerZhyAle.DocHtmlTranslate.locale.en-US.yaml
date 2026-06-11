@@ -1,7 +1,8 @@
+# Created using wingetcreate 1.12.8.0
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
 
 PackageIdentifier: SerZhyAle.DocHtmlTranslate
-PackageVersion: "26.0612.0124"
+PackageVersion: 26.0612.0124
 PackageLocale: en-US
 Publisher: SZA
 PublisherUrl: https://github.com/SerZhyAle
@@ -40,8 +41,5 @@ Tags:
 - txt
 - windows
 ReleaseNotesUrl: https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0612.0124
-Documentations:
-- DocumentLabel: Wiki
-  DocumentUrl: https://github.com/SerZhyAle/doc-html-translate/wiki
 ManifestType: defaultLocale
 ManifestVersion: 1.12.0
