@@ -160,6 +160,22 @@ Main entry points:
 - `internal/pdf/extract.go`
 - `internal/translator/translator.go`
 
+## Companion App: FastMediaSorter LITE
+
+For documents that are **pictures, not text** — screenshots, manga, photographed or scanned pages — use
+**FastMediaSorter LITE**, a free Windows app for opening and sorting images and videos with built-in **OCR + on-image translation**.
+Press `T` on any image to recognize the text and overlay the translation in your language (local Ollama or
+LibreTranslate). It complements doc-html-translate, which targets ebook and text formats.
+
+Also available via winget and GitHub:
+
+```powershell
+winget install SerZhyAle.FastMediaSorter
+```
+
+- Repository: https://github.com/SerZhyAle/FastMediaSorter_Lite
+- Latest release: https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest
+
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for details.
