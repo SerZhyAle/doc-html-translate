@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX package manifest for doc-html-translate (Microsoft Store, Path A: MSIX).
+
+  This is a TEMPLATE. build-msix.ps1 replaces the {{...}} placeholders and writes
+  the result into the staging payload folder before calling makeappx. Do not pack
+  this file directly.
+
+  Placeholders (filled from Partner Center "Product identity" / build version):
+    {{IDENTITY_NAME}}          -> Package/Identity/Name
+    {{PUBLISHER}}              -> Package/Identity/Publisher (e.g. CN=ABCD1234-...)
+    {{PUBLISHER_DISPLAY_NAME}} -> Package/Properties/PublisherDisplayName
+    {{VERSION}}                -> 4-part Major.Minor.Build.0 (revision MUST be 0)
+
+  EntryPoint Windows.FullTrustApplication keeps every Win32 API working: the app
+  spawns the bundled CLI (doc-html-translate.exe), launches a browser app window,
+  shells out to PowerShell for the native file/folder pickers, and serves a local
+  127.0.0.1 UI. runFullTrust (a restricted capability) is required for that.
+-->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    IgnorableNamespaces="uap rescap">
+
+  <Identity
+      Name="{{IDENTITY_NAME}}"
+      Publisher="{{PUBLISHER}}"
+      Version="{{VERSION}}"
+      ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>doc-html-translate</DisplayName>
+    <PublisherDisplayName>{{PUBLISHER_DISPLAY_NAME}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="DocHtmlUi" Executable="doc-html-ui.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+          DisplayName="doc-html-translate"
+          Description="Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML, with optional translation through Google Cloud or a local Ollama model."
+          BackgroundColor="#1E3A8A"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile
+            ShortName="doc-html-translate"
+            Square71x71Logo="Assets\Square71x71Logo.png"
+            Wide310x150Logo="Assets\Wide310x150Logo.png">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo" />
+            <uap:ShowOn Tile="wide310x150Logo" />
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+      </uap:VisualElements>
+
+      <Extensions>
+        <!--
+          File type associations replace the unpackaged "-register" HKCU flow, which is
+          virtualized (and therefore ignored) inside an MSIX container. Double-clicking
+          an associated document launches doc-html-ui.exe with the path as argv[1]; the
+          GUI pre-fills it and lets the user pick options before converting.
+          FileTypeAssociation Name must be lowercase [a-z0-9.], <= 39 chars.
+        -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="dochtmltranslate">
+            <uap:DisplayName>DOC-HTML-TRANSLATE Document</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.epub</uap:FileType>
+              <uap:FileType>.pdf</uap:FileType>
+              <uap:FileType>.txt</uap:FileType>
+              <uap:FileType>.md</uap:FileType>
+              <uap:FileType>.fb2</uap:FileType>
+              <uap:FileType>.rtf</uap:FileType>
+              <uap:FileType>.html</uap:FileType>
+              <uap:FileType>.htm</uap:FileType>
+              <uap:FileType>.mobi</uap:FileType>
+              <uap:FileType>.azw3</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient" />
+  </Capabilities>
+
+</Package>

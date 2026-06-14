@@ -15,24 +15,24 @@
 | 2026-03-04 01:33:49 | scripts/build.ps1 | build | Сборка дополнена генерацией и копированием иконки epub2html.ico рядом с exe |
 | 2026-03-04 01:33:49 | internal/windowsreg/register_windows.go | windows-registry | Регистрация .epub расширена: ProgID, open command и DefaultIcon с использованием epub2html.ico |
 | 2026-03-04 01:35:37 | scripts/commit_after_build.ps1 | git-workflow | Исправлен commit workflow: COMMIT_LOG добавляется в тот же коммит через amend |
-| 2026-03-04 01:35:37 | DEV/plan.md | planning | Обновлен live-прогресс: baseline commit выполнен (f3fbc43) |
+| 2026-03-04 01:35:37 | DEV/plan.md | planning | Обновлён live-прогресс: baseline commit выполнен (f3fbc43) |
 | 2026-03-04 01:37:57 | scripts/build.ps1 | build | Сборка переведена на temp/: output temp/build, icon temp/assets, build.log в temp/logs |
 | 2026-03-04 01:37:57 | scripts/test.ps1 | test | Тестовый скрипт пишет лог в temp/logs/test.log |
 | 2026-03-04 01:37:57 | scripts/lint.ps1 | lint | Линтер пишет лог в temp/logs/lint.log |
 | 2026-03-04 01:37:57 | scripts/typo.ps1 | typo | Проверка typos пишет лог в temp/logs/typo.log |
 | 2026-03-04 01:37:57 | scripts/check.ps1 | check | Агрегирующий скрипт сохраняет логи шагов в temp/logs |
-| 2026-03-04 01:37:58 | scripts/generate-icon.ps1 | build-assets | Default output иконки изменен на temp/assets/epub2html.ico |
+| 2026-03-04 01:37:58 | scripts/generate-icon.ps1 | build-assets | Default output иконки изменён на temp/assets/epub2html.ico |
 | 2026-03-04 01:37:58 | configs/.typos.toml | config | Исключения typos обновлены: temp вместо build |
 | 2026-03-04 01:37:58 | .gitignore | git | Добавлено правило temp/ для исключения промежуточных артефактов |
 | 2026-03-04 01:37:58 | README.md | docs | Документация обновлена: все артефакты/логи в temp |
-| 2026-03-04 01:37:58 | assets/epub2html.ico | cleanup | Удален артефакт иконки из корня проекта |
-| 2026-03-04 01:38:10 | DEV/plan.md | planning | Live-прогресс обновлен: зафиксирована temp-only политика для артефактов и логов |
+| 2026-03-04 01:37:58 | assets/epub2html.ico | cleanup | Удалён артефакт иконки из корня проекта |
+| 2026-03-04 01:38:10 | DEV/plan.md | planning | Live-прогресс обновлён: зафиксирована temp-only политика для артефактов и логов |
 | 2026-03-04 01:38:47 | .gitignore | git | Добавлено исключение build/ для предотвращения попадания root-артефактов в git |
-| 2026-03-04 01:38:47 | build/epub2html.ico | cleanup | Удален случайно отслеживаемый build-артефакт, политика temp-only восстановлена |
-| 2026-03-04 01:39:40 | DEV/README.md | docs | README перенесен из корня в DEV согласно политике хранения документации |
-| 2026-03-04 01:39:40 | DEV/universal_copilot_instructions.md | docs | Файл universal_copilot_instructions перенесен из корня в DEV |
-| 2026-03-04 01:39:40 | DEV/plan.md | planning | План обновлен: документация хранится в DEV, путь K3 обновлен на DEV/README.md |
-| 2026-03-04 01:40:22 | temp/docs-archive/task_2026-03-04.md | docs-archive | Устаревший DEV/task.md перенесен в temp/docs-archive |
+| 2026-03-04 01:38:47 | build/epub2html.ico | cleanup | Удалён случайно отслеживаемый build-артефакт, политика temp-only восстановлена |
+| 2026-03-04 01:39:40 | DEV/README.md | docs | README перенесён из корня в DEV согласно политике хранения документации |
+| 2026-03-04 01:39:40 | DEV/universal_copilot_instructions.md | docs | Файл universal_copilot_instructions перенесён из корня в DEV |
+| 2026-03-04 01:39:40 | DEV/plan.md | planning | План обновлён: документация хранится в DEV, путь K3 обновлён на DEV/README.md |
+| 2026-03-04 01:40:22 | temp/docs-archive/task_2026-03-04.md | docs-archive | Устаревший DEV/task.md перенесён в temp/docs-archive |
 | 2026-03-04 01:40:22 | DEV/README.md | docs | Добавлен раздел жизненного цикла документации и правила архивирования |
 | 2026-03-04 01:40:22 | DEV/plan.md | planning | В план добавлено правило переноса устаревшей документации в temp/docs-archive |
 | 2026-03-04 01:41:13 | DEV/questionnaire_for_user.txt | docs | Создан текстовый опросник для пользователя с 15 вопросами по уточнению требований |
@@ -78,7 +78,7 @@
 | 2026-03-07 03:44:55 | cmd/doc-html-ui/main.go | DOC-HTML-UI | Created standalone GUI launcher (embedded web UI + Go HTTP server, Edge/Chrome app-mode, native file dialogs via PowerShell, all CLI flags as checkboxes/inputs, streaming log output, heartbeat auto-shutdown) |
 | 2026-03-07 03:45:00 | cmd/doc-html-ui/ui.html | DOC-HTML-UI | Dark-themed responsive HTML/CSS/JS interface with all doc-html-translate flags |
 | 2026-03-07 03:45:05 | scripts/build-ui.ps1 | DOC-HTML-UI | Build script for doc-html-ui.exe (pure Go, no CGO, -H windowsgui, icon embedding) |
-| 2026-03-07 03:50:31 | internal/pdf/extract.go | PDF | Added panic recovery (defer/recover) for malformed PDFs — function-level and per-page level |
+| 2026-03-07 03:50:31 | internal/pdf/extract.go | PDF | Added panic recovery (defer/recover) for malformed PDFs - function-level and per-page level |
 | 2026-03-07 03:54:13 | internal/pdf/extract.go | PDF | Added auto-repair fallback via pdfcpu (OptimizeFile + retry extraction), improved no-text diagnostic for scanned PDFs |
 | 2026-03-07 03:54:44 | internal/pdf/extract.go | PDF | Mapped repaired-PDF no-text error back to original input path for clearer UX |
 | 2026-03-07 03:55:17 | go.mod | Dependencies | Added pdfcpu dependency for PDF repair fallback; removed temporary parser experiment deps |
@@ -93,5 +93,5 @@
 | 2026-03-09 23:54:57 | internal/epub/epub.go | epub.Extract | Fix: resolveReservedNames renames EPUB content files named index.html to _content_index.html to avoid overwrite by generated nav TOC |
 | 2026-03-10 01:03:46 | internal/config/flags.go | SplitSize | Default SplitSize changed from 0 to 5000; removed injectDefaultSplitValue hack; disable via -split 0 |
 | 2026-03-10 01:16:56 | scripts/build.ps1 | goversioninfo | Fix: added -64 flag to goversioninfo to generate amd64-compatible .syso (was: relocation type 7 error) |
-| 2026-03-10 01:32:31 | internal/htmlgen/navbar.go | navBarScript | feat: edge-scroll auto-navigation — PageDown/wheel-down at bottom → next page; PageUp/wheel-up at top → prev page (wheel threshold: 3 events) |
+| 2026-03-10 01:32:31 | internal/htmlgen/navbar.go | navBarScript | feat: edge-scroll auto-navigation - PageDown/wheel-down at bottom → next page; PageUp/wheel-up at top → prev page (wheel threshold: 3 events) |
 

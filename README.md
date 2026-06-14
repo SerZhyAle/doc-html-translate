@@ -8,6 +8,9 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 - Website: https://serzhyale.github.io/doc-html-translate/
 - Repository: https://github.com/SerZhyAle/doc-html-translate
 - Latest release: https://github.com/SerZhyAle/doc-html-translate/releases/latest
+- Universal Agent Kit: https://serzhyale.github.io/universal-agent-kit/
+- Author page: https://sza.od.ua
+- Email: sza@ukr.net
 
 ## Features
 
@@ -162,7 +165,7 @@ Main entry points:
 
 ## Companion App: FastMediaSorter LITE
 
-For documents that are **pictures, not text** — screenshots, manga, photographed or scanned pages — use
+For documents that are **pictures, not text** - screenshots, manga, photographed or scanned pages - use
 **FastMediaSorter LITE**, a free Windows app for opening and sorting images and videos with built-in **OCR + on-image translation**.
 Press `T` on any image to recognize the text and overlay the translation in your language (local Ollama or
 LibreTranslate). It complements doc-html-translate, which targets ebook and text formats.
@@ -175,6 +178,10 @@ winget install SerZhyAle.FastMediaSorter
 
 - Repository: https://github.com/SerZhyAle/FastMediaSorter_Lite
 - Latest release: https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest
+
+This project is also listed in the Universal Agent Kit collection:
+
+- https://serzhyale.github.io/universal-agent-kit/
 
 ## License
 

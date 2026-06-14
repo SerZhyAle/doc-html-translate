@@ -1,6 +1,6 @@
 # How I posted doc-html-translate to winget
 
-A walkthrough of getting **doc-html-translate** into the official Windows Package Manager, with every command, every blocker, and every fix — written so you can repeat it for any future release in about 15 minutes.
+A walkthrough of getting **doc-html-translate** into the official Windows Package Manager, with every command, every blocker, and every fix - written so you can repeat it for any future release in about 15 minutes.
 
 The end result: anyone on Windows can now run
 
@@ -16,9 +16,9 @@ and get both `doc-html-translate` and `doc-html-ui` on their `PATH`, with no adm
 
 ## 1. What winget actually is
 
-The Windows Package Manager (`winget`) ships with Windows 10 1809+ and Windows 11. It pulls its package catalog from a single curated GitHub repository: **[microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs)**. To get a package listed you submit a pull request adding three small YAML files describing your release. Microsoft moderators review and merge. Once merged, every winget client on the planet sees your package on the next index rebuild (~30–60 minutes).
+The Windows Package Manager (`winget`) ships with Windows 10 1809+ and Windows 11. It pulls its package catalog from a single curated GitHub repository: **[microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs)**. To get a package listed you submit a pull request adding three small YAML files describing your release. Microsoft moderators review and merge. Once merged, every winget client on the planet sees your package on the next index rebuild (~30-60 minutes).
 
-There is no developer account, no signing certificate requirement, no annual fee — just a GitHub PR.
+There is no developer account, no signing certificate requirement, no annual fee - just a GitHub PR.
 
 ---
 
@@ -26,18 +26,18 @@ There is no developer account, no signing certificate requirement, no annual fee
 
 This project ships **two** independent executables:
 
-- `doc-html-translate.exe` — the main CLI (console app)
-- `doc-html-ui.exe` — a small GUI launcher (compiled with `-H windowsgui`, no console window)
+- `doc-html-translate.exe` - the main CLI (console app)
+- `doc-html-ui.exe` - a small GUI launcher (compiled with `-H windowsgui`, no console window)
 
 That ruled out `InstallerType: portable` (single-exe only). Three options:
 
-1. **Single portable EXE** — only ships one binary.
-2. **Portable zip** (`InstallerType: zip` + `NestedInstallerType: portable`) — ships both binaries, each registered as a separate command alias.
-3. **Real installer** (Inno Setup / WiX MSI) — heavyweight for a CLI tool.
+1. **Single portable EXE** - only ships one binary.
+2. **Portable zip** (`InstallerType: zip` + `NestedInstallerType: portable`) - ships both binaries, each registered as a separate command alias.
+3. **Real installer** (Inno Setup / WiX MSI) - heavyweight for a CLI tool.
 
 I picked **option 2**. Each binary becomes a `PortableCommandAlias`, so users get both `doc-html-translate` and `doc-html-ui` from any shell.
 
-One thing that makes this project simpler than a typical zip release: `pdftotext.exe` is **embedded inside the binary** via Go's `//go:embed` directive (`internal/bundledtools/pdftotext.go`). The release zip only needs to contain the two `.exe` files — no bundled tools folder, no extra DLLs.
+One thing that makes this project simpler than a typical zip release: `pdftotext.exe` is **embedded inside the binary** via Go's `//go:embed` directive (`internal/bundledtools/pdftotext.go`). The release zip only needs to contain the two `.exe` files - no bundled tools folder, no extra DLLs.
 
 Calibre is an optional runtime dependency for MOBI/AZW3 conversion. It's noted in the locale manifest description but the user installs it separately; it doesn't ship with this package.
 
@@ -96,7 +96,7 @@ jobs:
 
 ### Version format
 
-The build scripts produce versions in `yy.MMdd.HHmm` format — e.g. `26.0427.1713`. Git tags use a `v` prefix: `v26.0427.1713`. The workflow parses the tag to recover the four integer components (yy, MM, dd, HHmm) needed to populate the `FixedFileInfo` fields in `versioninfo.generated.json`.
+The build scripts produce versions in `yy.MMdd.HHmm` format - e.g. `26.0427.1713`. Git tags use a `v` prefix: `v26.0427.1713`. The workflow parses the tag to recover the four integer components (yy, MM, dd, HHmm) needed to populate the `FixedFileInfo` fields in `versioninfo.generated.json`.
 
 ### Cutting the first release
 
@@ -166,7 +166,7 @@ ManifestVersion: 1.12.0
 ReleaseDate: 2026-04-27
 ```
 
-`NestedInstallerFiles` with multiple portable entries requires schema **1.12.0** — earlier schema versions don't support it.
+`NestedInstallerFiles` with multiple portable entries requires schema **1.12.0** - earlier schema versions don't support it.
 
 ### Locale manifest (`SerZhyAle.DocHtmlTranslate.locale.en-US.yaml`)
 
@@ -248,7 +248,7 @@ Command line alias added: "doc-html-ui"
 Successfully installed
 ```
 
-Both aliases resolved. This is the single best gate before submitting — if it passes locally it will pass CI too.
+Both aliases resolved. This is the single best gate before submitting - if it passes locally it will pass CI too.
 
 ---
 
@@ -267,9 +267,9 @@ Pull request can be found here: https://github.com/microsoft/winget-pkgs/pull/36
 
 `wingetcreate` forks `microsoft/winget-pkgs`, creates a branch, copies the manifests into `manifests/s/SerZhyAle/DocHtmlTranslate/26.0427.1713/`, and opens the PR.
 
-### Blocker — leaked PAT
+### Blocker - leaked PAT
 
-I pasted the GitHub PAT into a chat window to use it as `--token`. The PAT was immediately visible in transcript history. The right response: **revoke the token immediately** at https://github.com/settings/tokens. With `public_repo` scope only, the blast radius is push-access to your own public repos. The cleaner alternative: run `wingetcreate` without `--token` and let it open a browser device-code flow — the token never touches your shell or chat.
+I pasted the GitHub PAT into a chat window to use it as `--token`. The PAT was immediately visible in transcript history. The right response: **revoke the token immediately** at https://github.com/settings/tokens. With `public_repo` scope only, the blast radius is push-access to your own public repos. The cleaner alternative: run `wingetcreate` without `--token` and let it open a browser device-code flow - the token never touches your shell or chat.
 
 ---
 
@@ -289,10 +289,10 @@ The `microsoft-github-policy-service` bot picks it up within a minute and marks 
 
 Within ~10 minutes of opening the PR, Azure Pipelines ran:
 
-- **ManifestValidation** — schema check (same as `winget validate` locally).
-- **InstallerValidation** — downloads the URL, verifies SHA256, sandbox install.
-- **URLValidation** — HTTP status checks on all URLs.
-- **DefenderScan** — antivirus scan of the binary.
+- **ManifestValidation** - schema check (same as `winget validate` locally).
+- **InstallerValidation** - downloads the URL, verifies SHA256, sandbox install.
+- **URLValidation** - HTTP status checks on all URLs.
+- **DefenderScan** - antivirus scan of the binary.
 
 All green. Labels added: `Azure-Pipeline-Passed`, `Validation-Completed`, `New-Package`.
 
@@ -306,9 +306,9 @@ gh pr view 365602 --repo microsoft/winget-pkgs --json state,labels,mergedAt
 
 ## 10. After merge
 
-A moderator approved it at **2026-04-28 00:06 UTC** — about 9 hours after the PR was opened.
+A moderator approved it at **2026-04-28 00:06 UTC** - about 9 hours after the PR was opened.
 
-After the community index rebuilt (~30–60 min after merge):
+After the community index rebuilt (~30-60 min after merge):
 
 ```powershell
 winget search SerZhyAle.DocHtmlTranslate
@@ -349,21 +349,21 @@ wingetcreate update SerZhyAle.DocHtmlTranslate `
 
 ## 12. Lessons worth remembering
 
-1. **`go:embed` makes packaging cleaner.** `pdftotext.exe` is embedded inside the binary — no extra files to include in the zip, no extraction step the user sees. The zip is just the two `.exe` files + LICENSE + README.
+1. **`go:embed` makes packaging cleaner.** `pdftotext.exe` is embedded inside the binary - no extra files to include in the zip, no extraction step the user sees. The zip is just the two `.exe` files + LICENSE + README.
 2. **Don't call local-deploy scripts from CI.** The `.ps1` build scripts both have a `Copy-Item … "C:\GD\tc\SZA\_APP"` step that fails on a CI runner. Reproduce the build logic inline in the workflow instead.
 3. **The `goversioninfo` tool must be installed in CI.** It's a dev dependency that `go build` itself doesn't pull. Add `go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest` before the build steps.
 4. **Don't paste PATs into chat.** Use device-code auth (`wingetcreate submit` without `--token`) so the token never leaves the browser flow. If you do use `--token`, revoke it at https://github.com/settings/tokens the instant the PR is open.
 5. **Sign the CLA via `gh pr comment`.** `@microsoft-github-policy-service agree` is faster than navigating the CLA portal.
 6. **`gh pr view --json` beats the browser for status checks.** Labels like `Validation-Completed` and `Moderator-Approved` are visible instantly from the terminal.
-7. **Source-of-truth your manifests in the repo.** The `winget/` directory mirrors what's in the live PR. Future releases just need a version bump — no archaeology required.
+7. **Source-of-truth your manifests in the repo.** The `winget/` directory mirrors what's in the live PR. Future releases just need a version bump - no archaeology required.
 
 ---
 
 ## 13. Files in this repo that are part of the winget pipeline
 
-- [`.github/workflows/release.yml`](../.github/workflows/release.yml) — builds + publishes the release zip on tag push.
-- [`winget/SerZhyAle.DocHtmlTranslate.yaml`](../winget/SerZhyAle.DocHtmlTranslate.yaml) — version manifest.
-- [`winget/SerZhyAle.DocHtmlTranslate.installer.yaml`](../winget/SerZhyAle.DocHtmlTranslate.installer.yaml) — installer manifest.
-- [`winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml`](../winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml) — locale manifest.
+- [`.github/workflows/release.yml`](../.github/workflows/release.yml) - builds + publishes the release zip on tag push.
+- [`winget/SerZhyAle.DocHtmlTranslate.yaml`](../winget/SerZhyAle.DocHtmlTranslate.yaml) - version manifest.
+- [`winget/SerZhyAle.DocHtmlTranslate.installer.yaml`](../winget/SerZhyAle.DocHtmlTranslate.installer.yaml) - installer manifest.
+- [`winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml`](../winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml) - locale manifest.
 
 Total elapsed from starting to write the workflow to PR merged: **~9 hours** (mostly waiting overnight for moderator review). Active work time: under 30 minutes.

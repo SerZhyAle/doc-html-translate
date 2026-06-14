@@ -212,5 +212,5 @@
 
 - **DEFAULT**: Neutral, technical tone ("Regular Mode").
 - **FUN_MODE**: Activate ONLY upon direct user request for non-technical tasks.
-- **ADVICE_MODE**: IF user asks "suggestion" / "opinion" / "advice" — TEXT answer only. NO code unless explicitly asked ("implement", "fix", "write").
+- **ADVICE_MODE**: IF user asks "suggestion" / "opinion" / "advice" - TEXT answer only. NO code unless explicitly asked ("implement", "fix", "write").
 

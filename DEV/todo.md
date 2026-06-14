@@ -1,4 +1,4 @@
-# TASK: DOC-HTML-UI — GUI Frontend for doc-html-translate
+# TASK: DOC-HTML-UI - GUI Frontend for doc-html-translate
 
 ## Project Links
 - GitHub Pages: https://serzhyale.github.io/doc-html-translate/
@@ -42,7 +42,7 @@ Design and implement a standalone Windows GUI application (`DOC-HTML-UI.EXE`) th
 ## Technology Choice
 
 **Preferred:** Go (e.g., `fyne`, `walk`, or `webview`).  
-**Fallback:** Any platform-suitable technology (.NET WinForms / WPF, etc.) — the UI is just a launcher, so the language doesn't matter as long as it ships as a native Windows executable.
+**Fallback:** Any platform-suitable technology (.NET WinForms / WPF, etc.) - the UI is just a launcher, so the language doesn't matter as long as it ships as a native Windows executable.
 
 **Research gate:** Before implementation, evaluate Go GUI options (Fyne, Walk, Lorca/webview) for effort vs. feasibility. Document findings in `DEV/research/`.
 
@@ -50,6 +50,6 @@ Design and implement a standalone Windows GUI application (`DOC-HTML-UI.EXE`) th
 
 ## Out of Scope
 
-- No business logic — all processing stays in `doc-html-translate`.
+- No business logic - all processing stays in `doc-html-translate`.
 - No macOS / Linux build required at this stage.
 

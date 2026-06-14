@@ -173,7 +173,7 @@ Changed files:
 - internal/windowsreg/register_nonwindows.go
 - internal/windowsreg/register_windows.go
 
-| 2026-03-04 21:04:24 | master | 4de44aa | feat: TXT support (Phase 6-O) — extractor, pipeline, registration |
+| 2026-03-04 21:04:24 | master | 4de44aa | feat: TXT support (Phase 6-O) - extractor, pipeline, registration |
 
 Changed files:
 - internal/config/flags.go
