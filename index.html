@@ -1,369 +1,811 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>doc-html-translate | Fast Book Reading + Free Browser Translation</title>
-  <meta name="description" content="Convert EPUB/PDF/TXT/FB2/RTF/MD/HTML to local HTML, then read in Chrome and translate pages to your language for free.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f2efe7;
-      --ink: #0f1a1c;
-      --muted: #46545a;
-      --card: #fffdf8;
-      --line: #c7c1b3;
-      --accent: #0f766e;
-      --accent-2: #ca8a04;
-      --shadow: 0 20px 60px rgba(13, 30, 34, 0.14);
-      --radius: 18px;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>doc-html-translate - read EPUB/PDF in your browser, translate for free</title>
+<meta name="description" content="A small Windows tool that converts EPUB, PDF, MOBI, FB2, RTF, TXT, MD and HTML into clean local HTML with navigation - then you read in Chrome and translate any page for free. Optional Google or local Ollama translation. Page in English, Russian, and Ukrainian.">
+<link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/">
+<meta name="theme-color" content="#0f1115">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="doc-html-translate">
+<meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/">
+<meta property="og:title" content="doc-html-translate - read EPUB/PDF in your browser, translate for free">
+<meta property="og:description" content="Convert EPUB/PDF/MOBI/FB2 to local HTML, read in Chrome, translate any page for free. English, Russian, Ukrainian.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="doc-html-translate">
+<meta name="twitter:description" content="Convert ebooks to local HTML and translate in the browser for free. English, Russian, Ukrainian.">
+<script>
+/* Resolve language + theme before first paint to avoid a flash of the wrong state. */
+(function(){
+  var l, t;
+  try{ l = localStorage.getItem('dht-lang'); t = localStorage.getItem('dht-theme'); }catch(e){}
+  if(!l){ var nav=(navigator.language||'en').toLowerCase(); l = nav.indexOf('ru')===0 ? 'ru' : (nav.indexOf('uk')===0 ? 'uk' : 'en'); }
+  if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+  var d = document.documentElement;
+  d.setAttribute('data-lang', l); d.setAttribute('lang', l); d.setAttribute('data-theme', t);
+})();
+</script>
+<style>
+  :root{
+    --wide: 1160px;          /* page container on wide monitors */
+    --bg:#0f1115; --bg2:#161922; --bg3:#1d2230; --fg:#e6e8ee; --muted:#9aa3b2;
+    --acc:#7aa2ff; --acc2:#9d7bff; --line:#272d3a; --code:#0b0d12; --ok:#5fd08a;
+    --warn:#e7b15a; --pill:#222838;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  html[data-theme="light"]{
+    --bg:#f7f8fa; --bg2:#ffffff; --bg3:#eef1f6; --fg:#1b2230; --muted:#5b6675;
+    --acc:#2f5fe0; --acc2:#6a40d8; --line:#e2e6ee; --code:#0e1117; --ok:#1f8b4c;
+    --warn:#9a6a13; --pill:#e9edf5; --shadow:0 6px 24px rgba(20,30,60,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--fg);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--acc); text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,kbd,pre{font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,Menlo,monospace}
+  code{background:var(--bg3); padding:.08em .38em; border-radius:5px; font-size:.88em}
+  kbd{background:var(--bg3); border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:.05em .45em; font-size:.85em}
 
-    * {
-      box-sizing: border-box;
-    }
+  header.top{
+    position:sticky; top:0; z-index:20; backdrop-filter:saturate(140%) blur(8px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .top .wrap{max-width:var(--wide); margin:0 auto; padding:10px 22px;
+    display:flex; align-items:center; gap:12px}
+  .brand{font-weight:700; letter-spacing:.2px; margin-right:auto; font-size:15px}
+  .brand .dot{color:var(--acc2)}
+  .btn{
+    border:1px solid var(--line); background:var(--bg2); color:var(--fg);
+    padding:8px 13px; border-radius:8px; font-size:13px; cursor:pointer; line-height:1.1;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:38px;
+  }
+  .btn:hover{border-color:var(--acc); text-decoration:none}
+  .btn.primary{background:linear-gradient(180deg,var(--acc),var(--acc2)); border:none; color:#fff; font-weight:600}
+  .seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+  .seg button{border:none; background:var(--bg2); color:var(--muted); padding:8px 12px; cursor:pointer; font-size:13px; min-height:38px; display:inline-flex; align-items:center}
+  .seg button[aria-pressed="true"]{background:var(--acc); color:#fff}
 
-    body {
-      margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(1300px 520px at 8% -5%, #fff7dd 0%, rgba(255, 247, 221, 0) 70%),
-        radial-gradient(1200px 560px at 100% 0%, #d5efe8 0%, rgba(213, 239, 232, 0) 64%),
-        linear-gradient(180deg, #f9f6ef 0%, var(--bg) 60%, #ece8dd 100%);
-      font-family: "Space Grotesk", "Trebuchet MS", "Segoe UI", sans-serif;
-      line-height: 1.45;
-    }
+  main{max-width:var(--wide); margin:0 auto; padding:0 22px 80px}
 
-    .wrap {
-      width: min(1080px, 92vw);
-      margin: 0 auto;
-      padding: 34px 0 64px;
-    }
+  /* ---------- hero ---------- */
+  .hero{padding:30px 0 18px; border-bottom:1px solid var(--line); margin-bottom:4px}
+  .hero h1{font-size:34px; line-height:1.14; margin:0 0 10px; letter-spacing:-.5px}
+  .hero p.lead{font-size:17px; color:var(--muted); margin:0 0 20px}
+  .hero .cta{display:flex; gap:10px; flex-wrap:wrap}
+  .kicker{font-size:13px; color:var(--muted); font-weight:600; margin:0 0 12px; letter-spacing:.01em}
+  .kicker b{color:var(--acc2); font-weight:700}
 
-    .hero {
-      border: 1px solid var(--line);
-      border-radius: calc(var(--radius) + 8px);
-      background: linear-gradient(155deg, rgba(255, 255, 255, 0.94), rgba(245, 249, 249, 0.92));
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
-      animation: rise 520ms ease-out;
-    }
+  /* ---------- collapsible sections grid (the showcase) ---------- */
+  .sections{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; align-items:start; margin-top:24px}
+  @media(max-width:760px){ .sections{grid-template-columns:1fr} }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(85deg, rgba(15, 118, 110, 0.09), rgba(15, 118, 110, 0)),
-        linear-gradient(290deg, rgba(202, 138, 4, 0.13), rgba(202, 138, 4, 0));
-      pointer-events: none;
-    }
+  .sec{
+    background:var(--bg2); border:1px solid var(--line); border-radius:12px;
+    overflow:hidden; scroll-margin-top:66px;
+  }
+  /* chessboard tint on the 2-column grid: shade cells by row+col parity */
+  .sec:nth-child(4n+2), .sec:nth-child(4n+3){background:color-mix(in srgb, var(--acc) 7%, var(--bg2))}
+  @media(max-width:760px){
+    .sec:nth-child(4n+2), .sec:nth-child(4n+3){background:var(--bg2)}
+    .sec:nth-child(even){background:color-mix(in srgb, var(--acc) 7%, var(--bg2))}
+  }
+  .sec[open]{grid-column:1 / -1; background:var(--bg2); border-color:color-mix(in srgb, var(--acc) 38%, var(--line)); box-shadow:var(--shadow)}
+  .sec > summary{
+    cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:11px;
+    padding:13px 16px;
+  }
+  .sec > summary::-webkit-details-marker{display:none}
+  .sec > summary::before{content:"▸"; color:var(--acc2); font-size:11px; line-height:1.7; flex:none}
+  .sec[open] > summary::before{content:"▾"}
+  .sec > summary:hover .sectitle{color:var(--acc)}
+  .secnum{color:var(--acc); font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; line-height:1.5; flex:none; min-width:2ch}
+  .sechead{display:flex; flex-direction:column; gap:2px; min-width:0}
+  .sectitle{margin:0; font-size:15.5px; font-weight:600; letter-spacing:-.1px; line-height:1.35}
+  .sectitle code{font-size:.9em; background:var(--bg3); padding:.05em .35em}
+  .secteaser{color:var(--muted); font-size:13px; line-height:1.42}
+  .sec[open] .secteaser{display:none}
 
-    .hero-inner {
-      position: relative;
-      padding: 34px 32px 30px;
-      display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      gap: 24px;
-    }
+  .secbody{padding:4px 18px 20px 18px}
+  .secbody h3{scroll-margin-top:72px}
+  .sec[open] .secbody{border-top:1px solid var(--line); margin-top:2px; padding-top:14px}
 
-    .tag {
-      display: inline-flex;
-      gap: 10px;
-      align-items: center;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      border: 1px solid #9ea8a4;
-      color: #2b3d42;
-      border-radius: 999px;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.7);
-    }
+  h3{font-size:17px; margin:22px 0 4px}
+  p{margin:12px 0}
+  ul,ol{margin:12px 0; padding-left:22px}
+  li{margin:6px 0}
+  strong{color:var(--fg)}
+  .muted{color:var(--muted)}
 
-    h1 {
-      margin: 14px 0 10px;
-      font-size: clamp(2rem, 4.8vw, 3.1rem);
-      line-height: 1.02;
-      letter-spacing: -0.02em;
-    }
+  pre{
+    background:var(--code); color:#cdd6f4; border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; overflow:auto; font-size:13px; line-height:1.5; box-shadow:var(--shadow);
+  }
+  pre.diagram{color:#aeb9d6}
 
-    .lead {
-      color: var(--muted);
-      max-width: 52ch;
-      margin: 0;
-      font-size: 1.07rem;
-    }
+  .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:12px; margin:16px 0}
+  .card{background:var(--bg3); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .card h3{margin:0 0 4px; font-size:15px}
+  .card p{margin:4px 0 0; font-size:14px; color:var(--muted)}
+  .card .num{font-size:12px; font-weight:700; color:var(--acc); letter-spacing:.1em}
 
-    .cta-row {
-      margin-top: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+  .note{
+    border-left:3px solid var(--acc2); background:var(--bg3); border-radius:0 10px 10px 0;
+    padding:12px 16px; margin:18px 0; font-size:14.5px;
+  }
+  .note .tag{font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:var(--acc2); font-weight:700}
+  .note p{margin:.4em 0 0}
 
-    .btn {
-      text-decoration: none;
-      border-radius: 12px;
-      padding: 11px 14px;
-      font-weight: 600;
-      border: 1px solid transparent;
-      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
-    }
+  .pills{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0}
+  .pill{background:var(--pill); border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:12.5px; color:var(--muted)}
+  .pill b{color:var(--fg); font-weight:600}
 
-    .btn:hover {
-      transform: translateY(-2px);
-    }
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--bg3); font-weight:600}
+  td code{white-space:nowrap}
 
-    .btn-primary {
-      color: #f8fffd;
-      background: linear-gradient(130deg, #0f766e, #0f5e68);
-      box-shadow: 0 10px 18px rgba(15, 118, 110, 0.24);
-    }
+  footer{max-width:var(--wide); margin:0 auto; padding:26px 22px 60px; border-top:1px solid var(--line); color:var(--muted); font-size:14px}
+  footer .cta{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0}
+  .author{margin:22px 0 0; padding-top:14px; border-top:1px solid var(--line); font-size:13px; color:var(--muted)}
 
-    .btn-alt {
-      color: #18373f;
-      border-color: #88a09a;
-      background: rgba(255, 255, 255, 0.75);
-    }
+  /* copy-able command box */
+  .cmd{margin:14px 0}
+  .cmd .prompt-actions{display:flex; justify-content:flex-end; margin:0 0 6px}
+  .cmd pre{margin:0}
 
-    .code-card {
-      border: 1px solid #abc2b9;
-      border-radius: 14px;
-      background: #0f1f21;
-      color: #d9f2ef;
-      padding: 14px;
-      font-family: "IBM Plex Mono", Consolas, monospace;
-      font-size: 0.85rem;
-      overflow-x: auto;
-      white-space: pre;
-    }
+  pre:focus-visible, summary:focus-visible,
+  button:focus-visible, a:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+  .seg button:focus-visible{outline-offset:-2px}
+  @media(max-width:480px){ header.top .btn.primary{display:none} }
+  @media (pointer:coarse){ .btn, .seg button{min-height:44px; min-width:44px} }
 
-    .free-flow {
-      margin-top: 28px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      animation: rise 760ms ease-out;
-    }
-
-    .flow-step {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      padding: 18px 16px;
-      box-shadow: 0 8px 24px rgba(18, 28, 34, 0.08);
-    }
-
-    .step-num {
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-    }
-
-    .flow-step h3 {
-      margin: 0 0 8px;
-      font-size: 1.1rem;
-    }
-
-    .flow-step p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .section {
-      margin-top: 32px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--card);
-      padding: 20px;
-      animation: rise 900ms ease-out;
-    }
-
-    .section h2 {
-      margin: 0 0 10px;
-      font-size: 1.45rem;
-    }
-
-    .formats {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 10px;
-      font-family: "IBM Plex Mono", Consolas, monospace;
-      font-size: 0.82rem;
-    }
-
-    .formats span {
-      border: 1px solid #b8c7c1;
-      border-radius: 999px;
-      text-align: center;
-      padding: 8px 6px;
-      background: #fbfffe;
-    }
-
-    .small {
-      color: #516269;
-      font-size: 0.88rem;
-    }
-
-    .footer {
-      margin-top: 22px;
-      color: #59707a;
-      font-size: 0.85rem;
-    }
-
-    @keyframes rise {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 920px) {
-      .hero-inner {
-        grid-template-columns: 1fr;
-      }
-      .free-flow {
-        grid-template-columns: 1fr;
-      }
-      .formats {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 520px) {
-      .wrap {
-        width: min(1080px, 94vw);
-        padding-top: 20px;
-      }
-      .hero-inner {
-        padding: 22px 18px;
-      }
-      .section {
-        padding: 16px;
-      }
-      .formats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-  </style>
+  /* language switching: hide every variant that is not the active language */
+  html[data-lang="ru"] [data-l="en"], html[data-lang="ru"] [data-l="uk"]{display:none}
+  html[data-lang="en"] [data-l="ru"], html[data-lang="en"] [data-l="uk"]{display:none}
+  html[data-lang="uk"] [data-l="ru"], html[data-lang="uk"] [data-l="en"]{display:none}
+</style>
 </head>
 <body>
-  <main class="wrap">
-    <section class="hero">
-      <div class="hero-inner">
-        <div>
-          <div class="tag">doc-html-translate • GitHub Pages</div>
-          <h1>Open EPUB/PDF in Chrome and translate to your language for free.</h1>
-          <p class="lead">
-            Convert books and documents to local HTML, keep navigation, then use Chrome page translation.
-            This is the fastest no-cost reading workflow.
-          </p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate">Open Repository</a>
-            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate/tree/master/build">Download Build Folder</a>
-            <a class="btn btn-primary" href="https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe">Download EXE</a>
-            <a class="btn btn-alt" href="docs.html">Open Documentation</a>
-            <a class="btn btn-alt" href="docs.ru.html">Документация RU</a>
-            <a class="btn btn-alt" href="docs.uk.html">Документація UK</a>
+<header class="top">
+  <div class="wrap">
+    <span class="brand">doc-html-translate<span class="dot">.</span></span>
+    <span class="seg" role="group" aria-label="Language" id="langGroup">
+      <button id="lng-ru" type="button" onclick="setLang('ru')" aria-pressed="false" aria-label="Русский">RU</button>
+      <button id="lng-en" type="button" onclick="setLang('en')" aria-pressed="true" aria-label="English">EN</button>
+      <button id="lng-uk" type="button" onclick="setLang('uk')" aria-pressed="false" aria-label="Українська">UK</button>
+    </span>
+    <button class="btn" id="themeBtn" type="button" onclick="toggleTheme()" title="Theme" aria-label="Theme" aria-pressed="false">◐</button>
+    <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
+      <span data-l="ru">⤓ Скачать</span><span data-l="en">⤓ Download</span><span data-l="uk">⤓ Завантажити</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="kicker">
+      <span data-l="ru"><b>Бесплатный сценарий чтения:</b> конвертируй · читай в Chrome · переводи любую страницу</span>
+      <span data-l="en"><b>Free reading workflow:</b> convert · read in Chrome · translate any page</span>
+      <span data-l="uk"><b>Безкоштовний сценарій читання:</b> конвертуй · читай у Chrome · перекладай будь-яку сторінку</span>
+    </div>
+    <h1>
+      <span data-l="ru">Открывай EPUB и PDF в браузере и переводи на свой язык бесплатно</span>
+      <span data-l="en">Open EPUB and PDF in your browser, translate to your language for free</span>
+      <span data-l="uk">Відкривай EPUB і PDF у браузері та перекладай своєю мовою безкоштовно</span>
+    </h1>
+    <p class="lead">
+      <span data-l="ru">Маленький инструмент для Windows: превращает EPUB, PDF, MOBI, FB2 и другие форматы в чистый локальный HTML с навигацией и оглавлением - дальше читаешь в Chrome и переводишь страницу встроенным переводчиком браузера. Без API-ключа, без платных запросов, одной командой. По желанию - перевод через Google Cloud или локальную Ollama.</span>
+      <span data-l="en">A small Windows tool that turns EPUB, PDF, MOBI, FB2 and other formats into clean local HTML with navigation and a table of contents - then you read in Chrome and translate the page with the browser's built-in translator. No API key, no paid calls, one command. Optionally translate through Google Cloud or a local Ollama model.</span>
+      <span data-l="uk">Маленький інструмент для Windows: перетворює EPUB, PDF, MOBI, FB2 та інші формати на чистий локальний HTML з навігацією та змістом - далі читаєш у Chrome і перекладаєш сторінку вбудованим перекладачем браузера. Без API-ключа, без платних запитів, однією командою. За бажанням - переклад через Google Cloud або локальну Ollama.</span>
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
+        <span data-l="ru">⤓ Скачать релиз</span><span data-l="en">⤓ Download release</span><span data-l="uk">⤓ Завантажити реліз</span>
+      </a>
+      <a class="btn" href="#install" data-l="ru">Установка через winget</a>
+      <a class="btn" href="#install-en" data-l="en">Install via winget</a>
+      <a class="btn" href="#install-uk" data-l="uk">Встановлення через winget</a>
+      <a class="btn" href="docs.ru.html" data-l="ru">Документация</a>
+      <a class="btn" href="docs.html" data-l="en">Documentation</a>
+      <a class="btn" href="docs.uk.html" data-l="uk">Документація</a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">
+        <span data-l="ru">Открыть на GitHub</span><span data-l="en">Browse on GitHub</span><span data-l="uk">Відкрити на GitHub</span>
+      </a>
+      <button class="btn" type="button" onclick="setAll(true)">
+        <span data-l="ru">Развернуть всё</span><span data-l="en">Expand all</span><span data-l="uk">Розгорнути все</span>
+      </button>
+      <button class="btn" type="button" onclick="setAll(false)">
+        <span data-l="ru">Свернуть всё</span><span data-l="en">Collapse all</span><span data-l="uk">Згорнути все</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== RU ARTICLE ===================== -->
+  <article data-l="ru">
+    <div class="sections">
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Что это и зачем</h2><span class="secteaser">Конвертер плюс самый дешёвый перевод - твой браузер</span></span></summary>
+        <div class="secbody">
+          <p>Купил или скачал книгу не на своём языке - и упёрся в выбор: платить за перевод, мучиться со специальными читалками или читать как есть. doc-html-translate решает это самым дешёвым способом: превращает файл в обычный локальный HTML и отдаёт его браузеру, а перевод делает встроенный переводчик Chrome - бесплатно и для любого языка.</p>
+          <p>На вход - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML</strong>. На выходе - папка с чистыми HTML-страницами, оглавлением и постраничной навигацией, которая сразу открывается в браузере. Текст остаётся текстом (не картинкой), поэтому браузер переводит его «на лету».</p>
+          <p>Это инструмент для Windows: есть командная строка (<code>doc-html-translate</code>) и оконное GUI-приложение (<code>doc-html-ui</code>) - выбирай, что удобнее.</p>
+          <div class="note"><div class="tag">Главное</div><p>Никакого API-ключа и платных вызовов в базовом сценарии. Конвертация локальная, перевод - средствами браузера. По желанию подключаются Google Cloud или локальная Ollama.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Три шага бесплатного чтения</h2><span class="secteaser">Открой - читай в Chrome - переводи страницу</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">ШАГ 1</div><h3>Открой или запусти</h3><p>Открой файл приложением или выполни простую команду. Перевод выключен, пока не добавишь <code>-google</code> или <code>-ollama</code>.</p></div>
+            <div class="card"><div class="num">ШАГ 2</div><h3>Читай в Chrome</h3><p>Инструмент сам открывает сгенерированный <code>index.html</code> с оглавлением и навигацией по страницам.</p></div>
+            <div class="card"><div class="num">ШАГ 3</div><h3>Переводи в браузере</h3><p>Включи встроенный перевод страницы в Chrome - и читай на любом нужном языке бесплатно.</p></div>
+          </div>
+          <div class="cmd">
+            <pre># Быстрый бесплатный сценарий
+doc-html-translate.exe "book.epub"
+# или
+doc-html-translate.exe "book.pdf"
+
+# инструмент откроет index.html в браузере
+# в Chrome: «Перевести страницу» -> твой язык</pre>
           </div>
         </div>
-        <div class="code-card"># Fast free workflow
+      </details>
 
-      doc-html-translate.exe "book.epub"
-      # or
-      # doc-html-translate.exe "book.pdf"
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Поддерживаемые форматы</h2><span class="secteaser">Девять форматов на входе, чистый HTML на выходе</span></span></summary>
+        <div class="secbody">
+          <p>Из коробки работают EPUB, TXT, FB2, RTF, HTML и Markdown. Для PDF используется встроенный движок (его можно усилить внешними утилитами - см. ниже). MOBI и AZW3 конвертируются через Calibre.</p>
+          <div class="pills">
+            <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
+            <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+            <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+          </div>
+          <p class="muted">MOBI и AZW3 требуют установленного <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файлы с DRM не поддерживаются.</p>
+        </div>
+      </details>
 
-# tool opens index.html in browser
-# in Chrome: Translate page -> your language</div>
-      </div>
-    </section>
+      <details class="sec" id="install">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Установка и загрузка</h2><span class="secteaser">winget, готовые релизы или сборка из исходников</span></span></summary>
+        <div class="secbody">
+          <p>Самый быстрый путь - winget:</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопировать">⧉ Скопировать</button></div>
+            <pre>winget install SerZhyAle.DocHtmlTranslate</pre>
+          </div>
+          <p>Или возьми готовые бинарники Windows x64 со страницы релизов. Каждый релиз содержит:</p>
+          <ul>
+            <li><code>doc-html-translate-&lt;версия&gt;-windows-x64.exe</code> - инструмент командной строки;</li>
+            <li><code>doc-html-ui-&lt;версия&gt;-windows-x64.exe</code> - оконное GUI-приложение;</li>
+            <li><code>...-windows-x64.zip</code> - полный архив (оба бинарника + LICENSE + README).</li>
+          </ul>
+          <p>Сборка из исходников (нужен Go):</p>
+          <div class="cmd"><pre>go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</pre></div>
+          <div class="note"><div class="tag">Ссылки</div><p><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Последний релиз</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторий на GitHub</a></p></div>
+        </div>
+      </details>
 
-    <section class="free-flow">
-      <article class="flow-step">
-        <div class="step-num">Step 1</div>
-        <h3>Open Or Run Default Command</h3>
-        <p>Just open the file with the app or run the plain command. Translation stays off unless you add <strong>-google</strong> or <strong>-ollama</strong>.</p>
-      </article>
-      <article class="flow-step">
-        <div class="step-num">Step 2</div>
-        <h3>Open In Chrome</h3>
-        <p>Read from generated index with TOC and page navigation.</p>
-      </article>
-      <article class="flow-step">
-        <div class="step-num">Step 3</div>
-        <h3>Translate In Browser</h3>
-        <p>Use Chrome built-in page translation to switch to any target language.</p>
-      </article>
-    </section>
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Режимы перевода</h2><span class="secteaser">Браузер бесплатно, Google или локальная Ollama по желанию</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Браузер (по умолчанию, бесплатно):</strong> конвертация без перевода, дальше «Перевести страницу» в Chrome. Без ключей и оплаты.</li>
+            <li><strong>Google Cloud (<code>-google</code>):</strong> перевод через Google Cloud Translation API. Положи файл <code>google_api.key</code> рядом с исполняемым файлом.</li>
+            <li><strong>Локальная Ollama (<code>-ollama</code>):</strong> перевод локальной моделью, полностью офлайн. Модель задаётся флагом <code>-ollama-model</code> (по умолчанию <code>gemma3:12b</code>).</li>
+          </ul>
+          <div class="cmd"><pre>doc-html-translate.exe -src en -dst ru "book.epub"
+doc-html-translate.exe -google "book.epub"
+doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
+        </div>
+      </details>
 
-    <section class="section">
-      <h2>Supported Input Formats</h2>
-      <p class="small">EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 are supported.</p>
-      <p class="small">MOBI and AZW3 require <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported.</p>
-      <div class="formats">
-        <span>EPUB</span>
-        <span>PDF</span>
-        <span>TXT</span>
-        <span>MD</span>
-        <span>FB2</span>
-        <span>RTF</span>
-        <span>HTML</span>
-        <span>MOBI</span>
-        <span>AZW3</span>
-      </div>
-    </section>
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Основные флаги</h2><span class="secteaser">Перевод, открытие, разбивка на страницы, языки</span></span></summary>
+        <div class="secbody">
+          <table>
+            <thead><tr><th>Флаг</th><th>По умолчанию</th><th>Что делает</th></tr></thead>
+            <tbody>
+              <tr><td><code>-notranslate</code></td><td><code>false</code></td><td>Только конвертация, без перевода</td></tr>
+              <tr><td><code>-noopen</code></td><td><code>false</code></td><td>Не открывать браузер автоматически</td></tr>
+              <tr><td><code>-google</code></td><td><code>false</code></td><td>Перевод через Google Cloud Translation API</td></tr>
+              <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Перевод через локальную Ollama</td></tr>
+              <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Имя модели Ollama</td></tr>
+              <tr><td><code>-split</code></td><td><code>5000</code></td><td>Разбивать страницы по N символов (<code>0</code> отключает)</td></tr>
+              <tr><td><code>-folder</code></td><td>пусто</td><td>Своя родительская папка для вывода</td></tr>
+              <tr><td><code>-src</code></td><td><code>en</code></td><td>Исходный язык</td></tr>
+              <tr><td><code>-dst</code></td><td><code>ru</code></td><td>Целевой язык</td></tr>
+              <tr><td><code>-force</code></td><td><code>false</code></td><td>Пересобрать, даже если вывод уже есть</td></tr>
+              <tr><td><code>-register</code></td><td><code>false</code></td><td>Зарегистрировать как обработчик файлов (HKCU)</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Полный список флагов - в <a href="docs.ru.html">документации</a>.</p>
+        </div>
+      </details>
 
-    <section class="section">
-      <h2>Download</h2>
-      <p class="small">Get the application from GitHub:</p>
-      <p class="small"><a href="https://github.com/SerZhyAle/doc-html-translate/tree/master/build">build folder (all build artifacts)</a></p>
-      <p class="small"><a href="https://github.com/SerZhyAle/doc-html-translate/blob/master/build/doc-html-translate.exe">direct link to doc-html-translate.exe</a></p>
-    </section>
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Дополнительные внешние утилиты</h2><span class="secteaser">Лучшее качество PDF и поддержка MOBI/AZW3</span></span></summary>
+        <div class="secbody">
+          <p>Приложение работает «из коробки» для EPUB, TXT, FB2, RTF, HTML и Markdown. Эти утилиты добавляют полноценную поддержку PDF-картинок и дополнительных форматов:</p>
+          <table>
+            <thead><tr><th>Утилита</th><th>Зачем</th><th>Для чего нужна</th></tr></thead>
+            <tbody>
+              <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>Качественное извлечение текста из PDF: сложные шрифты, лигатуры, многоколоночная вёрстка</td><td>PDF - по желанию, есть встроенный запасной движок</td></tr>
+              <tr><td><strong>ffmpeg</strong></td><td>Конвертирует картинки JPEG 2000 (.jpx) из PDF в JPEG - браузеры не умеют JPEG 2000</td><td>PDF с изображениями JPEG2000</td></tr>
+              <tr><td><strong>Calibre</strong></td><td>Конвертирует MOBI / AZW3 в EPUB перед обработкой</td><td>Обязательна для MOBI и AZW3</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Без <strong>pdftotext</strong> используется встроенный Go-движок (качество чуть ниже). Без <strong>ffmpeg</strong> картинки JPEG2000 в PDF не отобразятся. Без <strong>Calibre</strong> файлы MOBI/AZW3 не открыть.</p>
+        </div>
+      </details>
 
-    <section class="section">
-      <h2>Companion App: FastMediaSorter LITE</h2>
-      <p class="small">
-        Need to read <strong>images, screenshots, manga or scanned pages</strong> instead of ebook files?
-        <strong>FastMediaSorter LITE</strong> is a free Windows app that opens and sorts images and videos and can run
-        <strong>OCR + on-image translation</strong> right on the picture - press <code>T</code> to recognize the text
-        and overlay the translation in your language (local Ollama or LibreTranslate). It is the recommended companion
-        for the cases doc-html-translate does not cover: documents that are pictures, not text.
-      </p>
-      <p class="small">Also available via winget and GitHub:</p>
-      <div class="code-card">winget install SerZhyAle.FastMediaSorter</div>
-      <div class="cta-row" style="margin-top: 14px;">
-        <a class="btn btn-primary" href="https://github.com/SerZhyAle/FastMediaSorter_Lite">FastMediaSorter on GitHub</a>
-        <a class="btn btn-alt" href="https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest">Download Latest Release</a>
-      </div>
-    </section>
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Спутник: FastMediaSorter LITE</h2><span class="secteaser">Когда документ - картинка, а не текст</span></span></summary>
+        <div class="secbody">
+          <p>Нужно читать <strong>скриншоты, мангу, фото или сканы страниц</strong> - то, что является изображением, а не текстом? <strong>FastMediaSorter LITE</strong> - бесплатное приложение для Windows: открывает и сортирует картинки и видео и умеет <strong>OCR + перевод прямо на изображении</strong>. Нажми <kbd>T</kbd> на картинке - и поверх неё ляжет перевод (локальная Ollama или LibreTranslate). Это дополнение для случаев, которые doc-html-translate не покрывает: документы-картинки.</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопировать">⧉ Скопировать</button></div>
+            <pre>winget install SerZhyAle.FastMediaSorter</pre>
+          </div>
+          <div class="cta">
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite" target="_blank" rel="noopener">FastMediaSorter на GitHub</a>
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest" target="_blank" rel="noopener">Последний релиз</a>
+          </div>
+        </div>
+      </details>
 
-    <section class="section">
-      <h2>More Tools</h2>
-      <p class="small">
-        This project is also featured in <a href="https://serzhyale.github.io/universal-agent-kit/">Universal Agent Kit</a>,
-        a collection page for related tools and agent-oriented projects.
-      </p>
-    </section>
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">08</span><span class="sechead"><h2 class="sectitle">Ссылки и происхождение</h2><span class="secteaser">Репозиторий, документация, родственные проекты</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторий на GitHub</a></li>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Последний релиз</a></li>
+            <li><a href="docs.ru.html">Полная документация</a></li>
+            <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - переносимый метод работы с ИИ-агентами</li>
+          </ul>
+          <p class="muted">Проект под лицензией MIT.</p>
+        </div>
+      </details>
 
-    <section class="section">
-      <h2>Why This Scenario Is Recommended</h2>
-      <p class="small">
-        No API key setup, no paid translation calls, and quick launch from one command.
-        You still keep a comfortable browser reading experience with generated navigation.
-      </p>
-      <p class="footer">Project: SerZhyAle/doc-html-translate</p>
-    </section>
-  </main>
+    </div>
+  </article>
+
+  <!-- ===================== EN ARTICLE ===================== -->
+  <article data-l="en">
+    <div class="sections">
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">What it is and why</h2><span class="secteaser">A converter plus the cheapest translation there is - your browser</span></span></summary>
+        <div class="secbody">
+          <p>You bought or downloaded a book that isn't in your language, and now you face a choice: pay for translation, fight with special readers, or read it as-is. doc-html-translate solves this the cheapest way possible: it turns the file into plain local HTML and hands it to the browser, while the translation is done by Chrome's built-in translator - free, for any language.</p>
+          <p>Input is <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML</strong>. Output is a folder of clean HTML pages with a table of contents and per-page navigation that opens straight in your browser. Text stays text (not an image), so the browser translates it on the fly.</p>
+          <p>It's a Windows tool: there is a command line (<code>doc-html-translate</code>) and a windowed GUI app (<code>doc-html-ui</code>) - pick whichever you prefer.</p>
+          <div class="note"><div class="tag">The point</div><p>No API key and no paid calls in the default scenario. Conversion is local, translation is the browser's job. Google Cloud or a local Ollama can be wired in optionally.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Three steps to free reading</h2><span class="secteaser">Open - read in Chrome - translate the page</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">STEP 1</div><h3>Open or run</h3><p>Open the file with the app or run the plain command. Translation stays off until you add <code>-google</code> or <code>-ollama</code>.</p></div>
+            <div class="card"><div class="num">STEP 2</div><h3>Read in Chrome</h3><p>The tool opens the generated <code>index.html</code> with a table of contents and page navigation.</p></div>
+            <div class="card"><div class="num">STEP 3</div><h3>Translate in the browser</h3><p>Turn on Chrome's built-in page translation and read in any language you need, for free.</p></div>
+          </div>
+          <div class="cmd">
+            <pre># Fast free workflow
+doc-html-translate.exe "book.epub"
+# or
+doc-html-translate.exe "book.pdf"
+
+# the tool opens index.html in the browser
+# in Chrome: Translate page -> your language</pre>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Supported formats</h2><span class="secteaser">Nine input formats, clean HTML out</span></span></summary>
+        <div class="secbody">
+          <p>EPUB, TXT, FB2, RTF, HTML and Markdown work out of the box. PDF uses a built-in engine (boostable with external tools - see below). MOBI and AZW3 are converted through Calibre.</p>
+          <div class="pills">
+            <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
+            <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+            <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+          </div>
+          <p class="muted">MOBI and AZW3 require <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a> installed. DRM-protected files are not supported.</p>
+        </div>
+      </details>
+
+      <details class="sec" id="install-en">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Install &amp; download</h2><span class="secteaser">winget, prebuilt releases, or build from source</span></span></summary>
+        <div class="secbody">
+          <p>The fastest path is winget:</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Copy">⧉ Copy</button></div>
+            <pre>winget install SerZhyAle.DocHtmlTranslate</pre>
+          </div>
+          <p>Or grab the prebuilt Windows x64 binaries from the Releases page. Each release contains:</p>
+          <ul>
+            <li><code>doc-html-translate-&lt;version&gt;-windows-x64.exe</code> - command-line tool;</li>
+            <li><code>doc-html-ui-&lt;version&gt;-windows-x64.exe</code> - windowed GUI app;</li>
+            <li><code>...-windows-x64.zip</code> - full archive (both binaries + LICENSE + README).</li>
+          </ul>
+          <p>Build from source (Go required):</p>
+          <div class="cmd"><pre>go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</pre></div>
+          <div class="note"><div class="tag">Links</div><p><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Latest release</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub repository</a></p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Translation modes</h2><span class="secteaser">Browser for free, Google or local Ollama on demand</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Browser (default, free):</strong> convert without translating, then "Translate page" in Chrome. No keys, no billing.</li>
+            <li><strong>Google Cloud (<code>-google</code>):</strong> translation via the Google Cloud Translation API. Put a <code>google_api.key</code> file next to the executable.</li>
+            <li><strong>Local Ollama (<code>-ollama</code>):</strong> translate with a local model, fully offline. Set the model with <code>-ollama-model</code> (default <code>gemma3:12b</code>).</li>
+          </ul>
+          <div class="cmd"><pre>doc-html-translate.exe -src en -dst ru "book.epub"
+doc-html-translate.exe -google "book.epub"
+doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Main flags</h2><span class="secteaser">Translation, opening, page splitting, languages</span></span></summary>
+        <div class="secbody">
+          <table>
+            <thead><tr><th>Flag</th><th>Default</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>-notranslate</code></td><td><code>false</code></td><td>Convert only, skip translation</td></tr>
+              <tr><td><code>-noopen</code></td><td><code>false</code></td><td>Do not auto-open the browser</td></tr>
+              <tr><td><code>-google</code></td><td><code>false</code></td><td>Translate via Google Cloud Translation API</td></tr>
+              <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Translate via local Ollama</td></tr>
+              <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Ollama model name</td></tr>
+              <tr><td><code>-split</code></td><td><code>5000</code></td><td>Split pages at N chars (<code>0</code> disables)</td></tr>
+              <tr><td><code>-folder</code></td><td>empty</td><td>Custom output parent folder</td></tr>
+              <tr><td><code>-src</code></td><td><code>en</code></td><td>Source language</td></tr>
+              <tr><td><code>-dst</code></td><td><code>ru</code></td><td>Target language</td></tr>
+              <tr><td><code>-force</code></td><td><code>false</code></td><td>Rebuild even if output exists</td></tr>
+              <tr><td><code>-register</code></td><td><code>false</code></td><td>Register as a file handler (HKCU)</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">The full flag list is in the <a href="docs.html">documentation</a>.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Optional external tools</h2><span class="secteaser">Better PDF quality and MOBI/AZW3 support</span></span></summary>
+        <div class="secbody">
+          <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML and Markdown. These tools add full PDF image support and extra formats:</p>
+          <table>
+            <thead><tr><th>Tool</th><th>Purpose</th><th>Needed for</th></tr></thead>
+            <tbody>
+              <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>High-quality PDF text extraction: complex fonts, ligatures, multi-column layout</td><td>PDF - optional, built-in fallback exists</td></tr>
+              <tr><td><strong>ffmpeg</strong></td><td>Converts JPEG 2000 (.jpx) images from PDFs to JPEG - browsers don't support JPEG 2000</td><td>PDFs with JPEG2000 images</td></tr>
+              <tr><td><strong>Calibre</strong></td><td>Converts MOBI / AZW3 to EPUB before processing</td><td>Required for MOBI and AZW3</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Without <strong>pdftotext</strong>, the built-in Go reader is used (slightly lower quality). Without <strong>ffmpeg</strong>, JPEG2000 images in PDFs won't show. Without <strong>Calibre</strong>, MOBI/AZW3 files can't be opened.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Companion: FastMediaSorter LITE</h2><span class="secteaser">When the document is a picture, not text</span></span></summary>
+        <div class="secbody">
+          <p>Need to read <strong>screenshots, manga, photos or scanned pages</strong> - things that are images, not text? <strong>FastMediaSorter LITE</strong> is a free Windows app: it opens and sorts images and videos and can do <strong>OCR + on-image translation</strong>. Press <kbd>T</kbd> on a picture and the translation is overlaid right on it (local Ollama or LibreTranslate). It's the companion for the cases doc-html-translate doesn't cover: documents that are pictures.</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Copy">⧉ Copy</button></div>
+            <pre>winget install SerZhyAle.FastMediaSorter</pre>
+          </div>
+          <div class="cta">
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite" target="_blank" rel="noopener">FastMediaSorter on GitHub</a>
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest" target="_blank" rel="noopener">Latest release</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">08</span><span class="sechead"><h2 class="sectitle">Links &amp; origin</h2><span class="secteaser">Repository, documentation, related projects</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub repository</a></li>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Latest release</a></li>
+            <li><a href="docs.html">Full documentation</a></li>
+            <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - a portable method for working with AI agents</li>
+          </ul>
+          <p class="muted">The project is licensed under MIT.</p>
+        </div>
+      </details>
+
+    </div>
+  </article>
+
+  <!-- ===================== UK ARTICLE ===================== -->
+  <article data-l="uk">
+    <div class="sections">
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Що це і навіщо</h2><span class="secteaser">Конвертер плюс найдешевший переклад - твій браузер</span></span></summary>
+        <div class="secbody">
+          <p>Купив або завантажив книжку не своєю мовою - і опинився перед вибором: платити за переклад, мучитися зі спеціальними читалками чи читати як є. doc-html-translate вирішує це найдешевшим способом: перетворює файл на звичайний локальний HTML і віддає його браузеру, а переклад робить вбудований перекладач Chrome - безкоштовно й для будь-якої мови.</p>
+          <p>На вхід - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown і HTML</strong>. На виході - тека з чистими HTML-сторінками, змістом і посторінковою навігацією, що одразу відкривається в браузері. Текст лишається текстом (не картинкою), тож браузер перекладає його «на льоту».</p>
+          <p>Це інструмент для Windows: є командний рядок (<code>doc-html-translate</code>) і віконний GUI-застосунок (<code>doc-html-ui</code>) - обирай, що зручніше.</p>
+          <div class="note"><div class="tag">Головне</div><p>Жодного API-ключа та платних викликів у базовому сценарії. Конвертація локальна, переклад - засобами браузера. За бажанням підключаються Google Cloud або локальна Ollama.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Три кроки безкоштовного читання</h2><span class="secteaser">Відкрий - читай у Chrome - перекладай сторінку</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">КРОК 1</div><h3>Відкрий або запусти</h3><p>Відкрий файл застосунком або виконай просту команду. Переклад вимкнено, доки не додаси <code>-google</code> чи <code>-ollama</code>.</p></div>
+            <div class="card"><div class="num">КРОК 2</div><h3>Читай у Chrome</h3><p>Інструмент сам відкриває згенерований <code>index.html</code> зі змістом і навігацією сторінками.</p></div>
+            <div class="card"><div class="num">КРОК 3</div><h3>Перекладай у браузері</h3><p>Увімкни вбудований переклад сторінки в Chrome - і читай будь-якою потрібною мовою безкоштовно.</p></div>
+          </div>
+          <div class="cmd">
+            <pre># Швидкий безкоштовний сценарій
+doc-html-translate.exe "book.epub"
+# або
+doc-html-translate.exe "book.pdf"
+
+# інструмент відкриє index.html у браузері
+# у Chrome: «Перекласти сторінку» -> твоя мова</pre>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Підтримувані формати</h2><span class="secteaser">Дев'ять форматів на вході, чистий HTML на виході</span></span></summary>
+        <div class="secbody">
+          <p>З коробки працюють EPUB, TXT, FB2, RTF, HTML і Markdown. Для PDF використовується вбудований рушій (його можна підсилити зовнішніми утилітами - див. нижче). MOBI та AZW3 конвертуються через Calibre.</p>
+          <div class="pills">
+            <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
+            <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+            <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+          </div>
+          <p class="muted">MOBI та AZW3 потребують встановленого <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файли з DRM не підтримуються.</p>
+        </div>
+      </details>
+
+      <details class="sec" id="install-uk">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Встановлення та завантаження</h2><span class="secteaser">winget, готові релізи або збірка з джерел</span></span></summary>
+        <div class="secbody">
+          <p>Найшвидший шлях - winget:</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопіювати">⧉ Скопіювати</button></div>
+            <pre>winget install SerZhyAle.DocHtmlTranslate</pre>
+          </div>
+          <p>Або візьми готові бінарники Windows x64 зі сторінки релізів. Кожен реліз містить:</p>
+          <ul>
+            <li><code>doc-html-translate-&lt;версія&gt;-windows-x64.exe</code> - інструмент командного рядка;</li>
+            <li><code>doc-html-ui-&lt;версія&gt;-windows-x64.exe</code> - віконний GUI-застосунок;</li>
+            <li><code>...-windows-x64.zip</code> - повний архів (обидва бінарники + LICENSE + README).</li>
+          </ul>
+          <p>Збірка з джерел (потрібен Go):</p>
+          <div class="cmd"><pre>go build -o build/doc-html-translate.exe ./cmd/doc-html-translate</pre></div>
+          <div class="note"><div class="tag">Посилання</div><p><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Останній реліз</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторій на GitHub</a></p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Режими перекладу</h2><span class="secteaser">Браузер безкоштовно, Google або локальна Ollama за бажанням</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Браузер (за замовчуванням, безкоштовно):</strong> конвертація без перекладу, далі «Перекласти сторінку» в Chrome. Без ключів і оплати.</li>
+            <li><strong>Google Cloud (<code>-google</code>):</strong> переклад через Google Cloud Translation API. Поклади файл <code>google_api.key</code> поруч із виконуваним файлом.</li>
+            <li><strong>Локальна Ollama (<code>-ollama</code>):</strong> переклад локальною моделлю, повністю офлайн. Модель задається прапорцем <code>-ollama-model</code> (за замовчуванням <code>gemma3:12b</code>).</li>
+          </ul>
+          <div class="cmd"><pre>doc-html-translate.exe -src en -dst ru "book.epub"
+doc-html-translate.exe -google "book.epub"
+doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Основні прапорці</h2><span class="secteaser">Переклад, відкриття, розбивка на сторінки, мови</span></span></summary>
+        <div class="secbody">
+          <table>
+            <thead><tr><th>Прапорець</th><th>За замовч.</th><th>Що робить</th></tr></thead>
+            <tbody>
+              <tr><td><code>-notranslate</code></td><td><code>false</code></td><td>Лише конвертація, без перекладу</td></tr>
+              <tr><td><code>-noopen</code></td><td><code>false</code></td><td>Не відкривати браузер автоматично</td></tr>
+              <tr><td><code>-google</code></td><td><code>false</code></td><td>Переклад через Google Cloud Translation API</td></tr>
+              <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Переклад через локальну Ollama</td></tr>
+              <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Ім'я моделі Ollama</td></tr>
+              <tr><td><code>-split</code></td><td><code>5000</code></td><td>Розбивати сторінки по N символів (<code>0</code> вимикає)</td></tr>
+              <tr><td><code>-folder</code></td><td>порожньо</td><td>Власна батьківська тека для виводу</td></tr>
+              <tr><td><code>-src</code></td><td><code>en</code></td><td>Вихідна мова</td></tr>
+              <tr><td><code>-dst</code></td><td><code>ru</code></td><td>Цільова мова</td></tr>
+              <tr><td><code>-force</code></td><td><code>false</code></td><td>Перезібрати, навіть якщо вивід уже є</td></tr>
+              <tr><td><code>-register</code></td><td><code>false</code></td><td>Зареєструвати як обробник файлів (HKCU)</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Повний перелік прапорців - у <a href="docs.uk.html">документації</a>.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Додаткові зовнішні утиліти</h2><span class="secteaser">Краща якість PDF і підтримка MOBI/AZW3</span></span></summary>
+        <div class="secbody">
+          <p>Застосунок працює «з коробки» для EPUB, TXT, FB2, RTF, HTML і Markdown. Ці утиліти додають повноцінну підтримку PDF-картинок і додаткових форматів:</p>
+          <table>
+            <thead><tr><th>Утиліта</th><th>Навіщо</th><th>Для чого потрібна</th></tr></thead>
+            <tbody>
+              <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>Якісне видобування тексту з PDF: складні шрифти, лігатури, багатоколонкова верстка</td><td>PDF - за бажанням, є вбудований запасний рушій</td></tr>
+              <tr><td><strong>ffmpeg</strong></td><td>Конвертує картинки JPEG 2000 (.jpx) з PDF у JPEG - браузери не вміють JPEG 2000</td><td>PDF із зображеннями JPEG2000</td></tr>
+              <tr><td><strong>Calibre</strong></td><td>Конвертує MOBI / AZW3 у EPUB перед обробкою</td><td>Обов'язкова для MOBI та AZW3</td></tr>
+            </tbody>
+          </table>
+          <p class="muted">Без <strong>pdftotext</strong> використовується вбудований Go-рушій (якість трохи нижча). Без <strong>ffmpeg</strong> картинки JPEG2000 у PDF не відобразяться. Без <strong>Calibre</strong> файли MOBI/AZW3 не відкрити.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Супутник: FastMediaSorter LITE</h2><span class="secteaser">Коли документ - картинка, а не текст</span></span></summary>
+        <div class="secbody">
+          <p>Треба читати <strong>скриншоти, мангу, фото чи скани сторінок</strong> - те, що є зображенням, а не текстом? <strong>FastMediaSorter LITE</strong> - безкоштовний застосунок для Windows: відкриває й сортує картинки та відео і вміє <strong>OCR + переклад прямо на зображенні</strong>. Натисни <kbd>T</kbd> на картинці - і поверх неї ляже переклад (локальна Ollama або LibreTranslate). Це доповнення для випадків, які doc-html-translate не покриває: документи-картинки.</p>
+          <div class="cmd">
+            <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопіювати">⧉ Скопіювати</button></div>
+            <pre>winget install SerZhyAle.FastMediaSorter</pre>
+          </div>
+          <div class="cta">
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite" target="_blank" rel="noopener">FastMediaSorter на GitHub</a>
+            <a class="btn" href="https://github.com/SerZhyAle/FastMediaSorter_Lite/releases/latest" target="_blank" rel="noopener">Останній реліз</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">08</span><span class="sechead"><h2 class="sectitle">Посилання та походження</h2><span class="secteaser">Репозиторій, документація, споріднені проєкти</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторій на GitHub</a></li>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Останній реліз</a></li>
+            <li><a href="docs.uk.html">Повна документація</a></li>
+            <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - переносний метод роботи з ШІ-агентами</li>
+          </ul>
+          <p class="muted">Проєкт під ліцензією MIT.</p>
+        </div>
+      </details>
+
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div data-l="ru">
+    <strong>doc-html-translate</strong> - конвертирует EPUB/PDF и другие форматы в локальный HTML, чтобы читать в браузере и переводить страницы бесплатно.
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Скачать релиз</a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="docs.ru.html">Документация</a>
+    </div>
+    <p class="muted">Лицензия MIT · для Windows · бесплатный сценарий чтения через перевод в браузере.</p>
+  </div>
+  <div data-l="en">
+    <strong>doc-html-translate</strong> - converts EPUB/PDF and other formats into local HTML so you can read in the browser and translate pages for free.
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Download release</a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="docs.html">Documentation</a>
+    </div>
+    <p class="muted">MIT license · for Windows · the free reading-via-browser-translation workflow.</p>
+  </div>
+  <div data-l="uk">
+    <strong>doc-html-translate</strong> - конвертує EPUB/PDF та інші формати в локальний HTML, щоб читати в браузері й перекладати сторінки безкоштовно.
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Завантажити реліз</a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="docs.uk.html">Документація</a>
+    </div>
+    <p class="muted">Ліцензія MIT · для Windows · безкоштовний сценарій читання через переклад у браузері.</p>
+  </div>
+  <p class="author">
+    <span data-l="ru">Автор</span><span data-l="en">Author</span><span data-l="uk">Автор</span>:
+    <a href="https://sza.od.ua" target="_blank" rel="noopener">SZA.od.ua</a> ·
+    <a href="mailto:sza@ukr.net">sza@ukr.net</a> ·
+    <a href="https://github.com/SerZhyAle" target="_blank" rel="noopener">github.com/SerZhyAle</a>
+  </p>
+</footer>
+
+<script>
+  var I18N = {
+    ru:{
+      title:'doc-html-translate - читай EPUB/PDF в браузере и переводи бесплатно',
+      desc:'Маленький инструмент для Windows: конвертирует EPUB, PDF, MOBI, FB2, RTF, TXT, MD и HTML в чистый локальный HTML с навигацией - дальше читаешь в Chrome и переводишь любую страницу бесплатно. По желанию - Google или локальная Ollama. Страница на русском, английском и украинском.',
+      langGroup:'Язык', theme:'Тема', toLight:'Включить светлую тему', toDark:'Включить тёмную тему', copied:'Скопировано'
+    },
+    en:{
+      title:'doc-html-translate - read EPUB/PDF in your browser, translate for free',
+      desc:'A small Windows tool that converts EPUB, PDF, MOBI, FB2, RTF, TXT, MD and HTML into clean local HTML with navigation - then you read in Chrome and translate any page for free. Optional Google or local Ollama translation. Page in English, Russian, and Ukrainian.',
+      langGroup:'Language', theme:'Theme', toLight:'Switch to light theme', toDark:'Switch to dark theme', copied:'Copied'
+    },
+    uk:{
+      title:'doc-html-translate - читай EPUB/PDF у браузері та перекладай безкоштовно',
+      desc:'Маленький інструмент для Windows: конвертує EPUB, PDF, MOBI, FB2, RTF, TXT, MD і HTML у чистий локальний HTML з навігацією - далі читаєш у Chrome і перекладаєш будь-яку сторінку безкоштовно. За бажанням - Google або локальна Ollama. Сторінка російською, англійською та українською.',
+      langGroup:'Мова', theme:'Тема', toLight:'Увімкнути світлу тему', toDark:'Увімкнути темну тему', copied:'Скопійовано'
+    }
+  };
+  function metaSet(sel, val){ var m = document.querySelector(sel); if(m) m.setAttribute('content', val); }
+  function applyThemeLabel(){
+    var d = document.documentElement, l = d.getAttribute('data-lang')||'en', m = I18N[l]||I18N.en;
+    var dark = d.getAttribute('data-theme') !== 'light';
+    var b = document.getElementById('themeBtn');
+    if(b){ b.setAttribute('aria-label', dark ? m.toLight : m.toDark); b.setAttribute('title', m.theme); b.setAttribute('aria-pressed', String(!dark)); }
+    metaSet('meta[name="theme-color"]', dark ? '#0f1115' : '#f7f8fa');
+  }
+  function applyLang(l){
+    var d = document.documentElement, m = I18N[l]||I18N.en;
+    d.setAttribute('data-lang', l); d.setAttribute('lang', l);
+    document.title = m.title;
+    metaSet('meta[name="description"]', m.desc);
+    metaSet('meta[property="og:title"]', m.title);
+    metaSet('meta[property="og:description"]', m.desc);
+    ['ru','en','uk'].forEach(function(code){
+      var btn = document.getElementById('lng-'+code);
+      if(btn) btn.setAttribute('aria-pressed', String(l===code));
+    });
+    var g = document.getElementById('langGroup'); if(g) g.setAttribute('aria-label', m.langGroup);
+    applyThemeLabel();
+  }
+  function setLang(l){ applyLang(l); try{ localStorage.setItem('dht-lang', l); }catch(e){} }
+  function toggleTheme(){
+    var d = document.documentElement, t = d.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+    d.setAttribute('data-theme', t);
+    try{ localStorage.setItem('dht-theme', t); }catch(e){}
+    applyThemeLabel();
+  }
+  /* Expand / collapse every showcase card. */
+  function setAll(open){
+    var s = document.querySelectorAll('details.sec');
+    for(var i=0;i<s.length;i++){ if(open){ s[i].setAttribute('open',''); } else { s[i].removeAttribute('open'); } }
+  }
+  /* Open the section a hash points at (the section itself, or the one containing the target). */
+  function openFromHash(){
+    var h = location.hash ? location.hash.slice(1) : '';
+    if(!h) return;
+    var el = document.getElementById(h);
+    if(!el) return;
+    var sec = el.closest ? el.closest('details.sec') : null;
+    if(sec) sec.setAttribute('open','');
+    el.scrollIntoView({block:'start'});
+  }
+  /* Copy the command in the nearest .cmd box. */
+  function copyCmd(btn){
+    var box = btn.closest('.cmd'); if(!box) return;
+    var pre = box.querySelector('pre'); var txt = pre ? pre.innerText : '';
+    var l = document.documentElement.getAttribute('data-lang')||'en', m = I18N[l]||I18N.en;
+    function done(){
+      if(btn.dataset.orig === undefined) btn.dataset.orig = btn.innerHTML;
+      btn.innerHTML = '✓ ' + m.copied; btn.setAttribute('disabled','');
+      setTimeout(function(){ btn.innerHTML = btn.dataset.orig; btn.removeAttribute('disabled'); }, 1600);
+    }
+    function fallback(){
+      try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px';
+        document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){}
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, function(){ fallback(); done(); });
+    } else { fallback(); done(); }
+  }
+  window.addEventListener('hashchange', openFromHash);
+  (function init(){
+    var l = document.documentElement.getAttribute('data-lang')||'en';
+    applyLang(l);
+    var pres = document.querySelectorAll('pre');
+    for(var i=0;i<pres.length;i++){ pres[i].setAttribute('tabindex','0'); }
+    openFromHash();
+  })();
+</script>
 </body>
 </html>
