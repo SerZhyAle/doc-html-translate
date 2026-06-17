@@ -6,7 +6,7 @@
 <title>doc-html-translate - read EPUB/PDF in your browser, translate for free</title>
 <meta name="description" content="A small Windows tool that converts EPUB, PDF, MOBI, FB2, RTF, TXT, MD and HTML into clean local HTML with navigation - then you read in Chrome and translate any page for free. Optional Google or local Ollama translation. Page in English, Russian, and Ukrainian.">
 <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/">
-<meta name="theme-color" content="#080b11">
+<meta name="theme-color" content="#0a0f0a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="doc-html-translate">
 <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/">
@@ -23,7 +23,7 @@
 /* Resolve language + theme before first paint to avoid a flash of the wrong state. */
 (function(){
   var l, t;
-  try{ l = localStorage.getItem('dht-lang'); t = localStorage.getItem('dht-theme'); }catch(e){}
+  try{ l = localStorage.getItem('sza-lang'); t = localStorage.getItem('sza-theme'); }catch(e){}
   if(!l){ var nav=(navigator.language||'en').toLowerCase(); l = nav.indexOf('ru')===0 ? 'ru' : (nav.indexOf('uk')===0 ? 'uk' : 'en'); }
   if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
   var d = document.documentElement;
@@ -31,73 +31,81 @@
 })();
 </script>
 <style>
-  /* ===== DESIGN SYSTEM — matches the SZA portfolio (sza.od.ua) ===== */
+  /* ===== DESIGN SYSTEM - SZA Web Kit "Pine + Gold" (dark-green primary, gold accent) ===== */
   :root{
     --wide:1160px;
 
-    --bg-color:#080b11;
-    --bg-elev:#0f172a;
-    --card-bg:rgba(13,20,35,.45);
-    --card-bg-hover:rgba(17,27,49,.7);
-    --border-color:rgba(255,255,255,.06);
-    --border-color-hover:rgba(99,102,241,.35);
+    --bg-color:#0a0f0a;
+    --bg-elev:#0f1610;
+    --card-bg:rgba(255,255,255,.035);
+    --card-bg-hover:rgba(255,255,255,.06);
+    --border-color:rgba(255,255,255,.08);
+    --border-color-hover:rgba(63,185,80,.35);
 
-    --text-primary:#f3f4f6;
-    --text-secondary:#9ca3af;
-    --text-muted:#6b7280;
+    --text-primary:#f1f5ee;
+    --text-secondary:#c3ccbc;
+    --text-muted:#94a08c;
 
-    --primary-gradient:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);
-    --secondary-gradient:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);
-    --text-gradient:linear-gradient(135deg,#fff 30%,#a5b4fc 100%);
+    --primary-gradient:linear-gradient(135deg,#3fb950 0%,#1f7a33 100%);
+    --secondary-gradient:linear-gradient(135deg,#e3b341 0%,#f0c862 100%);
+    --text-gradient:linear-gradient(135deg,#fff 30%,#86efac 100%);
 
-    --accent:#818cf8;
-    --accent-strong:#a5b4fc;
-    --accent-purple:#c084fc;
-    --accent-cyan:#22d3ee;
+    --accent:#3fb950;
+    --accent-strong:#56d364;
+    --accent-purple:#e3b341;   /* gold - secondary highlight */
+    --accent-cyan:#f0c862;     /* gold strong */
+    --gold:#e3b341;
+    --gold-strong:#f0c862;
 
-    --accent-glow:0 0 25px rgba(99,102,241,.15);
-    --accent-glow-strong:0 0 30px rgba(99,102,241,.35);
+    --accent-glow:0 0 25px rgba(63,185,80,.18);
+    --accent-glow-strong:0 0 30px rgba(63,185,80,.38);
 
     --glass-fill:rgba(255,255,255,.03);
     --glass-fill-hover:rgba(255,255,255,.08);
 
-    --code-bg:#070b14;
-    --code-ink:#cdd6f4;
+    --code-bg:#070f08;
+    --code-ink:#d6e2cf;
     --pill-bg:rgba(255,255,255,.04);
 
-    --blob-1:#6366f1; --blob-2:#a855f7; --blob-3:#06b6d4; --blob-opacity:.15;
-    --shadow:0 14px 38px rgba(0,0,0,.42);
+    --blob-1:#3fb950; --blob-2:#e3b341; --blob-3:#1f7a33; --blob-opacity:.14;
+    --shadow:0 14px 38px rgba(0,0,0,.45);
 
     --font-heading:'Outfit','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
     --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   }
   html[data-theme="light"]{
-    --bg-color:#eef1f7;
+    --bg-color:#eef3ea;
     --bg-elev:#ffffff;
-    --card-bg:rgba(255,255,255,.62);
-    --card-bg-hover:rgba(255,255,255,.85);
-    --border-color:rgba(15,23,42,.08);
-    --border-color-hover:rgba(99,102,241,.4);
+    --card-bg:rgba(255,255,255,.70);
+    --card-bg-hover:rgba(255,255,255,.92);
+    --border-color:rgba(16,40,20,.12);
+    --border-color-hover:rgba(47,143,58,.40);
 
-    --text-primary:#161c2b;
-    --text-secondary:#4b5563;
-    --text-muted:#6b7280;
+    --text-primary:#16210f;
+    --text-secondary:#384534;
+    --text-muted:#5f6b54;
 
-    --text-gradient:linear-gradient(135deg,#1e293b 10%,#6366f1 100%);
+    --primary-gradient:linear-gradient(135deg,#2f8f3a 0%,#1f6d2c 100%);
+    --secondary-gradient:linear-gradient(135deg,#9a6a13 0%,#7e560f 100%);
+    --text-gradient:linear-gradient(135deg,#16210f 10%,#2f8f3a 100%);
 
-    --accent:#5b54e6;
-    --accent-strong:#4f46e5;
-    --accent-purple:#9333ea;
-    --accent-cyan:#0891b2;
+    --accent:#2f8f3a;
+    --accent-strong:#267a30;
+    --accent-purple:#9a6a13;   /* gold - secondary highlight (light) */
+    --accent-cyan:#7e560f;
+    --gold:#9a6a13;
+    --gold-strong:#7e560f;
 
-    --accent-glow:0 0 25px rgba(99,102,241,.18);
-    --accent-glow-strong:0 8px 24px rgba(99,102,241,.3);
+    --accent-glow:0 0 25px rgba(47,143,58,.18);
+    --accent-glow-strong:0 8px 24px rgba(47,143,58,.30);
 
     --glass-fill:rgba(255,255,255,.62);
     --glass-fill-hover:rgba(255,255,255,.92);
-    --pill-bg:rgba(15,23,42,.04);
+    --code-bg:#0e1411;
+    --code-ink:#d6e2cf;
+    --pill-bg:rgba(16,40,20,.04);
     --blob-opacity:.12;
-    --shadow:0 14px 38px rgba(30,41,90,.13);
+    --shadow:0 14px 38px rgba(20,40,20,.13);
   }
 
   *{box-sizing:border-box; margin:0; padding:0}
@@ -154,13 +162,13 @@
     display:inline-flex; align-items:center; transition:all .3s ease;
   }
   .seg button:hover{color:var(--text-primary)}
-  .seg button[aria-pressed="true"]{background:var(--primary-gradient); color:#fff; box-shadow:0 2px 10px rgba(99,102,241,.3)}
+  .seg button[aria-pressed="true"]{background:var(--primary-gradient); color:#fff; box-shadow:0 2px 10px rgba(63,185,80,.3)}
   #themeBtn{padding:.4rem; min-width:38px; font-size:15px}
 
   main{max-width:var(--wide); margin:0 auto; padding:0 22px 90px; position:relative; z-index:1}
 
   /* ===== hero ===== */
-  .hero{text-align:center; padding:2.6rem 1rem 2rem; margin-bottom:.4rem}
+  .hero{text-align:center; padding:2rem 1rem 1.2rem; margin-bottom:.2rem}
   .avatar-glow{position:relative; width:88px; height:88px; margin:0 auto 1.3rem}
   .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:50%; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
   .avatar{position:relative; width:100%; height:100%; background:var(--bg-elev); border-radius:50%; border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 2px 5px rgba(255,255,255,.1)}
@@ -219,7 +227,7 @@
     border:1px solid var(--border-color); border-radius:12px;
     padding:14px 16px; overflow:auto; font-size:13px; line-height:1.55; box-shadow:var(--shadow);
   }
-  pre.diagram{color:#aeb9d6}
+  pre.diagram{color:var(--code-ink)}
 
   .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px; margin:18px 0}
   .card{background:var(--glass-fill); border:1px solid var(--border-color); border-radius:14px; padding:16px 18px; transition:transform .3s ease, border-color .3s ease, background .3s ease}
@@ -237,7 +245,7 @@
   .note p{margin:.4em 0 0}
 
   .pills{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
-  .pill{background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.2); border-radius:999px; padding:5px 13px; font-size:12.5px; color:var(--accent-strong); font-weight:600}
+  .pill{background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.2); border-radius:999px; padding:5px 13px; font-size:12.5px; color:var(--accent-strong); font-weight:600}
   .pill b{color:var(--text-primary); font-weight:700}
 
   table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px}
@@ -260,6 +268,40 @@
   .cmd .prompt-actions{display:flex; justify-content:flex-end; margin:0 0 6px}
   .cmd .prompt-actions .btn{padding:.4rem .85rem; min-height:32px; font-size:.76rem}
   .cmd pre{margin:0}
+
+  /* ===== "Get it" distribution block (kit component) ===== */
+  .get{display:grid; gap:1rem; max-width:860px; margin:0 auto 2rem; padding:1.3rem 1.5rem;
+    background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px;
+    -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
+  .get .channels{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
+  .quickstart{counter-reset:qs; display:grid; gap:.5rem; margin:.1rem 0 0; padding:0}
+  .quickstart li{list-style:none; position:relative; padding-left:2rem; margin:0; color:var(--text-secondary); font-size:.92rem}
+  .quickstart li::before{counter-increment:qs; content:counter(qs); position:absolute; left:0; top:.05rem;
+    width:1.35rem; height:1.35rem; border-radius:50%; background:rgba(63,185,80,.18);
+    color:var(--accent); font-family:var(--font-heading); font-weight:800; font-size:.72rem; display:grid; place-items:center}
+  html[data-theme="light"] .quickstart li::before{background:rgba(47,143,58,.16)}
+
+  .copybox{position:relative; background:var(--code-bg); border:1px solid var(--border-color); border-radius:10px;
+    padding:.8rem 1rem; padding-right:6rem; font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,monospace;
+    font-size:.86rem; color:var(--code-ink); overflow-x:auto; white-space:nowrap}
+  .copybox .tok{color:var(--accent-strong)}
+  .copybox .copy{position:absolute; top:.45rem; right:.45rem; font-family:var(--font-body); font-size:.72rem; font-weight:600;
+    padding:.35rem .7rem; border-radius:8px; background:var(--glass-fill); border:1px solid var(--border-color);
+    color:var(--text-muted); cursor:pointer; min-height:auto}
+  .copybox .copy:hover{color:var(--text-primary); border-color:var(--border-color-hover)}
+  .copybox .copy.done{color:var(--accent); border-color:var(--accent)}
+
+  /* ===== footer "More tools by SZA" grid (kit component) ===== */
+  .tools-title{font-family:var(--font-heading); font-size:12px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.14em; color:var(--text-muted); margin:0 0 .9rem; text-align:left}
+  .tools-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin:0 0 1.4rem; text-align:left}
+  @media(min-width:760px){ .tools-grid{grid-template-columns:repeat(3,1fr)} }
+  .tools-grid a{display:block; padding:.7rem .9rem; border:1px solid var(--border-color); border-radius:10px;
+    background:var(--glass-fill); color:var(--text-primary); font-size:.85rem; text-decoration:none;
+    transition:border-color .25s ease, background .25s ease, transform .25s ease}
+  .tools-grid a:hover{border-color:var(--border-color-hover); background:var(--card-bg-hover); text-decoration:none; transform:translateY(-2px)}
+  .tools-grid a b{font-family:var(--font-heading); font-weight:700}
+  .tools-grid a span{display:block; color:var(--text-muted); font-size:.74rem; margin-top:.15rem}
 
   pre:focus-visible, summary:focus-visible,
   button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
@@ -297,7 +339,7 @@
     <span class="seg" role="group" aria-label="Language" id="langGroup">
       <button id="lng-ru" type="button" onclick="setLang('ru')" aria-pressed="false" aria-label="Русский">RU</button>
       <button id="lng-en" type="button" onclick="setLang('en')" aria-pressed="true" aria-label="English">EN</button>
-      <button id="lng-uk" type="button" onclick="setLang('uk')" aria-pressed="false" aria-label="Українська">UK</button>
+      <button id="lng-uk" type="button" onclick="setLang('uk')" aria-pressed="false" aria-label="Українська">UA</button>
     </span>
     <button class="btn" id="themeBtn" type="button" onclick="toggleTheme()" title="Theme" aria-label="Theme" aria-pressed="false">◐</button>
     <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
@@ -313,7 +355,7 @@
       <div class="avatar">
         <svg viewBox="0 0 24 24" fill="none" stroke="url(#hero-ico)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <defs><linearGradient id="hero-ico" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#c4b5fd"></stop><stop offset=".55" stop-color="#818cf8"></stop><stop offset="1" stop-color="#22d3ee"></stop>
+            <stop offset="0" stop-color="#56d364"></stop><stop offset=".55" stop-color="#3fb950"></stop><stop offset="1" stop-color="#e3b341"></stop>
           </linearGradient></defs>
           <path d="M13 2.5H7.5A1.5 1.5 0 0 0 6 4v16a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 20V7.5z"></path>
           <path d="M13 2.5V7.5h5"></path>
@@ -338,25 +380,53 @@
       <span data-l="en">A small Windows tool that turns EPUB, PDF, MOBI, FB2 and other formats into clean local HTML with navigation and a table of contents - then you read in Chrome and translate the page with the browser's built-in translator. No API key, no paid calls, one command. Optionally translate through Google Cloud or a local Ollama model.</span>
       <span data-l="uk">Маленький інструмент для Windows: перетворює EPUB, PDF, MOBI, FB2 та інші формати на чистий локальний HTML з навігацією та змістом - далі читаєш у Chrome і перекладаєш сторінку вбудованим перекладачем браузера. Без API-ключа, без платних запитів, однією командою. За бажанням - переклад через Google Cloud або локальну Ollama.</span>
     </p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
-        <span data-l="ru">⤓ Скачать релиз</span><span data-l="en">⤓ Download release</span><span data-l="uk">⤓ Завантажити реліз</span>
-      </a>
-      <a class="btn" href="#install" data-l="ru">Установка через winget</a>
-      <a class="btn" href="#install-en" data-l="en">Install via winget</a>
-      <a class="btn" href="#install-uk" data-l="uk">Встановлення через winget</a>
-      <a class="btn" href="docs.ru.html" data-l="ru">Документация</a>
-      <a class="btn" href="docs.html" data-l="en">Documentation</a>
-      <a class="btn" href="docs.uk.html" data-l="uk">Документація</a>
-      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">
-        <span data-l="ru">Открыть на GitHub</span><span data-l="en">Browse on GitHub</span><span data-l="uk">Відкрити на GitHub</span>
-      </a>
-      <button class="btn" type="button" onclick="setAll(true)">
-        <span data-l="ru">Развернуть всё</span><span data-l="en">Expand all</span><span data-l="uk">Розгорнути все</span>
-      </button>
-      <button class="btn" type="button" onclick="setAll(false)">
-        <span data-l="ru">Свернуть всё</span><span data-l="en">Collapse all</span><span data-l="uk">Згорнути все</span>
-      </button>
+  </section>
+
+  <!-- ===================== GET IT (header zone) ===================== -->
+  <section aria-label="Get it">
+    <div class="get">
+      <div class="channels">
+        <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
+          <span data-l="ru">⤓ Скачать релиз<span class="dl-ver"></span></span><span data-l="en">⤓ Download release<span class="dl-ver"></span></span><span data-l="uk">⤓ Завантажити реліз<span class="dl-ver"></span></span>
+        </a>
+        <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">
+          <span data-l="ru">Открыть на GitHub</span><span data-l="en">Browse on GitHub</span><span data-l="uk">Відкрити на GitHub</span>
+        </a>
+        <a class="btn" href="docs.ru.html" data-l="ru">Документация</a>
+        <a class="btn" href="docs.html" data-l="en">Documentation</a>
+        <a class="btn" href="docs.uk.html" data-l="uk">Документація</a>
+      </div>
+      <div class="copybox" data-cmd="winget install SerZhyAle.DocHtmlTranslate">
+        <span class="tok">winget</span> install SerZhyAle.DocHtmlTranslate
+        <button class="copy" type="button" onclick="copyBox(this)" aria-label="Copy">
+          <span data-l="ru">Копировать</span><span data-l="en">Copy</span><span data-l="uk">Копіювати</span>
+        </button>
+      </div>
+      <ol class="quickstart">
+        <li>
+          <span data-l="ru">Установи через winget или скачай релиз с GitHub.</span>
+          <span data-l="en">Install via winget or grab a release from GitHub.</span>
+          <span data-l="uk">Встанови через winget або завантаж реліз з GitHub.</span>
+        </li>
+        <li>
+          <span data-l="ru">Конвертируй файл: <code>doc-html-translate.exe "book.epub"</code> - откроется в браузере.</span>
+          <span data-l="en">Convert a file: <code>doc-html-translate.exe "book.epub"</code> - it opens in the browser.</span>
+          <span data-l="uk">Конвертуй файл: <code>doc-html-translate.exe "book.epub"</code> - відкриється в браузері.</span>
+        </li>
+        <li>
+          <span data-l="ru">Читай в Chrome и переводи страницу бесплатно. По желанию - <code>-google</code> или <code>-ollama</code>.</span>
+          <span data-l="en">Read in Chrome and translate the page for free. Optionally - <code>-google</code> or <code>-ollama</code>.</span>
+          <span data-l="uk">Читай у Chrome і перекладай сторінку безкоштовно. За бажанням - <code>-google</code> чи <code>-ollama</code>.</span>
+        </li>
+      </ol>
+      <div class="channels">
+        <button class="btn" type="button" onclick="setAll(true)">
+          <span data-l="ru">Развернуть всё</span><span data-l="en">Expand all</span><span data-l="uk">Розгорнути все</span>
+        </button>
+        <button class="btn" type="button" onclick="setAll(false)">
+          <span data-l="ru">Свернуть всё</span><span data-l="en">Collapse all</span><span data-l="uk">Згорнути все</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -815,33 +885,23 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
 </main>
 
 <footer>
-  <div data-l="ru">
-    <strong>doc-html-translate</strong> - конвертирует EPUB/PDF и другие форматы в локальный HTML, чтобы читать в браузере и переводить страницы бесплатно.
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Скачать релиз</a>
-      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn" href="docs.ru.html">Документация</a>
-    </div>
-    <p class="muted">Лицензия MIT · для Windows · бесплатный сценарий чтения через перевод в браузере.</p>
+  <p class="tools-title">
+    <span data-l="ru">Другие инструменты SZA</span><span data-l="en">More tools by SZA</span><span data-l="uk">Інші інструменти SZA</span>
+  </p>
+  <div class="tools-grid">
+    <a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Sort &amp; organize photos/videos on Android</span></a>
+    <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>FastMediaSorter LITE</b><span>Desktop photo &amp; video organizer + OCR</span></a>
+    <a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Instant Cyrillic keyboard layout swap</span></a>
+    <a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Command-line file &amp; storage management</span></a>
+    <a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>Portable method for AI-agent work</span></a>
+    <a href="https://github.com/SerZhyAle/OneClickRunner" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher (in development)</span></a>
+    <a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA Hub</b><span>Portfolio &amp; all tools</span></a>
   </div>
-  <div data-l="en">
-    <strong>doc-html-translate</strong> - converts EPUB/PDF and other formats into local HTML so you can read in the browser and translate pages for free.
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Download release</a>
-      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn" href="docs.html">Documentation</a>
-    </div>
-    <p class="muted">MIT license · for Windows · the free reading-via-browser-translation workflow.</p>
-  </div>
-  <div data-l="uk">
-    <strong>doc-html-translate</strong> - конвертує EPUB/PDF та інші формати в локальний HTML, щоб читати в браузері й перекладати сторінки безкоштовно.
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">⤓ Завантажити реліз</a>
-      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn" href="docs.uk.html">Документація</a>
-    </div>
-    <p class="muted">Ліцензія MIT · для Windows · безкоштовний сценарій читання через переклад у браузері.</p>
-  </div>
+  <p class="muted">
+    <span data-l="ru">Лицензия MIT · для Windows · бесплатный сценарий чтения через перевод в браузере.</span>
+    <span data-l="en">MIT license · for Windows · the free reading-via-browser-translation workflow.</span>
+    <span data-l="uk">Ліцензія MIT · для Windows · безкоштовний сценарій читання через переклад у браузері.</span>
+  </p>
   <p class="author">
     <span data-l="ru">Автор</span><span data-l="en">Author</span><span data-l="uk">Автор</span>:
     <a href="https://sza.od.ua" target="_blank" rel="noopener">SZA.od.ua</a> ·
@@ -874,7 +934,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
     var dark = d.getAttribute('data-theme') !== 'light';
     var b = document.getElementById('themeBtn');
     if(b){ b.setAttribute('aria-label', dark ? m.toLight : m.toDark); b.setAttribute('title', m.theme); b.setAttribute('aria-pressed', String(!dark)); }
-    metaSet('meta[name="theme-color"]', dark ? '#080b11' : '#eef1f7');
+    metaSet('meta[name="theme-color"]', dark ? '#0a0f0a' : '#eef3ea');
   }
   function applyLang(l){
     var d = document.documentElement, m = I18N[l]||I18N.en;
@@ -890,11 +950,11 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
     var g = document.getElementById('langGroup'); if(g) g.setAttribute('aria-label', m.langGroup);
     applyThemeLabel();
   }
-  function setLang(l){ applyLang(l); try{ localStorage.setItem('dht-lang', l); }catch(e){} }
+  function setLang(l){ applyLang(l); try{ localStorage.setItem('sza-lang', l); }catch(e){} }
   function toggleTheme(){
     var d = document.documentElement, t = d.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
     d.setAttribute('data-theme', t);
-    try{ localStorage.setItem('dht-theme', t); }catch(e){}
+    try{ localStorage.setItem('sza-theme', t); }catch(e){}
     applyThemeLabel();
   }
   /* Expand / collapse every showcase card. */
@@ -930,6 +990,37 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       navigator.clipboard.writeText(txt).then(done, function(){ fallback(); done(); });
     } else { fallback(); done(); }
   }
+  /* Copy the command stored on a .copybox (kit-style box with a check-mark button). */
+  function copyBox(btn){
+    var box = btn.closest('.copybox'); if(!box) return;
+    var txt = box.getAttribute('data-cmd') || box.textContent.trim();
+    function done(){
+      btn.classList.add('done');
+      if(btn.dataset.orig === undefined) btn.dataset.orig = btn.innerHTML;
+      btn.textContent = '✓';
+      setTimeout(function(){ btn.innerHTML = btn.dataset.orig; btn.classList.remove('done'); }, 1600);
+    }
+    function fallback(){
+      try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px';
+        document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){}
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, function(){ fallback(); done(); });
+    } else { fallback(); done(); }
+  }
+  /* Fill the latest release tag into the download button (static /releases/latest stays as fallback). */
+  function loadLatestRelease(){
+    try{
+      fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest', {headers:{'Accept':'application/vnd.github+json'}})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){
+          if(j && j.tag_name){
+            var v = document.querySelectorAll('.dl-ver');
+            for(var i=0;i<v.length;i++){ v[i].textContent = ' ' + j.tag_name; }
+          }
+        }).catch(function(){});
+    }catch(e){}
+  }
   window.addEventListener('hashchange', openFromHash);
   (function init(){
     var l = document.documentElement.getAttribute('data-lang')||'en';
@@ -937,6 +1028,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
     var pres = document.querySelectorAll('pre');
     for(var i=0;i<pres.length;i++){ pres[i].setAttribute('tabindex','0'); }
     openFromHash();
+    loadLatestRelease();
   })();
 </script>
 </body>
