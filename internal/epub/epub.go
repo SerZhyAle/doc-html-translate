@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -107,6 +108,13 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 	// documents. Prepare HTML copies and update hrefs for better compatibility.
 	if err := normalizeXHTMLToHTML(book, outputDir); err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: XHTML->HTML normalization skipped: %v\n", err)
+	}
+
+	// Rewrite Calibre/Kindlegen single-image SVG cover wrappers into plain <img>
+	// so the injected img CSS controls sizing and the browser applies EXIF
+	// orientation (SVG <image> does neither — see normalizeCoverImages).
+	if err := normalizeCoverImages(book, outputDir); err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: cover image normalization skipped: %v\n", err)
 	}
 
 	// Rename any content file whose resolved path conflicts with the generated
@@ -240,6 +248,62 @@ func normalizeXHTMLToHTML(book *Book, outputDir string) error {
 		}
 	}
 
+	return nil
+}
+
+// coverSVGWrapperRe matches a Calibre/Kindlegen-style SVG element that exists
+// only to embed a single raster image (the cover-page idiom). Capture group 1
+// is the image href. It is lazy at both .*? so each match spans exactly one
+// <svg>…</svg> block.
+var coverSVGWrapperRe = regexp.MustCompile(
+	`(?is)<svg\b[^>]*>.*?<image\b[^>]*?\b(?:xlink:)?href\s*=\s*["']([^"']+)["'][^>]*>.*?</svg>`)
+
+// rewriteSVGImageWrappers replaces single-image SVG wrappers with a plain <img>.
+//
+// EPUB tools commonly wrap the cover in <svg><image .../></svg>. That breaks two
+// things in the generated output: the injected `img { object-fit: contain }` CSS
+// and aspect-ratio JS guard never touch SVG <image>, and Calibre often emits
+// preserveAspectRatio="none" — together this stretches the cover to fill the
+// viewport. Browsers also do not apply EXIF orientation to SVG <image>, so a
+// cover tagged Orientation=3 shows upside down. Converting to <img> fixes both:
+// sizing falls under the injected CSS and the browser honours EXIF orientation.
+//
+// SVG blocks holding more than one <image> are left untouched so genuinely
+// illustrated pages are not collapsed to a single picture.
+func rewriteSVGImageWrappers(content string) string {
+	return coverSVGWrapperRe.ReplaceAllStringFunc(content, func(match string) string {
+		if strings.Count(strings.ToLower(match), "<image") != 1 {
+			return match
+		}
+		sub := coverSVGWrapperRe.FindStringSubmatch(match)
+		if len(sub) < 2 || strings.TrimSpace(sub[1]) == "" {
+			return match
+		}
+		// sub[1] excludes both quote characters by construction, so it is safe
+		// to wrap in double quotes without re-escaping.
+		return fmt.Sprintf(`<img src="%s" alt=""/>`, strings.TrimSpace(sub[1]))
+	})
+}
+
+// normalizeCoverImages rewrites single-image SVG wrappers into <img> across all
+// HTML content files. Best-effort: unreadable or unwritable files are skipped.
+func normalizeCoverImages(book *Book, outputDir string) error {
+	for _, item := range book.Manifest {
+		if !isHTMLMediaType(item.MediaType) {
+			continue
+		}
+		path := bookPath(outputDir, book.BasePath, item.Href)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		content := string(data)
+		rewritten := rewriteSVGImageWrappers(content)
+		if rewritten == content {
+			continue
+		}
+		_ = os.WriteFile(path, []byte(rewritten), 0o644)
+	}
 	return nil
 }
 

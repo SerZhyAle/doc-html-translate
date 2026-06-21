@@ -8,8 +8,12 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/syslocale"
 )
+
+// projectURL is the home page opened from the version link in the navbar.
+const projectURL = "https://serzhyale.github.io/doc-html-translate/"
 
 // NavInfo describes navigation links for a single chapter page.
 type NavInfo struct {
@@ -54,6 +58,15 @@ const navBarCSS = `
     pointer-events: none;
     cursor: default;
   }
+  .dht-navbar .nav-title {
+    margin-right: auto;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 55%;
+    padding-right: 12px;
+  }
 	.dht-navbar .nav-actions {
     display: flex;
     align-items: center;
@@ -63,6 +76,17 @@ const navBarCSS = `
     font-size: 12px;
     color: #bdc3c7;
 		margin-left: 4px;
+  }
+  .dht-navbar a.nav-version {
+    font-size: 11px;
+    color: #95a5a6;
+    padding: 2px 6px;
+    margin-left: 4px;
+    text-decoration: none;
+  }
+  .dht-navbar a.nav-version:hover {
+    color: #ecf0f1;
+    background: #34495e;
   }
   img {
     max-height: 100vh;
@@ -322,8 +346,31 @@ func buildNavBarHTML(nav NavInfo) string {
 	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
 
-	return fmt.Sprintf(`<div class="dht-navbar"><div class="nav-actions">%s%s%s</div>%s</div>%s`,
-		prevLink, indexLink, nextLink, info, navBarScript)
+	var titleEl string
+	if strings.TrimSpace(nav.Title) != "" {
+		titleEl = fmt.Sprintf(`<span class="nav-title" title="%s">%s</span>`,
+			html.EscapeString(nav.Title), html.EscapeString(nav.Title))
+	}
+
+	versionLink := fmt.Sprintf(
+		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
+		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
+
+	return fmt.Sprintf(`<div class="dht-navbar">%s<div class="nav-actions">%s%s%s</div>%s%s</div>%s`,
+		titleEl, prevLink, indexLink, nextLink, info, versionLink, navBarScript)
+}
+
+// versionLabel formats the running app version for display in the navbar.
+// Numeric calendar versions are prefixed with "v"; "dev" and the like are shown as-is.
+func versionLabel() string {
+	v := strings.TrimSpace(logging.AppVersion)
+	if v == "" {
+		v = "dev"
+	}
+	if v != "dev" && !strings.HasPrefix(v, "v") {
+		v = "v" + v
+	}
+	return v
 }
 
 // InjectNavBars adds a sticky navigation bar to all spine HTML files.

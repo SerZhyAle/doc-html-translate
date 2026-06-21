@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(go test ./internal/epub/ -run 'TestRewriteSVGImageWrappers|TestExtractMinimalEPUB|TestPathTraversal' -v 2>&1)"
+    ]
+  }
+}

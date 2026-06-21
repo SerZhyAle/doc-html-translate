@@ -133,6 +133,52 @@ func TestSpineHrefs(t *testing.T) {
 	}
 }
 
+func TestRewriteSVGImageWrappers(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "stretching cover (preserveAspectRatio=none, xlink:href)",
+			in:   `<body><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 960 1500" preserveAspectRatio="none"><image width="960" height="1500" xlink:href="cover.jpeg"/></svg></body>`,
+			want: `<body><img src="cover.jpeg" alt=""/></body>`,
+		},
+		{
+			name: "calibre cover with attrs after href and class",
+			in:   `<svg version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1200 1920" height="100%" width="100%" class="calibre"><image xlink:href="image_rsrcSB.jpg" height="1920" width="1200" class="calibre1"/></svg>`,
+			want: `<img src="image_rsrcSB.jpg" alt=""/>`,
+		},
+		{
+			name: "plain href without xlink prefix",
+			in:   `<svg width="100%" height="100%"><image href="cover.png"/></svg>`,
+			want: `<img src="cover.png" alt=""/>`,
+		},
+		{
+			name: "multi-image svg left untouched",
+			in:   `<svg><image xlink:href="a.jpg"/><image xlink:href="b.jpg"/></svg>`,
+			want: `<svg><image xlink:href="a.jpg"/><image xlink:href="b.jpg"/></svg>`,
+		},
+		{
+			name: "icon svg without raster image left untouched",
+			in:   `<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>`,
+			want: `<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>`,
+		},
+		{
+			name: "two separate cover svgs both rewritten",
+			in:   `<svg><image href="a.jpg"/></svg><hr/><svg><image href="b.jpg"/></svg>`,
+			want: `<img src="a.jpg" alt=""/><hr/><img src="b.jpg" alt=""/>`,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := rewriteSVGImageWrappers(tc.in); got != tc.want {
+				t.Errorf("rewriteSVGImageWrappers()\n got: %s\nwant: %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestPathTraversalProtection(t *testing.T) {
 	tmpDir := t.TempDir()
 
