@@ -91,9 +91,14 @@
     </Application>
   </Applications>
 
+  <!--
+    runFullTrust is the single capability: a Windows.FullTrustApplication runs outside the
+    AppContainer sandbox, so network access (the optional Google Cloud / local Ollama calls)
+    is already granted by full trust. internetClient is an AppContainer/UWP capability and
+    would be inert here, so it is intentionally omitted to keep one capability to justify.
+  -->
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <Capability Name="internetClient" />
   </Capabilities>
 
 </Package>

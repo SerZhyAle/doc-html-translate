@@ -212,8 +212,10 @@ func (r Runner) Run() (int, error) {
 		apiKey, keyErr := translator.LoadGoogleAPIKey()
 		if keyErr != nil {
 			logging.Printf("[3/4] Google Translate skipped — API key not available.\n")
-			logging.Printf("       To enable: place your Google Cloud Translation API key in a file\n")
-			logging.Printf("       named 'google_api.key' next to the executable.\n")
+			logging.Printf("       To enable: save your Google Cloud Translation API key as 'google_api.key' in either:\n")
+			for _, p := range translator.GoogleAPIKeyPaths() {
+				logging.Printf("         %s\n", p)
+			}
 			logging.Printf("       Details: %v\n", keyErr)
 			break
 		}
