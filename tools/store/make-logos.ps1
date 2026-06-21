@@ -69,7 +69,8 @@ $mark = @("DOC","HTML")
 Write-Host "Generating Store logos..." -ForegroundColor Cyan
 # 9:16 Poster art (Xbox) - provide the larger of the two accepted sizes.
 New-LogoPng (Join-Path $OutDir "poster-9x16-1440x2160.png") 1440 2160 $mark
-# 1:1 Box art (Xbox) - larger accepted size.
+# 1:1 Box art (Xbox) - both accepted sizes.
+New-LogoPng (Join-Path $OutDir "boxart-1x1-1080x1080.png")  1080 1080 $mark
 New-LogoPng (Join-Path $OutDir "boxart-1x1-2160x2160.png")  2160 2160 $mark
 # 1:1 Store display images.
 New-LogoPng (Join-Path $OutDir "tile-300x300.png")          300  300  $mark
