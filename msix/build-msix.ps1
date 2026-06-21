@@ -21,18 +21,18 @@
   .\msix\build-msix.ps1 -SelfSign
 
 .EXAMPLE
-  # Store package (unsigned, ready to upload):
-  .\msix\build-msix.ps1 `
-      -IdentityName        "12345SerZhyAle.DocHtmlTranslate" `
-      -Publisher           "CN=ABCD1234-5678-..." `
-      -PublisherDisplayName "SZA"
+  # Store package (unsigned, ready to upload). -Publisher / -PublisherDisplayName already
+  # default to the SZA account values, so only the reserved per-product Name is required:
+  .\msix\build-msix.ps1 -IdentityName "<Package/Identity/Name from Partner Center>"
 #>
 param(
-    # Package/Identity/Name from Partner Center. Default suits self-signed local tests.
+    # Package/Identity/Name from Partner Center. Default suits self-signed local tests;
+    # for a Store upload, pass the reserved per-product Name (Partner Center > Product identity).
     [string]$IdentityName = "SerZhyAle.DocHtmlTranslate",
-    # Package/Identity/Publisher (e.g. CN=...). For -SelfSign this MUST equal the cert subject.
-    [string]$Publisher = "CN=SerZhyAle",
-    # Package/Properties/PublisherDisplayName (shown on the Store listing).
+    # Package/Identity/Publisher. Account-wide for the SZA publisher and identical across all
+    # SZA products, so it is the default. For -SelfSign this MUST equal the cert subject (it does).
+    [string]$Publisher = "CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD",
+    # Package/Properties/PublisherDisplayName (shown on the Store listing). Account-wide for SZA.
     [string]$PublisherDisplayName = "SZA",
     # Override the version stamp (YY.MMDD.HHmm). Default: now.
     [string]$Stamp,

@@ -14,8 +14,13 @@ import (
 	"time"
 )
 
-// googleAPIKeyFile is the filename looked up next to the executable.
+// googleAPIKeyFile is the filename of the Google API key.
 const googleAPIKeyFile = "google_api.key"
+
+// appDataDirName is the per-user folder under %LOCALAPPDATA% where a writable
+// copy of the key may live. Needed for the Microsoft Store (MSIX) build, whose
+// install directory is read-only, so the key cannot sit next to the executable.
+const appDataDirName = "doc-html-translate"
 
 const (
 	apiURL         = "https://translation.googleapis.com/language/translate/v2"
@@ -43,27 +48,47 @@ type GoogleClient struct {
 	httpClient *http.Client
 }
 
-// LoadGoogleAPIKey reads the API key from google_api.key located in the same
-// directory as the executable. Returns an error if the file is missing or empty,
-// so the caller can inform the user and skip translation gracefully.
+// GoogleAPIKeyPaths returns the candidate locations for google_api.key, in the
+// order they are tried: next to the executable first (the unpackaged build), then
+// %LOCALAPPDATA%\doc-html-translate\google_api.key (a writable per-user path that
+// also works under the read-only Microsoft Store/MSIX install directory).
+func GoogleAPIKeyPaths() []string {
+	var paths []string
+	if exePath, err := os.Executable(); err == nil {
+		paths = append(paths, filepath.Join(filepath.Dir(exePath), googleAPIKeyFile))
+	}
+	if appData := os.Getenv("LOCALAPPDATA"); appData != "" {
+		paths = append(paths, filepath.Join(appData, appDataDirName, googleAPIKeyFile))
+	}
+	return paths
+}
+
+// LoadGoogleAPIKey reads the API key from the first of GoogleAPIKeyPaths that
+// holds a non-empty key. Returns an error if no location has a usable key, so the
+// caller can inform the user and skip translation gracefully.
 func LoadGoogleAPIKey() (string, error) {
-	exePath, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("cannot locate executable: %w", err)
+	candidates := GoogleAPIKeyPaths()
+	if len(candidates) == 0 {
+		return "", fmt.Errorf("cannot locate executable or %%LOCALAPPDATA%%")
 	}
-	keyPath := filepath.Join(filepath.Dir(exePath), googleAPIKeyFile)
-	data, err := os.ReadFile(keyPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return "", fmt.Errorf("key file not found: %s", keyPath)
+	var lastErr error
+	for _, keyPath := range candidates {
+		data, err := os.ReadFile(keyPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				lastErr = fmt.Errorf("key file not found: %s", keyPath)
+				continue
+			}
+			return "", fmt.Errorf("read key file: %w", err)
 		}
-		return "", fmt.Errorf("read key file: %w", err)
+		key := strings.TrimSpace(string(data))
+		if key == "" {
+			lastErr = fmt.Errorf("key file is empty: %s", keyPath)
+			continue
+		}
+		return key, nil
 	}
-	key := strings.TrimSpace(string(data))
-	if key == "" {
-		return "", fmt.Errorf("key file is empty: %s", keyPath)
-	}
-	return key, nil
+	return "", lastErr
 }
 
 // NewGoogleClient creates a new Google Translate client with the given API key.
