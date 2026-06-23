@@ -17,6 +17,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"doc-html-translate/internal/translator"
 )
 
 //go:embed ui.html
@@ -48,6 +50,7 @@ func main() {
 	mux.HandleFunc("/api/ping", handlePing)
 	mux.HandleFunc("/api/browse-file", handleBrowseFile)
 	mux.HandleFunc("/api/browse-folder", handleBrowseFolder)
+	mux.HandleFunc("/api/google-key", handleGoogleKey)
 	mux.HandleFunc("/api/run", handleRun)
 
 	srv := &http.Server{Handler: mux}
@@ -96,6 +99,76 @@ func handleBrowseFolder(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{"path": path})
+}
+
+// handleGoogleKey lets the GUI inspect and save the Google Translate API key.
+//
+//	GET  → {"exists": bool, "path": "<writable per-user path>"}
+//	POST → {"key": "..."} saves the key to the writable per-user location and
+//	       returns {"exists": bool, "path": "..."}.
+//
+// The key is stored at %LOCALAPPDATA%\doc-html-translate\google_api.key so it
+// also works under the read-only Microsoft Store (MSIX) install directory.
+func handleGoogleKey(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var req struct {
+			Key string `json:"key"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if err := saveGoogleAPIKey(req.Key); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	case http.MethodGet:
+		// fallthrough to status response below
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	_, err := translator.LoadGoogleAPIKey()
+	json.NewEncoder(w).Encode(map[string]any{
+		"exists": err == nil,
+		"path":   writableGoogleKeyPath(),
+	})
+}
+
+// writableGoogleKeyPath returns the per-user, writable key location. It mirrors
+// translator.GoogleAPIKeyPaths by picking the %LOCALAPPDATA% candidate (the only
+// one guaranteed writable under MSIX); falls back to the last candidate.
+func writableGoogleKeyPath() string {
+	paths := translator.GoogleAPIKeyPaths()
+	for _, p := range paths {
+		if appData := os.Getenv("LOCALAPPDATA"); appData != "" && strings.HasPrefix(p, appData) {
+			return p
+		}
+	}
+	if len(paths) > 0 {
+		return paths[len(paths)-1]
+	}
+	return ""
+}
+
+func saveGoogleAPIKey(key string) error {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return fmt.Errorf("key is empty")
+	}
+	path := writableGoogleKeyPath()
+	if path == "" {
+		return fmt.Errorf("cannot determine a writable key location")
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create key folder: %w", err)
+	}
+	if err := os.WriteFile(path, []byte(key), 0o600); err != nil {
+		return fmt.Errorf("write key file: %w", err)
+	}
+	return nil
 }
 
 type runRequest struct {
@@ -243,7 +316,7 @@ func findCLI() string {
 func browseFile() (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 $f = New-Object System.Windows.Forms.OpenFileDialog
-$f.Filter = "Documents|*.epub;*.fb2;*.pdf;*.txt;*.html;*.htm;*.rtf;*.md|All files|*.*"
+$f.Filter = "Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|All files|*.*"
 $f.Title = "Select input file"
 if ($f.ShowDialog() -eq 'OK') { $f.FileName }`
 	return runPowershell(script)

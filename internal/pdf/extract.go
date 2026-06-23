@@ -210,6 +210,11 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 
 	pageImages := extractImages(pdfPath, outputDir, totalPages)
 
+	// Map each emitted page's source PDF page number to its generated href, so
+	// PDF bookmarks (which reference 1-based PDF pages) can be linked even when
+	// blank pages were skipped and output pages were renumbered.
+	pdfPageToHref := make(map[int]string, totalPages)
+
 	generated := 0
 	for i, rawPage := range pageTexts {
 		pdfPageNum := i + 1
@@ -223,6 +228,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 		generated++
 		href := fmt.Sprintf("page_%03d.html", generated)
 		id := fmt.Sprintf("page_%03d", generated)
+		pdfPageToHref[pdfPageNum] = href
 
 		pageHTML := buildPDFPageHTML(title, pdfPageNum, totalPages, items, imgs)
 		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
@@ -237,6 +243,8 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	if generated == 0 {
 		return nil, fmt.Errorf("pdftotext: no text content found (scanned/image-only PDF?)")
 	}
+
+	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
 	logging.Printf("  Pages: %d (with text: %d)\n", totalPages, generated)
@@ -425,7 +433,6 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(bookTitle), pageNum))
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }\n")
-	sb.WriteString("    .pdf-page-header { color: #666; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 0.5em; margin-bottom: 1.5em; }\n")
 	sb.WriteString("    p { margin: 0.6em 0; text-indent: 1.5em; }\n")
 	sb.WriteString("    p:first-of-type { text-indent: 0; }\n")
 	sb.WriteString("    h2 { text-align: center; font-size: 1.5em; font-weight: bold; letter-spacing: 0.08em; margin: 1.8em 0 1.2em; text-transform: uppercase; }\n")
@@ -438,7 +445,7 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 		sb.WriteString("    @media (max-width: 700px) { .pdf-images { float: none; width: 100%; margin-right: 0; } }\n")
 	}
 	sb.WriteString("  </style>\n</head>\n<body>\n")
-	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
+	// Page number is shown in the injected navbar (top-right); no body header needed.
 
 	if sideBySide {
 		sb.WriteString("  <div class=\"pdf-images\">\n")
@@ -498,6 +505,9 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	// Extract embedded images (non-fatal if PDF has none).
 	pageImages := extractImages(pdfPath, outputDir, totalPages)
 
+	// Source PDF page number -> generated href (blank pages are skipped).
+	pdfPageToHref := make(map[int]string, totalPages)
+
 	generated := 0
 	for i := 1; i <= totalPages; i++ {
 		pageContent, skip, pageErr := extractPage(reader, i)
@@ -520,6 +530,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		generated++
 		href := fmt.Sprintf("page_%03d.html", generated)
 		id := fmt.Sprintf("page_%03d", generated)
+		pdfPageToHref[i] = href
 
 		pageHTML := buildPageHTML(title, i, totalPages, pageContent, imgs)
 		pagePath := filepath.Join(outputDir, href)
@@ -564,6 +575,8 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		logging.Printf("  Original PDF copied: %s\n", pdfCopyName)
 		return book, nil
 	}
+
+	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
 	logging.Printf("  Pages: %d (with text: %d)\n", totalPages, generated)
@@ -736,7 +749,6 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 		html.EscapeString(bookTitle), pageNum))
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }\n")
-	sb.WriteString("    .pdf-page-header { color: #666; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 0.5em; margin-bottom: 1em; }\n")
 	sb.WriteString("    p { margin: 0.4em 0; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
 	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
@@ -748,7 +760,7 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
-	sb.WriteString(fmt.Sprintf("  <div class=\"pdf-page-header\">Page %d / %d</div>\n", pageNum, totalPages))
+	// Page number is shown in the injected navbar (top-right); no body header needed.
 
 	if sideBySide {
 		sb.WriteString("  <div class=\"pdf-images\">\n")

@@ -30,6 +30,8 @@ body {
 h1 { font-size: 18px; font-weight: 600; }
 .ver { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
 .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.hint.ok { color: var(--green); }
+.hint.warn { color: var(--red); }
 .section { margin: 14px 0; }
 .stitle {
     font-size: 11px;
@@ -114,6 +116,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
         <input type="text" id="inputFile" placeholder="Click Browse to select a document...">
         <button onclick="browseFile()">Browse...</button>
     </div>
+    <div class="hint">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
     <div class="hint">Tip: drag a file onto this window (or onto doc-html-ui.exe) to pre-fill input.</div>
 </div>
 
@@ -145,6 +148,15 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
     <div class="row"><span class="lbl">Context:</span><input type="number" id="ollamaCtx" value="8192" min="512"></div>
     <div class="row"><span class="lbl">Split Size:</span><input type="number" id="splitSize" value="0" min="0"></div>
     <div class="hint">Use <code>0</code> to disable splitting, or set a character limit like <code>5000</code>.</div>
+</div>
+
+<div class="section" id="googleKeySection" style="display:none">
+    <div class="stitle">Google API Key</div>
+    <div class="row">
+        <input type="password" id="googleKey" placeholder="Paste your Google Cloud Translation API key...">
+        <button onclick="saveGoogleKey()">Save</button>
+    </div>
+    <div class="hint" id="googleKeyStatus">Checking for a saved key...</div>
 </div>
 
 <hr>
@@ -250,10 +262,75 @@ async function browseFolder() {
     } catch(e) { console.error('browseFolder', e); }
 }
 
+// ── translation engine toggles ──────────────────────────
+const chkGoogle = document.getElementById('chkGoogle');
+const chkOllama = document.getElementById('chkOllama');
+const googleKeySection = document.getElementById('googleKeySection');
+
+chkGoogle.addEventListener('change', () => {
+    if (chkGoogle.checked) chkOllama.checked = false; // engines are mutually exclusive
+    syncEngineUI();
+});
+chkOllama.addEventListener('change', () => {
+    if (chkOllama.checked) chkGoogle.checked = false;
+    syncEngineUI();
+});
+
+function syncEngineUI() {
+    googleKeySection.style.display = chkGoogle.checked ? '' : 'none';
+    if (chkGoogle.checked) refreshGoogleKeyStatus();
+}
+
+// ── Google API key ──────────────────────────────────────
+function setKeyStatus(text, cls) {
+    const el = document.getElementById('googleKeyStatus');
+    el.textContent = text;
+    el.className = 'hint' + (cls ? ' ' + cls : '');
+}
+
+async function refreshGoogleKeyStatus() {
+    try {
+        const r = await fetch('/api/google-key');
+        const d = await r.json();
+        if (d.exists) {
+            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new key to replace.', 'ok');
+        } else {
+            setKeyStatus('No key saved yet. Paste your key and click Save (stored at ' + (d.path || 'per-user folder') + ').', 'warn');
+        }
+    } catch(e) {
+        setKeyStatus('Could not check key status: ' + e.message, 'warn');
+    }
+}
+
+async function saveGoogleKey() {
+    const key = document.getElementById('googleKey').value.trim();
+    if (!key) { setKeyStatus('Enter a key before saving.', 'warn'); return; }
+    try {
+        const r = await fetch('/api/google-key', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({key}),
+        });
+        if (!r.ok) { setKeyStatus('Save failed: ' + (await r.text()).trim(), 'warn'); return; }
+        document.getElementById('googleKey').value = '';
+        const d = await r.json();
+        setKeyStatus(d.exists ? 'Key saved.' : 'Saved, but key could not be verified.', d.exists ? 'ok' : 'warn');
+    } catch(e) {
+        setKeyStatus('Save failed: ' + e.message, 'warn');
+    }
+}
+
 // ── run ─────────────────────────────────────────────────
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
     if (!input) { alert('Select an input file first.'); return; }
+
+    if (chkGoogle.checked) {
+        try {
+            const d = await (await fetch('/api/google-key')).json();
+            if (!d.exists && !confirm('No Google API key is saved — translation will be skipped. Continue anyway?')) return;
+        } catch(e) { /* ignore, let the CLI report it */ }
+    }
 
     const cfg = {
         input:          input,

@@ -114,8 +114,13 @@ func TestInjectNavBars(t *testing.T) {
 		},
 	}
 
-	if err := InjectNavBars(book, tmpDir); err != nil {
+	if err := InjectNavBars(book, tmpDir, "Test Book.epub"); err != nil {
 		t.Fatal(err)
+	}
+
+	// The source file name must appear on the left of the bar.
+	if dataF, _ := os.ReadFile(filepath.Join(oebpsDir, "ch01.xhtml")); !strings.Contains(string(dataF), "Test Book.epub") {
+		t.Error("ch01: expected source file name in navbar")
 	}
 
 	// Check first page: no prev, has next

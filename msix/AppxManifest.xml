@@ -44,6 +44,14 @@
   </Resources>
 
   <Applications>
+    <!--
+      Two applications share one package:
+        DocHtmlUi  (doc-html-ui.exe)        - the launchable GUI; the only Start-menu tile.
+        DocHtmlCli (doc-html-translate.exe) - the headless file handler; owns the file type
+                                              associations, hidden from the Start app list.
+      File type associations launch the Executable of the Application they are declared
+      under, so the CLI association must live on its own Application.
+    -->
     <Application Id="DocHtmlUi" Executable="doc-html-ui.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
           DisplayName="doc-html-translate"
@@ -61,15 +69,30 @@
           </uap:ShowNameOnTiles>
         </uap:DefaultTile>
       </uap:VisualElements>
+    </Application>
 
+    <!--
+      Headless document handler. Double-clicking an associated file launches the CLI
+      directly as  doc-html-translate.exe "<path>"  (the path arrives as argv[1]), which
+      converts the document and opens the result - the same behavior as the unpackaged
+      "-register" HKCU flow (internal/windowsreg/register_windows.go). No GUI window opens;
+      a console shows the conversion progress. The default run selects no translation engine
+      (convert + open only); to translate or change options, launch the GUI from the Start
+      menu and browse to the file.
+
+      AppListEntry="none" keeps this app out of the Start app list (so it is not a second
+      tile); its file type associations are still registered.
+      FileTypeAssociation Name must be lowercase [a-z0-9.], <= 39 chars.
+    -->
+    <Application Id="DocHtmlCli" Executable="doc-html-translate.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+          AppListEntry="none"
+          DisplayName="doc-html-translate (convert)"
+          Description="Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML."
+          BackgroundColor="#1E3A8A"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png" />
       <Extensions>
-        <!--
-          File type associations replace the unpackaged "-register" HKCU flow, which is
-          virtualized (and therefore ignored) inside an MSIX container. Double-clicking
-          an associated document launches doc-html-ui.exe with the path as argv[1]; the
-          GUI pre-fills it and lets the user pick options before converting.
-          FileTypeAssociation Name must be lowercase [a-z0-9.], <= 39 chars.
-        -->
         <uap:Extension Category="windows.fileTypeAssociation">
           <uap:FileTypeAssociation Name="dochtmltranslate">
             <uap:DisplayName>DOC-HTML-TRANSLATE Document</uap:DisplayName>

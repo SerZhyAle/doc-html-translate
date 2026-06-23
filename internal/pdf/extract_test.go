@@ -161,8 +161,9 @@ func TestBuildPageHTML(t *testing.T) {
 	if !strings.Contains(html, "<title>Test Book — Page 3</title>") {
 		t.Error("missing/wrong title")
 	}
-	if !strings.Contains(html, "Page 3 / 10") {
-		t.Error("missing page header")
+	// Page number is shown in the injected navbar, not in a body header.
+	if strings.Contains(html, "pdf-page-header") {
+		t.Error("body page header should be removed (navbar shows the page number)")
 	}
 	if !strings.Contains(html, "<p>Hello World</p>") {
 		t.Error("missing first paragraph")

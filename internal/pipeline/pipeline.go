@@ -197,7 +197,7 @@ func (r Runner) Run() (int, error) {
 		}
 		logging.Println("  Single page — TOC and navigation skipped.")
 	} else {
-		if err := htmlgen.InjectNavBars(book, outputDir); err != nil {
+		if err := htmlgen.InjectNavBars(book, outputDir, filepath.Base(inputPath)); err != nil {
 			return ExitIOError, fmt.Errorf("inject navbars: %w", err)
 		}
 		logging.Printf("  Navigation: %d pages\n", len(book.SpineHrefs()))
@@ -266,7 +266,14 @@ func (r Runner) Run() (int, error) {
 
 	// Generate TOC after translation so snippets reflect translated text.
 	if len(book.Spine) > 1 {
-		generatedIndex, err = htmlgen.GenerateIndexWithSnippets(book, outputDir, tocSnippets)
+		// No authored TOC (NCX/nav for EPUB, bookmarks for PDF)? Synthesize a
+		// multi-level TOC from the headings on the now-final pages, injecting
+		// stable anchors. Runs on the translated files so labels are translated.
+		if len(book.TOC) == 0 {
+			book.TOC = htmlgen.BuildFallbackTOC(book, outputDir, tocSnippets)
+		}
+
+		generatedIndex, err = htmlgen.GenerateIndexWithSnippetsDepth(book, outputDir, tocSnippets, r.cfg.TOCDepth)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate index: %w", err)
 		}
@@ -378,8 +385,53 @@ func (r Runner) translateContent(book *epub.Book, client translator.Client, page
 		}
 	}
 
+	// Translate authored TOC labels (EPUB NCX/nav, PDF bookmarks). The
+	// heading-scan fallback is built later from already-translated pages, so it
+	// is not translated here. The shared CachingClient keeps labels consistent
+	// with identical in-page headings.
+	r.translateTOCTitles(book, client)
+
 	logging.Println("  Translation complete.")
 	return ExitOK, tocSnippets, nil
+}
+
+// translateTOCTitles batch-translates every label in book.TOC in place,
+// preserving the tree structure. Best-effort: a failed batch leaves labels as-is.
+func (r Runner) translateTOCTitles(book *epub.Book, client translator.Client) {
+	if len(book.TOC) == 0 {
+		return
+	}
+	var titles []string
+	collectTOCTitles(book.TOC, &titles)
+	if len(titles) == 0 {
+		return
+	}
+	translated, err := client.Translate(titles, r.cfg.SourceLang, r.cfg.TargetLang)
+	if err != nil || len(translated) == 0 {
+		return
+	}
+	idx := 0
+	assignTOCTitles(book.TOC, translated, &idx)
+}
+
+func collectTOCTitles(entries []epub.TOCEntry, out *[]string) {
+	for i := range entries {
+		*out = append(*out, entries[i].Title)
+		collectTOCTitles(entries[i].Children, out)
+	}
+}
+
+func assignTOCTitles(entries []epub.TOCEntry, translated []string, idx *int) {
+	for i := range entries {
+		if *idx >= len(translated) {
+			return
+		}
+		if t := translated[*idx]; t != "" {
+			entries[i].Title = t
+		}
+		*idx++
+		assignTOCTitles(entries[i].Children, translated, idx)
+	}
 }
 
 // outputDirForFile returns the output directory path for a given input file.

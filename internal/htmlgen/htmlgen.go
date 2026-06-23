@@ -18,12 +18,20 @@ import (
 // GenerateIndex creates index.html in outputDir with a table of contents
 // based on the book's spine order. CSS files from the manifest are linked.
 func GenerateIndex(book *epub.Book, outputDir string) (string, error) {
-	return GenerateIndexWithSnippets(book, outputDir, nil)
+	return GenerateIndexWithSnippetsDepth(book, outputDir, nil, 0)
 }
 
-// GenerateIndexWithSnippets creates index.html in outputDir with a table of contents
-// based on the book's spine order. Precomputed snippets are used when available.
+// GenerateIndexWithSnippets creates index.html in outputDir with a table of contents.
+// Precomputed snippets are used when available. TOC nesting is unlimited.
 func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[string]string) (string, error) {
+	return GenerateIndexWithSnippetsDepth(book, outputDir, snippets, 0)
+}
+
+// GenerateIndexWithSnippetsDepth writes index.html. When book.TOC is populated
+// (authored NCX/nav, PDF outline, or the heading-scan fallback) it renders a
+// multi-level collapsible TOC limited to `depth` levels (0 = unlimited).
+// Otherwise it falls back to the flat, one-entry-per-spine-page list.
+func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets map[string]string, depth int) (string, error) {
 	indexPath := filepath.Join(outputDir, "index.html")
 
 	// Collect CSS files from manifest
@@ -38,36 +46,16 @@ func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[s
 		}
 	}
 
-	// Build TOC from spine, with first-sentence previews from each page.
 	spineHrefs := book.SpineHrefs()
-	var tocEntries []string
-	for i, href := range spineHrefs {
-		fullHref := href
-		if book.BasePath != "" && book.BasePath != "." {
-			fullHref = book.BasePath + "/" + href
-		}
-		label := chapterLabel(href, i+1)
 
-		// Extract snippet from the page file (translated if available).
-		snippet := ""
-		if snippets != nil {
-			snippet = snippets[href]
-		}
-		if snippet == "" {
-			pagePath := bookPath(outputDir, book.BasePath, href)
-			snippet = extractSnippet(pagePath)
-		}
-
-		if snippet != "" {
-			// Use snippet as the primary label — filename (part0001 etc.) is not informative.
-			tocEntries = append(tocEntries, fmt.Sprintf(
-				`      <li><a href="%s"><span class="toc-label">%d.</span><span class="toc-snippet">%s</span></a></li>`,
-				html.EscapeString(fullHref), i+1, html.EscapeString(snippet)))
-		} else {
-			tocEntries = append(tocEntries, fmt.Sprintf(
-				`      <li><a href="%s"><span class="toc-label">%s</span></a></li>`,
-				html.EscapeString(fullHref), html.EscapeString(label)))
-		}
+	// Build the <nav> body: a multi-level collapsible TOC when one is available,
+	// otherwise the flat spine list (preserves behaviour for callers that do not
+	// populate book.TOC).
+	var navBody string
+	if len(book.TOC) > 0 {
+		navBody = renderTOCTree(book.TOC, book.BasePath, depth)
+	} else {
+		navBody = renderFlatSpineTOC(book, outputDir, snippets, spineHrefs)
 	}
 
 	title := book.Title
@@ -88,12 +76,17 @@ func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[s
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; }\n")
 	sb.WriteString("    h1 { border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }\n")
-	sb.WriteString("    nav ul { list-style: none; padding: 0; }\n")
-	sb.WriteString("    nav li { margin: 0.5em 0; }\n")
-	sb.WriteString("    nav a { text-decoration: none; color: #1a0dab; display: block; padding: 0.3em 0; }\n")
+	sb.WriteString("    nav ul { list-style: none; padding-left: 1.3em; }\n")
+	sb.WriteString("    nav > ul { padding-left: 0; }\n")
+	sb.WriteString("    nav li { margin: 0.4em 0; }\n")
+	sb.WriteString("    nav a { text-decoration: none; color: #1a0dab; }\n")
 	sb.WriteString("    nav a:hover { text-decoration: underline; }\n")
+	sb.WriteString("    nav details { margin: 0.2em 0; }\n")
+	sb.WriteString("    nav summary { cursor: pointer; padding: 0.2em 0; color: #1a0dab; }\n")
+	sb.WriteString("    nav summary a { display: inline; }\n")
 	sb.WriteString("    .toc-label { font-weight: bold; margin-right: 0.4em; }\n")
 	sb.WriteString("    .toc-snippet { font-size: 0.9em; color: #333; font-style: italic; }\n")
+	sb.WriteString("    .toc-section { color: #333; }\n")
 	sb.WriteString("    .meta { color: #666; font-size: 0.9em; margin-bottom: 2em; }\n")
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
@@ -101,11 +94,7 @@ func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[s
 	sb.WriteString(fmt.Sprintf("  <h1>%s</h1>\n", html.EscapeString(title)))
 	sb.WriteString(fmt.Sprintf("  <p class=\"meta\">Chapters: %d</p>\n", len(spineHrefs)))
 	sb.WriteString("  <nav>\n")
-	sb.WriteString("    <ul>\n")
-	if len(tocEntries) > 0 {
-		sb.WriteString(strings.Join(tocEntries, "\n") + "\n")
-	}
-	sb.WriteString("    </ul>\n")
+	sb.WriteString(navBody)
 	sb.WriteString("  </nav>\n")
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")
@@ -115,6 +104,99 @@ func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[s
 	}
 
 	return indexPath, nil
+}
+
+// renderFlatSpineTOC renders the legacy one-entry-per-spine-page list, with a
+// first-sentence snippet (translated when available) as each label. Returns the
+// <ul>…</ul> block for insertion into <nav>.
+func renderFlatSpineTOC(book *epub.Book, outputDir string, snippets map[string]string, spineHrefs []string) string {
+	var tocEntries []string
+	for i, href := range spineHrefs {
+		fullHref := href
+		if book.BasePath != "" && book.BasePath != "." {
+			fullHref = book.BasePath + "/" + href
+		}
+		label := chapterLabel(href, i+1)
+
+		snippet := ""
+		if snippets != nil {
+			snippet = snippets[href]
+		}
+		if snippet == "" {
+			pagePath := bookPath(outputDir, book.BasePath, href)
+			snippet = extractSnippet(pagePath)
+		}
+
+		if snippet != "" {
+			tocEntries = append(tocEntries, fmt.Sprintf(
+				`      <li><a href="%s"><span class="toc-label">%d.</span><span class="toc-snippet">%s</span></a></li>`,
+				html.EscapeString(fullHref), i+1, html.EscapeString(snippet)))
+		} else {
+			tocEntries = append(tocEntries, fmt.Sprintf(
+				`      <li><a href="%s"><span class="toc-label">%s</span></a></li>`,
+				html.EscapeString(fullHref), html.EscapeString(label)))
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString("    <ul>\n")
+	if len(tocEntries) > 0 {
+		sb.WriteString(strings.Join(tocEntries, "\n") + "\n")
+	}
+	sb.WriteString("    </ul>\n")
+	return sb.String()
+}
+
+// renderTOCTree renders a nested TOC as collapsible <details> sections (for
+// entries with children) and plain links (for leaves), honouring depth
+// (0 = unlimited). Returns the top-level <ul>…</ul> block.
+func renderTOCTree(entries []epub.TOCEntry, basePath string, depth int) string {
+	var sb strings.Builder
+	renderTOCList(&sb, entries, basePath, depth, 1, 2)
+	return sb.String()
+}
+
+func renderTOCList(sb *strings.Builder, entries []epub.TOCEntry, basePath string, depth, level, indent int) {
+	pad := strings.Repeat("  ", indent)
+	sb.WriteString(pad + "<ul>\n")
+	for _, e := range entries {
+		renderTOCEntry(sb, e, basePath, depth, level, indent+1)
+	}
+	sb.WriteString(pad + "</ul>\n")
+}
+
+func renderTOCEntry(sb *strings.Builder, e epub.TOCEntry, basePath string, depth, level, indent int) {
+	pad := strings.Repeat("  ", indent)
+
+	label := html.EscapeString(e.Title)
+	if strings.TrimSpace(e.Title) == "" {
+		label = "&#8230;" // ellipsis placeholder for an untitled grouping node
+	}
+
+	var labelHTML string
+	if e.Href != "" {
+		labelHTML = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(prefixBase(basePath, e.Href)), label)
+	} else {
+		labelHTML = fmt.Sprintf(`<span class="toc-section">%s</span>`, label)
+	}
+
+	showChildren := len(e.Children) > 0 && (depth <= 0 || level < depth)
+	if showChildren {
+		sb.WriteString(pad + "<li><details open><summary>" + labelHTML + "</summary>\n")
+		renderTOCList(sb, e.Children, basePath, depth, level+1, indent+1)
+		sb.WriteString(pad + "</details></li>\n")
+	} else {
+		sb.WriteString(pad + "<li>" + labelHTML + "</li>\n")
+	}
+}
+
+// prefixBase joins the OPF base directory to a book-relative href (which may
+// carry a #fragment), matching the spine-href convention.
+func prefixBase(basePath, href string) string {
+	if basePath != "" && basePath != "." {
+		return basePath + "/" + href
+	}
+	return href
 }
 
 func bookPath(outputDir, basePath, href string) string {

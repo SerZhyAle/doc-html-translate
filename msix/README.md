@@ -16,15 +16,22 @@ during certification) and a Store-signed build also reduces antivirus false posi
 Both binaries ship side by side, plus the manifest and generated logos:
 
 ```
-doc-html-ui.exe            ← Application entry point (the launchable GUI)
-doc-html-translate.exe     ← the CLI the GUI spawns (findCLI() looks next to itself)
+doc-html-ui.exe            ← GUI application (the launchable Start-menu tile)
+doc-html-translate.exe     ← CLI: the GUI spawns it AND it is the file-association handler
 AppxManifest.xml
 Assets\StoreLogo.png  Square44x44Logo.png  Square71x71Logo.png  Square150x150Logo.png  Wide310x150Logo.png
 ```
 
-The GUI is the entry point because a Store app needs a launchable window. Double-clicking an
-associated document launches `doc-html-ui.exe` with the file as `argv[1]`; it pre-fills the path
-and lets the user pick options before converting (see `cmd/doc-html-ui/main.go`).
+The package declares **two applications** (see `AppxManifest.xml`):
+
+- **`DocHtmlUi`** → `doc-html-ui.exe` — the launchable GUI; the only Start-menu tile. A Store app
+  needs a launchable window, so this is the visible app.
+- **`DocHtmlCli`** → `doc-html-translate.exe` — the file-type-association handler, hidden from the
+  Start app list (`AppListEntry="none"`). Double-clicking an associated document launches the CLI
+  directly as `doc-html-translate.exe "<path>"` (path as `argv[1]`), which converts and opens the
+  result — matching the unpackaged `-register` HKCU flow (`internal/windowsreg/register_windows.go`).
+  A double-click runs with default options (no translation engine); to translate or pick options,
+  launch the GUI and browse to the file.
 
 ## Prerequisites
 
@@ -114,12 +121,14 @@ Monotonic over time and unique per minute. Override the stamp with `-Stamp 26.06
 
 ### Age rating (IARC)
 
-The SZA account has a portable **Global Rating ID `7d9b315a-f211-8505-80d0-3f4bee633770`**
-(first generated for FastMediaSorter). You may paste it **only if** this app's functionality
-does not change any questionnaire answer; otherwise run the short questionnaire again and let
-IARC generate a fresh rating. doc-html-translate is a different app (document conversion, no IAP,
-no ads, no UGC sharing), so verify the answers still hold before reusing the ID - when in doubt,
-re-run the questionnaire.
+doc-html-translate has its **own** IARC rating - **Global Rating ID
+`a759a909-53c4-8fef-8ef0-3f4f445d1125`** (the questionnaire was re-run for this app; the rating
+went live on the Microsoft storefront on 2026-06-21). Reuse this ID for future doc-html-translate
+updates whose questionnaire answers do not change; otherwise re-run the questionnaire.
+
+The SZA account also has an older portable ID `7d9b315a-f211-8505-80d0-3f4bee633770` (first
+generated for FastMediaSorter). It does **not** apply here - doc-html-translate's answers
+differed, so IARC generated this fresh per-product rating.
 
 ## 5. Submit → certification
 

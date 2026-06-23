@@ -269,11 +269,9 @@ func buildPageHTML(title string, pageNum, totalPages int, paragraphs []string) s
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(title), pageNum))
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }\n")
-	sb.WriteString("    .page-header { color: #666; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 0.5em; margin-bottom: 1em; }\n")
 	sb.WriteString("    p { text-indent: 1.5em; margin: 0.5em 0; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
-	sb.WriteString(fmt.Sprintf("  <div class=\"page-header\">%s — %d / %d</div>\n",
-		html.EscapeString(title), pageNum, totalPages))
+	// Page number is shown in the injected navbar (top-right); no body header needed.
 
 	for _, p := range paragraphs {
 		sb.WriteString(fmt.Sprintf("  <p>%s</p>\n", html.EscapeString(p)))

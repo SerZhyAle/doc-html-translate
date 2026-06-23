@@ -18,14 +18,35 @@ type Book struct {
 	Title    string
 	Manifest []ManifestItem
 	Spine    []SpineItem
-	BasePath string // directory within EPUB where content.opf resides
+	BasePath string     // directory within EPUB where content.opf resides
+	TOC      []TOCEntry // authored table of contents (NCX navMap / nav.xhtml), nil if none
+
+	// hrefRewrites maps an original content href to its final href after
+	// normalization (e.g. "chapter1.xhtml" -> "chapter1.html", or an
+	// index.* -> "_content_index.html" reserved-name rename). It lets TOC
+	// resolution follow the same renames the content files underwent.
+	hrefRewrites map[string]string
+
+	// spineTocID is the manifest id referenced by <spine toc="...">, used to
+	// locate the EPUB2 NCX when no manifest media-type identifies it.
+	spineTocID string
+}
+
+// TOCEntry is one node of a (possibly nested) table of contents.
+// Href is relative to the OPF base directory and may carry a #fragment,
+// matching the convention used by SpineHrefs.
+type TOCEntry struct {
+	Title    string
+	Href     string
+	Children []TOCEntry
 }
 
 // ManifestItem represents a single item in the OPF manifest.
 type ManifestItem struct {
-	ID        string
-	Href      string
-	MediaType string
+	ID         string
+	Href       string
+	MediaType  string
+	Properties string // OPF properties attribute (e.g. "nav", "cover-image")
 }
 
 // SpineItem represents an entry in the OPF spine (reading order).
@@ -61,12 +82,14 @@ type opfManifest struct {
 }
 
 type opfItem struct {
-	ID        string `xml:"id,attr"`
-	Href      string `xml:"href,attr"`
-	MediaType string `xml:"media-type,attr"`
+	ID         string `xml:"id,attr"`
+	Href       string `xml:"href,attr"`
+	MediaType  string `xml:"media-type,attr"`
+	Properties string `xml:"properties,attr"`
 }
 
 type opfSpine struct {
+	Toc      string       `xml:"toc,attr"`
 	ItemRefs []opfItemRef `xml:"itemref"`
 }
 
@@ -124,7 +147,43 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 		fmt.Fprintf(os.Stderr, "WARNING: reserved-name conflict resolution skipped: %v\n", err)
 	}
 
+	// Parse the authored table of contents (EPUB3 nav.xhtml or EPUB2 toc.ncx)
+	// into book.TOC. Best-effort: a missing/malformed TOC just leaves it nil
+	// and the generator falls back to a spine/heading-based TOC.
+	if err := parseTOC(book, outputDir); err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: table-of-contents parse skipped: %v\n", err)
+	}
+
 	return book, nil
+}
+
+// recordHrefRewrite notes that content addressed as `from` by an earlier
+// reference is now served from `to`. Each normalization stage records its own
+// direct mapping; resolveHrefChain follows them transitively, so an
+// "x.xhtml -> x.html" rewrite and a later "x.html -> _content_x.html" rename
+// compose without either stage having to know about the other.
+func (b *Book) recordHrefRewrite(from, to string) {
+	if from == to {
+		return
+	}
+	if b.hrefRewrites == nil {
+		b.hrefRewrites = make(map[string]string)
+	}
+	b.hrefRewrites[from] = to
+}
+
+// resolveHrefChain follows hrefRewrites transitively from href to its final
+// form, guarding against cycles.
+func (b *Book) resolveHrefChain(href string) string {
+	seen := make(map[string]bool)
+	for {
+		next, ok := b.hrefRewrites[href]
+		if !ok || next == href || seen[href] {
+			return href
+		}
+		seen[href] = true
+		href = next
+	}
 }
 
 // resolveReservedNames renames content files whose disk path would conflict
@@ -150,6 +209,7 @@ func resolveReservedNames(book *Book, outputDir string) error {
 			return fmt.Errorf("rename conflicting %s: %w", item.Href, err)
 		}
 		hrefMap[item.Href] = newHref
+		book.recordHrefRewrite(item.Href, newHref)
 		item.Href = newHref
 	}
 
@@ -221,6 +281,7 @@ func normalizeXHTMLToHTML(book *Book, outputDir string) error {
 		}
 
 		hrefMap[oldHref] = newHref
+		book.recordHrefRewrite(oldHref, newHref)
 		item.Href = newHref
 		item.MediaType = "text/html"
 	}
@@ -407,11 +468,14 @@ func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 
 	for _, item := range pkg.Manifest.Items {
 		book.Manifest = append(book.Manifest, ManifestItem{
-			ID:        item.ID,
-			Href:      item.Href,
-			MediaType: item.MediaType,
+			ID:         item.ID,
+			Href:       item.Href,
+			MediaType:  item.MediaType,
+			Properties: item.Properties,
 		})
 	}
+
+	book.spineTocID = pkg.Spine.Toc
 
 	for _, ref := range pkg.Spine.ItemRefs {
 		book.Spine = append(book.Spine, SpineItem{

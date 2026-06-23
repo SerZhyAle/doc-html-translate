@@ -15,6 +15,7 @@ type Config struct {
 	OllamaParallel int
 	OllamaNumCtx   int
 	SplitSize      int
+	TOCDepth       int
 	OutputFolder   string
 	Force          bool
 	Verbose        bool
@@ -36,6 +37,7 @@ func ParseArgs(args []string) (Config, error) {
 	ollamaParallel := fs.Int("ollama-parallel", 1, "concurrent batch requests (set OLLAMA_NUM_PARALLEL=N on Ollama side too)")
 	ollamaNumCtx := fs.Int("ollama-ctx", 8192, "context window size in tokens sent to Ollama")
 	splitSize := fs.Int("split", 5000, "split pages at N chars for browser GT extension (0 = disable)")
+	tocDepth := fs.Int("toc-depth", 0, "table-of-contents nesting depth shown on index.html (0 = unlimited)")
 	outputFolder := fs.String("folder", "", "output folder (default: same directory as input file)")
 	force := fs.Bool("force", false, "force re-extract and re-translate even if output already exists")
 	verbose := fs.Bool("v", false, "verbose output (debug)")
@@ -61,6 +63,7 @@ func ParseArgs(args []string) (Config, error) {
 		OllamaParallel: *ollamaParallel,
 		OllamaNumCtx:   *ollamaNumCtx,
 		SplitSize:      *splitSize,
+		TOCDepth:       *tocDepth,
 		OutputFolder:   *outputFolder,
 		Force:          *force,
 		Verbose:        *verbose,

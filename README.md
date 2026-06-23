@@ -16,6 +16,7 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
 - Local HTML output with generated navigation and TOC
+- Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`–`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
 - Optional translation:
   - Google Cloud Translation API (`-google`)
   - Local Ollama (`-ollama`)
@@ -121,6 +122,7 @@ Why this workflow is popular:
 | `-ollama-parallel` | `1` | Parallel batch requests |
 | `-ollama-ctx` | `8192` | Ollama context size |
 | `-split` | `5000` | Split pages at N chars (`0` disables split) |
+| `-toc-depth` | `0` | Table-of-contents nesting depth on `index.html` (`0` = unlimited, `1` = chapters only) |
 | `-folder` | empty | Output parent folder |
 | `-force` | `false` | Re-extract and re-translate even if output exists |
 | `-v` | `false` | Verbose output |
@@ -130,7 +132,10 @@ Why this workflow is popular:
 
 ## Google API Key
 
-For `-google`, place `google_api.key` next to the executable.
+For `-google`, the key is read from the first available of:
+
+1. `google_api.key` next to the executable (unpackaged build), then
+2. `%LOCALAPPDATA%\doc-html-translate\google_api.key` (a writable per-user path that also works under the read-only Microsoft Store/MSIX install directory).
 
 Example file contents:
 
@@ -138,15 +143,20 @@ Example file contents:
 AIzaSy...your_key_here...
 ```
 
-If the file is missing/empty, the app logs a warning and skips translation.
+In `doc-html-ui`, tick **Google Translate** to reveal a key field — paste your key and click **Save** to write it to the per-user path above (no manual file editing needed).
+
+If no usable key is found, the app logs a warning and skips translation.
 
 ## Behavior Notes
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
+- The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`–`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - PDF extraction is best-effort and includes fallback flows for difficult files.
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
+- `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required).
+- In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.
 
 ## Development
 

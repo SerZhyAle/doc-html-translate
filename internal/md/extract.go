@@ -120,7 +120,6 @@ func wrapPageHTML(title string, pageNum, totalPages int, content string) string 
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(title), pageNum))
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }\n")
-	sb.WriteString("    .page-header { color: #666; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 0.5em; margin-bottom: 1em; }\n")
 	sb.WriteString("    pre { background: #f6f8fa; padding: 1em; overflow-x: auto; border-radius: 6px; }\n")
 	sb.WriteString("    code { background: #f0f0f0; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }\n")
 	sb.WriteString("    pre code { background: none; padding: 0; }\n")
@@ -129,8 +128,7 @@ func wrapPageHTML(title string, pageNum, totalPages int, content string) string 
 	sb.WriteString("    th, td { border: 1px solid #ddd; padding: 0.5em; text-align: left; }\n")
 	sb.WriteString("    img { max-width: 100%; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
-	sb.WriteString(fmt.Sprintf("  <div class=\"page-header\">%s — %d / %d</div>\n",
-		html.EscapeString(title), pageNum, totalPages))
+	// Page number is shown in the injected navbar (top-right); no body header needed.
 	sb.WriteString(content)
 	sb.WriteString("\n</body>\n</html>\n")
 	return sb.String()

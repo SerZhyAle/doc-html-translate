@@ -17,12 +17,13 @@ const projectURL = "https://serzhyale.github.io/doc-html-translate/"
 
 // NavInfo describes navigation links for a single chapter page.
 type NavInfo struct {
-	PrevHref  string // empty if first page
-	NextHref  string // empty if last page
-	IndexHref string // relative path to index.html
-	Title     string
-	Current   int
-	Total     int
+	PrevHref   string // empty if first page
+	NextHref   string // empty if last page
+	IndexHref  string // relative path to index.html
+	Title      string
+	SourceName string // original source file name, shown on the left of the bar
+	Current    int
+	Total      int
 }
 
 // navBarCSS is the inline style for the sticky navigation bar.
@@ -36,7 +37,6 @@ const navBarCSS = `
     color: #ecf0f1;
     display: flex;
     align-items: center;
-		justify-content: flex-end;
 		gap: 6px;
 		padding: 6px 10px;
     font-family: Arial, Helvetica, sans-serif;
@@ -58,19 +58,28 @@ const navBarCSS = `
     pointer-events: none;
     cursor: default;
   }
-  .dht-navbar .nav-title {
-    margin-right: auto;
+  .dht-navbar .nav-file {
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 55%;
+    max-width: 45%;
+    padding-right: 12px;
+  }
+  .dht-navbar .nav-title {
+    font-weight: 400;
+    color: #bdc3c7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 35%;
     padding-right: 12px;
   }
 	.dht-navbar .nav-actions {
     display: flex;
     align-items: center;
 		gap: 4px;
+		margin-left: auto;
   }
   .dht-navbar .nav-info {
     font-size: 12px;
@@ -346,6 +355,12 @@ func buildNavBarHTML(nav NavInfo) string {
 	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
 
+	var fileEl string
+	if strings.TrimSpace(nav.SourceName) != "" {
+		fileEl = fmt.Sprintf(`<span class="nav-file" title="%s">%s</span>`,
+			html.EscapeString(nav.SourceName), html.EscapeString(nav.SourceName))
+	}
+
 	var titleEl string
 	if strings.TrimSpace(nav.Title) != "" {
 		titleEl = fmt.Sprintf(`<span class="nav-title" title="%s">%s</span>`,
@@ -356,8 +371,8 @@ func buildNavBarHTML(nav NavInfo) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
-	return fmt.Sprintf(`<div class="dht-navbar">%s<div class="nav-actions">%s%s%s</div>%s%s</div>%s`,
-		titleEl, prevLink, indexLink, nextLink, info, versionLink, navBarScript)
+	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s</div>%s%s</div>%s`,
+		fileEl, titleEl, prevLink, indexLink, nextLink, info, versionLink, navBarScript)
 }
 
 // versionLabel formats the running app version for display in the navbar.
@@ -375,7 +390,8 @@ func versionLabel() string {
 
 // InjectNavBars adds a sticky navigation bar to all spine HTML files.
 // It inserts CSS into <head> and the nav bar right after <body>.
-func InjectNavBars(book *epub.Book, outputDir string) error {
+// sourceName is the original input file name, shown on the left of the bar.
+func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 	spineHrefs := book.SpineHrefs()
 	total := len(spineHrefs)
 	if total == 0 {
@@ -408,12 +424,13 @@ func InjectNavBars(book *epub.Book, outputDir string) error {
 		indexRel := relativePath(thisDir, "index.html")
 
 		nav := NavInfo{
-			PrevHref:  prevRel,
-			NextHref:  nextRel,
-			IndexHref: indexRel,
-			Title:     book.Title,
-			Current:   i + 1,
-			Total:     total,
+			PrevHref:   prevRel,
+			NextHref:   nextRel,
+			IndexHref:  indexRel,
+			Title:      book.Title,
+			SourceName: sourceName,
+			Current:    i + 1,
+			Total:      total,
 		}
 
 		if err := injectNavIntoFile(filePath, nav); err != nil {
