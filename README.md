@@ -20,6 +20,10 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 - Optional translation:
   - Google Cloud Translation API (`-google`)
   - Local Ollama (`-ollama`)
+  - Hard spending guard for paid engines: `-max-cost N` aborts before sending if the estimated cost in USD exceeds `N`
+- Reader experience baked into the output HTML (no server, works on `file://`):
+  - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
+  - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
 - Re-open existing extracted book instantly (idempotent behavior)
 - Optional Windows file association registration (`-register`)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
@@ -77,6 +81,9 @@ doc-html-translate.exe -folder "D:\out" "book.pdf"
 # Force full rebuild even if output already exists
 doc-html-translate.exe -force "book.epub"
 
+# Cap paid (Google) translation: skip if the estimate exceeds $2.00
+doc-html-translate.exe -google -max-cost 2 "book.epub"
+
 # Register as handler in current user registry
 doc-html-translate.exe -register
 ```
@@ -121,6 +128,7 @@ Why this workflow is popular:
 | `-ollama-model` | `gemma3:12b` | Ollama model name |
 | `-ollama-parallel` | `1` | Parallel batch requests |
 | `-ollama-ctx` | `8192` | Ollama context size |
+| `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N (`0` = no limit) |
 | `-split` | `5000` | Split pages at N chars (`0` disables split) |
 | `-toc-depth` | `0` | Table-of-contents nesting depth on `index.html` (`0` = unlimited, `1` = chapters only) |
 | `-folder` | empty | Output parent folder |
@@ -153,6 +161,8 @@ If no usable key is found, the app logs a warning and skips translation.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`–`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
+- The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
+- For paid engines the estimated cost is `chars / 1e6 * $20`. `-max-cost N` turns the existing advisory dialog into a hard pre-flight guard: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated.
 - PDF extraction is best-effort and includes fallback flows for difficult files.
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required).

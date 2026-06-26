@@ -64,6 +64,17 @@ doc-html-translate.exe -ollama "book.epub"</div>
     </section>
 
     <section class="card" style="margin-top: 14px;">
+      <h2>Удобство чтения</h2>
+      <p>В сгенерированный HTML встроен небольшой клиентский слой для чтения - без сервера, работает по <code>file://</code>:</p>
+      <ul>
+        <li><strong>Темы чтения</strong> - переключатель в навбаре (и на <code>index.html</code>) циклит Light / Sepia / Dark / Night. Выбор хранится в <code>localStorage</code> и применяется на каждой странице.</li>
+        <li><strong>Позиция чтения</strong> - прокрутка сохраняется для каждой книги. На <code>index.html</code> появляется ссылка «Continue reading» на последнюю открытую страницу, а в навбаре - тонкий индикатор прогресса по всей книге.</li>
+        <li><strong>Лимит расходов</strong> - для платных движков флаг <code>-max-cost N</code> превращает оценку стоимости (символы / 1e6 * $20) в жёсткий лимит до отправки: если оценка превышает N, перевод пропускается, а книга всё равно собирается без перевода.</li>
+      </ul>
+      <p class="small">У одностраничных документов нет навбара, поэтому этот слой к ним не применяется.</p>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
       <h2>Дополнительные внешние инструменты</h2>
       <p>Приложение работает сразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Установите эти инструменты для полной поддержки PDF-изображений и дополнительных форматов.</p>
       <table>
@@ -101,6 +112,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Не открывать браузер автоматически</td></tr>
           <tr><td>-google</td><td>false</td><td>Перевод через Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Локальный перевод Ollama</td></tr>
+          <tr><td>-max-cost</td><td>0</td><td>Прервать платный перевод до отправки, если оценка стоимости в USD превышает N (0 = без лимита)</td></tr>
           <tr><td>-split</td><td>5000</td><td>Разбивка страниц по символам, 0 отключает</td></tr>
           <tr><td>-folder</td><td>empty</td><td>Папка для результата</td></tr>
           <tr><td>-src</td><td>en</td><td>Язык источника</td></tr>

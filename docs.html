@@ -243,6 +243,17 @@ doc-html-translate.exe -ollama "book.epub"</div>
     </section>
 
     <section class="card" style="margin-top: 14px;">
+      <h2>Reading Experience</h2>
+      <p>The generated HTML carries a small, fully client-side reader layer - no server, works on <code>file://</code>:</p>
+      <ul>
+        <li><strong>Reading themes</strong> - a toggle in the navbar (and on <code>index.html</code>) cycles Light / Sepia / Dark / Night. Your choice is stored in <code>localStorage</code> and applied on every page.</li>
+        <li><strong>Reading position</strong> - your scroll is saved per book. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book.</li>
+        <li><strong>Spending guard</strong> - for paid engines, <code>-max-cost N</code> turns the cost estimate (chars / 1e6 * $20) into a hard pre-flight limit: if the estimate exceeds N, translation is skipped and the book is still produced untranslated.</li>
+      </ul>
+      <p class="small">Single-page documents have no navbar and therefore no reader layer.</p>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
       <h2>Optional External Tools</h2>
       <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML, Markdown. Install these tools to get full PDF image support and additional formats.</p>
       <table>
@@ -288,6 +299,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Do not auto-open browser</td></tr>
           <tr><td>-google</td><td>false</td><td>Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Local Ollama translation</td></tr>
+          <tr><td>-max-cost</td><td>0</td><td>Abort paid translation before sending if the estimated cost in USD exceeds N (0 = no limit)</td></tr>
           <tr><td>-split</td><td>5000</td><td>Split pages at N chars, 0 disables split</td></tr>
           <tr><td>-folder</td><td>empty</td><td>Custom output parent folder</td></tr>
           <tr><td>-src</td><td>en</td><td>Source language</td></tr>

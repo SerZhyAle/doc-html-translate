@@ -6,6 +6,11 @@
 
 | Timestamp | Path | Target | Description |
 |---|---|---|---|
+| 2026-06-26 17:00:00 | internal/config/flags.go, internal/pipeline/pipeline.go | cost cap | Feature [21]: `-max-cost N` hard pre-flight guard - paid (Google) translation is skipped before sending if the estimate (chars/1e6*$20) exceeds N; book is still produced untranslated |
+| 2026-06-26 17:00:00 | internal/htmlgen/navbar.go | reading themes/position | Feature [12]/[14]: injected reader layer - Light/Sepia/Dark/Night theme toggle (localStorage) and reading-position tracking (per-book key, scroll restore, navbar progress bar); edge-scroll auto-nav switched to class-based prev/next selection |
+| 2026-06-26 17:00:00 | internal/htmlgen/htmlgen.go | index reader toolbar | Feature [12]/[14]: index.html gets a theme toggle and a "Continue reading" link wired to the same per-book localStorage key |
+| 2026-06-26 17:00:00 | internal/htmlgen/navbar_test.go, internal/htmlgen/htmlgen_test.go | tests | Regression assertions for the theme button, progress bar, continue link and reader script |
+| 2026-06-26 17:00:00 | README.md, AGENTS.md | docs | Documented `-max-cost`, reading themes and reading position |
 | 2026-06-12 00:00:00 | internal/htmlgen/htmlgen.go | TOC snippets | Fix: TOC snippets now resolve chapter files through EPUB BasePath (e.g. OEBPS/) and fallback labels are no longer double-numbered |
 | 2026-06-12 00:00:00 | internal/pipeline/pipeline.go | pipeline performance | Optimization: parsed HTML pages are now reused for Google cost estimation, translation, and TOC snippet generation to avoid repeated DOM parsing |
 | 2026-06-12 00:00:00 | cmd/doc-html-ui/main.go, cmd/doc-html-ui/ui.html | GUI split size | Fix: GUI now passes `-split 0` explicitly so disabling split matches CLI behavior; added inline help text |

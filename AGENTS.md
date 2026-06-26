@@ -58,6 +58,8 @@ Notes:
 - Idempotent output reuse: if output index exists, pipeline reuses it unless -force is set.
 - Default CLI with no args enters registration flow (not conversion).
 - Translation is optional; default run is convert + open without translation engine unless -google or -ollama is passed.
+- Paid engines respect -max-cost: the estimate (chars/1e6*$20) is enforced as a pre-flight guard in internal/pipeline/pipeline.go before any request is sent.
+- The output HTML carries a client-side reader layer injected by internal/htmlgen (navbar.go readerScript/readerCSS on chapter pages, plus a matching toolbar/script on index.html). Keep two storage scopes distinct: zoom uses sessionStorage; reading themes and reading position use localStorage (must survive sessions). Reading position is namespaced by bookStorageKey, which must be computed identically on chapter pages and index.html.
 - Windows and non-Windows behavior is split via *_windows.go and *_nonwindows.go files in several packages.
 
 ## Pitfalls

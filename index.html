@@ -452,7 +452,7 @@
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">ШАГ 1</div><h3>Открой или запусти</h3><p>Открой файл приложением или выполни простую команду. Перевод выключен, пока не добавишь <code>-google</code> или <code>-ollama</code>.</p></div>
-            <div class="card"><div class="num">ШАГ 2</div><h3>Читай в Chrome</h3><p>Инструмент сам открывает сгенерированный <code>index.html</code> с оглавлением и навигацией по страницам.</p></div>
+            <div class="card"><div class="num">ШАГ 2</div><h3>Читай в Chrome</h3><p>Инструмент сам открывает сгенерированный <code>index.html</code> с оглавлением и навигацией по страницам. Встроены темы чтения (свет/сепия/тёмная/ночь) и сохранение позиции - со ссылкой «продолжить чтение».</p></div>
             <div class="card"><div class="num">ШАГ 3</div><h3>Переводи в браузере</h3><p>Включи встроенный перевод страницы в Chrome - и читай на любом нужном языке бесплатно.</p></div>
           </div>
           <div class="cmd">
@@ -525,6 +525,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><code>-google</code></td><td><code>false</code></td><td>Перевод через Google Cloud Translation API</td></tr>
               <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Перевод через локальную Ollama</td></tr>
               <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Имя модели Ollama</td></tr>
+              <tr><td><code>-max-cost</code></td><td><code>0</code></td><td>Прервать платный перевод, если оценка в USD превышает N (<code>0</code> = без лимита)</td></tr>
               <tr><td><code>-split</code></td><td><code>5000</code></td><td>Разбивать страницы по N символов (<code>0</code> отключает)</td></tr>
               <tr><td><code>-folder</code></td><td>пусто</td><td>Своя родительская папка для вывода</td></tr>
               <tr><td><code>-src</code></td><td><code>en</code></td><td>Исходный язык</td></tr>
@@ -604,7 +605,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">STEP 1</div><h3>Open or run</h3><p>Open the file with the app or run the plain command. Translation stays off until you add <code>-google</code> or <code>-ollama</code>.</p></div>
-            <div class="card"><div class="num">STEP 2</div><h3>Read in Chrome</h3><p>The tool opens the generated <code>index.html</code> with a table of contents and page navigation.</p></div>
+            <div class="card"><div class="num">STEP 2</div><h3>Read in Chrome</h3><p>The tool opens the generated <code>index.html</code> with a table of contents and page navigation. Reading themes (light/sepia/dark/night) and saved reading position - with a "continue reading" link - are built in.</p></div>
             <div class="card"><div class="num">STEP 3</div><h3>Translate in the browser</h3><p>Turn on Chrome's built-in page translation and read in any language you need, for free.</p></div>
           </div>
           <div class="cmd">
@@ -677,6 +678,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><code>-google</code></td><td><code>false</code></td><td>Translate via Google Cloud Translation API</td></tr>
               <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Translate via local Ollama</td></tr>
               <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Ollama model name</td></tr>
+              <tr><td><code>-max-cost</code></td><td><code>0</code></td><td>Abort paid translation if the USD estimate exceeds N (<code>0</code> = no limit)</td></tr>
               <tr><td><code>-split</code></td><td><code>5000</code></td><td>Split pages at N chars (<code>0</code> disables)</td></tr>
               <tr><td><code>-folder</code></td><td>empty</td><td>Custom output parent folder</td></tr>
               <tr><td><code>-src</code></td><td><code>en</code></td><td>Source language</td></tr>
@@ -756,7 +758,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">КРОК 1</div><h3>Відкрий або запусти</h3><p>Відкрий файл застосунком або виконай просту команду. Переклад вимкнено, доки не додаси <code>-google</code> чи <code>-ollama</code>.</p></div>
-            <div class="card"><div class="num">КРОК 2</div><h3>Читай у Chrome</h3><p>Інструмент сам відкриває згенерований <code>index.html</code> зі змістом і навігацією сторінками.</p></div>
+            <div class="card"><div class="num">КРОК 2</div><h3>Читай у Chrome</h3><p>Інструмент сам відкриває згенерований <code>index.html</code> зі змістом і навігацією сторінками. Вбудовано теми читання (світла/сепія/темна/ніч) і збереження позиції - з посиланням «продовжити читання».</p></div>
             <div class="card"><div class="num">КРОК 3</div><h3>Перекладай у браузері</h3><p>Увімкни вбудований переклад сторінки в Chrome - і читай будь-якою потрібною мовою безкоштовно.</p></div>
           </div>
           <div class="cmd">
@@ -829,6 +831,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><code>-google</code></td><td><code>false</code></td><td>Переклад через Google Cloud Translation API</td></tr>
               <tr><td><code>-ollama</code></td><td><code>false</code></td><td>Переклад через локальну Ollama</td></tr>
               <tr><td><code>-ollama-model</code></td><td><code>gemma3:12b</code></td><td>Ім'я моделі Ollama</td></tr>
+              <tr><td><code>-max-cost</code></td><td><code>0</code></td><td>Перервати платний переклад, якщо оцінка в USD перевищує N (<code>0</code> = без ліміту)</td></tr>
               <tr><td><code>-split</code></td><td><code>5000</code></td><td>Розбивати сторінки по N символів (<code>0</code> вимикає)</td></tr>
               <tr><td><code>-folder</code></td><td>порожньо</td><td>Власна батьківська тека для виводу</td></tr>
               <tr><td><code>-src</code></td><td><code>en</code></td><td>Вихідна мова</td></tr>

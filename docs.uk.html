@@ -64,6 +64,17 @@ doc-html-translate.exe -ollama "book.epub"</div>
     </section>
 
     <section class="card" style="margin-top: 14px;">
+      <h2>Зручність читання</h2>
+      <p>У згенерований HTML вбудовано невеликий клієнтський шар для читання - без сервера, працює через <code>file://</code>:</p>
+      <ul>
+        <li><strong>Теми читання</strong> - перемикач у навбарі (і на <code>index.html</code>) циклить Light / Sepia / Dark / Night. Вибір зберігається в <code>localStorage</code> і застосовується на кожній сторінці.</li>
+        <li><strong>Позиція читання</strong> - прокручування зберігається для кожної книги. На <code>index.html</code> з'являється посилання «Continue reading» на останню відкриту сторінку, а в навбарі - тонкий індикатор прогресу по всій книзі.</li>
+        <li><strong>Ліміт витрат</strong> - для платних рушіїв прапорець <code>-max-cost N</code> перетворює оцінку вартості (символи / 1e6 * $20) на жорсткий ліміт до відправлення: якщо оцінка перевищує N, переклад пропускається, а книга все одно збирається без перекладу.</li>
+      </ul>
+      <p class="small">Односторінкові документи не мають навбара, тому цей шар до них не застосовується.</p>
+    </section>
+
+    <section class="card" style="margin-top: 14px;">
       <h2>Додаткові зовнішні інструменти</h2>
       <p>Застосунок працює одразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Встановіть ці інструменти для повної підтримки зображень PDF та додаткових форматів.</p>
       <table>
@@ -101,6 +112,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
           <tr><td>-google</td><td>false</td><td>Переклад через Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Локальний переклад Ollama</td></tr>
+          <tr><td>-max-cost</td><td>0</td><td>Перервати платний переклад до відправлення, якщо оцінка вартості в USD перевищує N (0 = без ліміту)</td></tr>
           <tr><td>-split</td><td>5000</td><td>Розбиття сторінок за кількістю символів, 0 вимикає</td></tr>
           <tr><td>-folder</td><td>empty</td><td>Папка для результату</td></tr>
           <tr><td>-src</td><td>en</td><td>Мова джерела</td></tr>
