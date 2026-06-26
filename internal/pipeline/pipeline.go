@@ -223,6 +223,10 @@ func (r Runner) Run() (int, error) {
 		totalChars := countLoadedPageChars(pages)
 		if totalChars > 1000 {
 			estCost := float64(totalChars) / 1_000_000 * 20
+			if r.cfg.MaxCost > 0 && estCost > r.cfg.MaxCost {
+				logging.Printf("[3/4] Translation skipped - estimated cost $%.2f USD exceeds -max-cost $%.2f limit\n", estCost, r.cfg.MaxCost)
+				break
+			}
 			msg := fmt.Sprintf(
 				"Characters to send: %s\nEstimated cost: $%.2f USD\n\nProceed with Google Translate?",
 				formatInt(totalChars), estCost,

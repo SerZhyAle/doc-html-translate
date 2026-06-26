@@ -135,6 +135,19 @@ func TestInjectNavBars(t *testing.T) {
 	if !strings.Contains(s1, "dht-zoom-sync") {
 		t.Error("ch01: expected zoom sync script")
 	}
+	// Reading themes [12] + reading-position controller [14].
+	if !strings.Contains(s1, "dht-theme-btn") {
+		t.Error("ch01: expected theme toggle button")
+	}
+	if !strings.Contains(s1, "dht-progress") {
+		t.Error("ch01: expected reading-progress bar")
+	}
+	if !strings.Contains(s1, "dht-reader") {
+		t.Error("ch01: expected reader controller script")
+	}
+	if !strings.Contains(s1, "dht-next") {
+		t.Error("ch01: expected next link to carry dht-next class for auto-nav")
+	}
 	if !strings.Contains(s1, "ch02.xhtml") {
 		t.Error("ch01: expected next link to ch02")
 	}

@@ -2,6 +2,7 @@ package htmlgen
 
 import (
 	"fmt"
+	"hash/fnv"
 	"html"
 	"os"
 	"path/filepath"
@@ -24,6 +25,8 @@ type NavInfo struct {
 	SourceName string // original source file name, shown on the left of the bar
 	Current    int
 	Total      int
+	BookKey    string // stable per-book id for localStorage (reading position)
+	SelfHref   string // this page's href relative to the book root
 }
 
 // navBarCSS is the inline style for the sticky navigation bar.
@@ -289,11 +292,9 @@ const navBarScript = `
 			return window.scrollY <= 4;
 		}
 		function tryNavigate(dir) {
-			// nav-actions children: [0]=prev, [1]=index, [2]=next
 			var actions = document.querySelector(".nav-actions");
 			if (!actions) return;
-			var children = actions.children;
-			var link = dir > 0 ? children[children.length - 1] : children[0];
+			var link = actions.querySelector(dir > 0 ? ".dht-next" : ".dht-prev");
 			if (link && !link.classList.contains("disabled")) {
 				link.click();
 			}
@@ -335,6 +336,118 @@ const navBarScript = `
 //]]></script>
 `
 
+// readerCSS styles the reading themes ([12]), the theme toggle button, the
+// thin reading-progress bar and the index-page toolbar ([14]). It is injected
+// into <head> on both chapter pages and index.html.
+const readerCSS = `
+<style id="dht-reader-css">
+  html[data-dht-theme="sepia"], html[data-dht-theme="sepia"] body { background:#f4ecd8 !important; color:#5b4636 !important; }
+  html[data-dht-theme="sepia"] a { color:#1a5276 !important; }
+  html[data-dht-theme="dark"], html[data-dht-theme="dark"] body { background:#1e1e1e !important; color:#cfcfcf !important; }
+  html[data-dht-theme="dark"] a { color:#6cb6ff !important; }
+  html[data-dht-theme="night"], html[data-dht-theme="night"] body { background:#0a0a0a !important; color:#8a8a8a !important; }
+  html[data-dht-theme="night"] a { color:#5599d6 !important; }
+  .dht-btn { background:#2c3e50; color:#ecf0f1; border:1px solid #7f8c8d; border-radius:3px; padding:4px 10px; font:inherit; font-size:13px; cursor:pointer; }
+  .dht-btn:hover { background:#34495e; }
+  .dht-navbar .dht-btn { padding:3px 8px; }
+  .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:#3498db; transition:width .12s linear; }
+  .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
+  .dht-toolbar a.dht-continue { display:none; background:#27ae60; color:#fff; text-decoration:none; padding:4px 10px; border-radius:3px; }
+  .dht-toolbar a.dht-continue:hover { background:#229954; }
+</style>
+`
+
+// readerScript emits the theme + reading-position controller injected into
+// every page. On chapter pages (self != "") it restores and tracks scroll
+// position and drives the progress bar; on index.html (self == "") it wires up
+// the "Continue reading" link. The theme choice is global and lives in
+// localStorage so it survives across sessions (unlike the zoom sessionStorage).
+func readerScript(bookKey, self string, idx, total int) string {
+	return fmt.Sprintf(`
+<script id="dht-reader">//<![CDATA[
+(function(){
+	var BOOK = %q;
+	var SELF = %q;
+	var IDX = %d;
+	var TOTAL = %d;
+
+	var THEMES = ["light","sepia","dark","night"];
+	var LABELS = {light:"☀ Light", sepia:"◑ Sepia", dark:"☾ Dark", night:"● Night"};
+	var THEME_KEY = "dht_theme";
+
+	function getTheme(){ try { return localStorage.getItem(THEME_KEY) || "light"; } catch(e){ return "light"; } }
+	function applyTheme(t){
+		document.documentElement.setAttribute("data-dht-theme", t);
+		var b = document.getElementById("dht-theme-btn");
+		if (b) b.textContent = LABELS[t] || t;
+	}
+	function cycleTheme(){
+		var next = THEMES[(THEMES.indexOf(getTheme()) + 1) %% THEMES.length];
+		try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+		applyTheme(next);
+	}
+	applyTheme(getTheme());
+	var tbtn = document.getElementById("dht-theme-btn");
+	if (tbtn) tbtn.addEventListener("click", cycleTheme);
+
+	var POS_KEY = "dht_pos:" + BOOK;
+	function readPos(){ try { return JSON.parse(localStorage.getItem(POS_KEY) || "null"); } catch(e){ return null; } }
+	function writePos(p){ try { localStorage.setItem(POS_KEY, JSON.stringify(p)); } catch(e){} }
+	function frac(){
+		var h = document.documentElement.scrollHeight - window.innerHeight;
+		if (h <= 0) return 0;
+		var f = window.scrollY / h;
+		return f < 0 ? 0 : (f > 1 ? 1 : f);
+	}
+	function setBar(f){
+		var bar = document.getElementById("dht-progress");
+		if (!bar) return;
+		var overall = TOTAL > 0 ? ((IDX - 1 + f) / TOTAL) : f;
+		bar.style.width = (overall * 100).toFixed(2) + "%%";
+	}
+
+	if (SELF) {
+		var saved = readPos();
+		if (saved && saved.href === SELF && typeof saved.frac === "number") {
+			window.addEventListener("load", function(){
+				var h = document.documentElement.scrollHeight - window.innerHeight;
+				if (h > 0) window.scrollTo(0, saved.frac * h);
+			});
+		}
+		var ticking = false;
+		window.addEventListener("scroll", function(){
+			if (ticking) return;
+			ticking = true;
+			window.requestAnimationFrame(function(){
+				var f = frac();
+				setBar(f);
+				writePos({href: SELF, idx: IDX, frac: f});
+				ticking = false;
+			});
+		}, {passive:true});
+		setBar(frac());
+	} else {
+		var p = readPos();
+		var cont = document.getElementById("dht-continue");
+		if (cont && p && p.href) {
+			cont.setAttribute("href", p.href);
+			cont.style.display = "inline-block";
+		}
+	}
+})();
+//]]></script>
+`, bookKey, self, idx, total)
+}
+
+// bookStorageKey derives a stable per-book id used to namespace reading-position
+// localStorage. It must be identical on chapter pages and index.html, so it is
+// computed from the same (raw title, page count) on both paths.
+func bookStorageKey(title string, total int) string {
+	h := fnv.New32a()
+	fmt.Fprintf(h, "%s|%d", title, total)
+	return fmt.Sprintf("%08x", h.Sum32())
+}
+
 // buildNavBarHTML generates the HTML for the navigation bar.
 func buildNavBarHTML(nav NavInfo) string {
 	labelPrev, labelNext, labelTOC := "Back", "Forward", "Contents"
@@ -344,13 +457,15 @@ func buildNavBarHTML(nav NavInfo) string {
 
 	prevLink := fmt.Sprintf(`<a class="disabled">&#9664; %s</a>`, labelPrev)
 	if nav.PrevHref != "" {
-		prevLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9664; %s</a>`, html.EscapeString(nav.PrevHref), labelPrev)
+		prevLink = fmt.Sprintf(`<a class="dht-nav-link dht-prev" href="%s">&#9664; %s</a>`, html.EscapeString(nav.PrevHref), labelPrev)
 	}
 
 	nextLink := fmt.Sprintf(`<a class="disabled">%s &#9654;</a>`, labelNext)
 	if nav.NextHref != "" {
-		nextLink = fmt.Sprintf(`<a class="dht-nav-link" href="%s">%s &#9654;</a>`, html.EscapeString(nav.NextHref), labelNext)
+		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s &#9654;</a>`, html.EscapeString(nav.NextHref), labelNext)
 	}
+
+	themeBtn := `<button id="dht-theme-btn" class="dht-btn" type="button">Theme</button>`
 
 	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
@@ -371,8 +486,9 @@ func buildNavBarHTML(nav NavInfo) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
-	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s</div>%s%s</div>%s`,
-		fileEl, titleEl, prevLink, indexLink, nextLink, info, versionLink, navBarScript)
+	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s%s</div>%s%s<div id="dht-progress" class="dht-progress"></div></div>%s%s`,
+		fileEl, titleEl, prevLink, indexLink, nextLink, themeBtn, info, versionLink, navBarScript,
+		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total))
 }
 
 // versionLabel formats the running app version for display in the navbar.
@@ -397,6 +513,7 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 	if total == 0 {
 		return nil
 	}
+	bookKey := bookStorageKey(book.Title, total)
 
 	// Build full href paths (with BasePath prefix)
 	fullHrefs := make([]string, total)
@@ -431,6 +548,8 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 			SourceName: sourceName,
 			Current:    i + 1,
 			Total:      total,
+			BookKey:    bookKey,
+			SelfHref:   href,
 		}
 
 		if err := injectNavIntoFile(filePath, nav); err != nil {
@@ -454,7 +573,7 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 
 	// Inject CSS before </head>
 	if idx := strings.Index(strings.ToLower(content), "</head>"); idx >= 0 {
-		content = content[:idx] + navBarCSS + content[idx:]
+		content = content[:idx] + navBarCSS + readerCSS + content[idx:]
 	}
 
 	// Inject navbar after <body> (or <body ...>)

@@ -21,6 +21,7 @@ type Config struct {
 	Verbose        bool
 	SourceLang     string
 	TargetLang     string
+	MaxCost        float64
 	InputFile      string
 }
 
@@ -43,6 +44,7 @@ func ParseArgs(args []string) (Config, error) {
 	verbose := fs.Bool("v", false, "verbose output (debug)")
 	src := fs.String("src", "en", "source language")
 	dst := fs.String("dst", "ru", "target language")
+	maxCost := fs.Float64("max-cost", 0, "abort paid translation before sending if estimated cost in USD exceeds N (0 = no limit)")
 	version := fs.Bool("version", false, "print version and exit")
 
 	if err := fs.Parse(args); err != nil {
@@ -69,6 +71,7 @@ func ParseArgs(args []string) (Config, error) {
 		Verbose:        *verbose,
 		SourceLang:     *src,
 		TargetLang:     *dst,
+		MaxCost:        *maxCost,
 	}
 
 	// First-click UX: running without any args behaves as registration mode.

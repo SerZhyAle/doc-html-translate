@@ -82,6 +82,17 @@ func TestGenerateIndex(t *testing.T) {
 	if !strings.Contains(content, "Chapters: 2") {
 		t.Error("index.html should show chapter count")
 	}
+
+	// Reading themes [12] + continue-reading [14] are wired into index.html.
+	if !strings.Contains(content, "dht-theme-btn") {
+		t.Error("index.html should contain the theme toggle button")
+	}
+	if !strings.Contains(content, "dht-continue") {
+		t.Error("index.html should contain the continue-reading link")
+	}
+	if !strings.Contains(content, "dht-reader") {
+		t.Error("index.html should contain the reader controller script")
+	}
 }
 
 func TestChapterLabel(t *testing.T) {
