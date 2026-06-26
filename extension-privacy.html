@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy - doc-html-translate browser extension</title>
+<meta name="description" content="Privacy policy for the doc-html-translate browser extension: no data collection, no telemetry, no remote code. PDFs and EPUBs are processed entirely on your device.">
+<link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="icon" href="assets/doc-html-translate.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+/* Resolve theme before first paint to avoid a flash of the wrong state. */
+(function(){
+  var t;
+  try{ t = localStorage.getItem('sza-theme'); }catch(e){}
+  if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<style>
+  /* ===== SZA Web Kit "Pine + Gold" (subset) ===== */
+  :root{
+    --bg-color:#0a0f0a;
+    --card-bg:rgba(255,255,255,.035);
+    --border-color:rgba(255,255,255,.08);
+    --text-primary:#f1f5ee;
+    --text-secondary:#c3ccbc;
+    --text-muted:#94a08c;
+    --accent:#3fb950;
+    --accent-strong:#56d364;
+    --gold:#e3b341;
+    --text-gradient:linear-gradient(135deg,#fff 30%,#86efac 100%);
+    --shadow:0 14px 38px rgba(0,0,0,.45);
+    --font-heading:'Outfit','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  html[data-theme="light"]{
+    --bg-color:#eef3ea;
+    --card-bg:rgba(255,255,255,.72);
+    --border-color:rgba(16,40,20,.12);
+    --text-primary:#16210f;
+    --text-secondary:#384534;
+    --text-muted:#5f6b54;
+    --accent:#2f8f3a;
+    --accent-strong:#267a30;
+    --gold:#9a6a13;
+    --text-gradient:linear-gradient(135deg,#16210f 10%,#2f8f3a 100%);
+    --shadow:0 14px 38px rgba(20,40,20,.13);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{
+    background-color:var(--bg-color); color:var(--text-primary);
+    font-family:var(--font-body); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+    padding:48px 20px;
+  }
+  .wrap{max-width:760px; margin:0 auto}
+  .card{
+    background:var(--card-bg); border:1px solid var(--border-color);
+    border-radius:18px; padding:40px 36px; box-shadow:var(--shadow);
+    backdrop-filter:blur(10px);
+  }
+  h1{
+    font-family:var(--font-heading); font-weight:800; font-size:2rem; line-height:1.15;
+    background:var(--text-gradient); -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; margin-bottom:6px;
+  }
+  .updated{color:var(--text-muted); font-size:.9rem; margin-bottom:28px}
+  h2{
+    font-family:var(--font-heading); font-weight:700; font-size:1.18rem;
+    margin:28px 0 10px; color:var(--text-primary);
+  }
+  h2::before{content:""; display:inline-block; width:8px; height:8px; border-radius:2px;
+    background:var(--gold); margin-right:10px; vertical-align:middle}
+  p{color:var(--text-secondary); margin:10px 0}
+  ul{color:var(--text-secondary); margin:10px 0 10px 22px}
+  li{margin:6px 0}
+  strong{color:var(--text-primary)}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{color:var(--accent-strong); text-decoration:underline}
+  .lead{font-size:1.05rem; color:var(--text-primary)}
+  footer{margin-top:32px; padding-top:20px; border-top:1px solid var(--border-color);
+    color:var(--text-muted); font-size:.9rem}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card">
+      <h1>Privacy Policy</h1>
+      <div class="updated">doc-html-translate browser extension &middot; last updated 2026-06-26</div>
+
+      <p class="lead"><strong>The doc-html-translate browser extension processes PDFs and EPUBs entirely
+      on your device.</strong> It does not collect, store, or transmit your documents or any personal
+      data to us or to any third party. It has no servers, no telemetry, no analytics, no ads, and no
+      accounts, and it loads no remote code.</p>
+
+      <h2>What the extension does</h2>
+      <p>When you open a PDF or EPUB, the extension redirects the page to a local viewer bundled with the
+      extension. The viewer reads the file's bytes in your browser and re-renders its text as HTML so
+      your browser's built-in "Translate page" feature can work on it. All extraction and rendering
+      happen locally, using bundled code (a copy of PDF.js for PDF; a self-contained unzip + HTML
+      pipeline for EPUB). No code is downloaded or executed from a remote server.</p>
+
+      <h2>Data we collect</h2>
+      <p>None. We have no servers and receive no data from the extension.</p>
+
+      <h2>Data stored on your device</h2>
+      <p>The extension uses the browser's local extension storage only to remember your settings: whether
+      reflow is enabled (globally and per-site), and your reading preferences (font size, font family,
+      theme). This data never leaves your device and is removed if you uninstall the extension.</p>
+
+      <h2>Network access</h2>
+      <p>The extension itself makes no network requests to any server we control. It fetches the PDF or
+      EPUB you opened (from the site or local file you chose) in order to render it. Translation is
+      performed by your browser's own built-in translation feature, which you invoke yourself; that
+      feature is governed by your browser vendor's privacy policy, not ours.</p>
+
+      <h2>Permissions</h2>
+      <ul>
+        <li><strong>declarativeNetRequest</strong> and <strong>host access</strong> - used solely to
+          redirect PDF/EPUB opens to the local viewer and to fetch the opened file for local rendering.
+          No browsing data is read or transmitted.</li>
+        <li><strong>storage</strong> - used solely to save the settings described above.</li>
+      </ul>
+
+      <h2>Children's privacy</h2>
+      <p>The extension is a document-reading utility and does not knowingly collect any data from anyone,
+      including children.</p>
+
+      <h2>Changes</h2>
+      <p>If this policy changes, the updated version will be published at the same URL with a new
+      "last updated" date.</p>
+
+      <footer>
+        Open source: <a href="https://github.com/SerZhyAle/doc-html-translate">github.com/SerZhyAle/doc-html-translate</a><br>
+        Contact: <a href="mailto:serzhyale@gmail.com">serzhyale@gmail.com</a>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

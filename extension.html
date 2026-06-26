@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>doc-html-translate - browser extension for translating PDFs and EPUBs</title>
+<meta name="description" content="The doc-html-translate browser extension re-renders PDFs and EPUBs as clean reflowed HTML so Chrome's and Edge's built-in Translate page works on them for free. Runs fully locally - no API key, no uploads. Page in English, Russian, and Ukrainian.">
+<link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/extension.html">
+<meta name="theme-color" content="#0a0f0a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="doc-html-translate">
+<meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/extension.html">
+<meta property="og:title" content="doc-html-translate - browser extension for translating PDFs and EPUBs">
+<meta property="og:description" content="Re-render PDFs and EPUBs as clean reflowed HTML so the browser's built-in Translate page works on them. 100% local.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="doc-html-translate browser extension">
+<meta name="twitter:description" content="Translate any PDF or EPUB for free with the browser's built-in translator. Local-only reflow extension.">
+<link rel="icon" href="assets/doc-html-translate.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* Resolve language + theme before first paint to avoid a flash of the wrong state. */
+(function(){
+  var l, t;
+  try{ l = localStorage.getItem('sza-lang'); t = localStorage.getItem('sza-theme'); }catch(e){}
+  if(!l){ var nav=(navigator.language||'en').toLowerCase(); l = nav.indexOf('ru')===0 ? 'ru' : (nav.indexOf('uk')===0 ? 'uk' : 'en'); }
+  if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+  var d = document.documentElement;
+  d.setAttribute('data-lang', l); d.setAttribute('lang', l); d.setAttribute('data-theme', t);
+})();
+</script>
+<style>
+  /* ===== DESIGN SYSTEM - SZA Web Kit "Pine + Gold" (shared with index.html) ===== */
+  :root{
+    --wide:1160px;
+    --bg-color:#0a0f0a; --bg-elev:#0f1610;
+    --card-bg:rgba(255,255,255,.035); --card-bg-hover:rgba(255,255,255,.06);
+    --border-color:rgba(255,255,255,.08); --border-color-hover:rgba(63,185,80,.35);
+    --text-primary:#f1f5ee; --text-secondary:#c3ccbc; --text-muted:#94a08c;
+    --primary-gradient:linear-gradient(135deg,#3fb950 0%,#1f7a33 100%);
+    --secondary-gradient:linear-gradient(135deg,#e3b341 0%,#f0c862 100%);
+    --text-gradient:linear-gradient(135deg,#fff 30%,#86efac 100%);
+    --accent:#3fb950; --accent-strong:#56d364; --accent-purple:#e3b341; --accent-cyan:#f0c862; --gold:#e3b341; --gold-strong:#f0c862;
+    --accent-glow:0 0 25px rgba(63,185,80,.18); --accent-glow-strong:0 0 30px rgba(63,185,80,.38);
+    --glass-fill:rgba(255,255,255,.03); --glass-fill-hover:rgba(255,255,255,.08);
+    --code-bg:#070f08; --code-ink:#d6e2cf; --pill-bg:rgba(255,255,255,.04);
+    --blob-1:#3fb950; --blob-2:#e3b341; --blob-3:#1f7a33; --blob-opacity:.14;
+    --shadow:0 14px 38px rgba(0,0,0,.45);
+    --font-heading:'Outfit','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-body:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  html[data-theme="light"]{
+    --bg-color:#eef3ea; --bg-elev:#ffffff;
+    --card-bg:rgba(255,255,255,.70); --card-bg-hover:rgba(255,255,255,.92);
+    --border-color:rgba(16,40,20,.12); --border-color-hover:rgba(47,143,58,.40);
+    --text-primary:#16210f; --text-secondary:#384534; --text-muted:#5f6b54;
+    --primary-gradient:linear-gradient(135deg,#2f8f3a 0%,#1f6d2c 100%);
+    --secondary-gradient:linear-gradient(135deg,#9a6a13 0%,#7e560f 100%);
+    --text-gradient:linear-gradient(135deg,#16210f 10%,#2f8f3a 100%);
+    --accent:#2f8f3a; --accent-strong:#267a30; --accent-purple:#9a6a13; --accent-cyan:#7e560f; --gold:#9a6a13; --gold-strong:#7e560f;
+    --accent-glow:0 0 25px rgba(47,143,58,.18); --accent-glow-strong:0 8px 24px rgba(47,143,58,.30);
+    --glass-fill:rgba(255,255,255,.62); --glass-fill-hover:rgba(255,255,255,.92);
+    --code-bg:#0e1411; --code-ink:#d6e2cf; --pill-bg:rgba(16,40,20,.04);
+    --blob-opacity:.12; --shadow:0 14px 38px rgba(20,40,20,.13);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.12) transparent}
+  body{background-color:var(--bg-color); color:var(--text-primary); font-family:var(--font-body); font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased; overflow-x:hidden; min-height:100vh; position:relative}
+  a{color:var(--accent); text-decoration:none; transition:color .2s}
+  a:hover{color:var(--accent-strong); text-decoration:underline}
+  code,kbd,pre{font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,Menlo,monospace}
+  code{background:var(--pill-bg); border:1px solid var(--border-color); padding:.08em .4em; border-radius:6px; font-size:.86em; color:var(--accent-strong)}
+  kbd{background:var(--glass-fill); border:1px solid var(--border-color); border-bottom-width:2px; border-radius:6px; padding:.05em .5em; font-size:.85em}
+  .bg-blobs{position:fixed; inset:0; pointer-events:none; z-index:-1; overflow:hidden}
+  .blob{position:absolute; border-radius:50%; filter:blur(120px); opacity:var(--blob-opacity)}
+  .blob-1{top:-120px; left:-60px; width:450px; height:450px; background:radial-gradient(circle,var(--blob-1) 0%,transparent 70%); animation:drift 18s infinite alternate ease-in-out}
+  .blob-2{top:32%; right:-130px; width:520px; height:520px; background:radial-gradient(circle,var(--blob-2) 0%,transparent 70%); animation:drift 25s infinite alternate-reverse ease-in-out}
+  .blob-3{bottom:-130px; left:8%; width:420px; height:420px; background:radial-gradient(circle,var(--blob-3) 0%,transparent 70%)}
+  @keyframes drift{0%{transform:translate(0,0) scale(1)} 100%{transform:translate(40px,30px) scale(1.1)}}
+  header.top{position:sticky; top:0; z-index:20; -webkit-backdrop-filter:saturate(150%) blur(12px); backdrop-filter:saturate(150%) blur(12px); background:color-mix(in srgb, var(--bg-color) 72%, transparent); border-bottom:1px solid var(--border-color)}
+  .top .wrap{max-width:var(--wide); margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:12px}
+  .brand{font-family:var(--font-heading); font-weight:700; letter-spacing:.2px; margin-right:auto; font-size:15px; color:var(--text-primary)}
+  .brand:hover{text-decoration:none; color:var(--text-primary)}
+  .brand .dot{color:var(--accent-purple)}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:.45rem; padding:.55rem 1.05rem; border-radius:50px; min-height:38px; font-family:var(--font-body); font-weight:600; font-size:.86rem; line-height:1.1; text-decoration:none; cursor:pointer; color:var(--text-primary); border:1px solid var(--border-color); background:var(--glass-fill); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:transform .3s cubic-bezier(.4,0,.2,1), background .3s, border-color .3s, box-shadow .3s, filter .3s}
+  .btn:hover{transform:translateY(-2px); background:var(--glass-fill-hover); border-color:var(--border-color-hover); text-decoration:none}
+  .btn.primary{background:var(--primary-gradient); color:#fff; border:1px solid transparent; box-shadow:var(--accent-glow); font-weight:600}
+  .btn.primary:hover{transform:translateY(-2px); box-shadow:var(--accent-glow-strong); filter:brightness(1.08)}
+  .seg{display:inline-flex; gap:.2rem; padding:.22rem; border:1px solid var(--border-color); border-radius:30px; background:var(--glass-fill); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+  .seg button{border:none; background:transparent; color:var(--text-muted); font-family:var(--font-heading); font-weight:700; font-size:.72rem; padding:.35rem .75rem; border-radius:20px; cursor:pointer; min-height:30px; display:inline-flex; align-items:center; transition:all .3s ease}
+  .seg button:hover{color:var(--text-primary)}
+  .seg button[aria-pressed="true"]{background:var(--primary-gradient); color:#fff; box-shadow:0 2px 10px rgba(63,185,80,.3)}
+  #themeBtn{padding:.4rem; min-width:38px; font-size:15px}
+  main{max-width:var(--wide); margin:0 auto; padding:0 22px 90px; position:relative; z-index:1}
+  .hero{text-align:center; padding:2rem 1rem 1.2rem; margin-bottom:.2rem}
+  .avatar-glow{position:relative; width:88px; height:88px; margin:0 auto 1.3rem}
+  .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:24px; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
+  .appicon{position:relative; width:100%; height:100%; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#22368a; color:#fff; font-family:var(--font-heading); font-weight:800; font-size:19px; line-height:1; letter-spacing:.5px; box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
+  @keyframes pulse{0%{transform:scale(.95); opacity:.45} 100%{transform:scale(1.05); opacity:.75}}
+  .kicker{font-size:.92rem; color:var(--accent); font-weight:600; margin:0 0 1rem; letter-spacing:.01em}
+  .kicker b{color:var(--accent-strong); font-weight:700}
+  .hero h1{font-family:var(--font-heading); font-weight:800; font-size:clamp(2rem,4.6vw,2.85rem); line-height:1.12; letter-spacing:-.02em; margin:0 auto .9rem; max-width:880px; background:var(--text-gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent}
+  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:720px; margin:0 auto 1.6rem}
+  .hero .cta{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center}
+  @supports not ((-webkit-background-clip:text) or (background-clip:text)){ .hero h1{-webkit-text-fill-color:currentColor; color:var(--text-primary); background:none} }
+  .sections{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; margin-top:1.6rem}
+  @media(max-width:760px){ .sections{grid-template-columns:1fr} }
+  .sec{background:var(--card-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border:1px solid var(--border-color); border-radius:16px; overflow:hidden; scroll-margin-top:74px; transition:transform .35s ease, border-color .35s ease, background .35s ease, box-shadow .35s ease}
+  .sec:not([open]):hover{transform:translateY(-3px); border-color:var(--border-color-hover); background:var(--card-bg-hover)}
+  .sec[open]{grid-column:1 / -1; background:var(--card-bg-hover); border-color:var(--border-color-hover); box-shadow:var(--shadow)}
+  .sec > summary{cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:12px; padding:15px 18px}
+  .sec > summary::-webkit-details-marker{display:none}
+  .sec > summary::before{content:"▸"; color:var(--accent-purple); font-size:11px; line-height:1.9; flex:none}
+  .sec[open] > summary::before{content:"▾"}
+  .sec > summary:hover .sectitle{color:var(--accent)}
+  .secnum{font-family:var(--font-heading); color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; line-height:1.6; flex:none; min-width:2ch}
+  .sechead{display:flex; flex-direction:column; gap:3px; min-width:0}
+  .sectitle{font-family:var(--font-heading); margin:0; font-size:16px; font-weight:700; letter-spacing:-.01em; line-height:1.32; color:var(--text-primary); transition:color .2s}
+  .sectitle code{font-size:.9em; background:var(--pill-bg)}
+  .secteaser{color:var(--text-secondary); font-size:13px; line-height:1.45}
+  .sec[open] .secteaser{display:none}
+  .secbody{padding:4px 18px 22px}
+  .sec[open] .secbody{border-top:1px solid var(--border-color); margin-top:4px; padding-top:16px}
+  h3{font-family:var(--font-heading); font-size:17px; font-weight:700; margin:22px 0 4px; color:var(--text-primary); scroll-margin-top:74px}
+  p{margin:12px 0}
+  ul,ol{margin:12px 0; padding-left:22px}
+  li{margin:6px 0}
+  strong{color:var(--text-primary); font-weight:700}
+  .muted{color:var(--text-secondary)}
+  pre{background:var(--code-bg); color:var(--code-ink); border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; overflow:auto; font-size:13px; line-height:1.55; box-shadow:var(--shadow)}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px; margin:18px 0}
+  .card{background:var(--glass-fill); border:1px solid var(--border-color); border-radius:14px; padding:16px 18px; transition:transform .3s ease, border-color .3s ease, background .3s ease}
+  .card:hover{transform:translateY(-3px); border-color:var(--border-color-hover); background:var(--card-bg-hover)}
+  .card h3{margin:0 0 4px; font-size:15px}
+  .card p{margin:4px 0 0; font-size:14px; color:var(--text-secondary)}
+  .card .num{font-family:var(--font-heading); font-size:11px; font-weight:800; color:var(--accent); letter-spacing:.14em; text-transform:uppercase}
+  .note{border:1px solid var(--border-color); border-left:3px solid var(--accent-purple); background:var(--glass-fill); border-radius:12px; padding:13px 18px; margin:18px 0; font-size:14.5px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px)}
+  .note .tag{display:inline-block; font-family:var(--font-heading); font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:var(--accent-purple); font-weight:800}
+  .note p{margin:.4em 0 0}
+  .pills{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+  .pill{background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.2); border-radius:999px; padding:5px 13px; font-size:12.5px; color:var(--accent-strong); font-weight:600}
+  .pill b{color:var(--text-primary); font-weight:700}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px}
+  th,td{border:1px solid var(--border-color); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--glass-fill); font-family:var(--font-heading); font-weight:700; color:var(--text-primary)}
+  .quickstart{counter-reset:qs; display:grid; gap:.5rem; margin:.4rem 0 0; padding:0}
+  .quickstart li{list-style:none; position:relative; padding-left:2rem; margin:0; color:var(--text-secondary); font-size:.95rem}
+  .quickstart li::before{counter-increment:qs; content:counter(qs); position:absolute; left:0; top:.05rem; width:1.35rem; height:1.35rem; border-radius:50%; background:rgba(63,185,80,.18); color:var(--accent); font-family:var(--font-heading); font-weight:800; font-size:.72rem; display:grid; place-items:center}
+  html[data-theme="light"] .quickstart li::before{background:rgba(47,143,58,.16)}
+  .get{display:grid; gap:1rem; max-width:860px; margin:0 auto 2rem; padding:1.3rem 1.5rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
+  .get .channels{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
+  footer{max-width:var(--wide); margin:2rem auto 3rem; padding:2rem 2.2rem; border:1px solid var(--border-color); border-radius:18px; background:var(--card-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); color:var(--text-secondary); font-size:14px; text-align:center; position:relative; z-index:1}
+  footer strong{color:var(--text-primary)}
+  .author{margin:20px auto 0; padding-top:16px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); max-width:760px}
+  pre:focus-visible, summary:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .seg button:focus-visible{outline-offset:-2px}
+  @media(max-width:480px){ header.top .btn.primary{display:none} }
+  @media (pointer:coarse){ .btn, .seg button{min-height:44px} }
+  @keyframes fadeInUp{from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)}}
+  .hero .avatar-glow{animation:fadeInUp .7s ease-out both}
+  .hero .kicker{animation:fadeInUp .7s ease-out .1s both}
+  .hero h1{animation:fadeInUp .7s ease-out .2s both}
+  .hero p.lead{animation:fadeInUp .7s ease-out .3s both}
+  .hero .cta{animation:fadeInUp .7s ease-out .4s both}
+  @media (prefers-reduced-motion:reduce){ *,*::before{animation:none !important} html{scroll-behavior:auto} }
+  html[data-lang="ru"] [data-l="en"], html[data-lang="ru"] [data-l="uk"]{display:none}
+  html[data-lang="en"] [data-l="ru"], html[data-lang="en"] [data-l="uk"]{display:none}
+  html[data-lang="uk"] [data-l="ru"], html[data-lang="uk"] [data-l="en"]{display:none}
+</style>
+</head>
+<body>
+<div class="bg-blobs" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">doc-html-translate<span class="dot">.</span></a>
+    <span class="seg" role="group" aria-label="Language" id="langGroup">
+      <button id="lng-ru" type="button" onclick="setLang('ru')" aria-pressed="false" aria-label="Русский">RU</button>
+      <button id="lng-en" type="button" onclick="setLang('en')" aria-pressed="true" aria-label="English">EN</button>
+      <button id="lng-uk" type="button" onclick="setLang('uk')" aria-pressed="false" aria-label="Українська">UA</button>
+    </span>
+    <button class="btn" id="themeBtn" type="button" onclick="toggleTheme()" title="Theme" aria-label="Theme" aria-pressed="false">◐</button>
+    <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">
+      <span data-l="ru">⤓ Расширение</span><span data-l="en">⤓ Get extension</span><span data-l="uk">⤓ Розширення</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="avatar-glow" aria-hidden="true"><div class="appicon"><span>DOC</span><span>HTML</span></div></div>
+    <div class="kicker">
+      <span data-l="ru"><b>Расширение для браузера:</b> открой PDF или EPUB · он станет чистым HTML · переведи страницу</span>
+      <span data-l="en"><b>Browser extension:</b> open a PDF or EPUB · it becomes clean HTML · translate the page</span>
+      <span data-l="uk"><b>Розширення для браузера:</b> відкрий PDF або EPUB · він стане чистим HTML · переклади сторінку</span>
+    </div>
+    <h1>
+      <span data-l="ru">Переводи любой PDF и EPUB прямо в браузере - бесплатно</span>
+      <span data-l="en">Translate any PDF or EPUB right in your browser - for free</span>
+      <span data-l="uk">Перекладай будь-який PDF чи EPUB прямо в браузері - безкоштовно</span>
+    </h1>
+    <p class="lead">
+      <span data-l="ru">Браузер умеет переводить любую веб-страницу бесплатно, но не PDF и не EPUB: встроенная читалка рисует текст PDF на холсте, и переводчик его не видит, а EPUB браузер вообще не открывает. Это расширение (спутник приложения doc-html-translate) перерисовывает PDF или EPUB в чистый HTML с абзацами и заголовками - и встроенный «Перевести страницу» работает как на обычном сайте. Всё локально: ни ключей, ни загрузки файлов на сервер.</span>
+      <span data-l="en">Browsers translate any web page for free, but not PDFs or EPUBs: the built-in PDF viewer paints text on a canvas the translator can't read, and EPUBs don't open in the browser at all. This extension (a companion to the doc-html-translate app) re-renders the PDF or EPUB as clean HTML paragraphs and headings - so the built-in "Translate page" works just like on any website. Everything stays local: no keys, no uploads.</span>
+      <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку doc-html-translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер.</span>
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="#install">
+        <span data-l="ru">Как установить</span><span data-l="en">How to install</span><span data-l="uk">Як встановити</span>
+      </a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">
+        <span data-l="ru">Исходники на GitHub</span><span data-l="en">Source on GitHub</span><span data-l="uk">Джерела на GitHub</span>
+      </a>
+      <a class="btn" href="index.html">
+        <span data-l="ru">← Десктоп-приложение</span><span data-l="en">← Desktop app</span><span data-l="uk">← Десктоп-застосунок</span>
+      </a>
+    </div>
+  </section>
+
+  <section aria-label="Quick start">
+    <div class="get">
+      <div class="note" style="margin:0">
+        <div class="tag"><span data-l="ru">Где взять</span><span data-l="en">Availability</span><span data-l="uk">Де взяти</span></div>
+        <p>
+          <span data-l="ru">Расширение распространяется как распакованное (Load unpacked) из папки <code>extension/</code> репозитория; публикация в Chrome Web Store и Edge Add-ons - в планах. Работает в Chrome и Edge (Chromium, MV3).</span>
+          <span data-l="en">The extension ships as an unpacked load from the repo's <code>extension/</code> folder; Chrome Web Store and Edge Add-ons listings are planned. Works in Chrome and Edge (Chromium, MV3).</span>
+          <span data-l="uk">Розширення поширюється як розпакована збірка (Load unpacked) з теки <code>extension/</code> репозиторію; публікація в Chrome Web Store та Edge Add-ons - у планах. Працює в Chrome та Edge (Chromium, MV3).</span>
+        </p>
+      </div>
+      <ol class="quickstart">
+        <li><span data-l="ru">Открой <code>chrome://extensions</code> и включи <strong>Режим разработчика</strong>.</span><span data-l="en">Open <code>chrome://extensions</code> and enable <strong>Developer mode</strong>.</span><span data-l="uk">Відкрий <code>chrome://extensions</code> і ввімкни <strong>Режим розробника</strong>.</span></li>
+        <li><span data-l="ru"><strong>Load unpacked</strong> → выбери папку <code>extension/</code>.</span><span data-l="en"><strong>Load unpacked</strong> → pick the <code>extension/</code> folder.</span><span data-l="uk"><strong>Load unpacked</strong> → обери теку <code>extension/</code>.</span></li>
+        <li><span data-l="ru">Кликни иконку <strong>doc-html-translate</strong> → <strong>Open a PDF or EPUB file…</strong> → выбери PDF или EPUB. Дальше «Перевести страницу».</span><span data-l="en">Click the <strong>doc-html-translate</strong> icon → <strong>Open a PDF or EPUB file…</strong> → pick a PDF or EPUB. Then "Translate page".</span><span data-l="uk">Клікни іконку <strong>doc-html-translate</strong> → <strong>Open a PDF or EPUB file…</strong> → обери PDF або EPUB. Далі «Перекласти сторінку».</span></li>
+      </ol>
+      <div class="channels">
+        <button class="btn" type="button" onclick="setAll(true)"><span data-l="ru">Развернуть всё</span><span data-l="en">Expand all</span><span data-l="uk">Розгорнути все</span></button>
+        <button class="btn" type="button" onclick="setAll(false)"><span data-l="ru">Свернуть всё</span><span data-l="en">Collapse all</span><span data-l="uk">Згорнути все</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RU ===================== -->
+  <article data-l="ru">
+    <div class="sections">
+      <details class="sec" open>
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Что это и зачем</h2><span class="secteaser">Перевод PDF в браузере без приложения и без ключей</span></span></summary>
+        <div class="secbody">
+          <p>doc-html-translate как настольное приложение конвертирует EPUB/PDF/MOBI и другие форматы в локальный HTML. Это <strong>расширение</strong> делает то же самое для PDF и EPUB <strong>прямо в браузере</strong>. Для PDF оно извлекает текст (через PDF.js, всё локально) и раскладывает его обычными абзацами и заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - распаковывает книгу и объединяет её главы в один чистый HTML-документ. После этого встроенный «Перевести страницу» в Chrome или Edge работает как на любом сайте.</p>
+          <div class="note"><div class="tag">Главное</div><p>Никаких API-ключей и загрузки файлов. Извлечение и вёрстка - на твоём устройстве; в сеть ходит только встроенный переводчик браузера, который ты включаешь сам.</p></div>
+        </div>
+      </details>
+
+      <details class="sec" id="install">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Установка</h2><span class="secteaser">Load unpacked в режиме разработчика</span></span></summary>
+        <div class="secbody">
+          <ol>
+            <li>Возьми папку <code>extension/</code> из <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">репозитория</a> (или из релиза). При сборке из исходников один раз выполни <code>npm install &amp;&amp; npm run vendor</code> внутри неё.</li>
+            <li>Открой <code>chrome://extensions</code> (или <code>edge://extensions</code>), включи <strong>Режим разработчика</strong>.</li>
+            <li>Нажми <strong>Load unpacked</strong> и выбери папку <code>extension/</code>.</li>
+          </ol>
+          <p>Для авто-перехвата локальных <code>file://</code> PDF включи в карточке расширения <strong>«Allow access to file URLs»</strong>. Для PDF по http(s) ничего включать не нужно.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Как пользоваться</h2><span class="secteaser">Три способа открыть PDF или EPUB</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">Способ 1</div><h3>Из попапа</h3><p>Клик по иконке расширения → <strong>Open a PDF or EPUB file…</strong> → в открывшейся вкладке <strong>Open file</strong> → выбери файл. Не нужны ни тумблеры, ни путь в адресе.</p></div>
+            <div class="card"><div class="num">Способ 2</div><h3>Открыть ссылку</h3><p>Просто открой ссылку на <code>.pdf</code> или <code>.epub</code> по http(s) - расширение само перенаправит её в свой вьюер.</p></div>
+            <div class="card"><div class="num">Способ 3</div><h3>Локальный файл</h3><p>Включи «Allow access to file URLs» и открывай <code>file://…pdf</code> или <code>file://…epub</code> напрямую - тоже перехватится.</p></div>
+          </div>
+          <p>В любом случае дальше: меню браузера → <strong>«Перевести страницу»</strong> → твой язык.</p>
+          <div class="note"><div class="tag">Совет</div><p>Способ через выбор файла самый надёжный: путь к файлу нигде не появляется в URL, поэтому сторонние блокировщики контента его не трогают, и не нужен тумблер доступа к файлам.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Возможности чтения</h2><span class="secteaser">Тулбар, оглавление, темы, тумблеры</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Тулбар:</strong> размер и семья шрифта, светлая/сепия/тёмная тема, переход по номеру страницы, кнопка «Open file» и «Original PDF» (открыть исходный PDF в нативной читалке; для EPUB скрыта - нативной читалки EPUB нет).</li>
+            <li><strong>Оглавление:</strong> строится из закладок PDF (outline) или из EPUB-навигации (<code>nav.xhtml</code> / <code>toc.ncx</code>) - сворачиваемый сайдбар с якорями.</li>
+            <li><strong>Язык:</strong> определяется автоматически и проставляется в <code>&lt;html lang&gt;</code>, чтобы браузер предложил правильный перевод.</li>
+            <li><strong>Тумблеры:</strong> глобальный вкл/выкл и отключение на конкретном сайте - из попапа; тема и подсказка исходного языка - в настройках.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Как это работает и приватность</h2><span class="secteaser">Reflow вместо холста; всё локально</span></span></summary>
+        <div class="secbody">
+          <p>Ключевое решение - <strong>reflow</strong> (перекладка в текст), а не стандартный «холст + слой текста» PDF.js. При наложении оригинальные глифы остаются под прозрачным текстом, и перевод получается удвоенным/искажённым. Чистая перекладка теряет точную раскладку, зато даёт DOM, который браузер переводит идеально - тот же приём, что и в «бесплатном сценарии» настольного приложения.</p>
+          <p>Эвристики абзацев и заголовков портированы из приложения (<code>internal/pdf</code>): абзац - по вертикальному разрыву и отступу первой строки; заголовок - по центрированию/КАПСУ/краткости; оглавление - из outline PDF.</p>
+          <p>EPUB не требует эвристики reflow: его содержимое уже семантический XHTML. Работа здесь - распаковать архив, пройти по spine из OPF в порядке чтения, очистить каждую главу (убрать скрипты и стили), переписать картинки на <code>blob:</code>-ссылки, а внутренние ссылки - на внутристраничные якоря, прочитать авторское оглавление (<code>nav.xhtml</code> / <code>toc.ncx</code>) и объединить все главы в один прокручиваемый документ, чтобы переводчик видел всю книгу сразу.</p>
+          <div class="note"><div class="tag">Приватность</div><p>Расширение не собирает и не передаёт данные. В хранилище браузера - только твои настройки. В сеть ходит лишь встроенный переводчик браузера, который ты включаешь сам.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Ограничения</h2><span class="secteaser">Сканы, перехват, блокировщики, лигатуры</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Сканы/картинки без текста:</strong> переводить нечего (нет текстового слоя). Расширение это распознаёт и предлагает открыть оригинал; для сканов сначала прогони OCR (напр. настольным приложением).</li>
+            <li><strong>Авто-перехват по URL:</strong> срабатывает для адресов, оканчивающихся на <code>.pdf</code> или <code>.epub</code>; файлы, отдаваемые без такого расширения в адресе, открывай через попап («Open file»).</li>
+            <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на странице вьюера:</strong> это другой блокировщик контента в твоём профиле режет навигацию по содержимому URL. Используй открытие файла через диалог (путь не попадает в URL) или отключи мешающее расширение.</li>
+            <li><strong>Лигатуры:</strong> качество извлечения PDF.js чуть ниже Poppler на нестандартных шрифтах.</li>
+            <li><strong>Стили EPUB:</strong> вьюер применяет свой чистый стиль чтения и отбрасывает авторские стили книги - это сделано намеренно, именно так книга переводится чисто.</li>
+            <li><strong>EPUB-ограничения:</strong> архивы ZIP64 не поддерживаются; EPUB с DRM прочитать нельзя.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Ссылки</h2><span class="secteaser">Репозиторий, приложение, документация</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Исходники расширения (папка <code>extension/</code>)</a></li>
+            <li><a href="index.html">Настольное приложение doc-html-translate</a> · <a href="docs.ru.html">документация</a></li>
+            <li><a href="privacy.html">Политика приватности</a></li>
+          </ul>
+          <p class="muted">Лицензия MIT.</p>
+        </div>
+      </details>
+    </div>
+  </article>
+
+  <!-- ===================== EN ===================== -->
+  <article data-l="en">
+    <div class="sections">
+      <details class="sec" open>
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">What it is and why</h2><span class="secteaser">Translate PDFs in the browser - no app, no keys</span></span></summary>
+        <div class="secbody">
+          <p>The doc-html-translate desktop app converts EPUB/PDF/MOBI and more into local HTML. This <strong>extension</strong> does the same for PDFs and EPUBs <strong>right in the browser</strong>. For a PDF it extracts the text (via PDF.js, all local) and lays it out as ordinary <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code> paragraphs and headings; for an EPUB it unpacks the book and combines its chapters into one clean HTML document. Then Chrome's or Edge's built-in "Translate page" works just like on any website.</p>
+          <div class="note"><div class="tag">The point</div><p>No API keys, no uploads. Extraction and layout happen on your device; the only network access is the browser's own translator, which you turn on yourself.</p></div>
+        </div>
+      </details>
+
+      <details class="sec" id="install-en">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Install</h2><span class="secteaser">Load unpacked in Developer mode</span></span></summary>
+        <div class="secbody">
+          <ol>
+            <li>Get the <code>extension/</code> folder from the <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">repository</a> (or a release). When building from source, run <code>npm install &amp;&amp; npm run vendor</code> inside it once.</li>
+            <li>Open <code>chrome://extensions</code> (or <code>edge://extensions</code>), enable <strong>Developer mode</strong>.</li>
+            <li>Click <strong>Load unpacked</strong> and select the <code>extension/</code> folder.</li>
+          </ol>
+          <p>For auto-intercepting local <code>file://</code> PDFs, enable <strong>"Allow access to file URLs"</strong> on the extension's card. Nothing to enable for http(s) PDFs.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">How to use</h2><span class="secteaser">Three ways to open a PDF or EPUB</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">Way 1</div><h3>From the popup</h3><p>Click the extension icon → <strong>Open a PDF or EPUB file…</strong> → on the tab that opens click <strong>Open file</strong> → pick the file. No toggles, no path in the URL.</p></div>
+            <div class="card"><div class="num">Way 2</div><h3>Open a link</h3><p>Just open an http(s) <code>.pdf</code> or <code>.epub</code> link - the extension redirects it to its viewer automatically.</p></div>
+            <div class="card"><div class="num">Way 3</div><h3>Local file</h3><p>Enable "Allow access to file URLs" and open <code>file://…pdf</code> or <code>file://…epub</code> directly - it's intercepted too.</p></div>
+          </div>
+          <p>Either way, then: browser menu → <strong>"Translate page"</strong> → your language.</p>
+          <div class="note"><div class="tag">Tip</div><p>The file-picker route is the most robust: the file path never appears in any URL, so URL-based content blockers can't touch it, and no file-access toggle is needed.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Reading features</h2><span class="secteaser">Toolbar, contents, themes, toggles</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Toolbar:</strong> font size and family, light/sepia/dark theme, jump to page, "Open file" and "Original PDF" (open the untouched PDF in the native viewer; hidden for EPUB, which has no native viewer).</li>
+            <li><strong>Table of contents:</strong> built from the PDF outline or the EPUB nav (<code>nav.xhtml</code> / <code>toc.ncx</code>) - a collapsible sidebar with anchors.</li>
+            <li><strong>Language:</strong> auto-detected and written to <code>&lt;html lang&gt;</code> so the browser offers the right translation.</li>
+            <li><strong>Toggles:</strong> global on/off and per-site disable from the popup; theme and a source-language hint in Options.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">How it works &amp; privacy</h2><span class="secteaser">Reflow, not a canvas; all local</span></span></summary>
+        <div class="secbody">
+          <p>The key decision is <strong>reflow</strong> - flowing text, not PDF.js's canvas + text-layer overlay. The overlay keeps the original glyphs under transparent text, so native translate produces doubled/garbled output. Clean reflow loses the exact layout but yields a DOM the browser translates perfectly - the same trade-off as the desktop app's "free workflow".</p>
+          <p>Paragraph and heading heuristics are ported from the app (<code>internal/pdf</code>): paragraphs by vertical gap and first-line indent; headings by centering/ALL-CAPS/shortness; the TOC from the PDF outline.</p>
+          <p>EPUB needs no reflow heuristic - its content is already semantic XHTML. The work is unzipping the archive, following the OPF spine in reading order, sanitizing each chapter (dropping scripts and styles), rewriting its images to <code>blob:</code> URLs and its internal links to in-page anchors, reading the authored TOC (<code>nav.xhtml</code> / <code>toc.ncx</code>), and combining all chapters into one scrollable document so translate sees the whole book at once.</p>
+          <div class="note"><div class="tag">Privacy</div><p>The extension collects and transmits nothing. Browser storage holds only your settings. The only network access is the browser's own translator, which you turn on yourself.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Limitations</h2><span class="secteaser">Scans, interception, blockers, ligatures</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Scanned / image-only PDFs:</strong> nothing to translate (no text layer). The extension detects this and offers the original; OCR first (e.g. with the desktop app).</li>
+            <li><strong>URL auto-interception:</strong> fires for addresses ending in <code>.pdf</code> or <code>.epub</code>; files served without a matching extension in the URL can be opened via the popup ("Open file").</li>
+            <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> on the viewer page:</strong> a different content blocker in your profile is blocking the navigation by URL content. Use the file-picker route (path never in the URL) or disable the interfering extension.</li>
+            <li><strong>Ligatures:</strong> PDF.js text extraction is slightly weaker than Poppler on non-standard fonts.</li>
+            <li><strong>EPUB styling:</strong> the viewer applies its own clean reading CSS and drops the book's author styles - by design, that is what makes it translate cleanly.</li>
+            <li><strong>EPUB limits:</strong> ZIP64 archives are unsupported; DRM-protected EPUBs cannot be read.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Links</h2><span class="secteaser">Repository, app, documentation</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Extension source (the <code>extension/</code> folder)</a></li>
+            <li><a href="index.html">doc-html-translate desktop app</a> · <a href="docs.html">documentation</a></li>
+            <li><a href="privacy.html">Privacy policy</a></li>
+          </ul>
+          <p class="muted">MIT license.</p>
+        </div>
+      </details>
+    </div>
+  </article>
+
+  <!-- ===================== UK ===================== -->
+  <article data-l="uk">
+    <div class="sections">
+      <details class="sec" open>
+        <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Що це і навіщо</h2><span class="secteaser">Переклад PDF у браузері - без застосунку й без ключів</span></span></summary>
+        <div class="secbody">
+          <p>Настільний застосунок doc-html-translate конвертує EPUB/PDF/MOBI та інше в локальний HTML. Це <strong>розширення</strong> робить те саме для PDF та EPUB <strong>прямо в браузері</strong>. Для PDF воно видобуває текст (через PDF.js, усе локально) і розкладає його звичайними абзацами та заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - розпаковує книгу та об'єднує її розділи в один чистий HTML-документ. Далі вбудований «Перекласти сторінку» в Chrome чи Edge працює як на будь-якому сайті.</p>
+          <div class="note"><div class="tag">Головне</div><p>Жодних API-ключів і завантажень. Видобування та верстка - на твоєму пристрої; у мережу ходить лише вбудований перекладач браузера, який ти вмикаєш сам.</p></div>
+        </div>
+      </details>
+
+      <details class="sec" id="install-uk">
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Встановлення</h2><span class="secteaser">Load unpacked у режимі розробника</span></span></summary>
+        <div class="secbody">
+          <ol>
+            <li>Візьми теку <code>extension/</code> з <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">репозиторію</a> (або з релізу). За збірки з джерел один раз виконай <code>npm install &amp;&amp; npm run vendor</code> усередині неї.</li>
+            <li>Відкрий <code>chrome://extensions</code> (або <code>edge://extensions</code>), увімкни <strong>Режим розробника</strong>.</li>
+            <li>Натисни <strong>Load unpacked</strong> і обери теку <code>extension/</code>.</li>
+          </ol>
+          <p>Для авто-перехоплення локальних <code>file://</code> PDF увімкни в картці розширення <strong>«Allow access to file URLs»</strong>. Для PDF по http(s) вмикати нічого не треба.</p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Як користуватися</h2><span class="secteaser">Три способи відкрити PDF або EPUB</span></span></summary>
+        <div class="secbody">
+          <div class="grid">
+            <div class="card"><div class="num">Спосіб 1</div><h3>З попапа</h3><p>Клік по іконці розширення → <strong>Open a PDF or EPUB file…</strong> → у відкритій вкладці <strong>Open file</strong> → обери файл. Без тумблерів і без шляху в адресі.</p></div>
+            <div class="card"><div class="num">Спосіб 2</div><h3>Відкрити посилання</h3><p>Просто відкрий посилання на <code>.pdf</code> або <code>.epub</code> по http(s) - розширення само перенаправить його у свій вьюер.</p></div>
+            <div class="card"><div class="num">Спосіб 3</div><h3>Локальний файл</h3><p>Увімкни «Allow access to file URLs» і відкривай <code>file://…pdf</code> або <code>file://…epub</code> напряму - теж перехопиться.</p></div>
+          </div>
+          <p>У будь-якому разі далі: меню браузера → <strong>«Перекласти сторінку»</strong> → твоя мова.</p>
+          <div class="note"><div class="tag">Порада</div><p>Спосіб через вибір файлу найнадійніший: шлях до файлу ніде не з'являється в URL, тож сторонні блокувальники контенту його не чіпають, і не потрібен тумблер доступу до файлів.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">03</span><span class="sechead"><h2 class="sectitle">Можливості читання</h2><span class="secteaser">Тулбар, зміст, теми, тумблери</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Тулбар:</strong> розмір і сім'я шрифту, світла/сепія/темна тема, перехід за номером сторінки, кнопки «Open file» та «Original PDF» (відкрити вихідний PDF у нативній читалці; для EPUB прихована - нативної читалки EPUB немає).</li>
+            <li><strong>Зміст:</strong> будується із закладок PDF (outline) або з EPUB-навігації (<code>nav.xhtml</code> / <code>toc.ncx</code>) - згортуваний сайдбар з якорями.</li>
+            <li><strong>Мова:</strong> визначається автоматично й проставляється в <code>&lt;html lang&gt;</code>, щоб браузер запропонував правильний переклад.</li>
+            <li><strong>Тумблери:</strong> глобальний увімк/вимк і вимкнення на конкретному сайті - з попапа; тема й підказка вихідної мови - у налаштуваннях.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Як це працює та приватність</h2><span class="secteaser">Reflow замість полотна; усе локально</span></span></summary>
+        <div class="secbody">
+          <p>Ключове рішення - <strong>reflow</strong> (перекладка в текст), а не стандартний «полотно + шар тексту» PDF.js. За накладання оригінальні гліфи лишаються під прозорим текстом, і переклад виходить подвоєним/спотвореним. Чиста перекладка втрачає точну розкладку, зате дає DOM, який браузер перекладає ідеально - той самий прийом, що й у «безкоштовному сценарії» настільного застосунку.</p>
+          <p>Евристики абзаців і заголовків портовані із застосунку (<code>internal/pdf</code>): абзац - за вертикальним розривом і відступом першого рядка; заголовок - за центруванням/КАПСОМ/стислістю; зміст - з outline PDF.</p>
+          <p>EPUB не потребує евристики reflow: його вміст уже семантичний XHTML. Робота тут - розпакувати архів, пройти по spine з OPF у порядку читання, очистити кожен розділ (прибрати скрипти та стилі), переписати картинки на <code>blob:</code>-посилання, а внутрішні посилання - на внутрішньосторінкові якорі, прочитати авторський зміст (<code>nav.xhtml</code> / <code>toc.ncx</code>) і об'єднати всі розділи в один прокручуваний документ, щоб перекладач бачив усю книгу одразу.</p>
+          <div class="note"><div class="tag">Приватність</div><p>Розширення не збирає й не передає дані. У сховищі браузера - лише твої налаштування. У мережу ходить тільки вбудований перекладач браузера, який ти вмикаєш сам.</p></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Обмеження</h2><span class="secteaser">Скани, перехоплення, блокувальники, лігатури</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><strong>Скани/картинки без тексту:</strong> перекладати нічого (немає текстового шару). Розширення це розпізнає й пропонує відкрити оригінал; для сканів спершу прожени OCR (напр. настільним застосунком).</li>
+            <li><strong>Авто-перехоплення за URL:</strong> спрацьовує для адрес, що закінчуються на <code>.pdf</code> або <code>.epub</code>; файли, що віддаються без відповідного розширення в адресі, відкривай через попап («Open file»).</li>
+            <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на сторінці вьюера:</strong> інший блокувальник контенту у твоєму профілі ріже навігацію за вмістом URL. Використовуй відкриття файлу через діалог (шлях не потрапляє в URL) або вимкни розширення, що заважає.</li>
+            <li><strong>Лігатури:</strong> якість видобування PDF.js трохи нижча за Poppler на нестандартних шрифтах.</li>
+            <li><strong>Стилі EPUB:</strong> вьюер застосовує власний чистий стиль читання й відкидає авторські стилі книги - це зроблено навмисно, саме так книга перекладається чисто.</li>
+            <li><strong>Обмеження EPUB:</strong> архіви ZIP64 не підтримуються; EPUB із DRM прочитати не можна.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Посилання</h2><span class="secteaser">Репозиторій, застосунок, документація</span></span></summary>
+        <div class="secbody">
+          <ul>
+            <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Джерела розширення (тека <code>extension/</code>)</a></li>
+            <li><a href="index.html">Настільний застосунок doc-html-translate</a> · <a href="docs.uk.html">документація</a></li>
+            <li><a href="privacy.html">Політика приватності</a></li>
+          </ul>
+          <p class="muted">Ліцензія MIT.</p>
+        </div>
+      </details>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <p>
+    <span data-l="ru"><strong>doc-html-translate</strong> - расширение для браузера: перевод любого PDF и EPUB встроенным переводчиком, полностью локально.</span>
+    <span data-l="en"><strong>doc-html-translate</strong> - browser extension: translate any PDF or EPUB with the built-in translator, fully local.</span>
+    <span data-l="uk"><strong>doc-html-translate</strong> - розширення для браузера: переклад будь-якого PDF чи EPUB вбудованим перекладачем, повністю локально.</span>
+  </p>
+  <p class="muted" style="margin-top:10px">
+    <span data-l="ru">Лицензия MIT · Chrome и Edge (Chromium, MV3) · <a href="index.html">десктоп-приложение</a></span>
+    <span data-l="en">MIT license · Chrome and Edge (Chromium, MV3) · <a href="index.html">desktop app</a></span>
+    <span data-l="uk">Ліцензія MIT · Chrome та Edge (Chromium, MV3) · <a href="index.html">десктоп-застосунок</a></span>
+  </p>
+  <p class="author">
+    <span data-l="ru">Автор</span><span data-l="en">Author</span><span data-l="uk">Автор</span>:
+    <a href="https://sza.od.ua" target="_blank" rel="noopener">SZA.od.ua</a> ·
+    <a href="mailto:sza@ukr.net">sza@ukr.net</a> ·
+    <a href="https://github.com/SerZhyAle" target="_blank" rel="noopener">github.com/SerZhyAle</a>
+  </p>
+</footer>
+
+<script>
+  var I18N = {
+    ru:{ title:'doc-html-translate - расширение для перевода PDF и EPUB в браузере', desc:'Расширение doc-html-translate перерисовывает PDF и EPUB в чистый HTML, чтобы встроенный «Перевести страницу» в Chrome и Edge работал на них бесплатно. Полностью локально - без ключей и загрузок.', langGroup:'Язык', theme:'Тема', toLight:'Включить светлую тему', toDark:'Включить тёмную тему', copied:'Скопировано' },
+    en:{ title:'doc-html-translate - browser extension for translating PDFs and EPUBs', desc:"The doc-html-translate browser extension re-renders PDFs and EPUBs as clean HTML so Chrome's and Edge's built-in Translate page works on them for free. Fully local - no keys, no uploads.", langGroup:'Language', theme:'Theme', toLight:'Switch to light theme', toDark:'Switch to dark theme', copied:'Copied' },
+    uk:{ title:'doc-html-translate - розширення для перекладу PDF та EPUB у браузері', desc:'Розширення doc-html-translate перемальовує PDF та EPUB у чистий HTML, щоб вбудований «Перекласти сторінку» в Chrome і Edge працював на них безкоштовно. Повністю локально - без ключів і завантажень.', langGroup:'Мова', theme:'Тема', toLight:'Увімкнути світлу тему', toDark:'Увімкнути темну тему', copied:'Скопійовано' }
+  };
+  function metaSet(sel, val){ var m = document.querySelector(sel); if(m) m.setAttribute('content', val); }
+  function applyThemeLabel(){
+    var d = document.documentElement, l = d.getAttribute('data-lang')||'en', m = I18N[l]||I18N.en;
+    var dark = d.getAttribute('data-theme') !== 'light';
+    var b = document.getElementById('themeBtn');
+    if(b){ b.setAttribute('aria-label', dark ? m.toLight : m.toDark); b.setAttribute('title', m.theme); b.setAttribute('aria-pressed', String(!dark)); }
+    metaSet('meta[name="theme-color"]', dark ? '#0a0f0a' : '#eef3ea');
+  }
+  function applyLang(l){
+    var d = document.documentElement, m = I18N[l]||I18N.en;
+    d.setAttribute('data-lang', l); d.setAttribute('lang', l);
+    document.title = m.title;
+    metaSet('meta[name="description"]', m.desc);
+    metaSet('meta[property="og:title"]', m.title);
+    metaSet('meta[property="og:description"]', m.desc);
+    ['ru','en','uk'].forEach(function(code){ var btn = document.getElementById('lng-'+code); if(btn) btn.setAttribute('aria-pressed', String(l===code)); });
+    var g = document.getElementById('langGroup'); if(g) g.setAttribute('aria-label', m.langGroup);
+    applyThemeLabel();
+  }
+  function setLang(l){ applyLang(l); try{ localStorage.setItem('sza-lang', l); }catch(e){} }
+  function toggleTheme(){
+    var d = document.documentElement, t = d.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+    d.setAttribute('data-theme', t); try{ localStorage.setItem('sza-theme', t); }catch(e){}
+    applyThemeLabel();
+  }
+  function setAll(open){ var s = document.querySelectorAll('details.sec'); for(var i=0;i<s.length;i++){ if(open){ s[i].setAttribute('open',''); } else { s[i].removeAttribute('open'); } } }
+  function openFromHash(){
+    var h = location.hash ? location.hash.slice(1) : ''; if(!h) return;
+    var el = document.getElementById(h); if(!el) return;
+    var sec = el.closest ? el.closest('details.sec') : null; if(sec) sec.setAttribute('open','');
+    el.scrollIntoView({block:'start'});
+  }
+  window.addEventListener('hashchange', openFromHash);
+  (function init(){
+    var l = document.documentElement.getAttribute('data-lang')||'en';
+    applyLang(l);
+    var pres = document.querySelectorAll('pre'); for(var i=0;i<pres.length;i++){ pres[i].setAttribute('tabindex','0'); }
+    openFromHash();
+  })();
+</script>
+</body>
+</html>
