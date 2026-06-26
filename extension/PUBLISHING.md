@@ -24,7 +24,7 @@ The scripts are dependency-free (Node builtins only, like `build.mjs`):
 
 | Name | What it is | Where |
 |------|------------|-------|
-| `CWS_PUBLISHER_ID` | your developer/publisher GUID `626d4626-bf35-4a92-889e-665da4388ffe` | devconsole URL / Account page |
+| `CWS_PUBLISHER_ID` | your developer/publisher GUID (the GUID in the devconsole URL) | devconsole URL / Account page |
 | `CWS_EXTENSION_ID` | the 32-char **item** ID, created on first upload | dashboard, after step 1 |
 | `EDGE_PRODUCT_ID` | the Edge product GUID | Partner Center > Edge > Overview > Extension identity |
 
