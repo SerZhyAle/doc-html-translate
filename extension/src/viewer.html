@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflow viewer</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <div id="toolbar">
+    <span class="title" id="doc-title">Loading..</span>
+    <span class="spacer"></span>
+    <div class="group" title="Table of contents">
+      <button id="btn-toc" type="button" aria-label="Toggle contents">&#9776; Contents</button>
+    </div>
+    <div class="group" title="Font size">
+      <button id="btn-font-dec" type="button" aria-label="Smaller text">A&minus;</button>
+      <button id="btn-font-inc" type="button" aria-label="Larger text">A+</button>
+    </div>
+    <div class="group">
+      <select id="sel-family" aria-label="Font family">
+        <option value="serif">Serif</option>
+        <option value="sans">Sans</option>
+        <option value="mono">Mono</option>
+      </select>
+      <select id="sel-theme" aria-label="Theme">
+        <option value="light">Light</option>
+        <option value="sepia">Sepia</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+    <div class="group" title="Go to page">
+      <span>Page</span>
+      <input id="page-jump" type="number" min="1" value="1" aria-label="Go to page">
+      <span id="page-total">/ ?</span>
+    </div>
+    <div class="group">
+      <button id="btn-open" type="button" title="Open a local PDF or EPUB via the file picker">Open file</button>
+      <button id="btn-original" type="button" title="Open the untouched PDF in the native viewer">Original PDF</button>
+    </div>
+  </div>
+  <input id="file-input" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub" class="hidden">
+
+  <div id="status"><div id="progress-bar"></div><span id="status-text">Loading..</span></div>
+
+  <div id="layout">
+    <nav id="toc" class="hidden" aria-label="Table of contents">
+      <h2>Contents</h2>
+      <div id="toc-tree"></div>
+    </nav>
+    <main id="content"></main>
+  </div>
+
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>

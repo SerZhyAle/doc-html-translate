@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF reflow</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, sans-serif; width: 270px; margin: 0; padding: 12px 14px; color: #1b1b1b; }
+    h1 { font-size: 14px; margin: 0 0 10px; }
+    .row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 8px; }
+    .row label { font-size: 13px; }
+    .host { color: #555; font-size: 12px; word-break: break-all; }
+    .switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 22px; transition: 0.2s; cursor: pointer; }
+    .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+    input:checked + .slider { background: #2563eb; }
+    input:checked + .slider::before { transform: translateX(16px); }
+    input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
+    hr { border: 0; border-top: 1px solid #eee; margin: 12px 0; }
+    a { color: #2563eb; font-size: 12px; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .cta { display: block; width: 100%; margin: 4px 0 12px; padding: 9px 12px; font: inherit; font-weight: 600;
+           color: #fff; background: #2563eb; border: 0; border-radius: 8px; cursor: pointer; }
+    .cta:hover { background: #1d4fd0; }
+  </style>
+</head>
+<body>
+  <h1>doc-html-translate</h1>
+  <button id="open-pdf" class="cta" type="button">Open a PDF or EPUB file&hellip;</button>
+  <div class="row">
+    <label for="global">Reflow PDFs &amp; EPUBs</label>
+    <span class="switch"><input type="checkbox" id="global"><span class="slider"></span></span>
+  </div>
+  <div class="row">
+    <label for="site">On this site<br><span class="host" id="host"></span></label>
+    <span class="switch"><input type="checkbox" id="site"><span class="slider"></span></span>
+  </div>
+  <hr>
+  <a id="opts" href="#">Options</a>
+  <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener" style="float:right">Guide &amp; help &#8599;</a>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>doc-html-translate - options</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1.2rem; color: #1b1b1b; line-height: 1.5; }
+    h1 { font-size: 1.4rem; }
+    .field { margin: 1.2rem 0; }
+    label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
+    .hint { color: #666; font-size: 0.85rem; margin-top: 0.25rem; }
+    select, input[type="text"] { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid #ccc; border-radius: 6px; min-width: 14rem; }
+    input[type="checkbox"] { transform: scale(1.2); margin-right: 0.5rem; }
+    .saved { color: #16803c; font-size: 0.85rem; margin-left: 0.6rem; opacity: 0; transition: opacity 0.2s; }
+    .saved.show { opacity: 1; }
+    ul.hosts { padding-left: 1.1rem; }
+    code { background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>doc-html-translate</h1>
+  <p class="hint">Re-renders PDFs and EPUBs as clean, reflowed HTML so the browser's built-in "Translate page" works.
+    Everything runs locally; only the browser's own translate touches the network.</p>
+
+  <div class="field">
+    <label><input type="checkbox" id="enabled"> Reflow PDFs and EPUBs automatically</label>
+    <div class="hint">When off, PDFs open in the browser's native viewer and EPUBs download as usual.</div>
+  </div>
+
+  <div class="field">
+    <label for="theme">Reading theme</label>
+    <select id="theme">
+      <option value="light">Light</option>
+      <option value="sepia">Sepia</option>
+      <option value="dark">Dark</option>
+    </select>
+    <span class="saved" id="saved-theme">Saved</span>
+  </div>
+
+  <div class="field">
+    <label for="lang">Source language</label>
+    <select id="lang">
+      <option value="auto">Auto-detect</option>
+      <option value="en">English</option>
+      <option value="ru">Russian</option>
+      <option value="uk">Ukrainian</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+      <option value="es">Spanish</option>
+      <option value="it">Italian</option>
+      <option value="pt">Portuguese</option>
+      <option value="zh">Chinese</option>
+      <option value="ja">Japanese</option>
+      <option value="ko">Korean</option>
+      <option value="ar">Arabic</option>
+    </select>
+    <div class="hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language).</div>
+  </div>
+
+  <div class="field">
+    <label>Sites where reflow is off</label>
+    <ul class="hosts" id="hosts"><li class="hint">None</li></ul>
+    <div class="hint">Manage these from the toolbar popup's "On this site" switch.</div>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

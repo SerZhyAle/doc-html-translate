@@ -1,0 +1,10 @@
+node_modules/
+dist/
+vendor/
+
+# Local publish credentials - NEVER commit these
+.env
+*.pem
+*service-account*.json
+cws-key*.json
+edge-key*.json

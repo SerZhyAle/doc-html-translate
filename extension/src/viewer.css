@@ -1,0 +1,213 @@
+/* viewer.css - reading styles for the reflow viewer. Body typography mirrors the
+   desktop app's internal/pdf buildPDFPageHTML CSS; the chrome (toolbar, sidebar,
+   themes) is extension-specific. Theme is selected via data-theme on <html>. */
+
+:root {
+  --reader-font: Georgia, "Times New Roman", serif;
+  --reader-size: 19px;
+  --bg: #faf9f7;
+  --fg: #1b1b1b;
+  --muted: #6b6b6b;
+  --bar-bg: #ffffff;
+  --bar-fg: #222;
+  --border: #e2e0db;
+  --accent: #2563eb;
+  --link: #1a4fb4;
+}
+
+html[data-theme="dark"] {
+  --bg: #1a1a1c;
+  --fg: #e6e4df;
+  --muted: #9a9893;
+  --bar-bg: #232327;
+  --bar-fg: #e6e4df;
+  --border: #36363b;
+  --accent: #5b8dff;
+  --link: #8fb4ff;
+}
+
+html[data-theme="sepia"] {
+  --bg: #f4ecd8;
+  --fg: #4a3f2f;
+  --muted: #7a6c54;
+  --bar-bg: #efe6cf;
+  --bar-fg: #4a3f2f;
+  --border: #ddd0b0;
+  --accent: #8a5a2b;
+  --link: #7a4a1b;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--reader-font);
+  font-size: var(--reader-size);
+  line-height: 1.6;
+}
+
+/* ---- Toolbar ---- */
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  flex-wrap: wrap;
+  padding: 0.4em 0.7em;
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  border-bottom: 1px solid var(--border);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}
+
+#toolbar .spacer { flex: 1 1 auto; }
+#toolbar .title {
+  font-weight: 600;
+  max-width: 38vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#toolbar button,
+#toolbar select,
+#toolbar input {
+  font: inherit;
+  color: var(--bar-fg);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25em 0.6em;
+  cursor: pointer;
+}
+#toolbar button:hover { border-color: var(--accent); }
+#toolbar input[type="number"] { width: 4.5em; cursor: text; }
+#toolbar .group { display: inline-flex; gap: 0.2em; align-items: center; }
+
+/* ---- Layout: optional TOC sidebar + content ---- */
+#layout { display: flex; align-items: flex-start; }
+
+#toc {
+  position: sticky;
+  top: 3.1em;
+  align-self: flex-start;
+  max-height: calc(100vh - 3.4em);
+  overflow: auto;
+  width: 19em;
+  flex: 0 0 19em;
+  padding: 1em 0.8em 2em 1em;
+  border-right: 1px solid var(--border);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}
+#toc.hidden { display: none; }
+#toc h2 { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.6em; }
+#toc ul { list-style: none; margin: 0; padding-left: 0.9em; }
+#toc > ul { padding-left: 0; }
+#toc li { margin: 0.1em 0; }
+#toc a { color: var(--link); text-decoration: none; display: block; padding: 0.15em 0.2em; border-radius: 4px; }
+#toc a:hover { background: rgba(127, 127, 127, 0.12); }
+#toc .toc-toggle {
+  cursor: pointer; user-select: none; color: var(--muted);
+  display: inline-block; width: 1em; text-align: center;
+}
+#toc .collapsed > ul { display: none; }
+
+#content {
+  flex: 1 1 auto;
+  width: 95%;
+  max-width: 46em;
+  margin: 1.5em auto 6em;
+  padding: 0 1.2em;
+}
+
+/* ---- Reading typography (mirrors the desktop output) ---- */
+#content p { margin: 0.6em 0; text-indent: 1.5em; }
+#content p.first { text-indent: 0; }
+#content h2 {
+  text-align: center; font-size: 1.5em; font-weight: bold;
+  letter-spacing: 0.06em; margin: 1.8em 0 1.2em;
+}
+#content h3 { text-align: center; font-size: 1.15em; font-style: italic; margin: 1.4em 0 0.8em; }
+
+/* ---- EPUB content (richer markup than the PDF reflow path) ---- */
+#content img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
+#content figure { margin: 1.2em 0; text-align: center; }
+#content figcaption { font-size: 0.85em; color: var(--muted); text-align: center; }
+#content h1 { font-size: 1.7em; text-align: center; margin: 1.6em 0 1em; }
+#content h4 { font-size: 1.05em; margin: 1.2em 0 0.6em; }
+#content h5, #content h6 { font-size: 1em; margin: 1em 0 0.5em; }
+#content blockquote {
+  margin: 1em 1.5em; padding-left: 1em;
+  border-left: 3px solid var(--border); color: var(--muted); font-style: italic;
+}
+#content ul, #content ol { margin: 0.8em 0; padding-left: 2em; }
+#content li { margin: 0.3em 0; text-indent: 0; }
+#content li p { text-indent: 0; margin: 0.3em 0; }
+#content table { border-collapse: collapse; margin: 1em auto; max-width: 100%; }
+#content th, #content td { border: 1px solid var(--border); padding: 0.3em 0.6em; text-align: left; }
+#content a { color: var(--link); }
+#content hr:not(.page-sep) { border: 0; border-top: 1px solid var(--border); margin: 1.5em auto; width: 40%; }
+#content pre { white-space: pre-wrap; overflow-x: auto; background: rgba(127, 127, 127, 0.08); padding: 0.8em; border-radius: 6px; }
+
+.page-sep {
+  border: 0;
+  border-top: 1px dashed var(--border);
+  margin: 2em 0 0.4em;
+}
+.page-label {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  margin: 0 0 1.2em;
+  text-indent: 0;
+}
+
+/* ---- Progress / status ---- */
+#status {
+  position: sticky;
+  top: 3.0em;
+  z-index: 10;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0.3em 0.8em;
+}
+#progress-bar {
+  height: 3px;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.2s ease;
+}
+#status.done { display: none; }
+
+/* ---- Fallback / error panels ---- */
+.notice {
+  max-width: 42em;
+  margin: 3em auto;
+  padding: 1.4em 1.6em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bar-bg);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
+}
+.notice h1 { font-size: 1.2em; margin: 0 0 0.5em; }
+.notice a.btn, .notice button {
+  display: inline-block; margin-top: 0.8em; margin-right: 0.6em;
+  padding: 0.5em 1em; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; text-decoration: none; cursor: pointer; font: inherit;
+}
+.notice .pw-row { margin-top: 1em; display: flex; gap: 0.5em; }
+.notice input[type="password"] { font: inherit; padding: 0.5em; border: 1px solid var(--border); border-radius: 8px; flex: 1; }
+
+.hidden { display: none !important; }
