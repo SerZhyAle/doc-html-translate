@@ -249,7 +249,7 @@ async function main() {
 
   if (!fileUrl) {
     showNotice("Open a PDF or EPUB", [
-      para("Pick a local PDF or EPUB to read here. Opening a PDF or EPUB link also loads it here automatically."),
+      para("Pick a local PDF or EPUB to read here. Opening a PDF or EPUB link loads it here too - the extension is helpful like that."),
       filePickerButton(),
     ]);
     return;
@@ -526,7 +526,7 @@ function renderEpubDocument(book, fallbackTitle) {
     h.textContent = "Little or no text found";
     banner.append(
       h,
-      para("This EPUB has no extractable text (it may be image-only). Native page-translate needs a text layer."),
+      para("This EPUB has no extractable text (it may be image-only). Native page-translate needs actual text, not a pretty picture of it."),
       filePickerButton(),
     );
     content.prepend(banner);
@@ -548,7 +548,7 @@ function finishDocument(total, totalChars, pagesWithText) {
     h.textContent = "Little or no text found";
     banner.append(
       h,
-      para("This looks like a scanned or image-only PDF, so there is little text to translate. Native page-translate needs a text layer."),
+      para("This looks like a scanned or image-only PDF, so there is little text to translate - the browser translates words, not pixels."),
       para("To translate scanned pages, run them through OCR first (e.g. the doc-html-translate desktop app), then reopen the result."),
       originalButton(),
     );

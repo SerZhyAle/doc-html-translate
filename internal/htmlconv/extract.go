@@ -105,7 +105,7 @@ func extractBody(data []byte) string {
 	}
 	var sb strings.Builder
 	for c := bodyNode.FirstChild; c != nil; c = c.NextSibling {
-		gohtml.Render(&sb, c)
+		_ = gohtml.Render(&sb, c)
 	}
 	return sb.String()
 }

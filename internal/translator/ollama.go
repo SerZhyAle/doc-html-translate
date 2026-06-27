@@ -17,14 +17,14 @@ import (
 )
 
 const (
-	ollamaDefaultURL     = "http://localhost:11434/api/generate"
-	ollamaDefaultModel   = "gemma3:12b"
-	ollamaDefaultNumCtx  = 8192 // far below default 128K; our batches need <4K tokens
-	ollamaTimeout        = 300 * time.Second
+	ollamaDefaultURL    = "http://localhost:11434/api/generate"
+	ollamaDefaultModel  = "gemma3:12b"
+	ollamaDefaultNumCtx = 8192 // far below default 128K; our batches need <4K tokens
+	ollamaTimeout       = 300 * time.Second
 	// Smaller batch keeps the model focused and reduces echo-back failures
-	ollamaBatchSize      = 20
+	ollamaBatchSize = 20
 	// Max retry passes for segments that came back untranslated (echo)
-	ollamaMaxRetries     = 2
+	ollamaMaxRetries = 2
 )
 
 // OllamaClient translates text using a local Ollama instance.
@@ -212,9 +212,9 @@ func (c *OllamaClient) translateSingle(text, srcLang, dstLang string) (string, e
 		langName(srcLang), langName(dstLang), text,
 	)
 	reqBody := ollamaRequest{
-		Model:  c.model,
-		Prompt: prompt,
-		Stream: false,
+		Model:   c.model,
+		Prompt:  prompt,
+		Stream:  false,
 		Options: ollamaOptions{NumCtx: c.numCtx, Temperature: 0},
 	}
 	body, err := json.Marshal(reqBody)

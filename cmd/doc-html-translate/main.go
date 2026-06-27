@@ -40,5 +40,5 @@ func main() {
 // waitOnError keeps the console window open so the user can read the error message (R9).
 func waitOnError() {
 	fmt.Fprintln(os.Stderr, "\nPress Enter to close...")
-	fmt.Scanln()
+	_, _ = fmt.Scanln()
 }

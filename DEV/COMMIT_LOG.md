@@ -308,3 +308,48 @@ Changed files:
 - internal/htmlgen/htmlgen_test.go
 
 
+| 2026-06-27 16:26:12 | main | ec7d9b2 | feat: GUI default-handler + cost/TOC controls, local build/release split, cheaper CI |
+
+Changed files:
+- .claude/commands/build.md
+- .claude/commands/release.md
+- .gitattributes
+- .github/workflows/publish-extension.yml
+- .github/workflows/release.yml
+- AGENTS.md
+- CLAUDE.md
+- DEV/CHANGELOG.md
+- DEV/RELEASE.md
+- README.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-translate/main.go
+- cmd/doc-html-ui/main.go
+- cmd/doc-html-ui/main_test.go
+- cmd/doc-html-ui/ui.html
+- configs/.golangci.yml
+- configs/.typos.toml
+- docs.html
+- docs.ru.html
+- docs.uk.html
+- extension.html
+- extension/README.md
+- extension/build.mjs
+- extension/src/options.html
+- extension/src/viewer.js
+- extension/store/LISTING.md
+- index.html
+- internal/app/app.go
+- internal/config/flags.go
+- internal/dialog/dialog_windows.go
+- internal/epub/epub.go
+- internal/fb2/extract.go
+- internal/htmlconv/extract.go
+- internal/md/extract.go
+- internal/pipeline/pipeline.go
+- internal/translator/ollama.go
+- internal/translator/translator_test.go
+- scripts/build-local.ps1
+- scripts/commit_after_build.ps1
+- scripts/release.ps1
+

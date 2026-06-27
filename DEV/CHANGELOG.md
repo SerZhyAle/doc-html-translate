@@ -100,3 +100,9 @@
 | 2026-03-10 01:16:56 | scripts/build.ps1 | goversioninfo | Fix: added -64 flag to goversioninfo to generate amd64-compatible .syso (was: relocation type 7 error) |
 | 2026-03-10 01:32:31 | internal/htmlgen/navbar.go | navBarScript | feat: edge-scroll auto-navigation - PageDown/wheel-down at bottom → next page; PageUp/wheel-up at top → prev page (wheel threshold: 3 events) |
 
+| 2026-06-27 16:18:59 | scripts/build-local.ps1, scripts/release.ps1, DEV/RELEASE.md | Build/Release | feat: split local-free build (build-local.ps1: gate+CLI+UI+commit) from paid release flow (release.ps1 checklist-only); /build + /release commands; AGENTS/CLAUDE/README docs |
+| 2026-06-27 16:18:59 | .github/workflows/release.yml, publish-extension.yml | CI | perf: move release + extension publish to ubuntu-latest (~half cost); add concurrency guards, npm cache, pinned goversioninfo@v1.7.0; drop WPF icon-gen (commit assets/*.ico) |
+| 2026-06-27 16:18:59 | cmd/doc-html-ui/main.go, ui.html | doc-html-ui | feat: Set-as-default-handler button (-register), -toc-depth/-max-cost fields, MSIX-aware hiding + missing-CLI warning via /api/env |
+| 2026-06-27 16:18:59 | internal/*, cmd/* | Lint | style: errcheck cleanup (explicit _ = on ignored returns) across internal and cmd; golangci config update |
+| 2026-06-27 16:18:59 | configs/.typos.toml | Gate | fix: teach typos config the project proper nouns (SerZhyAle, OPF, PNGs) and exclude data/fixture files so the typo gate runs clean |
+| 2026-06-27 16:18:59 | index.html, extension.html, docs.*.html, README.md, extension/ | Site/Docs | docs: typography pass (short hyphens, .. ellipsis) and tone rewrites across site, README and extension copy |

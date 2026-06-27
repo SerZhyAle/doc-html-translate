@@ -40,11 +40,11 @@ func ParseArgs(args []string) (Config, error) {
 	splitSize := fs.Int("split", 5000, "split pages at N chars for browser GT extension (0 = disable)")
 	tocDepth := fs.Int("toc-depth", 0, "table-of-contents nesting depth shown on index.html (0 = unlimited)")
 	outputFolder := fs.String("folder", "", "output folder (default: same directory as input file)")
-	force := fs.Bool("force", false, "force re-extract and re-translate even if output already exists")
-	verbose := fs.Bool("v", false, "verbose output (debug)")
+	force := fs.Bool("force", false, "re-extract and re-translate even if output already exists (yes, all over again)")
+	verbose := fs.Bool("v", false, "verbose output - more than you ever wanted to know")
 	src := fs.String("src", "en", "source language")
 	dst := fs.String("dst", "ru", "target language")
-	maxCost := fs.Float64("max-cost", 0, "abort paid translation before sending if estimated cost in USD exceeds N (0 = no limit)")
+	maxCost := fs.Float64("max-cost", 0, "abort paid translation before your wallet notices if the USD estimate exceeds N (0 = live dangerously, no limit)")
 	version := fs.Bool("version", false, "print version and exit")
 
 	if err := fs.Parse(args); err != nil {

@@ -37,7 +37,7 @@ func ConfirmYesNo(title, message string) bool {
 func ShowWarning(title, message string) {
 	titlePtr, _ := syscall.UTF16PtrFromString(title)
 	msgPtr, _ := syscall.UTF16PtrFromString(message)
-	messageBoxW.Call(
+	_, _, _ = messageBoxW.Call(
 		0,
 		uintptr(unsafe.Pointer(msgPtr)),
 		uintptr(unsafe.Pointer(titlePtr)),

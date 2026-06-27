@@ -7,7 +7,7 @@ hosted privacy-policy URL before submitting. Everything here is text; no account
 doc-html-translate
 
 ## Short description (<= 132 chars)
-Opens PDFs and EPUBs as clean reflowed HTML so your browser's built-in Translate page works on them. 100% local - no API key.
+Turns PDFs and EPUBs into clean HTML so your browser's built-in Translate page finally works on them. 100% local, no API key.
 
 ## Category
 Productivity
@@ -18,9 +18,9 @@ reflowed HTML in a local viewer so the browser's built-in "Translate page" featu
 does not do anything else.
 
 ## Detailed description
-Browsers can translate any web page for free, but not PDFs or EPUBs - the PDF viewer draws text on a
-canvas that translation can't touch, and EPUBs don't open in the browser at all. This extension fixes
-both. When you open a PDF, it extracts the text with PDF.js (bundled, offline) and lays it out as
+Browsers can translate any web page for free - just not the two formats you actually keep your books in.
+The PDF viewer draws text on a canvas that translation can't touch, and EPUBs don't open in the browser
+at all. This extension quietly fixes both. When you open a PDF, it extracts the text with PDF.js (bundled, offline) and lays it out as
 ordinary HTML paragraphs and headings. When you open an EPUB, it unpacks the book and combines its
 chapters into one clean HTML document. Either way you get a table of contents from the document's own
 outline, and your browser's own "Translate page" works exactly as it does on any website.
@@ -31,8 +31,9 @@ outline, and your browser's own "Translate page" works exactly as it does on any
 - One click back to the original PDF in the native viewer.
 - Turn it off globally or per-site from the toolbar.
 
-Privacy: everything runs on your device. The extension never uploads your documents anywhere. The only
-network access is your browser's own translation feature, which you trigger yourself.
+Privacy: everything runs on your device. The extension never uploads your documents anywhere - it has no
+server to send them to and no interest in your reading list. The only network access is your browser's own
+translation feature, which you trigger yourself.
 
 Limitations: scanned/image-only PDFs have no text to translate (the extension detects this and offers
 the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with

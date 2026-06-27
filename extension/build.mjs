@@ -69,13 +69,21 @@ async function zip() {
   const out = join(dist, "doc-html-translate-extension.zip");
   await rm(out, { force: true });
 
-  // Compress-Archive (PowerShell) is the path of least resistance on Windows and
-  // keeps this script dependency-free.
-  const paths = PACKAGE.map((e) => `'${resolve(root, e).replace(/'/g, "''")}'`).join(",");
-  const ps = `Compress-Archive -Path ${paths} -DestinationPath '${out.replace(/'/g, "''")}' -Force`;
-  const r = spawnSync("powershell", ["-NoProfile", "-Command", ps], { stdio: "inherit" });
+  // Dependency-free zip, cross-platform so CI can run on cheap Linux runners:
+  //   - Windows (dev machines): PowerShell Compress-Archive.
+  //   - Linux/macOS (CI, ubuntu-latest): the `zip` CLI, run from `root` so the
+  //     entries land at the archive root (matching Compress-Archive's layout).
+  let r;
+  if (process.platform === "win32") {
+    const paths = PACKAGE.map((e) => `'${resolve(root, e).replace(/'/g, "''")}'`).join(",");
+    const ps = `Compress-Archive -Path ${paths} -DestinationPath '${out.replace(/'/g, "''")}' -Force`;
+    r = spawnSync("powershell", ["-NoProfile", "-Command", ps], { stdio: "inherit" });
+  } else {
+    // -r recurse dirs, -q quiet; relative entry names preserved via cwd: root.
+    r = spawnSync("zip", ["-r", "-q", out, ...PACKAGE], { cwd: root, stdio: "inherit" });
+  }
   if (r.status !== 0) {
-    console.error("Compress-Archive failed");
+    console.error("zip failed");
     process.exit(1);
   }
   const { size } = await stat(out);

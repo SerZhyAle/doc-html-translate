@@ -20,11 +20,11 @@
 <body>
   <h1>doc-html-translate</h1>
   <p class="hint">Re-renders PDFs and EPUBs as clean, reflowed HTML so the browser's built-in "Translate page" works.
-    Everything runs locally; only the browser's own translate touches the network.</p>
+    Everything runs locally; the only thing that phones home is the browser's own translator - and only when you ask it to.</p>
 
   <div class="field">
     <label><input type="checkbox" id="enabled"> Reflow PDFs and EPUBs automatically</label>
-    <div class="hint">When off, PDFs open in the browser's native viewer and EPUBs download as usual.</div>
+    <div class="hint">When off, PDFs open in the browser's native viewer and EPUBs download as usual - i.e. back to square one.</div>
   </div>
 
   <div class="field">
@@ -54,7 +54,7 @@
       <option value="ko">Korean</option>
       <option value="ar">Arabic</option>
     </select>
-    <div class="hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language).</div>
+    <div class="hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.</div>
   </div>
 
   <div class="field">

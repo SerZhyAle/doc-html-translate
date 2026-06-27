@@ -12,9 +12,20 @@ on:
 permissions:
   contents: write
 
+# Не даём двум прогонам одного тега идти параллельно. cancel-in-progress
+# намеренно false: отмена релиза на середине заливки ассетов оставила бы
+# полу-собранный GitHub Release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    runs-on: windows-latest
+    # Linux-раннер вдвое дешевле windows-latest. Бинари под Windows собираются
+    # кросс-компиляцией (CGO_ENABLED=0, GOOS=windows), goversioninfo и pwsh
+    # работают на Linux, иконка берётся из закоммиченного assets/*.ico.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20            # страховка от зависаний (обычный прогон ~3-5 мин)
     defaults:
       run:
         shell: pwsh
@@ -49,10 +60,12 @@ jobs:
           "build=$build"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Install goversioninfo
-        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+        # Пин версии вместо @latest: воспроизводимая сборка, без внезапных апдейтов.
+        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.7.0
 
-      - name: Generate icon
-        run: ./scripts/generate-icon.ps1 -Output assets/doc-html-translate.ico
+      # Иконка берётся из закоммиченного assets/doc-html-translate.ico
+      # (versioninfo.json -> IconPath). Шаг генерации через WPF удалён: он был
+      # единственной Windows-only зависимостью и блокировал переезд на Linux.
 
       - name: Build doc-html-translate.exe
         env:

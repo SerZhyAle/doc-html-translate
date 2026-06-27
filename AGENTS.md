@@ -16,15 +16,29 @@ Purpose: help coding agents become productive in this repository quickly.
 2. Prefer script-based workflows from scripts/ instead of ad-hoc commands.
 3. For conversion logic changes, start in internal/pipeline/pipeline.go and trace into format-specific packages.
 
+## Build vs Release (READ THIS)
+
+Two distinct flows - see [DEV/RELEASE.md](DEV/RELEASE.md):
+
+- **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "..."` (gate + build
+  CLI + build UI + commit). Never touches GitHub/CI. This is the default for any "build"/"сборка" ask.
+- **Release ("релиз")** = published and PAID. `./scripts/release.ps1` prints the full checklist and
+  runs nothing; tags (`v*`, `ext-v*`) trigger paid CI. Only do this for an explicit "release"/"релиз".
+
+Never push a tag, submit to winget, upload to the Store, or publish the extension unless the request
+is explicitly a release.
+
 ## Build, Test, Lint
 
 Run from repository root in PowerShell.
 
-- Build CLI: ./scripts/build.ps1
-- Build UI: ./scripts/build-ui.ps1
+- Local build + commit (the "сборка" flow): ./scripts/build-local.ps1 -Message "..."
+- Build CLI only: ./scripts/build.ps1
+- Build UI only: ./scripts/build-ui.ps1
 - Test: ./scripts/test.ps1
 - Lint: ./scripts/lint.ps1
 - Full local checks: ./scripts/check.ps1
+- Release checklist (prints only, runs nothing): ./scripts/release.ps1
 
 Tool bootstrap (when missing):
 

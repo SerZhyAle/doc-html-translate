@@ -4,7 +4,8 @@
 # (item creation + listing/screenshots/privacy) is done by hand once. See
 # extension/PUBLISHING.md for the one-time setup and the secrets/variables below.
 #
-# Runs on windows-latest because extension/build.mjs zips via PowerShell Compress-Archive.
+# Runs on ubuntu-latest: extension/build.mjs now zips cross-platform (`zip` on
+# Linux/macOS, Compress-Archive only on Windows dev machines).
 
 name: publish-extension
 
@@ -14,9 +15,15 @@ on:
       - "ext-v*"
   workflow_dispatch: {}   # allow manual runs from the Actions tab
 
+# Новый тег отменяет ещё не закончившийся прогон того же ref.
+concurrency:
+  group: publish-extension-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest        # вдвое дешевле windows-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: extension
@@ -26,10 +33,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: "npm"                                 # кэш npm-пакетов между прогонами
+          cache-dependency-path: extension/package-lock.json
 
       - name: Install dev deps + build the store ZIP
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund                  # ci: детерминированно по lock-файлу
           npm run build
 
       - name: Publish to Chrome Web Store

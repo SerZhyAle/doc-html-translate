@@ -26,7 +26,7 @@ func (a App) Run() (int, error) {
 			return 1, err
 		}
 		printSplash(registered)
-		fmt.Scanln() // pause — keep console open until user presses Enter
+		_, _ = fmt.Scanln() // pause — keep console open until user presses Enter
 		return 0, nil
 	}
 
@@ -47,11 +47,11 @@ func printSplash(registeredExts []string) {
 func printSplashEN(line string, registeredExts []string) {
 	fmt.Println(line)
 	fmt.Println("  DOC-HTML-TRANSLATE")
-	fmt.Println("  Document converter to HTML with translation support")
+	fmt.Println("  Document converter to HTML, with translation for the rest of us")
 	fmt.Println(line)
 	fmt.Println()
 	fmt.Println("  Converts documents to HTML and opens the result")
-	fmt.Println("  in the default browser.")
+	fmt.Println("  in your default browser. No ceremony required.")
 	fmt.Println()
 	fmt.Println("  Features:")
 	fmt.Println("    - Convert EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 to readable HTML")
@@ -103,17 +103,17 @@ func printSplashEN(line string, registeredExts []string) {
 
 	fmt.Println(line)
 	fmt.Println()
-	fmt.Println("  Press Enter to close...")
+	fmt.Println("  Press Enter to close.. (we both know you'll close the window anyway)")
 }
 
 func printSplashRU(line string, registeredExts []string) {
 	fmt.Println(line)
 	fmt.Println("  DOC-HTML-TRANSLATE")
-	fmt.Println("  Конвертер документов в HTML с переводом Google Translate")
+	fmt.Println("  Конвертер документов в HTML с переводом - для тех, кто не полиглот")
 	fmt.Println(line)
 	fmt.Println()
 	fmt.Println("  Программа преобразует документы в HTML и открывает")
-	fmt.Println("  результат в браузере по умолчанию.")
+	fmt.Println("  результат в браузере по умолчанию. Без лишних церемоний.")
 	fmt.Println()
 	fmt.Println("  Возможности:")
 	fmt.Println("    - Конвертация EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 в читаемый HTML")
@@ -165,5 +165,5 @@ func printSplashRU(line string, registeredExts []string) {
 
 	fmt.Println(line)
 	fmt.Println()
-	fmt.Println("  Нажмите Enter для закрытия...")
+	fmt.Println("  Нажмите Enter для закрытия.. (хотя вы всё равно закроете окно крестиком)")
 }

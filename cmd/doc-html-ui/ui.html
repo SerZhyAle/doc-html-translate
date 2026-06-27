@@ -106,24 +106,25 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 <body>
 
 <h1>DOC-HTML-UI</h1>
-<div class="ver" id="ver">loading...</div>
+<div class="ver" id="ver">loading..</div>
+<div class="hint warn" id="cliWarn" style="display:none">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
 <hr>
 
 <div class="section">
     <div class="stitle">Input File</div>
     <div class="row">
-        <input type="text" id="inputFile" placeholder="Click Browse to select a document...">
+        <input type="text" id="inputFile" placeholder="Click Browse to select a document..">
         <button onclick="browseFile()">Browse...</button>
     </div>
-    <div class="hint">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
-    <div class="hint">Tip: drag a file onto this window (or onto doc-html-ui.exe) to pre-fill input.</div>
+    <div class="hint">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed - it won't install itself, alas.</div>
+    <div class="hint">Tip: drag a file onto this window (or onto doc-html-ui.exe). Yes, dragging still works in 2026.</div>
 </div>
 
 <div class="section">
     <div class="stitle">Output Folder</div>
     <div class="row">
-        <input type="text" id="outputFolder" placeholder="Default: same directory as input">
+        <input type="text" id="outputFolder" placeholder="Leave empty and it lands next to the input - sensible, we know">
         <button onclick="browseFolder()">Browse...</button>
     </div>
 </div>
@@ -147,16 +148,19 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
     <div class="row"><span class="lbl">Parallel:</span><input type="number" id="ollamaParallel" value="1" min="1"></div>
     <div class="row"><span class="lbl">Context:</span><input type="number" id="ollamaCtx" value="8192" min="512"></div>
     <div class="row"><span class="lbl">Split Size:</span><input type="number" id="splitSize" value="0" min="0"></div>
-    <div class="hint">Use <code>0</code> to disable splitting, or set a character limit like <code>5000</code>.</div>
+    <div class="hint">Use <code>0</code> to disable splitting, or a character limit like <code>5000</code>. When in doubt, <code>0</code> is a perfectly respectable choice.</div>
+    <div class="row"><span class="lbl">TOC Depth:</span><input type="number" id="tocDepth" value="0" min="0"></div>
+    <div class="row"><span class="lbl">Max Cost ($):</span><input type="number" id="maxCost" value="0" min="0" step="0.5"></div>
+    <div class="hint">TOC Depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max Cost: paid engines only - <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (the book still converts, just untranslated).</div>
 </div>
 
 <div class="section" id="googleKeySection" style="display:none">
     <div class="stitle">Google API Key</div>
     <div class="row">
-        <input type="password" id="googleKey" placeholder="Paste your Google Cloud Translation API key...">
+        <input type="password" id="googleKey" placeholder="Paste your Google Cloud Translation API key..">
         <button onclick="saveGoogleKey()">Save</button>
     </div>
-    <div class="hint" id="googleKeyStatus">Checking for a saved key...</div>
+    <div class="hint" id="googleKeyStatus">Rummaging for a saved key..</div>
 </div>
 
 <hr>
@@ -173,6 +177,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
 <div class="center" style="margin:16px 0">
     <button class="btn-run" id="btnRun" onclick="runConvert()">Convert</button>
+</div>
+
+<div class="section" id="integrationSection">
+    <div class="stitle">Windows Integration</div>
+    <div class="row">
+        <button onclick="registerHandler()">Set as default handler for EPUB, PDF, ..</button>
+    </div>
+    <div class="hint" id="registerStatus">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
 </div>
 
 <div class="section">
@@ -245,6 +257,12 @@ fetch('/api/initial').then(r=>r.json()).then(d=>{
     if (d.file) document.getElementById('inputFile').value = d.file;
 }).catch(()=>{});
 
+// ── environment: hide register under MSIX, warn if CLI missing ──
+fetch('/api/env').then(r=>r.json()).then(d=>{
+    if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
+    if (!d.cli) document.getElementById('cliWarn').style.display = '';
+}).catch(()=>{});
+
 // ── browse buttons ──────────────────────────────────────
 async function browseFile() {
     try {
@@ -293,9 +311,9 @@ async function refreshGoogleKeyStatus() {
         const r = await fetch('/api/google-key');
         const d = await r.json();
         if (d.exists) {
-            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new key to replace.', 'ok');
+            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new one to replace it - your call.', 'ok');
         } else {
-            setKeyStatus('No key saved yet. Paste your key and click Save (stored at ' + (d.path || 'per-user folder') + ').', 'warn');
+            setKeyStatus('No key saved yet. Paste it and click Save (kept at ' + (d.path || 'per-user folder') + ') - it never leaves this machine.', 'warn');
         }
     } catch(e) {
         setKeyStatus('Could not check key status: ' + e.message, 'warn');
@@ -304,7 +322,7 @@ async function refreshGoogleKeyStatus() {
 
 async function saveGoogleKey() {
     const key = document.getElementById('googleKey').value.trim();
-    if (!key) { setKeyStatus('Enter a key before saving.', 'warn'); return; }
+    if (!key) { setKeyStatus('Enter a key before saving. Saving nothing saves nothing.', 'warn'); return; }
     try {
         const r = await fetch('/api/google-key', {
             method: 'POST',
@@ -314,21 +332,42 @@ async function saveGoogleKey() {
         if (!r.ok) { setKeyStatus('Save failed: ' + (await r.text()).trim(), 'warn'); return; }
         document.getElementById('googleKey').value = '';
         const d = await r.json();
-        setKeyStatus(d.exists ? 'Key saved.' : 'Saved, but key could not be verified.', d.exists ? 'ok' : 'warn');
+        setKeyStatus(d.exists ? 'Key saved. That wasn\'t so hard.' : 'Saved, but we could not verify it - Google stayed mysteriously quiet.', d.exists ? 'ok' : 'warn');
     } catch(e) {
         setKeyStatus('Save failed: ' + e.message, 'warn');
+    }
+}
+
+// ── register as default document handler ────────────────
+async function registerHandler() {
+    const st = document.getElementById('registerStatus');
+    st.textContent = 'Registering..';
+    st.className = 'hint';
+    try {
+        const r = await fetch('/api/register', {method:'POST'});
+        const d = await r.json();
+        if (d.ok) {
+            st.textContent = 'Done - this app is now the default handler. Double-clicking a document opens it. (If Windows ignores it: right-click the file -> Open with -> Always.)';
+            st.className = 'hint ok';
+        } else {
+            st.textContent = 'Registration failed: ' + (d.error || 'unknown error');
+            st.className = 'hint warn';
+        }
+    } catch(e) {
+        st.textContent = 'Registration failed: ' + e.message;
+        st.className = 'hint warn';
     }
 }
 
 // ── run ─────────────────────────────────────────────────
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
-    if (!input) { alert('Select an input file first.'); return; }
+    if (!input) { alert('Select an input file first - the converter can\'t read your mind (yet).'); return; }
 
     if (chkGoogle.checked) {
         try {
             const d = await (await fetch('/api/google-key')).json();
-            if (!d.exists && !confirm('No Google API key is saved — translation will be skipped. Continue anyway?')) return;
+            if (!d.exists && !confirm('No Google API key is saved - translation will be quietly skipped. Convert anyway?')) return;
         } catch(e) { /* ignore, let the CLI report it */ }
     }
 
@@ -343,6 +382,8 @@ async function runConvert() {
         ollamaParallel: document.getElementById('ollamaParallel').value,
         ollamaCtx:      document.getElementById('ollamaCtx').value,
         splitSize:      document.getElementById('splitSize').value,
+        tocDepth:       document.getElementById('tocDepth').value,
+        maxCost:        document.getElementById('maxCost').value,
         srcLang:        document.getElementById('srcLang').value,
         dstLang:        document.getElementById('dstLang').value,
         force:          document.getElementById('chkForce').checked,

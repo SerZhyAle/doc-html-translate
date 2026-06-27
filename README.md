@@ -1,6 +1,6 @@
 # doc-html-translate
 
-Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model.
+Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model. No cloud account required, no ceremony, and yes, it still runs on plain old Windows in 2026.
 
 Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb2` `ebook` `html-converter` `translation` `ollama`
 
@@ -16,7 +16,7 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
 - Local HTML output with generated navigation and TOC
-- Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`–`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
+- Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`-`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
 - Optional translation:
   - Google Cloud Translation API (`-google`)
   - Local Ollama (`-ollama`)
@@ -24,7 +24,7 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 - Reader experience baked into the output HTML (no server, works on `file://`):
   - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
   - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
-- Re-open existing extracted book instantly (idempotent behavior)
+- Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
 - Optional Windows file association registration (`-register`)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 
@@ -109,10 +109,10 @@ doc-html-translate.exe "book.pdf"
 
 `-notranslate` is still available, but it is only the explicit form of the default non-API flow.
 
-Why this workflow is popular:
+Why this workflow is popular (besides the obvious):
 
-- Free (no Google Cloud API billing)
-- Fast to start (single command)
+- Free (no Google Cloud API billing, no invoices to dread)
+- Fast to start (single command, no ceremony required)
 - Comfortable reading flow in browser with page navigation
 
 ## Flags
@@ -151,22 +151,23 @@ Example file contents:
 AIzaSy...your_key_here...
 ```
 
-In `doc-html-ui`, tick **Google Translate** to reveal a key field — paste your key and click **Save** to write it to the per-user path above (no manual file editing needed).
+In `doc-html-ui`, tick **Google Translate** to reveal a key field - paste your key and click **Save** to write it to the per-user path above (no manual file editing needed).
 
-If no usable key is found, the app logs a warning and skips translation.
+If no usable key is found, the app logs a warning and skips translation - it would rather say so than guess.
 
 ## Behavior Notes
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
-- The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`–`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
+- The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`-`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
 - For paid engines the estimated cost is `chars / 1e6 * $20`. `-max-cost N` turns the existing advisory dialog into a hard pre-flight guard: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated.
-- PDF extraction is best-effort and includes fallback flows for difficult files.
+- PDF extraction is best-effort and includes fallback flows for difficult files (PDFs have opinions, and they are rarely kind).
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required).
 - In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.
+- `doc-html-ui` exposes the full CLI surface, including `-toc-depth` and `-max-cost`, plus a **Set as default handler** button (the GUI equivalent of `-register`). That button is hidden under the Microsoft Store (MSIX) build, where file associations come from the package manifest instead. If the converter exe is missing next to the GUI, it shows a warning rather than failing silently on Convert.
 
 ## Development
 
@@ -185,7 +186,7 @@ Main entry points:
 
 ## Companion App: FastMediaSorter LITE
 
-For documents that are **pictures, not text** - screenshots, manga, photographed or scanned pages - use
+For documents that are **pictures, not text** - screenshots, manga, photographed or scanned pages, the ones this tool politely cannot read - use
 **FastMediaSorter LITE**, a free Windows app for opening and sorting images and videos with built-in **OCR + on-image translation**.
 Press `T` on any image to recognize the text and overlay the translation in your language (local Ollama or
 LibreTranslate). It complements doc-html-translate, which targets ebook and text formats.

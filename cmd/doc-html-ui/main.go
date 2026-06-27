@@ -52,13 +52,15 @@ func main() {
 	mux.HandleFunc("/api/browse-folder", handleBrowseFolder)
 	mux.HandleFunc("/api/google-key", handleGoogleKey)
 	mux.HandleFunc("/api/run", handleRun)
+	mux.HandleFunc("/api/register", handleRegister)
+	mux.HandleFunc("/api/env", handleEnv)
 
 	srv := &http.Server{Handler: mux}
 
 	go watchHeartbeat(srv)
 	go openAppWindow("http://" + addr)
 
-	srv.Serve(ln)
+	_ = srv.Serve(ln)
 }
 
 // ── HTTP handlers ───────────────────────────────────────────
@@ -67,15 +69,15 @@ var lastPing atomic.Int64
 
 func handleUI(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	io.WriteString(w, uiHTML)
+	_, _ = io.WriteString(w, uiHTML)
 }
 
 func handleVersion(w http.ResponseWriter, _ *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{"version": Version})
+	_ = json.NewEncoder(w).Encode(map[string]string{"version": Version})
 }
 
 func handleInitial(w http.ResponseWriter, _ *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{"file": initialFile})
+	_ = json.NewEncoder(w).Encode(map[string]string{"file": initialFile})
 }
 
 func handlePing(w http.ResponseWriter, _ *http.Request) {
@@ -89,7 +91,7 @@ func handleBrowseFile(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"path": path})
+	_ = json.NewEncoder(w).Encode(map[string]string{"path": path})
 }
 
 func handleBrowseFolder(w http.ResponseWriter, _ *http.Request) {
@@ -98,7 +100,7 @@ func handleBrowseFolder(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"path": path})
+	_ = json.NewEncoder(w).Encode(map[string]string{"path": path})
 }
 
 // handleGoogleKey lets the GUI inspect and save the Google Translate API key.
@@ -131,7 +133,7 @@ func handleGoogleKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := translator.LoadGoogleAPIKey()
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"exists": err == nil,
 		"path":   writableGoogleKeyPath(),
 	})
@@ -182,6 +184,8 @@ type runRequest struct {
 	OllamaParallel string `json:"ollamaParallel"`
 	OllamaCtx      string `json:"ollamaCtx"`
 	SplitSize      string `json:"splitSize"`
+	TOCDepth       string `json:"tocDepth"`
+	MaxCost        string `json:"maxCost"`
 	SrcLang        string `json:"srcLang"`
 	DstLang        string `json:"dstLang"`
 	Force          bool   `json:"force"`
@@ -252,6 +256,43 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 }
 
+// handleRegister sets this app as the default Windows handler for the supported
+// document types. It shells out to the bundled CLI's -register flow so the file
+// associations point at doc-html-translate.exe (the headless converter) rather than
+// at the GUI - matching the unpackaged double-click behavior. Under an MSIX/Store
+// install this is a no-op (HKCU is virtualized); the GUI hides the button there.
+func handleRegister(w http.ResponseWriter, _ *http.Request) {
+	bin := findCLI()
+	cmd := exec.Command(bin, "-register")
+	// The CLI's -register flow prints a splash and waits on Scanln; feed a newline
+	// so it returns immediately instead of blocking this request.
+	cmd.Stdin = strings.NewReader("\n")
+	hideWindow(cmd)
+	out, err := cmd.CombinedOutput()
+	resp := map[string]any{"ok": err == nil}
+	if err != nil {
+		msg := strings.TrimSpace(string(out))
+		if msg == "" {
+			msg = err.Error()
+		}
+		resp["error"] = msg
+	}
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// handleEnv reports environment facts the GUI adapts to on load:
+//
+//	packaged → running from inside an MSIX/Store package, where -register is a no-op
+//	           (file associations come from the package manifest instead).
+//	cli      → the bundled converter exe is resolvable next to the app or on PATH;
+//	           without it, Convert cannot run.
+func handleEnv(w http.ResponseWriter, _ *http.Request) {
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"packaged": isPackaged(),
+		"cli":      cliAvailable(),
+	})
+}
+
 // ── args assembly ───────────────────────────────────────────
 
 func assembleArgs(req runRequest) []string {
@@ -279,6 +320,14 @@ func assembleArgs(req runRequest) []string {
 	}
 	if req.SplitSize != "" {
 		a = append(a, "-split", req.SplitSize)
+	}
+	// toc-depth/max-cost default to 0 (unlimited / no limit) in the CLI, so only
+	// forward them when the user picked a non-default value - keeps the command line clean.
+	if req.TOCDepth != "" && req.TOCDepth != "0" {
+		a = append(a, "-toc-depth", req.TOCDepth)
+	}
+	if req.MaxCost != "" && req.MaxCost != "0" {
+		a = append(a, "-max-cost", req.MaxCost)
 	}
 	a = append(a, "-src", req.SrcLang, "-dst", req.DstLang)
 	if req.Force {
@@ -309,6 +358,30 @@ func findCLI() string {
 		return p
 	}
 	return cliName
+}
+
+// cliAvailable reports whether the bundled converter exe can actually be located
+// (next to this app or on PATH). findCLI always returns a bare name as a last resort,
+// so it cannot answer this on its own.
+func cliAvailable() bool {
+	if exe, err := os.Executable(); err == nil {
+		if _, err := os.Stat(filepath.Join(filepath.Dir(exe), cliName)); err == nil {
+			return true
+		}
+	}
+	_, err := exec.LookPath(cliName)
+	return err == nil
+}
+
+// isPackaged reports whether the app runs from inside an MSIX/Store package.
+// Such installs live under ...\WindowsApps\... and virtualize HKCU writes, so the
+// -register flow is a no-op there (associations come from the package manifest).
+func isPackaged() bool {
+	exe, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(exe), `\windowsapps\`)
 }
 
 // ── native file/folder dialogs via PowerShell ───────────────
@@ -352,7 +425,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("ProgramFiles"), `Microsoft\Edge\Application\msedge.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				exec.Command(p, "--app="+url, "--window-size=780,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=780,700").Start()
 				return
 			}
 		}
@@ -363,21 +436,21 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				exec.Command(p, "--app="+url, "--window-size=780,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=780,700").Start()
 				return
 			}
 		}
 		// Fallback: default browser
-		exec.Command("cmd", "/c", "start", "", url).Start()
+		_ = exec.Command("cmd", "/c", "start", "", url).Start()
 		return
 	}
 
 	// Non-Windows fallback
 	switch runtime.GOOS {
 	case "darwin":
-		exec.Command("open", url).Start()
+		_ = exec.Command("open", url).Start()
 	default:
-		exec.Command("xdg-open", url).Start()
+		_ = exec.Command("xdg-open", url).Start()
 	}
 }
 
@@ -388,7 +461,7 @@ func watchHeartbeat(srv *http.Server) {
 	for {
 		time.Sleep(5 * time.Second)
 		if time.Now().Unix()-lastPing.Load() > 15 {
-			srv.Shutdown(context.Background())
+			_ = srv.Shutdown(context.Background())
 			os.Exit(0)
 		}
 	}

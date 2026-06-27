@@ -4,8 +4,24 @@ extend-ignore-re = [
   "epub2html",
 ]
 
+# Project proper nouns / format acronyms typos misreads as misspellings.
+extend-ignore-identifiers-re = [
+  "SerZhyAle",   # author handle -> flagged "Ser"
+  "PNGs?",       # "PNG"/"PNGs" -> flagged "PN"
+]
+
+[default.extend-words]
+opf = "opf"      # EPUB OPF package format, not a typo of "of"
+mis = "mis"      # valid English prefix, e.g. "mis-tagged"
+ist = "ist"      # German stop-word in extension/src/lang.js detection list
+ein = "ein"      # German stop-word in extension/src/lang.js detection list
+
 [files]
 extend-exclude = [
   "temp",
   "go.sum",
+  "DEV/COMMIT_LOG.md",              # append-only build log: book filenames + hashes
+  "manifests",                      # generated winget community-repo manifests
+  "internal/bundledtools",          # vendored third-party binaries (e.g. libgcc_s_seh-1.dll)
+  "extension/test/reflow.test.mjs", # multilingual reflow fixtures (German "ist ein", hyphenation)
 ]

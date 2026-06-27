@@ -16,10 +16,6 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-// sectionsPerPage controls how many H1/H2 sections go into one HTML page.
-// If no headings found, the whole document becomes a single page.
-const sectionsPerPage = 1
-
 // Extract reads a Markdown file, converts it to HTML, generates per-page HTML
 // files in outputDir, and returns an *epub.Book adapter for pipeline compatibility.
 func Extract(mdPath, outputDir string) (*epub.Book, error) {

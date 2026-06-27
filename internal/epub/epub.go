@@ -467,20 +467,13 @@ func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 	}
 
 	for _, item := range pkg.Manifest.Items {
-		book.Manifest = append(book.Manifest, ManifestItem{
-			ID:         item.ID,
-			Href:       item.Href,
-			MediaType:  item.MediaType,
-			Properties: item.Properties,
-		})
+		book.Manifest = append(book.Manifest, ManifestItem(item))
 	}
 
 	book.spineTocID = pkg.Spine.Toc
 
 	for _, ref := range pkg.Spine.ItemRefs {
-		book.Spine = append(book.Spine, SpineItem{
-			IDRef: ref.IDRef,
-		})
+		book.Spine = append(book.Spine, SpineItem(ref))
 	}
 
 	return book, nil

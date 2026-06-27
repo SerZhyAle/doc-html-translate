@@ -200,9 +200,9 @@
       <span data-l="uk">Перекладай будь-який PDF чи EPUB прямо в браузері - безкоштовно</span>
     </h1>
     <p class="lead">
-      <span data-l="ru">Браузер умеет переводить любую веб-страницу бесплатно, но не PDF и не EPUB: встроенная читалка рисует текст PDF на холсте, и переводчик его не видит, а EPUB браузер вообще не открывает. Это расширение (спутник приложения doc-html-translate) перерисовывает PDF или EPUB в чистый HTML с абзацами и заголовками - и встроенный «Перевести страницу» работает как на обычном сайте. Всё локально: ни ключей, ни загрузки файлов на сервер.</span>
-      <span data-l="en">Browsers translate any web page for free, but not PDFs or EPUBs: the built-in PDF viewer paints text on a canvas the translator can't read, and EPUBs don't open in the browser at all. This extension (a companion to the doc-html-translate app) re-renders the PDF or EPUB as clean HTML paragraphs and headings - so the built-in "Translate page" works just like on any website. Everything stays local: no keys, no uploads.</span>
-      <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку doc-html-translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер.</span>
+      <span data-l="ru">Браузер умеет переводить любую веб-страницу бесплатно, но не PDF и не EPUB: встроенная читалка рисует текст PDF на холсте, и переводчик его не видит, а EPUB браузер вообще не открывает. Это расширение (спутник приложения doc-html-translate) перерисовывает PDF или EPUB в чистый HTML с абзацами и заголовками - и встроенный «Перевести страницу» работает как на обычном сайте. Всё локально: ни ключей, ни загрузки файлов на сервер. Революционная идея: показать переводчику текст, который он может прочитать.</span>
+      <span data-l="en">Browsers translate any web page for free, but not PDFs or EPUBs: the built-in PDF viewer paints text on a canvas the translator can't read, and EPUBs don't open in the browser at all. This extension (a companion to the doc-html-translate app) re-renders the PDF or EPUB as clean HTML paragraphs and headings - so the built-in "Translate page" works just like on any website. Everything stays local: no keys, no uploads. The radical idea: show the translator text it can actually read.</span>
+      <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку doc-html-translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер. Революційна ідея: показати перекладачеві текст, який він справді може прочитати.</span>
     </p>
     <div class="cta">
       <a class="btn primary" href="#install">
@@ -263,10 +263,10 @@
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Как пользоваться</h2><span class="secteaser">Три способа открыть PDF или EPUB</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Как пользоваться</h2><span class="secteaser">Три способа открыть PDF или EPUB - выбери любимый</span></span></summary>
         <div class="secbody">
           <div class="grid">
-            <div class="card"><div class="num">Способ 1</div><h3>Из попапа</h3><p>Клик по иконке расширения → <strong>Open a PDF or EPUB file…</strong> → в открывшейся вкладке <strong>Open file</strong> → выбери файл. Не нужны ни тумблеры, ни путь в адресе.</p></div>
+            <div class="card"><div class="num">Способ 1</div><h3>Из попапа</h3><p>Клик по иконке расширения → <strong>Open a PDF or EPUB file…</strong> → в открывшейся вкладке <strong>Open file</strong> → выбери файл. Ни тумблеров, ни пути в адресе - никаких церемоний.</p></div>
             <div class="card"><div class="num">Способ 2</div><h3>Открыть ссылку</h3><p>Просто открой ссылку на <code>.pdf</code> или <code>.epub</code> по http(s) - расширение само перенаправит её в свой вьюер.</p></div>
             <div class="card"><div class="num">Способ 3</div><h3>Локальный файл</h3><p>Включи «Allow access to file URLs» и открывай <code>file://…pdf</code> или <code>file://…epub</code> напрямую - тоже перехватится.</p></div>
           </div>
@@ -290,15 +290,15 @@
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Как это работает и приватность</h2><span class="secteaser">Reflow вместо холста; всё локально</span></span></summary>
         <div class="secbody">
-          <p>Ключевое решение - <strong>reflow</strong> (перекладка в текст), а не стандартный «холст + слой текста» PDF.js. При наложении оригинальные глифы остаются под прозрачным текстом, и перевод получается удвоенным/искажённым. Чистая перекладка теряет точную раскладку, зато даёт DOM, который браузер переводит идеально - тот же приём, что и в «бесплатном сценарии» настольного приложения.</p>
+          <p>Ключевое решение - <strong>reflow</strong> (перекладка в текст), а не стандартный «холст + слой текста» PDF.js. При наложении оригинальные глифы остаются под прозрачным текстом, и перевод получается удвоенным/искажённым - читать такое весело недолго. Чистая перекладка теряет точную раскладку, зато даёт DOM, который браузер переводит идеально - тот же приём, что и в «бесплатном сценарии» настольного приложения.</p>
           <p>Эвристики абзацев и заголовков портированы из приложения (<code>internal/pdf</code>): абзац - по вертикальному разрыву и отступу первой строки; заголовок - по центрированию/КАПСУ/краткости; оглавление - из outline PDF.</p>
           <p>EPUB не требует эвристики reflow: его содержимое уже семантический XHTML. Работа здесь - распаковать архив, пройти по spine из OPF в порядке чтения, очистить каждую главу (убрать скрипты и стили), переписать картинки на <code>blob:</code>-ссылки, а внутренние ссылки - на внутристраничные якоря, прочитать авторское оглавление (<code>nav.xhtml</code> / <code>toc.ncx</code>) и объединить все главы в один прокручиваемый документ, чтобы переводчик видел всю книгу сразу.</p>
-          <div class="note"><div class="tag">Приватность</div><p>Расширение не собирает и не передаёт данные. В хранилище браузера - только твои настройки. В сеть ходит лишь встроенный переводчик браузера, который ты включаешь сам.</p></div>
+          <div class="note"><div class="tag">Приватность</div><p>Расширение не собирает и не передаёт данные - телеметрии тут просто нет. В хранилище браузера - только твои настройки. В сеть ходит лишь встроенный переводчик браузера, который ты включаешь сам.</p></div>
         </div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Ограничения</h2><span class="secteaser">Сканы, перехват, блокировщики, лигатуры</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Ограничения</h2><span class="secteaser">Сканы, перехват, блокировщики, лигатуры - честно обо всём</span></span></summary>
         <div class="secbody">
           <ul>
             <li><strong>Сканы/картинки без текста:</strong> переводить нечего (нет текстового слоя). Расширение это распознаёт и предлагает открыть оригинал; для сканов сначала прогони OCR (напр. настольным приложением).</li>
@@ -349,10 +349,10 @@
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">How to use</h2><span class="secteaser">Three ways to open a PDF or EPUB</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">How to use</h2><span class="secteaser">Three ways to open a PDF or EPUB - pick a favourite</span></span></summary>
         <div class="secbody">
           <div class="grid">
-            <div class="card"><div class="num">Way 1</div><h3>From the popup</h3><p>Click the extension icon → <strong>Open a PDF or EPUB file…</strong> → on the tab that opens click <strong>Open file</strong> → pick the file. No toggles, no path in the URL.</p></div>
+            <div class="card"><div class="num">Way 1</div><h3>From the popup</h3><p>Click the extension icon → <strong>Open a PDF or EPUB file…</strong> → on the tab that opens click <strong>Open file</strong> → pick the file. No toggles, no path in the URL - no ceremony required.</p></div>
             <div class="card"><div class="num">Way 2</div><h3>Open a link</h3><p>Just open an http(s) <code>.pdf</code> or <code>.epub</code> link - the extension redirects it to its viewer automatically.</p></div>
             <div class="card"><div class="num">Way 3</div><h3>Local file</h3><p>Enable "Allow access to file URLs" and open <code>file://…pdf</code> or <code>file://…epub</code> directly - it's intercepted too.</p></div>
           </div>
@@ -376,15 +376,15 @@
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">How it works &amp; privacy</h2><span class="secteaser">Reflow, not a canvas; all local</span></span></summary>
         <div class="secbody">
-          <p>The key decision is <strong>reflow</strong> - flowing text, not PDF.js's canvas + text-layer overlay. The overlay keeps the original glyphs under transparent text, so native translate produces doubled/garbled output. Clean reflow loses the exact layout but yields a DOM the browser translates perfectly - the same trade-off as the desktop app's "free workflow".</p>
+          <p>The key decision is <strong>reflow</strong> - flowing text, not PDF.js's canvas + text-layer overlay. The overlay keeps the original glyphs under transparent text, so native translate produces doubled/garbled output - fun to read for about two seconds. Clean reflow loses the exact layout but yields a DOM the browser translates perfectly - the same trade-off as the desktop app's "free workflow".</p>
           <p>Paragraph and heading heuristics are ported from the app (<code>internal/pdf</code>): paragraphs by vertical gap and first-line indent; headings by centering/ALL-CAPS/shortness; the TOC from the PDF outline.</p>
           <p>EPUB needs no reflow heuristic - its content is already semantic XHTML. The work is unzipping the archive, following the OPF spine in reading order, sanitizing each chapter (dropping scripts and styles), rewriting its images to <code>blob:</code> URLs and its internal links to in-page anchors, reading the authored TOC (<code>nav.xhtml</code> / <code>toc.ncx</code>), and combining all chapters into one scrollable document so translate sees the whole book at once.</p>
-          <div class="note"><div class="tag">Privacy</div><p>The extension collects and transmits nothing. Browser storage holds only your settings. The only network access is the browser's own translator, which you turn on yourself.</p></div>
+          <div class="note"><div class="tag">Privacy</div><p>The extension collects and transmits nothing - there is no telemetry to speak of. Browser storage holds only your settings. The only network access is the browser's own translator, which you turn on yourself.</p></div>
         </div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Limitations</h2><span class="secteaser">Scans, interception, blockers, ligatures</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Limitations</h2><span class="secteaser">Scans, interception, blockers, ligatures - the honest list</span></span></summary>
         <div class="secbody">
           <ul>
             <li><strong>Scanned / image-only PDFs:</strong> nothing to translate (no text layer). The extension detects this and offers the original; OCR first (e.g. with the desktop app).</li>
@@ -435,10 +435,10 @@
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Як користуватися</h2><span class="secteaser">Три способи відкрити PDF або EPUB</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Як користуватися</h2><span class="secteaser">Три способи відкрити PDF або EPUB - обери улюблений</span></span></summary>
         <div class="secbody">
           <div class="grid">
-            <div class="card"><div class="num">Спосіб 1</div><h3>З попапа</h3><p>Клік по іконці розширення → <strong>Open a PDF or EPUB file…</strong> → у відкритій вкладці <strong>Open file</strong> → обери файл. Без тумблерів і без шляху в адресі.</p></div>
+            <div class="card"><div class="num">Спосіб 1</div><h3>З попапа</h3><p>Клік по іконці розширення → <strong>Open a PDF or EPUB file…</strong> → у відкритій вкладці <strong>Open file</strong> → обери файл. Без тумблерів і без шляху в адресі - без жодних церемоній.</p></div>
             <div class="card"><div class="num">Спосіб 2</div><h3>Відкрити посилання</h3><p>Просто відкрий посилання на <code>.pdf</code> або <code>.epub</code> по http(s) - розширення само перенаправить його у свій вьюер.</p></div>
             <div class="card"><div class="num">Спосіб 3</div><h3>Локальний файл</h3><p>Увімкни «Allow access to file URLs» і відкривай <code>file://…pdf</code> або <code>file://…epub</code> напряму - теж перехопиться.</p></div>
           </div>
@@ -462,15 +462,15 @@
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">04</span><span class="sechead"><h2 class="sectitle">Як це працює та приватність</h2><span class="secteaser">Reflow замість полотна; усе локально</span></span></summary>
         <div class="secbody">
-          <p>Ключове рішення - <strong>reflow</strong> (перекладка в текст), а не стандартний «полотно + шар тексту» PDF.js. За накладання оригінальні гліфи лишаються під прозорим текстом, і переклад виходить подвоєним/спотвореним. Чиста перекладка втрачає точну розкладку, зате дає DOM, який браузер перекладає ідеально - той самий прийом, що й у «безкоштовному сценарії» настільного застосунку.</p>
+          <p>Ключове рішення - <strong>reflow</strong> (перекладка в текст), а не стандартний «полотно + шар тексту» PDF.js. За накладання оригінальні гліфи лишаються під прозорим текстом, і переклад виходить подвоєним/спотвореним - читати таке весело недовго. Чиста перекладка втрачає точну розкладку, зате дає DOM, який браузер перекладає ідеально - той самий прийом, що й у «безкоштовному сценарії» настільного застосунку.</p>
           <p>Евристики абзаців і заголовків портовані із застосунку (<code>internal/pdf</code>): абзац - за вертикальним розривом і відступом першого рядка; заголовок - за центруванням/КАПСОМ/стислістю; зміст - з outline PDF.</p>
           <p>EPUB не потребує евристики reflow: його вміст уже семантичний XHTML. Робота тут - розпакувати архів, пройти по spine з OPF у порядку читання, очистити кожен розділ (прибрати скрипти та стилі), переписати картинки на <code>blob:</code>-посилання, а внутрішні посилання - на внутрішньосторінкові якорі, прочитати авторський зміст (<code>nav.xhtml</code> / <code>toc.ncx</code>) і об'єднати всі розділи в один прокручуваний документ, щоб перекладач бачив усю книгу одразу.</p>
-          <div class="note"><div class="tag">Приватність</div><p>Розширення не збирає й не передає дані. У сховищі браузера - лише твої налаштування. У мережу ходить тільки вбудований перекладач браузера, який ти вмикаєш сам.</p></div>
+          <div class="note"><div class="tag">Приватність</div><p>Розширення не збирає й не передає дані - телеметрії тут просто немає. У сховищі браузера - лише твої налаштування. У мережу ходить тільки вбудований перекладач браузера, який ти вмикаєш сам.</p></div>
         </div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Обмеження</h2><span class="secteaser">Скани, перехоплення, блокувальники, лігатури</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Обмеження</h2><span class="secteaser">Скани, перехоплення, блокувальники, лігатури - чесно про все</span></span></summary>
         <div class="secbody">
           <ul>
             <li><strong>Скани/картинки без тексту:</strong> перекладати нічого (немає текстового шару). Розширення це розпізнає й пропонує відкрити оригінал; для сканів спершу прожени OCR (напр. настільним застосунком).</li>
@@ -500,9 +500,9 @@
 
 <footer>
   <p>
-    <span data-l="ru"><strong>doc-html-translate</strong> - расширение для браузера: перевод любого PDF и EPUB встроенным переводчиком, полностью локально.</span>
-    <span data-l="en"><strong>doc-html-translate</strong> - browser extension: translate any PDF or EPUB with the built-in translator, fully local.</span>
-    <span data-l="uk"><strong>doc-html-translate</strong> - розширення для браузера: переклад будь-якого PDF чи EPUB вбудованим перекладачем, повністю локально.</span>
+    <span data-l="ru"><strong>doc-html-translate</strong> - расширение для браузера: перевод любого PDF и EPUB встроенным переводчиком, полностью локально. Без облака, без подписки, без сюрпризов.</span>
+    <span data-l="en"><strong>doc-html-translate</strong> - browser extension: translate any PDF or EPUB with the built-in translator, fully local. No cloud, no subscription, no surprises.</span>
+    <span data-l="uk"><strong>doc-html-translate</strong> - розширення для браузера: переклад будь-якого PDF чи EPUB вбудованим перекладачем, повністю локально. Без хмари, без підписки, без сюрпризів.</span>
   </p>
   <p class="muted" style="margin-top:10px">
     <span data-l="ru">Лицензия MIT · Chrome и Edge (Chromium, MV3) · <a href="index.html">десктоп-приложение</a></span>

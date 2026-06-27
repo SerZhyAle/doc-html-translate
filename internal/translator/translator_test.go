@@ -54,7 +54,7 @@ func TestTranslateSuccess(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -81,12 +81,12 @@ func TestTranslateRetryOn429(t *testing.T) {
 		attempts++
 		if attempts <= 2 {
 			w.WriteHeader(429)
-			w.Write([]byte(`{"error": {"code": 429, "message": "rate limited"}}`))
+			_, _ = w.Write([]byte(`{"error": {"code": 429, "message": "rate limited"}}`))
 			return
 		}
 
 		var req translateRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		_ = json.NewDecoder(r.Body).Decode(&req)
 
 		resp := translateResponse{}
 		for range req.Q {
@@ -95,7 +95,7 @@ func TestTranslateRetryOn429(t *testing.T) {
 			}{TranslatedText: "ok"})
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -115,7 +115,7 @@ func TestTranslateRetryOn429(t *testing.T) {
 func TestTranslateNonRetryableError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
-		w.Write([]byte(`{"error": {"code": 403, "message": "forbidden"}}`))
+		_, _ = w.Write([]byte(`{"error": {"code": 403, "message": "forbidden"}}`))
 	}))
 	defer server.Close()
 

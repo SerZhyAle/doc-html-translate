@@ -362,7 +362,7 @@ func (r Runner) translateContent(book *epub.Book, client translator.Client, page
 			logging.Errorf("Translation failed at page %d/%d (%s)\n", i+1, total, page.item.Href)
 			logging.Errorf("The book will be opened WITHOUT translation.\n")
 			logging.Errorf("Press Enter to continue...\n")
-			fmt.Scanln()
+			_, _ = fmt.Scanln()
 			return ExitOK, nil, nil
 		}
 

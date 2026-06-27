@@ -13,6 +13,14 @@ translation (Google Cloud or local Ollama). Binaries: `cmd/doc-html-translate` (
 `internal/<fmt>` extractors. Signature "free" flow: convert, open `index.html` in Chrome, then use Chrome's
 built-in page translation (no API key needed).
 
+## Build vs Release ("сборка" vs "релиз")
+
+Canonical: [DEV/RELEASE.md](DEV/RELEASE.md). **Build** = local, free: `./scripts/build-local.ps1
+-Message "..."` (gate + build CLI + UI + commit; never touches GitHub). **Release** = published,
+paid: `./scripts/release.ps1` prints the full checklist and runs nothing; `v*` / `ext-v*` tags
+trigger paid CI. Treat any "сборка"/"build" request as the local flow - never push a tag, submit to
+winget, upload to the Store, or publish the extension unless the request is explicitly a release.
+
 ## Where to start for a change
 
 Trace from [internal/pipeline/pipeline.go](internal/pipeline/pipeline.go) into the format package
@@ -54,6 +62,9 @@ Imported from the Universal Agent Kit. Pick the cheapest path that fits:
 - `/spec-check` - audit implementation against the spec; set status from reality.
 - `/spec-fix` - apply the audit's mechanical action items, then re-audit.
 - `/git` - branch model, staging, commit grouping (honour the CRLF + typography rules above).
+- `/build` - "сборка": local+free flow (gate, build CLI+UI, changelog entry, commit). Never publishes.
+- `/release` - "релиз": published+paid flow. Curates "What's new in version XXX" and drives the full
+  checklist (GitHub release, winget, Store, extension) with per-step confirmation. See [DEV/RELEASE.md](DEV/RELEASE.md).
 
 Subagents: `solution-researcher` (read-only investigator), `implementer` (focused code writer),
 `rd-lead-kit` (senior orchestrator - opt-in, not the default agent). Methodology references:

@@ -14,4 +14,11 @@ linters:
     - gofmt
 
 issues:
-  exclude-use-default: false
+  # temp/ holds untracked scratch/diagnostic programs, not shippable code - don't lint it.
+  exclude-dirs:
+    - temp
+  # Use golangci's built-in default exclusions: the conventional, widely-accepted
+  # set that ignores unchecked Close/Flush/print/os.Remove/os.Setenv returns. Genuine
+  # unchecked errors outside that set are still reported (and handled explicitly with
+  # `_ =` at the call site).
+  exclude-use-default: true

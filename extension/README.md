@@ -1,7 +1,7 @@
 # PDF / EPUB -> translatable HTML (browser extension)
 
 A Chromium MV3 extension that intercepts PDF **and EPUB** opens and re-renders them as clean,
-semantic HTML so the browser's built-in **Translate page** works on them for free (no API key).
+semantic HTML so the browser's built-in **Translate page** works on them for free (no API key, no invoice, no catch).
 Spin-off of [doc-html-translate](../README.md); it ports that app's proven PDF reflow and EPUB
 extraction heuristics to run in-browser (PDF.js for PDF, a native unzip + DOM pipeline for EPUB).
 
@@ -10,7 +10,7 @@ reflow to flowing `<p>` / `<h2>` text, **not** the PDF.js canvas + text-layer ov
 leaves the original glyphs under transform-scaled spans, which native translate doubles/garbles. Clean
 reflow loses exact layout but yields a DOM the browser translates perfectly.
 
-EPUB is simpler: its content is *already* semantic XHTML, so there is no reflow heuristic. The work is
+EPUB is simpler, for once: its content is *already* semantic XHTML, so there is no reflow heuristic. The work is
 unzipping the archive (native `DecompressionStream`, no dependency), following the OPF spine in reading
 order, sanitizing each chapter (drop scripts/styles, strip inline styles and event handlers), rewriting
 its images to `blob:` URLs and its internal links to in-page anchors, and reading the authored TOC
@@ -83,7 +83,7 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
   extension in the URL aren't auto-intercepted (open them via **Open file** in the viewer). DNR can't
   see the response Content-Type before the request.
 - PDF.js text extraction is weaker than Poppler on ligatures / non-standard font maps (same caveat the
-  desktop app notes for its pure-Go reader).
+  desktop app notes for its pure-Go reader - exotic fonts remain a humbling experience).
 - Scanned/image-only PDFs are out of scope (OCR); the viewer detects them and offers the original.
 - EPUB: the viewer applies its own clean reading CSS and drops author stylesheets/inline styles, so
   heavily designed books lose their exact layout (by design - that is what makes them translate cleanly).
@@ -100,4 +100,4 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
 `npm run zip` produces a minimal-permission, store-ready ZIP. Publishing (Chrome Web Store $5
 one-time registration, Edge Add-ons free, listing assets, privacy policy) is done from the developer
 consoles and is out of scope for this repo drop. Selling point for the listing: everything runs
-locally; only the browser's own translate touches the network.
+locally; only the browser's own translate touches the network, and even that waits until you ask.

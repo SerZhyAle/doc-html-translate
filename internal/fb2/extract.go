@@ -45,10 +45,10 @@ type fb2Body struct {
 }
 
 type fb2Section struct {
-	Title      *fb2Title    `xml:"title"`
-	Paragraphs []string     `xml:"p"`
+	Title      *fb2Title     `xml:"title"`
+	Paragraphs []string      `xml:"p"`
 	Epigraphs  []fb2Epigraph `xml:"epigraph"`
-	Sections   []fb2Section `xml:"section"`
+	Sections   []fb2Section  `xml:"section"`
 }
 
 type fb2Title struct {

@@ -1,0 +1,5 @@
+# Keep Go sources LF in the working tree regardless of core.autocrlf, so gofmt and
+# the gofmt linter see the same LF the repo already stores. Without this, a CRLF
+# checkout (autocrlf=true on Windows) makes `gofmt -l` flag every file even though
+# the committed source is clean. Other paths keep git's default handling.
+*.go text eol=lf

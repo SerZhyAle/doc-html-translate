@@ -29,6 +29,47 @@ func TestAssembleArgsPassesExplicitSplitZero(t *testing.T) {
 	t.Fatalf("expected -split 0 in args, got %v", args)
 }
 
+func assertFlagValue(t *testing.T, args []string, flag, val string) {
+	t.Helper()
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == flag && args[i+1] == val {
+			return
+		}
+	}
+	t.Fatalf("expected %s %s in args, got %v", flag, val, args)
+}
+
+func TestAssembleArgsForwardsTOCDepthAndMaxCost(t *testing.T) {
+	args := assembleArgs(runRequest{
+		Input:    `C:\books\story.epub`,
+		Google:   true,
+		TOCDepth: "1",
+		MaxCost:  "2",
+		SrcLang:  "en",
+		DstLang:  "ru",
+	})
+	assertFlagValue(t, args, "-toc-depth", "1")
+	assertFlagValue(t, args, "-max-cost", "2")
+}
+
+func TestAssembleArgsOmitsDefaultTOCDepthAndMaxCost(t *testing.T) {
+	// 0 is the CLI default for both (unlimited TOC / no cost limit), so the GUI
+	// should not clutter the command line with them.
+	args := assembleArgs(runRequest{
+		Input:    `C:\books\story.epub`,
+		TOCDepth: "0",
+		MaxCost:  "0",
+		SrcLang:  "en",
+		DstLang:  "ru",
+	})
+	if slices.Contains(args, "-toc-depth") {
+		t.Fatalf("did not expect -toc-depth for default 0, got %v", args)
+	}
+	if slices.Contains(args, "-max-cost") {
+		t.Fatalf("did not expect -max-cost for default 0, got %v", args)
+	}
+}
+
 func TestSaveGoogleAPIKeyRoundTrip(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("LOCALAPPDATA", tmp)

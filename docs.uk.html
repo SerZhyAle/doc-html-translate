@@ -26,13 +26,13 @@
 
     <section class="hero">
       <h1>Швидке локальне читання книг і безкоштовний переклад у Chrome</h1>
-      <p class="lead">Конвертуйте EPUB/PDF та інші формати у локальні HTML-сторінки, потім читайте у Chrome і перекладайте вбудованим перекладачем браузера.</p>
+      <p class="lead">Конвертуйте EPUB/PDF та інші формати у локальні HTML-сторінки, потім читайте у Chrome і перекладайте вбудованим перекладачем браузера. Без API-ключа, без підписки і без зайвих церемоній.</p>
     </section>
 
     <section class="grid">
       <article class="card">
         <h2>Рекомендований сценарій (безкоштовно)</h2>
-        <p>Найзручніший щоденний варіант:</p>
+        <p>Найзручніший щоденний варіант, і так, «безкоштовно» тут справді означає безкоштовно:</p>
         <ul>
           <li>Відкрити файл застосунком або запустити звичайну команду</li>
           <li>Відкриття згенерованого index у Chrome</li>
@@ -59,16 +59,16 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Підтримувані формати</h2>
-      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3.</p>
-      <p class="small">MOBI та AZW3: потрібен встановлений <a href="https://calibre-ebook.com">Calibre</a>. Файли з DRM не підтримуються.</p>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. Набір, відверто кажучи, пристойний.</p>
+      <p class="small">MOBI та AZW3: потрібен встановлений <a href="https://calibre-ebook.com">Calibre</a>. Файли з DRM не підтримуються - конвертер поважає замки, які не вміє зламувати.</p>
     </section>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Зручність читання</h2>
-      <p>У згенерований HTML вбудовано невеликий клієнтський шар для читання - без сервера, працює через <code>file://</code>:</p>
+      <p>У згенерований HTML вбудовано невеликий клієнтський шар для читання - сервер няньчити не треба, спокійно працює через <code>file://</code>:</p>
       <ul>
         <li><strong>Теми читання</strong> - перемикач у навбарі (і на <code>index.html</code>) циклить Light / Sepia / Dark / Night. Вибір зберігається в <code>localStorage</code> і застосовується на кожній сторінці.</li>
-        <li><strong>Позиція читання</strong> - прокручування зберігається для кожної книги. На <code>index.html</code> з'являється посилання «Continue reading» на останню відкриту сторінку, а в навбарі - тонкий індикатор прогресу по всій книзі.</li>
+        <li><strong>Позиція читання</strong> - прокручування зберігається для кожної книги, тож застосунок памʼятає, де ви зупинилися, навіть коли ви самі вже не памʼятаєте. На <code>index.html</code> з'являється посилання «Continue reading» на останню відкриту сторінку, а в навбарі - тонкий індикатор прогресу по всій книзі.</li>
         <li><strong>Ліміт витрат</strong> - для платних рушіїв прапорець <code>-max-cost N</code> перетворює оцінку вартості (символи / 1e6 * $20) на жорсткий ліміт до відправлення: якщо оцінка перевищує N, переклад пропускається, а книга все одно збирається без перекладу.</li>
       </ul>
       <p class="small">Односторінкові документи не мають навбара, тому цей шар до них не застосовується.</p>
@@ -76,7 +76,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Додаткові зовнішні інструменти</h2>
-      <p>Застосунок працює одразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Встановіть ці інструменти для повної підтримки зображень PDF та додаткових форматів.</p>
+      <p>Застосунок працює одразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Інструменти нижче суто опціональні - ставте їх, лише якщо хочете повну підтримку зображень PDF та додаткових форматів.</p>
       <table>
         <thead><tr><th>Інструмент</th><th>Призначення</th><th>Потрібен для</th><th>Як встановити</th></tr></thead>
         <tbody>
@@ -88,7 +88,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           </tr>
           <tr>
             <td><strong>ffmpeg</strong></td>
-            <td>Конвертує JPEG 2000 зображення (.jpx) з PDF у JPEG - браузери не підтримують JPEG 2000</td>
+            <td>Конвертує JPEG 2000 зображення (.jpx) з PDF у JPEG - браузери й у 2026 році ввічливо відмовляються показувати JPEG 2000</td>
             <td>PDF-файли із зображеннями у форматі JPEG2000 (поширено в комерційних PDF)</td>
             <td><a href="https://www.gyan.dev/ffmpeg/builds/">gyan.dev/ffmpeg</a> → «release essentials»<br>або <code>winget install ffmpeg</code></td>
           </tr>
@@ -105,6 +105,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Основні прапорці</h2>
+      <p class="small">Усі опціональні. Значення за замовчуванням розумні, тож цю таблицю можна ігнорувати, доки не зʼявиться власна думка.</p>
       <table>
         <thead><tr><th>Прапорець</th><th>За замовчуванням</th><th>Опис</th></tr></thead>
         <tbody>
@@ -112,20 +113,23 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
           <tr><td>-google</td><td>false</td><td>Переклад через Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Локальний переклад Ollama</td></tr>
-          <tr><td>-max-cost</td><td>0</td><td>Перервати платний переклад до відправлення, якщо оцінка вартості в USD перевищує N (0 = без ліміту)</td></tr>
+          <tr><td>-max-cost</td><td>0</td><td>Перервати платний переклад до відправлення, якщо оцінка вартості в USD перевищує N. Якщо сумніваєтеся, 0 (без ліміту) - цілком гідний вибір</td></tr>
           <tr><td>-split</td><td>5000</td><td>Розбиття сторінок за кількістю символів, 0 вимикає</td></tr>
+          <tr><td>-toc-depth</td><td>0</td><td>Глибина вкладеності змісту на index.html, 0 = без обмежень, 1 = лише розділи</td></tr>
           <tr><td>-folder</td><td>empty</td><td>Папка для результату</td></tr>
           <tr><td>-src</td><td>en</td><td>Мова джерела</td></tr>
           <tr><td>-dst</td><td>ru</td><td>Мова перекладу</td></tr>
           <tr><td>-force</td><td>false</td><td>Перезібрати навіть якщо output вже існує</td></tr>
+          <tr><td>-register</td><td>false</td><td>Призначити застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів (та сама кнопка "Set as default handler" у застосунку doc-html-ui)</td></tr>
         </tbody>
       </table>
+      <p class="small" style="margin-top:10px;">Усі опції вище доступні й у графічному застосунку <strong>doc-html-ui</strong> - вибір файлу, drag &amp; drop, глибина змісту, ліміт вартості та кнопка "Set as default handler". У збірці Microsoft Store саме GUI - запускана точка входу, а подвійний клік по файлу досі запускає конвертер з командного рядка.</p>
     </section>
 
     <section class="card" style="margin-top: 14px;">
       <h2>Companion-застосунок: FastMediaSorter LITE</h2>
       <p>Для документів, які є <strong>зображеннями, а не текстом</strong> - скриншоти, манґа,
-        сфотографовані або відскановані сторінки - використовуйте <strong>FastMediaSorter LITE</strong>,
+        сфотографовані або відскановані сторінки, те, чого текстовий конвертер прочитати в думках поки не вміє - використовуйте <strong>FastMediaSorter LITE</strong>,
         безкоштовний Windows-застосунок для відкриття та сортування зображень і відео з вбудованим <strong>OCR та перекладом прямо на зображенні</strong>.
         Натисніть <code>T</code> на будь-якій картинці, щоб розпізнати текст і накласти переклад вашою мовою
         (локальний Ollama або LibreTranslate). Доповнює doc-html-translate, який працює з книжковими та текстовими форматами.</p>
