@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf16"
 
 	"doc-html-translate/internal/translator"
 )
@@ -28,6 +30,11 @@ var uiHTML string
 var Version = "dev"
 
 const cliName = "doc-html-translate.exe"
+
+// maxDropBytes caps an uploaded (dropped) document. The window runs in a plain
+// browser where a dropped file has no filesystem path, so its bytes are uploaded
+// instead; the cap is a sanity backstop, not a real limit for any ebook/PDF.
+const maxDropBytes = 2 << 30 // 2 GiB
 
 var initialFile string
 
@@ -50,6 +57,8 @@ func main() {
 	mux.HandleFunc("/api/ping", handlePing)
 	mux.HandleFunc("/api/browse-file", handleBrowseFile)
 	mux.HandleFunc("/api/browse-folder", handleBrowseFolder)
+	mux.HandleFunc("/api/drop", handleDrop)
+	mux.HandleFunc("/api/settings", handleSettings)
 	mux.HandleFunc("/api/google-key", handleGoogleKey)
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
@@ -66,6 +75,12 @@ func main() {
 // ── HTTP handlers ───────────────────────────────────────────
 
 var lastPing atomic.Int64
+
+// activeRuns counts in-flight conversions. The heartbeat watchdog must not shut the
+// server down while one is running, even if the browser's ping lapses (its main
+// thread can stall while rendering a long log), or a long conversion gets cut off
+// mid-stream - which surfaces in the UI as a bare "network error".
+var activeRuns atomic.Int64
 
 func handleUI(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -101,6 +116,109 @@ func handleBrowseFolder(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(w).Encode(map[string]string{"path": path})
+}
+
+// handleDrop saves the bytes of a file dropped onto the app window to a per-user
+// folder and returns the resulting path. The GUI runs in a plain browser window
+// (Edge/Chrome --app mode), where a dropped file exposes no filesystem path, so the
+// page uploads the raw bytes here and we materialize them for the CLI to read. The
+// destination lives under %LOCALAPPDATA% (writable even under the read-only MSIX/Store
+// install) so the converted output, which lands next to the input, persists too.
+func handleDrop(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	// The browser only ever sends a bare file name; Base strips any stray path
+	// components or traversal so we cannot be steered outside the drop folder.
+	name := filepath.Base(filepath.FromSlash(strings.TrimSpace(r.URL.Query().Get("name"))))
+	if name == "" || name == "." || name == string(os.PathSeparator) {
+		http.Error(w, "missing or invalid filename", http.StatusBadRequest)
+		return
+	}
+
+	dir := droppedFilesDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	dest := filepath.Join(dir, name)
+	f, err := os.Create(dest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := io.Copy(f, http.MaxBytesReader(w, r.Body, maxDropBytes)); err != nil {
+		_ = f.Close()
+		http.Error(w, "upload failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := f.Close(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]string{"path": dest})
+}
+
+// droppedFilesDir is the writable, per-user folder where files dropped onto the
+// window are saved before conversion. It mirrors the Google-key location's choice of
+// %LOCALAPPDATA% so it keeps working under the read-only MSIX/Store install.
+func droppedFilesDir() string {
+	if appData := os.Getenv("LOCALAPPDATA"); appData != "" {
+		return filepath.Join(appData, "doc-html-translate", "dropped")
+	}
+	return filepath.Join(os.TempDir(), "doc-html-translate-dropped")
+}
+
+// handleSettings persists the GUI's form state across sessions. The browser's own
+// localStorage cannot: the server binds a random port each launch, so the page origin
+// (and thus the store) differs every time. We keep the raw JSON blob the page sends -
+// its shape is the page's business - under %LOCALAPPDATA% so it survives restarts and
+// the read-only MSIX/Store install.
+//
+//	GET  → the saved JSON (or {} if none yet)
+//	POST → save the request body (must be valid JSON, capped at 64 KiB)
+func handleSettings(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		data, err := os.ReadFile(settingsPath())
+		if err != nil || !json.Valid(data) {
+			_, _ = io.WriteString(w, "{}")
+			return
+		}
+		_, _ = w.Write(data)
+	case http.MethodPost:
+		data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 64<<10))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if !json.Valid(data) {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		p := settingsPath()
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := os.WriteFile(p, data, 0o600); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// settingsPath is the writable, per-user location of the saved GUI state.
+func settingsPath() string {
+	if appData := os.Getenv("LOCALAPPDATA"); appData != "" {
+		return filepath.Join(appData, "doc-html-translate", "ui-settings.json")
+	}
+	return filepath.Join(os.TempDir(), "doc-html-translate-ui-settings.json")
 }
 
 // handleGoogleKey lets the GUI inspect and save the Google Translate API key.
@@ -193,6 +311,9 @@ type runRequest struct {
 }
 
 func handleRun(w http.ResponseWriter, r *http.Request) {
+	activeRuns.Add(1)
+	defer activeRuns.Add(-1)
+
 	var req runRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -386,31 +507,96 @@ func isPackaged() bool {
 
 // ── native file/folder dialogs via PowerShell ───────────────
 
+// The dialogs run from a hidden PowerShell process that owns no window. A dialog with
+// no owner (or owned by an off-screen helper form) is not topmost, so it opens behind
+// our active app window, and a background process is denied SetForegroundWindow to fix
+// that. The reliable cure is to own the dialog to the *current foreground window* -
+// our DOC-HTML-UI (Edge --app) window, which still has focus from the click that
+// triggered the browse. An owned dialog always sits above its owner, so it lands in
+// front. dialogOwner compiles a tiny IWin32Window wrapper around GetForegroundWindow()
+// and leaves the handle in $owner.
+const dialogOwner = `Add-Type -ReferencedAssemblies System.Windows.Forms -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+public class Fg : IWin32Window {
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    public IntPtr Handle { get; set; }
+    public static Fg Current() { return new Fg { Handle = GetForegroundWindow() }; }
+}
+'@
+$owner = [Fg]::Current()`
+
 func browseFile() (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
+` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
 $f.Filter = "Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|All files|*.*"
 $f.Title = "Select input file"
-if ($f.ShowDialog() -eq 'OK') { $f.FileName }`
-	return runPowershell(script)
+$res = $f.ShowDialog($owner)
+if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.FileName)) }`
+	out, err := runPowershell(script)
+	if err != nil {
+		return "", err
+	}
+	return decodeDialogPath(out)
 }
 
 func browseFolder() (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
+` + dialogOwner + `
 $f = New-Object System.Windows.Forms.FolderBrowserDialog
 $f.Description = "Select output folder"
-if ($f.ShowDialog() -eq 'OK') { $f.SelectedPath }`
-	return runPowershell(script)
+$res = $f.ShowDialog($owner)
+if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.SelectedPath)) }`
+	out, err := runPowershell(script)
+	if err != nil {
+		return "", err
+	}
+	return decodeDialogPath(out)
 }
 
 func runPowershell(script string) (string, error) {
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", script)
+	// -EncodedCommand (base64 of UTF-16LE) sidesteps every -Command quoting pitfall
+	// for multi-line scripts that embed here-strings, inline C# (Add-Type), and double
+	// quotes - which the dialog scripts now do.
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encodePSCommand(script))
 	hideWindow(cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+// encodePSCommand encodes a script the way powershell -EncodedCommand expects:
+// base64 of its UTF-16LE bytes.
+func encodePSCommand(script string) string {
+	u16 := utf16.Encode([]rune(script))
+	b := make([]byte, len(u16)*2)
+	for i, r := range u16 {
+		b[i*2] = byte(r)
+		b[i*2+1] = byte(r >> 8)
+	}
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+// decodeDialogPath decodes a path emitted by the dialog scripts as base64(UTF-8).
+// We cannot just print the raw path: launched detached (no console), Windows
+// PowerShell writes stdout in the OEM code page (e.g. cp866) and Go, reading it as
+// UTF-8, mangles non-ASCII paths like Cyrillic folder names. Base64 is plain ASCII,
+// so it survives any code page - and, unlike forcing [Console]::OutputEncoding, it
+// never throws in a console-less process (which silently broke the dialog).
+func decodeDialogPath(out string) (string, error) {
+	out = strings.TrimSpace(out)
+	if out == "" {
+		return "", nil // dialog cancelled
+	}
+	b, err := base64.StdEncoding.DecodeString(out)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 // ── browser / app window ────────────────────────────────────
@@ -425,7 +611,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("ProgramFiles"), `Microsoft\Edge\Application\msedge.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=780,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=720,700").Start()
 				return
 			}
 		}
@@ -436,7 +622,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=780,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=720,700").Start()
 				return
 			}
 		}
@@ -460,6 +646,13 @@ func watchHeartbeat(srv *http.Server) {
 	lastPing.Store(time.Now().Unix())
 	for {
 		time.Sleep(5 * time.Second)
+		// A running conversion counts as alive: keep the timer fresh so we neither
+		// abort it nor shut down the instant a long one finishes (the browser needs
+		// a moment to resume pinging).
+		if activeRuns.Load() > 0 {
+			lastPing.Store(time.Now().Unix())
+			continue
+		}
 		if time.Now().Unix()-lastPing.Load() > 15 {
 			_ = srv.Shutdown(context.Background())
 			os.Exit(0)

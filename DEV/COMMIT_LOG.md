@@ -353,3 +353,19 @@ Changed files:
 - scripts/commit_after_build.ps1
 - scripts/release.ps1
 
+| 2026-06-27 18:37:07 | main | b72e522 | feat: GUI drag-and-drop, compact layout, language pickers, persisted settings
+
+Also fixes: Cyrillic dialog paths (base64 over the PowerShell boundary),
+the file dialog opening behind the window (own to the foreground window),
+and the server being killed mid-conversion by the heartbeat watchdog.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com> |
+
+Changed files:
+- DEV/CHANGELOG.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-ui/main.go
+- cmd/doc-html-ui/main_test.go
+- cmd/doc-html-ui/ui.html
+

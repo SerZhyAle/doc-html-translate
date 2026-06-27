@@ -8,10 +8,12 @@
 :root {
     --bg: #1e1e2e;
     --surface: #2b2b3d;
+    --surface2: #232334;
     --text: #cdd6f4;
     --muted: #6c7086;
     --accent: #89b4fa;
     --accent-hover: #74c7ec;
+    --accent-soft: rgba(137, 180, 250, 0.10);
     --border: #45475a;
     --green: #a6e3a1;
     --red: #f38ba8;
@@ -22,28 +24,26 @@ body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 20px 24px;
-    max-width: 720px;
+    padding: 16px 22px 28px;
+    max-width: 640px;
     margin: 0 auto;
     -webkit-font-smoothing: antialiased;
 }
-h1 { font-size: 18px; font-weight: 600; }
-.ver { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
-.hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
+.ver { font-size: 11px; color: var(--muted); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 .hint.ok { color: var(--green); }
 .hint.warn { color: var(--red); }
-.section { margin: 14px 0; }
+code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; background: var(--surface); padding: 1px 4px; border-radius: 3px; }
+
 .stitle {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    margin-bottom: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--accent); margin: 14px 0 6px;
 }
-.row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-input[type="text"], input[type="number"] {
-    flex: 1;
+
+/* inputs / selects / buttons */
+input[type="text"], input[type="number"], input[type="password"], select {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
@@ -54,7 +54,8 @@ input[type="text"], input[type="number"] {
     outline: none;
     transition: border-color .15s;
 }
-input:focus { border-color: var(--accent); }
+select { cursor: pointer; }
+input:focus, select:focus { border-color: var(--accent); }
 input::placeholder { color: var(--muted); }
 button {
     background: var(--surface);
@@ -69,21 +70,87 @@ button {
     transition: background .15s;
 }
 button:hover { background: var(--border); }
+
+/* drop zone */
+.drop {
+    border: 2px dashed var(--border);
+    border-radius: 9px;
+    padding: 16px 14px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .15s, background .15s;
+}
+.drop:hover { border-color: var(--accent); }
+.drop.dragover { border-color: var(--accent); background: var(--accent-soft); }
+.drop.has-file { border-style: solid; border-color: var(--accent); text-align: left; }
+.drop .ico { font-size: 20px; color: var(--accent); display: block; margin-bottom: 2px; }
+.drop .ph { font-size: 13px; color: var(--muted); }
+.drop .fname { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-all; }
+.drop .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* generic field row: inline label + control */
+.field { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.field > label { font-size: 12px; color: var(--muted); min-width: 84px; }
+.field > input, .field > select { flex: 1; min-width: 0; }
+.field.num > input { max-width: 130px; flex: 0 0 auto; }
+.field.num > .gap { flex: 1; }
+
+/* engine radios */
+.engine { display: flex; flex-wrap: wrap; gap: 7px 18px; margin: 4px 0 2px; }
+.engine label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.engine input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+/* languages */
+.langs { display: flex; align-items: center; gap: 8px; }
+.langs select { flex: 1; min-width: 0; }
+.swap { padding: 7px 11px; font-size: 14px; line-height: 1; }
+
+/* checkbox toggles */
+.toggles { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 4px 0; }
+.chk { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; }
+.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+/* collapsibles */
+details {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    margin: 8px 0;
+}
+details > summary {
+    cursor: pointer;
+    padding: 9px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--accent);
+    list-style: none;
+    user-select: none;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: '\25B8\00A0\00A0'; color: var(--muted); font-weight: 400; }
+details[open] > summary::before { content: '\25BE\00A0\00A0'; }
+details > .body { padding: 2px 12px 12px; }
+
+/* primary row: document picker + run button on one line */
+.toprow { display: flex; gap: 12px; align-items: stretch; }
+.toprow .drop { flex: 1; }
 .btn-run {
+    flex: 0 0 auto;
+    align-self: stretch;
     background: var(--accent);
     color: #11111b;
     border: none;
     font-weight: 700;
-    padding: 10px 40px;
+    padding: 0 32px;
     font-size: 15px;
-    border-radius: 6px;
+    border-radius: 9px;
 }
 .btn-run:hover { background: var(--accent-hover); }
 .btn-run:disabled { opacity: .45; cursor: not-allowed; }
-.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; }
-.chk { display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 3px 0; cursor: pointer; }
-.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
-.lbl { font-size: 12px; min-width: 95px; color: var(--muted); }
+
 .log {
     background: var(--log-bg);
     border: 1px solid var(--border);
@@ -92,172 +159,231 @@ button:hover { background: var(--border); }
     font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
     font-size: 10px;
     line-height: 1.35;
-    height: 280px;
+    height: 240px;
     overflow: auto;
     white-space: pre;
     word-break: normal;
     color: var(--green);
 }
-.log .err { color: var(--red); }
-hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-.center { text-align: center; }
+hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 </style>
 </head>
 <body>
 
-<h1>DOC-HTML-UI</h1>
-<div class="ver" id="ver">loading..</div>
+<div class="head">
+    <h1>DOC-HTML-UI</h1>
+    <span class="ver" id="ver">loading..</span>
+</div>
 <div class="hint warn" id="cliWarn" style="display:none">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
-<hr>
-
-<div class="section">
-    <div class="stitle">Input File</div>
-    <div class="row">
-        <input type="text" id="inputFile" placeholder="Click Browse to select a document..">
-        <button onclick="browseFile()">Browse...</button>
+<!-- primary flow: pick a document (left) and run (right), on one line -->
+<div class="toprow">
+    <div class="drop" id="dropZone" onclick="browseFile()">
+        <div id="dropEmpty">
+            <span class="ico">&#x2913;</span>
+            <span class="ph">Drag a document here, or click to choose one</span>
+        </div>
+        <div id="dropFilled" style="display:none">
+            <span class="fname" id="dropName"></span>
+            <div class="sub">click to choose another file</div>
+        </div>
     </div>
-    <div class="hint">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed - it won't install itself, alas.</div>
-    <div class="hint">Tip: drag a file onto this window (or onto doc-html-ui.exe). Yes, dragging still works in 2026.</div>
+    <button class="btn-run" id="btnRun" onclick="runConvert()">Convert</button>
+</div>
+<input type="hidden" id="inputFile">
+<div class="hint" id="dropStatus">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
+
+<!-- output folder -->
+<div class="field" style="margin-top:10px">
+    <label>Output:</label>
+    <input type="text" id="outputFolder" placeholder="Leave empty - lands next to the input">
+    <button onclick="browseFolder()">Browse..</button>
 </div>
 
-<div class="section">
-    <div class="stitle">Output Folder</div>
-    <div class="row">
-        <input type="text" id="outputFolder" placeholder="Leave empty and it lands next to the input - sensible, we know">
-        <button onclick="browseFolder()">Browse...</button>
-    </div>
+<div class="stitle">Translation</div>
+<div class="engine" id="engine">
+    <label><input type="radio" name="engine" value="chrome" checked> Chrome (free)</label>
+    <label><input type="radio" name="engine" value="google"> Google Cloud</label>
+    <label><input type="radio" name="engine" value="ollama"> Ollama (local)</label>
+    <label><input type="radio" name="engine" value="none"> Don't translate</label>
+</div>
+<div class="hint">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</div>
+
+<div class="field langs" style="margin-top:8px">
+    <label>Languages:</label>
+    <select id="srcLang"></select>
+    <button class="swap" id="btnSwap" title="Swap source and target">&#x21C4;</button>
+    <select id="dstLang"></select>
 </div>
 
-<hr>
-
-<div class="section">
-    <div class="stitle">Options</div>
-    <div class="checks">
-        <label class="chk"><input type="checkbox" id="chkNoTranslate"> No Translate</label>
-        <label class="chk"><input type="checkbox" id="chkNoOpen"> No Open Browser</label>
-        <label class="chk"><input type="checkbox" id="chkGoogle"> Google Translate</label>
-        <label class="chk"><input type="checkbox" id="chkOllama"> Ollama Local</label>
-        <label class="chk"><input type="checkbox" id="chkForce"> Force Re-process</label>
-        <label class="chk"><input type="checkbox" id="chkVerbose"> Verbose</label>
-    </div>
-</div>
-
-<div class="section">
-    <div class="row"><span class="lbl">Ollama Model:</span><input type="text" id="ollamaModel" value="gemma3:12b"></div>
-    <div class="row"><span class="lbl">Parallel:</span><input type="number" id="ollamaParallel" value="1" min="1"></div>
-    <div class="row"><span class="lbl">Context:</span><input type="number" id="ollamaCtx" value="8192" min="512"></div>
-    <div class="row"><span class="lbl">Split Size:</span><input type="number" id="splitSize" value="0" min="0"></div>
-    <div class="hint">Use <code>0</code> to disable splitting, or a character limit like <code>5000</code>. When in doubt, <code>0</code> is a perfectly respectable choice.</div>
-    <div class="row"><span class="lbl">TOC Depth:</span><input type="number" id="tocDepth" value="0" min="0"></div>
-    <div class="row"><span class="lbl">Max Cost ($):</span><input type="number" id="maxCost" value="0" min="0" step="0.5"></div>
-    <div class="hint">TOC Depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max Cost: paid engines only - <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (the book still converts, just untranslated).</div>
-</div>
-
-<div class="section" id="googleKeySection" style="display:none">
-    <div class="stitle">Google API Key</div>
-    <div class="row">
+<!-- Google API key (only when Google is selected) -->
+<div id="googleKeySection" style="display:none">
+    <div class="field" style="margin-top:8px">
+        <label>Google key:</label>
         <input type="password" id="googleKey" placeholder="Paste your Google Cloud Translation API key..">
         <button onclick="saveGoogleKey()">Save</button>
     </div>
     <div class="hint" id="googleKeyStatus">Rummaging for a saved key..</div>
 </div>
 
-<hr>
-
-<div class="section">
-    <div class="stitle">Languages</div>
-    <div class="row">
-        <span class="lbl">Source:</span><input type="text" id="srcLang" value="en" style="max-width:70px">
-        <span class="lbl" style="min-width:55px">Target:</span><input type="text" id="dstLang" value="ru" style="max-width:70px">
+<details id="advancedDetails">
+    <summary>Advanced</summary>
+    <div class="body">
+        <div class="field num"><label>Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="gap"></span></div>
+        <div class="hint">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
+        <div class="field num"><label>TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"><span class="gap"></span></div>
+        <div class="field num"><label>Max cost $:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="gap"></span></div>
+        <div class="hint">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
     </div>
-</div>
+</details>
 
-<hr>
-
-<div class="center" style="margin:16px 0">
-    <button class="btn-run" id="btnRun" onclick="runConvert()">Convert</button>
-</div>
-
-<div class="section" id="integrationSection">
-    <div class="stitle">Windows Integration</div>
-    <div class="row">
-        <button onclick="registerHandler()">Set as default handler for EPUB, PDF, ..</button>
+<details id="ollamaDetails">
+    <summary>Ollama settings</summary>
+    <div class="body">
+        <div class="field"><label>Model:</label><input type="text" id="ollamaModel" value="gemma3:12b"></div>
+        <div class="field num"><label>Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"><span class="gap"></span></div>
+        <div class="field num"><label>Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="gap"></span></div>
     </div>
-    <div class="hint" id="registerStatus">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
+</details>
+
+<div class="toggles">
+    <label class="chk"><input type="checkbox" id="chkNoOpen"> Don't open browser</label>
+    <label class="chk"><input type="checkbox" id="chkForce"> Force re-process</label>
+    <label class="chk"><input type="checkbox" id="chkVerbose"> Verbose log</label>
 </div>
 
-<div class="section">
-    <div class="stitle">Log</div>
-    <div class="log" id="logArea"></div>
-</div>
+<details id="integrationSection">
+    <summary>Windows integration</summary>
+    <div class="body">
+        <div class="field">
+            <button onclick="registerHandler()">Set as default handler for EPUB, PDF, ..</button>
+        </div>
+        <div class="hint" id="registerStatus">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
+    </div>
+</details>
+
+<details id="logDetails">
+    <summary>Log</summary>
+    <div class="body">
+        <div class="log" id="logArea"></div>
+    </div>
+</details>
 
 <script>
+// ── languages ───────────────────────────────────────────
+// Codes the converter/translator already recognise (see internal/translator),
+// plus a few common extras. Value is the ISO code passed to -src / -dst.
+const LANGS = [
+    ['en', 'English'], ['ru', 'Russian'], ['uk', 'Ukrainian'], ['de', 'German'],
+    ['fr', 'French'], ['es', 'Spanish'], ['it', 'Italian'], ['pt', 'Portuguese'],
+    ['pl', 'Polish'], ['nl', 'Dutch'], ['cs', 'Czech'], ['sv', 'Swedish'],
+    ['tr', 'Turkish'], ['zh', 'Chinese'], ['ja', 'Japanese'], ['ko', 'Korean'],
+    ['ar', 'Arabic'], ['hi', 'Hindi'],
+];
+function fillLangs(sel, selected) {
+    sel.innerHTML = '';
+    for (const [code, name] of LANGS) {
+        const o = document.createElement('option');
+        o.value = code;
+        o.textContent = name + ' (' + code + ')';
+        if (code === selected) o.selected = true;
+        sel.appendChild(o);
+    }
+}
+fillLangs(document.getElementById('srcLang'), 'en');
+fillLangs(document.getElementById('dstLang'), 'ru');
+
+document.getElementById('btnSwap').addEventListener('click', () => {
+    const s = document.getElementById('srcLang'), d = document.getElementById('dstLang');
+    const t = s.value; s.value = d.value; d.value = t;
+    saveSettings();
+});
+
 // ── heartbeat ───────────────────────────────────────────
 setInterval(() => fetch('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
 
-// ── drag & drop into app window ─────────────────────────
-function fileUriToPath(uri) {
-    let u = uri.trim();
-    if (!u) return '';
-    if (u.startsWith('file:///')) {
-        u = decodeURIComponent(u.replace(/^file:\/\//, ''));
-        // Windows drive path in URI may start with '/': /C:/...
-        if (/^\/[A-Za-z]:\//.test(u)) {
-            u = u.slice(1);
-        }
-        return u.replaceAll('/', '\\');
-    }
-    return '';
+// ── input file display ──────────────────────────────────
+function setInputPath(p) {
+    document.getElementById('inputFile').value = p;
+    const base = p.split(/[\\/]/).pop() || p;
+    document.getElementById('dropName').textContent = base;
+    document.getElementById('dropName').title = p;
+    document.getElementById('dropEmpty').style.display = 'none';
+    document.getElementById('dropFilled').style.display = '';
+    document.getElementById('dropZone').classList.add('has-file');
+}
+function setDropStatus(text, cls) {
+    const el = document.getElementById('dropStatus');
+    el.textContent = text;
+    el.className = 'hint' + (cls ? ' ' + cls : '');
 }
 
+// ── drag & drop into the window ─────────────────────────
+// The app runs in a plain browser (Edge/Chrome --app), so a dropped file exposes
+// no path. Try a path first (works in webview-like hosts); otherwise upload the
+// bytes to /api/drop, which saves them and returns a real path the CLI can read.
+function fileUriToPath(uri) {
+    let u = (uri || '').trim();
+    if (!u.startsWith('file:///')) return '';
+    u = decodeURIComponent(u.replace(/^file:\/\//, ''));
+    if (/^\/[A-Za-z]:\//.test(u)) u = u.slice(1);
+    return u.replaceAll('/', '\\');
+}
 function extractDroppedPath(ev) {
     const dt = ev.dataTransfer;
     if (!dt) return '';
-
     const uriList = dt.getData('text/uri-list');
     if (uriList) {
         const first = uriList.split(/\r?\n/).find(x => x && !x.startsWith('#')) || '';
         const p = fileUriToPath(first);
         if (p) return p;
     }
-
     const text = dt.getData('text/plain');
-    if (text) {
-        const p = fileUriToPath(text);
-        if (p) return p;
-    }
-
-    if (dt.files && dt.files.length > 0) {
-        const f = dt.files[0];
-        if (f && typeof f.path === 'string' && f.path) return f.path;
+    const p = fileUriToPath(text);
+    if (p) return p;
+    if (dt.files && dt.files.length && typeof dt.files[0].path === 'string' && dt.files[0].path) {
+        return dt.files[0].path;
     }
     return '';
 }
-
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
-    window.addEventListener(name, ev => {
-        ev.preventDefault();
-        ev.stopPropagation();
-    });
-});
-
-window.addEventListener('drop', ev => {
+async function uploadDropped(file) {
+    setDropStatus('Loading ' + file.name + '..');
+    try {
+        const r = await fetch('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
+        if (!r.ok) { setDropStatus('Could not load file: ' + (await r.text()).trim(), 'warn'); return; }
+        const d = await r.json();
+        if (d.path) {
+            setInputPath(d.path);
+            setDropStatus('Loaded a copy into the app folder; set Output if you want results elsewhere.');
+        }
+    } catch(e) {
+        setDropStatus('Could not load file: ' + e.message, 'warn');
+    }
+}
+async function handleDrop(ev) {
     const p = extractDroppedPath(ev);
-    if (p) document.getElementById('inputFile').value = p;
-});
+    if (p) { setInputPath(p); setDropStatus(''); return; }
+    const dt = ev.dataTransfer;
+    if (dt && dt.files && dt.files.length) await uploadDropped(dt.files[0]);
+}
 
-// ── version ─────────────────────────────────────────────
+['dragenter','dragover','dragleave','drop'].forEach(name => {
+    window.addEventListener(name, ev => { ev.preventDefault(); ev.stopPropagation(); });
+});
+const dropZone = document.getElementById('dropZone');
+window.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+window.addEventListener('dragleave', ev => { if (ev.relatedTarget === null) dropZone.classList.remove('dragover'); });
+window.addEventListener('drop', ev => { dropZone.classList.remove('dragover'); handleDrop(ev); });
+
+// ── version / initial file / environment ────────────────
 fetch('/api/version').then(r=>r.json()).then(d=>{
     document.getElementById('ver').textContent = 'v' + d.version;
 }).catch(()=>{});
 
-// ── initial file from CLI arg ───────────────────────────
 fetch('/api/initial').then(r=>r.json()).then(d=>{
-    if (d.file) document.getElementById('inputFile').value = d.file;
+    if (d.file) setInputPath(d.file);
 }).catch(()=>{});
 
-// ── environment: hide register under MSIX, warn if CLI missing ──
 fetch('/api/env').then(r=>r.json()).then(d=>{
     if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
@@ -268,35 +394,30 @@ async function browseFile() {
     try {
         const r = await fetch('/api/browse-file', {method:'POST'});
         const d = await r.json();
-        if (d.path) document.getElementById('inputFile').value = d.path;
+        if (d.path) { setInputPath(d.path); setDropStatus(''); }
     } catch(e) { console.error('browseFile', e); }
 }
-
 async function browseFolder() {
     try {
         const r = await fetch('/api/browse-folder', {method:'POST'});
         const d = await r.json();
-        if (d.path) document.getElementById('outputFolder').value = d.path;
+        if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); }
     } catch(e) { console.error('browseFolder', e); }
 }
 
-// ── translation engine toggles ──────────────────────────
-const chkGoogle = document.getElementById('chkGoogle');
-const chkOllama = document.getElementById('chkOllama');
+// ── translation engine ──────────────────────────────────
 const googleKeySection = document.getElementById('googleKeySection');
+document.querySelectorAll('input[name="engine"]').forEach(r => r.addEventListener('change', syncEngineUI));
 
-chkGoogle.addEventListener('change', () => {
-    if (chkGoogle.checked) chkOllama.checked = false; // engines are mutually exclusive
-    syncEngineUI();
-});
-chkOllama.addEventListener('change', () => {
-    if (chkOllama.checked) chkGoogle.checked = false;
-    syncEngineUI();
-});
-
+function currentEngine() {
+    const r = document.querySelector('input[name="engine"]:checked');
+    return r ? r.value : 'chrome';
+}
 function syncEngineUI() {
-    googleKeySection.style.display = chkGoogle.checked ? '' : 'none';
-    if (chkGoogle.checked) refreshGoogleKeyStatus();
+    const e = currentEngine();
+    googleKeySection.style.display = (e === 'google') ? '' : 'none';
+    if (e === 'google') refreshGoogleKeyStatus();
+    if (e === 'ollama') document.getElementById('ollamaDetails').open = true;
 }
 
 // ── Google API key ──────────────────────────────────────
@@ -305,13 +426,12 @@ function setKeyStatus(text, cls) {
     el.textContent = text;
     el.className = 'hint' + (cls ? ' ' + cls : '');
 }
-
 async function refreshGoogleKeyStatus() {
     try {
         const r = await fetch('/api/google-key');
         const d = await r.json();
         if (d.exists) {
-            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new one to replace it - your call.', 'ok');
+            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new one to replace it.', 'ok');
         } else {
             setKeyStatus('No key saved yet. Paste it and click Save (kept at ' + (d.path || 'per-user folder') + ') - it never leaves this machine.', 'warn');
         }
@@ -319,7 +439,6 @@ async function refreshGoogleKeyStatus() {
         setKeyStatus('Could not check key status: ' + e.message, 'warn');
     }
 }
-
 async function saveGoogleKey() {
     const key = document.getElementById('googleKey').value.trim();
     if (!key) { setKeyStatus('Enter a key before saving. Saving nothing saves nothing.', 'warn'); return; }
@@ -359,25 +478,93 @@ async function registerHandler() {
     }
 }
 
+// ── persist form state across sessions ─────────────────
+// Saved server-side: the server binds a random port each launch, so the page origin
+// changes and browser localStorage would not survive a restart.
+const el = id => document.getElementById(id);
+
+function collectSettings() {
+    return {
+        engine:         currentEngine(),
+        output:         el('outputFolder').value,
+        srcLang:        el('srcLang').value,
+        dstLang:        el('dstLang').value,
+        splitSize:      el('splitSize').value,
+        tocDepth:       el('tocDepth').value,
+        maxCost:        el('maxCost').value,
+        ollamaModel:    el('ollamaModel').value,
+        ollamaParallel: el('ollamaParallel').value,
+        ollamaCtx:      el('ollamaCtx').value,
+        noOpen:         el('chkNoOpen').checked,
+        force:          el('chkForce').checked,
+        verbose:        el('chkVerbose').checked,
+    };
+}
+function applySettings(s) {
+    if (!s || typeof s !== 'object') return;
+    if (typeof s.engine === 'string') {
+        const r = document.querySelector('input[name="engine"][value="' + s.engine + '"]');
+        if (r) r.checked = true;
+    }
+    if (s.output != null) el('outputFolder').value = s.output;
+    for (const k of ['srcLang','dstLang','splitSize','tocDepth','maxCost','ollamaModel','ollamaParallel','ollamaCtx']) {
+        if (s[k] != null) el(k).value = s[k];
+    }
+    if (s.noOpen  != null) el('chkNoOpen').checked  = !!s.noOpen;
+    if (s.force   != null) el('chkForce').checked   = !!s.force;
+    if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
+    syncEngineUI();
+}
+
+let settingsLoaded = false, saveTimer = null;
+function saveSettings() {
+    if (!settingsLoaded) return; // don't overwrite saved state before it loads
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(collectSettings()),
+        }).catch(()=>{});
+    }, 400);
+}
+
+fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).finally(() => {
+    settingsLoaded = true;
+    fitWindow();
+});
+document.addEventListener('change', saveSettings);
+
+// ── fit the window height to its content (no dead space) ─
+function fitWindow() {
+    try {
+        const frame = Math.max(0, window.outerHeight - window.innerHeight);
+        const h = Math.min(Math.ceil(document.body.scrollHeight) + frame + 6, screen.availHeight);
+        if (h > 200) window.resizeTo(window.outerWidth, h);
+    } catch(e) { /* app window may forbid resize; --window-size is the fallback */ }
+}
+window.addEventListener('load', () => setTimeout(fitWindow, 120));
+
 // ── run ─────────────────────────────────────────────────
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
-    if (!input) { alert('Select an input file first - the converter can\'t read your mind (yet).'); return; }
+    if (!input) { alert('Choose an input file first - the converter can\'t read your mind (yet).'); return; }
 
-    if (chkGoogle.checked) {
+    const engine = currentEngine();
+    if (engine === 'google') {
         try {
             const d = await (await fetch('/api/google-key')).json();
             if (!d.exists && !confirm('No Google API key is saved - translation will be quietly skipped. Convert anyway?')) return;
-        } catch(e) { /* ignore, let the CLI report it */ }
+        } catch(e) { /* let the CLI report it */ }
     }
 
     const cfg = {
         input:          input,
         output:         document.getElementById('outputFolder').value.trim(),
-        noTranslate:    document.getElementById('chkNoTranslate').checked,
+        noTranslate:    engine === 'none',
         noOpen:         document.getElementById('chkNoOpen').checked,
-        google:         document.getElementById('chkGoogle').checked,
-        ollama:         document.getElementById('chkOllama').checked,
+        google:         engine === 'google',
+        ollama:         engine === 'ollama',
         ollamaModel:    document.getElementById('ollamaModel').value,
         ollamaParallel: document.getElementById('ollamaParallel').value,
         ollamaCtx:      document.getElementById('ollamaCtx').value,
@@ -392,6 +579,8 @@ async function runConvert() {
 
     const btn = document.getElementById('btnRun');
     const log = document.getElementById('logArea');
+    document.getElementById('logDetails').open = true;
+    fitWindow(); // grow to reveal the log
     btn.disabled = true;
     log.textContent = '';
 
@@ -401,19 +590,18 @@ async function runConvert() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(cfg),
         });
-
         const reader = resp.body.getReader();
         const dec = new TextDecoder();
-
         while (true) {
             const {value, done} = await reader.read();
             if (done) break;
-            const chunk = dec.decode(value, {stream: true});
-            log.textContent += chunk;
+            // appendChild is O(chunk); "textContent +=" re-reads the whole log each
+            // time (O(n^2)) and can freeze the page on a long conversion.
+            log.appendChild(document.createTextNode(dec.decode(value, {stream: true})));
             log.scrollTop = log.scrollHeight;
         }
     } catch(e) {
-        log.textContent += '\n[ERROR] ' + e.message + '\n';
+        log.appendChild(document.createTextNode('\n[ERROR] ' + e.message + '\n'));
     } finally {
         btn.disabled = false;
     }

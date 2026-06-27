@@ -1,9 +1,14 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"doc-html-translate/internal/translator"
@@ -103,5 +108,132 @@ func TestSaveGoogleAPIKeyRoundTrip(t *testing.T) {
 func TestSaveGoogleAPIKeyRejectsEmpty(t *testing.T) {
 	if err := saveGoogleAPIKey("   "); err == nil {
 		t.Fatal("expected error for empty key, got nil")
+	}
+}
+
+func TestDroppedFilesDirUsesLocalAppData(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("LOCALAPPDATA", tmp)
+	want := filepath.Join(tmp, "doc-html-translate", "dropped")
+	if got := droppedFilesDir(); got != want {
+		t.Fatalf("droppedFilesDir() = %q, want %q", got, want)
+	}
+}
+
+func TestHandleDropSavesUploadedFile(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("LOCALAPPDATA", tmp)
+
+	// A non-ASCII name exercises the URL-encoded query path the GUI uses.
+	req := httptest.NewRequest(http.MethodPost, "/api/drop?name=%D0%9A%D0%BD%D0%B8%D0%B3%D0%B0.epub", strings.NewReader("EPUB-BYTES"))
+	rec := httptest.NewRecorder()
+	handleDrop(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Path string `json:"path"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	want := filepath.Join(tmp, "doc-html-translate", "dropped", "Книга.epub")
+	if resp.Path != want {
+		t.Fatalf("saved path = %q, want %q", resp.Path, want)
+	}
+	data, err := os.ReadFile(want)
+	if err != nil {
+		t.Fatalf("read saved file: %v", err)
+	}
+	if string(data) != "EPUB-BYTES" {
+		t.Fatalf("saved bytes = %q, want %q", string(data), "EPUB-BYTES")
+	}
+}
+
+func TestHandleDropStripsPathTraversal(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("LOCALAPPDATA", tmp)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/drop?name=..%2F..%2Fevil.epub", strings.NewReader("x"))
+	rec := httptest.NewRecorder()
+	handleDrop(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Path string `json:"path"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &resp)
+	want := filepath.Join(tmp, "doc-html-translate", "dropped", "evil.epub")
+	if resp.Path != want {
+		t.Fatalf("path = %q, want %q (traversal must be stripped to a base name)", resp.Path, want)
+	}
+}
+
+func TestDecodeDialogPathRoundTripsCyrillic(t *testing.T) {
+	want := `C:\Users\serzh\OneDrive\Документы\file.pdf`
+	enc := base64.StdEncoding.EncodeToString([]byte(want))
+
+	// The dialog scripts print base64 with a trailing newline; decodeDialogPath trims it.
+	got, err := decodeDialogPath("  " + enc + "\r\n")
+	if err != nil {
+		t.Fatalf("decodeDialogPath: %v", err)
+	}
+	if got != want {
+		t.Fatalf("decodeDialogPath = %q, want %q", got, want)
+	}
+}
+
+func TestDecodeDialogPathEmptyMeansCancelled(t *testing.T) {
+	got, err := decodeDialogPath("  \r\n")
+	if err != nil || got != "" {
+		t.Fatalf("decodeDialogPath(empty) = %q, %v; want \"\", nil", got, err)
+	}
+}
+
+func TestSettingsRoundTrip(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("LOCALAPPDATA", tmp)
+
+	// No file yet → GET returns an empty object, not an error.
+	rec := httptest.NewRecorder()
+	handleSettings(rec, httptest.NewRequest(http.MethodGet, "/api/settings", nil))
+	if rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != "{}" {
+		t.Fatalf("initial GET = %d %q, want 200 {}", rec.Code, rec.Body.String())
+	}
+
+	// POST saves the blob.
+	body := `{"engine":"google","srcLang":"en","dstLang":"ru"}`
+	rec = httptest.NewRecorder()
+	handleSettings(rec, httptest.NewRequest(http.MethodPost, "/api/settings", strings.NewReader(body)))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("POST = %d, body %s", rec.Code, rec.Body.String())
+	}
+
+	// GET returns exactly what was saved.
+	rec = httptest.NewRecorder()
+	handleSettings(rec, httptest.NewRequest(http.MethodGet, "/api/settings", nil))
+	if got := strings.TrimSpace(rec.Body.String()); got != body {
+		t.Fatalf("GET after save = %q, want %q", got, body)
+	}
+}
+
+func TestSettingsRejectsInvalidJSON(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	rec := httptest.NewRecorder()
+	handleSettings(rec, httptest.NewRequest(http.MethodPost, "/api/settings", strings.NewReader("not json")))
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("POST invalid = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestHandleDropRejectsMissingName(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/drop", strings.NewReader("x"))
+	rec := httptest.NewRecorder()
+	handleDrop(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
 	}
 }
