@@ -117,6 +117,10 @@ func printSplashEN(line string, registeredExts []string) {
 	fmt.Println("    -src LANG       Source language (default: en)")
 	fmt.Println("    -dst LANG       Target language (default: ru)")
 	fmt.Println()
+	fmt.Println("  Links:")
+	fmt.Println("    Product site: https://serzhyale.github.io/doc-html-translate/")
+	fmt.Println("    Feedback:     sza@ukr.net")
+	fmt.Println()
 	fmt.Println(line)
 
 	if len(registeredExts) > 0 {
@@ -178,6 +182,10 @@ func printSplashRU(line string, registeredExts []string) {
 	fmt.Println("    -force          Принудительная перегенерация")
 	fmt.Println("    -src LANG       Исходный язык (по умолчанию: en)")
 	fmt.Println("    -dst LANG       Целевой язык  (по умолчанию: ru)")
+	fmt.Println()
+	fmt.Println("  Ссылки:")
+	fmt.Println("    Сайт продукта:  https://serzhyale.github.io/doc-html-translate/")
+	fmt.Println("    Обратная связь: sza@ukr.net")
 	fmt.Println()
 	fmt.Println(line)
 

@@ -47,8 +47,9 @@ func TestParseTSVSkipsEmptyBlocks(t *testing.T) {
 }
 
 func TestPercentStyle(t *testing.T) {
+	// font-size = pct(LineH, w) * fontFitFactor = (20/200*100) * 0.85 = 8.50cqw.
 	got := percentStyle(Block{X0: 10, Y0: 20, X1: 110, Y1: 60, LineH: 20}, 200, 100)
-	want := "left:5.00%;top:20.00%;width:50.00%;min-height:40.00%;font-size:10.00cqw"
+	want := "left:5.00%;top:20.00%;width:50.00%;min-height:40.00%;font-size:8.50cqw"
 	if got != want {
 		t.Errorf("percentStyle = %q, want %q", got, want)
 	}
@@ -57,6 +58,39 @@ func TestPercentStyle(t *testing.T) {
 func TestPercentStyleZeroDims(t *testing.T) {
 	if got := percentStyle(Block{X1: 10, Y1: 10}, 0, 0); got != "" {
 		t.Errorf("percentStyle with zero dims = %q, want empty", got)
+	}
+}
+
+func TestIsTranslatable(t *testing.T) {
+	cases := map[string]bool{
+		// keep: real translatable text
+		"Get your food, drink & duty free delivered before the trolley.": true,
+		"AUTO MIETEN. BIS ZU 25% SPAREN.":                                true,
+		"CHAPTER ONE":                                                    true,
+		"Section 12.3 - Results and Summary":                             true,
+		"Привет мир, это тест":                                           true,
+		"日本語":                                                            true, // short CJK phrase
+		// drop: nothing to translate
+		"":                             false,
+		"   ":                          false,
+		"XS":                           false, // < 5 letters
+		"Se of":                        false, // < 5 letters
+		"25":                           false, // digits only
+		"25%":                          false,
+		"1234 5678":                    false,
+		"————— ——— ~~ :":               false, // symbols only
+		"BCDFG":                        false, // no vowels
+		"https://example.com/x":        false, // address
+		"www.sixt.de":                  false,
+		"user@example.com":             false,
+		"sixt.de":                      false,
+		"C:\\Users\\serzh":             false, // path
+		"gr [u : &o Se A JETZT MIETEN": false, // mishmash
+	}
+	for in, want := range cases {
+		if got := isTranslatable(in); got != want {
+			t.Errorf("isTranslatable(%q) = %v, want %v", in, got, want)
+		}
 	}
 }
 

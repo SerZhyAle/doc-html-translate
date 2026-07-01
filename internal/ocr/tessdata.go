@@ -17,8 +17,8 @@ type LangInfo struct {
 	Name string
 }
 
-// Available is the catalog of languages the app offers for download. It mirrors the
-// extension's set plus a few common Latin/CJK ones.
+// Available is the catalog of languages the app offers for download. It is the shared
+// catalog with the extension's ocr-lang.js LANGS - keep the two in sync (see docs/PARITY.md).
 var Available = []LangInfo{
 	{"eng", "English"},
 	{"rus", "Russian"},
@@ -35,11 +35,18 @@ var Available = []LangInfo{
 	{"kor", "Korean"},
 }
 
-// Bundled languages are meant to ship with the app (English works offline out of the box).
+// Bundled languages ship with the app so English OCR works offline out of the box.
+// The eng.traineddata blob is not committed; scripts/build.ps1 provisions it into
+// <exe>/tessdata at build time (copied from the extension's vendored copy, or downloaded
+// from cdnBase). Both sources are tessdata_fast 4.0.0, so the bundled data matches the
+// extension's (see docs/PARITY.md).
 var Bundled = []string{"eng"}
 
 // tessdata_fast plain (non-gzipped) files via GitHub raw - no decompression needed.
-const cdnBase = "https://github.com/tesseract-ocr/tessdata_fast/raw/main"
+// Pinned to the 4.0.0 tag so downloaded languages match the extension, which loads
+// tessdata_fast 4.0.0 from tesseract.js's CDN (ocr-lang.js CDN_LANG_PATH). Both sides
+// must reference the same tessdata version - see docs/PARITY.md ("OCR").
+const cdnBase = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0"
 
 // DataDir is the tessdata directory the app manages: <exe dir>/tessdata.
 func DataDir() string {

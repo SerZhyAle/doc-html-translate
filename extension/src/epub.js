@@ -268,13 +268,22 @@ function parseNcxToc(xml) {
   return points(navMap);
 }
 
+// isExternalHref matches the desktop app's internal/epub isExternalHref (toc.go): any
+// scheme with "://" (http, ftp, ..) or a mailto:/tel:/data: URI. Shared by the TOC
+// resolver and the chapter-link rewriter so both classify links the same way as the Go
+// side - keep in sync with toc.go (see ../../docs/PARITY.md, "EPUB TOC parsing").
+function isExternalHref(href) {
+  const s = String(href || "").toLowerCase();
+  return s.includes("://") || /^(mailto|tel|data):/.test(s);
+}
+
 // resolveTocAnchor maps a raw nav/NCX href to an in-page element id, or null when
 // it points outside the rendered spine. Internal hrefs resolve relative to the TOC
 // document's directory; a #fragment becomes "d<index>-<fragment>" (the namespaced
 // id the chapter's element carries), a bare file becomes the chapter wrapper id.
 function resolveTocAnchor(href, tocDir, pathToIndex) {
   href = String(href || "").trim();
-  if (!href || /^(https?|mailto|tel|data):/i.test(href)) return null;
+  if (!href || isExternalHref(href)) return null;
   const [file, frag] = splitFrag(href);
   if (!file) return null;
   const idx = pathToIndex.get(resolvePath(tocDir, decodeHref(file)));
@@ -362,7 +371,7 @@ function rewriteAnchor(a, index, docDir, pathToIndex) {
   if (nm && !a.id) a.id = nm;
   const href = a.getAttribute("href");
   if (!href) return;
-  if (/^(https?|mailto|tel):/i.test(href)) {
+  if (isExternalHref(href)) {
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     return;

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico">
 <title>DOC-HTML-UI</title>
 <style>
 :root {
@@ -25,13 +26,35 @@ body {
     background: var(--bg);
     color: var(--text);
     padding: 16px 22px 28px;
-    max-width: 640px;
+    max-width: 1180px;
     margin: 0 auto;
     -webkit-font-smoothing: antialiased;
 }
-.head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+
+/* two-column layout: controls on the left, log filling the landscape space on the
+   right. Collapses to a single stacked column on a narrow window. */
+.app {
+    display: grid;
+    grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: stretch;
+}
+.col-main { min-width: 0; }
+.col-log { display: flex; flex-direction: column; min-width: 0; }
+@media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+}
+.head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; }
 h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
 .ver { font-size: 11px; color: var(--muted); }
+.byline { font-size: 11px; color: var(--muted); }
+.byline a { color: var(--accent); text-decoration: none; }
+.byline a:hover { text-decoration: underline; }
+.byline .dot { color: var(--muted); margin: 0 3px; }
+/* language switch, pushed to the far right of the header row */
+.langsw { margin-left: auto; display: flex; gap: 4px; align-self: center; }
+.langsw button { padding: 3px 9px; font-size: 11px; font-weight: 600; }
+.langsw button.active { background: var(--accent); color: #11111b; border-color: var(--accent); }
 .hint { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 .hint.ok { color: var(--green); }
 .hint.warn { color: var(--red); }
@@ -159,12 +182,36 @@ details > .body { padding: 2px 12px 12px; }
     font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
     font-size: 10px;
     line-height: 1.35;
-    height: 240px;
+    flex: 1 1 auto;
+    min-height: 260px;
     overflow: auto;
     white-space: pre;
     word-break: normal;
     color: var(--green);
 }
+
+/* live command-line preview: shows the exact command the current settings will run,
+   with a Copy button to grab it for a terminal. */
+.cmdbar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 14px; }
+.cmdline {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: var(--log-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--accent);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 92px;
+    overflow-y: auto;
+}
+.cmdline .ph { color: var(--muted); }
+.cmdcopy { flex: 0 0 auto; align-self: stretch; }
+.cmdcopy.done { color: var(--green); border-color: var(--green); }
 hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 </style>
 </head>
@@ -173,114 +220,424 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <div class="head">
     <h1>DOC-HTML-UI</h1>
     <span class="ver" id="ver">loading..</span>
+    <span class="byline">
+        <a href="https://sza.od.ua" target="_blank" rel="noopener">SZA.od.ua</a>
+        <span class="dot">&#183;</span>
+        <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site</a>
+        <span class="dot">&#183;</span>
+        <a href="mailto:sza@ukr.net">Feedback</a>
+    </span>
+    <span class="langsw" id="langSwitch">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="ru">RU</button>
+        <button type="button" data-lang="uk">UK</button>
+    </span>
 </div>
-<div class="hint warn" id="cliWarn" style="display:none">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
+<div class="hint warn" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
+
+<div class="app">
+<div class="col-main">
 
 <!-- primary flow: pick a document (left) and run (right), on one line -->
 <div class="toprow">
     <div class="drop" id="dropZone" onclick="browseFile()">
         <div id="dropEmpty">
             <span class="ico">&#x2913;</span>
-            <span class="ph">Drag a document here, or click to choose one</span>
+            <span class="ph" data-i18n="dropPlaceholder">Drag a document here, or click to choose one</span>
         </div>
         <div id="dropFilled" style="display:none">
             <span class="fname" id="dropName"></span>
-            <div class="sub">click to choose another file</div>
+            <div class="sub" data-i18n="dropChooseAnother">click to choose another file</div>
         </div>
     </div>
-    <button class="btn-run" id="btnRun" onclick="runConvert()">Convert</button>
+    <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
 </div>
 <input type="hidden" id="inputFile">
-<div class="hint" id="dropStatus">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
+<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
 
 <!-- output folder -->
 <div class="field" style="margin-top:10px">
-    <label>Output:</label>
-    <input type="text" id="outputFolder" placeholder="Leave empty - lands next to the input">
-    <button onclick="browseFolder()">Browse..</button>
+    <label data-i18n="lblOutput">Output:</label>
+    <input type="text" id="outputFolder" data-i18n-ph="phOutput" placeholder="Leave empty - lands next to the input">
+    <button onclick="browseFolder()" data-i18n="btnBrowse">Browse..</button>
 </div>
 
-<div class="stitle">Translation</div>
+<div class="stitle" data-i18n="secTranslation">Translation</div>
 <div class="engine" id="engine">
-    <label><input type="radio" name="engine" value="chrome" checked> Chrome (free)</label>
-    <label><input type="radio" name="engine" value="google"> Google Cloud</label>
-    <label><input type="radio" name="engine" value="ollama"> Ollama (local)</label>
-    <label><input type="radio" name="engine" value="none"> Don't translate</label>
+    <label><input type="radio" name="engine" value="chrome" checked> <span data-i18n="engChrome">Chrome (free)</span></label>
+    <label><input type="radio" name="engine" value="google"> <span data-i18n="engGoogle">Google Cloud</span></label>
+    <label><input type="radio" name="engine" value="ollama"> <span data-i18n="engOllama">Ollama (local)</span></label>
+    <label><input type="radio" name="engine" value="none"> <span data-i18n="engNone">Don't translate</span></label>
 </div>
-<div class="hint">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</div>
+<div class="hint" data-i18n="hintEngine">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</div>
 
 <div class="field langs" style="margin-top:8px">
-    <label>Languages:</label>
+    <label data-i18n="lblLanguages">Languages:</label>
     <select id="srcLang"></select>
-    <button class="swap" id="btnSwap" title="Swap source and target">&#x21C4;</button>
+    <button class="swap" id="btnSwap" data-i18n-title="titleSwap" title="Swap source and target">&#x21C4;</button>
     <select id="dstLang"></select>
 </div>
 
 <!-- Google API key (only when Google is selected) -->
 <div id="googleKeySection" style="display:none">
     <div class="field" style="margin-top:8px">
-        <label>Google key:</label>
-        <input type="password" id="googleKey" placeholder="Paste your Google Cloud Translation API key..">
-        <button onclick="saveGoogleKey()">Save</button>
+        <label data-i18n="lblGoogleKey">Google key:</label>
+        <input type="password" id="googleKey" data-i18n-ph="phGoogleKey" placeholder="Paste your Google Cloud Translation API key..">
+        <button onclick="saveGoogleKey()" data-i18n="btnSave">Save</button>
     </div>
-    <div class="hint" id="googleKeyStatus">Rummaging for a saved key..</div>
+    <div class="hint" id="googleKeyStatus" data-i18n="googleKeySearching">Rummaging for a saved key..</div>
 </div>
 
 <details id="advancedDetails">
-    <summary>Advanced</summary>
+    <summary data-i18n="secAdvanced">Advanced</summary>
     <div class="body">
-        <div class="field num"><label>Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="gap"></span></div>
-        <div class="hint">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
-        <div class="field num"><label>TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"><span class="gap"></span></div>
-        <div class="field num"><label>Max cost $:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="gap"></span></div>
-        <div class="hint">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
+        <div class="field num"><label data-i18n="lblSplitSize">Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="gap"></span></div>
+        <div class="hint" data-i18n-html="hintSplit">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
+        <div class="field num"><label data-i18n="lblTocDepth">TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"><span class="gap"></span></div>
+        <div class="field num"><label data-i18n="lblMaxCost">Max cost $:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="gap"></span></div>
+        <div class="hint" data-i18n-html="hintTocCost">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
     </div>
 </details>
 
 <details id="ollamaDetails">
-    <summary>Ollama settings</summary>
+    <summary data-i18n="secOllama">Ollama settings</summary>
     <div class="body">
-        <div class="field"><label>Model:</label><input type="text" id="ollamaModel" value="gemma3:12b"></div>
-        <div class="field num"><label>Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"><span class="gap"></span></div>
-        <div class="field num"><label>Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="gap"></span></div>
+        <div class="field"><label data-i18n="lblModel">Model:</label><input type="text" id="ollamaModel" value="gemma3:12b"></div>
+        <div class="field num"><label data-i18n="lblParallel">Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"><span class="gap"></span></div>
+        <div class="field num"><label data-i18n="lblContext">Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="gap"></span></div>
     </div>
 </details>
 
 <details id="ocrDetails">
-    <summary>Image OCR (translate text in pictures)</summary>
+    <summary data-i18n="secOCR">Image OCR (translate text in pictures)</summary>
     <div class="body">
-        <label class="chk"><input type="checkbox" id="chkOCR"> Overlay translatable text on images</label>
-        <div class="hint">Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.</div>
-        <div class="field" style="margin-top:8px"><label>OCR language:</label><select id="ocrLang"></select></div>
-        <div class="field"><label>Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button">Download</button></div>
-        <div class="hint" id="ocrStatus">English is built-in; download other languages as needed.</div>
+        <label class="chk"><input type="checkbox" id="chkOCR"> <span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
+        <div class="hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.</div>
+        <div class="field" style="margin-top:8px"><label data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
+        <div class="field"><label data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
+        <div class="hint" id="ocrStatus" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
     </div>
 </details>
 
 <div class="toggles">
-    <label class="chk"><input type="checkbox" id="chkNoOpen"> Don't open browser</label>
-    <label class="chk"><input type="checkbox" id="chkForce"> Force re-process</label>
-    <label class="chk"><input type="checkbox" id="chkVerbose"> Verbose log</label>
+    <label class="chk"><input type="checkbox" id="chkSingle"> <span data-i18n="chkSingle">Single page (no table of contents)</span></label>
+    <label class="chk"><input type="checkbox" id="chkNoOpen"> <span data-i18n="chkNoOpen">Don't open browser</span></label>
+    <label class="chk"><input type="checkbox" id="chkForce"> <span data-i18n="chkForce">Force re-process</span></label>
+    <label class="chk"><input type="checkbox" id="chkVerbose"> <span data-i18n="chkVerbose">Verbose log</span></label>
 </div>
 
 <details id="integrationSection">
-    <summary>Windows integration</summary>
+    <summary data-i18n="secIntegration">Windows integration</summary>
     <div class="body">
         <div class="field">
-            <button onclick="registerHandler()">Set as default handler for EPUB, PDF, ..</button>
+            <button onclick="registerHandler()" data-i18n="btnRegister">Set as default handler for EPUB, PDF, ..</button>
         </div>
-        <div class="hint" id="registerStatus">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
+        <div class="hint" id="registerStatus" data-i18n="registerHint">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
     </div>
 </details>
 
-<details id="logDetails">
-    <summary>Log</summary>
-    <div class="body">
-        <div class="log" id="logArea"></div>
+</div><!-- /col-main -->
+
+<div class="col-log">
+    <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
+    <div class="cmdbar">
+        <div class="cmdline" id="cmdLine"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
+        <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
     </div>
-</details>
+    <div class="stitle" data-i18n="secLog">Log</div>
+    <div class="log" id="logArea"></div>
+</div><!-- /col-log -->
+
+</div><!-- /app -->
 
 <script>
+// ── i18n ────────────────────────────────────────────────
+// The GUI opens in the Windows UI language (reported by /api/env) and can be
+// switched with the EN/RU/UK buttons; the choice is persisted per user. Static
+// text is tagged with data-i18n / data-i18n-html / data-i18n-ph / data-i18n-title;
+// dynamic status lines go through setStatus() so they re-render on a switch.
+const I18N = {
+    en: {
+        cliWarn: "Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.",
+        dropPlaceholder: "Drag a document here, or click to choose one",
+        dropChooseAnother: "click to choose another file",
+        btnConvert: "Convert",
+        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.",
+        lblOutput: "Output:",
+        phOutput: "Leave empty - lands next to the input",
+        btnBrowse: "Browse..",
+        secTranslation: "Translation",
+        engChrome: "Chrome (free)",
+        engGoogle: "Google Cloud",
+        engOllama: "Ollama (local)",
+        engNone: "Don't translate",
+        hintEngine: "Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.",
+        lblLanguages: "Languages:",
+        titleSwap: "Swap source and target",
+        lblGoogleKey: "Google key:",
+        phGoogleKey: "Paste your Google Cloud Translation API key..",
+        btnSave: "Save",
+        googleKeySearching: "Rummaging for a saved key..",
+        secAdvanced: "Advanced",
+        lblSplitSize: "Split size:",
+        hintSplit: "Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.",
+        lblTocDepth: "TOC depth:",
+        lblMaxCost: "Max cost $:",
+        hintTocCost: "TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).",
+        secOllama: "Ollama settings",
+        lblModel: "Model:",
+        lblParallel: "Parallel:",
+        lblContext: "Context:",
+        secOCR: "Image OCR (translate text in pictures)",
+        chkOCRLabel: "Overlay translatable text on images",
+        hintOCR: "Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.",
+        lblOcrLang: "OCR language:",
+        lblAddLang: "Add language:",
+        btnDownload: "Download",
+        ocrStatusDefault: "English is built-in; download other languages as needed.",
+        chkSingle: "Single page (no table of contents)",
+        chkNoOpen: "Don't open browser",
+        chkForce: "Force re-process",
+        chkVerbose: "Verbose log",
+        secIntegration: "Windows integration",
+        btnRegister: "Set as default handler for EPUB, PDF, ..",
+        registerHint: "One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).",
+        secCmdLine: "Command line",
+        cmdPlaceholder: "Pick a file and settings to see the command..",
+        btnCopy: "Copy",
+        cmdCopied: "Copied!",
+        cmdCopyFailed: "Copy failed",
+        titleCopyCmd: "Copy command line to clipboard",
+        secLog: "Log",
+        statusLoading: "Loading {name}..",
+        statusLoadFail: "Could not load file: {msg}",
+        statusLoadedCopy: "Loaded a copy into the app folder; set Output if you want results elsewhere.",
+        googleKeyFound: "A saved key was found. Leave blank to keep it, or paste a new one to replace it.",
+        googleKeyNone: "No key saved yet. Paste it and click Save (kept at {path}) - it never leaves this machine.",
+        googleKeyPathFallback: "per-user folder",
+        googleKeyCheckFail: "Could not check key status: {msg}",
+        googleKeyEnterFirst: "Enter a key before saving. Saving nothing saves nothing.",
+        googleKeySaveFail: "Save failed: {msg}",
+        googleKeySaved: "Key saved. That wasn't so hard.",
+        googleKeySavedUnverified: "Saved, but we could not verify it - Google stayed mysteriously quiet.",
+        registering: "Registering..",
+        registerDone: "Done - this app is now the default handler. Double-clicking a document opens it. (If Windows ignores it: right-click the file -> Open with -> Always.)",
+        registerFail: "Registration failed: {msg}",
+        alertChooseFirst: "Choose an input file first - the converter can't read your mind (yet).",
+        confirmNoKey: "No Google API key is saved - translation will be quietly skipped. Convert anyway?",
+        ocrDownloading: "Downloading {lang}..",
+        ocrInstalledMsg: "{lang} installed.",
+        ocrDownloadFail: "Download failed: {err}",
+        ocrDownloadFailGeneric: "Download failed.",
+        unknownError: "unknown error",
+        unknown: "unknown",
+    },
+    ru: {
+        cliWarn: "Движок конвертера (doc-html-translate.exe) не найден рядом с приложением или в PATH - конвертация не сработает. Держите оба файла вместе.",
+        dropPlaceholder: "Перетащите документ сюда или щёлкните, чтобы выбрать",
+        dropChooseAnother: "щёлкните, чтобы выбрать другой файл",
+        btnConvert: "Конвертировать",
+        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 нужен установленный Calibre.",
+        lblOutput: "Папка вывода:",
+        phOutput: "Оставьте пустым - результат ляжет рядом с исходником",
+        btnBrowse: "Обзор..",
+        secTranslation: "Перевод",
+        engChrome: "Chrome (бесплатно)",
+        engGoogle: "Google Cloud",
+        engOllama: "Ollama (локально)",
+        engNone: "Не переводить",
+        hintEngine: "Chrome (бесплатно): только конвертация, затем перевод в браузере - без API-ключа. Google/Ollama переводят во время конвертации.",
+        lblLanguages: "Языки:",
+        titleSwap: "Поменять исходный и целевой",
+        lblGoogleKey: "Ключ Google:",
+        phGoogleKey: "Вставьте ключ Google Cloud Translation API..",
+        btnSave: "Сохранить",
+        googleKeySearching: "Ищем сохранённый ключ..",
+        secAdvanced: "Дополнительно",
+        lblSplitSize: "Размер блока:",
+        hintSplit: "Символов на блок; <code>0</code> отключает разбиение. Если сомневаетесь - <code>0</code>.",
+        lblTocDepth: "Глубина оглавления:",
+        lblMaxCost: "Макс. стоимость $:",
+        hintTocCost: "Глубина оглавления: <code>0</code> = без ограничений, <code>1</code> = только главы. Макс. стоимость (только платные движки): <code>0</code> = без лимита; напр. <code>2</code> пропустит Google, если оценка превысит $2 (книга всё равно конвертируется, без перевода).",
+        secOllama: "Настройки Ollama",
+        lblModel: "Модель:",
+        lblParallel: "Параллельно:",
+        lblContext: "Контекст:",
+        secOCR: "OCR изображений (перевод текста на картинках)",
+        chkOCRLabel: "Наложить переводимый текст поверх изображений",
+        hintOCR: "Распознаёт текст, впечатанный в изображения (EPUB/PDF), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Нужен установленный Tesseract.",
+        lblOcrLang: "Язык OCR:",
+        lblAddLang: "Добавить язык:",
+        btnDownload: "Скачать",
+        ocrStatusDefault: "Английский встроен; другие языки скачивайте по необходимости.",
+        chkSingle: "Одна страница (без оглавления)",
+        chkNoOpen: "Не открывать браузер",
+        chkForce: "Принудительно переобработать",
+        chkVerbose: "Подробный лог",
+        secIntegration: "Интеграция с Windows",
+        btnRegister: "Сделать обработчиком по умолчанию для EPUB, PDF, ..",
+        registerHint: "Однократная настройка: двойной щелчок по документу будет открывать его этим приложением (записывает пользовательские ассоциации файлов).",
+        secCmdLine: "Командная строка",
+        cmdPlaceholder: "Выберите файл и настройки, чтобы увидеть команду..",
+        btnCopy: "Копировать",
+        cmdCopied: "Скопировано!",
+        cmdCopyFailed: "Не скопировано",
+        titleCopyCmd: "Скопировать командную строку в буфер обмена",
+        secLog: "Лог",
+        statusLoading: "Загрузка {name}..",
+        statusLoadFail: "Не удалось загрузить файл: {msg}",
+        statusLoadedCopy: "Копия загружена в папку приложения; укажите «Папка вывода», если нужен другой путь.",
+        googleKeyFound: "Найден сохранённый ключ. Оставьте пустым, чтобы сохранить его, или вставьте новый для замены.",
+        googleKeyNone: "Ключ ещё не сохранён. Вставьте его и нажмите «Сохранить» (хранится в {path}) - он никогда не покидает этот компьютер.",
+        googleKeyPathFallback: "пользовательскую папку",
+        googleKeyCheckFail: "Не удалось проверить статус ключа: {msg}",
+        googleKeyEnterFirst: "Введите ключ перед сохранением. Сохранять нечего.",
+        googleKeySaveFail: "Не удалось сохранить: {msg}",
+        googleKeySaved: "Ключ сохранён. Не так уж и сложно.",
+        googleKeySavedUnverified: "Сохранено, но проверить не удалось - Google загадочно промолчал.",
+        registering: "Регистрация..",
+        registerDone: "Готово - теперь это приложение обработчик по умолчанию. Двойной щелчок по документу открывает его. (Если Windows игнорирует: правый клик по файлу -> Открыть с помощью -> Всегда.)",
+        registerFail: "Не удалось зарегистрировать: {msg}",
+        alertChooseFirst: "Сначала выберите входной файл - конвертер пока не умеет читать мысли.",
+        confirmNoKey: "Ключ Google API не сохранён - перевод будет тихо пропущен. Всё равно конвертировать?",
+        ocrDownloading: "Скачивание {lang}..",
+        ocrInstalledMsg: "{lang} установлен.",
+        ocrDownloadFail: "Не удалось скачать: {err}",
+        ocrDownloadFailGeneric: "Не удалось скачать.",
+        unknownError: "неизвестная ошибка",
+        unknown: "неизвестно",
+    },
+    uk: {
+        cliWarn: "Рушій конвертера (doc-html-translate.exe) не знайдено поряд із застосунком або в PATH - конвертація не спрацює. Тримайте обидва файли разом.",
+        dropPlaceholder: "Перетягніть документ сюди або клацніть, щоб обрати",
+        dropChooseAnother: "клацніть, щоб обрати інший файл",
+        btnConvert: "Конвертувати",
+        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 потрібен встановлений Calibre.",
+        lblOutput: "Тека виводу:",
+        phOutput: "Залиште порожнім - результат ляже поряд із джерелом",
+        btnBrowse: "Огляд..",
+        secTranslation: "Переклад",
+        engChrome: "Chrome (безкоштовно)",
+        engGoogle: "Google Cloud",
+        engOllama: "Ollama (локально)",
+        engNone: "Не перекладати",
+        hintEngine: "Chrome (безкоштовно): лише конвертація, потім переклад у браузері - без API-ключа. Google/Ollama перекладають під час конвертації.",
+        lblLanguages: "Мови:",
+        titleSwap: "Поміняти джерело та ціль",
+        lblGoogleKey: "Ключ Google:",
+        phGoogleKey: "Вставте ключ Google Cloud Translation API..",
+        btnSave: "Зберегти",
+        googleKeySearching: "Шукаємо збережений ключ..",
+        secAdvanced: "Додатково",
+        lblSplitSize: "Розмір блоку:",
+        hintSplit: "Символів на блок; <code>0</code> вимикає розбиття. Якщо сумніваєтесь - <code>0</code>.",
+        lblTocDepth: "Глибина змісту:",
+        lblMaxCost: "Макс. вартість $:",
+        hintTocCost: "Глибина змісту: <code>0</code> = без обмежень, <code>1</code> = лише розділи. Макс. вартість (лише платні рушії): <code>0</code> = без ліміту; напр. <code>2</code> пропустить Google, якщо оцінка перевищить $2 (книга все одно конвертується, без перекладу).",
+        secOllama: "Налаштування Ollama",
+        lblModel: "Модель:",
+        lblParallel: "Паралельно:",
+        lblContext: "Контекст:",
+        secOCR: "OCR зображень (переклад тексту на картинках)",
+        chkOCRLabel: "Накласти перекладний текст поверх зображень",
+        hintOCR: "Розпізнає текст, вбудований у зображення (EPUB/PDF), і накладає його зверху як справжній текст, щоб переклад охоплював і картинки. Потрібен встановлений Tesseract.",
+        lblOcrLang: "Мова OCR:",
+        lblAddLang: "Додати мову:",
+        btnDownload: "Завантажити",
+        ocrStatusDefault: "Англійська вбудована; інші мови завантажуйте за потреби.",
+        chkSingle: "Одна сторінка (без змісту)",
+        chkNoOpen: "Не відкривати браузер",
+        chkForce: "Примусово переобробити",
+        chkVerbose: "Докладний лог",
+        secIntegration: "Інтеграція з Windows",
+        btnRegister: "Зробити обробником за замовчуванням для EPUB, PDF, ..",
+        registerHint: "Одноразове налаштування: подвійний клік по документу відкриватиме його цим застосунком (записує користувацькі асоціації файлів).",
+        secCmdLine: "Командний рядок",
+        cmdPlaceholder: "Оберіть файл і налаштування, щоб побачити команду..",
+        btnCopy: "Копіювати",
+        cmdCopied: "Скопійовано!",
+        cmdCopyFailed: "Не скопійовано",
+        titleCopyCmd: "Скопіювати командний рядок у буфер обміну",
+        secLog: "Лог",
+        statusLoading: "Завантаження {name}..",
+        statusLoadFail: "Не вдалося завантажити файл: {msg}",
+        statusLoadedCopy: "Копію завантажено в теку застосунку; вкажіть «Тека виводу», якщо потрібен інший шлях.",
+        googleKeyFound: "Знайдено збережений ключ. Залиште порожнім, щоб зберегти його, або вставте новий для заміни.",
+        googleKeyNone: "Ключ ще не збережено. Вставте його та натисніть «Зберегти» (зберігається в {path}) - він ніколи не залишає цей комп'ютер.",
+        googleKeyPathFallback: "користувацьку теку",
+        googleKeyCheckFail: "Не вдалося перевірити стан ключа: {msg}",
+        googleKeyEnterFirst: "Введіть ключ перед збереженням. Зберігати нічого.",
+        googleKeySaveFail: "Не вдалося зберегти: {msg}",
+        googleKeySaved: "Ключ збережено. Не так уже й складно.",
+        googleKeySavedUnverified: "Збережено, але перевірити не вдалося - Google загадково промовчав.",
+        registering: "Реєстрація..",
+        registerDone: "Готово - тепер цей застосунок обробник за замовчуванням. Подвійний клік по документу відкриває його. (Якщо Windows ігнорує: правий клік по файлу -> Відкрити за допомогою -> Завжди.)",
+        registerFail: "Не вдалося зареєструвати: {msg}",
+        alertChooseFirst: "Спочатку оберіть вхідний файл - конвертер поки що не вміє читати думки.",
+        confirmNoKey: "Ключ Google API не збережено - переклад буде тихо пропущено. Все одно конвертувати?",
+        ocrDownloading: "Завантаження {lang}..",
+        ocrInstalledMsg: "{lang} встановлено.",
+        ocrDownloadFail: "Не вдалося завантажити: {err}",
+        ocrDownloadFailGeneric: "Не вдалося завантажити.",
+        unknownError: "невідома помилка",
+        unknown: "невідомо",
+    },
+};
+
+let currentLang = 'en';   // language currently shown
+let userLang = null;      // explicit user choice (from saved settings / buttons)
+let systemLang = null;    // Windows UI language (from /api/env)
+
+function t(key, params) {
+    if (!key) return '';
+    const dict = I18N[currentLang] || I18N.en;
+    let s = (dict[key] != null) ? dict[key] : I18N.en[key];
+    if (s == null) return key;
+    if (params) for (const k in params) s = s.split('{' + k + '}').join(params[k]);
+    return s;
+}
+
+// Dynamic status lines: remember the (key, params, cls) so a language switch
+// re-renders them in the new language.
+const liveStatus = {};
+function setStatus(elId, key, params, cls) {
+    liveStatus[elId] = { key: key, params: params || null, cls: cls || '' };
+    renderStatus(elId);
+}
+function renderStatus(elId) {
+    const s = liveStatus[elId];
+    if (!s) return;
+    const node = document.getElementById(elId);
+    if (!node) return;
+    node.textContent = t(s.key, s.params);
+    node.className = 'hint' + (s.cls ? ' ' + s.cls : '');
+}
+
+function applyLang(lang) {
+    if (!I18N[lang]) lang = 'en';
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+    for (const id in liveStatus) renderStatus(id);
+    document.querySelectorAll('#langSwitch button').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+    });
+}
+
+// System language (from env) is the default; an explicit user choice wins.
+function resolveLang() { applyLang(userLang || systemLang || 'en'); }
+
+document.querySelectorAll('#langSwitch button').forEach(b => {
+    b.addEventListener('click', () => {
+        userLang = b.dataset.lang;
+        applyLang(userLang);
+        saveSettings();
+    });
+});
+
 // ── languages ───────────────────────────────────────────
 // Codes the converter/translator already recognise (see internal/translator),
 // plus a few common extras. Value is the ISO code passed to -src / -dst.
@@ -308,6 +665,7 @@ document.getElementById('btnSwap').addEventListener('click', () => {
     const s = document.getElementById('srcLang'), d = document.getElementById('dstLang');
     const t = s.value; s.value = d.value; d.value = t;
     saveSettings();
+    updateCmdPreview();
 });
 
 // ── heartbeat ───────────────────────────────────────────
@@ -322,11 +680,7 @@ function setInputPath(p) {
     document.getElementById('dropEmpty').style.display = 'none';
     document.getElementById('dropFilled').style.display = '';
     document.getElementById('dropZone').classList.add('has-file');
-}
-function setDropStatus(text, cls) {
-    const el = document.getElementById('dropStatus');
-    el.textContent = text;
-    el.className = 'hint' + (cls ? ' ' + cls : '');
+    updateCmdPreview();
 }
 
 // ── drag & drop into the window ─────────────────────────
@@ -358,22 +712,22 @@ function extractDroppedPath(ev) {
     return '';
 }
 async function uploadDropped(file) {
-    setDropStatus('Loading ' + file.name + '..');
+    setStatus('dropStatus', 'statusLoading', {name: file.name});
     try {
         const r = await fetch('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
-        if (!r.ok) { setDropStatus('Could not load file: ' + (await r.text()).trim(), 'warn'); return; }
+        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', {msg: (await r.text()).trim()}, 'warn'); return; }
         const d = await r.json();
         if (d.path) {
             setInputPath(d.path);
-            setDropStatus('Loaded a copy into the app folder; set Output if you want results elsewhere.');
+            setStatus('dropStatus', 'statusLoadedCopy');
         }
     } catch(e) {
-        setDropStatus('Could not load file: ' + e.message, 'warn');
+        setStatus('dropStatus', 'statusLoadFail', {msg: e.message}, 'warn');
     }
 }
 async function handleDrop(ev) {
     const p = extractDroppedPath(ev);
-    if (p) { setInputPath(p); setDropStatus(''); return; }
+    if (p) { setInputPath(p); setStatus('dropStatus', ''); return; }
     const dt = ev.dataTransfer;
     if (dt && dt.files && dt.files.length) await uploadDropped(dt.files[0]);
 }
@@ -398,6 +752,7 @@ fetch('/api/initial').then(r=>r.json()).then(d=>{
 fetch('/api/env').then(r=>r.json()).then(d=>{
     if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
+    if (d.lang) { systemLang = d.lang; resolveLang(); }
 }).catch(()=>{});
 
 // ── browse buttons ──────────────────────────────────────
@@ -405,14 +760,14 @@ async function browseFile() {
     try {
         const r = await fetch('/api/browse-file', {method:'POST'});
         const d = await r.json();
-        if (d.path) { setInputPath(d.path); setDropStatus(''); }
+        if (d.path) { setInputPath(d.path); setStatus('dropStatus', ''); }
     } catch(e) { console.error('browseFile', e); }
 }
 async function browseFolder() {
     try {
         const r = await fetch('/api/browse-folder', {method:'POST'});
         const d = await r.json();
-        if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); }
+        if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); updateCmdPreview(); }
     } catch(e) { console.error('browseFolder', e); }
 }
 
@@ -432,60 +787,51 @@ function syncEngineUI() {
 }
 
 // ── Google API key ──────────────────────────────────────
-function setKeyStatus(text, cls) {
-    const el = document.getElementById('googleKeyStatus');
-    el.textContent = text;
-    el.className = 'hint' + (cls ? ' ' + cls : '');
-}
 async function refreshGoogleKeyStatus() {
     try {
         const r = await fetch('/api/google-key');
         const d = await r.json();
         if (d.exists) {
-            setKeyStatus('A saved key was found. Leave blank to keep it, or paste a new one to replace it.', 'ok');
+            setStatus('googleKeyStatus', 'googleKeyFound', null, 'ok');
         } else {
-            setKeyStatus('No key saved yet. Paste it and click Save (kept at ' + (d.path || 'per-user folder') + ') - it never leaves this machine.', 'warn');
+            setStatus('googleKeyStatus', 'googleKeyNone', {path: d.path || t('googleKeyPathFallback')}, 'warn');
         }
     } catch(e) {
-        setKeyStatus('Could not check key status: ' + e.message, 'warn');
+        setStatus('googleKeyStatus', 'googleKeyCheckFail', {msg: e.message}, 'warn');
     }
 }
 async function saveGoogleKey() {
     const key = document.getElementById('googleKey').value.trim();
-    if (!key) { setKeyStatus('Enter a key before saving. Saving nothing saves nothing.', 'warn'); return; }
+    if (!key) { setStatus('googleKeyStatus', 'googleKeyEnterFirst', null, 'warn'); return; }
     try {
         const r = await fetch('/api/google-key', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({key}),
         });
-        if (!r.ok) { setKeyStatus('Save failed: ' + (await r.text()).trim(), 'warn'); return; }
+        if (!r.ok) { setStatus('googleKeyStatus', 'googleKeySaveFail', {msg: (await r.text()).trim()}, 'warn'); return; }
         document.getElementById('googleKey').value = '';
         const d = await r.json();
-        setKeyStatus(d.exists ? 'Key saved. That wasn\'t so hard.' : 'Saved, but we could not verify it - Google stayed mysteriously quiet.', d.exists ? 'ok' : 'warn');
+        if (d.exists) setStatus('googleKeyStatus', 'googleKeySaved', null, 'ok');
+        else setStatus('googleKeyStatus', 'googleKeySavedUnverified', null, 'warn');
     } catch(e) {
-        setKeyStatus('Save failed: ' + e.message, 'warn');
+        setStatus('googleKeyStatus', 'googleKeySaveFail', {msg: e.message}, 'warn');
     }
 }
 
 // ── register as default document handler ────────────────
 async function registerHandler() {
-    const st = document.getElementById('registerStatus');
-    st.textContent = 'Registering..';
-    st.className = 'hint';
+    setStatus('registerStatus', 'registering');
     try {
         const r = await fetch('/api/register', {method:'POST'});
         const d = await r.json();
         if (d.ok) {
-            st.textContent = 'Done - this app is now the default handler. Double-clicking a document opens it. (If Windows ignores it: right-click the file -> Open with -> Always.)';
-            st.className = 'hint ok';
+            setStatus('registerStatus', 'registerDone', null, 'ok');
         } else {
-            st.textContent = 'Registration failed: ' + (d.error || 'unknown error');
-            st.className = 'hint warn';
+            setStatus('registerStatus', 'registerFail', {msg: d.error || t('unknownError')}, 'warn');
         }
     } catch(e) {
-        st.textContent = 'Registration failed: ' + e.message;
-        st.className = 'hint warn';
+        setStatus('registerStatus', 'registerFail', {msg: e.message}, 'warn');
     }
 }
 
@@ -496,6 +842,9 @@ const el = id => document.getElementById(id);
 
 function collectSettings() {
     return {
+        // Persist only an explicit language pick (null while following the system
+        // language), so the system language stays the default across sessions.
+        lang:           userLang,
         engine:         currentEngine(),
         output:         el('outputFolder').value,
         srcLang:        el('srcLang').value,
@@ -506,6 +855,7 @@ function collectSettings() {
         ollamaModel:    el('ollamaModel').value,
         ollamaParallel: el('ollamaParallel').value,
         ollamaCtx:      el('ollamaCtx').value,
+        singlePage:     el('chkSingle').checked,
         noOpen:         el('chkNoOpen').checked,
         force:          el('chkForce').checked,
         verbose:        el('chkVerbose').checked,
@@ -515,6 +865,7 @@ function collectSettings() {
 }
 function applySettings(s) {
     if (!s || typeof s !== 'object') return;
+    if (typeof s.lang === 'string') userLang = s.lang;
     if (typeof s.engine === 'string') {
         const r = document.querySelector('input[name="engine"][value="' + s.engine + '"]');
         if (r) r.checked = true;
@@ -523,6 +874,7 @@ function applySettings(s) {
     for (const k of ['srcLang','dstLang','splitSize','tocDepth','maxCost','ollamaModel','ollamaParallel','ollamaCtx']) {
         if (s[k] != null) el(k).value = s[k];
     }
+    if (s.singlePage != null) el('chkSingle').checked = !!s.singlePage;
     if (s.noOpen  != null) el('chkNoOpen').checked  = !!s.noOpen;
     if (s.force   != null) el('chkForce').checked   = !!s.force;
     if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
@@ -546,7 +898,9 @@ function saveSettings() {
 
 fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).finally(() => {
     settingsLoaded = true;
+    resolveLang();
     fitWindow();
+    updateCmdPreview();
 });
 document.addEventListener('change', saveSettings);
 
@@ -568,50 +922,53 @@ async function loadOcrLangs() {
             sel.appendChild(o);
         }
         if ([...sel.options].some(o => o.value === want)) sel.value = want;
+        updateCmdPreview();
     } catch (e) { /* leave selects as-is */ }
 }
 el('btnOcrDownload').addEventListener('click', async () => {
-    const sel = el('ocrDownloadSel'), btn = el('btnOcrDownload'), status = el('ocrStatus');
+    const sel = el('ocrDownloadSel'), btn = el('btnOcrDownload');
     const lang = sel.value;
     if (!lang) return;
     btn.disabled = true;
-    status.textContent = 'Downloading ' + lang + '..';
+    setStatus('ocrStatus', 'ocrDownloading', {lang});
     try {
         const r = await (await fetch('/api/ocr-download', {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang}),
         })).json();
-        if (r.ok) { status.textContent = lang + ' installed.'; el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
-        else { status.textContent = 'Download failed: ' + (r.error || 'unknown'); }
-    } catch (e) { status.textContent = 'Download failed.'; }
+        if (r.ok) { setStatus('ocrStatus', 'ocrInstalledMsg', {lang}); el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
+        else { setStatus('ocrStatus', 'ocrDownloadFail', {err: r.error || t('unknown')}); }
+    } catch (e) { setStatus('ocrStatus', 'ocrDownloadFailGeneric'); }
     btn.disabled = false;
 });
 loadOcrLangs();
 
 // ── fit the window height to its content (no dead space) ─
-function fitWindow() {
+// growOnly: only ever enlarge the window (used when expanding a group), never
+// shrink it back - the user asked for one-way growth.
+function fitWindow(growOnly) {
     try {
         const frame = Math.max(0, window.outerHeight - window.innerHeight);
         const h = Math.min(Math.ceil(document.body.scrollHeight) + frame + 6, screen.availHeight);
-        if (h > 200) window.resizeTo(window.outerWidth, h);
+        if (h <= 200) return;
+        if (growOnly && h <= window.outerHeight) return;
+        window.resizeTo(window.outerWidth, h);
     } catch(e) { /* app window may forbid resize; --window-size is the fallback */ }
 }
 window.addEventListener('load', () => setTimeout(fitWindow, 120));
 
-// ── run ─────────────────────────────────────────────────
-async function runConvert() {
-    const input = document.getElementById('inputFile').value.trim();
-    if (!input) { alert('Choose an input file first - the converter can\'t read your mind (yet).'); return; }
+// Expanding a collapsible group grows the window to reveal it; collapsing leaves
+// the window as-is (no shrink-back, per request).
+document.querySelectorAll('details').forEach(d => {
+    d.addEventListener('toggle', () => { if (d.open) fitWindow(true); });
+});
 
+// ── command config (shared by run + live preview) ───────
+// Mirrors the runRequest the server expects; the preview and the actual run go
+// through the same shape so what you see is what runs.
+function collectRunConfig() {
     const engine = currentEngine();
-    if (engine === 'google') {
-        try {
-            const d = await (await fetch('/api/google-key')).json();
-            if (!d.exists && !confirm('No Google API key is saved - translation will be quietly skipped. Convert anyway?')) return;
-        } catch(e) { /* let the CLI report it */ }
-    }
-
-    const cfg = {
-        input:          input,
+    return {
+        input:          document.getElementById('inputFile').value.trim(),
         output:         document.getElementById('outputFolder').value.trim(),
         noTranslate:    engine === 'none',
         noOpen:         document.getElementById('chkNoOpen').checked,
@@ -622,6 +979,7 @@ async function runConvert() {
         ollamaCtx:      document.getElementById('ollamaCtx').value,
         splitSize:      document.getElementById('splitSize').value,
         tocDepth:       document.getElementById('tocDepth').value,
+        singlePage:     document.getElementById('chkSingle').checked,
         maxCost:        document.getElementById('maxCost').value,
         srcLang:        document.getElementById('srcLang').value,
         dstLang:        document.getElementById('dstLang').value,
@@ -630,11 +988,72 @@ async function runConvert() {
         ocr:            document.getElementById('chkOCR').checked,
         ocrLang:        document.getElementById('ocrLang').value,
     };
+}
+
+// ── live command-line preview ───────────────────────────
+// Ask the server to assemble the exact command the current settings would run
+// (same assembleArgs the run uses), so the box always matches reality.
+let cmdTimer = null;
+function updateCmdPreview() {
+    clearTimeout(cmdTimer);
+    cmdTimer = setTimeout(async () => {
+        try {
+            const r = await fetch('/api/preview', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(collectRunConfig()),
+            });
+            const d = await r.json();
+            el('cmdLine').textContent = d.cmd || '';
+        } catch (e) { /* leave the last preview in place */ }
+    }, 150);
+}
+document.addEventListener('change', updateCmdPreview);
+document.addEventListener('input', updateCmdPreview);
+
+el('btnCopyCmd').addEventListener('click', async () => {
+    const btn = el('btnCopyCmd');
+    const text = el('cmdLine').textContent.trim();
+    if (!text) return;
+    let ok = false;
+    try {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+    } catch (e) {
+        // Clipboard API can be blocked; fall back to a hidden textarea + execCommand.
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+        } catch (e2) { ok = false; }
+    }
+    btn.textContent = ok ? t('cmdCopied') : t('cmdCopyFailed');
+    btn.classList.toggle('done', ok);
+    setTimeout(() => { btn.textContent = t('btnCopy'); btn.classList.remove('done'); }, 1400);
+});
+
+// ── run ─────────────────────────────────────────────────
+async function runConvert() {
+    const input = document.getElementById('inputFile').value.trim();
+    if (!input) { alert(t('alertChooseFirst')); return; }
+
+    const engine = currentEngine();
+    if (engine === 'google') {
+        try {
+            const d = await (await fetch('/api/google-key')).json();
+            if (!d.exists && !confirm(t('confirmNoKey'))) return;
+        } catch(e) { /* let the CLI report it */ }
+    }
+
+    const cfg = collectRunConfig();
 
     const btn = document.getElementById('btnRun');
     const log = document.getElementById('logArea');
-    document.getElementById('logDetails').open = true;
-    fitWindow(); // grow to reveal the log
     btn.disabled = true;
     log.textContent = '';
 

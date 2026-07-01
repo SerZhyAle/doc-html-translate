@@ -8,4 +8,7 @@ coverage.out
 test_epub/
 test_pdf/
 test_txt/
+# Local sample documents used by the integration tests (tests/testdoc_test.go).
+# The files are private and must never be committed; the tests skip when absent.
+test_doc/
 DEV/private/

@@ -27,6 +27,17 @@ Trace from [internal/pipeline/pipeline.go](internal/pipeline/pipeline.go) into t
 (`internal/epub`, `internal/pdf`, ..). Entry points: [cmd/doc-html-translate/main.go](cmd/doc-html-translate/main.go),
 app wiring in [internal/app/app.go](internal/app/app.go) and [internal/config/flags.go](internal/config/flags.go).
 
+## Cross-edition parity
+
+Two independent codebases, no shared code: the Go app (CLI/GUI/MSIX) and the JS browser extension
+(`extension/src`). Logic is hand-ported Go -> JS, so it drifts. **[docs/PARITY.md](docs/PARITY.md) is
+the source of truth** for the port map, the invariants that must match (theme palette, PDF reflow
+constants, EPUB TOC rules, OCR host/catalog/classes, defaults), and the intentional differences (don't
+"fix" them). Any new user-facing feature is **one cross-edition ticket** (template
+[DEV/plan/_TEMPLATE_cross-edition.md](DEV/plan/_TEMPLATE_cross-edition.md)) covering every edition;
+update docs/PARITY.md when you change a shared invariant. Open gaps:
+[DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-07-01_cross-edition-parity.md).
+
 ## Environment (this machine)
 
 - **PowerShell is the shell, and `go` is on PATH in PowerShell - not in the Bash tool.** Run Go via PowerShell.

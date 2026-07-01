@@ -29,35 +29,37 @@ type NavInfo struct {
 	SelfHref   string // this page's href relative to the book root
 }
 
-// navBarCSS is the inline style for the sticky navigation bar.
+// navBarCSS is the inline style for the sticky navigation bar. Colours come from the
+// shared theme variables (readerCSS) so the bar follows the reading theme, matching the
+// browser extension's viewer chrome.
 const navBarCSS = `
 <style id="dht-nav">
   .dht-navbar {
     position: sticky;
     top: 0;
     z-index: 9999;
-    background: #2c3e50;
-    color: #ecf0f1;
+    background: var(--dht-bar-bg);
+    color: var(--dht-bar-fg);
+    border-bottom: 1px solid var(--dht-border);
     display: flex;
     align-items: center;
 		gap: 6px;
 		padding: 6px 10px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Segoe UI", system-ui, Arial, sans-serif;
     font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
   .dht-navbar a {
-    color: #ecf0f1;
+    color: var(--dht-bar-fg);
     text-decoration: none;
-    padding: 4px 12px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 6px;
     transition: background 0.2s;
   }
   .dht-navbar a:hover {
-    background: #34495e;
+    background: rgba(127,127,127,0.14);
   }
   .dht-navbar a.disabled {
-    color: #7f8c8d;
+    color: var(--dht-muted);
     pointer-events: none;
     cursor: default;
   }
@@ -66,16 +68,16 @@ const navBarCSS = `
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 45%;
+    max-width: 40%;
     padding-right: 12px;
   }
   .dht-navbar .nav-title {
     font-weight: 400;
-    color: #bdc3c7;
+    color: var(--dht-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 35%;
+    max-width: 30%;
     padding-right: 12px;
   }
 	.dht-navbar .nav-actions {
@@ -86,20 +88,23 @@ const navBarCSS = `
   }
   .dht-navbar .nav-info {
     font-size: 12px;
-    color: #bdc3c7;
+    color: var(--dht-muted);
 		margin-left: 4px;
   }
   .dht-navbar a.nav-version {
     font-size: 11px;
-    color: #95a5a6;
+    color: var(--dht-muted);
     padding: 2px 6px;
     margin-left: 4px;
     text-decoration: none;
   }
   .dht-navbar a.nav-version:hover {
-    color: #ecf0f1;
-    background: #34495e;
+    color: var(--dht-bar-fg);
+    background: rgba(127,127,127,0.14);
   }
+  /* prev/next turn group, pinned to the far corner for easy "next" clicks */
+  .dht-navbar .nav-turn { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
+  .dht-navbar .nav-turn a.dht-next { font-weight: 600; }
   img {
     max-height: 100vh;
 		height: auto;
@@ -339,21 +344,45 @@ const navBarScript = `
 // readerCSS styles the reading themes ([12]), the theme toggle button, the
 // thin reading-progress bar and the index-page toolbar ([14]). It is injected
 // into <head> on both chapter pages and index.html.
+// readerCSS defines the shared reading themes (light/sepia/dark/night), the reader font
+// variables (size + family), the theme/font controls, and the progress bar. The colour
+// values are the canonical palette shared with the browser extension's viewer.css so both
+// front-ends look identical. Injected into <head> on chapter pages and index.html.
 const readerCSS = `
 <style id="dht-reader-css">
-  html[data-dht-theme="sepia"], html[data-dht-theme="sepia"] body { background:#f4ecd8 !important; color:#5b4636 !important; }
-  html[data-dht-theme="sepia"] a { color:#1a5276 !important; }
-  html[data-dht-theme="dark"], html[data-dht-theme="dark"] body { background:#1e1e1e !important; color:#cfcfcf !important; }
-  html[data-dht-theme="dark"] a { color:#6cb6ff !important; }
-  html[data-dht-theme="night"], html[data-dht-theme="night"] body { background:#0a0a0a !important; color:#8a8a8a !important; }
-  html[data-dht-theme="night"] a { color:#5599d6 !important; }
-  .dht-btn { background:#2c3e50; color:#ecf0f1; border:1px solid #7f8c8d; border-radius:3px; padding:4px 10px; font:inherit; font-size:13px; cursor:pointer; }
-  .dht-btn:hover { background:#34495e; }
-  .dht-navbar .dht-btn { padding:3px 8px; }
-  .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:#3498db; transition:width .12s linear; }
+  :root {
+    --dht-bg:#faf9f7; --dht-fg:#1b1b1b; --dht-muted:#6b6b6b;
+    --dht-bar-bg:#ffffff; --dht-bar-fg:#222222; --dht-border:#e2e0db;
+    --dht-accent:#2563eb; --dht-link:#1a4fb4;
+    --dht-reader-size:100%; --dht-reader-font:Georgia,"Times New Roman",serif;
+  }
+  html[data-dht-theme="sepia"] {
+    --dht-bg:#f4ecd8; --dht-fg:#4a3f2f; --dht-muted:#7a6c54;
+    --dht-bar-bg:#efe6cf; --dht-bar-fg:#4a3f2f; --dht-border:#ddd0b0;
+    --dht-accent:#8a5a2b; --dht-link:#7a4a1b;
+  }
+  html[data-dht-theme="dark"] {
+    --dht-bg:#1a1a1c; --dht-fg:#e6e4df; --dht-muted:#9a9893;
+    --dht-bar-bg:#232327; --dht-bar-fg:#e6e4df; --dht-border:#36363b;
+    --dht-accent:#5b8dff; --dht-link:#8fb4ff;
+  }
+  html[data-dht-theme="night"] {
+    --dht-bg:#0a0a0b; --dht-fg:#9a9a9a; --dht-muted:#6a6a6a;
+    --dht-bar-bg:#131315; --dht-bar-fg:#b8b8b8; --dht-border:#262629;
+    --dht-accent:#5599d6; --dht-link:#6aa8e0;
+  }
+  html, body { background:var(--dht-bg) !important; color:var(--dht-fg) !important; }
+  body { font-size:var(--dht-reader-size); font-family:var(--dht-reader-font); }
+  body a { color:var(--dht-link); }
+  .dht-btn, .dht-navbar select, .dht-toolbar select {
+    background:transparent; color:var(--dht-bar-fg); border:1px solid var(--dht-border);
+    border-radius:6px; padding:3px 8px; font:inherit; font-size:13px; cursor:pointer;
+  }
+  .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
+  .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
   .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
-  .dht-toolbar a.dht-continue { display:none; background:#27ae60; color:#fff; text-decoration:none; padding:4px 10px; border-radius:3px; }
-  .dht-toolbar a.dht-continue:hover { background:#229954; }
+  .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:#fff; text-decoration:none; padding:4px 10px; border-radius:6px; }
+  .dht-toolbar a.dht-continue:hover { filter:brightness(1.08); }
 </style>
 `
 
@@ -371,24 +400,51 @@ func readerScript(bookKey, self string, idx, total int) string {
 	var IDX = %d;
 	var TOTAL = %d;
 
-	var THEMES = ["light","sepia","dark","night"];
-	var LABELS = {light:"☀ Light", sepia:"◑ Sepia", dark:"☾ Dark", night:"● Night"};
-	var THEME_KEY = "dht_theme";
+	var THEME_KEY = "dht_theme", SIZE_KEY = "dht_fontsize", FAM_KEY = "dht_family";
+	var FAMILIES = {
+		serif: 'Georgia,"Times New Roman",serif',
+		sans: '"Segoe UI",system-ui,Arial,sans-serif',
+		mono: '"Cascadia Code",Consolas,monospace'
+	};
+	var MINSZ = 70, MAXSZ = 180, STEPSZ = 10;
 
+	// Theme (dropdown, 4 themes; global, localStorage).
 	function getTheme(){ try { return localStorage.getItem(THEME_KEY) || "light"; } catch(e){ return "light"; } }
 	function applyTheme(t){
 		document.documentElement.setAttribute("data-dht-theme", t);
-		var b = document.getElementById("dht-theme-btn");
-		if (b) b.textContent = LABELS[t] || t;
+		var s = document.getElementById("dht-theme-sel");
+		if (s && s.value !== t) s.value = t;
 	}
-	function cycleTheme(){
-		var next = THEMES[(THEMES.indexOf(getTheme()) + 1) %% THEMES.length];
-		try { localStorage.setItem(THEME_KEY, next); } catch(e){}
-		applyTheme(next);
-	}
+	function setTheme(t){ try { localStorage.setItem(THEME_KEY, t); } catch(e){} applyTheme(t); }
 	applyTheme(getTheme());
-	var tbtn = document.getElementById("dht-theme-btn");
-	if (tbtn) tbtn.addEventListener("click", cycleTheme);
+	var tsel = document.getElementById("dht-theme-sel");
+	if (tsel) tsel.addEventListener("change", function(){ setTheme(tsel.value); });
+
+	// Text size (A-/A+), scales the em-based content without touching images.
+	function getSize(){ var n; try { n = parseInt(localStorage.getItem(SIZE_KEY), 10); } catch(e){} return (!n || Number.isNaN(n)) ? 100 : n; }
+	function applySize(n){
+		if (n < MINSZ) n = MINSZ; if (n > MAXSZ) n = MAXSZ;
+		document.documentElement.style.setProperty("--dht-reader-size", n + "%%");
+		try { localStorage.setItem(SIZE_KEY, String(n)); } catch(e){}
+		return n;
+	}
+	var sizeNow = applySize(getSize());
+	var dec = document.getElementById("dht-font-dec");
+	if (dec) dec.addEventListener("click", function(){ sizeNow = applySize(sizeNow - STEPSZ); });
+	var inc = document.getElementById("dht-font-inc");
+	if (inc) inc.addEventListener("click", function(){ sizeNow = applySize(sizeNow + STEPSZ); });
+
+	// Font family (dropdown).
+	function getFam(){ try { return localStorage.getItem(FAM_KEY) || "serif"; } catch(e){ return "serif"; } }
+	function applyFam(f){
+		document.documentElement.style.setProperty("--dht-reader-font", FAMILIES[f] || FAMILIES.serif);
+		var s = document.getElementById("dht-family-sel");
+		if (s && s.value !== f) s.value = f;
+	}
+	function setFam(f){ try { localStorage.setItem(FAM_KEY, f); } catch(e){} applyFam(f); }
+	applyFam(getFam());
+	var fsel = document.getElementById("dht-family-sel");
+	if (fsel) fsel.addEventListener("change", function(){ setFam(fsel.value); });
 
 	var POS_KEY = "dht_pos:" + BOOK;
 	function readPos(){ try { return JSON.parse(localStorage.getItem(POS_KEY) || "null"); } catch(e){ return null; } }
@@ -465,8 +521,6 @@ func buildNavBarHTML(nav NavInfo) string {
 		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s &#9654;</a>`, html.EscapeString(nav.NextHref), labelNext)
 	}
 
-	themeBtn := `<button id="dht-theme-btn" class="dht-btn" type="button">Theme</button>`
-
 	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
 
@@ -486,9 +540,31 @@ func buildNavBarHTML(nav NavInfo) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
-	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s%s</div>%s%s<div id="dht-progress" class="dht-progress"></div></div>%s%s`,
-		fileEl, titleEl, prevLink, indexLink, nextLink, themeBtn, info, versionLink, navBarScript,
+	// prev/next live in a turn group pinned to the far corner (next flush to the edge)
+	// so "next" is the easiest button to hit while reading.
+	turn := fmt.Sprintf(`<span class="nav-turn">%s%s</span>`, prevLink, nextLink)
+
+	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s`,
+		fileEl, titleEl, indexLink, readerControlsHTML(), versionLink, info, turn, navBarScript,
 		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total))
+}
+
+// readerControlsHTML returns the shared reader controls (text size, font family, theme
+// dropdown) used identically in the chapter navbar and the index toolbar, so both the
+// generated HTML and the browser extension expose the same operations.
+func readerControlsHTML() string {
+	titleSmaller, titleLarger, titleFont, titleTheme := "Smaller text", "Larger text", "Font", "Theme"
+	tLight, tSepia, tDark, tNight := "Light", "Sepia", "Dark", "Night"
+	if syslocale.IsRussian() {
+		titleSmaller, titleLarger, titleFont, titleTheme = "Мельче", "Крупнее", "Шрифт", "Тема"
+		tLight, tSepia, tDark, tNight = "Светлая", "Сепия", "Тёмная", "Ночь"
+	}
+	return fmt.Sprintf(
+		`<button id="dht-font-dec" class="dht-btn" type="button" title="%s">A&minus;</button>`+
+			`<button id="dht-font-inc" class="dht-btn" type="button" title="%s">A+</button>`+
+			`<select id="dht-family-sel" title="%s"><option value="serif">Serif</option><option value="sans">Sans</option><option value="mono">Mono</option></select>`+
+			`<select id="dht-theme-sel" title="%s"><option value="light">&#9728; %s</option><option value="sepia">&#9681; %s</option><option value="dark">&#9790; %s</option><option value="night">&#9679; %s</option></select>`,
+		titleSmaller, titleLarger, titleFont, titleTheme, tLight, tSepia, tDark, tNight)
 }
 
 // versionLabel formats the running app version for display in the navbar.

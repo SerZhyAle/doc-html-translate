@@ -66,6 +66,21 @@ Notes:
 - Translation:
   - internal/translator
 
+## Cross-Edition Parity (READ BEFORE ADDING FEATURES)
+
+The app ships as two independent codebases that do **not** share code: the Go desktop app (CLI / GUI /
+MSIX) and the JavaScript browser extension (`extension/src`). Logic is ported from Go to JS by hand, so
+shared constants and heuristics drift unless they are pinned. **[docs/PARITY.md](docs/PARITY.md) is the
+single source of truth** for the port map (which Go file maps to which JS file), the shared invariants
+that must stay identical (theme palette, PDF reflow constants, EPUB TOC rules, OCR download host /
+catalog / class names, settings defaults), and the intentional divergences (do not "fix" them).
+
+Process: a user-facing feature is **one cross-edition ticket** (template
+[DEV/plan/_TEMPLATE_cross-edition.md](DEV/plan/_TEMPLATE_cross-edition.md)) covering every edition -
+each edition is either implemented or explicitly declined with a rationale. Do not open a separate
+ticket per edition. When you touch a shared invariant, update docs/PARITY.md in the same change. Open
+gaps are tracked in [DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-07-01_cross-edition-parity.md).
+
 ## Conventions And Behavior To Preserve
 
 - Script-first dev flow: prefer existing scripts in scripts/ for routine tasks.
@@ -93,4 +108,5 @@ Notes:
 
 - README.md
 - DEV/README.md
+- docs/PARITY.md (cross-edition invariants + port map - read before adding features)
 - docs/how-i-posted-this-project-to-winget.md

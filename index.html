@@ -248,6 +248,18 @@
   .pill{background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.2); border-radius:999px; padding:5px 13px; font-size:12.5px; color:var(--accent-strong); font-weight:600}
   .pill b{color:var(--text-primary); font-weight:700}
 
+  /* summary panels: always-visible "what it does" + "how to" blocks above the grid */
+  .panel{
+    background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px;
+    -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+    padding:22px 24px; margin:1.6rem 0; box-shadow:var(--shadow); scroll-margin-top:74px;
+  }
+  .panel > h2{font-family:var(--font-heading); font-size:clamp(18px,2.4vw,22px); font-weight:800;
+    letter-spacing:-.015em; margin:0 0 6px; color:var(--text-primary)}
+  .panel > .plead{color:var(--text-secondary); font-size:14.5px; margin:0 0 12px; max-width:70ch}
+  .panel .ksub{font-family:var(--font-heading); font-size:11.5px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.14em; color:var(--accent-purple); margin:24px 0 2px}
+
   table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px}
   th,td{border:1px solid var(--border-color); padding:9px 12px; text-align:left; vertical-align:top}
   th{background:var(--glass-fill); font-family:var(--font-heading); font-weight:700; color:var(--text-primary)}
@@ -435,6 +447,61 @@
 
   <!-- ===================== RU ARTICLE ===================== -->
   <article data-l="ru">
+
+    <!-- capabilities summary -->
+    <section class="panel" aria-label="Что умеет">
+      <h2>Что умеет</h2>
+      <p class="plead">Девять форматов документов на входе, чистый локальный HTML на выходе - с настоящим оглавлением, постраничной навигацией и темами чтения. Дальше читаешь в браузере и переводишь на любой язык бесплатно.</p>
+      <div class="grid">
+        <div class="card"><div class="num">Конвертирует</div><h3>9 форматов → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML превращаются в чистые локальные страницы.</p></div>
+        <div class="card"><div class="num">Читаешь</div><h3>Оглавление + навигация</h3><p>Многоуровневое оглавление, постраничная навигация, темы чтения (свет/сепия/тёмная/ночь) и сохранение позиции.</p></div>
+        <div class="card"><div class="num">Переводишь</div><h3>Любой язык, бесплатно</h3><p>Текст остаётся текстом, поэтому Chrome и Edge переводят всю страницу на лету - без API-ключа и без счёта.</p></div>
+        <div class="card"><div class="num">По желанию</div><h3>Google · Ollama · OCR</h3><p>Подключается Google Cloud или локальная Ollama; OCR достаёт текст из картинок внутри страниц.</p></div>
+      </div>
+      <div class="pills">
+        <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
+        <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+        <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+      </div>
+    </section>
+
+    <!-- how-to, big block with variants -->
+    <section class="panel" id="howto-ru" aria-label="Как это сделать">
+      <h2>Как это сделать - выбери свой путь</h2>
+      <p class="plead">Три способа начать и три способа перевести. Комбинируй как удобно - все пути дают одни и те же читаемые страницы, готовые к переводу.</p>
+
+      <p class="ksub">Как начать</p>
+      <div class="grid">
+        <div class="card"><div class="num">Путь A</div><h3>Двойной клик (GUI)</h3><p>Открой <code>doc-html-ui</code>, перетащи файл, выбери исходный и целевой язык и нажми «Конвертировать». Или зарегистрируй как обработчик файлов и открывай книги двойным кликом.</p></div>
+        <div class="card"><div class="num">Путь B</div><h3>Одна команда (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> конвертирует файл и открывает его в браузере. Флаги добавляют перевод и разбивку на страницы.</p></div>
+        <div class="card"><div class="num">Путь C</div><h3>Расширение для браузера</h3><p>Не хочешь ставить десктоп? Установи <a href="extension.html">расширение для Chrome/Edge</a> и открывай PDF, EPUB, MOBI, FB2, RTF, TXT и Markdown прямо в браузере.</p></div>
+      </div>
+
+      <p class="ksub">Выбери перевод</p>
+      <ul>
+        <li><strong>Браузер (бесплатно, по умолчанию):</strong> конвертируй, затем «Перевести страницу» в Chrome или Edge - на любой из 100+ языков. Без ключей и оплаты.</li>
+        <li><strong>Google Cloud (<code>-google</code>):</strong> перевод через Google Cloud Translation API - 100+ языков, лучшее качество. Положи <code>google_api.key</code> рядом с исполняемым файлом.</li>
+        <li><strong>Локальная Ollama (<code>-ollama</code>):</strong> локальная модель, полностью офлайн - ничего не уходит с твоего ПК.</li>
+      </ul>
+      <div class="cmd">
+        <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопировать">⧉ Скопировать</button></div>
+        <pre># en и ru - лишь значения по умолчанию, -src / -dst принимают любой язык
+doc-html-translate.exe -src en -dst es "book.epub"   # английский -> испанский
+doc-html-translate.exe -src de -dst uk "book.pdf"    # немецкий   -> украинский
+doc-html-translate.exe -src ja -dst en "book.epub"   # японский   -> английский
+doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
+      </div>
+
+      <div class="note"><div class="tag">Любой язык</div><p>Не только английский и русский. <code>-src</code>/<code>-dst</code> принимают любой языковой код, а браузер переводит на 100+ языков - читай на испанском, немецком, французском, польском, итальянском, португальском, турецком, украинском, китайском, японском, корейском, арабском, хинди и далеко за их пределами.</p></div>
+      <div class="pills">
+        <span class="pill"><b>Испанский</b></span><span class="pill"><b>Немецкий</b></span><span class="pill"><b>Французский</b></span>
+        <span class="pill"><b>Польский</b></span><span class="pill"><b>Итальянский</b></span><span class="pill"><b>Португальский</b></span>
+        <span class="pill"><b>Турецкий</b></span><span class="pill"><b>Украинский</b></span><span class="pill"><b>Китайский</b></span>
+        <span class="pill"><b>Японский</b></span><span class="pill"><b>Корейский</b></span><span class="pill"><b>Арабский</b></span>
+        <span class="pill"><b>Хинди</b></span><span class="pill">+ ещё 100</span>
+      </div>
+    </section>
+
     <div class="sections">
 
       <details class="sec">
@@ -577,7 +644,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторий на GitHub</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Последний релиз</a></li>
             <li><a href="docs.ru.html">Полная документация</a></li>
-            <li><a href="extension.html">Расширение для браузера</a> - переводи PDF и EPUB прямо в Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
+            <li><a href="extension.html">Расширение для браузера</a> - переводи PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown и другие прямо в Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
             <li><a href="https://apps.microsoft.com/search?query=doc-html-translate" target="_blank" rel="noopener">Приложение в Microsoft Store</a> - тот же десктоп как MSIX</li>
             <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - переносимый метод работы с ИИ-агентами</li>
           </ul>
@@ -590,6 +657,61 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
 
   <!-- ===================== EN ARTICLE ===================== -->
   <article data-l="en">
+
+    <!-- capabilities summary -->
+    <section class="panel" aria-label="What it does">
+      <h2>What it does</h2>
+      <p class="plead">Nine document formats in, clean local HTML out - with a real table of contents, page navigation and reading themes. Then read in your browser and translate into any language, free.</p>
+      <div class="grid">
+        <div class="card"><div class="num">Convert</div><h3>9 formats → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML become clean local pages.</p></div>
+        <div class="card"><div class="num">Read</div><h3>TOC + navigation</h3><p>Multi-level table of contents, per-page navigation, reading themes (light/sepia/dark/night) and a saved position.</p></div>
+        <div class="card"><div class="num">Translate</div><h3>Any language, free</h3><p>Text stays text, so Chrome and Edge translate the whole page on the fly - no API key, no bill.</p></div>
+        <div class="card"><div class="num">Optional</div><h3>Google · Ollama · OCR</h3><p>Wire in Google Cloud or a local Ollama model; OCR pulls text out of images inside the pages.</p></div>
+      </div>
+      <div class="pills">
+        <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
+        <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+        <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+      </div>
+    </section>
+
+    <!-- how-to, big block with variants -->
+    <section class="panel" id="howto-en" aria-label="How to">
+      <h2>How to do it - pick your path</h2>
+      <p class="plead">Three ways in, three ways to translate. Mix and match - every path produces the same readable, translatable pages.</p>
+
+      <p class="ksub">Ways in</p>
+      <div class="grid">
+        <div class="card"><div class="num">Path A</div><h3>Double-click (GUI)</h3><p>Open <code>doc-html-ui</code>, drop your file in, pick source &amp; target language and hit Convert. Or register it as a file handler and open books with a double-click.</p></div>
+        <div class="card"><div class="num">Path B</div><h3>One command (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> converts the file and opens it in your browser. Flags add translation and paging.</p></div>
+        <div class="card"><div class="num">Path C</div><h3>Browser extension</h3><p>Don't want the desktop app? Install the <a href="extension.html">Chrome/Edge extension</a> and open PDF, EPUB, MOBI, FB2, RTF, TXT and Markdown right in the browser.</p></div>
+      </div>
+
+      <p class="ksub">Pick your translation</p>
+      <ul>
+        <li><strong>Browser (free, default):</strong> convert, then "Translate page" in Chrome or Edge - into any of 100+ languages. No key, no billing.</li>
+        <li><strong>Google Cloud (<code>-google</code>):</strong> the Google Cloud Translation API - 100+ languages, top quality. Drop a <code>google_api.key</code> next to the executable.</li>
+        <li><strong>Local Ollama (<code>-ollama</code>):</strong> a local model, fully offline - nothing leaves your PC.</li>
+      </ul>
+      <div class="cmd">
+        <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Copy">⧉ Copy</button></div>
+        <pre># en and ru are only defaults - -src / -dst take any language
+doc-html-translate.exe -src en -dst es "book.epub"   # English  -> Spanish
+doc-html-translate.exe -src de -dst uk "book.pdf"    # German   -> Ukrainian
+doc-html-translate.exe -src ja -dst en "book.epub"   # Japanese -> English
+doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
+      </div>
+
+      <div class="note"><div class="tag">Any language</div><p>Not just English and Russian. <code>-src</code>/<code>-dst</code> accept any language code, and the browser translates into 100+ languages - so you can read in Spanish, German, French, Polish, Italian, Portuguese, Turkish, Ukrainian, Chinese, Japanese, Korean, Arabic, Hindi and far beyond.</p></div>
+      <div class="pills">
+        <span class="pill"><b>Spanish</b></span><span class="pill"><b>German</b></span><span class="pill"><b>French</b></span>
+        <span class="pill"><b>Polish</b></span><span class="pill"><b>Italian</b></span><span class="pill"><b>Portuguese</b></span>
+        <span class="pill"><b>Turkish</b></span><span class="pill"><b>Ukrainian</b></span><span class="pill"><b>Chinese</b></span>
+        <span class="pill"><b>Japanese</b></span><span class="pill"><b>Korean</b></span><span class="pill"><b>Arabic</b></span>
+        <span class="pill"><b>Hindi</b></span><span class="pill">+ 100 more</span>
+      </div>
+    </section>
+
     <div class="sections">
 
       <details class="sec">
@@ -732,7 +854,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub repository</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Latest release</a></li>
             <li><a href="docs.html">Full documentation</a></li>
-            <li><a href="extension.html">Browser extension</a> - translate PDFs and EPUBs right in Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
+            <li><a href="extension.html">Browser extension</a> - translate PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown &amp; more right in Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
             <li><a href="https://apps.microsoft.com/search?query=doc-html-translate" target="_blank" rel="noopener">Microsoft Store app</a> - the same desktop app as an MSIX</li>
             <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - a portable method for working with AI agents</li>
           </ul>
@@ -745,6 +867,61 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
 
   <!-- ===================== UK ARTICLE ===================== -->
   <article data-l="uk">
+
+    <!-- capabilities summary -->
+    <section class="panel" aria-label="Що вміє">
+      <h2>Що вміє</h2>
+      <p class="plead">Дев'ять форматів документів на вході, чистий локальний HTML на виході - зі справжнім змістом, посторінковою навігацією та темами читання. Далі читаєш у браузері й перекладаєш будь-якою мовою безкоштовно.</p>
+      <div class="grid">
+        <div class="card"><div class="num">Конвертує</div><h3>9 форматів → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown і HTML стають чистими локальними сторінками.</p></div>
+        <div class="card"><div class="num">Читаєш</div><h3>Зміст + навігація</h3><p>Багаторівневий зміст, посторінкова навігація, теми читання (світла/сепія/темна/ніч) і збереження позиції.</p></div>
+        <div class="card"><div class="num">Перекладаєш</div><h3>Будь-яка мова, безкоштовно</h3><p>Текст лишається текстом, тож Chrome і Edge перекладають усю сторінку на льоту - без API-ключа й без рахунку.</p></div>
+        <div class="card"><div class="num">За бажанням</div><h3>Google · Ollama · OCR</h3><p>Підключається Google Cloud або локальна Ollama; OCR дістає текст із картинок усередині сторінок.</p></div>
+      </div>
+      <div class="pills">
+        <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
+        <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
+        <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+      </div>
+    </section>
+
+    <!-- how-to, big block with variants -->
+    <section class="panel" id="howto-uk" aria-label="Як це зробити">
+      <h2>Як це зробити - обери свій шлях</h2>
+      <p class="plead">Три способи почати і три способи перекласти. Поєднуй як зручно - усі шляхи дають ті самі читабельні сторінки, готові до перекладу.</p>
+
+      <p class="ksub">Як почати</p>
+      <div class="grid">
+        <div class="card"><div class="num">Шлях A</div><h3>Подвійний клік (GUI)</h3><p>Відкрий <code>doc-html-ui</code>, перетягни файл, обери вихідну й цільову мову та натисни «Конвертувати». Або зареєструй як обробник файлів і відкривай книжки подвійним кліком.</p></div>
+        <div class="card"><div class="num">Шлях B</div><h3>Одна команда (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> конвертує файл і відкриває його в браузері. Прапорці додають переклад і розбивку на сторінки.</p></div>
+        <div class="card"><div class="num">Шлях C</div><h3>Розширення для браузера</h3><p>Не хочеш ставити десктоп? Встанови <a href="extension.html">розширення для Chrome/Edge</a> і відкривай PDF, EPUB, MOBI, FB2, RTF, TXT та Markdown прямо в браузері.</p></div>
+      </div>
+
+      <p class="ksub">Обери переклад</p>
+      <ul>
+        <li><strong>Браузер (безкоштовно, за замовчуванням):</strong> конвертуй, потім «Перекласти сторінку» в Chrome чи Edge - будь-якою зі 100+ мов. Без ключів і оплати.</li>
+        <li><strong>Google Cloud (<code>-google</code>):</strong> переклад через Google Cloud Translation API - 100+ мов, найкраща якість. Поклади <code>google_api.key</code> поруч із виконуваним файлом.</li>
+        <li><strong>Локальна Ollama (<code>-ollama</code>):</strong> локальна модель, повністю офлайн - нічого не залишає твій ПК.</li>
+      </ul>
+      <div class="cmd">
+        <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопіювати">⧉ Скопіювати</button></div>
+        <pre># en і ru - лише значення за замовчуванням, -src / -dst приймають будь-яку мову
+doc-html-translate.exe -src en -dst es "book.epub"   # англійська -> іспанська
+doc-html-translate.exe -src de -dst uk "book.pdf"    # німецька   -> українська
+doc-html-translate.exe -src ja -dst en "book.epub"   # японська   -> англійська
+doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
+      </div>
+
+      <div class="note"><div class="tag">Будь-яка мова</div><p>Не лише англійська та російська. <code>-src</code>/<code>-dst</code> приймають будь-який мовний код, а браузер перекладає на 100+ мов - читай іспанською, німецькою, французькою, польською, італійською, португальською, турецькою, українською, китайською, японською, корейською, арабською, гінді та далеко поза ними.</p></div>
+      <div class="pills">
+        <span class="pill"><b>Іспанська</b></span><span class="pill"><b>Німецька</b></span><span class="pill"><b>Французька</b></span>
+        <span class="pill"><b>Польська</b></span><span class="pill"><b>Італійська</b></span><span class="pill"><b>Португальська</b></span>
+        <span class="pill"><b>Турецька</b></span><span class="pill"><b>Українська</b></span><span class="pill"><b>Китайська</b></span>
+        <span class="pill"><b>Японська</b></span><span class="pill"><b>Корейська</b></span><span class="pill"><b>Арабська</b></span>
+        <span class="pill"><b>Гінді</b></span><span class="pill">+ ще 100</span>
+      </div>
+    </section>
+
     <div class="sections">
 
       <details class="sec">
@@ -887,7 +1064,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторій на GitHub</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Останній реліз</a></li>
             <li><a href="docs.uk.html">Повна документація</a></li>
-            <li><a href="extension.html">Розширення для браузера</a> - перекладай PDF і EPUB прямо в Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
+            <li><a href="extension.html">Розширення для браузера</a> - перекладай PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown та інші прямо в Chrome/Edge (<a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>)</li>
             <li><a href="https://apps.microsoft.com/search?query=doc-html-translate" target="_blank" rel="noopener">Застосунок у Microsoft Store</a> - той самий десктоп як MSIX</li>
             <li><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener">Universal Agent Kit</a> - переносний метод роботи з ШІ-агентами</li>
           </ul>

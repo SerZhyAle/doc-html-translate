@@ -1,12 +1,15 @@
 # App + GUI: OCR text overlay on document images
 
-**Status:** Implemented - awaiting manual test (needs tesseract installed)
+**Status:** Implemented - OCR engine path verified; full document/GUI flow pending manual test
 **Priority:** 50
 **Date:** 2026-07-01
 
-> All 5 phases implemented. `go build ./...`, `go vet ./...`, and the full `go test ./...` suite (17
-> packages) pass; `internal/ocr` has unit tests for TSV parsing and plate positioning. The actual OCR
-> run needs a Tesseract binary (not present on this machine) - verify manually per Done criteria below.
+> All 5 phases implemented and committed (build bc72494). Gate green (test + lint + typos); full
+> `go test ./...` passes. Tesseract 5.4.0 installed locally (winget UB-Mannheim, added to user PATH);
+> a throwaway smoke test drove ocr.Recognize on a generated image and correctly returned "Hello World"
+> with sane bbox/lineH - so the tesseract shell-out, TSV parse, and block grouping are verified against
+> the real binary. Still to verify by hand: the full pipeline on a real EPUB/PDF with image text
+> (overlay placement + translation) and the GUI Image-OCR section / language download.
 
 Bring the browser-extension's OCR-overlay feature to the main Go app (`doc-html-translate`) and its GUI
 (`doc-html-ui`): an opt-in option that, while converting a document to HTML, recognizes text baked into

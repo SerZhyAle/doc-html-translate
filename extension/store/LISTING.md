@@ -7,6 +7,11 @@ action is automated.
 The Edge Add-ons submission is still pending - reuse the same copy below (see the Edge notes at the end).
 Keep this file in sync with the published listing when the description changes.
 
+> **Owner sign-off required (ticket 2026-07-01_extension-format-parity):** the extension now opens nine
+> formats (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML), not just PDF/EPUB. The name,
+> short and detailed copy below is a draft reflecting the wider range - review and finalize the marketing
+> wording (especially the store **name**, which changes the listing identity) before the next publication.
+
 ## Localization (RU / UK)
 The extension is localized via `_locales/{en,ru,uk}/messages.json` (`default_locale: en`). Chrome and Edge
 auto-serve the localized **name** and **short description** from those files based on the user's browser
@@ -19,45 +24,46 @@ message keys (`storeDescription`, `shot1Caption`..`shot3Caption`) into each stor
 The RU/UK strings below are the canonical source; keep them in sync with `_locales`.
 
 ## Name
-PDF & EPUB Page Translator (Free & Local)
-- RU: Переводчик страниц PDF и EPUB (бесплатно, локально)
-- UK: Перекладач сторінок PDF та EPUB (безкоштовно, локально)
+Document Page Translator - PDF, EPUB, MOBI & more (Free & Local)
+- RU: Переводчик страниц: PDF, EPUB, MOBI и другие (бесплатно, локально)
+- UK: Перекладач сторінок: PDF, EPUB, MOBI та інші (безкоштовно, локально)
 
 ## Short description (<= 132 chars)
-Translate any PDF & EPUB for free in Chrome using your browser's built-in translator. 100% local, fast, and secure.
-- RU: Переводите любые PDF и EPUB бесплатно встроенным переводчиком браузера. Полностью локально, быстро и безопасно.
-- UK: Перекладайте будь-які PDF та EPUB безкоштовно вбудованим перекладачем браузера. Повністю локально, швидко й безпечно.
+Translate PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown & HTML for free using your browser's built-in translator. 100% local.
+- RU: Переводите PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML бесплатно встроенным переводчиком браузера. Локально.
+- UK: Перекладайте PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown та HTML безкоштовно вбудованим перекладачем браузера. Локально.
 
 ## Category
 Productivity
 
 ## Single-purpose statement
-This extension has one purpose: when you open a PDF or EPUB, it re-renders the document's text as clean,
-reflowed HTML in a local viewer so the browser's built-in "Translate page" feature can translate it. It
-does not do anything else.
+This extension has one purpose: when you open a document (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown,
+or local HTML), it re-renders the document's text as clean, reflowed HTML in a local viewer so the
+browser's built-in "Translate page" feature can translate it. It does not do anything else.
 
 ## Detailed description
 Chrome and Edge have excellent built-in translators that translate any webpage instantly and for free. But they don't work on books and documents:
 1. **PDFs** are rendered on a canvas, making the text invisible to the browser's translator.
 2. **EPUBs** cannot be opened in the browser at all; they just trigger a download.
 
-**"PDF & EPUB Page Translator" quietly solves both problems!**
+**This extension quietly solves both problems - and opens seven more document formats too!**
 
 ### How it works:
-When you open a PDF or EPUB file, this extension automatically intercepts it and converts the text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!
+When you open a supported document (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, or local HTML), this extension converts its text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!
 
 ### Key Features:
 - 📖 **EPUB Reader**: Unpacks EPUB books and combines chapters into a single scrollable document for seamless translation.
 - 📄 **PDF Reflow**: Extracts text and lays it out as readable paragraphs, making sure the translator doesn't break, overlap, or double text.
+- 📚 **More formats**: Also opens MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML - each converted to clean, translatable text, with no Calibre or any other app required.
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
-- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), or turn on "Use OCR for images" for PDFs and EPUBs, to recognize the text baked into pictures and lay it over them as real text - so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
+- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file (PNG, JPEG, GIF, BMP, WebP) with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
 - 🔒 **100% Local & Private**: Everything runs entirely on your device. Your documents are never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 
 ### How to use:
 1. Install the extension.
-2. Open any PDF or EPUB file in your browser (or click the extension icon to select a local file).
+2. Open any supported document in your browser, or click the extension icon to select a local file.
 3. Right-click anywhere on the page and select **"Translate"** to translate the entire document into your language for free!
 
 Privacy: Everything runs on your device. The extension never uploads your documents anywhere — it has no server to send them to and no interest in your reading list. The only network access is your browser's own translation feature, which you trigger yourself.
@@ -65,8 +71,8 @@ Privacy: Everything runs on your device. The extension never uploads your docume
 Limitations: Scanned/image-only PDFs have no text to translate (the extension detects this and offers the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
 
 ## Permission justifications (for the review form)
-- declarativeNetRequest: used with dynamic rules created at runtime to redirect main_frame `*.pdf` and
-  `*.epub` loads to the bundled local viewer. The extension does not read or modify the content of other
+- declarativeNetRequest: used with dynamic rules created at runtime to redirect main_frame document loads
+  (`*.pdf`, `*.epub`, `*.mobi`, `*.azw3`, `*.fb2`, `*.rtf`) to the bundled local viewer. The extension does not read or modify the content of other
   sites; the rules are plain URL redirects.
 - host_permissions (`<all_urls>`): required because the viewer fetches the opened document's bytes for
   local rendering and the file can live on any origin, and because the toolbar popup reads the active

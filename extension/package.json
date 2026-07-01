@@ -16,6 +16,9 @@
     "release:edge": "npm run build && npm run publish:edge"
   },
   "devDependencies": {
+    "fflate": "^0.8.3",
+    "foliate-js": "^1.0.1",
+    "marked": "^12.0.0",
     "pdfjs-dist": "^4.10.38",
     "tesseract.js": "^5.1.1",
     "tesseract.js-core": "^5.1.1"

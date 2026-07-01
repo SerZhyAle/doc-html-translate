@@ -1,19 +1,20 @@
-# Privacy Policy - PDF / EPUB to translatable HTML
+# Privacy Policy - Documents to translatable HTML
 
 _Last updated: 2026-07-01_
 
 _Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html — rendered from this text as `extension-privacy.html` in the repo root._
 
 ## Summary
-This extension processes PDFs and EPUBs entirely on your device. It does not collect, store, or transmit
-your documents or any personal data to us or to any third party.
+This extension processes documents - PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML -
+entirely on your device. It does not collect, store, or transmit your documents or any personal data to
+us or to any third party.
 
 ## What the extension does
-When you open a PDF or EPUB, the extension redirects the page to a local viewer bundled with the
-extension. The viewer reads the file's bytes in your browser and re-renders its text as HTML so your
-browser's built-in "Translate page" feature can work on it. All extraction and rendering happen locally,
-using bundled code (PDF.js for PDF; a self-contained unzip + HTML pipeline for EPUB) - no code is
-downloaded at runtime.
+When you open a supported document, the extension opens it in a local viewer bundled with the extension.
+The viewer reads the file's bytes in your browser and re-renders its text as HTML so your browser's
+built-in "Translate page" feature can work on it. All extraction and rendering happen locally, using
+bundled code (PDF.js for PDF; a self-contained unzip + HTML pipeline for EPUB; `marked` for Markdown;
+`foliate-js` for MOBI/AZW3; and small readers for FB2/RTF/TXT/HTML) - no code is downloaded at runtime.
 
 ## Image text recognition (OCR)
 The extension can recognize text baked into images - both images inside your PDFs/EPUBs and any image
@@ -34,7 +35,7 @@ is enabled (globally and per-site), and your reading preferences (font size, fon
 data never leaves your device and is removed if you uninstall the extension.
 
 ## Network access
-The extension itself makes no network requests to any server we control. It fetches the PDF or EPUB you
+The extension itself makes no network requests to any server we control. It fetches the document you
 opened (from the site or local file you chose) in order to render it, and it fetches an image you asked
 it to OCR. The only outbound request beyond that is optional: when you explicitly download an extra OCR
 language, its data file is fetched from the public open-source host named above and cached locally.

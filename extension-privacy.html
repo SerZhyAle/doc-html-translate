@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy - doc-html-translate browser extension</title>
-<meta name="description" content="Privacy policy for the doc-html-translate browser extension: no data collection, no telemetry, no remote code. PDFs and EPUBs are processed entirely on your device.">
+<meta name="description" content="Privacy policy for the doc-html-translate browser extension: no data collection, no telemetry, no remote code. Documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) are processed entirely on your device.">
 <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html">
 <meta name="theme-color" content="#0a0f0a">
 <link rel="icon" href="assets/doc-html-translate.ico">
@@ -92,17 +92,19 @@
       <h1>Privacy Policy</h1>
       <div class="updated">doc-html-translate browser extension &middot; last updated 2026-06-26</div>
 
-      <p class="lead"><strong>The doc-html-translate browser extension processes PDFs and EPUBs entirely
-      on your device.</strong> It does not collect, store, or transmit your documents or any personal
+      <p class="lead"><strong>The doc-html-translate browser extension processes documents (PDF, EPUB,
+      MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML) entirely on your device.</strong> It does not
+      collect, store, or transmit your documents or any personal
       data to us or to any third party. It has no servers, no telemetry, no analytics, no ads, and no
       accounts, and it loads no remote code.</p>
 
       <h2>What the extension does</h2>
-      <p>When you open a PDF or EPUB, the extension redirects the page to a local viewer bundled with the
+      <p>When you open a supported document, the extension opens it in a local viewer bundled with the
       extension. The viewer reads the file's bytes in your browser and re-renders its text as HTML so
       your browser's built-in "Translate page" feature can work on it. All extraction and rendering
-      happen locally, using bundled code (a copy of PDF.js for PDF; a self-contained unzip + HTML
-      pipeline for EPUB). No code is downloaded or executed from a remote server.</p>
+      happen locally, using bundled code (PDF.js for PDF; a self-contained unzip + HTML pipeline for
+      EPUB; marked for Markdown; foliate-js for MOBI/AZW3; and small readers for FB2/RTF/TXT/HTML). No
+      code is downloaded or executed from a remote server.</p>
 
       <h2>Data we collect</h2>
       <p>None. We have no servers and receive no data from the extension.</p>
@@ -113,15 +115,15 @@
       theme). This data never leaves your device and is removed if you uninstall the extension.</p>
 
       <h2>Network access</h2>
-      <p>The extension itself makes no network requests to any server we control. It fetches the PDF or
-      EPUB you opened (from the site or local file you chose) in order to render it. Translation is
+      <p>The extension itself makes no network requests to any server we control. It fetches the document
+      you opened (from the site or local file you chose) in order to render it. Translation is
       performed by your browser's own built-in translation feature, which you invoke yourself; that
       feature is governed by your browser vendor's privacy policy, not ours.</p>
 
       <h2>Permissions</h2>
       <ul>
         <li><strong>declarativeNetRequest</strong> and <strong>host access</strong> - used solely to
-          redirect PDF/EPUB opens to the local viewer and to fetch the opened file for local rendering.
+          redirect document opens to the local viewer and to fetch the opened file for local rendering.
           No browsing data is read or transmitted.</li>
         <li><strong>storage</strong> - used solely to save the settings described above.</li>
       </ul>

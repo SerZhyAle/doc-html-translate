@@ -1,85 +1,76 @@
 param(
-    [string]$Output = "assets/doc-html-translate.ico"
+    [string]$Output = "assets/doc-html-translate.ico",
+    [string]$Source = "tools/store/logos/boxart-1x1-1080x1080.png"
 )
 
 $ErrorActionPreference = "Stop"
 
-Add-Type -AssemblyName PresentationCore
-Add-Type -AssemblyName PresentationFramework
-Add-Type -AssemblyName WindowsBase
+# Build a proper multi-resolution .ico from the canonical project logo so Windows
+# renders a crisp icon at every size (taskbar 16/24/32, large icons up to 256) instead
+# of scaling a single low-res frame. Each frame is stored PNG-compressed (supported by
+# Windows Vista+), which keeps the file small and preserves the alpha edges.
 
-$width = 64
-$height = 64
+Add-Type -AssemblyName System.Drawing
 
-$visual = New-Object System.Windows.Media.DrawingVisual
-$ctx = $visual.RenderOpen()
+if (-not (Test-Path $Source)) {
+    throw "Source logo not found: $Source"
+}
 
-$bg = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(30, 58, 138))
-$fg = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
+$sizes = @(16, 24, 32, 48, 64, 128, 256)
 
-$ctx.DrawRectangle($bg, $null, (New-Object System.Windows.Rect(0, 0, $width, $height)))
+$src = [System.Drawing.Image]::FromFile((Resolve-Path $Source).Path)
+try {
+    $frames = @()
+    foreach ($s in $sizes) {
+        $bmp = New-Object System.Drawing.Bitmap($s, $s, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+        $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+        $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+        $g.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+        $g.DrawImage($src, (New-Object System.Drawing.Rectangle(0, 0, $s, $s)))
+        $g.Dispose()
 
-$fontFamily = New-Object System.Windows.Media.FontFamily("Segoe UI")
-$typeface = New-Object System.Windows.Media.Typeface($fontFamily, [System.Windows.FontStyles]::Normal, [System.Windows.FontWeights]::Bold, [System.Windows.FontStretches]::Normal)
-
-$line1 = New-Object System.Windows.Media.FormattedText(
-    "DOC",
-    [System.Globalization.CultureInfo]::InvariantCulture,
-    [System.Windows.FlowDirection]::LeftToRight,
-    $typeface,
-    14,
-    $fg,
-    1.0
-)
-
-$line2 = New-Object System.Windows.Media.FormattedText(
-    "HTML",
-    [System.Globalization.CultureInfo]::InvariantCulture,
-    [System.Windows.FlowDirection]::LeftToRight,
-    $typeface,
-    15,
-    $fg,
-    1.0
-)
-
-$ctx.DrawText($line1, (New-Object System.Windows.Point(7, 14)))
-$ctx.DrawText($line2, (New-Object System.Windows.Point(11, 34)))
-$ctx.Close()
-
-$rtb = New-Object System.Windows.Media.Imaging.RenderTargetBitmap($width, $height, 96, 96, [System.Windows.Media.PixelFormats]::Pbgra32)
-$rtb.Render($visual)
-
-$pngEncoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
-$pngEncoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($rtb))
-
-$pngStream = New-Object System.IO.MemoryStream
-$pngEncoder.Save($pngStream)
-$pngBytes = $pngStream.ToArray()
-$pngStream.Dispose()
-
-$iconDir = [byte[]](0,0,1,0,1,0)
-$entry = New-Object System.IO.MemoryStream
-$bw = New-Object System.IO.BinaryWriter($entry)
-
-$bw.Write([byte]$width)
-$bw.Write([byte]$height)
-$bw.Write([byte]0)
-$bw.Write([byte]0)
-$bw.Write([UInt16]1)
-$bw.Write([UInt16]32)
-$bw.Write([UInt32]$pngBytes.Length)
-$bw.Write([UInt32]22)
-$bw.Flush()
-$entryBytes = $entry.ToArray()
-$bw.Dispose()
-$entry.Dispose()
+        $ms = New-Object System.IO.MemoryStream
+        $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+        $bmp.Dispose()
+        $frames += , @{ Size = $s; Data = $ms.ToArray() }
+        $ms.Dispose()
+    }
+} finally {
+    $src.Dispose()
+}
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Output) | Out-Null
 
-$outStream = [System.IO.File]::Open($Output, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
-$outStream.Write($iconDir, 0, $iconDir.Length)
-$outStream.Write($entryBytes, 0, $entryBytes.Length)
-$outStream.Write($pngBytes, 0, $pngBytes.Length)
-$outStream.Dispose()
+$out = [System.IO.File]::Open($Output, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
+$bw = New-Object System.IO.BinaryWriter($out)
 
-Write-Host "Icon generated: $Output"
+# ICONDIR: reserved, type (1 = icon), image count.
+$bw.Write([UInt16]0)
+$bw.Write([UInt16]1)
+$bw.Write([UInt16]$frames.Count)
+
+# Frame data starts right after the directory (6 bytes) + one 16-byte entry per frame.
+$offset = 6 + 16 * $frames.Count
+foreach ($f in $frames) {
+    $dim = if ($f.Size -ge 256) { 0 } else { $f.Size } # 0 means 256 in the ICONDIRENTRY
+    $bw.Write([byte]$dim)          # width
+    $bw.Write([byte]$dim)          # height
+    $bw.Write([byte]0)             # color count (0 = truecolor)
+    $bw.Write([byte]0)             # reserved
+    $bw.Write([UInt16]1)           # color planes
+    $bw.Write([UInt16]32)          # bits per pixel
+    $bw.Write([UInt32]$f.Data.Length)
+    $bw.Write([UInt32]$offset)
+    $offset += $f.Data.Length
+}
+foreach ($f in $frames) {
+    $bw.Write($f.Data)
+}
+
+$bw.Flush()
+$bw.Dispose()
+$out.Dispose()
+
+Write-Host "Icon generated: $Output ($($frames.Count) sizes: $($sizes -join ', '))"

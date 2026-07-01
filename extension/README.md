@@ -1,9 +1,11 @@
-# PDF / EPUB -> translatable HTML (browser extension)
+# Documents -> translatable HTML (browser extension)
 
-A Chromium MV3 extension that intercepts PDF **and EPUB** opens and re-renders them as clean,
-semantic HTML so the browser's built-in **Translate page** works on them for free (no API key, no invoice, no catch).
-Spin-off of [doc-html-translate](../README.md); it ports that app's proven PDF reflow and EPUB
-extraction heuristics to run in-browser (PDF.js for PDF, a native unzip + DOM pipeline for EPUB).
+A Chromium MV3 extension that opens **PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown and local HTML**
+and re-renders them as clean, semantic HTML so the browser's built-in **Translate page** works on them
+for free (no API key, no invoice, no catch). Spin-off of [doc-html-translate](../README.md); it ports
+that app's format extractors to run in-browser - PDF.js for PDF, a native unzip + DOM pipeline for EPUB,
+hand-ported readers for TXT/RTF/FB2/HTML, the vendored `marked` for Markdown, and the vendored
+`foliate-js` for MOBI/AZW3 (replacing the desktop's Calibre dependency).
 
 **Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)** (Chrome and Edge / Chromium). An Edge Add-ons listing is still planned; you can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
 
@@ -19,16 +21,28 @@ its images to `blob:` URLs and its internal links to in-page anchors, and readin
 (EPUB3 `nav.xhtml` or EPUB2 `toc.ncx`). All chapters are combined into one scrollable document so native
 translate sees the whole book at once.
 
+## Parity with the desktop app
+
+This extension re-implements the desktop app's Go logic in JavaScript - there is no shared code, so the
+two drift unless kept in sync deliberately. The canonical map of which JS module ports which Go file,
+the invariants that must stay identical (theme palette, PDF reflow constants, EPUB TOC rules, OCR
+download host / language catalog / CSS classes, defaults) and the intentional differences live in
+**[../docs/PARITY.md](../docs/PARITY.md)**. Read it before changing ported logic; the per-file "ported
+from" notes below are a pointer, not the source of truth.
+
 ## Layout
 
 ```text
 manifest.json          MV3 manifest
 src/
   background.js        service worker: declarativeNetRequest interception + on/off toggle + "open original"
-  viewer.html/.js/.css viewer (the redirect target); sniffs PDF vs EPUB and routes to the right reader
+  viewer.html/.js/.css viewer (the redirect target); detectFormat routes to the right reader -> renderBook
   reflow.js            PDF paragraph/heading heuristics ported from internal/pdf/extract.go
   toc.js               PDF outline -> nested TOC, ported from internal/pdf/toc.go
   epub.js              EPUB: unzip + OPF/spine + nav/NCX TOC + chapter sanitize, ported from internal/epub
+  txt.js rtf.js html.js md.js fb2.js  ported readers for TXT / RTF / local HTML / Markdown / FB2
+  ebook.js             MOBI + AZW3 (KF8) via vendored foliate-js (replaces the desktop's Calibre)
+  sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
   lang.js              source-language detection -> <html lang>
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
   options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
@@ -36,7 +50,7 @@ src/
   ocr-overlay.js/.css  shared OCR unit: recognize -> opaque translatable plates over the image
   ocr.html/.js         standalone page for the right-click "OCR & translate this image" action
   pdf-images.js        pull raster images out of a PDF page (embedded XObjects + scanned-page raster)
-vendor/                pdfjs-dist + tesseract/ (engine + eng.traineddata) - generated, git-ignored
+vendor/                pdfjs-dist + tesseract/ + marked + foliate/ (mobi.js) + fflate - generated, git-ignored
 icons/                 16/32/48/128
 test/                  node:test unit tests for the pure modules (reflow/toc/lang + epub unzip/path)
 build.mjs              `vendor` (sync pdfjs) and `zip` (store package)
@@ -87,10 +101,15 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
 
 Text baked into images (scanned pages, comics, screenshots) is invisible to the browser translator. The
 extension can OCR it **on-device** (Tesseract, bundled) and lay the recognized text over the image as
-real, translatable HTML, so one **Translate page** covers pictures too. Three ways in:
+real, translatable HTML, so one **Translate page** covers pictures too. Ways in:
 
 - **Any web image:** right-click -> **OCR & translate this image**. Opens a new tab, OCRs the image,
   overlays the text, and sets `<html lang>` so the browser offers Translate page.
+- **A local image file:** click **Open file** in the viewer (or *Open a document..* in the popup) and pick
+  a PNG / JPEG / GIF / BMP / WebP. It is OCR'd on open regardless of the *Use OCR for images* toggle -
+  opening a bare image is itself the request to read its text. There is deliberately **no** file-type
+  association for images (unlike PDF/EPUB), so opening an image URL never hijacks it - only the explicit
+  Open file / right-click paths OCR images.
 - **PDFs / EPUBs:** turn on **Use OCR for images** (in the toolbar popup, next to *Open file*, or in
   Options). Images are OCR'd lazily as they scroll into view; an "OCR: done/total" counter shows progress
   so a picture-heavy document never looks frozen.
@@ -110,6 +129,9 @@ network access, and only when you click **Download**. See [`store/PRIVACY.md`](s
 - EPUB: the viewer applies its own clean reading CSS and drops author stylesheets/inline styles, so
   heavily designed books lose their exact layout (by design - that is what makes them translate cleanly).
   ZIP64 archives are not supported (vanishingly rare for EPUB). DRM-protected EPUBs cannot be read.
+- MOBI/AZW3 are parsed in-browser by the vendored `foliate-js` (no Calibre needed); DRM-protected Kindle
+  files cannot be read (same as the desktop app). TXT/RTF/Markdown/FB2/HTML are opened via the file picker
+  (or, for FB2/RTF, a `*.fb2` / `*.rtf` URL); plain `.txt`/`.html` pages are left to the browser.
 - Firefox and mobile are out of scope (different PDF + interception story).
 - With OCR **off**, the viewer is text-extraction only (`getTextContent()`) and never rasterizes pages.
   OCR (Tesseract) uses WebAssembly, and scanned-PDF OCR rasterizes the page, so the manifest sets

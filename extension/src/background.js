@@ -3,20 +3,15 @@
 //
 // Interception uses declarativeNetRequest *dynamic* rules built at runtime from
 // chrome.runtime.getURL(), so the extension id is never hardcoded. Two redirect
-// rules send main_frame requests for `*.pdf` / `*.epub` (http/https and file://)
-// to the reflow viewer. DNR matches the *request* URL, so documents served without
+// rules send main_frame requests for supported document extensions (http/https and
+// file://) to the reflow viewer. DNR matches the *request* URL, so documents served without
 // a matching extension in the URL are not intercepted - a documented limitation
 // (spec sec 4/7).
 
+import { DEFAULT_OPTIONS } from "./defaults.js";
+
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
-
-const DEFAULT_OPTIONS = {
-  enabledByDefault: true,
-  disabledHosts: [],
-  sourceLang: "auto",
-  theme: "light",
-};
 
 async function getOptions() {
   const got = await chrome.storage.local.get("options");
@@ -38,7 +33,7 @@ function buildRules(options) {
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
       // Capture the whole URL so the substitution keeps any query string intact.
-      regexFilter: "^(https?://.*\\.(?:pdf|epub)(?:[?#].*)?)$",
+      regexFilter: "^(https?://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
       resourceTypes: ["main_frame"],
     },
   };
@@ -50,7 +45,7 @@ function buildRules(options) {
     priority: 1,
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
-      regexFilter: "^(file://.*\\.(?:pdf|epub)(?:[?#].*)?)$",
+      regexFilter: "^(file://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
       resourceTypes: ["main_frame"],
     },
   };

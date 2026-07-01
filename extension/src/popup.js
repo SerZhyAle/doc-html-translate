@@ -2,8 +2,7 @@
 // object to storage; background.js rebuilds the DNR rules on the storage change.
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
-
-const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light", ocrImages: false, ocrLang: "eng" };
+import { DEFAULT_OPTIONS } from "./defaults.js";
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");

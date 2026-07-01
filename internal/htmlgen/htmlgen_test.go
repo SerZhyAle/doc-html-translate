@@ -84,8 +84,8 @@ func TestGenerateIndex(t *testing.T) {
 	}
 
 	// Reading themes [12] + continue-reading [14] are wired into index.html.
-	if !strings.Contains(content, "dht-theme-btn") {
-		t.Error("index.html should contain the theme toggle button")
+	if !strings.Contains(content, "dht-theme-sel") {
+		t.Error("index.html should contain the theme dropdown")
 	}
 	if !strings.Contains(content, "dht-continue") {
 		t.Error("index.html should contain the continue-reading link")

@@ -253,7 +253,10 @@ func ncxPointsToEntries(points []ncxNavPoint) []TOCEntry {
 	var entries []TOCEntry
 	for _, p := range points {
 		entries = append(entries, TOCEntry{
-			Title:    strings.TrimSpace(p.NavLabel.Text),
+			// collapseWS (not just TrimSpace) so NCX titles with internal newlines/runs
+			// match the nav.xhtml path (textContent) and the extension, which collapses
+			// whitespace in both TOC sources - see docs/PARITY.md ("EPUB TOC parsing").
+			Title:    collapseWS(p.NavLabel.Text),
 			Href:     strings.TrimSpace(p.Content.Src),
 			Children: ncxPointsToEntries(p.Points),
 		})
@@ -360,6 +363,13 @@ func elementAttr(n *gohtml.Node, key string) string {
 		}
 	}
 	return ""
+}
+
+// collapseWS trims and collapses internal whitespace runs to a single space. Matches
+// textContent (the nav.xhtml path) and the extension, which collapses whitespace for
+// both TOC sources, so NCX titles stay identical across implementations.
+func collapseWS(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 // hasToken reports whether the whitespace-separated value contains token.

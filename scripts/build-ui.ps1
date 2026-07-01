@@ -38,6 +38,9 @@ New-Item -ItemType Directory -Force -Path "assets" | Out-Null
 if (-not (Test-Path $iconSource)) {
     ./scripts/generate-icon.ps1 -Output $iconSource
 }
+# Keep the favicon embedded in the GUI server (shown as the app-window icon) in sync
+# with the canonical project icon used for the exe resource.
+Copy-Item $iconSource "cmd/doc-html-ui/favicon.ico" -Force
 
 # ── Step 2: goversioninfo ────────────────────────────────
 $cmdDir = "cmd/doc-html-ui"

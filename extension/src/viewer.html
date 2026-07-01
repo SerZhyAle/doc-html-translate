@@ -27,6 +27,7 @@
         <option value="light">Light</option>
         <option value="sepia">Sepia</option>
         <option value="dark">Dark</option>
+        <option value="night">Night</option>
       </select>
     </div>
     <div class="group" title="Go to page">
@@ -35,11 +36,15 @@
       <span id="page-total">/ ?</span>
     </div>
     <div class="group">
-      <button id="btn-open" type="button" title="Open a local PDF or EPUB via the file picker">Open file</button>
+      <button id="btn-open" type="button" title="Open a local document via the file picker">Open file</button>
       <button id="btn-original" type="button" title="Open the untouched PDF in the native viewer">Original PDF</button>
+      <button id="btn-save-src" type="button" class="hidden" title="Download the original document file">&#8595; File</button>
+      <button id="btn-save-html" type="button" class="hidden" title="Save the current view as a standalone HTML file (keeps the translation if you translated the page)">&#8595; HTML</button>
     </div>
+    <a class="proj-link" href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" title="doc-html-translate">doc-html-translate</a>
+    <a class="proj-link" href="mailto:sza@ukr.net" title="Feedback">Feedback</a>
   </div>
-  <input id="file-input" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub" class="hidden">
+  <input id="file-input" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub,.txt,.rtf,.html,.htm,.md,.markdown,.fb2,image/png,.png,image/jpeg,.jpg,.jpeg,image/gif,.gif,image/bmp,.bmp,image/webp,.webp" class="hidden">
 
   <div id="status"><div id="progress-bar"></div><span id="status-text">Loading..</span></div>
 

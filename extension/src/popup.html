@@ -19,6 +19,7 @@
     hr { border: 0; border-top: 1px solid #eee; margin: 12px 0; }
     a { color: #2563eb; font-size: 12px; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    .links { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
     .cta { display: block; width: 100%; margin: 4px 0 12px; padding: 9px 12px; font: inherit; font-weight: 600;
            color: #fff; background: #2563eb; border: 0; border-radius: 8px; cursor: pointer; }
     .cta:hover { background: #1d4fd0; }
@@ -34,7 +35,7 @@
 </head>
 <body>
   <h1>doc-html-translate</h1>
-  <button id="open-pdf" class="cta" type="button">Open a PDF or EPUB file&hellip;</button>
+  <button id="open-pdf" class="cta" type="button">Open a document&hellip;</button>
   <div class="row">
     <label for="ocr-images">Use OCR for images</label>
     <span class="switch"><input type="checkbox" id="ocr-images"><span class="slider"></span></span>
@@ -50,8 +51,14 @@
     <span class="switch"><input type="checkbox" id="site"><span class="slider"></span></span>
   </div>
   <hr>
-  <a id="opts" href="#">Options</a>
-  <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener" style="float:right">Guide &amp; help &#8599;</a>
+  <div class="links">
+    <a id="opts" href="#">Options</a>
+    <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener">Guide &amp; help &#8599;</a>
+  </div>
+  <div class="links">
+    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site &#8599;</a>
+    <a href="mailto:sza@ukr.net">Feedback</a>
+  </div>
   <script type="module" src="popup.js"></script>
 </body>
 </html>

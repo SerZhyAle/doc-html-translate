@@ -2,8 +2,7 @@
 // downloads, and a view of the per-site disable list. Persists the shared `options` object.
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
-
-const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light", ocrImages: false, ocrLang: "eng" };
+import { DEFAULT_OPTIONS } from "./defaults.js";
 
 const enabledEl = document.getElementById("enabled");
 const themeEl = document.getElementById("theme");

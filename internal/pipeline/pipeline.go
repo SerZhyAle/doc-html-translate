@@ -175,7 +175,8 @@ func (r Runner) Run() (int, error) {
 
 	// Optional: split oversized pages at paragraph boundaries so browser
 	// translation extensions (Chrome GT: ~5000 chars) can handle each page.
-	if r.cfg.SplitSize > 0 {
+	// Single-page mode merges everything into one file anyway, so splitting is moot.
+	if r.cfg.SplitSize > 0 && !r.cfg.SinglePage {
 		n, err := htmlsplit.SplitIfNeeded(book, outputDir, r.cfg.SplitSize)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
@@ -190,14 +191,22 @@ func (r Runner) Run() (int, error) {
 	// Step 2: Inject navigation bars (must happen before translation).
 	logging.Println("[2/4] Building HTML structure...")
 	var generatedIndex string
-	if len(book.Spine) == 1 {
+	switch {
+	case r.cfg.SinglePage:
+		// Merge the whole document into one HTML page; no TOC, no navigation bars.
+		generatedIndex, err = htmlgen.GenerateSinglePage(book, outputDir, filepath.Base(inputPath))
+		if err != nil {
+			return ExitIOError, fmt.Errorf("generate single page: %w", err)
+		}
+		logging.Println("  Single-page mode — all content merged, TOC skipped.")
+	case len(book.Spine) == 1:
 		// Single page — no TOC, no navigation bars needed.
 		generatedIndex, err = htmlgen.GenerateSinglePageIndex(book, outputDir)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate single-page index: %w", err)
 		}
 		logging.Println("  Single page — TOC and navigation skipped.")
-	} else {
+	default:
 		if err := htmlgen.InjectNavBars(book, outputDir, filepath.Base(inputPath)); err != nil {
 			return ExitIOError, fmt.Errorf("inject navbars: %w", err)
 		}

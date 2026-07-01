@@ -16,6 +16,7 @@ type Config struct {
 	OllamaNumCtx   int
 	SplitSize      int
 	TOCDepth       int
+	SinglePage     bool // -single: merge the whole document into one HTML page (no TOC)
 	OutputFolder   string
 	Force          bool
 	Verbose        bool
@@ -43,6 +44,7 @@ func ParseArgs(args []string) (Config, error) {
 	ollamaNumCtx := fs.Int("ollama-ctx", 8192, "context window size in tokens sent to Ollama")
 	splitSize := fs.Int("split", 5000, "split pages at N chars for browser GT extension (0 = disable)")
 	tocDepth := fs.Int("toc-depth", 0, "table-of-contents nesting depth shown on index.html (0 = unlimited)")
+	singlePage := fs.Bool("single", false, "combine the whole document into a single HTML page (no table of contents)")
 	outputFolder := fs.String("folder", "", "output folder (default: same directory as input file)")
 	force := fs.Bool("force", false, "re-extract and re-translate even if output already exists (yes, all over again)")
 	verbose := fs.Bool("v", false, "verbose output - more than you ever wanted to know")
@@ -74,6 +76,7 @@ func ParseArgs(args []string) (Config, error) {
 		OllamaNumCtx:   *ollamaNumCtx,
 		SplitSize:      *splitSize,
 		TOCDepth:       *tocDepth,
+		SinglePage:     *singlePage,
 		OutputFolder:   *outputFolder,
 		Force:          *force,
 		Verbose:        *verbose,

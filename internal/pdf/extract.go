@@ -382,6 +382,19 @@ func isDoubleSpacedLayout(blocks []layoutBlock) bool {
 // A centered heading like "LITTLE TOKYO" gets ~20 spaces of left indent.
 // Body paragraph first lines get ~1 space (first-line indent).
 // leadingSpaces > 8 = centered = heading candidate.
+// PDF reflow heuristic constants. These paragraph/heading thresholds are shared,
+// value-for-value, with the browser extension's reflow.js (a hand port). A change here
+// must be mirrored there and in docs/PARITY.md ("PDF reflow heuristics").
+const (
+	paraGapFactor         = 1.5  // paragraph break when a Y-gap exceeds this * median line spacing (reflow.js PARA_GAP_FACTOR)
+	indentThreshold       = 8.0  // points; first-line indent past the left margin starts a paragraph (reflow.js INDENT_THRESHOLD)
+	medianGapFallback     = 12.0 // fallback median line spacing when it can't be measured
+	ligatureMaxAvgWordLen = 3.0  // avg word length below this (over >= ligatureMinWords words) = ligature garbage
+	ligatureMinWords      = 4
+	headingShortWords     = 8  // "short" line word cap for an h2 heading candidate
+	headingMediumWords    = 14 // "medium" line word cap for an h3 heading candidate
+)
+
 func classifyBlock(text string, leadingSpaces int) string {
 	words := strings.Fields(text)
 	if len(words) == 0 {
@@ -391,12 +404,12 @@ func classifyBlock(text string, leadingSpaces int) string {
 	upper := strings.ToUpper(text)
 	isAllCaps := upper == text && strings.ContainsAny(text, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	isCentered := leadingSpaces > 8
-	isShort := len(words) <= 8
+	isShort := len(words) <= headingShortWords
 
 	switch {
 	case (isAllCaps || isCentered) && isShort:
 		return "h2"
-	case isCentered && len(words) <= 14:
+	case isCentered && len(words) <= headingMediumWords:
 		return "h3"
 	default:
 		return "p"
@@ -407,14 +420,14 @@ func classifyBlock(text string, leadingSpaces int) string {
 // (e.g. "if lf if if if if if") produced when pdftotext can't decode font maps.
 func isLigaturesArtifact(s string) bool {
 	words := strings.Fields(s)
-	if len(words) < 4 {
+	if len(words) < ligatureMinWords {
 		return false
 	}
 	total := 0
 	for _, w := range words {
 		total += len(w)
 	}
-	return float64(total)/float64(len(words)) < 3.0
+	return float64(total)/float64(len(words)) < ligatureMaxAvgWordLen
 }
 
 // buildPDFPageHTML generates an HTML page from structured pageItems and images.

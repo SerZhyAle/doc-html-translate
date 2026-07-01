@@ -22,6 +22,8 @@ const vendor = join(root, "vendor");
 
 // tessdata_fast is tesseract.js's own default host; the English data is fetched once
 // at build time so English OCR ships fully offline (see the OCR spec's privacy note).
+// Version 4.0.0 must match ocr-lang.js CDN_LANG_PATH and the desktop app's pinned
+// tessdata version (internal/ocr/tessdata.go cdnBase) - see ../docs/PARITY.md ("OCR").
 const TESSDATA_BASE = "https://tessdata.projectnaptha.com/4.0.0_fast";
 
 async function vendorPdfjs() {
@@ -104,6 +106,48 @@ async function vendorTesseract() {
   );
 }
 
+// Vendor the marked Markdown->HTML converter (single ESM file). Runs after the
+// pdfjs/tesseract vendoring (which wiped vendor/), so it only adds its own files.
+async function vendorMarked() {
+  const marked = join(root, "node_modules", "marked");
+  if (!existsSync(marked)) {
+    console.error("marked not installed. Run `npm install` first.");
+    process.exit(1);
+  }
+  await cp(join(marked, "lib", "marked.esm.js"), join(vendor, "marked.esm.js"));
+  await cp(join(marked, "LICENSE.md"), join(vendor, "LICENSE.marked"));
+  const version = JSON.parse(
+    await import("node:fs/promises").then((fs) =>
+      fs.readFile(join(marked, "package.json"), "utf8"),
+    ),
+  ).version;
+  console.log(`Vendored marked@${version} into vendor/`);
+}
+
+// Vendor the foliate-js MOBI/KF8 reader for MOBI and AZW3. mobi.js is self-contained
+// (no local imports) and receives its unzlib via the constructor, so only that one
+// module plus fflate (KF8 font decompression) need vendoring. Pinned via package.json.
+async function vendorFoliate() {
+  const foliate = join(root, "node_modules", "foliate-js");
+  const fflate = join(root, "node_modules", "fflate");
+  if (!existsSync(foliate) || !existsSync(fflate)) {
+    console.error("foliate-js / fflate not installed. Run `npm install` first.");
+    process.exit(1);
+  }
+  const out = join(vendor, "foliate");
+  await mkdir(out, { recursive: true });
+  await cp(join(foliate, "mobi.js"), join(out, "mobi.js"));
+  await cp(join(foliate, "LICENSE"), join(out, "LICENSE.foliate"));
+  await cp(join(fflate, "esm", "browser.js"), join(vendor, "fflate.js"));
+  await cp(join(fflate, "LICENSE"), join(vendor, "LICENSE.fflate"));
+  const version = JSON.parse(
+    await import("node:fs/promises").then((fs) =>
+      fs.readFile(join(foliate, "package.json"), "utf8"),
+    ),
+  ).version;
+  console.log(`Vendored foliate-js@${version} mobi.js + fflate into vendor/`);
+}
+
 // Exactly what the extension needs at runtime. An allow-list (not a deny-list) so
 // dev/listing artifacts - store/, README.md, tests - can never silently leak into
 // the store package.
@@ -150,7 +194,7 @@ async function zip() {
 }
 
 const cmd = process.argv[2];
-if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); }
+if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); }
 else if (cmd === "zip") await zip();
 else {
   console.error("usage: node build.mjs <vendor|zip>");

@@ -11,19 +11,30 @@ import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 const { createWorker } = Tesseract;
 
 // Supported OCR languages. `code` is the Tesseract traineddata name; jpn_vert is the
-// vertical-text model used for manga.
+// vertical-text model used for manga. This catalog is shared with the desktop app's
+// internal/ocr/tessdata.go `Available` - keep the two in sync (see ../../docs/PARITY.md).
 export const LANGS = [
   { code: "eng", name: "English" },
   { code: "rus", name: "Russian" },
   { code: "ukr", name: "Ukrainian" },
   { code: "jpn", name: "Japanese" },
   { code: "jpn_vert", name: "Japanese (vertical)" },
+  { code: "deu", name: "German" },
+  { code: "fra", name: "French" },
+  { code: "spa", name: "Spanish" },
+  { code: "ita", name: "Italian" },
+  { code: "por", name: "Portuguese" },
+  { code: "pol", name: "Polish" },
+  { code: "chi_sim", name: "Chinese (simplified)" },
+  { code: "kor", name: "Korean" },
 ];
 
 // Languages that ship inside the extension package (fully offline, no network).
 export const BUNDLED = ["eng"];
 
 // tessdata_fast on tesseract.js's own default host - matches the bundled eng build.
+// Version 4.0.0 must match build.mjs TESSDATA_BASE and the desktop app's pinned tessdata
+// version (internal/ocr/tessdata.go cdnBase) so recognition matches - see ../../docs/PARITY.md.
 export const CDN_LANG_PATH = "https://tessdata.projectnaptha.com/4.0.0_fast";
 
 // storage key holding the list of successfully-downloaded language codes.

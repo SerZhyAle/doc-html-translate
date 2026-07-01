@@ -170,8 +170,8 @@ func parseTSV(data []byte) (Result, error) {
 
 	for _, bn := range order {
 		txt := strings.TrimSpace(blockText[bn].String())
-		if txt == "" {
-			continue
+		if !isTranslatable(txt) {
+			continue // skip OCR noise with nothing to translate (see text.go)
 		}
 		bx := blockBox[bn]
 		res.Blocks = append(res.Blocks, Block{

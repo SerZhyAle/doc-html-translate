@@ -55,17 +55,10 @@ Benefits:
 
 ## Key Flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-notranslate` | `false` | Convert only, skip translation |
-| `-google` | `false` | Use Google Cloud Translation API |
-| `-ollama` | `false` | Use local Ollama translation |
-| `-split` | `5000` | Split pages at N chars (`0` disables split) |
-| `-folder` | empty | Output parent folder |
-| `-noopen` | `false` | Do not open browser automatically |
-| `-force` | `false` | Full rebuild even if output already exists |
-| `-src` | `en` | Source language |
-| `-dst` | `ru` | Target language |
+The full, current flag table lives in [../README.md](../README.md#flags) (single source of truth -
+this file used to duplicate it and drifted). The canonical defaults are also pinned in
+[../docs/PARITY.md](../docs/PARITY.md#settings-defaults). `internal/config/flags.go` is the code of
+record.
 
 ## Google API Key (Current Behavior)
 

@@ -21,11 +21,15 @@ import (
 	"unicode/utf16"
 
 	"doc-html-translate/internal/ocr"
+	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/translator"
 )
 
 //go:embed ui.html
 var uiHTML string
+
+//go:embed favicon.ico
+var faviconICO []byte
 
 // Version is set at build time via -ldflags.
 var Version = "dev"
@@ -53,6 +57,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleUI)
+	mux.HandleFunc("/favicon.ico", handleFavicon)
 	mux.HandleFunc("/api/version", handleVersion)
 	mux.HandleFunc("/api/initial", handleInitial)
 	mux.HandleFunc("/api/ping", handlePing)
@@ -61,6 +66,7 @@ func main() {
 	mux.HandleFunc("/api/drop", handleDrop)
 	mux.HandleFunc("/api/settings", handleSettings)
 	mux.HandleFunc("/api/google-key", handleGoogleKey)
+	mux.HandleFunc("/api/preview", handlePreview)
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
 	mux.HandleFunc("/api/env", handleEnv)
@@ -88,6 +94,13 @@ var activeRuns atomic.Int64
 func handleUI(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = io.WriteString(w, uiHTML)
+}
+
+// handleFavicon serves the project icon so the app window shows our logo instead of the
+// browser's default globe (the GUI runs as a Chrome --app window rendering this page).
+func handleFavicon(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "image/x-icon")
+	_, _ = w.Write(faviconICO)
 }
 
 func handleVersion(w http.ResponseWriter, _ *http.Request) {
@@ -306,6 +319,7 @@ type runRequest struct {
 	OllamaCtx      string `json:"ollamaCtx"`
 	SplitSize      string `json:"splitSize"`
 	TOCDepth       string `json:"tocDepth"`
+	SinglePage     bool   `json:"singlePage"`
 	MaxCost        string `json:"maxCost"`
 	SrcLang        string `json:"srcLang"`
 	DstLang        string `json:"dstLang"`
@@ -313,6 +327,23 @@ type runRequest struct {
 	Verbose        bool   `json:"verbose"`
 	OCR            bool   `json:"ocr"`
 	OCRLang        string `json:"ocrLang"`
+}
+
+// handlePreview returns the exact command line the current settings would run,
+// so the GUI can show it live next to a Copy button. It reuses assembleArgs and
+// findCLI so the preview always matches what handleRun actually executes.
+func handlePreview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req runRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	cmd := formatCommandLine(findCLI(), assembleArgs(req))
+	_ = json.NewEncoder(w).Encode(map[string]string{"cmd": cmd})
 }
 
 func handleRun(w http.ResponseWriter, r *http.Request) {
@@ -337,7 +368,7 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 	args := assembleArgs(req)
 	bin := findCLI()
 
-	fmt.Fprintf(w, "> %s %s\n\n", bin, strings.Join(args, " "))
+	fmt.Fprintf(w, "> %s\n\n", formatCommandLine(bin, args))
 	flusher.Flush()
 
 	cmd := exec.Command(bin, args...)
@@ -412,10 +443,13 @@ func handleRegister(w http.ResponseWriter, _ *http.Request) {
 //	           (file associations come from the package manifest instead).
 //	cli      → the bundled converter exe is resolvable next to the app or on PATH;
 //	           without it, Convert cannot run.
+//	lang     → the Windows UI language ("ru"/"uk"/"en"); the GUI opens in it by
+//	           default, unless the user has picked a language before.
 func handleEnv(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"packaged": isPackaged(),
 		"cli":      cliAvailable(),
+		"lang":     syslocale.Lang(),
 	})
 }
 
@@ -488,6 +522,9 @@ func assembleArgs(req runRequest) []string {
 	if req.TOCDepth != "" && req.TOCDepth != "0" {
 		a = append(a, "-toc-depth", req.TOCDepth)
 	}
+	if req.SinglePage {
+		a = append(a, "-single")
+	}
 	if req.MaxCost != "" && req.MaxCost != "0" {
 		a = append(a, "-max-cost", req.MaxCost)
 	}
@@ -511,6 +548,29 @@ func assembleArgs(req runRequest) []string {
 		a = append(a, req.Input)
 	}
 	return a
+}
+
+// formatCommandLine joins a binary and its args into a single copy-pasteable command
+// line, quoting any token that contains spaces (Windows paths routinely do) so the
+// result stays runnable in a terminal. This is also what the run log's header shows,
+// so the live preview matches the command that actually executes.
+func formatCommandLine(bin string, args []string) string {
+	parts := make([]string, 0, len(args)+1)
+	parts = append(parts, quoteArg(bin))
+	for _, a := range args {
+		parts = append(parts, quoteArg(a))
+	}
+	return strings.Join(parts, " ")
+}
+
+func quoteArg(s string) string {
+	if s == "" {
+		return `""`
+	}
+	if strings.ContainsAny(s, " \t\"") {
+		return `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
+	}
+	return s
 }
 
 // ── find CLI binary ─────────────────────────────────────────
@@ -658,7 +718,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("ProgramFiles"), `Microsoft\Edge\Application\msedge.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=720,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=1160,760").Start()
 				return
 			}
 		}
@@ -669,7 +729,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=720,700").Start()
+				_ = exec.Command(p, "--app="+url, "--window-size=1160,760").Start()
 				return
 			}
 		}

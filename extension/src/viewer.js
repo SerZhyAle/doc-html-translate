@@ -11,8 +11,15 @@ import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag } from "./lang.js";
 import { loadEpub } from "./epub.js";
-import { overlayImage, makeBadge } from "./ocr-overlay.js";
+import { parseText } from "./txt.js";
+import { parseRtf } from "./rtf.js";
+import { parseHtml } from "./html.js";
+import { parseMarkdown } from "./md.js";
+import { parseFb2 } from "./fb2.js";
+import { parseEbook, isMobiBytes } from "./ebook.js";
+import { overlayImage, makeBadge, ocrLangToHtmlLang } from "./ocr-overlay.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
+import { DEFAULT_OPTIONS } from "./defaults.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -54,20 +61,49 @@ function fileTitle(url) {
   try {
     const u = new URL(url);
     const name = decodeURIComponent(u.pathname.split("/").pop() || "");
-    return name.replace(/\.(pdf|epub)$/i, "") || "Document";
+    return name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, "") || "Document";
   } catch {
     return "Document";
   }
 }
 
-// sniffType inspects the leading bytes to tell a PDF (%PDF) from an EPUB / ZIP
-// (PK\x03\x04). The byte signature is authoritative regardless of the URL or
-// filename, so a mislabelled file still routes to the right reader.
-function sniffType(data) {
-  const b = new Uint8Array(data, 0, Math.min(5, data.byteLength));
+// FORMAT_EXT maps a filename extension to the internal format id. Each format
+// phase extends this map; magic-byte detection below takes priority when a
+// signature exists.
+const FORMAT_EXT = { pdf: "pdf", epub: "epub", txt: "txt", rtf: "rtf", htm: "html", html: "html", md: "md", markdown: "md", fb2: "fb2", mobi: "mobi", azw3: "mobi", png: "image", jpg: "image", jpeg: "image", gif: "image", bmp: "image", webp: "image" };
+
+function fileExt(name) {
+  const clean = String(name || "").split(/[?#]/)[0];
+  const dot = clean.lastIndexOf(".");
+  return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : "";
+}
+
+// detectFormat classifies bytes + source name into a format id. Byte signatures
+// are authoritative (a mislabelled file still routes correctly); the filename
+// extension is the fallback for formats without a reliable magic number.
+function detectFormat(data, name) {
+  const b = new Uint8Array(data, 0, Math.min(12, data.byteLength));
   if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return "pdf";   // %PDF
   if (b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04) return "epub";  // PK..
-  return "unknown";
+  if (b[0] === 0x7b && b[1] === 0x5c && b[2] === 0x72 && b[3] === 0x74 && b[4] === 0x66) return "rtf"; // {\rtf
+  if (isMobiBytes(data)) return "mobi"; // MOBI / AZW3 (PDB "BOOKMOBI" at offset 60)
+  if (imageMime(data, "")) return "image"; // PNG / JPEG / GIF / BMP / WebP by signature
+  return FORMAT_EXT[fileExt(name)] || "unknown";
+}
+
+// imageMime returns the MIME type for a raster image the user opened directly, by byte
+// signature first (authoritative) then the filename extension. Returns "" when the bytes
+// and name are not a recognized image, which is also how detectFormat tells images apart.
+function imageMime(data, name) {
+  const b = new Uint8Array(data, 0, Math.min(12, data.byteLength));
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";  // .PNG
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";                  // JPEG SOI
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return "image/gif";  // GIF8
+  if (b[0] === 0x42 && b[1] === 0x4d) return "image/bmp";                                    // BM
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return "image/webp"; // RIFF..WEBP
+  const byExt = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", webp: "image/webp" };
+  return byExt[fileExt(name)] || "";
 }
 
 // Release the previous document's resources (EPUB image blob: URLs) before
@@ -84,7 +120,6 @@ function teardownCurrent() {
 
 // ---- Preferences -----------------------------------------------------------
 const DEFAULT_PREFS = { size: 19, family: "serif", theme: null };
-const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light", ocrImages: false, ocrLang: "eng" };
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 
@@ -224,6 +259,7 @@ async function appendPdfImages(page, section, pageChars) {
 
 // ---- Notices / fallbacks ---------------------------------------------------
 function showNotice(titleText, bodyNodes) {
+  $("btn-save-html").classList.add("hidden"); // nothing valid to save as HTML
   const content = $("content");
   content.replaceChildren();
   const box = el("div", "notice");
@@ -260,6 +296,177 @@ async function openOriginal() {
     // than a dead button.
     location.href = fileUrl;
   }
+}
+
+// ---- Download / save -------------------------------------------------------
+// Two toolbar actions. "File" downloads the untouched source bytes. "HTML" saves the
+// current on-screen view as a self-contained .html - and because it serializes the
+// *live* #content, if the reader translated the page with Chrome's built-in translator
+// (which rewrites the DOM in place), the saved file carries that translation. There is
+// no API to trigger that translation from here: the user does it, we capture the result.
+let originalBlob = null;   // source bytes as a Blob/File (browser-backed, no extra copy)
+let originalName = "document";
+
+function setOriginalDownload(blob, name) {
+  originalBlob = blob || null;
+  originalName = safeBase(name);
+  $("btn-save-src").classList.toggle("hidden", !originalBlob);
+}
+
+function triggerDownload(href, filename) {
+  const a = el("a");
+  a.href = href;
+  a.download = filename || "download";
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
+// Strip characters a filesystem rejects and cap the length; never returns "".
+function safeBase(name) {
+  const clean = String(name || "").replace(/[\\/:*?"<>|\r\n\t]+/g, "_").replace(/\s+/g, " ").trim();
+  return clean.slice(0, 120) || "document";
+}
+
+function filenameFromUrl(url) {
+  try {
+    return decodeURIComponent(new URL(url).pathname.split("/").pop() || "");
+  } catch {
+    return "";
+  }
+}
+
+// Download the exact bytes the viewer opened. Works for URL-loaded documents and for
+// files chosen via the picker (we keep the File/Blob, so there is no re-fetch).
+function downloadOriginal() {
+  if (!originalBlob) return;
+  const url = URL.createObjectURL(originalBlob);
+  triggerDownload(url, originalName);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// Save the current view as a standalone HTML file: captures translated text when the
+// page has been translated in place, inlines blob: images as data URIs, and unwraps the
+// translator's <font> wrappers so the result is portable and clean.
+async function downloadHtml() {
+  const content = $("content");
+  if (!content || !content.children.length) return;
+
+  const imgMap = buildImageDataMap(content); // read decoded live images once
+  const clone = content.cloneNode(true);
+  unwrapTranslateFonts(clone);
+  applyImageDataMap(clone, imgMap);
+
+  const title = document.title || "document";
+  const theme = document.documentElement.getAttribute("data-theme") || "light";
+  const lang = document.documentElement.lang || "";
+  const css = await collectExportCss(clone);
+  const styleVars = [
+    cssVar("--reader-size"),
+    cssVar("--reader-font"),
+  ].filter(Boolean).join(";");
+
+  const doc = buildExportHtml({ title, theme, lang, styleVars, css, body: clone.outerHTML });
+  const blob = new Blob([doc], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, `${safeBase(title)}.html`);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function cssVar(name) {
+  const v = document.documentElement.style.getPropertyValue(name).trim();
+  return v ? `${name}:${v}` : "";
+}
+
+// Rasterize every live blob: image to a data: URI, keyed by src. Live images are already
+// decoded, so naturalWidth/Height are valid (a fresh clone's would be 0). http(s)/data
+// images are left untouched - they are already portable.
+function buildImageDataMap(root) {
+  const map = new Map();
+  for (const img of root.querySelectorAll("img")) {
+    const src = img.getAttribute("src") || "";
+    if (!src || map.has(src) || !/^blob:/i.test(src)) continue;
+    try {
+      const w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h) { map.set(src, null); continue; }
+      const c = el("canvas");
+      c.width = w;
+      c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0);
+      map.set(src, c.toDataURL("image/jpeg", 0.85));
+    } catch {
+      map.set(src, null); // tainted or too large - dropped below
+    }
+  }
+  return map;
+}
+
+function applyImageDataMap(clone, map) {
+  for (const img of clone.querySelectorAll("img")) {
+    const src = img.getAttribute("src") || "";
+    if (map.has(src)) {
+      const data = map.get(src);
+      if (data) { img.setAttribute("src", data); img.removeAttribute("srcset"); }
+      else img.remove();
+    } else if (/^blob:/i.test(src)) {
+      img.remove(); // an unmapped blob would be a dead link outside this tab
+    }
+  }
+}
+
+// Chrome's built-in translator wraps translated runs in <font> tags. Unwrap them so the
+// export keeps the translated text without the translator's scaffolding.
+function unwrapTranslateFonts(root) {
+  for (const font of root.querySelectorAll("font")) {
+    const parent = font.parentNode;
+    if (!parent) continue;
+    while (font.firstChild) parent.insertBefore(font.firstChild, font);
+    parent.removeChild(font);
+  }
+}
+
+async function fetchText(url) {
+  try {
+    const r = await fetch(url);
+    return r.ok ? await r.text() : "";
+  } catch {
+    return "";
+  }
+}
+
+// Inline the same stylesheets the viewer uses so the saved file reads identically.
+async function collectExportCss(clone) {
+  const parts = [await fetchText(chrome.runtime.getURL("src/viewer.css"))];
+  if (clone.querySelector(".ocr-overlay")) {
+    parts.push(await fetchText(chrome.runtime.getURL("src/ocr-overlay.css")));
+  }
+  return parts.filter(Boolean).join("\n\n");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function buildExportHtml({ title, theme, lang, styleVars, css, body }) {
+  const attrs = `lang="${escapeHtml(lang)}" data-theme="${escapeHtml(theme)}"` +
+    (styleVars ? ` style="${escapeHtml(styleVars)}"` : "");
+  return `<!DOCTYPE html>
+<html ${attrs}>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(title)}</title>
+<style>
+${css}
+</style>
+</head>
+<body>
+${body}
+</body>
+</html>
+`;
 }
 
 // ---- TOC -------------------------------------------------------------------
@@ -359,8 +566,8 @@ async function main() {
   }
 
   if (!fileUrl) {
-    showNotice("Open a PDF or EPUB", [
-      para("Pick a local PDF or EPUB to read here. Opening a PDF or EPUB link loads it here too - the extension is helpful like that."),
+    showNotice("Open a document", [
+      para("Pick a local document to read here (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - or an image (PNG, JPEG, GIF, BMP, WebP) to OCR into translatable text. Opening a document link loads it here too - the extension is helpful like that."),
       filePickerButton(),
     ]);
     return;
@@ -389,7 +596,9 @@ async function loadUrl(url) {
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    data = await resp.arrayBuffer();
+    const blob = await resp.blob();
+    setOriginalDownload(blob, filenameFromUrl(url)); // keep a downloadable copy (browser-backed)
+    data = await blob.arrayBuffer();
   } catch (err) {
     showNotice("Couldn't load this document", [
       para("The file could not be downloaded by the extension."),
@@ -401,20 +610,97 @@ async function loadUrl(url) {
     ]);
     return;
   }
-  await loadFromData(data, fileTitle(url));
+  await loadFromData(data, fileTitle(url), url);
 }
 
 // loadFromData routes already-fetched bytes (URL fetch or local file picker) to
-// the right reader by sniffing the file signature: PDF -> PDF.js + reflow,
-// EPUB/ZIP -> the EPUB reader. Anything else falls through to the PDF path, whose
-// error handling reports an unreadable file clearly.
-async function loadFromData(data, title) {
+// the right reader via detectFormat (byte signature first, then the source name's
+// extension). Unknown types fall through to the PDF path, whose error handling
+// reports an unreadable file clearly.
+async function loadFromData(data, title, name) {
   teardownCurrent();
-  if (sniffType(data) === "epub") {
-    await loadEpubData(data, title);
+  switch (detectFormat(data, name)) {
+    case "epub": await loadEpubData(data, title); return;
+    case "pdf": await loadPdfData(data, title); return;
+    case "txt": await loadBook(data, title, parseText, "Reading text.."); return;
+    case "rtf": await loadBook(data, title, parseRtf, "Reading RTF.."); return;
+    case "html": await loadBook(data, title, parseHtml, "Reading HTML.."); return;
+    case "md": await loadBook(data, title, parseMarkdown, "Reading Markdown.."); return;
+    case "fb2": await loadBook(data, title, parseFb2, "Reading FB2.."); return;
+    case "mobi": await loadBook(data, title, parseEbook, "Reading e-book.."); return;
+    case "image": await loadImageData(data, title, imageMime(data, name)); return;
+    default: await loadPdfData(data, title);
+  }
+}
+
+// loadBook is the generic intake the non-PDF/EPUB parsers reuse: set status, hide
+// the PDF-only Original button, parse the bytes into the shared book shape, and
+// render it. On a parse error it shows a notice with the file picker.
+async function loadBook(data, title, parseFn, statusLabel) {
+  $("doc-title").textContent = title;
+  document.title = title;
+  $("btn-original").classList.add("hidden");
+  $("status").classList.remove("done");
+  setStatus(statusLabel);
+  setProgress(0.1);
+  let book;
+  try {
+    book = await parseFn(data);
+  } catch (err) {
+    showNotice("Couldn't open this file", [
+      para("The file may be corrupt or not a supported document."),
+      para(err && err.message ? `Details: ${err.message}` : ""),
+      filePickerButton(),
+    ]);
     return;
   }
-  await loadPdfData(data, title);
+  renderBook(book, title);
+}
+
+// loadImageData renders a standalone image the user opened directly and OCRs it into
+// translatable text plates (the same overlay unit the right-click image page and the
+// in-document image OCR use). OCR runs unconditionally here, independent of the "Use OCR
+// for images" toggle: opening a bare image is itself the explicit request to read its
+// text, and without OCR there is nothing for the browser translator to work on.
+async function loadImageData(data, title, mime) {
+  $("doc-title").textContent = title;
+  document.title = title;
+  $("btn-original").classList.add("hidden"); // no "native viewer" concept for a picture
+  $("status").classList.remove("done");
+  $("page-total").textContent = "/ 1";
+  ensureOcrCss();
+
+  const content = $("content");
+  content.replaceChildren();
+  const url = URL.createObjectURL(new Blob([data], mime ? { type: mime } : undefined));
+  pdfImageUrls.push(url); // revoked on the next teardownCurrent()
+
+  const lang = options.ocrLang || "eng";
+  setStatus("Recognizing text..");
+  setProgress(0.1);
+  try {
+    const container = await overlayImage(url, {
+      lang,
+      onProgress: (m) => { if (m && typeof m.progress === "number") setProgress(m.progress); },
+    });
+    content.append(container);
+    applyLang(ocrLangToHtmlLang(lang));
+    if (container.classList.contains("ocr-empty")) {
+      container.append(makeBadge("No text found"));
+      setStatus("No text found");
+    } else {
+      setStatus('Done - use the browser\'s "Translate page"');
+    }
+  } catch (err) {
+    showNotice("Couldn't read this image", [
+      para(err && err.message ? `Details: ${err.message}` : "The image could not be processed."),
+      filePickerButton(),
+    ]);
+    return;
+  }
+  $("btn-save-html").classList.remove("hidden");
+  setProgress(1);
+  setTimeout(hideStatus, 1400);
 }
 
 // loadPdfData runs the PDF.js + reflow pipeline over PDF bytes.
@@ -461,7 +747,8 @@ function openFilePicker() {
     setStatus("Reading file..");
     try {
       const data = await f.arrayBuffer();
-      await loadFromData(data, f.name.replace(/\.(pdf|epub)$/i, ""));
+      setOriginalDownload(f, f.name); // the picked File is itself a downloadable Blob
+      await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, ""), f.name);
     } catch (err) {
       showNotice("Couldn't read the file", [para(err.message || String(err)), filePickerButton()]);
     }
@@ -469,7 +756,7 @@ function openFilePicker() {
   input.click();
 }
 
-function filePickerButton(label = "Open a PDF or EPUB file") {
+function filePickerButton(label = "Open a document") {
   const b = el("button");
   b.textContent = label;
   b.addEventListener("click", openFilePicker);
@@ -601,11 +888,11 @@ async function loadEpubData(data, title) {
     ]);
     return;
   }
-  revokeCurrent = book.revoke;
-  renderEpubDocument(book, title);
+  renderBook(book, title);
 }
 
-function renderEpubDocument(book, fallbackTitle) {
+function renderBook(book, fallbackTitle) {
+  if (book.revoke) revokeCurrent = book.revoke;
   const title = book.title || fallbackTitle;
   $("doc-title").textContent = title;
   document.title = title;
@@ -649,6 +936,7 @@ function renderEpubDocument(book, fallbackTitle) {
     );
     content.prepend(banner);
   }
+  $("btn-save-html").classList.remove("hidden");
   setProgress(1);
   setStatus(`Done - ${total} ${total === 1 ? "section" : "sections"}`);
   setTimeout(hideStatus, 1200);
@@ -672,6 +960,7 @@ function finishDocument(total, totalChars, pagesWithText) {
     );
     content.prepend(banner);
   }
+  $("btn-save-html").classList.remove("hidden");
   setProgress(1);
   setStatus(`Done - ${total} pages`);
   setTimeout(hideStatus, 1200);
@@ -746,6 +1035,8 @@ function wireToolbar() {
   });
   $("btn-open").addEventListener("click", openFilePicker);
   $("btn-original").addEventListener("click", openOriginal);
+  $("btn-save-src").addEventListener("click", downloadOriginal);
+  $("btn-save-html").addEventListener("click", downloadHtml);
 
   // Keep the page-jump box in sync with scroll position.
   let ticking = false;
