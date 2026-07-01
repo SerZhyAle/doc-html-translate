@@ -1,0 +1,57 @@
+/* ocr-overlay.css - shared styling for the OCR overlay unit (ocr-overlay.js). Used by
+   the context-menu OCR page and by the reflow viewer. */
+
+.ocr-overlay {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  container-type: inline-size;
+  line-height: 1.1;
+}
+
+.ocr-overlay-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Opaque plate covering the source text, carrying the recognized text. Grows downward
+   so translated text (often longer) wraps instead of clipping. */
+.ocr-plate {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.05em 0.15em;
+  border-radius: 2px;
+  background: #fff;
+  color: #111;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: "Segoe UI", system-ui, Arial, sans-serif;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Per-image progress badge overlaid while an image is queued / being recognized. */
+.ocr-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font: 600 12px/1.2 "Segoe UI", system-ui, sans-serif;
+  pointer-events: none;
+}
+
+/* Recognized nothing: keep the image, hint via the badge colour. */
+.ocr-overlay.ocr-empty .ocr-badge {
+  background: rgba(150, 80, 0, 0.82);
+}

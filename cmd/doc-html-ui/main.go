@@ -20,6 +20,7 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/translator"
 )
 
@@ -63,6 +64,8 @@ func main() {
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
 	mux.HandleFunc("/api/env", handleEnv)
+	mux.HandleFunc("/api/ocr-langs", handleOCRLangs)
+	mux.HandleFunc("/api/ocr-download", handleOCRDownload)
 
 	srv := &http.Server{Handler: mux}
 
@@ -308,6 +311,8 @@ type runRequest struct {
 	DstLang        string `json:"dstLang"`
 	Force          bool   `json:"force"`
 	Verbose        bool   `json:"verbose"`
+	OCR            bool   `json:"ocr"`
+	OCRLang        string `json:"ocrLang"`
 }
 
 func handleRun(w http.ResponseWriter, r *http.Request) {
@@ -414,6 +419,42 @@ func handleEnv(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
+// handleOCRLangs reports the OCR language catalog with an installed flag, so the GUI can
+// show which languages are ready and which need downloading.
+func handleOCRLangs(w http.ResponseWriter, _ *http.Request) {
+	installed := map[string]bool{}
+	for _, c := range ocr.Installed() {
+		installed[c] = true
+	}
+	type row struct {
+		Code      string `json:"code"`
+		Name      string `json:"name"`
+		Installed bool   `json:"installed"`
+	}
+	out := make([]row, 0, len(ocr.Available))
+	for _, l := range ocr.Available {
+		out = append(out, row{Code: l.Code, Name: l.Name, Installed: installed[l.Code]})
+	}
+	_ = json.NewEncoder(w).Encode(out)
+}
+
+// handleOCRDownload downloads a single OCR language pack on request from the GUI.
+func handleOCRDownload(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Lang string `json:"lang"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	resp := map[string]any{"ok": true}
+	if err := ocr.Download(req.Lang); err != nil {
+		resp["ok"] = false
+		resp["error"] = err.Error()
+	}
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 // ── args assembly ───────────────────────────────────────────
 
 func assembleArgs(req runRequest) []string {
@@ -451,6 +492,12 @@ func assembleArgs(req runRequest) []string {
 		a = append(a, "-max-cost", req.MaxCost)
 	}
 	a = append(a, "-src", req.SrcLang, "-dst", req.DstLang)
+	if req.OCR {
+		a = append(a, "-ocr")
+		if req.OCRLang != "" {
+			a = append(a, "-ocr-lang", req.OCRLang)
+		}
+	}
 	if req.Force {
 		a = append(a, "-force")
 	}

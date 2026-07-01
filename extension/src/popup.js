@@ -1,11 +1,81 @@
 // popup.js - global on/off and per-site disable. Writes the shared `options`
 // object to storage; background.js rebuilds the DNR rules on the storage change.
 
-const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light" };
+import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
+
+const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light", ocrImages: false, ocrLang: "eng" };
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
 const hostEl = document.getElementById("host");
+const ocrImagesEl = document.getElementById("ocr-images");
+const ocrLangsEl = document.getElementById("ocr-langs");
+
+const msg = (key, fallback) => {
+  try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
+};
+
+// Render the nested OCR-language list: installed languages are selectable (radio),
+// others show a Download button that fetches + caches the language, then re-renders.
+// The whole block is disabled while "Use OCR for images" is off.
+async function renderOcrLangs() {
+  const o = await getOptions();
+  const installed = await getInstalledLangs();
+  ocrLangsEl.replaceChildren();
+  ocrLangsEl.classList.toggle("disabled", !o.ocrImages);
+
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = msg("ocrLangsHint", "Recognition language (English is built-in).");
+  ocrLangsEl.append(hint);
+
+  for (const lang of LANGS) {
+    const row = document.createElement("div");
+    row.className = "ocr-lang";
+    if (installed.includes(lang.code)) {
+      const id = `ocrlang-${lang.code}`;
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "ocrLang";
+      radio.id = id;
+      radio.checked = o.ocrLang === lang.code;
+      radio.disabled = !o.ocrImages;
+      radio.addEventListener("change", async () => {
+        const oo = await getOptions();
+        oo.ocrLang = lang.code;
+        await setOptions(oo);
+      });
+      const label = document.createElement("label");
+      label.htmlFor = id;
+      label.textContent = `${lang.name} (${msg("ocrInstalled", "installed")})`;
+      row.append(radio, label);
+    } else {
+      const name = document.createElement("span");
+      name.textContent = lang.name;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = msg("ocrDownload", "Download");
+      btn.disabled = !o.ocrImages;
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          await downloadLang(lang.code, (m) => {
+            if (m && typeof m.progress === "number") {
+              btn.textContent = `${msg("ocrDownloading", "Downloading")} ${Math.round(m.progress * 100)}%`;
+            }
+          });
+          await renderOcrLangs();
+        } catch (e) {
+          console.error("language download failed", e);
+          btn.textContent = msg("ocrDownload", "Download");
+          btn.disabled = false;
+        }
+      });
+      row.append(name, btn);
+    }
+    ocrLangsEl.append(row);
+  }
+}
 
 async function getOptions() {
   const got = await chrome.storage.local.get("options");
@@ -28,6 +98,15 @@ async function init() {
   const host = await activeHost();
 
   globalEl.checked = opts.enabledByDefault;
+
+  ocrImagesEl.checked = opts.ocrImages;
+  ocrImagesEl.addEventListener("change", async () => {
+    const o = await getOptions();
+    o.ocrImages = ocrImagesEl.checked;
+    await setOptions(o);
+    renderOcrLangs();
+  });
+  renderOcrLangs();
 
   if (host) {
     hostEl.textContent = host;

@@ -75,6 +75,7 @@ Notes:
 - Paid engines respect -max-cost: the estimate (chars/1e6*$20) is enforced as a pre-flight guard in internal/pipeline/pipeline.go before any request is sent.
 - The output HTML carries a client-side reader layer injected by internal/htmlgen (navbar.go readerScript/readerCSS on chapter pages, plus a matching toolbar/script on index.html). Keep two storage scopes distinct: zoom uses sessionStorage; reading themes and reading position use localStorage (must survive sessions). Reading position is namespaced by bookStorageKey, which must be computed identically on chapter pages and index.html.
 - Windows and non-Windows behavior is split via *_windows.go and *_nonwindows.go files in several packages.
+- Optional OCR overlay (-ocr): internal/ocr shells out to the external Tesseract binary (parses TSV for bboxes) and rewrites document images into positioned, translatable text plates. It runs in internal/pipeline/pipeline.go after nav injection and before translation (so overlay text is translated too), and is strictly best-effort - a missing tesseract or a failed image never aborts the conversion. English data ships in <exe>/tessdata; other languages download on demand (-ocr-download / GUI). Applies to EPUB and PDF (formats whose images exist at HTML stage).
 
 ## Pitfalls
 

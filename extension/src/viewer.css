@@ -211,3 +211,10 @@ body {
 .notice input[type="password"] { font: inherit; padding: 0.5em; border: 1px solid var(--border); border-radius: 8px; flex: 1; }
 
 .hidden { display: none !important; }
+
+/* Lazy image OCR: the pending wrapper carries the per-image badge over the image
+   while recognition runs; the finished .ocr-overlay (from ocr-overlay.css) sits in
+   the reading column like a normal figure. */
+.ocr-pending { position: relative; display: block; margin: 1em auto; max-width: 100%; }
+.ocr-pending img { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+#content .ocr-overlay { margin: 1em auto; max-width: 100%; }

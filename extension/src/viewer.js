@@ -11,6 +11,8 @@ import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag } from "./lang.js";
 import { loadEpub } from "./epub.js";
+import { overlayImage, makeBadge } from "./ocr-overlay.js";
+import { extractPageImages, rasterizePage } from "./pdf-images.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -73,11 +75,16 @@ function sniffType(data) {
 let revokeCurrent = null;
 function teardownCurrent() {
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
+  if (ocrObserver) { ocrObserver.disconnect(); ocrObserver = null; }
+  ocrTotal = 0;
+  ocrDone = 0;
+  for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
+  pdfImageUrls = [];
 }
 
 // ---- Preferences -----------------------------------------------------------
 const DEFAULT_PREFS = { size: 19, family: "serif", theme: null };
-const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light" };
+const DEFAULT_OPTIONS = { enabledByDefault: true, disabledHosts: [], sourceLang: "auto", theme: "light", ocrImages: false, ocrLang: "eng" };
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 
@@ -110,6 +117,110 @@ function applyPrefs() {
 function setStatus(text) { $("status-text").textContent = text; }
 function setProgress(frac) { $("progress-bar").style.width = `${Math.round(frac * 100)}%`; }
 function hideStatus() { $("status").classList.add("done"); }
+
+// ---- Lazy image OCR --------------------------------------------------------
+// When options.ocrImages is on, document images are OCR'd only as they scroll into
+// view (a single shared worker processes them one at a time, so an image-heavy book
+// never blocks reading). Recognized text is overlaid as opaque translatable plates.
+// The status bar shows an overall "OCR: done/total" counter while any are pending.
+let ocrObserver = null;
+let ocrTotal = 0;
+let ocrDone = 0;
+const ocrQueued = new WeakSet();
+let pdfImageUrls = []; // object URLs for PDF-extracted images, revoked on teardown
+
+function ensureOcrCss() {
+  if (document.getElementById("ocr-overlay-css")) return;
+  const link = el("link");
+  link.id = "ocr-overlay-css";
+  link.rel = "stylesheet";
+  link.href = chrome.runtime.getURL("src/ocr-overlay.css");
+  document.head.append(link);
+}
+
+function ocrUpdateStatus() {
+  if (ocrTotal === 0) return;
+  $("status").classList.remove("done");
+  setStatus(`OCR: ${ocrDone}/${ocrTotal}`);
+  setProgress(ocrDone / ocrTotal);
+  if (ocrDone >= ocrTotal) setTimeout(hideStatus, 1000);
+}
+
+function getOcrObserver() {
+  if (ocrObserver) return ocrObserver;
+  ocrObserver = new IntersectionObserver((entries, obs) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      ocrProcessImage(e.target);
+    }
+  }, { rootMargin: "300px" });
+  return ocrObserver;
+}
+
+async function ocrProcessImage(img) {
+  const wrapper = el("div", "ocr-pending");
+  const badge = makeBadge("OCR..");
+  img.replaceWith(wrapper);
+  wrapper.append(img, badge);
+  try {
+    const container = await overlayImage(img, {
+      lang: options.ocrLang || "eng",
+      onProgress: (m) => {
+        if (m && typeof m.progress === "number") badge.textContent = `OCR ${Math.round(m.progress * 100)}%`;
+      },
+    });
+    wrapper.replaceWith(container);
+  } catch (err) {
+    console.warn("OCR failed for image", err);
+    wrapper.replaceWith(img); // restore the plain image
+  } finally {
+    ocrDone += 1;
+    ocrUpdateStatus();
+  }
+}
+
+// Register every <img> under `root` for lazy OCR. No-op when OCR is off.
+function registerImagesForOcr(root) {
+  if (!options.ocrImages) return;
+  const imgs = root.querySelectorAll("img");
+  if (!imgs.length) return;
+  ensureOcrCss();
+  const obs = getOcrObserver();
+  for (const img of imgs) {
+    if (ocrQueued.has(img)) continue;
+    ocrQueued.add(img);
+    ocrTotal += 1;
+    obs.observe(img);
+  }
+  ocrUpdateStatus();
+}
+
+// Extract raster images from a PDF page (scanned pages fall back to a full-page raster),
+// append them to the page section as <img>, and register them for lazy OCR. Must run
+// before page.cleanup(). No-op unless it finds usable images.
+async function appendPdfImages(page, section, pageChars) {
+  let imgs = [];
+  try {
+    imgs = await extractPageImages(page);
+    if (!imgs.length && pageChars < 20) {
+      const raster = await rasterizePage(page);
+      if (raster) imgs = [raster];
+    }
+  } catch (err) {
+    console.warn("PDF image extraction failed", err);
+    return;
+  }
+  if (!imgs.length) return;
+  for (const im of imgs) {
+    const url = URL.createObjectURL(im.blob);
+    pdfImageUrls.push(url);
+    const imgEl = el("img");
+    imgEl.src = url;
+    section.append(imgEl);
+  }
+  registerImagesForOcr(section);
+}
 
 // ---- Notices / fallbacks ---------------------------------------------------
 function showNotice(titleText, bodyNodes) {
@@ -426,12 +537,12 @@ async function renderDocument(pdf, title) {
   let pagesWithText = 0;
   for (let n = 1; n <= total; n++) {
     let blocks = [];
+    let page = null;
     try {
-      const page = await pdf.getPage(n);
+      page = await pdf.getPage(n);
       const viewport = page.getViewport({ scale: 1 });
       const tc = await page.getTextContent();
       blocks = reflowPage(tc, viewport);
-      page.cleanup();
     } catch {
       blocks = [];
     }
@@ -444,10 +555,16 @@ async function renderDocument(pdf, title) {
     label.textContent = `Page ${n}`;
     section.append(label);
     renderBlocks(section, blocks);
-    content.append(section);
 
     let pageChars = 0;
     for (const b of blocks) pageChars += b.text.length;
+
+    // Image OCR must run before cleanup (it needs the live page). No-op when off.
+    if (page && options.ocrImages) await appendPdfImages(page, section, pageChars);
+    if (page) { try { page.cleanup(); } catch { /* ignore */ } }
+
+    content.append(section);
+
     totalChars += pageChars;
     if (pageChars >= 20) pagesWithText++;
 
@@ -517,6 +634,7 @@ function renderEpubDocument(book, fallbackTitle) {
     totalChars += (s.frag.textContent || "").length; // read before append empties it
     section.append(s.frag);
     content.append(section);
+    registerImagesForOcr(section); // lazy image OCR (no-op when options.ocrImages is off)
     setProgress(0.1 + 0.9 * (n / total));
   });
 

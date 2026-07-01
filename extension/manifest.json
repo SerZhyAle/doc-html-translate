@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "doc-html-translate",
-  "short_name": "doc-html-translate",
-  "version": "0.1.0",
-  "description": "Re-renders PDFs and EPUBs as clean reflowed HTML so the browser's built-in Translate page works on them. Runs fully locally.",
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "version": "0.1.1",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
   "minimum_chrome_version": "105",
   "permissions": [
     "declarativeNetRequest",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -16,9 +18,12 @@
     "service_worker": "src/background.js",
     "type": "module"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "action": {
     "default_popup": "src/popup.html",
-    "default_title": "doc-html-translate - PDF/EPUB reflow + translate",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -46,9 +51,18 @@
         "src/toc.js",
         "src/lang.js",
         "src/epub.js",
+        "src/ocr.html",
+        "src/ocr.js",
+        "src/ocr-overlay.js",
+        "src/ocr-overlay.css",
+        "src/ocr-lang.js",
+        "src/pdf-images.js",
         "vendor/*"
       ],
-      "matches": ["<all_urls>", "file:///*"]
+      "matches": [
+        "<all_urls>",
+        "file:///*"
+      ]
     }
   ]
 }

@@ -7,15 +7,22 @@
 // friendlier to readable third-party code than to minified blobs, and the size cost
 // (~3 MB) is irrelevant for a locally-installed extension.
 
-import { cp, mkdir, rm, stat } from "node:fs/promises";
+import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const pdfjs = join(root, "node_modules", "pdfjs-dist");
+const tesseract = join(root, "node_modules", "tesseract.js");
+const tesseractCore = join(root, "node_modules", "tesseract.js-core");
 const vendor = join(root, "vendor");
+
+// tessdata_fast is tesseract.js's own default host; the English data is fetched once
+// at build time so English OCR ships fully offline (see the OCR spec's privacy note).
+const TESSDATA_BASE = "https://tessdata.projectnaptha.com/4.0.0_fast";
 
 async function vendorPdfjs() {
   if (!existsSync(pdfjs)) {
@@ -45,10 +52,62 @@ async function vendorPdfjs() {
   console.log(`Vendored pdfjs-dist@${version} into vendor/`);
 }
 
+// Vendor the Tesseract.js OCR engine + bundled English data into vendor/tesseract/.
+// Runs after vendorPdfjs() (which wipes vendor/), so it only writes its own subtree.
+//
+// minimum_chrome_version 105 guarantees WASM SIMD, and tesseract.js runs LSTM-only by
+// default, so the single self-contained core `tesseract-core-simd-lstm.wasm.js` (wasm
+// embedded) is the only core file the worker ever importScripts() - no need to ship the
+// ~30 MB of non-SIMD / combined variants.
+async function vendorTesseract() {
+  if (!existsSync(tesseract) || !existsSync(tesseractCore)) {
+    console.error("tesseract.js / tesseract.js-core not installed. Run `npm install` first.");
+    process.exit(1);
+  }
+  const out = join(vendor, "tesseract");
+  const langDir = join(out, "lang");
+  await mkdir(langDir, { recursive: true });
+
+  // Main-thread ESM entry + the worker script (loaded via workerPath at runtime).
+  await cp(join(tesseract, "dist", "tesseract.esm.min.js"), join(out, "tesseract.esm.min.js"));
+  await cp(join(tesseract, "dist", "worker.min.js"), join(out, "worker.min.js"));
+
+  // The one core build the SIMD + LSTM-only path uses.
+  await cp(
+    join(tesseractCore, "tesseract-core-simd-lstm.wasm.js"),
+    join(out, "tesseract-core-simd-lstm.wasm.js"),
+  );
+
+  // Bundled English data: fetch the gzipped tessdata_fast file once and store it
+  // decompressed so the runtime loads it with gzip:false and no network.
+  const url = `${TESSDATA_BASE}/eng.traineddata.gz`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    console.error(`Failed to fetch ${url}: ${resp.status} ${resp.statusText}`);
+    process.exit(1);
+  }
+  const gz = new Uint8Array(await resp.arrayBuffer());
+  const data = gunzipSync(gz);
+  await writeFile(join(langDir, "eng.traineddata"), data);
+
+  // Carry the upstream licences next to the vendored code.
+  await cp(join(tesseract, "LICENSE.md"), join(out, "LICENSE.tesseract"));
+  await cp(join(tesseractCore, "LICENSE"), join(out, "LICENSE.tesseract-core"));
+
+  const version = JSON.parse(
+    await import("node:fs/promises").then((fs) =>
+      fs.readFile(join(tesseract, "package.json"), "utf8"),
+    ),
+  ).version;
+  console.log(
+    `Vendored tesseract.js@${version} + eng.traineddata (${(data.length / 1024 / 1024).toFixed(1)} MB) into vendor/tesseract/`,
+  );
+}
+
 // Exactly what the extension needs at runtime. An allow-list (not a deny-list) so
 // dev/listing artifacts - store/, README.md, tests - can never silently leak into
 // the store package.
-const PACKAGE = ["manifest.json", "src", "vendor", "icons"];
+const PACKAGE = ["manifest.json", "_locales", "src", "vendor", "icons"];
 
 async function zip() {
   // The package is broken without the vendored pdfjs build; fail loudly rather
@@ -91,7 +150,7 @@ async function zip() {
 }
 
 const cmd = process.argv[2];
-if (cmd === "vendor") await vendorPdfjs();
+if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); }
 else if (cmd === "zip") await zip();
 else {
   console.error("usage: node build.mjs <vendor|zip>");

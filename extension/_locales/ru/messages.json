@@ -1,0 +1,74 @@
+{
+  "appName": {
+    "message": "Переводчик страниц PDF и EPUB (бесплатно, локально)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "Перевод PDF/EPUB",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "Переводите любые PDF и EPUB бесплатно встроенным переводчиком браузера. Полностью локально, быстро и безопасно.",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "Перевёрстка и перевод PDF/EPUB",
+    "description": "Tooltip on the toolbar button."
+  },
+  "storeDescription": {
+    "message": "В Chrome и Edge есть отличные встроенные переводчики: любую веб-страницу они переводят мгновенно и бесплатно. Но с книгами и документами это не работает:\n1. PDF рисуется на холсте (canvas), и текст не виден переводчику браузера.\n2. EPUB браузер вообще не открывает - просто скачивает файл.\n\n«Переводчик страниц PDF и EPUB» тихо решает обе проблемы!\n\nКак это работает:\nКогда вы открываете файл PDF или EPUB, расширение автоматически перехватывает его и превращает текст в чистую, перевёрстанную HTML-страницу. Теперь это обычная веб-страница - достаточно щёлкнуть правой кнопкой и выбрать «Перевести на [ваш язык]»!\n\nГлавные возможности:\n- Чтение EPUB: распаковывает книги EPUB и собирает главы в один прокручиваемый документ для удобного перевода.\n- Перевёрстка PDF: извлекает текст и раскладывает его в читаемые абзацы, чтобы переводчик не ломал, не накладывал и не дублировал текст.\n- Оглавление: автоматически переносит исходную структуру документа в виде сворачиваемого дерева навигации.\n- Режим чтения: светлая, сепия, тёмная и ночная темы с настраиваемым размером шрифта.\n- Полностью локально и приватно: всё работает на вашем устройстве. Документы никуда не загружаются.\n- Распознавание текста на картинках (OCR): распознаёт и переводит текст внутри изображений - правый клик по картинке или включите OCR для изображений в PDF и EPUB; английский встроен, другие языки скачиваются по запросу.\n- Оригинал в один клик: мгновенно вернуться к встроенному просмотрщику браузера.\n\nКак пользоваться:\n1. Установите расширение.\n2. Откройте любой файл PDF или EPUB в браузере (или нажмите значок расширения и выберите локальный файл).\n3. Щёлкните правой кнопкой в любом месте страницы и выберите «Перевести», чтобы бесплатно перевести весь документ на ваш язык!\n\nКонфиденциальность: всё работает на вашем устройстве. Расширение никуда не загружает ваши документы - у него попросту нет сервера, куда их отправлять. Единственный сетевой доступ - это встроенный перевод браузера, который вы запускаете сами.",
+    "description": "Long store-listing description; paste into the dashboard per language."
+  },
+  "shot1Caption": {
+    "message": "Откройте PDF - расширение перевёрстывает его в чистый текст, который Chrome переводит в один клик.",
+    "description": "Screenshot 1 caption."
+  },
+  "shot2Caption": {
+    "message": "Книги EPUB открываются со сворачиваемым оглавлением и удобными темами чтения.",
+    "description": "Screenshot 2 caption."
+  },
+  "shot3Caption": {
+    "message": "Правый клик, «Перевести на ...», готово - 100% локально, ничего не покидает ваше устройство.",
+    "description": "Screenshot 3 caption."
+  },
+  "ocrImageMenu": {
+    "message": "Распознать и перевести это изображение",
+    "description": "Right-click context-menu item on images."
+  },
+  "ocrProgress": {
+    "message": "Распознавание текста..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "Текст не найден",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "Не удалось обработать изображение.",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "Готово - используйте «Перевести страницу» в браузере",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "Использовать OCR для изображений",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "Скачать",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "Загрузка",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "установлен",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "Язык распознавания (английский встроен).",
+    "description": "Hint above the OCR language list."
+  }
+}

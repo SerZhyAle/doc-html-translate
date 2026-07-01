@@ -246,6 +246,17 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     </div>
 </details>
 
+<details id="ocrDetails">
+    <summary>Image OCR (translate text in pictures)</summary>
+    <div class="body">
+        <label class="chk"><input type="checkbox" id="chkOCR"> Overlay translatable text on images</label>
+        <div class="hint">Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.</div>
+        <div class="field" style="margin-top:8px"><label>OCR language:</label><select id="ocrLang"></select></div>
+        <div class="field"><label>Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button">Download</button></div>
+        <div class="hint" id="ocrStatus">English is built-in; download other languages as needed.</div>
+    </div>
+</details>
+
 <div class="toggles">
     <label class="chk"><input type="checkbox" id="chkNoOpen"> Don't open browser</label>
     <label class="chk"><input type="checkbox" id="chkForce"> Force re-process</label>
@@ -498,6 +509,8 @@ function collectSettings() {
         noOpen:         el('chkNoOpen').checked,
         force:          el('chkForce').checked,
         verbose:        el('chkVerbose').checked,
+        ocr:            el('chkOCR').checked,
+        ocrLang:        el('ocrLang').value,
     };
 }
 function applySettings(s) {
@@ -513,6 +526,8 @@ function applySettings(s) {
     if (s.noOpen  != null) el('chkNoOpen').checked  = !!s.noOpen;
     if (s.force   != null) el('chkForce').checked   = !!s.force;
     if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
+    if (s.ocr     != null) el('chkOCR').checked     = !!s.ocr;
+    if (s.ocrLang != null) el('ocrLang').dataset.want = s.ocrLang;
     syncEngineUI();
 }
 
@@ -534,6 +549,43 @@ fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).final
     fitWindow();
 });
 document.addEventListener('change', saveSettings);
+
+// ── OCR languages ───────────────────────────────────────
+async function loadOcrLangs() {
+    try {
+        const langs = await (await fetch('/api/ocr-langs')).json();
+        const sel = el('ocrLang'), dl = el('ocrDownloadSel');
+        const want = sel.dataset.want || sel.value || 'eng';
+        sel.innerHTML = ''; dl.innerHTML = '';
+        for (const l of langs) {
+            const o = document.createElement('option');
+            o.value = l.code; o.textContent = l.name;
+            (l.installed ? sel : dl).appendChild(o);
+        }
+        if (!sel.options.length) {
+            const o = document.createElement('option');
+            o.value = 'eng'; o.textContent = 'English (default)';
+            sel.appendChild(o);
+        }
+        if ([...sel.options].some(o => o.value === want)) sel.value = want;
+    } catch (e) { /* leave selects as-is */ }
+}
+el('btnOcrDownload').addEventListener('click', async () => {
+    const sel = el('ocrDownloadSel'), btn = el('btnOcrDownload'), status = el('ocrStatus');
+    const lang = sel.value;
+    if (!lang) return;
+    btn.disabled = true;
+    status.textContent = 'Downloading ' + lang + '..';
+    try {
+        const r = await (await fetch('/api/ocr-download', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang}),
+        })).json();
+        if (r.ok) { status.textContent = lang + ' installed.'; el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
+        else { status.textContent = 'Download failed: ' + (r.error || 'unknown'); }
+    } catch (e) { status.textContent = 'Download failed.'; }
+    btn.disabled = false;
+});
+loadOcrLangs();
 
 // ── fit the window height to its content (no dead space) ─
 function fitWindow() {
@@ -575,6 +627,8 @@ async function runConvert() {
         dstLang:        document.getElementById('dstLang').value,
         force:          document.getElementById('chkForce').checked,
         verbose:        document.getElementById('chkVerbose').checked,
+        ocr:            document.getElementById('chkOCR').checked,
+        ocrLang:        document.getElementById('ocrLang').value,
     };
 
     const btn = document.getElementById('btnRun');

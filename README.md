@@ -8,9 +8,22 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 - Website: https://serzhyale.github.io/doc-html-translate/
 - Repository: https://github.com/SerZhyAle/doc-html-translate
 - Latest release: https://github.com/SerZhyAle/doc-html-translate/releases/latest
+- Browser extension: https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic
 - Universal Agent Kit: https://serzhyale.github.io/universal-agent-kit/
 - Author page: https://sza.od.ua
 - Email: sza@ukr.net
+
+## Editions
+
+doc-html-translate comes in several forms - pick whichever fits; they all share the same converter:
+
+- **CLI** - `doc-html-translate.exe`, the command-line converter and Windows file-association handler. See [Quick Usage](#quick-usage).
+- **GUI desktop app** - `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (file picker, drag & drop, options dialog, a **Set as default handler** button).
+- **Microsoft Store app** - the same desktop app (GUI + CLI) shipped as an MSIX package: Store-signed, auto-updating, no manual download. Under MSIX, `-register` is a no-op (file associations come from the package manifest). Packaging details: [`msix/README.md`](msix/README.md).
+- **Browser extension** - a Chromium MV3 extension that re-renders PDFs and EPUBs as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). (Edge Add-ons listing planned.)
+- **Website & docs** - the [landing page](https://serzhyale.github.io/doc-html-translate/), multi-language documentation, and a dedicated [extension page](https://serzhyale.github.io/doc-html-translate/extension.html).
+
+The desktop app and the extension are independent and complementary: the app converts a file into a local HTML folder you keep; the extension does the same reflow live inside a browser tab. Both lean on the same "free" idea - hand the browser clean HTML and let its built-in translator do the rest.
 
 ## Features
 
@@ -129,6 +142,10 @@ Why this workflow is popular (besides the obvious):
 | `-ollama-parallel` | `1` | Parallel batch requests |
 | `-ollama-ctx` | `8192` | Ollama context size |
 | `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N (`0` = no limit) |
+| `-ocr` | `false` | OCR text inside document images and overlay it as translatable HTML (needs Tesseract) |
+| `-ocr-lang` | (`-src`) | OCR language(s), e.g. `eng` or `eng+rus` (defaults from `-src`, else `eng`) |
+| `-ocr-langs` | `false` | List installed/available OCR languages and exit |
+| `-ocr-download` | empty | Download an OCR language pack (e.g. `-ocr-download rus`) and exit |
 | `-split` | `5000` | Split pages at N chars (`0` disables split) |
 | `-toc-depth` | `0` | Table-of-contents nesting depth on `index.html` (`0` = unlimited, `1` = chapters only) |
 | `-folder` | empty | Output parent folder |
@@ -154,6 +171,27 @@ AIzaSy...your_key_here...
 In `doc-html-ui`, tick **Google Translate** to reveal a key field - paste your key and click **Save** to write it to the per-user path above (no manual file editing needed).
 
 If no usable key is found, the app logs a warning and skips translation - it would rather say so than guess.
+
+## OCR image overlay (`-ocr`)
+
+Text baked into a document's images (scanned pages, comics, screenshots) is invisible to any text
+translator. With `-ocr`, the app recognizes that text and overlays it as real, translatable HTML
+positioned over each image, so the app's own translation (`-google` / `-ollama`) or the browser's
+"Translate page" translates the pictures too. Works for formats whose images reach the HTML stage (EPUB
+and PDF); other formats are unaffected.
+
+- **Engine:** the external **Tesseract** binary. The app finds it via `DOCHT_TESSERACT`, then a
+  `tesseract\tesseract.exe` next to the app, then `PATH`. If none is found, conversion still completes
+  (without overlays) and logs a hint.
+- **Languages:** English (`eng.traineddata`) ships with the app and works offline. Other languages are
+  downloaded on demand into the app's `tessdata\` folder:
+  - `doc-html-translate.exe -ocr-langs` - list installed and available languages.
+  - `doc-html-translate.exe -ocr-download rus` - download Russian (etc.).
+  - In `doc-html-ui`, use the **Image OCR** section: tick the toggle, pick the OCR language, and use
+    **Download** to add languages.
+- **Usage:** `doc-html-translate.exe -ocr -src ja -google "manga.pdf"` (OCR Japanese, then translate).
+  `-ocr-lang` overrides the OCR language (accepts Tesseract codes like `eng+rus`); by default it follows
+  `-src`.
 
 ## Behavior Notes
 

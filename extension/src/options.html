@@ -15,6 +15,12 @@
     .saved.show { opacity: 1; }
     ul.hosts { padding-left: 1.1rem; }
     code { background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 4px; }
+    .ocr-langs.disabled { opacity: 0.5; }
+    .ocr-lang { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0; }
+    .ocr-lang label { font-weight: 400; margin: 0; display: inline; }
+    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.15rem 0.6rem; border: 1px solid #2563eb;
+      color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
+    .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -55,6 +61,14 @@
       <option value="ar">Arabic</option>
     </select>
     <div class="hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.</div>
+  </div>
+
+  <div class="field">
+    <label><input type="checkbox" id="ocr-images"> Use OCR for images</label>
+    <div class="hint">Recognize text baked into images - in PDFs and EPUBs, and via the right-click
+      "OCR &amp; translate this image" - then translate it with the browser's "Translate page".
+      English works offline; other languages download on demand and are cached locally.</div>
+    <div id="ocr-langs" style="margin-top: 0.6rem"></div>
   </div>
 
   <div class="field">

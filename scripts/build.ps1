@@ -89,3 +89,28 @@ if (Test-Path $keyFile) {
 }
 
 Write-Host "Copied to $deployDir"
+
+# Step 6: Ship the bundled OCR language data (English) into <dir>/tessdata next to the
+# exe, so -ocr works offline out of the box. Prefer the copy the extension already
+# vendored; otherwise fetch it. Other languages are downloaded on demand by the app.
+function Ensure-EngTessdata {
+    param([string]$destDir)
+    $dest = Join-Path $destDir "tessdata"
+    New-Item -ItemType Directory -Force -Path $dest | Out-Null
+    $engDest = Join-Path $dest "eng.traineddata"
+    if (Test-Path $engDest) { return }
+    $vendored = "extension/vendor/tesseract/lang/eng.traineddata"
+    if (Test-Path $vendored) {
+        Copy-Item -Path $vendored -Destination $engDest -Force
+        Write-Host "Bundled eng.traineddata -> $dest"
+        return
+    }
+    try {
+        Invoke-WebRequest -Uri "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata" -OutFile $engDest -UseBasicParsing
+        Write-Host "Downloaded eng.traineddata -> $dest"
+    } catch {
+        Write-Host "NOTE: could not provision eng.traineddata ($_); -ocr will need a system tesseract or a manual download."
+    }
+}
+Ensure-EngTessdata -destDir (Split-Path -Parent $absOutput)
+Ensure-EngTessdata -destDir $deployDir

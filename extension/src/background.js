@@ -66,8 +66,32 @@ async function syncRules() {
   });
 }
 
-chrome.runtime.onInstalled.addListener(() => { syncRules(); });
-chrome.runtime.onStartup.addListener(() => { syncRules(); });
+// "OCR & translate this image": a right-click action on any image that opens the OCR
+// overlay page in a new tab for that image. removeAll first so re-running onInstalled /
+// onStartup never throws on a duplicate id.
+const OCR_MENU_ID = "ocr-image";
+function setupContextMenu() {
+  try {
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: OCR_MENU_ID,
+        title: chrome.i18n.getMessage("ocrImageMenu") || "OCR & translate this image",
+        contexts: ["image"],
+      });
+    });
+  } catch (e) {
+    console.warn("context menu setup failed", e);
+  }
+}
+
+chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId !== OCR_MENU_ID || !info.srcUrl) return;
+  const url = `${chrome.runtime.getURL("src/ocr.html")}?src=${encodeURIComponent(info.srcUrl)}`;
+  chrome.tabs.create({ url });
+});
+
+chrome.runtime.onInstalled.addListener(() => { syncRules(); setupContextMenu(); });
+chrome.runtime.onStartup.addListener(() => { syncRules(); setupContextMenu(); });
 
 // Rebuild rules whenever the options change (popup/options page write storage).
 chrome.storage.onChanged.addListener((changes, area) => {

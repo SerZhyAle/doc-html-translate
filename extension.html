@@ -180,8 +180,8 @@
       <button id="lng-uk" type="button" onclick="setLang('uk')" aria-pressed="false" aria-label="Українська">UA</button>
     </span>
     <button class="btn" id="themeBtn" type="button" onclick="toggleTheme()" title="Theme" aria-label="Theme" aria-pressed="false">◐</button>
-    <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">
-      <span data-l="ru">⤓ Расширение</span><span data-l="en">⤓ Get extension</span><span data-l="uk">⤓ Розширення</span>
+    <a class="btn primary" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">
+      <span data-l="ru">⤓ Chrome Web Store</span><span data-l="en">⤓ Chrome Web Store</span><span data-l="uk">⤓ Chrome Web Store</span>
     </a>
   </div>
 </header>
@@ -205,8 +205,11 @@
       <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку doc-html-translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер. Революційна ідея: показати перекладачеві текст, який він справді може прочитати.</span>
     </p>
     <div class="cta">
-      <a class="btn primary" href="#install">
-        <span data-l="ru">Как установить</span><span data-l="en">How to install</span><span data-l="uk">Як встановити</span>
+      <a class="btn primary" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">
+        <span data-l="ru">⤓ Установить из Chrome Web Store</span><span data-l="en">⤓ Add from Chrome Web Store</span><span data-l="uk">⤓ Встановити з Chrome Web Store</span>
+      </a>
+      <a class="btn" href="#install">
+        <span data-l="ru">Установить вручную</span><span data-l="en">Install manually</span><span data-l="uk">Встановити вручну</span>
       </a>
       <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">
         <span data-l="ru">Исходники на GitHub</span><span data-l="en">Source on GitHub</span><span data-l="uk">Джерела на GitHub</span>
@@ -222,9 +225,9 @@
       <div class="note" style="margin:0">
         <div class="tag"><span data-l="ru">Где взять</span><span data-l="en">Availability</span><span data-l="uk">Де взяти</span></div>
         <p>
-          <span data-l="ru">Расширение распространяется как распакованное (Load unpacked) из папки <code>extension/</code> репозитория; публикация в Chrome Web Store и Edge Add-ons - в планах. Работает в Chrome и Edge (Chromium, MV3).</span>
-          <span data-l="en">The extension ships as an unpacked load from the repo's <code>extension/</code> folder; Chrome Web Store and Edge Add-ons listings are planned. Works in Chrome and Edge (Chromium, MV3).</span>
-          <span data-l="uk">Розширення поширюється як розпакована збірка (Load unpacked) з теки <code>extension/</code> репозиторію; публікація в Chrome Web Store та Edge Add-ons - у планах. Працює в Chrome та Edge (Chromium, MV3).</span>
+          <span data-l="ru">Расширение доступно в <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> - установка в один клик. Можно также загрузить распакованным (Load unpacked) из папки <code>extension/</code> репозитория. Публикация в Edge Add-ons - в планах. Работает в Chrome и Edge (Chromium, MV3).</span>
+          <span data-l="en">The extension is available on the <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> - one-click install. You can also load it unpacked from the repo's <code>extension/</code> folder. An Edge Add-ons listing is planned. Works in Chrome and Edge (Chromium, MV3).</span>
+          <span data-l="uk">Розширення доступне в <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> - встановлення в один клік. Можна також завантажити розпакованим (Load unpacked) з теки <code>extension/</code> репозиторію. Публікація в Edge Add-ons - у планах. Працює в Chrome та Edge (Chromium, MV3).</span>
         </p>
       </div>
       <ol class="quickstart">
@@ -251,8 +254,10 @@
       </details>
 
       <details class="sec" id="install">
-        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Установка</h2><span class="secteaser">Load unpacked в режиме разработчика</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Установка</h2><span class="secteaser">Chrome Web Store в один клик или Load unpacked</span></span></summary>
         <div class="secbody">
+          <p>Проще всего - из <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>: открой страницу и нажми <strong>«Установить»</strong>. Подходит для Chrome и Edge (Chromium). Дальше - сразу к разделу «Как пользоваться».</p>
+          <p class="muted">Ручная установка из исходников (для разработки или Edge без магазина):</p>
           <ol>
             <li>Возьми папку <code>extension/</code> из <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">репозитория</a> (или из релиза). При сборке из исходников один раз выполни <code>npm install &amp;&amp; npm run vendor</code> внутри неё.</li>
             <li>Открой <code>chrome://extensions</code> (или <code>edge://extensions</code>), включи <strong>Режим разработчика</strong>.</li>
@@ -315,9 +320,10 @@
         <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Ссылки</h2><span class="secteaser">Репозиторий, приложение, документация</span></span></summary>
         <div class="secbody">
           <ul>
+            <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Расширение в Chrome Web Store</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Исходники расширения (папка <code>extension/</code>)</a></li>
-            <li><a href="index.html">Настольное приложение doc-html-translate</a> · <a href="docs.ru.html">документация</a></li>
-            <li><a href="privacy.html">Политика приватности</a></li>
+            <li><a href="index.html">Настольное приложение doc-html-translate</a> (CLI, GUI и Microsoft Store) · <a href="docs.ru.html">документация</a></li>
+            <li><a href="extension-privacy.html">Политика приватности расширения</a></li>
           </ul>
           <p class="muted">Лицензия MIT.</p>
         </div>
@@ -337,8 +343,10 @@
       </details>
 
       <details class="sec" id="install-en">
-        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Install</h2><span class="secteaser">Load unpacked in Developer mode</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Install</h2><span class="secteaser">One click from the Chrome Web Store, or load unpacked</span></span></summary>
         <div class="secbody">
+          <p>The easiest way is the <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>: open the page and click <strong>Add</strong>. Works in Chrome and Edge (Chromium). Then jump to "How to use".</p>
+          <p class="muted">Manual install from source (for development or Edge without the store):</p>
           <ol>
             <li>Get the <code>extension/</code> folder from the <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">repository</a> (or a release). When building from source, run <code>npm install &amp;&amp; npm run vendor</code> inside it once.</li>
             <li>Open <code>chrome://extensions</code> (or <code>edge://extensions</code>), enable <strong>Developer mode</strong>.</li>
@@ -401,9 +409,10 @@
         <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Links</h2><span class="secteaser">Repository, app, documentation</span></span></summary>
         <div class="secbody">
           <ul>
+            <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Extension on the Chrome Web Store</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Extension source (the <code>extension/</code> folder)</a></li>
-            <li><a href="index.html">doc-html-translate desktop app</a> · <a href="docs.html">documentation</a></li>
-            <li><a href="privacy.html">Privacy policy</a></li>
+            <li><a href="index.html">doc-html-translate desktop app</a> (CLI, GUI and Microsoft Store) · <a href="docs.html">documentation</a></li>
+            <li><a href="extension-privacy.html">Extension privacy policy</a></li>
           </ul>
           <p class="muted">MIT license.</p>
         </div>
@@ -423,8 +432,10 @@
       </details>
 
       <details class="sec" id="install-uk">
-        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Встановлення</h2><span class="secteaser">Load unpacked у режимі розробника</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">01</span><span class="sechead"><h2 class="sectitle">Встановлення</h2><span class="secteaser">Chrome Web Store в один клік або Load unpacked</span></span></summary>
         <div class="secbody">
+          <p>Найпростіше - з <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>: відкрий сторінку та натисни <strong>«Встановити»</strong>. Підходить для Chrome та Edge (Chromium). Далі - одразу до розділу «Як користуватися».</p>
+          <p class="muted">Ручне встановлення з джерел (для розробки або Edge без магазину):</p>
           <ol>
             <li>Візьми теку <code>extension/</code> з <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">репозиторію</a> (або з релізу). За збірки з джерел один раз виконай <code>npm install &amp;&amp; npm run vendor</code> усередині неї.</li>
             <li>Відкрий <code>chrome://extensions</code> (або <code>edge://extensions</code>), увімкни <strong>Режим розробника</strong>.</li>
@@ -487,9 +498,10 @@
         <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Посилання</h2><span class="secteaser">Репозиторій, застосунок, документація</span></span></summary>
         <div class="secbody">
           <ul>
+            <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Розширення в Chrome Web Store</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Джерела розширення (тека <code>extension/</code>)</a></li>
-            <li><a href="index.html">Настільний застосунок doc-html-translate</a> · <a href="docs.uk.html">документація</a></li>
-            <li><a href="privacy.html">Політика приватності</a></li>
+            <li><a href="index.html">Настільний застосунок doc-html-translate</a> (CLI, GUI та Microsoft Store) · <a href="docs.uk.html">документація</a></li>
+            <li><a href="extension-privacy.html">Політика приватності розширення</a></li>
           </ul>
           <p class="muted">Ліцензія MIT.</p>
         </div>

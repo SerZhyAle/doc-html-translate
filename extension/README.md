@@ -5,6 +5,8 @@ semantic HTML so the browser's built-in **Translate page** works on them for fre
 Spin-off of [doc-html-translate](../README.md); it ports that app's proven PDF reflow and EPUB
 extraction heuristics to run in-browser (PDF.js for PDF, a native unzip + DOM pipeline for EPUB).
 
+**Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)** (Chrome and Edge / Chromium). An Edge Add-ons listing is still planned; you can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
+
 The make-or-break decision for PDF (see [the spec](../DEV/research/pdf_translate_extension_spec.md)):
 reflow to flowing `<p>` / `<h2>` text, **not** the PDF.js canvas + text-layer overlay. The overlay
 leaves the original glyphs under transform-scaled spans, which native translate doubles/garbles. Clean
@@ -28,9 +30,13 @@ src/
   toc.js               PDF outline -> nested TOC, ported from internal/pdf/toc.go
   epub.js              EPUB: unzip + OPF/spine + nav/NCX TOC + chapter sanitize, ported from internal/epub
   lang.js              source-language detection -> <html lang>
-  popup.html/.js       toolbar: global + per-site toggle
-  options.html/.js     defaults: on/off, theme, source-language hint
-vendor/                pdfjs-dist (pdf.mjs, pdf.worker.mjs, cmaps, standard_fonts) - generated, git-ignored
+  popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
+  options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
+  ocr-lang.js          OCR languages: bundled English, on-demand download + IndexedDB cache
+  ocr-overlay.js/.css  shared OCR unit: recognize -> opaque translatable plates over the image
+  ocr.html/.js         standalone page for the right-click "OCR & translate this image" action
+  pdf-images.js        pull raster images out of a PDF page (embedded XObjects + scanned-page raster)
+vendor/                pdfjs-dist + tesseract/ (engine + eng.traineddata) - generated, git-ignored
 icons/                 16/32/48/128
 test/                  node:test unit tests for the pure modules (reflow/toc/lang + epub unzip/path)
 build.mjs              `vendor` (sync pdfjs) and `zip` (store package)
@@ -39,8 +45,8 @@ build.mjs              `vendor` (sync pdfjs) and `zip` (store package)
 ## Develop
 
 ```sh
-npm install        # pulls pdfjs-dist (dev dependency)
-npm run vendor     # copies the pieces of pdfjs we ship into vendor/  (run once after install)
+npm install        # pulls pdfjs-dist + tesseract.js / tesseract.js-core (dev dependencies)
+npm run vendor     # copies pdfjs + the Tesseract engine and eng.traineddata into vendor/ (run once after install)
 npm test           # unit-tests reflow.js / toc.js / lang.js (no browser needed)
 npm run zip        # builds dist/doc-html-translate-extension.zip (store-ready)
 ```
@@ -77,6 +83,22 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
   result or a clear fallback (no crashes/hangs). Scanned PDFs show a "little or no text" notice that
   points back to the desktop OCR flow.
 
+## Translate text in images (OCR)
+
+Text baked into images (scanned pages, comics, screenshots) is invisible to the browser translator. The
+extension can OCR it **on-device** (Tesseract, bundled) and lay the recognized text over the image as
+real, translatable HTML, so one **Translate page** covers pictures too. Three ways in:
+
+- **Any web image:** right-click -> **OCR & translate this image**. Opens a new tab, OCRs the image,
+  overlays the text, and sets `<html lang>` so the browser offers Translate page.
+- **PDFs / EPUBs:** turn on **Use OCR for images** (in the toolbar popup, next to *Open file*, or in
+  Options). Images are OCR'd lazily as they scroll into view; an "OCR: done/total" counter shows progress
+  so a picture-heavy document never looks frozen.
+
+**English is bundled** and works fully offline. Other languages (Russian, Ukrainian, Japanese, ..) are
+optional: they download on demand from the tessdata_fast host and cache locally for reuse - the only new
+network access, and only when you click **Download**. See [`store/PRIVACY.md`](store/PRIVACY.md).
+
 ## Known limitations
 
 - Interception matches the **request URL** (`*.pdf` / `*.epub`), so files served without a matching
@@ -89,15 +111,19 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
   heavily designed books lose their exact layout (by design - that is what makes them translate cleanly).
   ZIP64 archives are not supported (vanishingly rare for EPUB). DRM-protected EPUBs cannot be read.
 - Firefox and mobile are out of scope (different PDF + interception story).
-- The viewer is **text-extraction only** (`getTextContent()`); it never rasterizes pages. The bundled
-  PDF.js worker contains a WASM JPEG2000 decoder that the default MV3 CSP would block, but that path is
-  never reached. If you ever add canvas rendering / image decoding, add
+- With OCR **off**, the viewer is text-extraction only (`getTextContent()`) and never rasterizes pages.
+  OCR (Tesseract) uses WebAssembly, and scanned-PDF OCR rasterizes the page, so the manifest sets
   `"content_security_policy": { "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'" }`
-  to the manifest (and keep `minimum_chrome_version` >= 103).
+  (`minimum_chrome_version` is 105, comfortably >= 103).
+- OCR accuracy depends on image quality and the chosen language; stylized/vertical text may recognize
+  imperfectly. Text is grouped by the engine's blocks, not by detected speech bubbles.
 
-## Store packaging (Steps 6-7)
+## Store packaging & publishing
 
-`npm run zip` produces a minimal-permission, store-ready ZIP. Publishing (Chrome Web Store $5
-one-time registration, Edge Add-ons free, listing assets, privacy policy) is done from the developer
-consoles and is out of scope for this repo drop. Selling point for the listing: everything runs
-locally; only the browser's own translate touches the network, and even that waits until you ask.
+`npm run zip` produces a minimal-permission, store-ready ZIP. The extension is **published on the
+[Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)**; an Edge
+Add-ons listing is still planned. Listing copy and review-form answers live in
+[`store/LISTING.md`](store/LISTING.md), the hosted privacy policy in [`store/PRIVACY.md`](store/PRIVACY.md)
+(served as `extension-privacy.html`), and the release/automation steps in [`PUBLISHING.md`](PUBLISHING.md).
+Selling point for the listing: everything runs locally; only the browser's own translate touches the
+network, and even that waits until you ask.

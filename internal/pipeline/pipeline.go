@@ -21,6 +21,7 @@ import (
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/md"
 	"doc-html-translate/internal/mobi"
+	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/pdf"
 	"doc-html-translate/internal/rtf"
 	"doc-html-translate/internal/translator"
@@ -201,6 +202,12 @@ func (r Runner) Run() (int, error) {
 			return ExitIOError, fmt.Errorf("inject navbars: %w", err)
 		}
 		logging.Printf("  Navigation: %d pages\n", len(book.SpineHrefs()))
+	}
+
+	// Optional: OCR document images and overlay translatable text plates. Runs before
+	// translation so the overlay text is translated too. Best-effort - never fatal.
+	if r.cfg.OCR {
+		r.overlayImages(book, outputDir)
 	}
 
 	// Step 3: Translation
@@ -485,6 +492,39 @@ func isWindowsReservedName(name string) bool {
 	}
 
 	return false
+}
+
+// overlayImages OCRs the images in every content page and rewrites each image into a
+// positioned container with translatable text plates. Best-effort: a missing tesseract or
+// a failed page is logged and skipped, never aborting the conversion.
+func (r Runner) overlayImages(book *epub.Book, outputDir string) {
+	bin, err := ocr.Locate()
+	if err != nil {
+		logging.Printf("  OCR skipped: %v\n", err)
+		return
+	}
+	lang := r.cfg.OCRLang
+	if lang == "" {
+		lang = ocr.TessLang(r.cfg.SourceLang)
+	}
+	dataDir := ocr.DataDir()
+	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, lang)
+
+	total := 0
+	for _, item := range book.ContentFiles() {
+		href := item.Href
+		if book.BasePath != "" && book.BasePath != "." {
+			href = book.BasePath + "/" + href
+		}
+		filePath := filepath.Join(outputDir, filepath.FromSlash(href))
+		n, err := ocr.OverlayFile(bin, filePath, lang, dataDir)
+		if err != nil {
+			logging.Printf("  OCR overlay %s: %v\n", filepath.Base(filePath), err)
+			continue
+		}
+		total += n
+	}
+	logging.Printf("  OCR overlay: %d image(s) overlaid\n", total)
 }
 
 func loadContentPages(book *epub.Book, outputDir string) []contentPage {

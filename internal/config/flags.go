@@ -22,6 +22,10 @@ type Config struct {
 	SourceLang     string
 	TargetLang     string
 	MaxCost        float64
+	OCR            bool   // -ocr: OCR document images and overlay translatable text
+	OCRLang        string // -ocr-lang: tesseract language(s) for OCR (default: -src or eng)
+	OCRList        bool   // -ocr-langs: list installed/available OCR languages and exit
+	OCRDownload    string // -ocr-download <lang>: download an OCR language pack and exit
 	InputFile      string
 }
 
@@ -45,6 +49,10 @@ func ParseArgs(args []string) (Config, error) {
 	src := fs.String("src", "en", "source language")
 	dst := fs.String("dst", "ru", "target language")
 	maxCost := fs.Float64("max-cost", 0, "abort paid translation before your wallet notices if the USD estimate exceeds N (0 = live dangerously, no limit)")
+	ocr := fs.Bool("ocr", false, "OCR text inside document images and overlay it as translatable HTML (needs tesseract)")
+	ocrLang := fs.String("ocr-lang", "", "OCR language(s) for -ocr, e.g. eng or eng+rus (default: -src, else eng)")
+	ocrLangs := fs.Bool("ocr-langs", false, "list installed and available OCR languages, then exit")
+	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the app's tessdata, then exit")
 	version := fs.Bool("version", false, "print version and exit")
 
 	if err := fs.Parse(args); err != nil {
@@ -72,6 +80,10 @@ func ParseArgs(args []string) (Config, error) {
 		SourceLang:     *src,
 		TargetLang:     *dst,
 		MaxCost:        *maxCost,
+		OCR:            *ocr,
+		OCRLang:        *ocrLang,
+		OCRList:        *ocrLangs,
+		OCRDownload:    *ocrDownload,
 	}
 
 	// First-click UX: running without any args behaves as registration mode.
@@ -79,7 +91,8 @@ func ParseArgs(args []string) (Config, error) {
 		cfg.Register = true
 	}
 
-	if !cfg.Register {
+	// OCR language management commands need no input file.
+	if !cfg.Register && !cfg.OCRList && cfg.OCRDownload == "" {
 		rest := fs.Args()
 		if len(rest) == 0 {
 			return Config{}, errors.New("input file is required unless -register is used")

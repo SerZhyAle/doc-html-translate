@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/pipeline"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/windowsreg"
@@ -30,8 +31,38 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
+	// OCR language management commands: run and exit without a document.
+	if a.cfg.OCRList {
+		printOCRLangs()
+		return 0, nil
+	}
+	if a.cfg.OCRDownload != "" {
+		fmt.Printf("Downloading OCR language %q (%s)...\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
+		if err := ocr.Download(a.cfg.OCRDownload); err != nil {
+			return 1, err
+		}
+		fmt.Printf("Installed into %s\n", ocr.DataDir())
+		return 0, nil
+	}
+
 	runner := pipeline.NewRunner(a.cfg)
 	return runner.Run()
+}
+
+// printOCRLangs lists which OCR languages are installed and which can be downloaded.
+func printOCRLangs() {
+	installed := map[string]bool{}
+	for _, c := range ocr.Installed() {
+		installed[c] = true
+	}
+	fmt.Println("OCR languages (tessdata:", ocr.DataDir()+")")
+	for _, l := range ocr.Available {
+		mark := "  available - download with: -ocr-download " + l.Code
+		if installed[l.Code] {
+			mark = "  installed"
+		}
+		fmt.Printf("  %-9s %-22s%s\n", l.Code, l.Name, mark)
+	}
 }
 
 // printSplash prints the welcome screen shown on first launch (no-args mode).

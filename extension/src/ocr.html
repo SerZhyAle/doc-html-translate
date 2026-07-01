@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image OCR</title>
+  <link rel="stylesheet" href="ocr-overlay.css">
+  <style>
+    body { margin: 0; background: #2b2b2b; color: #eee; font-family: "Segoe UI", system-ui, sans-serif; }
+    #status { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
+      padding: 8px 14px; background: #1e1e1e; border-bottom: 1px solid #000; font-size: 13px; }
+    #status.done { display: none; }
+    #progress-bar { height: 4px; width: 0; background: #2563eb; border-radius: 2px; flex: 0 0 140px;
+      transition: width 0.2s; align-self: center; }
+    #status-text { flex: 1 1 auto; }
+    main#ocr-mount { display: block; max-width: 1100px; margin: 16px auto; padding: 0 12px; }
+    .ocr-hint { padding: 24px; text-align: center; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div id="status"><div id="progress-bar"></div><span id="status-text">Recognizing..</span></div>
+  <main id="ocr-mount"><p class="ocr-hint">Loading image..</p></main>
+  <script type="module" src="ocr.js"></script>
+</body>
+</html>

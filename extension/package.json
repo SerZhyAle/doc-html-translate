@@ -1,6 +1,6 @@
 {
   "name": "doc-html-translate-extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Re-render PDFs as clean reflowed HTML so the browser's built-in Translate page works for free. Spin-off of doc-html-translate.",
   "type": "module",
@@ -16,6 +16,8 @@
     "release:edge": "npm run build && npm run publish:edge"
   },
   "devDependencies": {
-    "pdfjs-dist": "^4.10.38"
+    "pdfjs-dist": "^4.10.38",
+    "tesseract.js": "^5.1.1",
+    "tesseract.js-core": "^5.1.1"
   }
 }

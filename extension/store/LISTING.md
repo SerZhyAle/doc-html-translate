@@ -1,13 +1,32 @@
-# Store listing assets (Steps 6-7)
+# Store listing assets
 
-Draft copy and metadata for the Chrome Web Store + Edge Add-ons listings. Fill in screenshots and the
-hosted privacy-policy URL before submitting. Everything here is text; no account action is automated.
+Copy and metadata for the Chrome Web Store + Edge Add-ons listings. Everything here is text; no account
+action is automated.
+
+**Live listing (Chrome Web Store):** https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic
+The Edge Add-ons submission is still pending - reuse the same copy below (see the Edge notes at the end).
+Keep this file in sync with the published listing when the description changes.
+
+## Localization (RU / UK)
+The extension is localized via `_locales/{en,ru,uk}/messages.json` (`default_locale: en`). Chrome and Edge
+auto-serve the localized **name** and **short description** from those files based on the user's browser
+language - no per-language dashboard step is needed for those two fields. The long **detailed description**
+and the **screenshot captions** are NOT auto-localized by the store, so paste them by hand from the same
+message keys (`storeDescription`, `shot1Caption`..`shot3Caption`) into each store's localized-listing editor:
+- Chrome Web Store: Store listing -> language dropdown (top right) -> add Russian and Ukrainian, paste the
+  RU/UK `storeDescription` and the localized screenshots/captions.
+- Edge Add-ons: Properties -> Availability -> add the same two languages, paste the same copy.
+The RU/UK strings below are the canonical source; keep them in sync with `_locales`.
 
 ## Name
-doc-html-translate
+PDF & EPUB Page Translator (Free & Local)
+- RU: Переводчик страниц PDF и EPUB (бесплатно, локально)
+- UK: Перекладач сторінок PDF та EPUB (безкоштовно, локально)
 
 ## Short description (<= 132 chars)
-Turns PDFs and EPUBs into clean HTML so your browser's built-in Translate page finally works on them. 100% local, no API key.
+Translate any PDF & EPUB for free in Chrome using your browser's built-in translator. 100% local, fast, and secure.
+- RU: Переводите любые PDF и EPUB бесплатно встроенным переводчиком браузера. Полностью локально, быстро и безопасно.
+- UK: Перекладайте будь-які PDF та EPUB безкоштовно вбудованим перекладачем браузера. Повністю локально, швидко й безпечно.
 
 ## Category
 Productivity
@@ -18,27 +37,32 @@ reflowed HTML in a local viewer so the browser's built-in "Translate page" featu
 does not do anything else.
 
 ## Detailed description
-Browsers can translate any web page for free - just not the two formats you actually keep your books in.
-The PDF viewer draws text on a canvas that translation can't touch, and EPUBs don't open in the browser
-at all. This extension quietly fixes both. When you open a PDF, it extracts the text with PDF.js (bundled, offline) and lays it out as
-ordinary HTML paragraphs and headings. When you open an EPUB, it unpacks the book and combines its
-chapters into one clean HTML document. Either way you get a table of contents from the document's own
-outline, and your browser's own "Translate page" works exactly as it does on any website.
+Chrome and Edge have excellent built-in translators that translate any webpage instantly and for free. But they don't work on books and documents:
+1. **PDFs** are rendered on a canvas, making the text invisible to the browser's translator.
+2. **EPUBs** cannot be opened in the browser at all; they just trigger a download.
 
-- Works on web (https) and local (file://) PDFs and EPUBs.
-- Detects the document language and sets it so the browser offers the right translation.
-- Reading controls: font size/family, light/sepia/dark themes, page jump, collapsible contents.
-- One click back to the original PDF in the native viewer.
-- Turn it off globally or per-site from the toolbar.
+**"PDF & EPUB Page Translator" quietly solves both problems!**
 
-Privacy: everything runs on your device. The extension never uploads your documents anywhere - it has no
-server to send them to and no interest in your reading list. The only network access is your browser's own
-translation feature, which you trigger yourself.
+### How it works:
+When you open a PDF or EPUB file, this extension automatically intercepts it and converts the text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!
 
-Limitations: scanned/image-only PDFs have no text to translate (the extension detects this and offers
-the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with
-the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be
-read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
+### Key Features:
+- 📖 **EPUB Reader**: Unpacks EPUB books and combines chapters into a single scrollable document for seamless translation.
+- 📄 **PDF Reflow**: Extracts text and lays it out as readable paragraphs, making sure the translator doesn't break, overlap, or double text.
+- 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
+- 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
+- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), or turn on "Use OCR for images" for PDFs and EPUBs, to recognize the text baked into pictures and lay it over them as real text - so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
+- 🔒 **100% Local & Private**: Everything runs entirely on your device. Your documents are never uploaded to any server.
+- 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
+
+### How to use:
+1. Install the extension.
+2. Open any PDF or EPUB file in your browser (or click the extension icon to select a local file).
+3. Right-click anywhere on the page and select **"Translate"** to translate the entire document into your language for free!
+
+Privacy: Everything runs on your device. The extension never uploads your documents anywhere — it has no server to send them to and no interest in your reading list. The only network access is your browser's own translation feature, which you trigger yourself.
+
+Limitations: Scanned/image-only PDFs have no text to translate (the extension detects this and offers the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
 
 ## Permission justifications (for the review form)
 - declarativeNetRequest: used with dynamic rules created at runtime to redirect main_frame `*.pdf` and
@@ -51,17 +75,38 @@ read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
   user opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the
   cross-origin fetch because the viewer is an extension page rather than the document's origin - so
   `<all_urls>` is the minimum that works for this single purpose.
-- storage: to remember your on/off choice, per-site exceptions, and reading preferences (font, theme).
+- contextMenus: to add the right-click "OCR & translate this image" action on images.
+- storage: to remember your on/off choice, per-site exceptions, reading preferences (font, theme), and
+  which OCR languages you have downloaded.
 
 ## Data use disclosures
 - Does the extension collect or transmit user data? No.
 - Remote code? No. All code (including PDF.js) is bundled in the package; nothing is loaded from a
   remote server and there is no eval of remote code.
 
-## Assets still to produce (manual)
-- Screenshots (1280x800 PNG, at least 1, ideally 3-5): a reflowed PDF mid-translation; a reflowed EPUB
-  with the contents sidebar; the toolbar popup. Use the same set for Chrome and Edge. Avoid text-only
-  marketing graphics (Chrome rejects non-representative images).
+## Screenshots (capture on Windows - manual)
+Shoot all three in **Chrome on Windows 11** so the Windows window chrome (title bar + Chrome's translate
+banner) is visible - that's the "у кого Windows" framing the listing should show. Export **1280x800 PNG**
+(or 640x400). Show real application screens, not text-only marketing banners. Capture an EN and a RU/UK pass
+so each localized listing gets matching shots. The captions below come verbatim from the `_locales`
+`shot*Caption` keys - overlay them (or paste as the screenshot description) per language.
+
+- **Screenshot 1 - Core value (PDF before -> after):** an English PDF reflowed into clean text with Chrome's
+  "Translate this page" banner visible at the top of the Windows window. For the RU/UK pass, show it
+  translated to that language.
+  - EN: Open a PDF - the extension reflows it into clean text Chrome can translate in one click.
+  - RU: Откройте PDF - расширение перевёрстывает его в чистый текст, который Chrome переводит в один клик.
+  - UK: Відкрийте PDF - розширення переверстує його в чистий текст, який Chrome перекладає в один клік.
+- **Screenshot 2 - EPUB reader + collapsible TOC:** an EPUB opened in dark or sepia theme, the collapsible
+  table-of-contents sidebar on the left, a formatted translated chapter on the right.
+  - EN: EPUB books open with a collapsible table of contents and comfortable reading themes.
+  - RU: Книги EPUB открываются со сворачиваемым оглавлением и удобными темами чтения.
+  - UK: Книжки EPUB відкриваються зі згортуваним змістом і зручними темами читання.
+- **Screenshot 3 - Right-click flow + toolbar popup:** the right-click menu "Translate to [language]" over the
+  reflowed document, with the extension's toolbar popup (toggles) in the corner.
+  - EN: Right-click, "Translate to ...", done - 100% local, nothing leaves your device.
+  - RU: Правый клик, «Перевести на ...», готово - 100% локально, ничего не покидает ваше устройство.
+  - UK: Правий клік, «Перекласти на ...», готово - 100% локально, нічого не залишає ваш пристрій.
 - Small promo tile 440x280 (optional), marquee 1400x560 (optional).
 - Hosted privacy-policy URL: **already prepared** at `extension-privacy.html` in the repo root - once the
   GitHub Pages site is deployed it is served at

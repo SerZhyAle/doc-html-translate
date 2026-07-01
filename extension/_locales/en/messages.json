@@ -1,0 +1,74 @@
+{
+  "appName": {
+    "message": "PDF & EPUB Page Translator (Free & Local)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "PDF/EPUB Translate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "Translate any PDF & EPUB for free in Chrome using your browser's built-in translator. 100% local, fast, and secure.",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "PDF/EPUB reflow + translate",
+    "description": "Tooltip on the toolbar button."
+  },
+  "storeDescription": {
+    "message": "Chrome and Edge have excellent built-in translators that translate any webpage instantly and for free. But they don't work on books and documents:\n1. PDFs are rendered on a canvas, making the text invisible to the browser's translator.\n2. EPUBs cannot be opened in the browser at all; they just trigger a download.\n\n\"PDF & EPUB Page Translator\" quietly solves both problems!\n\nHow it works:\nWhen you open a PDF or EPUB file, this extension automatically intercepts it and converts the text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select \"Translate to [Your Language]\"!\n\nKey features:\n- EPUB reader: unpacks EPUB books and combines chapters into a single scrollable document for seamless translation.\n- PDF reflow: extracts text and lays it out as readable paragraphs, so the translator doesn't break, overlap, or double the text.\n- Table of contents: automatically imports the document's original outline as a collapsible navigation tree.\n- Reading mode: light, sepia, dark, and night themes with adjustable font sizes.\n- 100% local and private: everything runs on your device. Your documents are never uploaded to any server.\n- Image OCR: recognize and translate text inside images - right-click an image, or turn on image OCR for PDFs and EPUBs; English is built-in, extra languages download on demand.\n- One-click original: instantly toggle back to the browser's native viewer.\n\nHow to use:\n1. Install the extension.\n2. Open any PDF or EPUB file in your browser (or click the extension icon to pick a local file).\n3. Right-click anywhere on the page and choose \"Translate\" to translate the whole document into your language for free!\n\nPrivacy: everything runs on your device. The extension never uploads your documents anywhere - it has no server to send them to. The only network access is your browser's own translation feature, which you trigger yourself.",
+    "description": "Long store-listing description; paste into the dashboard per language."
+  },
+  "shot1Caption": {
+    "message": "Open a PDF - the extension reflows it into clean text Chrome can translate in one click.",
+    "description": "Screenshot 1 caption."
+  },
+  "shot2Caption": {
+    "message": "EPUB books open with a collapsible table of contents and comfortable reading themes.",
+    "description": "Screenshot 2 caption."
+  },
+  "shot3Caption": {
+    "message": "Right-click, \"Translate to ...\", done - 100% local, nothing leaves your device.",
+    "description": "Screenshot 3 caption."
+  },
+  "ocrImageMenu": {
+    "message": "OCR & translate this image",
+    "description": "Right-click context-menu item on images."
+  },
+  "ocrProgress": {
+    "message": "Recognizing text..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "No text found",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "Could not process this image.",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "Done - use the browser's \"Translate page\"",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "Use OCR for images",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "Download",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "Downloading",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "installed",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "Recognition language (English is built-in).",
+    "description": "Hint above the OCR language list."
+  }
+}
