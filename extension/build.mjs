@@ -193,16 +193,17 @@ async function zip() {
   console.log(`Wrote ${out} (${(size / 1024 / 1024).toFixed(1)} MB)`);
 }
 
-// Stamp the extension version from the local date-time, exactly like the desktop app's
-// build.ps1 (yy.MMdd.HHmm, e.g. 26.0701.1716). Chrome accepts the leading zeros; the value
-// is monotonic (so the Web Store always sees an increment) and human-readable, so you can
-// tell which build you're testing. Writes manifest.json + package.json in lockstep.
+// Stamp the extension version from the local date-time, like the desktop app's build.ps1
+// but WITHOUT leading zeros: Chrome and Edge require every dot-separated part to be an
+// integer 0-65535 with no leading zero on a non-zero part, so Edge rejects "26.0702.1342"
+// (the "0702" part). Encode month/day and hour/minute as plain integers instead - identical
+// to the desktop MSIX mapping (26.0702.1342 -> 26.702.1342). Still monotonic (mmdd 101..1231,
+// hhmm 0..2359) and human-readable. Writes manifest.json + package.json in lockstep.
 function dateVersion() {
   const d = new Date();
-  const p2 = (n) => String(n).padStart(2, "0");
-  const yy = p2(d.getFullYear() % 100);
-  const mmdd = p2(d.getMonth() + 1) + p2(d.getDate());
-  const hhmm = p2(d.getHours()) + p2(d.getMinutes());
+  const yy = d.getFullYear() % 100;
+  const mmdd = (d.getMonth() + 1) * 100 + d.getDate();
+  const hhmm = d.getHours() * 100 + d.getMinutes();
   return `${yy}.${mmdd}.${hhmm}`;
 }
 

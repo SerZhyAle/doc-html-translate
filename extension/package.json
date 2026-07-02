@@ -1,6 +1,6 @@
 {
   "name": "doc-html-translate-extension",
-  "version": "26.0702.1342",
+  "version": "26.702.1342",
   "private": true,
   "description": "Re-render PDFs as clean reflowed HTML so the browser's built-in Translate page works for free. Spin-off of doc-html-translate.",
   "type": "module",
