@@ -4,7 +4,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "Перевод документов",
+    "message": "Док-перевод",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
