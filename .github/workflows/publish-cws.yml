@@ -1,0 +1,53 @@
+# Publish the browser extension to the Chrome Web Store on an `ext-cws-v*` tag
+# (or a manual dispatch). Independent of Edge: Chrome and Edge have separate tags,
+# separate runs, and therefore separate build-time versions - pushing an ext-cws-v*
+# tag publishes ONLY to Chrome. This automates every release AFTER the first manual
+# one (the stores have no create-item / listing-metadata API, so the very first
+# publish is done by hand once). See extension/PUBLISHING.md for the one-time setup.
+#
+# Runs on ubuntu-latest: extension/build.mjs zips cross-platform (`zip` on Linux/macOS).
+
+name: publish-cws
+
+on:
+  push:
+    tags:
+      - "ext-cws-v*"
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+# A newer tag cancels an in-flight run for the same ref.
+concurrency:
+  group: publish-cws-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest        # half the cost of windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dev deps + build the store ZIP
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Publish to Chrome Web Store
+        env:
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          # OAuth fallback (only if you did not configure a service account):
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: npm run publish:cws

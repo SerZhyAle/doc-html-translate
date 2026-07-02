@@ -88,13 +88,14 @@ by hand in Partner Center (no API for create/listing):
 
 Details: [msix/README.md](../../msix/README.md).
 
-**Step I — Chrome / Edge extension `[PAID]` `[PUBLIC]`.** Bump (required — same version is rejected),
-commit, confirm, then push an `ext-v*` tag (triggers `publish-extension.yml`):
+**Step I — Chrome / Edge extension `[PAID]` `[PUBLIC]`.** Chrome and Edge publish **independently** -
+separate tags, separate build-time versions. Push `ext-cws-v*` for Chrome (triggers `publish-cws.yml`)
+or `ext-edge-v*` for Edge (`publish-edge.yml`); each CI run does its own `npm run build`, which stamps
+a fresh version, so no manual bump is needed:
 
 ```powershell
-cd extension; npm run version:bump
-git commit -am "ext: release <ext-ver>"
-git tag ext-v<ext-ver>; git push origin ext-v<ext-ver>
+git tag ext-cws-v<label>; git push origin ext-cws-v<label>    # Chrome only
+git tag ext-edge-v<label>; git push origin ext-edge-v<label>  # Edge only
 ```
 
 Details: [extension/PUBLISHING.md](../../extension/PUBLISHING.md).

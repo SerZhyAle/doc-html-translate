@@ -37,7 +37,7 @@ function Get-GitValue([string[]]$GitArgs) {
 $branch   = Get-GitValue @("branch", "--show-current")
 $dirty    = Get-GitValue @("status", "--porcelain")
 $lastVer  = Get-GitValue @("describe", "--tags", "--abbrev=0", "--match", "v*")
-$lastExt  = Get-GitValue @("describe", "--tags", "--abbrev=0", "--match", "ext-v*")
+$lastExt  = Get-GitValue @("describe", "--tags", "--abbrev=0", "--match", "ext-*-v*")
 
 if (-not $Version) {
     $now = Get-Date
@@ -109,11 +109,10 @@ Note "Upload msix/out/*.msix in Partner Center (no API for create/listing). Deta
 Write-Host ""
 
 Step "5" "Chrome / Edge extension  [PAID] [PUBLIC]"
-Note "Bump first (re-uploading the same version is rejected), commit, then push an ext-v* tag"
-Note "to trigger .github/workflows/publish-extension.yml."
-Cmd  "cd extension; npm run version:bump   # -> updates manifest.json + package.json"
-Cmd  "git commit -am ""ext: release <new-ext-version>"""
-Cmd  "git tag ext-v<new-ext-version>; git push origin ext-v<new-ext-version>"
+Note "Chrome and Edge publish INDEPENDENTLY: separate tags, separate build-time versions."
+Note "Chrome -> ext-cws-v* (publish-cws.yml); Edge -> ext-edge-v* (publish-edge.yml). Each CI run does its own npm run build (fresh stamp)."
+Cmd  "git tag ext-cws-v<label>; git push origin ext-cws-v<label>    # Chrome only"
+Cmd  "git tag ext-edge-v<label>; git push origin ext-edge-v<label>  # Edge only"
 Note "Details: extension/PUBLISHING.md"
 Write-Host ""
 

@@ -17,8 +17,8 @@ built-in page translation (no API key needed).
 
 Canonical: [DEV/RELEASE.md](DEV/RELEASE.md). **Build** = local, free: `./scripts/build-local.ps1
 -Message "..."` (gate + build CLI + UI + commit; never touches GitHub). **Release** = published,
-paid: `./scripts/release.ps1` prints the full checklist and runs nothing; `v*` / `ext-v*` tags
-trigger paid CI. Treat any "сборка"/"build" request as the local flow - never push a tag, submit to
+paid: `./scripts/release.ps1` prints the full checklist and runs nothing; `v*` / `ext-cws-v*` /
+`ext-edge-v*` tags trigger paid CI. Treat any "сборка"/"build" request as the local flow - never push a tag, submit to
 winget, upload to the Store, or publish the extension unless the request is explicitly a release.
 
 ## Where to start for a change

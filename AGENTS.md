@@ -23,7 +23,7 @@ Two distinct flows - see [DEV/RELEASE.md](DEV/RELEASE.md):
 - **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "..."` (gate + build
   CLI + build UI + commit). Never touches GitHub/CI. This is the default for any "build"/"сборка" ask.
 - **Release ("релиз")** = published and PAID. `./scripts/release.ps1` prints the full checklist and
-  runs nothing; tags (`v*`, `ext-v*`) trigger paid CI. Only do this for an explicit "release"/"релиз".
+  runs nothing; tags (`v*`, `ext-cws-v*`, `ext-edge-v*`) trigger paid CI. Only do this for an explicit "release"/"релиз".
 
 Never push a tag, submit to winget, upload to the Store, or publish the extension unless the request
 is explicitly a release.

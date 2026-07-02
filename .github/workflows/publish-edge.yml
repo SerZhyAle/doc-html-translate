@@ -1,0 +1,49 @@
+# Publish the browser extension to Microsoft Edge Add-ons on an `ext-edge-v*` tag
+# (or a manual dispatch). Independent of Chrome: separate tag, separate run, separate
+# build-time version - pushing an ext-edge-v* tag publishes ONLY to Edge. The first
+# submission (product creation + listing/screenshots/privacy) is manual in Partner
+# Center to obtain EDGE_PRODUCT_ID; only version updates are automated here. See
+# extension/PUBLISHING.md for the one-time setup and secrets/variables.
+#
+# Runs on ubuntu-latest: extension/build.mjs zips cross-platform (`zip` on Linux/macOS).
+
+name: publish-edge
+
+on:
+  push:
+    tags:
+      - "ext-edge-v*"
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+# A newer tag cancels an in-flight run for the same ref.
+concurrency:
+  group: publish-edge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest        # half the cost of windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dev deps + build the store ZIP
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Publish to Edge Add-ons
+        env:
+          EDGE_PRODUCT_ID: ${{ vars.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: npm run publish:edge

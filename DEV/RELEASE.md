@@ -65,13 +65,14 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
    prompted. See [docs/how-i-posted-this-project-to-winget.md](../docs/how-i-posted-this-project-to-winget.md).
 4. **Windows Store (MSIX)** `[PUBLIC]` - build unsigned and upload by hand in Partner Center:
    `./msix/build-msix.ps1 -IdentityName "<name>"`. See [../msix/README.md](../msix/README.md).
-5. **Chrome / Edge extension** `[PAID]` `[PUBLIC]` - bump (required), commit, push an `ext-v*` tag
-   → `.github/workflows/publish-extension.yml`:
-   `cd extension; npm run version:bump` then `git tag ext-v<ext-ver>; git push origin ext-v<ext-ver>`.
+5. **Chrome / Edge extension** `[PAID]` `[PUBLIC]` - Chrome and Edge publish **independently**
+   (separate tags, separate build-time versions; each CI run does its own `npm run build`). Push
+   `ext-cws-v*` → Chrome (`.github/workflows/publish-cws.yml`) or `ext-edge-v*` → Edge
+   (`publish-edge.yml`), e.g. `git tag ext-cws-v<label>; git push origin ext-cws-v<label>`.
    See [../extension/PUBLISHING.md](../extension/PUBLISHING.md).
 6. **Verify** - `gh release view v<ver>`, `winget search SerZhyAle.DocHtmlTranslate` (≈30-60 min
    after the winget PR merges), confirm the Store and extension dashboards show the new version.
 
 Not every release needs every target: a code-only release may skip the extension; an extension-only
 release uses only steps 0, 1 and 5. The version stamp format is `yy.MMdd.HHmm`; app tags are
-`v<stamp>`, extension tags are `ext-v<semver>`.
+`v<stamp>`, extension tags are `ext-cws-v<label>` (Chrome) / `ext-edge-v<label>` (Edge), published independently.

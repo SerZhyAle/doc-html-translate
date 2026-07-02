@@ -110,18 +110,28 @@ npm run release:cws
 
 ## CI (GitHub Actions)
 
-[.github/workflows/publish-extension.yml](../.github/workflows/publish-extension.yml) runs on a
-`ext-v*` tag (or manual dispatch) on `windows-latest` and calls the same scripts. Set these in the repo:
+Chrome and Edge publish **independently** - separate workflows, separate tags, and therefore
+separate build-time versions (each run does its own `npm run build`, which stamps a fresh version,
+so a tag ships only to its own store). Both run on `ubuntu-latest`:
+
+- [.github/workflows/publish-cws.yml](../.github/workflows/publish-cws.yml) - on an `ext-cws-v*`
+  tag (or manual dispatch) -> Chrome Web Store only.
+- [.github/workflows/publish-edge.yml](../.github/workflows/publish-edge.yml) - on an `ext-edge-v*`
+  tag (or manual dispatch) -> Edge Add-ons only.
+
+Set these in the repo:
 
 - **Variables** (Settings > Secrets and variables > Actions > Variables): `CWS_PUBLISHER_ID`,
-  `CWS_EXTENSION_ID`, and `EDGE_PRODUCT_ID` (leave empty to skip Edge).
+  `CWS_EXTENSION_ID` (Chrome); `EDGE_PRODUCT_ID` (Edge).
 - **Secrets**: `CWS_SERVICE_ACCOUNT_KEY` (or the three `CWS_CLIENT_*`/`CWS_REFRESH_TOKEN`),
   `EDGE_CLIENT_ID`, `EDGE_API_KEY`.
 
+The tag suffix is just a label (the published version is stamped at build time), so pick any
+unused suffix per store:
+
 ```sh
-npm run version:bump
-git commit -am "ext: release 0.1.1"
-git tag ext-v0.1.1 && git push --tags
+git tag ext-cws-v1 && git push origin ext-cws-v1     # Chrome only
+git tag ext-edge-v1 && git push origin ext-edge-v1   # Edge only, independent
 ```
 
 ## Gotchas
