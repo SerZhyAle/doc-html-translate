@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
 
 PackageIdentifier: SerZhyAle.DocHtmlTranslate
-PackageVersion: "26.0612.0124"
+PackageVersion: "26.0702.1530"
 PackageLocale: en-US
 Publisher: SZA
 PublisherUrl: https://github.com/SerZhyAle
@@ -42,7 +42,7 @@ Tags:
 - translation
 - txt
 - windows
-ReleaseNotesUrl: https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0612.0124
+ReleaseNotesUrl: https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0702.1530
 Documentations:
 - DocumentLabel: Wiki
   DocumentUrl: https://github.com/SerZhyAle/doc-html-translate/wiki
