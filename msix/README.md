@@ -17,21 +17,27 @@ Both binaries ship side by side, plus the manifest and generated logos:
 
 ```
 doc-html-ui.exe            ← GUI application (the launchable Start-menu tile)
-doc-html-translate.exe     ← CLI: the GUI spawns it AND it is the file-association handler
+doc-html-translate.exe     ← CLI: the GUI spawns it to do the actual conversion
 AppxManifest.xml
 Assets\StoreLogo.png  Square44x44Logo.png  Square71x71Logo.png  Square150x150Logo.png  Wide310x150Logo.png
 ```
 
-The package declares **two applications** (see `AppxManifest.xml`):
+The package declares **one application** (see `AppxManifest.xml`):
 
-- **`DocHtmlUi`** → `doc-html-ui.exe` — the launchable GUI; the only Start-menu tile. A Store app
-  needs a launchable window, so this is the visible app.
-- **`DocHtmlCli`** → `doc-html-translate.exe` — the file-type-association handler, hidden from the
-  Start app list (`AppListEntry="none"`). Double-clicking an associated document launches the CLI
-  directly as `doc-html-translate.exe "<path>"` (path as `argv[1]`), which converts and opens the
-  result — matching the unpackaged `-register` HKCU flow (`internal/windowsreg/register_windows.go`).
-  A double-click runs with default options (no translation engine); to translate or pick options,
-  launch the GUI and browse to the file.
+- **`DocHtmlUi`** -> `doc-html-ui.exe` - the launchable GUI, the only Start-menu tile, **and** the
+  file-type-association handler. Double-clicking an associated document launches
+  `doc-html-ui.exe "<path>"` (path as `argv[1]`, read into `initialFile` by
+  `cmd/doc-html-ui/main.go`); the GUI opens pre-filled so the user can pick options before
+  converting. `doc-html-translate.exe` still ships in the package (the GUI spawns it to convert),
+  it just isn't a separate app entry.
+
+> **Why not a hidden CLI handler?** An earlier design declared a second `doc-html-translate.exe`
+> application with `AppListEntry="none"` so a double-click converted immediately with no window.
+> The Microsoft Store **rejects that** at upload ("The package specifies a headless app. You don't
+> have permission to create a headless app" - it needs a `HeadlessAppBypass` waiver). So the Store
+> build routes double-clicks to the GUI; the unpackaged `-register` HKCU flow
+> (`internal/windowsreg/register_windows.go`) still routes them straight to the CLI for immediate
+> conversion.
 
 ## Prerequisites
 
