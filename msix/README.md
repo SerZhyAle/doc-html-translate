@@ -158,9 +158,11 @@ takes a few business days.
 
 ### Description
 ```
-doc-html-translate converts documents - EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML - into clean, local HTML you can read in any browser, with generated navigation and a table of contents.
+doc-html-translate converts documents - EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML - into clean, local HTML you can read in any browser, with generated navigation and a real multi-level table of contents.
 
-Open a file and the app extracts it to a self-contained HTML folder and opens it in your browser. Read it offline, or use your browser's built-in page translation to read in your own language - completely free. For automated translation it can optionally use the Google Cloud Translation API or a local Ollama model (with Ollama your text never leaves your machine).
+Open a file and the app extracts it to a self-contained HTML folder and opens it in your browser. The built-in reader has light/sepia/dark/night themes, adjustable text size and font, and remembers where you stopped. Read offline, or use your browser's built-in page translation to read in your own language - completely free. For automated translation it can optionally use the Google Cloud Translation API or a local Ollama model (with Ollama your text never leaves your machine).
+
+It can also recognize text inside images (OCR) and overlay it as selectable, translatable text - English is bundled and more languages download on demand. Prefer one long page? Convert to a single HTML file with no table of contents.
 
 It runs as a small desktop app: pick a file, choose options, convert. Re-opening an already-converted book is instant. It needs nothing extra on Windows 10/11 (MOBI/AZW3 additionally require Calibre, for non-DRM files only).
 
@@ -170,9 +172,12 @@ doc-html-translate runs entirely on your device, has no accounts and no telemetr
 ### Product features (one per line, ≤ 200 chars each)
 ```
 Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML to clean local HTML
-Generated navigation and table of contents for comfortable reading
+Generated navigation and a real multi-level table of contents
+Recognize text inside images (OCR) and overlay it as translatable text
+Built-in reader: light/sepia/dark/night themes, text size and font, resume where you left off
 Read offline in any browser, or translate the page free with the browser's built-in translator
 Optional automated translation via Google Cloud or a local Ollama model
+Convert to a single HTML page, or keep chapters with a table of contents
 Re-opens an already-converted book instantly
 Opens documents straight from Explorer via file associations
 Open source - no accounts, no telemetry, no ads, no data collection
