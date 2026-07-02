@@ -20,6 +20,14 @@ let workerPromise = null;
 let workerLang = null;
 let currentProgress = null;
 
+// Page-segmentation mode for the recognition worker. tesseract.js defaults tessedit_pageseg_mode to
+// PSM 6 (SINGLE_BLOCK), which reads a whole illustrated/scanned page as ONE text block - so on a page
+// with a figure and scattered text (a speech bubble, a caption) it folds scene edges into the
+// recognized text (stray "< =", "|", digits) and mis-merges regions. Pin PSM 3 (AUTO) so layout
+// analysis isolates real text regions, matching the desktop app's tesseract CLI (whose own default is
+// PSM 3). Shared invariant - see docs/PARITY.md and tesseract.go ocrPageSegMode.
+const OCR_PSM = "3";
+
 async function getWorker(lang) {
   if (workerPromise && workerLang === lang) return workerPromise;
   if (workerPromise) {
@@ -29,7 +37,19 @@ async function getWorker(lang) {
   workerLang = lang;
   const options = workerOptions(lang);
   options.logger = (m) => { if (currentProgress) currentProgress(m); };
-  workerPromise = createWorker(lang, 1, options);
+  workerPromise = createWorker(lang, 1, options).then(async (w) => {
+    // Best-effort worker params (keep the worker if a call fails). Set PSM first and on its own so
+    // silencing the logs below can never revert it.
+    // - PSM 3 to match the desktop CLI (see OCR_PSM).
+    try { await w.setParameters({ tessedit_pageseg_mode: OCR_PSM }); } catch { /* keep default */ }
+    // - Route Tesseract's engine chatter ("Estimating resolution as N", "Detected N diacritics",
+    //   "Invalid resolution 0 dpi") to the null device. It is printed via the C++ tprintf, which
+    //   tesseract.js forwards to the worker console - and Chrome's extension console flags those as
+    //   errors. /dev/null exists in the Emscripten FS; real failures still reject the promise. The
+    //   desktop CLI needs no equivalent - it captures stderr and discards it on success.
+    try { await w.setParameters({ debug_file: "/dev/null" }); } catch { /* leave engine logs on */ }
+    return w;
+  });
   return workerPromise;
 }
 
@@ -72,17 +92,23 @@ async function toBitmap(src) {
 }
 
 // ---- Recognition -----------------------------------------------------------
-// The lines of a recognized block. Tesseract.js v5 nests lines under
-// block.paragraphs[].lines[] (the block itself has no `.lines`); older shapes exposed
-// block.lines directly. We gather whichever exists so the plate font-size tracks the real
-// median line height (mirroring the desktop app's per-line sizing). Without this the code
-// falls back to the whole-block height, producing an absurd cqw font-size and a plate that
-// swallows the page.
-function blockLines(b) {
-  if (Array.isArray(b.lines) && b.lines.length) return b.lines;
-  if (Array.isArray(b.paragraphs)) return b.paragraphs.flatMap((p) => p.lines || []);
-  return [];
-}
+// Overlay grouping constants, shared verbatim with the desktop app (see docs/PARITY.md and
+// internal/ocr/tesseract.go ocrMinLineConf / ocrClusterGapFactor). OCR_MIN_LINE_CONF drops a
+// line whose mean word confidence is below it: real text scores ~80-97, while the "text"
+// Tesseract hallucinates out of a drawing scores ~0-50, so the gate removes noise that would
+// otherwise become an opaque plate covering the figure (and whose oversized boxes inflate the
+// font). OCR_CLUSTER_GAP_FACTOR then grows one plate while the vertical gap to the next line
+// stays within this many median line heights; a bigger gap - a figure, a section break, a new
+// column - starts a new plate.
+const OCR_MIN_LINE_CONF = 50;
+const OCR_CLUSTER_GAP_FACTOR = 1.2;
+
+// Upscale a small source before OCR so Tesseract reads low-res thumbnails/scans better, then
+// map coordinates back. Only images whose long side is below OCR_UPSCALE_BELOW are enlarged, by
+// OCR_UPSCALE_FACTOR (a high-quality 2x). Shared with tesseract.go ocrUpscaleBelow /
+// ocrUpscaleFactor (docs/PARITY.md).
+const OCR_UPSCALE_BELOW = 1000;
+const OCR_UPSCALE_FACTOR = 2;
 
 // ---- Adaptive plate colours ------------------------------------------------
 // Sample the source image so each plate borrows the block's background ("paper") and text
@@ -145,6 +171,108 @@ async function sampleColors(blob, blocks) {
   } catch { /* best-effort: plates keep the default white/dark CSS */ }
 }
 
+// Flatten the recognized hierarchy (blocks -> paragraphs -> lines -> words) to a flat list of
+// text lines, each with its bbox, concatenated word text and mean word confidence. Falls back
+// to the paragraph, then the block, when a level exposes no finer children.
+function collectLines(data, scale = 1) {
+  const out = [];
+  const push = (u) => {
+    if (!u || !u.bbox) return;
+    const words = u.words || [];
+    const text = (words.length ? words.map((w) => w.text).join(" ") : (u.text || ""))
+      .replace(/\s+/g, " ").trim();
+    const conf = words.length
+      ? words.reduce((s, w) => s + (w.confidence || 0), 0) / words.length
+      : (typeof u.confidence === "number" ? u.confidence : 0);
+    const b = u.bbox;
+    const bbox = scale === 1 ? b : {
+      x0: Math.round(b.x0 / scale), y0: Math.round(b.y0 / scale),
+      x1: Math.round(b.x1 / scale), y1: Math.round(b.y1 / scale),
+    };
+    out.push({ bbox, text, conf });
+  };
+  for (const b of data.blocks || []) {
+    const paras = (b.paragraphs && b.paragraphs.length) ? b.paragraphs : [b];
+    for (const p of paras) {
+      const lines = (p.lines && p.lines.length) ? p.lines : [p];
+      for (const l of lines) push(l);
+    }
+  }
+  return out;
+}
+
+// Drop low-confidence noise lines, then group the survivors (in reading order) into one plate
+// per run of vertically-adjacent, horizontally-overlapping lines. A plate's box is the union of
+// its line boxes and its font tracks the median line height, so a plate covers a coherent text
+// column without spanning imagery or the gaps between columns/sections. Mirrors the desktop
+// app's tesseract.go clusterLines - keep the two in sync (docs/PARITY.md).
+function clusterLines(lines) {
+  const kept = lines.filter((l) => l.text && l.conf >= OCR_MIN_LINE_CONF);
+  if (!kept.length) return [];
+  const medianH = medianOf(kept.map((l) => l.bbox.y1 - l.bbox.y0)) || 1;
+  const gapMax = medianH * OCR_CLUSTER_GAP_FACTOR;
+
+  const blocks = [];
+  let cur = null;
+  const flush = () => {
+    if (!cur) return;
+    const text = cur.texts.join(" ").trim();
+    if (isTranslatable(text)) {
+      blocks.push({
+        text,
+        bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
+        lineHeight: medianOf(cur.heights) || (cur.y1 - cur.y0),
+      });
+    }
+    cur = null;
+  };
+  for (const l of kept) {
+    const { x0, y0, x1, y1 } = l.bbox;
+    if (cur) {
+      const gap = y0 - cur.y1;
+      const overlap = Math.min(x1, cur.x1) - Math.max(x0, cur.x0);
+      const narrower = Math.min(x1 - x0, cur.x1 - cur.x0);
+      // same column (share x-extent) and vertically adjacent (small forward gap; a small
+      // negative gap tolerates overlapping boxes, a big one means a new column/section).
+      if (gap <= gapMax && gap >= -medianH && overlap * 10 >= narrower) {
+        cur.x0 = Math.min(cur.x0, x0); cur.y0 = Math.min(cur.y0, y0);
+        cur.x1 = Math.max(cur.x1, x1); cur.y1 = Math.max(cur.y1, y1);
+        cur.texts.push(l.text); cur.heights.push(y1 - y0);
+        continue;
+      }
+      flush();
+    }
+    cur = { x0, y0, x1, y1, texts: [l.text], heights: [y1 - y0] };
+  }
+  flush();
+  return blocks;
+}
+
+// Upscale a small source before OCR so Tesseract reads low-res thumbnails/scans better; the
+// caller divides recognized coordinates by the returned scale to return to the original space.
+// Only images whose long side is below OCR_UPSCALE_BELOW are enlarged (by OCR_UPSCALE_FACTOR);
+// larger ones pass through untouched. Best-effort: any failure returns the original blob with
+// scale 1. Mirrors the desktop app's tesseract.go upscaleForOCR (docs/PARITY.md).
+async function upscaleForOcr(blob, width, height) {
+  if (Math.max(width, height) >= OCR_UPSCALE_BELOW) return { image: blob, scale: 1 };
+  try {
+    const bmp = await createImageBitmap(blob);
+    const w = bmp.width * OCR_UPSCALE_FACTOR, h = bmp.height * OCR_UPSCALE_FACTOR;
+    const cv = typeof OffscreenCanvas !== "undefined"
+      ? new OffscreenCanvas(w, h)
+      : Object.assign(document.createElement("canvas"), { width: w, height: h });
+    const ctx = cv.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(bmp, 0, 0, w, h);
+    if (bmp.close) bmp.close();
+    const out = cv.convertToBlob ? await cv.convertToBlob() : await new Promise((r) => cv.toBlob(r));
+    return out ? { image: out, scale: OCR_UPSCALE_FACTOR } : { image: blob, scale: 1 };
+  } catch {
+    return { image: blob, scale: 1 };
+  }
+}
+
 // Returns block-level results with bounding boxes (pixel coords) plus the image's
 // natural dimensions, so callers can position plates in percent.
 export async function recognize(imageSource, { lang = "eng", onProgress } = {}) {
@@ -153,19 +281,9 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
     const worker = await getWorker(lang);
     currentProgress = onProgress || null;
     try {
-      const { data } = await worker.recognize(bitmap.source, {}, { blocks: true });
-      const blocks = (data.blocks || [])
-        .map((b) => {
-          const text = (b.text || "").trim();
-          const lines = blockLines(b);
-          let lineHeight = b.bbox.y1 - b.bbox.y0;
-          if (lines.length) {
-            const hs = lines.map((l) => l.bbox.y1 - l.bbox.y0).sort((a, z) => a - z);
-            lineHeight = hs[Math.floor(hs.length / 2)] || lineHeight;
-          }
-          return { text, bbox: b.bbox, lineHeight };
-        })
-        .filter((b) => isTranslatable(b.text));
+      const { image, scale } = await upscaleForOcr(bitmap.source, bitmap.width, bitmap.height);
+      const { data } = await worker.recognize(image, {}, { blocks: true });
+      const blocks = clusterLines(collectLines(data, scale));
       await sampleColors(bitmap.source, blocks);
       return { blocks, width: bitmap.width, height: bitmap.height };
     } finally {
@@ -179,8 +297,9 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
 // inside the block box (the opaque box - sized by min-height - is what covers the source,
 // independent of the font). Without it a tall title block wraps to more lines than the
 // source and the plate grows past its region, colliding with the next plate. Shared with
-// the desktop app's overlay.go fontFitFactor (see docs/PARITY.md).
-const FONT_FIT = 0.85;
+// the desktop app's overlay.go fontFitFactor (see docs/PARITY.md). 0.92 keeps plate text close to
+// the source size while leaving headroom for longer translations and word-wrap slack.
+const FONT_FIT = 0.92;
 
 // A container the size of the image (via aspect-ratio) with the image as a base layer
 // and one opaque plate per recognized block, positioned/sized in percent so it survives

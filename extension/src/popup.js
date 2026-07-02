@@ -10,6 +10,10 @@ const hostEl = document.getElementById("host");
 const ocrImagesEl = document.getElementById("ocr-images");
 const ocrLangsEl = document.getElementById("ocr-langs");
 
+// Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
+const verEl = document.getElementById("ver");
+if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
+
 const msg = (key, fallback) => {
   try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
 };

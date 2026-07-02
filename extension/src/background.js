@@ -45,7 +45,10 @@ function buildRules(options) {
     priority: 1,
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
-      regexFilter: "^(file://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
+      // Three slashes: only empty-host file URLs. UNC paths (file://server/share)
+      // can't be granted to extensions by any match pattern, so the viewer could
+      // never fetch them - leave those to Chrome's built-in viewer.
+      regexFilter: "^(file:///.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
       resourceTypes: ["main_frame"],
     },
   };

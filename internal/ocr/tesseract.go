@@ -14,6 +14,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,6 +23,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	xdraw "golang.org/x/image/draw"
 )
 
 // Block is a recognized text block with its bounding box in image pixels. LineH is the
@@ -67,19 +71,39 @@ func Locate() (string, error) {
 	return "", ErrNoTesseract
 }
 
+// ocrPageSegMode pins Tesseract's page-segmentation mode. 3 = fully automatic page segmentation
+// (no OSD) - the tesseract CLI default, made explicit so it stays a guarded shared value. The
+// extension's tesseract.js otherwise defaults to PSM 6 (single block), which reads an illustrated or
+// scanned page as one text block and folds scene edges into the recognized text; PSM 3 runs layout
+// analysis and isolates real text regions. Mirrored by ocr-overlay.js OCR_PSM (see docs/PARITY.md).
+const ocrPageSegMode = 3
+
 // Recognize runs tesseract on imgPath for the given language and returns the recognized
 // blocks plus the image's pixel dimensions. dataDir is passed as --tessdata-dir only when
 // it actually contains the requested language, so a system tesseract still works when the
-// app ships no bundled data.
+// app ships no bundled data. A small image is transparently upscaled before recognition (so
+// Tesseract reads low-res scans/thumbnails better) and the coordinates are mapped back after.
 func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	if lang == "" {
 		lang = "eng"
 	}
-	args := []string{imgPath, "stdout"}
+
+	ocrPath, scale := imgPath, 1
+	if up, cleanup, ok := upscaleForOCR(imgPath); ok {
+		defer cleanup()
+		ocrPath, scale = up, ocrUpscaleFactor
+	}
+
+	args := []string{ocrPath, "stdout"}
 	if dataDir != "" && hasLangFile(dataDir, lang) {
 		args = append(args, "--tessdata-dir", dataDir)
 	}
-	args = append(args, "-l", lang, "tsv")
+	// Request TSV via -c, not the `tsv` config file. That config lives in <tessdata>/configs/tsv,
+	// but the app's bundled tessdata dir ships only traineddata (no configs/), and --tessdata-dir
+	// redirects config lookup there - so `tsv` is not found ("read_params_file: Can't open tsv")
+	// and tesseract falls back to plain text, which parseTSV can't read (zero blocks -> no overlay).
+	// Setting the renderer flag directly is independent of any configs/ directory.
+	args = append(args, "--psm", strconv.Itoa(ocrPageSegMode), "-l", lang, "-c", "tessedit_create_tsv=1")
 
 	cmd := exec.Command(bin, args...)
 	var out, errb bytes.Buffer
@@ -88,7 +112,64 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	if err := cmd.Run(); err != nil {
 		return Result{}, fmt.Errorf("tesseract: %w: %s", err, strings.TrimSpace(errb.String()))
 	}
-	return parseTSV(out.Bytes())
+	res, err := parseTSV(out.Bytes())
+	if err != nil {
+		return Result{}, err
+	}
+	if scale > 1 {
+		scaleDown(&res, scale)
+	}
+	return res, nil
+}
+
+// OCR upscaling constants, shared with the extension's ocr-overlay.js OCR_UPSCALE_BELOW /
+// OCR_UPSCALE_FACTOR (docs/PARITY.md). An image whose long side is below ocrUpscaleBelow is
+// enlarged ocrUpscaleFactor-fold before recognition so Tesseract reads small scans/thumbnails
+// better; recognized coordinates are divided back by the factor so the overlay still maps onto
+// the original picture. Larger images are recognized as-is.
+const (
+	ocrUpscaleBelow  = 1000
+	ocrUpscaleFactor = 2
+)
+
+// upscaleForOCR writes an ocrUpscaleFactor-enlarged copy of a small image to a temp PNG so
+// Tesseract reads it better, returning the temp path and a cleanup func. Best-effort: a large
+// image, or any decode/scale/encode failure, returns ok=false (recognize the original).
+func upscaleForOCR(imgPath string) (path string, cleanup func(), ok bool) {
+	src := decodeImage(imgPath)
+	if src == nil {
+		return "", nil, false
+	}
+	b := src.Bounds()
+	if b.Dx() <= 0 || b.Dy() <= 0 || max(b.Dx(), b.Dy()) >= ocrUpscaleBelow {
+		return "", nil, false
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*ocrUpscaleFactor, b.Dy()*ocrUpscaleFactor))
+	xdraw.CatmullRom.Scale(dst, dst.Bounds(), src, b, xdraw.Over, nil)
+	f, err := os.CreateTemp("", "docht-ocr-*.png")
+	if err != nil {
+		return "", nil, false
+	}
+	if err := png.Encode(f, dst); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return "", nil, false
+	}
+	f.Close()
+	name := f.Name()
+	return name, func() { os.Remove(name) }, true
+}
+
+// scaleDown maps a Result recognized on an s-fold enlarged image back to the original pixel
+// space, dividing every coordinate (and the reported dimensions) by s with rounding.
+func scaleDown(res *Result, s int) {
+	div := func(v int) int { return (v + s/2) / s }
+	res.Width, res.Height = div(res.Width), div(res.Height)
+	for i := range res.Blocks {
+		bl := &res.Blocks[i]
+		bl.X0, bl.Y0, bl.X1, bl.Y1 = div(bl.X0), div(bl.Y0), div(bl.X1), div(bl.Y1)
+		bl.LineH = div(bl.LineH)
+	}
 }
 
 // hasLangFile reports whether every code in a "+"-joined lang string has a traineddata
@@ -102,85 +183,167 @@ func hasLangFile(dir, lang string) bool {
 	return true
 }
 
+// Overlay grouping constants, shared verbatim with the extension (see docs/PARITY.md and
+// extension/src/ocr-overlay.js OCR_MIN_LINE_CONF / OCR_CLUSTER_GAP_FACTOR).
+//
+// ocrMinLineConf drops a recognized line whose mean word confidence is below this. Real text
+// scores ~80-97, while the "text" Tesseract hallucinates out of a drawing scores ~0-50, so a
+// line-level confidence gate removes the noise that would otherwise become an opaque plate
+// covering the figure (and whose oversized boxes inflate the plate font). ocrClusterGapFactor
+// then groups surviving lines into one plate while the vertical gap to the next line stays
+// within this many median line heights; a larger gap - a figure, a section break, a new column
+// - starts a new plate. Together they turn Tesseract's unstable block/paragraph boxes into
+// plates that (a) never cover imagery and (b) don't splinter one uniform text column.
+const (
+	ocrMinLineConf      = 50
+	ocrClusterGapFactor = 1.2
+)
+
+// ocrLine is one recognized text line: its bounding box, the concatenated word text, and the
+// running mean of its word confidences (used to reject noise).
+type ocrLine struct {
+	x0, y0, x1, y1 int
+	text           strings.Builder
+	confSum        float64
+	confN          int
+}
+
+func (l *ocrLine) meanConf() float64 {
+	if l.confN == 0 {
+		return 0
+	}
+	return l.confSum / float64(l.confN)
+}
+
 // parseTSV turns tesseract's TSV output into a Result. Columns are:
 // level page block par line word left top width height conf text
-// level 1 = page (its size is the image size), 2 = block, 4 = line, 5 = word.
+// level 1 = page (its size is the image size), 2 = block, 3 = paragraph, 4 = line, 5 = word.
+//
+// We read only the page size (level 1), the line boxes (level 4) and the words (level 5): the
+// words give each line its text and confidence, and clusterLines groups the confident lines
+// into plates by proximity. Block/paragraph boxes are ignored - trusting them makes an opaque
+// plate span imagery the engine folded into a text paragraph (see clusterLines, docs/PARITY.md).
 func parseTSV(data []byte) (Result, error) {
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 
 	var res Result
-	type box struct{ x0, y0, x1, y1 int }
-	blockBox := map[int]box{}
-	blockText := map[int]*strings.Builder{}
-	blockLineH := map[int][]int{}
-	var order []int
+	var lines []*ocrLine
+	var cur *ocrLine
 
 	firstLine := true
 	for sc.Scan() {
-		line := sc.Text()
+		row := sc.Text()
 		if firstLine {
 			firstLine = false
-			if strings.HasPrefix(line, "level\t") || strings.HasPrefix(line, "level ") {
+			if strings.HasPrefix(row, "level\t") || strings.HasPrefix(row, "level ") {
 				continue // header row
 			}
 		}
-		cols := strings.Split(line, "\t")
+		cols := strings.Split(row, "\t")
 		if len(cols) < 12 {
 			continue
 		}
 		level, _ := strconv.Atoi(cols[0])
-		blockNum, _ := strconv.Atoi(cols[2])
 		left, _ := strconv.Atoi(cols[6])
 		top, _ := strconv.Atoi(cols[7])
 		w, _ := strconv.Atoi(cols[8])
 		h, _ := strconv.Atoi(cols[9])
-		text := cols[11]
 
 		switch level {
-		case 1:
+		case 1: // page: the image dimensions
 			res.Width, res.Height = w, h
-		case 2:
-			blockBox[blockNum] = box{left, top, left + w, top + h}
-			if _, ok := blockText[blockNum]; !ok {
-				blockText[blockNum] = &strings.Builder{}
-				order = append(order, blockNum)
-			}
-		case 4:
-			blockLineH[blockNum] = append(blockLineH[blockNum], h)
-		case 5:
-			if text == "" {
+		case 4: // line: start a fresh accumulator
+			cur = &ocrLine{x0: left, y0: top, x1: left + w, y1: top + h}
+			lines = append(lines, cur)
+		case 5: // word: fold text + confidence into the current line
+			if cur == nil || strings.TrimSpace(cols[11]) == "" {
 				continue
 			}
-			b, ok := blockText[blockNum]
-			if !ok {
-				b = &strings.Builder{}
-				blockText[blockNum] = b
-				order = append(order, blockNum)
+			if cur.text.Len() > 0 {
+				cur.text.WriteByte(' ')
 			}
-			if b.Len() > 0 {
-				b.WriteByte(' ')
+			cur.text.WriteString(cols[11])
+			if conf, err := strconv.ParseFloat(cols[10], 64); err == nil {
+				cur.confSum += conf
+				cur.confN++
 			}
-			b.WriteString(text)
 		}
 	}
 	if err := sc.Err(); err != nil {
 		return Result{}, err
 	}
 
-	for _, bn := range order {
-		txt := strings.TrimSpace(blockText[bn].String())
-		if !isTranslatable(txt) {
-			continue // skip OCR noise with nothing to translate (see text.go)
-		}
-		bx := blockBox[bn]
-		res.Blocks = append(res.Blocks, Block{
-			Text: txt,
-			X0:   bx.x0, Y0: bx.y0, X1: bx.x1, Y1: bx.y1,
-			LineH: median(blockLineH[bn], bx.y1-bx.y0),
-		})
-	}
+	res.Blocks = clusterLines(lines)
 	return res, nil
+}
+
+// clusterLines drops low-confidence noise lines, then groups the survivors (in reading order)
+// into one Block per run of vertically-adjacent, horizontally-overlapping lines. A plate's box
+// is the union of its line boxes and its font tracks the median line height, so a plate covers a
+// coherent text column without spanning the imagery or blank gaps between columns/sections.
+// Mirrors the extension's ocr-overlay.js clusterLines - keep the two in sync (docs/PARITY.md).
+func clusterLines(lines []*ocrLine) []Block {
+	var kept []*ocrLine
+	var heights []int
+	for _, l := range lines {
+		if l.text.Len() == 0 || l.meanConf() < ocrMinLineConf {
+			continue
+		}
+		kept = append(kept, l)
+		heights = append(heights, l.y1-l.y0)
+	}
+	if len(kept) == 0 {
+		return nil
+	}
+	medianH := median(heights, 1)
+	gapMax := float64(medianH) * ocrClusterGapFactor
+
+	var blocks []Block
+	var (
+		cx0, cy0, cx1, cy1 int
+		ctext              strings.Builder
+		cheights           []int
+		open               bool
+	)
+	flush := func() {
+		if !open {
+			return
+		}
+		if txt := strings.TrimSpace(ctext.String()); isTranslatable(txt) {
+			blocks = append(blocks, Block{
+				Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
+				LineH: median(cheights, cy1-cy0),
+			})
+		}
+		ctext.Reset()
+		cheights = cheights[:0]
+		open = false
+	}
+	for _, l := range kept {
+		if open {
+			gap := float64(l.y0 - cy1)
+			overlap := min(l.x1, cx1) - max(l.x0, cx0)
+			narrower := min(l.x1-l.x0, cx1-cx0)
+			// same column (share x-extent), and vertically adjacent (small forward gap; a
+			// small negative gap tolerates overlapping boxes, a big one means a new column).
+			if gap <= gapMax && gap >= -float64(medianH) && overlap*10 >= narrower {
+				cx0, cy0 = min(cx0, l.x0), min(cy0, l.y0)
+				cx1, cy1 = max(cx1, l.x1), max(cy1, l.y1)
+				ctext.WriteByte(' ')
+				ctext.WriteString(strings.TrimSpace(l.text.String()))
+				cheights = append(cheights, l.y1-l.y0)
+				continue
+			}
+			flush()
+		}
+		cx0, cy0, cx1, cy1 = l.x0, l.y0, l.x1, l.y1
+		ctext.WriteString(strings.TrimSpace(l.text.String()))
+		cheights = append(cheights, l.y1-l.y0)
+		open = true
+	}
+	flush()
+	return blocks
 }
 
 func median(vals []int, fallback int) int {

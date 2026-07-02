@@ -147,6 +147,38 @@ func TestParityOCRCatalog(t *testing.T) {
 	}
 }
 
+// TestParityOCRClustering: the overlay's line-clustering, pre-OCR upscale, and page-segmentation
+// constants must match, or the two editions recognize/group text differently. See docs/PARITY.md "OCR".
+func TestParityOCRClustering(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	pairs := []struct{ name, goRe, jsRe string }{
+		{"min line confidence", `ocrMinLineConf\s*=\s*([\d.]+)`, `OCR_MIN_LINE_CONF\s*=\s*([\d.]+)`},
+		{"cluster gap factor", `ocrClusterGapFactor\s*=\s*([\d.]+)`, `OCR_CLUSTER_GAP_FACTOR\s*=\s*([\d.]+)`},
+		{"upscale threshold", `ocrUpscaleBelow\s*=\s*([\d.]+)`, `OCR_UPSCALE_BELOW\s*=\s*([\d.]+)`},
+		{"upscale factor", `ocrUpscaleFactor\s*=\s*([\d.]+)`, `OCR_UPSCALE_FACTOR\s*=\s*([\d.]+)`},
+		{"page-seg mode", `ocrPageSegMode\s*=\s*([\d.]+)`, `OCR_PSM\s*=\s*"?([\d.]+)"?`},
+	}
+	for _, p := range pairs {
+		gv := num(t, p.name+" (tesseract.go)", p.goRe, goSrc)
+		jv := num(t, p.name+" (ocr-overlay.js)", p.jsRe, jsSrc)
+		if gv != jv {
+			t.Errorf("%s drift: tesseract.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", p.name, gv, jv)
+		}
+	}
+}
+
+// TestParityOCRFontFit: the plate font-fit factor (font-size = median line height x factor) must
+// match across editions - overlay.go fontFitFactor vs ocr-overlay.js FONT_FIT. See docs/PARITY.md
+// "OCR" (plate geometry).
+func TestParityOCRFontFit(t *testing.T) {
+	gv := num(t, "fontFitFactor (overlay.go)", `fontFitFactor\s*=\s*([\d.]+)`, readRepoFile(t, "internal", "ocr", "overlay.go"))
+	jv := num(t, "FONT_FIT (ocr-overlay.js)", `FONT_FIT\s*=\s*([\d.]+)`, readRepoFile(t, "extension", "src", "ocr-overlay.js"))
+	if gv != jv {
+		t.Errorf("font fit factor drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gv, jv)
+	}
+}
+
 // TestParityReflowConstants: the PDF reflow heuristic thresholds shared by extract.go
 // and reflow.js must hold the same values. See docs/PARITY.md "PDF reflow heuristics".
 func TestParityReflowConstants(t *testing.T) {

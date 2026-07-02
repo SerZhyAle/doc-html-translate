@@ -591,6 +591,17 @@ function isFileUrl(url) {
 // loadUrl downloads a PDF by URL and renders it. On failure it offers the local
 // file picker (which needs no host access and no file-URL toggle) as a fallback.
 async function loadUrl(url) {
+  // file URLs with a host (UNC, \\server\share) are unreachable for extensions:
+  // file-scheme match patterns only cover empty-host URLs, so fetch() can never
+  // be permitted. Fail fast with a targeted hint instead of a doomed download.
+  if (/^file:\/\/[^/]/i.test(url)) {
+    showNotice("Network paths are not supported", [
+      para("Extensions cannot read network file paths (\\\\server\\share). Map the share to a drive letter and open it as a local file, or pick the file below."),
+      filePickerButton(),
+      originalButton("Open in built-in viewer"),
+    ]);
+    return;
+  }
   setStatus("Downloading document..");
   let data;
   try {
@@ -925,7 +936,10 @@ function renderBook(book, fallbackTitle) {
     setProgress(0.1 + 0.9 * (n / total));
   });
 
-  if (totalChars === 0) {
+  // Same as the PDF path: when OCR is on and images were queued for recognition, they become
+  // translatable plates, so suppress the "no extractable text" banner.
+  const ocrCovering = options.ocrImages && ocrTotal > 0;
+  if (totalChars === 0 && !ocrCovering) {
     const banner = el("div", "notice");
     const h = el("h1");
     h.textContent = "Little or no text found";
@@ -947,7 +961,11 @@ function finishDocument(total, totalChars, pagesWithText) {
   // extractable text. Using per-page density rather than an absolute character
   // floor avoids mislabeling a legitimately short one-page document.
   const mostlyEmpty = total > 1 && pagesWithText / total < 0.3;
-  if (totalChars === 0 || mostlyEmpty) {
+  // When "Use OCR for images" is on and page images were queued for recognition, they become
+  // translatable plates - so the "little or no text" banner (which judges only the PDF text layer)
+  // would contradict what the viewer did. Skip it entirely when OCR is covering the images.
+  const ocrCovering = options.ocrImages && ocrTotal > 0;
+  if ((totalChars === 0 || mostlyEmpty) && !ocrCovering) {
     const content = $("content");
     const banner = el("div", "notice");
     const h = el("h1");
@@ -955,9 +973,15 @@ function finishDocument(total, totalChars, pagesWithText) {
     banner.append(
       h,
       para("This looks like a scanned or image-only PDF, so there is little text to translate - the browser translates words, not pixels."),
-      para("To translate scanned pages, run them through OCR first (e.g. the doc-html-translate desktop app), then reopen the result."),
-      originalButton(),
     );
+    // OCR is off here (or found no images); when it is on we skip the whole banner above. Still,
+    // if the reader has OCR off, suggest turning to a real OCR pass rather than a dead end.
+    if (!options.ocrImages) {
+      banner.append(
+        para("To translate scanned pages, run them through OCR first (turn on \"Use OCR for images\", or use the doc-html-translate desktop app), then reopen the result."),
+      );
+    }
+    banner.append(originalButton());
     content.prepend(banner);
   }
   $("btn-save-html").classList.remove("hidden");

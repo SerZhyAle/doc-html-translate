@@ -1,14 +1,15 @@
 {
   "name": "doc-html-translate-extension",
-  "version": "0.1.1",
+  "version": "26.0702.1321",
   "private": true,
   "description": "Re-render PDFs as clean reflowed HTML so the browser's built-in Translate page works for free. Spin-off of doc-html-translate.",
   "type": "module",
   "scripts": {
     "vendor": "node build.mjs vendor",
     "test": "node --test \"test/*.test.mjs\"",
+    "stamp": "node build.mjs stamp",
     "zip": "node build.mjs zip",
-    "build": "node build.mjs vendor && node build.mjs zip",
+    "build": "node build.mjs stamp && node build.mjs vendor && node build.mjs zip",
     "version:bump": "node scripts/bump-version.mjs",
     "publish:cws": "node scripts/publish-cws.mjs",
     "publish:edge": "node scripts/publish-edge.mjs",

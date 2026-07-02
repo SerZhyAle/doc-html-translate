@@ -53,7 +53,7 @@ src/
 vendor/                pdfjs-dist + tesseract/ + marked + foliate/ (mobi.js) + fflate - generated, git-ignored
 icons/                 16/32/48/128
 test/                  node:test unit tests for the pure modules (reflow/toc/lang + epub unzip/path)
-build.mjs              `vendor` (sync pdfjs) and `zip` (store package)
+build.mjs              `stamp` (date-time version), `vendor` (sync pdfjs) and `zip` (store package)
 ```
 
 ## Develop
@@ -61,11 +61,16 @@ build.mjs              `vendor` (sync pdfjs) and `zip` (store package)
 ```sh
 npm install        # pulls pdfjs-dist + tesseract.js / tesseract.js-core (dev dependencies)
 npm run vendor     # copies pdfjs + the Tesseract engine and eng.traineddata into vendor/ (run once after install)
-npm test           # unit-tests reflow.js / toc.js / lang.js (no browser needed)
-npm run zip        # builds dist/doc-html-translate-extension.zip (store-ready)
+npm run stamp      # sets manifest.json + package.json version to the date-time (yy.MMdd.HHmm) - run before reloading unpacked to see which build you're testing
+npm test           # unit-tests the pure modules (no browser needed)
+npm run build      # stamp + vendor + zip -> dist/ (store-ready, auto-versioned)
+npm run zip        # only zip (uses the current version)
 ```
 
-`vendor/` is generated and git-ignored; run `npm run vendor` before loading the extension.
+`vendor/` is generated and git-ignored; run `npm run vendor` before loading the extension. The version
+is a **date-time stamp** (`yy.MMdd.HHmm`, same scheme as the desktop `build.ps1`) - it shows in the popup
+and options footer and in `chrome://extensions`, so you can tell which build is loaded. `npm run build`
+re-stamps automatically; for local unpacked testing run `npm run stamp` then reload the extension.
 
 ## Load unpacked (Chrome / Edge)
 

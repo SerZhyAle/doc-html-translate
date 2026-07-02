@@ -6,6 +6,7 @@
   <style>
     body { font-family: "Segoe UI", system-ui, sans-serif; width: 270px; margin: 0; padding: 12px 14px; color: #1b1b1b; }
     h1 { font-size: 14px; margin: 0 0 10px; }
+    .ver { color: #888; font-size: 11px; font-weight: normal; }
     .row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 8px; }
     .row label { font-size: 13px; }
     .host { color: #555; font-size: 12px; word-break: break-all; }
@@ -34,7 +35,7 @@
   </style>
 </head>
 <body>
-  <h1>doc-html-translate</h1>
+  <h1>doc-html-translate <span class="ver" id="ver"></span></h1>
   <button id="open-pdf" class="cta" type="button">Open a document&hellip;</button>
   <div class="row">
     <label for="ocr-images">Use OCR for images</label>

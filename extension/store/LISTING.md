@@ -29,9 +29,9 @@ Document Page Translator - PDF, EPUB, MOBI & more (Free & Local)
 - UK: Перекладач сторінок: PDF, EPUB, MOBI та інші (безкоштовно, локально)
 
 ## Short description (<= 132 chars)
-Translate PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown & HTML for free using your browser's built-in translator. 100% local.
-- RU: Переводите PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML бесплатно встроенным переводчиком браузера. Локально.
-- UK: Перекладайте PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown та HTML безкоштовно вбудованим перекладачем браузера. Локально.
+Translate PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown & HTML - and text inside images (OCR) - free & 100% local.
+- RU: Переводите PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML - и текст на изображениях (OCR) - бесплатно, локально.
+- UK: Перекладайте PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown та HTML - і текст на зображеннях (OCR) - безкоштовно, локально.
 
 ## Category
 Productivity

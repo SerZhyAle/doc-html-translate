@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +21,7 @@ import (
 	"doc-html-translate/internal/md"
 	"doc-html-translate/internal/mobi"
 	"doc-html-translate/internal/ocr"
+	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/pdf"
 	"doc-html-translate/internal/rtf"
 	"doc-html-translate/internal/translator"
@@ -72,7 +72,7 @@ func (r Runner) Run() (int, error) {
 	ext := strings.ToLower(filepath.Ext(inputPath))
 
 	// Output directory: same location as file (or -folder path), named after the file (without extension)
-	outputDir := outputDirFor(inputPath, r.cfg.OutputFolder)
+	outputDir := outputpath.OutputDirFor(inputPath, r.cfg.OutputFolder)
 	indexPath := filepath.Join(outputDir, "index.html")
 
 	// R4: if output dir + index.html already exist → open browser immediately
@@ -452,55 +452,6 @@ func assignTOCTitles(entries []epub.TOCEntry, translated []string, idx *int) {
 		*idx++
 		assignTOCTitles(entries[i].Children, translated, idx)
 	}
-}
-
-// outputDirForFile returns the output directory path for a given input file.
-// outputDirFor returns the output directory for a given input file.
-// If folder is non-empty, the result is placed inside that folder.
-// Otherwise it falls back to the directory of the input file (original behaviour).
-//
-// Example (folder=""):        /path/to/My Book.epub → /path/to/My Book/
-// Example (folder="C:/out"): /path/to/My Book.epub → C:/out/My Book/
-func outputDirFor(filePath, folder string) string {
-	base := filepath.Base(filePath)
-	ext := filepath.Ext(base)
-	name := sanitizeOutputName(strings.TrimSuffix(base, ext))
-	if folder != "" {
-		return filepath.Join(folder, name)
-	}
-	return filepath.Join(filepath.Dir(filePath), name)
-}
-
-func sanitizeOutputName(name string) string {
-	name = strings.TrimSpace(name)
-	name = strings.TrimRight(name, ". ")
-	if name == "" || name == "." || name == ".." {
-		return "document"
-	}
-
-	if isWindowsReservedName(name) {
-		name += "_"
-	}
-
-	return name
-}
-
-func isWindowsReservedName(name string) bool {
-	upper := strings.ToUpper(name)
-	if upper == "CON" || upper == "PRN" || upper == "AUX" || upper == "NUL" {
-		return true
-	}
-
-	if strings.HasPrefix(upper, "COM") || strings.HasPrefix(upper, "LPT") {
-		if len(upper) == 4 {
-			n, err := strconv.Atoi(upper[3:])
-			if err == nil && n >= 1 && n <= 9 {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 // overlayImages OCRs the images in every content page and rewrites each image into a

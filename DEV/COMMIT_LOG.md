@@ -521,3 +521,49 @@ Changed files:
 - tests/testdoc_test.go
 - tests/ui_cli_parity_test.go
 
+| 2026-07-02 13:39:55 | main | 521a4fa | ext: OCR overlay quality + docs |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/plan/2026-07-01_ocr-overlay-line-clustering.md
+- DEV/plan/2026-07-01_ocr-pre-upscale.md
+- DEV/plan/2026-07-02_ocr-desktop-tsv-config.md
+- DEV/plan/2026-07-02_ocr-psm-parity.md
+- build.ps1
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-ui/main.go
+- cmd/doc-html-ui/ui.html
+- docs.html
+- docs.ru.html
+- docs.uk.html
+- docs/PARITY.md
+- extension.html
+- extension/README.md
+- extension/_locales/en/messages.json
+- extension/_locales/ru/messages.json
+- extension/_locales/uk/messages.json
+- extension/build.mjs
+- extension/manifest.json
+- extension/package.json
+- extension/src/background.js
+- extension/src/ocr-overlay.css
+- extension/src/ocr-overlay.js
+- extension/src/options.html
+- extension/src/options.js
+- extension/src/popup.html
+- extension/src/popup.js
+- extension/src/viewer.css
+- extension/src/viewer.js
+- extension/store/LISTING.md
+- internal/ocr/overlay.go
+- internal/ocr/tesseract.go
+- internal/ocr/tsv_test.go
+- internal/ocr/upscale_test.go
+- internal/outputpath/outputpath.go
+- internal/outputpath/outputpath_test.go
+- internal/pipeline/pipeline.go
+- internal/pipeline/pipeline_test.go
+- scripts/build-extension.ps1
+- tests/parity_test.go
+

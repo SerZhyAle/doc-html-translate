@@ -24,11 +24,14 @@ import (
 // The container MUST be display:block with an explicit width (not inline-block): a
 // shrink-to-fit box with container-type:inline-size collapses to zero inline size (size
 // containment removes the content's contribution), which hides the image and every plate.
-// The image is width:100% so the percent-positioned plates line up with it. This mirrors
-// the extension's .ocr-overlay (see docs/PARITY.md and ocr-overlay.css).
+// The image is width:100% - plus margin:0 and max-height:none so a page-level `img` reset can't
+// offset or shrink it below the container (which would drift the plates vertically) - so the
+// percent-positioned plates line up with it. Plates top-align their text (align-items:flex-start)
+// so it starts at the source line and longer translations grow downward. This mirrors the
+// extension's .ocr-overlay (see docs/PARITY.md and ocr-overlay.css).
 const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:100%;margin:0 auto;container-type:inline-size;line-height:1.1}
-.ocr-fig>img{display:block;width:100%;height:auto}
-.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;color:#111;padding:0.05em 0.15em;border-radius:2px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif}`
+.ocr-fig>img{display:block;width:100%;height:auto;margin:0;max-height:none}
+.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;color:#111;padding:0.05em 0.15em;border-radius:2px;display:flex;align-items:flex-start;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif}`
 
 // OverlayFile OCRs every local <img> in the HTML file and rewrites each into a positioned
 // container with opaque, translatable text plates over the image. Returns the number of
@@ -156,9 +159,10 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 // text reliably fits inside the block box (which is what actually covers the source - the
 // opaque box is sized by min-height, independent of the font). Without it a tall title
 // block wraps to more lines than the source and the plate grows past its region, colliding
-// with the next plate. 0.85 leaves the text readable while absorbing font-metric and
-// word-wrap slack. Shared with the extension's ocr-overlay.js FONT_FIT (see docs/PARITY.md).
-const fontFitFactor = 0.85
+// with the next plate. 0.92 keeps plate text close to the source size while still absorbing
+// font-metric and word-wrap slack. Shared with the extension's ocr-overlay.js FONT_FIT (see
+// docs/PARITY.md).
+const fontFitFactor = 0.92
 
 // percentStyle positions a plate as percentages of the image dimensions and sizes its font
 // from the block's line height (in cqw, i.e. percent of the container width), scaled by

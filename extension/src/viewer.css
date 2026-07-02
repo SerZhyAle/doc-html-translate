@@ -239,3 +239,8 @@ body {
 .ocr-pending { position: relative; display: block; margin: 1em auto; max-width: 100%; }
 .ocr-pending img { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 #content .ocr-overlay { margin: 1em auto; max-width: 100%; }
+/* The overlay image must fill its aspect-ratio container exactly, or the percent-positioned
+   plates drift from it. Neutralize the "#content img" reset: its `margin: 1em auto` grew the
+   container by ~2em and centered the image inside it, so plates (positioned as % of the taller
+   container) drifted vertically - up above the image centre, down below it. */
+#content .ocr-overlay-img { margin: 0; max-height: none; }

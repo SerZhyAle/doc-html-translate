@@ -7,7 +7,7 @@
 // friendlier to readable third-party code than to minified blobs, and the size cost
 // (~3 MB) is irrelevant for a locally-installed extension.
 
-import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { spawnSync } from "node:child_process";
@@ -193,10 +193,36 @@ async function zip() {
   console.log(`Wrote ${out} (${(size / 1024 / 1024).toFixed(1)} MB)`);
 }
 
+// Stamp the extension version from the local date-time, exactly like the desktop app's
+// build.ps1 (yy.MMdd.HHmm, e.g. 26.0701.1716). Chrome accepts the leading zeros; the value
+// is monotonic (so the Web Store always sees an increment) and human-readable, so you can
+// tell which build you're testing. Writes manifest.json + package.json in lockstep.
+function dateVersion() {
+  const d = new Date();
+  const p2 = (n) => String(n).padStart(2, "0");
+  const yy = p2(d.getFullYear() % 100);
+  const mmdd = p2(d.getMonth() + 1) + p2(d.getDate());
+  const hhmm = p2(d.getHours()) + p2(d.getMinutes());
+  return `${yy}.${mmdd}.${hhmm}`;
+}
+
+async function stamp() {
+  const version = dateVersion();
+  for (const file of ["manifest.json", "package.json"]) {
+    const path = join(root, file);
+    const json = JSON.parse(await readFile(path, "utf8"));
+    json.version = version;
+    await writeFile(path, JSON.stringify(json, null, 2) + "\n");
+  }
+  console.log(`Stamped version ${version} (manifest.json + package.json).`);
+  return version;
+}
+
 const cmd = process.argv[2];
-if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); }
+if (cmd === "stamp") { await stamp(); }
+else if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); }
 else if (cmd === "zip") await zip();
 else {
-  console.error("usage: node build.mjs <vendor|zip>");
+  console.error("usage: node build.mjs <stamp|vendor|zip>");
   process.exit(1);
 }

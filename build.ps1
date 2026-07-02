@@ -17,14 +17,25 @@
 .PARAMETER Gate
   Run the quality gate (test + lint + typo) before building.
 
+.PARAMETER NoExtension
+  Skip stamping / building the browser extension (build only the desktop binaries).
+
+.PARAMETER ExtZip
+  Also build the extension store zip (extension/dist/*.zip), not just stamp the version.
+
 .EXAMPLE
   ./build.ps1
 
 .EXAMPLE
   ./build.ps1 -Gate
+
+.EXAMPLE
+  ./build.ps1 -ExtZip
 #>
 param(
-    [switch]$Gate
+    [switch]$Gate,
+    [switch]$NoExtension,
+    [switch]$ExtZip
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +54,17 @@ Write-Host "== build CLI (doc-html-translate.exe) ==" -ForegroundColor Cyan
 Write-Host "== build UI (doc-html-ui.exe) ==" -ForegroundColor Cyan
 ./scripts/build-ui.ps1
 
+if (-not $NoExtension) {
+    Write-Host "== stamp + build extension ==" -ForegroundColor Cyan
+    # -NoTest keeps this wrapper fast (like the app build skips the gate unless -Gate);
+    # run ./scripts/build-extension.ps1 directly for the tested build.
+    if ($ExtZip) { ./scripts/build-extension.ps1 -NoTest -Zip }
+    else { ./scripts/build-extension.ps1 -NoTest }
+}
+
 Write-Host ""
 Write-Host "Done: both binaries built and copied to C:\GD\tc\SZA\_APP." -ForegroundColor Green
+if (-not $NoExtension) {
+    Write-Host "Extension version stamped (loaded unpacked from extension/)." -ForegroundColor Green
+}
 Write-Host "Local build - nothing committed or pushed. Gated+committed flow: scripts/build-local.ps1" -ForegroundColor DarkGray

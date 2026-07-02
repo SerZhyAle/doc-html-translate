@@ -213,6 +213,10 @@ details > .body { padding: 2px 12px 12px; }
 .cmdcopy { flex: 0 0 auto; align-self: stretch; }
 .cmdcopy.done { color: var(--green); border-color: var(--green); }
 hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+/* "previous result" hint: appears under the drop zone when the current input already
+   has a converted output, with an inline button to clear it. */
+.hint .inline-btn { padding: 2px 9px; font-size: 11px; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -254,6 +258,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
+<div class="hint" id="prevResultHint" style="display:none">
+    <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
+    <button type="button" class="inline-btn" id="btnDeletePrev" data-i18n="btnDeletePrev">Delete previous result</button>
+</div>
 
 <!-- output folder -->
 <div class="field" style="margin-top:10px">
@@ -363,6 +371,11 @@ const I18N = {
         dropChooseAnother: "click to choose another file",
         btnConvert: "Convert",
         dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.",
+        prevResultFound: "A previous result already exists for this file.",
+        btnDeletePrev: "Delete previous result",
+        confirmDeletePrev: "Delete the previous conversion result for this file? This cannot be undone.",
+        confirmParamsChanged: "The existing result was built with different options. Delete it and rebuild with the current settings?",
+        deletePrevFail: "Could not delete the previous result: {msg}",
         lblOutput: "Output:",
         phOutput: "Leave empty - lands next to the input",
         btnBrowse: "Browse..",
@@ -438,6 +451,11 @@ const I18N = {
         dropChooseAnother: "щёлкните, чтобы выбрать другой файл",
         btnConvert: "Конвертировать",
         dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 нужен установленный Calibre.",
+        prevResultFound: "Для этого файла уже есть результат конвертации.",
+        btnDeletePrev: "Удалить предыдущий результат",
+        confirmDeletePrev: "Удалить предыдущий результат конвертации для этого файла? Это необратимо.",
+        confirmParamsChanged: "Существующий результат собран с другими параметрами. Удалить его и пересобрать с текущими настройками?",
+        deletePrevFail: "Не удалось удалить предыдущий результат: {msg}",
         lblOutput: "Папка вывода:",
         phOutput: "Оставьте пустым - результат ляжет рядом с исходником",
         btnBrowse: "Обзор..",
@@ -513,6 +531,11 @@ const I18N = {
         dropChooseAnother: "клацніть, щоб обрати інший файл",
         btnConvert: "Конвертувати",
         dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 потрібен встановлений Calibre.",
+        prevResultFound: "Для цього файлу вже є результат конвертації.",
+        btnDeletePrev: "Видалити попередній результат",
+        confirmDeletePrev: "Видалити попередній результат конвертації для цього файлу? Це незворотно.",
+        confirmParamsChanged: "Наявний результат зібрано з іншими параметрами. Видалити його та перезібрати з поточними налаштуваннями?",
+        deletePrevFail: "Не вдалося видалити попередній результат: {msg}",
         lblOutput: "Тека виводу:",
         phOutput: "Залиште порожнім - результат ляже поряд із джерелом",
         btnBrowse: "Огляд..",
@@ -681,6 +704,7 @@ function setInputPath(p) {
     document.getElementById('dropFilled').style.display = '';
     document.getElementById('dropZone').classList.add('has-file');
     updateCmdPreview();
+    scheduleOutputStatus();
 }
 
 // ── drag & drop into the window ─────────────────────────
@@ -1011,6 +1035,56 @@ function updateCmdPreview() {
 document.addEventListener('change', updateCmdPreview);
 document.addEventListener('input', updateCmdPreview);
 
+// ── previous-result detection ───────────────────────────
+// Asks the server whether this input already has a converted output, and whether it
+// was built with different options than what's currently selected - so re-running
+// with, say, "Single page" newly checked doesn't just silently reopen the old
+// multi-page result (the CLI reuses existing output unless -force is passed).
+let outputStatus = {exists: false, paramsChanged: false};
+function renderPrevResultHint() {
+    el('prevResultHint').style.display = outputStatus.exists ? '' : 'none';
+}
+let statusTimer = null;
+async function checkOutputStatus() {
+    if (!el('inputFile').value.trim()) {
+        outputStatus = {exists: false, paramsChanged: false};
+        renderPrevResultHint();
+        return;
+    }
+    try {
+        const r = await fetch('/api/output-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(collectRunConfig()),
+        });
+        outputStatus = await r.json();
+    } catch (e) {
+        outputStatus = {exists: false, paramsChanged: false};
+    }
+    renderPrevResultHint();
+}
+function scheduleOutputStatus() {
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(checkOutputStatus, 150);
+}
+document.addEventListener('change', scheduleOutputStatus);
+document.addEventListener('input', scheduleOutputStatus);
+
+el('btnDeletePrev').addEventListener('click', async () => {
+    if (!confirm(t('confirmDeletePrev'))) return;
+    try {
+        const r = await (await fetch('/api/delete-output', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({input: el('inputFile').value.trim(), output: el('outputFolder').value.trim()}),
+        })).json();
+        if (r.ok) await checkOutputStatus();
+        else alert(t('deletePrevFail', {msg: r.error || t('unknownError')}));
+    } catch (e) {
+        alert(t('deletePrevFail', {msg: e.message}));
+    }
+});
+
 el('btnCopyCmd').addEventListener('click', async () => {
     const btn = el('btnCopyCmd');
     const text = el('cmdLine').textContent.trim();
@@ -1050,7 +1124,15 @@ async function runConvert() {
         } catch(e) { /* let the CLI report it */ }
     }
 
+    await checkOutputStatus();
+    if (outputStatus.exists && outputStatus.paramsChanged) {
+        if (!confirm(t('confirmParamsChanged'))) return;
+    }
+
     const cfg = collectRunConfig();
+    // The user just confirmed rebuilding over a differently-built result; force it for
+    // this run without touching the persisted "Force re-process" checkbox.
+    if (outputStatus.exists && outputStatus.paramsChanged) cfg.force = true;
 
     const btn = document.getElementById('btnRun');
     const log = document.getElementById('logArea');

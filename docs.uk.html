@@ -125,6 +125,10 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
           <tr><td>-google</td><td>false</td><td>Переклад через Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Локальний переклад Ollama</td></tr>
+          <tr><td>-ocr</td><td>false</td><td>Розпізнати текст на зображеннях документа (OCR) і накласти його зверху справжнім перекладним HTML (потрібен Tesseract)</td></tr>
+          <tr><td>-ocr-lang</td><td>(-src)</td><td>Мова(и) OCR, напр. eng або eng+rus (за замовчуванням з -src, інакше eng)</td></tr>
+          <tr><td>-ocr-langs</td><td>false</td><td>Показати встановлені/доступні мови OCR і вийти</td></tr>
+          <tr><td>-ocr-download</td><td>empty</td><td>Завантажити мовний пакет OCR (напр. -ocr-download rus) і вийти</td></tr>
           <tr><td>-max-cost</td><td>0</td><td>Перервати платний переклад до відправлення, якщо оцінка вартості в USD перевищує N. Якщо сумніваєтеся, 0 (без ліміту) - цілком гідний вибір</td></tr>
           <tr><td>-split</td><td>5000</td><td>Розбиття сторінок за кількістю символів, 0 вимикає</td></tr>
           <tr><td>-toc-depth</td><td>0</td><td>Глибина вкладеності змісту на index.html, 0 = без обмежень, 1 = лише розділи</td></tr>

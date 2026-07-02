@@ -306,7 +306,7 @@
         <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Ограничения</h2><span class="secteaser">Сканы, перехват, блокировщики, лигатуры - честно обо всём</span></span></summary>
         <div class="secbody">
           <ul>
-            <li><strong>Сканы/картинки без текста:</strong> переводить нечего (нет текстового слоя). Расширение это распознаёт и предлагает открыть оригинал; для сканов сначала прогони OCR (напр. настольным приложением).</li>
+            <li><strong>Сканы/картинки без текста:</strong> переводчику страницы нечего читать (нет текстового слоя). Включите OCR для изображений (или правый клик по картинке), и расширение распознаёт вшитый текст и накладывает его переводимым слоем; без OCR оно определяет пустую страницу и предлагает открыть оригинал.</li>
             <li><strong>Авто-перехват по URL:</strong> срабатывает для адресов, оканчивающихся на <code>.pdf</code> или <code>.epub</code>; файлы, отдаваемые без такого расширения в адресе, открывай через попап («Open file»).</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на странице вьюера:</strong> это другой блокировщик контента в твоём профиле режет навигацию по содержимому URL. Используй открытие файла через диалог (путь не попадает в URL) или отключи мешающее расширение.</li>
             <li><strong>Лигатуры:</strong> качество извлечения PDF.js чуть ниже Poppler на нестандартных шрифтах.</li>
@@ -395,7 +395,7 @@
         <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Limitations</h2><span class="secteaser">Scans, interception, blockers, ligatures - the honest list</span></span></summary>
         <div class="secbody">
           <ul>
-            <li><strong>Scanned / image-only PDFs:</strong> nothing to translate (no text layer). The extension detects this and offers the original; OCR first (e.g. with the desktop app).</li>
+            <li><strong>Scanned / image-only PDFs:</strong> no text layer for the page translator. Turn on <strong>Use OCR for images</strong> (or right-click a picture) so the extension recognizes the baked-in text and overlays it as translatable text; without OCR it detects the empty page and offers the original.</li>
             <li><strong>URL auto-interception:</strong> fires for addresses ending in <code>.pdf</code> or <code>.epub</code>; files served without a matching extension in the URL can be opened via the popup ("Open file").</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> on the viewer page:</strong> a different content blocker in your profile is blocking the navigation by URL content. Use the file-picker route (path never in the URL) or disable the interfering extension.</li>
             <li><strong>Ligatures:</strong> PDF.js text extraction is slightly weaker than Poppler on non-standard fonts.</li>
@@ -484,7 +484,7 @@
         <summary><span class="secnum" aria-hidden="true">05</span><span class="sechead"><h2 class="sectitle">Обмеження</h2><span class="secteaser">Скани, перехоплення, блокувальники, лігатури - чесно про все</span></span></summary>
         <div class="secbody">
           <ul>
-            <li><strong>Скани/картинки без тексту:</strong> перекладати нічого (немає текстового шару). Розширення це розпізнає й пропонує відкрити оригінал; для сканів спершу прожени OCR (напр. настільним застосунком).</li>
+            <li><strong>Скани/картинки без тексту:</strong> перекладачу сторінки нічого читати (немає текстового шару). Увімкніть OCR для зображень (або правий клік по зображенню), і розширення розпізнає вшитий текст і накладає його перекладним шаром; без OCR воно визначає порожню сторінку й пропонує відкрити оригінал.</li>
             <li><strong>Авто-перехоплення за URL:</strong> спрацьовує для адрес, що закінчуються на <code>.pdf</code> або <code>.epub</code>; файли, що віддаються без відповідного розширення в адресі, відкривай через попап («Open file»).</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на сторінці вьюера:</strong> інший блокувальник контенту у твоєму профілі ріже навігацію за вмістом URL. Використовуй відкриття файлу через діалог (шлях не потрапляє в URL) або вимкни розширення, що заважає.</li>
             <li><strong>Лігатури:</strong> якість видобування PDF.js трохи нижча за Poppler на нестандартних шрифтах.</li>

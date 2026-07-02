@@ -312,6 +312,10 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-noopen</td><td>false</td><td>Do not auto-open browser</td></tr>
           <tr><td>-google</td><td>false</td><td>Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Local Ollama translation</td></tr>
+          <tr><td>-ocr</td><td>false</td><td>OCR text inside document images and overlay it as translatable HTML (needs Tesseract)</td></tr>
+          <tr><td>-ocr-lang</td><td>(-src)</td><td>OCR language(s), e.g. eng or eng+rus (defaults from -src, else eng)</td></tr>
+          <tr><td>-ocr-langs</td><td>false</td><td>List installed/available OCR languages and exit</td></tr>
+          <tr><td>-ocr-download</td><td>empty</td><td>Download an OCR language pack (e.g. -ocr-download rus) and exit</td></tr>
           <tr><td>-max-cost</td><td>0</td><td>Abort paid translation before sending if the estimated cost in USD exceeds N. When in doubt, 0 (no limit) is a perfectly respectable choice</td></tr>
           <tr><td>-split</td><td>5000</td><td>Split pages at N chars, 0 disables split</td></tr>
           <tr><td>-toc-depth</td><td>0</td><td>Table-of-contents nesting depth on index.html, 0 = unlimited, 1 = chapters only</td></tr>

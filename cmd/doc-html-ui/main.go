@@ -21,6 +21,7 @@ import (
 	"unicode/utf16"
 
 	"doc-html-translate/internal/ocr"
+	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/translator"
 )
@@ -67,6 +68,8 @@ func main() {
 	mux.HandleFunc("/api/settings", handleSettings)
 	mux.HandleFunc("/api/google-key", handleGoogleKey)
 	mux.HandleFunc("/api/preview", handlePreview)
+	mux.HandleFunc("/api/output-status", handleOutputStatus)
+	mux.HandleFunc("/api/delete-output", handleDeleteOutput)
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
 	mux.HandleFunc("/api/env", handleEnv)
@@ -346,6 +349,166 @@ func handlePreview(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"cmd": cmd})
 }
 
+// resolveOutputDir mirrors internal/pipeline's reuse-check target directory so the
+// GUI can look at (and clear) a previous result without shelling out to the CLI.
+func resolveOutputDir(input, folder string) (string, error) {
+	abs, err := filepath.Abs(input)
+	if err != nil {
+		return "", err
+	}
+	return outputpath.OutputDirFor(abs, folder), nil
+}
+
+// outputFingerprint captures the runRequest fields that change what actually gets
+// written to the output directory - as opposed to execution-only flags like Force,
+// Verbose, NoOpen, or OllamaParallel - so paramsHistory can detect "this result was
+// built with different options than what's selected now".
+type outputFingerprint struct {
+	SinglePage  bool
+	SplitSize   string
+	TOCDepth    string
+	MaxCost     string
+	SrcLang     string
+	DstLang     string
+	NoTranslate bool
+	Google      bool
+	Ollama      bool
+	OllamaModel string
+	OllamaCtx   string
+	OCR         bool
+	OCRLang     string
+}
+
+func fingerprintFor(req runRequest) string {
+	data, _ := json.Marshal(outputFingerprint{
+		SinglePage:  req.SinglePage,
+		SplitSize:   req.SplitSize,
+		TOCDepth:    req.TOCDepth,
+		MaxCost:     req.MaxCost,
+		SrcLang:     req.SrcLang,
+		DstLang:     req.DstLang,
+		NoTranslate: req.NoTranslate,
+		Google:      req.Google,
+		Ollama:      req.Ollama,
+		OllamaModel: req.OllamaModel,
+		OllamaCtx:   req.OllamaCtx,
+		OCR:         req.OCR,
+		OCRLang:     req.OCRLang,
+	})
+	return string(data)
+}
+
+// paramsHistoryPath is the writable, per-user location of the fingerprint each output
+// directory was last built with, so a later run with different options can be told
+// apart from a plain re-run of the same settings.
+func paramsHistoryPath() string {
+	if appData := os.Getenv("LOCALAPPDATA"); appData != "" {
+		return filepath.Join(appData, "doc-html-translate", "output-params.json")
+	}
+	return filepath.Join(os.TempDir(), "doc-html-translate-output-params.json")
+}
+
+func loadParamsHistory() map[string]string {
+	data, err := os.ReadFile(paramsHistoryPath())
+	if err != nil {
+		return map[string]string{}
+	}
+	var m map[string]string
+	if json.Unmarshal(data, &m) != nil || m == nil {
+		return map[string]string{}
+	}
+	return m
+}
+
+func saveParamsHistory(m map[string]string) error {
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	p := paramsHistoryPath()
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(p, data, 0o600)
+}
+
+// handleOutputStatus reports whether a previous conversion result exists for the
+// request's input/output, and whether it was built with different options than the
+// request currently describes - so the GUI can offer to delete and rebuild instead of
+// silently reopening a stale result (mirrors the CLI's reuse-unless--force rule).
+func handleOutputStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req runRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	resp := map[string]any{"exists": false, "paramsChanged": false}
+	if req.Input == "" {
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if _, err := os.Stat(filepath.Join(outputDir, "index.html")); err != nil {
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+
+	resp["exists"] = true
+	resp["outputDir"] = outputDir
+	if prev, ok := loadParamsHistory()[outputDir]; ok && prev != fingerprintFor(req) {
+		resp["paramsChanged"] = true
+	}
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// handleDeleteOutput removes a previous conversion result so the next run starts
+// clean. It only ever deletes a directory that actually contains index.html - the
+// same marker the CLI's reuse check uses - so a stray output-folder value can't steer
+// it into deleting something unrelated.
+func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Input  string `json:"input"`
+		Output string `json:"output"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	if _, err := os.Stat(filepath.Join(outputDir, "index.html")); err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": "no previous result found"})
+		return
+	}
+	if err := os.RemoveAll(outputDir); err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	if hist := loadParamsHistory(); len(hist) > 0 {
+		if _, ok := hist[outputDir]; ok {
+			delete(hist, outputDir)
+			_ = saveParamsHistory(hist)
+		}
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+}
+
 func handleRun(w http.ResponseWriter, r *http.Request) {
 	activeRuns.Add(1)
 	defer activeRuns.Add(-1)
@@ -409,6 +572,11 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "\nExit: %v\n", err)
 	} else {
 		fmt.Fprintf(w, "\nDone.\n")
+		if outputDir, err := resolveOutputDir(req.Input, req.Output); err == nil && outputDir != "" {
+			hist := loadParamsHistory()
+			hist[outputDir] = fingerprintFor(req)
+			_ = saveParamsHistory(hist)
+		}
 	}
 	flusher.Flush()
 }
