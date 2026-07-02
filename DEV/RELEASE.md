@@ -55,9 +55,14 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
 2. **GitHub Release - app** `[PAID]` - push a `v*` tag → `.github/workflows/release.yml` builds
    the exes and creates the GitHub Release:
    `git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>`.
-3. **winget** `[PUBLIC]` - after the release exists:
-   `wingetcreate update SerZhyAle.DocHtmlTranslate --version <ver> --urls <zip-url> --submit`
-   (sign the CLA on the PR if prompted). See [docs/how-i-posted-this-project-to-winget.md](../docs/how-i-posted-this-project-to-winget.md).
+3. **winget** `[PUBLIC]` - after the release exists. **Always local-install-test the manifest
+   first** - `winget install --manifest winget` (one-time: `winget settings --enable
+   LocalManifestFiles`) - it downloads the release zip and verifies the SHA256 end-to-end, the
+   single best gate (`winget validate` only checks schema, not the hash/URL). Then submit:
+   version-only bump = `wingetcreate update SerZhyAle.DocHtmlTranslate --version <ver> --urls
+   <zip-url> --submit`; **to also change the description/tags, edit `winget/` and `wingetcreate
+   submit winget`** (`update` copies the old metadata forward). Sign the CLA on the PR if
+   prompted. See [docs/how-i-posted-this-project-to-winget.md](../docs/how-i-posted-this-project-to-winget.md).
 4. **Windows Store (MSIX)** `[PUBLIC]` - build unsigned and upload by hand in Partner Center:
    `./msix/build-msix.ps1 -IdentityName "<name>"`. See [../msix/README.md](../msix/README.md).
 5. **Chrome / Edge extension** `[PAID]` `[PUBLIC]` - bump (required), commit, push an `ext-v*` tag
