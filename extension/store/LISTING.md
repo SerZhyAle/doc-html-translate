@@ -29,9 +29,13 @@ Document Page Translator - PDF, EPUB, MOBI & more (Free & Local)
 - UK: Перекладач сторінок: PDF, EPUB, MOBI та інші (безкоштовно, локально)
 
 ## Short description (<= 132 chars)
-Translate PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown & HTML - and text inside images (OCR) - free & 100% local.
-- RU: Переводите PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML - и текст на изображениях (OCR) - бесплатно, локально.
-- UK: Перекладайте PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown та HTML - і текст на зображеннях (OCR) - безкоштовно, локально.
+> Chrome rejected the earlier all-formats keyword list as "excessive keywords" (Spam / Placement,
+> Jul 2026). Keep only the two headline formats (PDF, EPUB) + "other documents" - do NOT re-enumerate
+> all nine formats here. The full list still lives in the detailed description below, in prose.
+
+Re-render PDF, EPUB & other documents as clean HTML the browser's free Translate page can read - incl. image OCR. 100% local.
+- RU: Открывайте PDF, EPUB и другие документы как чистый HTML - и браузер бесплатно переводит их встроенным переводчиком. Локально.
+- UK: Відкривайте PDF, EPUB та інші документи як чистий HTML - і браузер безкоштовно перекладає їх вбудованим перекладачем. Локально.
 
 ## Category
 Productivity

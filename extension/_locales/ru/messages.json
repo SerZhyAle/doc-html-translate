@@ -8,7 +8,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "Переводите PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML - и текст на изображениях (OCR) - бесплатно, локально.",
+    "message": "Открывайте PDF, EPUB и другие документы как чистый HTML - и браузер бесплатно переводит их встроенным переводчиком. Локально.",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {
