@@ -56,7 +56,7 @@ browser's built-in "Translate page" feature can translate it. It does not do any
 > Store-listing **Description** field edit (dashboard only); the packaged manifest short description is
 > already compliant, so no new upload or version bump is required to resubmit.
 
-Chrome and Edge have excellent built-in translators that translate any webpage instantly and for free. But they don't work on books and documents:
+Your browser has an excellent built-in translator that translates any webpage instantly and for free. But it doesn't work on books and documents:
 1. **PDFs** are rendered on a canvas, making the text invisible to the browser's translator.
 2. **EPUBs** cannot be opened in the browser at all; they just trigger a download.
 
