@@ -24,9 +24,9 @@ message keys (`storeDescription`, `shot1Caption`..`shot3Caption`) into each stor
 The RU/UK strings below are the canonical source; keep them in sync with `_locales`.
 
 ## Name
-Document Page Translator - PDF, EPUB, MOBI & more (Free & Local)
-- RU: Переводчик страниц: PDF, EPUB, MOBI и другие (бесплатно, локально)
-- UK: Перекладач сторінок: PDF, EPUB, MOBI та інші (безкоштовно, локально)
+Document Page Translator - PDF, EPUB & more (Free & Local)
+- RU: Переводчик страниц: PDF, EPUB и другие (бесплатно, локально)
+- UK: Перекладач сторінок: PDF, EPUB та інші (безкоштовно, локально)
 
 ## Short description (<= 132 chars)
 > Chrome rejected the earlier all-formats keyword list as "excessive keywords" (Spam / Placement,
@@ -41,11 +41,21 @@ Re-render PDF, EPUB & other documents as clean HTML the browser's free Translate
 Productivity
 
 ## Single-purpose statement
-This extension has one purpose: when you open a document (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown,
-or local HTML), it re-renders the document's text as clean, reflowed HTML in a local viewer so the
+This extension has one purpose: when you open a supported document (PDF, EPUB, and other e-book and
+document formats), it re-renders the document's text as clean, reflowed HTML in a local viewer so the
 browser's built-in "Translate page" feature can translate it. It does not do anything else.
 
 ## Detailed description
+> Chrome rejected this again on Jul 4 2026 (same "Yellow Argon" ref) - this time for the **detailed**
+> description, not the short one. The offender was the full nine-format list repeated in a parenthetical
+> `(PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, or local HTML)` in both the single-purpose statement
+> and "How it works". After a second rejection we stopped fighting it: the store copy now names **only
+> PDF and EPUB** (the core formats) and refers to everything else generically as "other e-book and
+> document formats" - **no MOBI/AZW3/FB2/RTF/TXT/Markdown/HTML enumeration anywhere in the listing**. The
+> full explicit list lives only in README.md and PRIVACY.md, never in the store Description. This is a
+> Store-listing **Description** field edit (dashboard only); the packaged manifest short description is
+> already compliant, so no new upload or version bump is required to resubmit.
+
 Chrome and Edge have excellent built-in translators that translate any webpage instantly and for free. But they don't work on books and documents:
 1. **PDFs** are rendered on a canvas, making the text invisible to the browser's translator.
 2. **EPUBs** cannot be opened in the browser at all; they just trigger a download.
@@ -53,15 +63,15 @@ Chrome and Edge have excellent built-in translators that translate any webpage i
 **This extension quietly solves both problems - and opens seven more document formats too!**
 
 ### How it works:
-When you open a supported document (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, or local HTML), this extension converts its text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!
+When you open a supported document, this extension converts its text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!
 
 ### Key Features:
 - 📖 **EPUB Reader**: Unpacks EPUB books and combines chapters into a single scrollable document for seamless translation.
 - 📄 **PDF Reflow**: Extracts text and lays it out as readable paragraphs, making sure the translator doesn't break, overlap, or double text.
-- 📚 **More formats**: Also opens MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML - each converted to clean, translatable text, with no Calibre or any other app required.
+- 📚 **More formats**: Also opens many other e-book and document formats - each converted to clean, translatable text, with no Calibre or any other app required.
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
-- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file (PNG, JPEG, GIF, BMP, WebP) with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
+- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
 - 🔒 **100% Local & Private**: Everything runs entirely on your device. Your documents are never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 
