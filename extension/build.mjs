@@ -80,6 +80,28 @@ async function vendorTesseract() {
     join(out, "tesseract-core-simd-lstm.wasm.js"),
   );
 
+  // Neutralize Tesseract.js's baked-in CDN fallbacks. worker.min.js / tesseract.esm.min.js
+  // ship jsdelivr defaults for corePath (the WASM core), the worker script and langPath; the
+  // engine would importScripts()/import() them only when those paths are not supplied. We
+  // always supply explicit local paths (ocr-lang.js workerAssets/workerOptions), so the
+  // defaults are dead code - but Chrome Web Store MV3 review scans the *packaged* bytes and
+  // rejects a `https://cdn.jsdelivr.net/...` load of executable code as "remotely hosted
+  // code" (traineddata and other data are exempt; JS/WASM is not). Rewrite the CDN base to an
+  // extension-local path so no remote-code URL ships. Behaviour is unchanged because the
+  // defaults are never taken; the assertion fails the build if a Tesseract.js upgrade adds a
+  // new remote default, so we catch it here rather than at store review.
+  const cdnBase = "https://cdn.jsdelivr.net/npm/";
+  const localBase = "vendor/tesseract/";
+  for (const name of ["worker.min.js", "tesseract.esm.min.js"]) {
+    const p = join(out, name);
+    const sanitized = (await readFile(p, "utf8")).replaceAll(cdnBase, localBase);
+    await writeFile(p, sanitized);
+    if (/https?:\/\/[^\s"'`]*cdn\.jsdelivr\.net/.test(sanitized)) {
+      console.error(`${name}: a jsdelivr CDN reference survived sanitization - Tesseract.js changed its remote defaults; update build.mjs.`);
+      process.exit(1);
+    }
+  }
+
   // Bundled English data: fetch the gzipped tessdata_fast file once and store it
   // decompressed so the runtime loads it with gzip:false and no network.
   const url = `${TESSDATA_BASE}/eng.traineddata.gz`;
