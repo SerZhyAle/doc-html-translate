@@ -45,8 +45,15 @@ Verified: `go build ./...`, `go test ./internal/... ./cmd/... ./tests/...` green
 - #11-#15, #17-#20 (P2 ports) - each is an existing intentional divergence in `docs/PARITY.md`; left as-is
   pending a product decision to port.
 
+**Aligned later (2026-07-09):**
+- #15 (partial) ALL-CAPS heading detection made language-agnostic in Go: `classifyBlock` now tests
+  `upper == text && text != strings.ToLower(text)` instead of a Latin-only `ContainsAny(A-Z)`, so Cyrillic
+  ALL-CAPS headings ("ГЛАВА ПЕРВАЯ") are detected like the extension's `/[A-ZА-ЯЁ]/u`. Guarded by
+  `TestClassifyBlock` (internal/pdf). The remaining #15 gap (JS font-size heading dimension) stays a
+  documented JS-only improvement. `docs/PARITY.md` updated.
+
 **Deferred (still open):**
-- #8 class-name unification, and the P2 ports (#11-#20) if/when the product wants full parity.
+- #8 class-name unification, and the P2 ports (#11-#14, #16-#20) if/when the product wants full parity.
 - #22 extension DOM-path unit tests (large; the concurrent format-parity work is adding coverage here).
 
 ## P0 - unintended drift / probable bugs (Align)

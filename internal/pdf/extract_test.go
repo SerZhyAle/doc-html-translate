@@ -421,3 +421,30 @@ func TestImageHTMLClassAttr(t *testing.T) {
 		t.Fatalf("expected tif flip class, got %q", got)
 	}
 }
+
+func TestClassifyBlock(t *testing.T) {
+	cases := []struct {
+		name          string
+		text          string
+		leadingSpaces int
+		want          string
+	}{
+		{"latin all-caps short", "LITTLE TOKYO", 0, "h2"},
+		{"cyrillic all-caps short", "ГЛАВА ПЕРВАЯ", 0, "h2"},
+		{"cyrillic all-caps with digit", "ГЛАВА 1", 0, "h2"},
+		{"mixed case not heading", "Little Tokyo", 0, "p"},
+		{"cyrillic mixed case not heading", "Глава первая", 0, "p"},
+		{"digits only not heading", "12345", 0, "p"},
+		{"centered short heading", "A Quiet Chapter", 12, "h2"},
+		{"centered medium heading", "A Somewhat Longer Centered Title Line That Runs Here Now", 12, "h3"},
+		{"plain body", "This is an ordinary body line of text.", 0, "p"},
+		{"all-caps but long stays body", "THIS ALL CAPS LINE HAS FAR TOO MANY WORDS TO BE A HEADING LINE", 0, "p"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := classifyBlock(c.text, c.leadingSpaces); got != c.want {
+				t.Errorf("classifyBlock(%q, %d) = %q, want %q", c.text, c.leadingSpaces, got, c.want)
+			}
+		})
+	}
+}

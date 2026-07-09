@@ -585,3 +585,17 @@ Changed files:
 - internal/windowsreg/register_windows.go
 - tests/ui_cli_parity_test.go
 
+| 2026-07-09 22:29:22 | main | 6a78fe8 | fix(pdf): detect Cyrillic ALL-CAPS headings, warn on malformed -src/-dst |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/plan/2026-07-01_cross-edition-parity.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- docs/PARITY.md
+- internal/config/lang.go
+- internal/config/lang_test.go
+- internal/pdf/extract.go
+- internal/pdf/extract_test.go
+- internal/pipeline/pipeline.go
+

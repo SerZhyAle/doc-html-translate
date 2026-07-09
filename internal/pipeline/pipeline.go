@@ -220,6 +220,14 @@ func (r Runner) Run() (int, error) {
 	}
 
 	// Step 3: Translation
+	// Advisory: when a translation engine is on, warn once if a language code looks
+	// malformed (e.g. "russian" instead of "ru"). Non-fatal - the engine still runs.
+	if r.cfg.UseGoogle || r.cfg.UseOllama {
+		if bad := config.SuspiciousLangCodes(r.cfg.SourceLang, r.cfg.TargetLang); len(bad) > 0 {
+			logging.Errorf("WARNING: %s does not look like a language code (expected e.g. 'en', 'ru', 'zh-CN'); translation may be wrong.\n", strings.Join(bad, " and "))
+		}
+	}
+
 	var tocSnippets map[string]string
 	switch {
 	case r.cfg.NoTranslate:

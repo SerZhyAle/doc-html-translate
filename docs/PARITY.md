@@ -209,7 +209,8 @@ These are by design. Do not "sync" them without a decision - document changes he
 - **PDF paths not ported:** Go's pdftotext `-layout` path, its double-spaced/ZWSP paragraph merge, and
   its blank-page skip + `hrefForPDFPage` TOC remap have **no JS counterpart**. Conversely the JS reflow
   adds a **font-size dimension** (`FONT_BREAK_RATIO=0.25`, `big`/`veryBig` heading triggers) and
-  geometric centering + Cyrillic ALL-CAPS that Go does not have.
+  geometric centering that Go does not have. (ALL-CAPS heading detection is now **aligned**: both sides
+  are language-agnostic, so Cyrillic headings like "ГЛАВА ПЕРВАЯ" are detected on both.)
 - **Translation target:** the extension has **no target language** - it delegates to the browser's
   built-in "Translate page", so `-dst` is CLI/GUI-only.
 - **Storage:** Go uses `localStorage`/`sessionStorage` string keys (`dht_*`); the extension uses

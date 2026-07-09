@@ -401,8 +401,13 @@ func classifyBlock(text string, leadingSpaces int) string {
 		return "p"
 	}
 
+	// Language-agnostic ALL-CAPS test: the line is all upper-case (equals its own
+	// upper-casing) AND contains at least one cased letter (differs from its
+	// lower-casing). This catches Cyrillic headings like "ГЛАВА ПЕРВАЯ" - matching the
+	// extension's `/[A-ZА-ЯЁ]/u` check - not just Latin A-Z, while still rejecting
+	// digit/punctuation-only lines (which lower-case to themselves). See docs/PARITY.md.
 	upper := strings.ToUpper(text)
-	isAllCaps := upper == text && strings.ContainsAny(text, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	isAllCaps := upper == text && text != strings.ToLower(text)
 	isCentered := leadingSpaces > 8
 	isShort := len(words) <= headingShortWords
 
