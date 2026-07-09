@@ -18,11 +18,12 @@ func TestParityGUIExposesEveryCLIFlag(t *testing.T) {
 	// Flags the GUI handles through its own endpoints/buttons rather than by forwarding
 	// the CLI flag to the converter.
 	guiNative := map[string]string{
-		"register":     `"Set as default handler" button + /api/register`,
-		"version":      `/api/version`,
-		"ocr-langs":    `/api/ocr-langs`,
-		"ocr-download": `/api/ocr-download`,
-		"free":         `alias of -ollama`,
+		"register":          `"Set as default handler" button + /api/register`,
+		"register-openwith": `auto-run on GUI startup via ensureOpenWithRegistered (adds app to "Open with" without setting a default)`,
+		"version":           `/api/version`,
+		"ocr-langs":         `/api/ocr-langs`,
+		"ocr-download":      `/api/ocr-download`,
+		"free":              `alias of -ollama`,
 	}
 
 	re := regexp.MustCompile(`fs\.(?:Bool|String|Int|Float64)\("([a-z0-9-]+)"`)

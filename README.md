@@ -38,7 +38,7 @@ The desktop app and the extension are independent and complementary: the app con
   - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
   - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
-- Optional Windows file association registration (`-register`)
+- Optional Windows file association registration (`-register`); the app also adds itself to the Windows "Open with" list automatically (no default-handler change required)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 
 ## Installation
@@ -133,6 +133,7 @@ Why this workflow is popular (besides the obvious):
 | Flag | Default | Description |
 |------|---------|-------------|
 | `-register` | `false` | Register app as document handler in HKCU |
+| `-register-openwith` | `false` | Add app to the Windows "Open with" list without making it the default handler (the `doc-html-ui` GUI does this automatically on launch) |
 | `-notranslate` | `false` | Convert only, skip translation |
 | `-noopen` | `false` | Do not open browser after conversion |
 | `-google` | `false` | Translate via Google Cloud Translation API |
@@ -148,7 +149,7 @@ Why this workflow is popular (besides the obvious):
 | `-ocr-download` | empty | Download an OCR language pack (e.g. `-ocr-download rus`) and exit |
 | `-split` | `5000` | Split pages at N chars (`0` disables split) |
 | `-toc-depth` | `0` | Table-of-contents nesting depth on `index.html` (`0` = unlimited, `1` = chapters only) |
-| `-single` | `false` | Combine the whole document into a single HTML page (no table of contents) |
+| `-multipage` | `false` | Produce multiple HTML pages with a table of contents instead of the default single page |
 | `-folder` | empty | Output parent folder |
 | `-force` | `false` | Re-extract and re-translate even if output exists |
 | `-v` | `false` | Verbose output |

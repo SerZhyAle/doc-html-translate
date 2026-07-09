@@ -10,3 +10,11 @@ var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf
 func RegisterHandler() ([]string, error) {
 	return nil, errors.New("windows registry registration is supported only on Windows")
 }
+
+func RegisterOpenWith() ([]string, error) {
+	return nil, errors.New("windows registry registration is supported only on Windows")
+}
+
+func RegisterOpenWithFor(string) ([]string, error) {
+	return nil, errors.New("windows registry registration is supported only on Windows")
+}

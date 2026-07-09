@@ -5,6 +5,7 @@ package windowsreg
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/sys/windows/registry"
 )
@@ -84,6 +85,83 @@ func RegisterHandler() ([]string, error) {
 	}
 
 	return registered, nil
+}
+
+// RegisterOpenWith advertises the current executable in the Windows "Open with"
+// list for all SupportedExtensions, without making it the default handler.
+func RegisterOpenWith() ([]string, error) {
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("resolve executable path: %w", err)
+	}
+	return RegisterOpenWithFor(exePath)
+}
+
+// RegisterOpenWithFor advertises exePath in the Windows "Open with" list for all
+// SupportedExtensions without touching any extension's default handler. Unlike
+// RegisterHandler this is non-destructive: it never sets a default ProgID, so each
+// file type's existing default association is left alone - the app just becomes one
+// more choice in the right-click "Open with" menu. It writes, under HKCU (no admin
+// rights needed):
+//
+//	Software\Classes\Applications\<exe>\
+//	    FriendlyAppName              = "DOC-HTML-TRANSLATE"
+//	    DefaultIcon\(default)        = "<exe>",0
+//	    shell\open\command\(default) = "<exe>" "%1"
+//	    SupportedTypes\<ext>         = ""   (one empty value per extension)
+//
+// The SupportedTypes list is exactly what makes Explorer offer the app under "Open
+// with" for those file types. The call is idempotent - safe to run on every launch,
+// and it re-points the command when a portable exe moves. Returns the advertised
+// extensions.
+func RegisterOpenWithFor(exePath string) ([]string, error) {
+	appKeyPath := `Software\Classes\Applications\` + filepath.Base(exePath)
+
+	appKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath, registry.SET_VALUE)
+	if err != nil {
+		return nil, fmt.Errorf("create application key: %w", err)
+	}
+	defer appKey.Close()
+	if err := appKey.SetStringValue("FriendlyAppName", "DOC-HTML-TRANSLATE"); err != nil {
+		return nil, fmt.Errorf("set FriendlyAppName: %w", err)
+	}
+
+	iconKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\DefaultIcon`, registry.SET_VALUE)
+	if err != nil {
+		return nil, fmt.Errorf("create default icon key: %w", err)
+	}
+	defer iconKey.Close()
+	if err := iconKey.SetStringValue("", fmt.Sprintf("\"%s\",0", exePath)); err != nil {
+		return nil, fmt.Errorf("set default icon value: %w", err)
+	}
+
+	commandKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\shell\open\command`, registry.SET_VALUE)
+	if err != nil {
+		return nil, fmt.Errorf("create open command key: %w", err)
+	}
+	defer commandKey.Close()
+	if err := commandKey.SetStringValue("", fmt.Sprintf("\"%s\" \"%%1\"", exePath)); err != nil {
+		return nil, fmt.Errorf("set open command value: %w", err)
+	}
+
+	typesKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\SupportedTypes`, registry.SET_VALUE)
+	if err != nil {
+		return nil, fmt.Errorf("create supported types key: %w", err)
+	}
+	defer typesKey.Close()
+
+	var advertised []string
+	for _, ext := range SupportedExtensions {
+		if err := typesKey.SetStringValue(ext, ""); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: failed to advertise %s: %v\n", ext, err)
+			continue
+		}
+		advertised = append(advertised, ext)
+	}
+	if len(advertised) == 0 {
+		return nil, fmt.Errorf("failed to advertise any extensions")
+	}
+	return advertised, nil
 }
 
 // registerExtension associates a file extension with the given ProgID in HKCU.

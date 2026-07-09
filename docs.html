@@ -324,6 +324,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-dst</td><td>ru</td><td>Target language</td></tr>
           <tr><td>-force</td><td>false</td><td>Rebuild even if output exists</td></tr>
           <tr><td>-register</td><td>false</td><td>Register the app as the default handler for EPUB, PDF and other supported files (also the "Set as default handler" button in the doc-html-ui app)</td></tr>
+          <tr><td>-register-openwith</td><td>false</td><td>Add the app to the Windows "Open with" list without making it the default handler. The doc-html-ui app does this automatically on launch, so the app shows up under "Open with" even if you never set it as default.</td></tr>
         </tbody>
       </table>
       <p class="small" style="margin-top:10px;">Every option above is also available in the <strong>doc-html-ui</strong> graphical app - file picker, drag &amp; drop, TOC depth, spending guard and a "Set as default handler" button. On the Microsoft Store build the GUI is the launchable entry point, while double-clicking a file still runs the command-line converter.</p>

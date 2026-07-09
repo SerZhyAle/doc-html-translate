@@ -31,6 +31,20 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
+	// Non-destructive: add the app to the "Open with" list without becoming the
+	// default handler. Scriptable; prints its result and exits without pausing.
+	if a.cfg.RegisterOpenWith {
+		advertised, err := windowsreg.RegisterOpenWith()
+		if err != nil {
+			return 1, err
+		}
+		fmt.Println(`Added to the Windows "Open with" list for:`)
+		for _, ext := range advertised {
+			fmt.Printf("  * %s\n", ext)
+		}
+		return 0, nil
+	}
+
 	// OCR language management commands: run and exit without a document.
 	if a.cfg.OCRList {
 		printOCRLangs()

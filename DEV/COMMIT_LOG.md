@@ -567,3 +567,21 @@ Changed files:
 - scripts/build-extension.ps1
 - tests/parity_test.go
 
+| 2026-07-09 02:18:09 | main | 8db7934 | feat: show app in Windows "Open with" list without setting it as default |
+
+Changed files:
+- DEV/CHANGELOG.md
+- README.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-ui/main.go
+- cmd/doc-html-ui/ui.html
+- docs.html
+- docs.ru.html
+- docs.uk.html
+- internal/app/app.go
+- internal/config/flags.go
+- internal/windowsreg/register_nonwindows.go
+- internal/windowsreg/register_windows.go
+- tests/ui_cli_parity_test.go
+

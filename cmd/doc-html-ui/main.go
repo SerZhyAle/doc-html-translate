@@ -24,6 +24,7 @@ import (
 	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/translator"
+	"doc-html-translate/internal/windowsreg"
 )
 
 //go:embed ui.html
@@ -80,8 +81,22 @@ func main() {
 
 	go watchHeartbeat(srv)
 	go openAppWindow("http://" + addr)
+	go ensureOpenWithRegistered()
 
 	_ = srv.Serve(ln)
+}
+
+// ensureOpenWithRegistered advertises the app in Windows' "Open with" list on every
+// launch, so users find it there without having to click "Set as default handler"
+// first. It is non-destructive - it never changes the default handler - and a no-op
+// under MSIX (the package manifest already declares the associations) or when the
+// bundled CLI cannot be located. The associations point at the CLI so "Open with ->
+// DOC-HTML-TRANSLATE" converts and opens the result, matching double-click behavior.
+func ensureOpenWithRegistered() {
+	if isPackaged() || !cliAvailable() {
+		return
+	}
+	_, _ = windowsreg.RegisterOpenWithFor(findCLI())
 }
 
 // ── HTTP handlers ───────────────────────────────────────────
@@ -690,8 +705,8 @@ func assembleArgs(req runRequest) []string {
 	if req.TOCDepth != "" && req.TOCDepth != "0" {
 		a = append(a, "-toc-depth", req.TOCDepth)
 	}
-	if req.SinglePage {
-		a = append(a, "-single")
+	if !req.SinglePage {
+		a = append(a, "-multipage")
 	}
 	if req.MaxCost != "" && req.MaxCost != "0" {
 		a = append(a, "-max-cost", req.MaxCost)

@@ -137,6 +137,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-dst</td><td>ru</td><td>Язык перевода</td></tr>
           <tr><td>-force</td><td>false</td><td>Пересобрать даже при готовом output</td></tr>
           <tr><td>-register</td><td>false</td><td>Назначить приложение обработчиком по умолчанию для EPUB, PDF и других поддерживаемых файлов (та же кнопка "Set as default handler" в приложении doc-html-ui)</td></tr>
+          <tr><td>-register-openwith</td><td>false</td><td>Добавить приложение в список Windows "Открыть с помощью" без назначения обработчиком по умолчанию. Приложение doc-html-ui делает это автоматически при запуске, так что программа появляется в "Открыть с помощью", даже если вы не назначали её по умолчанию.</td></tr>
         </tbody>
       </table>
       <p class="small" style="margin-top:10px;">Все опции выше доступны и в графическом приложении <strong>doc-html-ui</strong> - выбор файла, drag &amp; drop, глубина оглавления, лимит стоимости и кнопка "Set as default handler". В сборке Microsoft Store именно GUI - запускаемая точка входа, а двойной клик по файлу по-прежнему запускает конвертер из командной строки.</p>
