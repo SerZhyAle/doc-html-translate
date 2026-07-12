@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>doc-html-translate - browser extension for translating PDF, EPUB, MOBI &amp; more</title>
-<meta name="description" content="The doc-html-translate browser extension re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean reflowed HTML so Chrome's and Edge's built-in Translate page works on them for free. Runs fully locally - no API key, no uploads. Page in English, Russian, and Ukrainian.">
+<title>Doc-HTML-Translate - browser extension for translating PDF, EPUB, MOBI &amp; more</title>
+<meta name="description" content="The Doc-HTML-Translate browser extension re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean reflowed HTML so Chrome's and Edge's built-in Translate page works on them for free. Runs fully locally - no API key, no uploads. Page in English, Russian, and Ukrainian.">
 <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/extension.html">
 <meta name="theme-color" content="#0a0f0a">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="doc-html-translate">
+<meta property="og:site_name" content="Doc-HTML-Translate">
 <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/extension.html">
-<meta property="og:title" content="doc-html-translate - browser extension for translating PDF, EPUB, MOBI &amp; more">
+<meta property="og:title" content="Doc-HTML-Translate - browser extension for translating PDF, EPUB, MOBI &amp; more">
 <meta property="og:description" content="Re-render PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown &amp; HTML as clean reflowed HTML so the browser's built-in Translate page works on them. 100% local.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="doc-html-translate browser extension">
+<meta name="twitter:title" content="Doc-HTML-Translate browser extension">
 <meta name="twitter:description" content="Translate PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown &amp; more for free with the browser's built-in translator. Local-only reflow extension.">
 <link rel="icon" href="assets/doc-html-translate.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@
 <style>
   /* ===== DESIGN SYSTEM - SZA Web Kit "Pine + Gold" (shared with index.html) ===== */
   :root{
-    --wide:1160px;
+    --wide:1400px;
     --bg-color:#0a0f0a; --bg-elev:#0f1610;
     --card-bg:rgba(255,255,255,.035); --card-bg-hover:rgba(255,255,255,.06);
     --border-color:rgba(255,255,255,.08); --border-color-hover:rgba(63,185,80,.35);
@@ -92,24 +92,25 @@
   .seg button:hover{color:var(--text-primary)}
   .seg button[aria-pressed="true"]{background:var(--primary-gradient); color:#fff; box-shadow:0 2px 10px rgba(63,185,80,.3)}
   #themeBtn{padding:.4rem; min-width:38px; font-size:15px}
-  main{max-width:var(--wide); margin:0 auto; padding:0 22px 90px; position:relative; z-index:1}
-  .hero{text-align:center; padding:2rem 1rem 1.2rem; margin-bottom:.2rem}
+  main{max-width:var(--wide); margin:0 auto; padding:0 22px 56px; position:relative; z-index:1}
+  .hero{text-align:center; padding:1.4rem 1rem 1rem; margin-bottom:.2rem}
   .avatar-glow{position:relative; width:88px; height:88px; margin:0 auto 1.3rem}
   .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:24px; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
   .appicon{position:relative; width:100%; height:100%; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#22368a; color:#fff; font-family:var(--font-heading); font-weight:800; font-size:19px; line-height:1; letter-spacing:.5px; box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
   @keyframes pulse{0%{transform:scale(.95); opacity:.45} 100%{transform:scale(1.05); opacity:.75}}
   .kicker{font-size:.92rem; color:var(--accent); font-weight:600; margin:0 0 1rem; letter-spacing:.01em}
   .kicker b{color:var(--accent-strong); font-weight:700}
-  .hero h1{font-family:var(--font-heading); font-weight:800; font-size:clamp(2rem,4.6vw,2.85rem); line-height:1.12; letter-spacing:-.02em; margin:0 auto .9rem; max-width:880px; background:var(--text-gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent}
-  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:720px; margin:0 auto 1.6rem}
+  .hero h1{font-family:var(--font-heading); font-weight:800; font-size:clamp(2rem,4.6vw,2.85rem); line-height:1.12; letter-spacing:-.02em; margin:0 auto .8rem; max-width:100%; background:var(--text-gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent}
+  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:1000px; margin:0 auto 1.3rem}
   .hero .cta{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center}
   @supports not ((-webkit-background-clip:text) or (background-clip:text)){ .hero h1{-webkit-text-fill-color:currentColor; color:var(--text-primary); background:none} }
-  .sections{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; margin-top:1.6rem}
+  .sections{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; margin-top:1rem}
+  @media(max-width:1040px){ .sections{grid-template-columns:repeat(2, minmax(0,1fr))} }
   @media(max-width:760px){ .sections{grid-template-columns:1fr} }
   .sec{background:var(--card-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border:1px solid var(--border-color); border-radius:16px; overflow:hidden; scroll-margin-top:74px; transition:transform .35s ease, border-color .35s ease, background .35s ease, box-shadow .35s ease}
   .sec:not([open]):hover{transform:translateY(-3px); border-color:var(--border-color-hover); background:var(--card-bg-hover)}
   .sec[open]{grid-column:1 / -1; background:var(--card-bg-hover); border-color:var(--border-color-hover); box-shadow:var(--shadow)}
-  .sec > summary{cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:12px; padding:15px 18px}
+  .sec > summary{cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:12px; padding:12px 16px}
   .sec > summary::-webkit-details-marker{display:none}
   .sec > summary::before{content:"▸"; color:var(--accent-purple); font-size:11px; line-height:1.9; flex:none}
   .sec[open] > summary::before{content:"▾"}
@@ -148,9 +149,9 @@
   .quickstart li{list-style:none; position:relative; padding-left:2rem; margin:0; color:var(--text-secondary); font-size:.95rem}
   .quickstart li::before{counter-increment:qs; content:counter(qs); position:absolute; left:0; top:.05rem; width:1.35rem; height:1.35rem; border-radius:50%; background:rgba(63,185,80,.18); color:var(--accent); font-family:var(--font-heading); font-weight:800; font-size:.72rem; display:grid; place-items:center}
   html[data-theme="light"] .quickstart li::before{background:rgba(47,143,58,.16)}
-  .get{display:grid; gap:1rem; max-width:860px; margin:0 auto 2rem; padding:1.3rem 1.5rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
+  .get{display:grid; gap:.85rem; max-width:1000px; margin:0 auto 1.3rem; padding:1.1rem 1.4rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
   .get .channels{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
-  footer{max-width:var(--wide); margin:2rem auto 3rem; padding:2rem 2.2rem; border:1px solid var(--border-color); border-radius:18px; background:var(--card-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); color:var(--text-secondary); font-size:14px; text-align:center; position:relative; z-index:1}
+  footer{max-width:var(--wide); margin:1.3rem auto 2rem; padding:1.5rem 2.2rem; border:1px solid var(--border-color); border-radius:18px; background:var(--card-bg); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); color:var(--text-secondary); font-size:14px; text-align:center; position:relative; z-index:1}
   footer strong{color:var(--text-primary)}
   .author{margin:20px auto 0; padding-top:16px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); max-width:760px}
   pre:focus-visible, summary:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
@@ -173,7 +174,7 @@
 <div class="bg-blobs" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="index.html">doc-html-translate<span class="dot">.</span></a>
+    <a class="brand" href="index.html">Doc-HTML-Translate<span class="dot">.</span></a>
     <span class="seg" role="group" aria-label="Language" id="langGroup">
       <button id="lng-ru" type="button" onclick="setLang('ru')" aria-pressed="false" aria-label="Русский">RU</button>
       <button id="lng-en" type="button" onclick="setLang('en')" aria-pressed="true" aria-label="English">EN</button>
@@ -200,9 +201,9 @@
       <span data-l="uk">Перекладай PDF, EPUB, MOBI та інші формати прямо в браузері - безкоштовно</span>
     </h1>
     <p class="lead">
-      <span data-l="ru">Браузер умеет переводить любую веб-страницу бесплатно, но не PDF и не EPUB: встроенная читалка рисует текст PDF на холсте, и переводчик его не видит, а EPUB браузер вообще не открывает. Это расширение (спутник приложения doc-html-translate) перерисовывает PDF или EPUB в чистый HTML с абзацами и заголовками - и встроенный «Перевести страницу» работает как на обычном сайте. Всё локально: ни ключей, ни загрузки файлов на сервер. Революционная идея: показать переводчику текст, который он может прочитать. Теперь оно открывает и MOBI, AZW3, FB2, RTF, TXT, Markdown и локальный HTML.</span>
-      <span data-l="en">Browsers translate any web page for free, but not PDFs or EPUBs: the built-in PDF viewer paints text on a canvas the translator can't read, and EPUBs don't open in the browser at all. This extension (a companion to the doc-html-translate app) re-renders the PDF or EPUB as clean HTML paragraphs and headings - so the built-in "Translate page" works just like on any website. Everything stays local: no keys, no uploads. The radical idea: show the translator text it can actually read. It now opens MOBI, AZW3, FB2, RTF, TXT, Markdown and local HTML too.</span>
-      <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку doc-html-translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер. Революційна ідея: показати перекладачеві текст, який він справді може прочитати. Тепер воно відкриває й MOBI, AZW3, FB2, RTF, TXT, Markdown та локальний HTML.</span>
+      <span data-l="ru">Браузер умеет переводить любую веб-страницу бесплатно, но не PDF и не EPUB: встроенная читалка рисует текст PDF на холсте, и переводчик его не видит, а EPUB браузер вообще не открывает. Это расширение (спутник приложения Doc-HTML-Translate) перерисовывает PDF или EPUB в чистый HTML с абзацами и заголовками - и встроенный «Перевести страницу» работает как на обычном сайте. Всё локально: ни ключей, ни загрузки файлов на сервер. Революционная идея: показать переводчику текст, который он может прочитать. Теперь оно открывает и MOBI, AZW3, FB2, RTF, TXT, Markdown и локальный HTML.</span>
+      <span data-l="en">Browsers translate any web page for free, but not PDFs or EPUBs: the built-in PDF viewer paints text on a canvas the translator can't read, and EPUBs don't open in the browser at all. This extension (a companion to the Doc-HTML-Translate app) re-renders the PDF or EPUB as clean HTML paragraphs and headings - so the built-in "Translate page" works just like on any website. Everything stays local: no keys, no uploads. The radical idea: show the translator text it can actually read. It now opens MOBI, AZW3, FB2, RTF, TXT, Markdown and local HTML too.</span>
+      <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку Doc-HTML-Translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер. Революційна ідея: показати перекладачеві текст, який він справді може прочитати. Тепер воно відкриває й MOBI, AZW3, FB2, RTF, TXT, Markdown та локальний HTML.</span>
     </p>
     <div class="cta">
       <a class="btn primary" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">
@@ -251,7 +252,7 @@
       <details class="sec" open>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Что это и зачем</h2><span class="secteaser">Перевод PDF в браузере без приложения и без ключей</span></span></summary>
         <div class="secbody">
-          <p>doc-html-translate как настольное приложение конвертирует EPUB/PDF/MOBI и другие форматы в локальный HTML. Это <strong>расширение</strong> делает то же самое для PDF и EPUB <strong>прямо в браузере</strong>. Для PDF оно извлекает текст (через PDF.js, всё локально) и раскладывает его обычными абзацами и заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - распаковывает книгу и объединяет её главы в один чистый HTML-документ. После этого встроенный «Перевести страницу» в Chrome или Edge работает как на любом сайте.</p>
+          <p>Doc-HTML-Translate как настольное приложение конвертирует EPUB/PDF/MOBI и другие форматы в локальный HTML. Это <strong>расширение</strong> делает то же самое для PDF и EPUB <strong>прямо в браузере</strong>. Для PDF оно извлекает текст (через PDF.js, всё локально) и раскладывает его обычными абзацами и заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - распаковывает книгу и объединяет её главы в один чистый HTML-документ. После этого встроенный «Перевести страницу» в Chrome или Edge работает как на любом сайте.</p>
           <div class="note"><div class="tag">Главное</div><p>Никаких API-ключей и загрузки файлов. Извлечение и вёрстка - на твоём устройстве; в сеть ходит только встроенный переводчик браузера, который ты включаешь сам.</p></div>
         </div>
       </details>
@@ -326,7 +327,7 @@
             <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Расширение в Chrome Web Store</a></li>
             <li><a href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Расширение в Edge Add-ons</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Исходники расширения (папка <code>extension/</code>)</a></li>
-            <li><a href="index.html">Настольное приложение doc-html-translate</a> (CLI, GUI и Microsoft Store) · <a href="docs.ru.html">документация</a></li>
+            <li><a href="index.html">Настольное приложение Doc-HTML-Translate</a> (CLI, GUI и Microsoft Store) · <a href="docs.ru.html">документация</a></li>
             <li><a href="extension-privacy.html">Политика приватности расширения</a></li>
           </ul>
           <p class="muted">Лицензия MIT.</p>
@@ -341,7 +342,7 @@
       <details class="sec" open>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">What it is and why</h2><span class="secteaser">Translate PDFs in the browser - no app, no keys</span></span></summary>
         <div class="secbody">
-          <p>The doc-html-translate desktop app converts EPUB/PDF/MOBI and more into local HTML. This <strong>extension</strong> does the same for PDFs and EPUBs <strong>right in the browser</strong>. For a PDF it extracts the text (via PDF.js, all local) and lays it out as ordinary <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code> paragraphs and headings; for an EPUB it unpacks the book and combines its chapters into one clean HTML document. Then Chrome's or Edge's built-in "Translate page" works just like on any website.</p>
+          <p>The Doc-HTML-Translate desktop app converts EPUB/PDF/MOBI and more into local HTML. This <strong>extension</strong> does the same for PDFs and EPUBs <strong>right in the browser</strong>. For a PDF it extracts the text (via PDF.js, all local) and lays it out as ordinary <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code> paragraphs and headings; for an EPUB it unpacks the book and combines its chapters into one clean HTML document. Then Chrome's or Edge's built-in "Translate page" works just like on any website.</p>
           <div class="note"><div class="tag">The point</div><p>No API keys, no uploads. Extraction and layout happen on your device; the only network access is the browser's own translator, which you turn on yourself.</p></div>
         </div>
       </details>
@@ -416,7 +417,7 @@
             <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Extension on the Chrome Web Store</a></li>
             <li><a href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Extension on Edge Add-ons</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Extension source (the <code>extension/</code> folder)</a></li>
-            <li><a href="index.html">doc-html-translate desktop app</a> (CLI, GUI and Microsoft Store) · <a href="docs.html">documentation</a></li>
+            <li><a href="index.html">Doc-HTML-Translate desktop app</a> (CLI, GUI and Microsoft Store) · <a href="docs.html">documentation</a></li>
             <li><a href="extension-privacy.html">Extension privacy policy</a></li>
           </ul>
           <p class="muted">MIT license.</p>
@@ -431,7 +432,7 @@
       <details class="sec" open>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Що це і навіщо</h2><span class="secteaser">Переклад PDF у браузері - без застосунку й без ключів</span></span></summary>
         <div class="secbody">
-          <p>Настільний застосунок doc-html-translate конвертує EPUB/PDF/MOBI та інше в локальний HTML. Це <strong>розширення</strong> робить те саме для PDF та EPUB <strong>прямо в браузері</strong>. Для PDF воно видобуває текст (через PDF.js, усе локально) і розкладає його звичайними абзацами та заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - розпаковує книгу та об'єднує її розділи в один чистий HTML-документ. Далі вбудований «Перекласти сторінку» в Chrome чи Edge працює як на будь-якому сайті.</p>
+          <p>Настільний застосунок Doc-HTML-Translate конвертує EPUB/PDF/MOBI та інше в локальний HTML. Це <strong>розширення</strong> робить те саме для PDF та EPUB <strong>прямо в браузері</strong>. Для PDF воно видобуває текст (через PDF.js, усе локально) і розкладає його звичайними абзацами та заголовками <code>&lt;p&gt;</code>/<code>&lt;h2&gt;</code>; для EPUB - розпаковує книгу та об'єднує її розділи в один чистий HTML-документ. Далі вбудований «Перекласти сторінку» в Chrome чи Edge працює як на будь-якому сайті.</p>
           <div class="note"><div class="tag">Головне</div><p>Жодних API-ключів і завантажень. Видобування та верстка - на твоєму пристрої; у мережу ходить лише вбудований перекладач браузера, який ти вмикаєш сам.</p></div>
         </div>
       </details>
@@ -506,7 +507,7 @@
             <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Розширення в Chrome Web Store</a></li>
             <li><a href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Розширення в Edge Add-ons</a></li>
             <li><a href="https://github.com/SerZhyAle/doc-html-translate/tree/main/extension" target="_blank" rel="noopener">Джерела розширення (тека <code>extension/</code>)</a></li>
-            <li><a href="index.html">Настільний застосунок doc-html-translate</a> (CLI, GUI та Microsoft Store) · <a href="docs.uk.html">документація</a></li>
+            <li><a href="index.html">Настільний застосунок Doc-HTML-Translate</a> (CLI, GUI та Microsoft Store) · <a href="docs.uk.html">документація</a></li>
             <li><a href="extension-privacy.html">Політика приватності розширення</a></li>
           </ul>
           <p class="muted">Ліцензія MIT.</p>
@@ -518,9 +519,9 @@
 
 <footer>
   <p>
-    <span data-l="ru"><strong>doc-html-translate</strong> - расширение для браузера: перевод любого PDF и EPUB встроенным переводчиком, полностью локально. Без облака, без подписки, без сюрпризов.</span>
-    <span data-l="en"><strong>doc-html-translate</strong> - browser extension: translate any PDF or EPUB with the built-in translator, fully local. No cloud, no subscription, no surprises.</span>
-    <span data-l="uk"><strong>doc-html-translate</strong> - розширення для браузера: переклад будь-якого PDF чи EPUB вбудованим перекладачем, повністю локально. Без хмари, без підписки, без сюрпризів.</span>
+    <span data-l="ru"><strong>Doc-HTML-Translate</strong> - расширение для браузера: перевод любого PDF и EPUB встроенным переводчиком, полностью локально. Без облака, без подписки, без сюрпризов.</span>
+    <span data-l="en"><strong>Doc-HTML-Translate</strong> - browser extension: translate any PDF or EPUB with the built-in translator, fully local. No cloud, no subscription, no surprises.</span>
+    <span data-l="uk"><strong>Doc-HTML-Translate</strong> - розширення для браузера: переклад будь-якого PDF чи EPUB вбудованим перекладачем, повністю локально. Без хмари, без підписки, без сюрпризів.</span>
   </p>
   <p class="muted" style="margin-top:10px">
     <span data-l="ru">Лицензия MIT · Chrome и Edge (Chromium, MV3) · <a href="index.html">десктоп-приложение</a></span>
@@ -537,9 +538,9 @@
 
 <script>
   var I18N = {
-    ru:{ title:'doc-html-translate - расширение для перевода PDF и EPUB в браузере', desc:'Расширение doc-html-translate перерисовывает PDF и EPUB в чистый HTML, чтобы встроенный «Перевести страницу» в Chrome и Edge работал на них бесплатно. Полностью локально - без ключей и загрузок.', langGroup:'Язык', theme:'Тема', toLight:'Включить светлую тему', toDark:'Включить тёмную тему', copied:'Скопировано' },
-    en:{ title:'doc-html-translate - browser extension for translating PDF, EPUB, MOBI &amp; more', desc:"The doc-html-translate browser extension re-renders PDFs and EPUBs as clean HTML so Chrome's and Edge's built-in Translate page works on them for free. Fully local - no keys, no uploads.", langGroup:'Language', theme:'Theme', toLight:'Switch to light theme', toDark:'Switch to dark theme', copied:'Copied' },
-    uk:{ title:'doc-html-translate - розширення для перекладу PDF та EPUB у браузері', desc:'Розширення doc-html-translate перемальовує PDF та EPUB у чистий HTML, щоб вбудований «Перекласти сторінку» в Chrome і Edge працював на них безкоштовно. Повністю локально - без ключів і завантажень.', langGroup:'Мова', theme:'Тема', toLight:'Увімкнути світлу тему', toDark:'Увімкнути темну тему', copied:'Скопійовано' }
+    ru:{ title:'Doc-HTML-Translate - расширение для перевода PDF и EPUB в браузере', desc:'Расширение Doc-HTML-Translate перерисовывает PDF и EPUB в чистый HTML, чтобы встроенный «Перевести страницу» в Chrome и Edge работал на них бесплатно. Полностью локально - без ключей и загрузок.', langGroup:'Язык', theme:'Тема', toLight:'Включить светлую тему', toDark:'Включить тёмную тему', copied:'Скопировано' },
+    en:{ title:'Doc-HTML-Translate - browser extension for translating PDF, EPUB, MOBI &amp; more', desc:"The Doc-HTML-Translate browser extension re-renders PDFs and EPUBs as clean HTML so Chrome's and Edge's built-in Translate page works on them for free. Fully local - no keys, no uploads.", langGroup:'Language', theme:'Theme', toLight:'Switch to light theme', toDark:'Switch to dark theme', copied:'Copied' },
+    uk:{ title:'Doc-HTML-Translate - розширення для перекладу PDF та EPUB у браузері', desc:'Розширення Doc-HTML-Translate перемальовує PDF та EPUB у чистий HTML, щоб вбудований «Перекласти сторінку» в Chrome і Edge працював на них безкоштовно. Повністю локально - без ключів і завантажень.', langGroup:'Мова', theme:'Тема', toLight:'Увімкнути світлу тему', toDark:'Увімкнути темну тему', copied:'Скопійовано' }
   };
   function metaSet(sel, val){ var m = document.querySelector(sel); if(m) m.setAttribute('content', val); }
   function applyThemeLabel(){

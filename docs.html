@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>doc-html-translate Documentation</title>
-  <meta name="description" content="Quick documentation for doc-html-translate: install, usage, flags, and recommended free Chrome translation workflow.">
+  <title>Doc-HTML-Translate Documentation</title>
+  <meta name="description" content="Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.">
+  <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -39,9 +40,9 @@
     }
 
     .wrap {
-      width: min(1050px, 92vw);
+      width: min(1400px, 94vw);
       margin: 0 auto;
-      padding: 28px 0 56px;
+      padding: 20px 0 40px;
     }
 
     .top {
@@ -91,8 +92,8 @@
       border-radius: calc(var(--radius) + 6px);
       background: linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(245, 249, 249, 0.93));
       box-shadow: var(--shadow);
-      padding: 26px 24px;
-      margin-bottom: 20px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
     }
 
     h1 {
@@ -105,7 +106,7 @@
     .lead {
       margin: 0;
       color: var(--muted);
-      max-width: 64ch;
+      max-width: 90ch;
     }
 
     .grid {
@@ -192,7 +193,7 @@
 <body>
   <main class="wrap">
     <header class="top">
-      <div class="brand">doc-html-translate Documentation</div>
+      <div class="brand">Doc-HTML-Translate Documentation</div>
       <nav class="nav">
         <a class="btn" href="index.html">Home</a>
         <a class="btn" href="extension.html">Extension</a>
@@ -209,9 +210,9 @@
       </p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Editions - all the ways to use it</h2>
-      <p>doc-html-translate comes in several forms; they share the same converter and the same "hand the browser clean HTML, let it translate" idea. Pick whichever fits.</p>
+      <p>Doc-HTML-Translate comes in several forms; they share the same converter and the same "hand the browser clean HTML, let it translate" idea. Pick whichever fits.</p>
       <ul>
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, the command-line converter and Windows file-association handler. This page documents its flags.</li>
         <li><strong>GUI desktop app</strong> - <code>doc-html-ui.exe</code>, a windowed front-end that exposes every flag below, with a file picker, drag &amp; drop and a "Set as default handler" button.</li>
@@ -248,13 +249,13 @@ doc-html-translate.exe -ollama "book.epub"</div>
       </article>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Supported Formats</h2>
       <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. A reasonable spread, if we say so ourselves.</p>
       <p class="small">MOBI and AZW3: requires <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported - the converter respects locks it cannot pick.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Reading Experience</h2>
       <p>The generated HTML carries a small, fully client-side reader layer - no server to babysit, works happily on <code>file://</code>:</p>
       <ul>
@@ -265,7 +266,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small">Single-page documents have no navbar and therefore no reader layer.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Optional External Tools</h2>
       <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML, Markdown. The tools below are strictly optional - install them only if you want full PDF image support and the extra formats.</p>
       <table>
@@ -296,7 +297,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small" style="margin-top:10px;">Without <strong>pdftotext</strong>: built-in Go PDF reader is used (slightly lower quality). Without <strong>ffmpeg</strong>: JPEG2000 images in PDFs will not be visible in the browser. Without <strong>Calibre</strong>: MOBI/AZW3 files cannot be opened.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Main Flags</h2>
       <p class="small">All optional. The defaults are sensible, so you can ignore this whole table until you have an opinion.</p>
       <table>
@@ -330,12 +331,12 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small" style="margin-top:10px;">Every option above is also available in the <strong>doc-html-ui</strong> graphical app - file picker, drag &amp; drop, TOC depth, spending guard and a "Set as default handler" button. On the Microsoft Store build the GUI is the launchable entry point, while double-clicking a file still runs the command-line converter.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Companion App: FastMediaSorter LITE</h2>
       <p>For documents that are <strong>pictures, not text</strong> - screenshots, manga, photographed or scanned pages, the things a text converter cannot read your mind about -
         use <strong>FastMediaSorter LITE</strong>, a free Windows app for opening and sorting images and videos with built-in
         <strong>OCR + on-image translation</strong>. Press <code>T</code> on any image to recognize the text and overlay
-        the translation in your language (local Ollama or LibreTranslate). It complements doc-html-translate, which targets
+        the translation in your language (local Ollama or LibreTranslate). It complements Doc-HTML-Translate, which targets
         ebook and text formats.</p>
       <div class="code">winget install SerZhyAle.FastMediaSorter</div>
       <ul>
@@ -344,7 +345,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       </ul>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Project Links</h2>
       <ul>
         <li><a href="https://serzhyale.github.io/doc-html-translate/">GitHub Pages</a></li>

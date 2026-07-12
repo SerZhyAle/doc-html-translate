@@ -51,25 +51,68 @@ function toRGBA(data, width, height) {
   return out;
 }
 
-async function bitmapToBlob(bitmap) {
+// Compose two PDF transform matrices [a b c d e f]; m2 is applied first
+// (same semantics as pdf.js Util.transform and canvas ctx.transform).
+export function composeTransform(m1, m2) {
+  return [
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3],
+    m1[0] * m2[4] + m1[2] * m2[5] + m1[4],
+    m1[1] * m2[4] + m1[3] * m2[5] + m1[5],
+  ];
+}
+
+// Flips that make extracted pixels match the image's rendered orientation.
+// The standard placement matrix [w 0 0 h x y] has positive scales and renders
+// the stored raster as-is; a negative scale means the PDF stores that axis
+// mirrored and un-mirrors it at draw time — which raw XObject extraction
+// bypasses. Rotated placements (dominant b/c terms) are left as stored.
+export function paintFlips(ctm) {
+  const [a, b, c, d] = ctm;
+  if (Math.abs(b) + Math.abs(c) > Math.abs(a) + Math.abs(d)) return { flipX: false, flipY: false };
+  return { flipX: a < 0, flipY: d < 0 };
+}
+
+function applyFlips(ctx, width, height, { flipX, flipY }) {
+  ctx.translate(flipX ? width : 0, flipY ? height : 0);
+  ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+}
+
+const NO_FLIPS = { flipX: false, flipY: false };
+
+async function bitmapToBlob(bitmap, flips) {
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  canvas.getContext("2d").drawImage(bitmap, 0, 0);
+  const ctx = canvas.getContext("2d");
+  applyFlips(ctx, bitmap.width, bitmap.height, flips);
+  ctx.drawImage(bitmap, 0, 0);
   return canvas.convertToBlob({ type: "image/png" });
 }
 
-async function imageObjToBlob(imgObj) {
+async function imageObjToBlob(imgObj, flips = NO_FLIPS) {
   if (!imgObj) return null;
   if (typeof ImageBitmap !== "undefined" && imgObj instanceof ImageBitmap) {
-    return bitmapToBlob(imgObj);
+    return bitmapToBlob(imgObj, flips);
   }
   if (imgObj.bitmap && typeof ImageBitmap !== "undefined" && imgObj.bitmap instanceof ImageBitmap) {
-    return bitmapToBlob(imgObj.bitmap);
+    return bitmapToBlob(imgObj.bitmap, flips);
   }
   if (imgObj.data && imgObj.width && imgObj.height) {
     const rgba = toRGBA(imgObj.data, imgObj.width, imgObj.height);
     if (!rgba) return null;
     const canvas = new OffscreenCanvas(imgObj.width, imgObj.height);
-    canvas.getContext("2d").putImageData(new ImageData(rgba, imgObj.width, imgObj.height), 0, 0);
+    const ctx = canvas.getContext("2d");
+    const imageData = new ImageData(rgba, imgObj.width, imgObj.height);
+    if (flips.flipX || flips.flipY) {
+      // putImageData ignores the canvas transform — stage on a second canvas.
+      const staged = new OffscreenCanvas(imgObj.width, imgObj.height);
+      staged.getContext("2d").putImageData(imageData, 0, 0);
+      applyFlips(ctx, imgObj.width, imgObj.height, flips);
+      ctx.drawImage(staged, 0, 0);
+    } else {
+      ctx.putImageData(imageData, 0, 0);
+    }
     return canvas.convertToBlob({ type: "image/png" });
   }
   return null;
@@ -86,8 +129,14 @@ export async function extractPageImages(page, { minSize = 64 } = {}) {
     return out;
   }
   const seen = new Set();
+  // Track the CTM so images placed with a mirroring matrix can be normalized.
+  let ctm = [1, 0, 0, 1, 0, 0];
+  const ctmStack = [];
   for (let i = 0; i < opList.fnArray.length; i++) {
     const fn = opList.fnArray[i];
+    if (fn === OPS.save) { ctmStack.push(ctm); continue; }
+    if (fn === OPS.restore) { if (ctmStack.length) ctm = ctmStack.pop(); continue; }
+    if (fn === OPS.transform) { ctm = composeTransform(ctm, opList.argsArray[i]); continue; }
     if (fn !== OPS.paintImageXObject && fn !== OPS.paintInlineImageXObject) continue;
     try {
       const args = opList.argsArray[i];
@@ -103,7 +152,7 @@ export async function extractPageImages(page, { minSize = 64 } = {}) {
       const width = imgObj && imgObj.width;
       const height = imgObj && imgObj.height;
       if (!width || !height || width < minSize || height < minSize) continue;
-      const blob = await imageObjToBlob(imgObj);
+      const blob = await imageObjToBlob(imgObj, paintFlips(ctm));
       if (blob) out.push({ blob, width, height });
     } catch {
       /* skip this image */

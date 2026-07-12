@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>doc-html-translate Документация</title>
-  <meta name="description" content="Быстрая документация doc-html-translate: установка, запуск, флаги и бесплатный сценарий перевода через Chrome.">
+  <title>Doc-HTML-Translate Документация</title>
+  <meta name="description" content="Быстрая документация Doc-HTML-Translate: установка, запуск, флаги и бесплатный сценарий перевода через Chrome.">
+  <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#f2efe7; --ink:#0f1a1c; --muted:#4d5c62; --card:#fffdf8; --line:#c7c1b3; --accent:#0f766e; --accent-dark:#0f5e68; --mono-bg:#0f1f21; --mono-ink:#d9f2ef; --radius:16px; --shadow:0 20px 55px rgba(13,30,34,.12);}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(1200px 420px at 10% -5%,#fff7dd 0%,rgba(255,247,221,0) 70%),radial-gradient(900px 560px at 100% 0%,#d5efe8 0%,rgba(213,239,232,0) 68%),linear-gradient(180deg,#f9f6ef 0%,#f2efe7 64%,#ece8dd 100%);font-family:"Space Grotesk","Segoe UI",sans-serif;line-height:1.5}.wrap{width:min(1050px,92vw);margin:0 auto;padding:28px 0 56px}.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.brand{font-weight:700;letter-spacing:.02em}.nav{display:flex;gap:8px;flex-wrap:wrap}.btn{text-decoration:none;border-radius:10px;padding:10px 12px;font-weight:600;border:1px solid #8ca49e;color:#1d3b41;background:rgba(255,255,255,.72);transition:transform .16s ease,background .16s ease}.btn:hover{transform:translateY(-1px);background:#fff}.btn.primary{border-color:transparent;color:#f4fffd;background:linear-gradient(130deg,var(--accent),var(--accent-dark))}.hero{border:1px solid var(--line);border-radius:calc(var(--radius) + 6px);background:linear-gradient(155deg,rgba(255,255,255,.95),rgba(245,249,249,.93));box-shadow:var(--shadow);padding:26px 24px;margin-bottom:20px}h1{margin:0 0 8px;font-size:clamp(1.9rem,4.2vw,2.8rem);line-height:1.05;letter-spacing:-.02em}.lead{margin:0;color:var(--muted);max-width:64ch}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:16px}.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:18px;box-shadow:0 8px 24px rgba(18,28,34,.08)}h2{margin:0 0 8px;font-size:1.3rem}h3{margin:12px 0 6px;font-size:1.05rem}p{margin:0 0 8px}ul{margin:6px 0 0;padding-left:18px}li{margin:5px 0}.code{margin-top:10px;border-radius:12px;border:1px solid #abc2b9;background:var(--mono-bg);color:var(--mono-ink);padding:12px;white-space:pre;overflow-x:auto;font-size:.84rem;font-family:"IBM Plex Mono",Consolas,monospace}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}th,td{border:1px solid #d9d2c2;padding:8px;text-align:left;vertical-align:top}th{background:#f8f4ea}.small{color:#5a6f76;font-size:.89rem}@media (max-width:930px){.grid{grid-template-columns:1fr}}
+    :root { --bg:#f2efe7; --ink:#0f1a1c; --muted:#4d5c62; --card:#fffdf8; --line:#c7c1b3; --accent:#0f766e; --accent-dark:#0f5e68; --mono-bg:#0f1f21; --mono-ink:#d9f2ef; --radius:16px; --shadow:0 20px 55px rgba(13,30,34,.12);}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(1200px 420px at 10% -5%,#fff7dd 0%,rgba(255,247,221,0) 70%),radial-gradient(900px 560px at 100% 0%,#d5efe8 0%,rgba(213,239,232,0) 68%),linear-gradient(180deg,#f9f6ef 0%,#f2efe7 64%,#ece8dd 100%);font-family:"Space Grotesk","Segoe UI",sans-serif;line-height:1.5}.wrap{width:min(1400px,94vw);margin:0 auto;padding:20px 0 40px}.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.brand{font-weight:700;letter-spacing:.02em}.nav{display:flex;gap:8px;flex-wrap:wrap}.btn{text-decoration:none;border-radius:10px;padding:10px 12px;font-weight:600;border:1px solid #8ca49e;color:#1d3b41;background:rgba(255,255,255,.72);transition:transform .16s ease,background .16s ease}.btn:hover{transform:translateY(-1px);background:#fff}.btn.primary{border-color:transparent;color:#f4fffd;background:linear-gradient(130deg,var(--accent),var(--accent-dark))}.hero{border:1px solid var(--line);border-radius:calc(var(--radius) + 6px);background:linear-gradient(155deg,rgba(255,255,255,.95),rgba(245,249,249,.93));box-shadow:var(--shadow);padding:20px 22px;margin-bottom:14px}h1{margin:0 0 8px;font-size:clamp(1.9rem,4.2vw,2.8rem);line-height:1.05;letter-spacing:-.02em}.lead{margin:0;color:var(--muted);max-width:90ch}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:16px}.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:18px;box-shadow:0 8px 24px rgba(18,28,34,.08)}h2{margin:0 0 8px;font-size:1.3rem}h3{margin:12px 0 6px;font-size:1.05rem}p{margin:0 0 8px}ul{margin:6px 0 0;padding-left:18px}li{margin:5px 0}.code{margin-top:10px;border-radius:12px;border:1px solid #abc2b9;background:var(--mono-bg);color:var(--mono-ink);padding:12px;white-space:pre;overflow-x:auto;font-size:.84rem;font-family:"IBM Plex Mono",Consolas,monospace}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}th,td{border:1px solid #d9d2c2;padding:8px;text-align:left;vertical-align:top}th{background:#f8f4ea}.small{color:#5a6f76;font-size:.89rem}@media (max-width:930px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <main class="wrap">
     <header class="top">
-      <div class="brand">doc-html-translate Документация (RU)</div>
+      <div class="brand">Doc-HTML-Translate Документация (RU)</div>
       <nav class="nav">
         <a class="btn" href="index.html">Главная</a>
         <a class="btn" href="extension.html">Расширение</a>
@@ -30,9 +31,9 @@
       <p class="lead">Конвертируйте EPUB/PDF и другие форматы в локальные HTML-страницы, затем читайте в Chrome и переводите встроенным переводчиком браузера. Без API-ключа, без подписки и без лишних церемоний.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Ипостаси - все способы пользоваться</h2>
-      <p>doc-html-translate существует в нескольких ипостасях; у них общий конвертер и общая идея - отдать браузеру чистый HTML и дать ему перевести. Выбирай, что удобнее.</p>
+      <p>Doc-HTML-Translate существует в нескольких ипостасях; у них общий конвертер и общая идея - отдать браузеру чистый HTML и дать ему перевести. Выбирай, что удобнее.</p>
       <ul>
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, конвертер командной строки и обработчик файловых ассоциаций Windows. Его флаги описаны на этой странице.</li>
         <li><strong>GUI-приложение</strong> - <code>doc-html-ui.exe</code>, оконный интерфейс со всеми флагами ниже: выбор файла, drag &amp; drop и кнопка «Set as default handler».</li>
@@ -69,13 +70,13 @@ doc-html-translate.exe -ollama "book.epub"</div>
       </article>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Поддерживаемые форматы</h2>
       <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. Набор, прямо скажем, приличный.</p>
       <p class="small">MOBI и AZW3: требуется установленный <a href="https://calibre-ebook.com">Calibre</a>. Файлы с DRM не поддерживаются - конвертер уважает замки, которые не умеет вскрывать.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Удобство чтения</h2>
       <p>В сгенерированный HTML встроен небольшой клиентский слой для чтения - сервер нянчить не нужно, спокойно работает по <code>file://</code>:</p>
       <ul>
@@ -86,7 +87,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small">У одностраничных документов нет навбара, поэтому этот слой к ним не применяется.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Дополнительные внешние инструменты</h2>
       <p>Приложение работает сразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Инструменты ниже строго опциональны - ставьте их, только если хотите полную поддержку PDF-изображений и дополнительных форматов.</p>
       <table>
@@ -115,7 +116,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small" style="margin-top:10px;">Без <strong>pdftotext</strong>: используется встроенный Go-ридер PDF (чуть ниже качество). Без <strong>ffmpeg</strong>: изображения JPEG2000 в PDF не будут видны в браузере. Без <strong>Calibre</strong>: файлы MOBI/AZW3 не открываются.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Основные флаги</h2>
       <p class="small">Все опциональны. Значения по умолчанию разумны, так что эту таблицу можно игнорировать, пока не появится своё мнение.</p>
       <table>
@@ -143,13 +144,13 @@ doc-html-translate.exe -ollama "book.epub"</div>
       <p class="small" style="margin-top:10px;">Все опции выше доступны и в графическом приложении <strong>doc-html-ui</strong> - выбор файла, drag &amp; drop, глубина оглавления, лимит стоимости и кнопка "Set as default handler". В сборке Microsoft Store именно GUI - запускаемая точка входа, а двойной клик по файлу по-прежнему запускает конвертер из командной строки.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Companion-приложение: FastMediaSorter LITE</h2>
       <p>Для документов, которые являются <strong>картинками, а не текстом</strong> - скриншоты, манга,
         сфотографированные или отсканированные страницы, то, что текстовый конвертер мысли читать пока не умеет - используйте <strong>FastMediaSorter LITE</strong>,
         бесплатное Windows-приложение для открытия и сортировки изображений и видео со встроенным <strong>OCR и переводом прямо на изображении</strong>.
         Нажмите <code>T</code> на любой картинке, чтобы распознать текст и наложить перевод на вашем языке
-        (локальный Ollama или LibreTranslate). Дополняет doc-html-translate, который работает с книжными и текстовыми форматами.</p>
+        (локальный Ollama или LibreTranslate). Дополняет Doc-HTML-Translate, который работает с книжными и текстовыми форматами.</p>
       <div class="code">winget install SerZhyAle.FastMediaSorter</div>
       <ul>
         <li><a href="https://github.com/SerZhyAle/FastMediaSorter_Lite">Репозиторий на GitHub</a></li>
@@ -157,7 +158,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
       </ul>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 10px;">
       <h2>Скачивание приложения</h2>
       <ul>
         <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Расширение для браузера (Chrome Web Store)</a> · <a href="extension.html">страница расширения</a></li>

@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>doc-html-translate - read EPUB/PDF in your browser, translate for free</title>
+<title>Doc-HTML-Translate - read EPUB/PDF in your browser, translate for free</title>
 <meta name="description" content="A small Windows tool that converts EPUB, PDF, MOBI, FB2, RTF, TXT, MD and HTML into clean local HTML with navigation - then you read in Chrome and translate any page for free. Optional Google or local Ollama translation. Page in English, Russian, and Ukrainian.">
 <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/">
 <meta name="theme-color" content="#0a0f0a">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="doc-html-translate">
+<meta property="og:site_name" content="Doc-HTML-Translate">
 <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/">
-<meta property="og:title" content="doc-html-translate - read EPUB/PDF in your browser, translate for free">
+<meta property="og:title" content="Doc-HTML-Translate - read EPUB/PDF in your browser, translate for free">
 <meta property="og:description" content="Convert EPUB/PDF/MOBI/FB2 to local HTML, read in Chrome, translate any page for free. English, Russian, Ukrainian.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="doc-html-translate">
+<meta name="twitter:title" content="Doc-HTML-Translate">
 <meta name="twitter:description" content="Convert ebooks to local HTML and translate in the browser for free. English, Russian, Ukrainian.">
 <link rel="icon" href="assets/doc-html-translate.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@
 <style>
   /* ===== DESIGN SYSTEM - SZA Web Kit "Pine + Gold" (dark-green primary, gold accent) ===== */
   :root{
-    --wide:1160px;
+    --wide:1400px;
 
     --bg-color:#0a0f0a;
     --bg-elev:#0f1610;
@@ -165,32 +165,32 @@
   .seg button[aria-pressed="true"]{background:var(--primary-gradient); color:#fff; box-shadow:0 2px 10px rgba(63,185,80,.3)}
   #themeBtn{padding:.4rem; min-width:38px; font-size:15px}
 
-  main{max-width:var(--wide); margin:0 auto; padding:0 22px 90px; position:relative; z-index:1}
+  main{max-width:var(--wide); margin:0 auto; padding:0 22px 56px; position:relative; z-index:1}
 
   /* ===== hero ===== */
-  .hero{text-align:center; padding:2rem 1rem 1.2rem; margin-bottom:.2rem}
+  .hero{text-align:center; padding:1.4rem 1rem 1rem; margin-bottom:.2rem}
   .avatar-glow{position:relative; width:88px; height:88px; margin:0 auto 1.3rem}
-  .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:50%; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
-  .avatar{position:relative; width:100%; height:100%; background:var(--bg-elev); border-radius:50%; border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 2px 5px rgba(255,255,255,.1)}
-  .avatar svg{width:44px; height:44px}
+  .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:24px; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
+  .appicon{position:relative; width:100%; height:100%; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#22368a; color:#fff; font-family:var(--font-heading); font-weight:800; font-size:19px; line-height:1; letter-spacing:.5px; box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
   @keyframes pulse{0%{transform:scale(.95); opacity:.45} 100%{transform:scale(1.05); opacity:.75}}
 
   .kicker{font-size:.92rem; color:var(--accent); font-weight:600; margin:0 0 1rem; letter-spacing:.01em}
   .kicker b{color:var(--accent-strong); font-weight:700}
   .hero h1{
     font-family:var(--font-heading); font-weight:800; font-size:clamp(2rem,4.6vw,2.85rem);
-    line-height:1.12; letter-spacing:-.02em; margin:0 auto .9rem; max-width:880px;
+    line-height:1.12; letter-spacing:-.02em; margin:0 auto .8rem; max-width:100%;
     background:var(--text-gradient); -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent;
   }
-  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:720px; margin:0 auto 1.6rem}
+  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:1000px; margin:0 auto 1.3rem}
   .hero .cta{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center}
   @supports not ((-webkit-background-clip:text) or (background-clip:text)){
     .hero h1{-webkit-text-fill-color:currentColor; color:var(--text-primary); background:none}
   }
 
   /* ===== showcase grid of collapsible sections ===== */
-  .sections{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; margin-top:1.6rem}
+  .sections{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; margin-top:1rem}
+  @media(max-width:1040px){ .sections{grid-template-columns:repeat(2, minmax(0,1fr))} }
   @media(max-width:760px){ .sections{grid-template-columns:1fr} }
 
   .sec{
@@ -200,7 +200,7 @@
   }
   .sec:not([open]):hover{transform:translateY(-3px); border-color:var(--border-color-hover); background:var(--card-bg-hover)}
   .sec[open]{grid-column:1 / -1; background:var(--card-bg-hover); border-color:var(--border-color-hover); box-shadow:var(--shadow)}
-  .sec > summary{cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:12px; padding:15px 18px}
+  .sec > summary{cursor:pointer; list-style:none; display:flex; align-items:flex-start; gap:12px; padding:12px 16px}
   .sec > summary::-webkit-details-marker{display:none}
   .sec > summary::before{content:"▸"; color:var(--accent-purple); font-size:11px; line-height:1.9; flex:none}
   .sec[open] > summary::before{content:"▾"}
@@ -252,7 +252,7 @@
   .panel{
     background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px;
     -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
-    padding:22px 24px; margin:1.6rem 0; box-shadow:var(--shadow); scroll-margin-top:74px;
+    padding:20px 22px; margin:1.1rem 0; box-shadow:var(--shadow); scroll-margin-top:74px;
   }
   .panel > h2{font-family:var(--font-heading); font-size:clamp(18px,2.4vw,22px); font-weight:800;
     letter-spacing:-.015em; margin:0 0 6px; color:var(--text-primary)}
@@ -266,7 +266,7 @@
   td code{white-space:nowrap}
 
   footer{
-    max-width:var(--wide); margin:2rem auto 3rem; padding:2rem 2.2rem;
+    max-width:var(--wide); margin:1.3rem auto 2rem; padding:1.5rem 2.2rem;
     border:1px solid var(--border-color); border-radius:18px; background:var(--card-bg);
     -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
     color:var(--text-secondary); font-size:14px; text-align:center; position:relative; z-index:1;
@@ -282,7 +282,7 @@
   .cmd pre{margin:0}
 
   /* ===== "Get it" distribution block (kit component) ===== */
-  .get{display:grid; gap:1rem; max-width:860px; margin:0 auto 2rem; padding:1.3rem 1.5rem;
+  .get{display:grid; gap:.85rem; max-width:1000px; margin:0 auto 1.3rem; padding:1.1rem 1.4rem;
     background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px;
     -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px)}
   .get .channels{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
@@ -347,7 +347,7 @@
 </div>
 <header class="top">
   <div class="wrap">
-    <span class="brand">doc-html-translate<span class="dot">.</span></span>
+    <span class="brand">Doc-HTML-Translate<span class="dot">.</span></span>
     <span class="seg" role="group" aria-label="Language" id="langGroup">
       <button id="lng-ru" type="button" onclick="setLang('ru')" aria-pressed="false" aria-label="Русский">RU</button>
       <button id="lng-en" type="button" onclick="setLang('en')" aria-pressed="true" aria-label="English">EN</button>
@@ -363,20 +363,7 @@
 <main>
   <!-- ===================== HERO ===================== -->
   <section class="hero">
-    <div class="avatar-glow" aria-hidden="true">
-      <div class="avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="url(#hero-ico)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <defs><linearGradient id="hero-ico" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#56d364"></stop><stop offset=".55" stop-color="#3fb950"></stop><stop offset="1" stop-color="#e3b341"></stop>
-          </linearGradient></defs>
-          <path d="M13 2.5H7.5A1.5 1.5 0 0 0 6 4v16a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 20V7.5z"></path>
-          <path d="M13 2.5V7.5h5"></path>
-          <circle cx="12" cy="14.2" r="3.3"></circle>
-          <path d="M8.7 14.2h6.6"></path>
-          <ellipse cx="12" cy="14.2" rx="1.45" ry="3.3"></ellipse>
-        </svg>
-      </div>
-    </div>
+    <div class="avatar-glow" aria-hidden="true"><div class="appicon"><span>DOC</span><span>HTML</span></div></div>
     <div class="kicker">
       <span data-l="ru"><b>Бесплатный сценарий чтения:</b> конвертируй · читай в Chrome · переводи любую страницу</span>
       <span data-l="en"><b>Free reading workflow:</b> convert · read in Chrome · translate any page</span>
@@ -507,7 +494,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Что это и зачем</h2><span class="secteaser">Конвертер плюс самый дешёвый перевод - твой браузер</span></span></summary>
         <div class="secbody">
-          <p>Купил или скачал книгу не на своём языке - и упёрся в выбор: платить за перевод, мучиться со специальными читалками или читать как есть. doc-html-translate решает это самым дешёвым способом: превращает файл в обычный локальный HTML и отдаёт его браузеру, а перевод делает встроенный переводчик Chrome - бесплатно и для любого языка.</p>
+          <p>Купил или скачал книгу не на своём языке - и упёрся в выбор: платить за перевод, мучиться со специальными читалками или читать как есть. Doc-HTML-Translate решает это самым дешёвым способом: превращает файл в обычный локальный HTML и отдаёт его браузеру, а перевод делает встроенный переводчик Chrome - бесплатно и для любого языка.</p>
           <p>На вход - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML</strong>. На выходе - папка с чистыми HTML-страницами, оглавлением и постраничной навигацией, которая сразу открывается в браузере. Текст остаётся текстом (не картинкой), поэтому браузер переводит его «на лету».</p>
           <p>Это инструмент для Windows: есть командная строка (<code>doc-html-translate</code>) и оконное GUI-приложение (<code>doc-html-ui</code>) - выбирай, что удобнее.</p>
           <div class="note"><div class="tag">Главное</div><p>Никакого API-ключа и платных вызовов в базовом сценарии. Конвертация локальная, перевод - средствами браузера - и никакой бухгалтерии. По желанию подключаются Google Cloud или локальная Ollama.</p></div>
@@ -625,7 +612,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Спутник: FastMediaSorter LITE</h2><span class="secteaser">Когда документ - картинка, а не текст</span></span></summary>
         <div class="secbody">
-          <p>Нужно читать <strong>скриншоты, мангу, фото или сканы страниц</strong> - то, что является изображением, а не текстом? <strong>FastMediaSorter LITE</strong> - бесплатное приложение для Windows: открывает и сортирует картинки и видео и умеет <strong>OCR + перевод прямо на изображении</strong>. Нажми <kbd>T</kbd> на картинке - и поверх неё ляжет перевод (локальная Ollama или LibreTranslate). Это дополнение для случаев, которые doc-html-translate не покрывает: документы-картинки, в которые браузер вглядывается, но текста так и не находит.</p>
+          <p>Нужно читать <strong>скриншоты, мангу, фото или сканы страниц</strong> - то, что является изображением, а не текстом? <strong>FastMediaSorter LITE</strong> - бесплатное приложение для Windows: открывает и сортирует картинки и видео и умеет <strong>OCR + перевод прямо на изображении</strong>. Нажми <kbd>T</kbd> на картинке - и поверх неё ляжет перевод (локальная Ollama или LibreTranslate). Это дополнение для случаев, которые Doc-HTML-Translate не покрывает: документы-картинки, в которые браузер вглядывается, но текста так и не находит.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопировать">⧉ Скопировать</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>
@@ -717,7 +704,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">What it is and why</h2><span class="secteaser">A converter plus the cheapest translation there is - your browser</span></span></summary>
         <div class="secbody">
-          <p>You bought or downloaded a book that isn't in your language, and now you face a choice: pay for translation, fight with special readers, or read it as-is. doc-html-translate solves this the cheapest way possible: it turns the file into plain local HTML and hands it to the browser, while the translation is done by Chrome's built-in translator - free, for any language.</p>
+          <p>You bought or downloaded a book that isn't in your language, and now you face a choice: pay for translation, fight with special readers, or read it as-is. Doc-HTML-Translate solves this the cheapest way possible: it turns the file into plain local HTML and hands it to the browser, while the translation is done by Chrome's built-in translator - free, for any language.</p>
           <p>Input is <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML</strong>. Output is a folder of clean HTML pages with a table of contents and per-page navigation that opens straight in your browser. Text stays text (not an image), so the browser translates it on the fly.</p>
           <p>It's a Windows tool: there is a command line (<code>doc-html-translate</code>) and a windowed GUI app (<code>doc-html-ui</code>) - pick whichever you prefer.</p>
           <div class="note"><div class="tag">The point</div><p>No API key and no paid calls in the default scenario. Conversion is local, translation is the browser's job - and no accounting required. Google Cloud or a local Ollama can be wired in optionally.</p></div>
@@ -835,7 +822,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Companion: FastMediaSorter LITE</h2><span class="secteaser">When the document is a picture, not text</span></span></summary>
         <div class="secbody">
-          <p>Need to read <strong>screenshots, manga, photos or scanned pages</strong> - things that are images, not text? <strong>FastMediaSorter LITE</strong> is a free Windows app: it opens and sorts images and videos and can do <strong>OCR + on-image translation</strong>. Press <kbd>T</kbd> on a picture and the translation is overlaid right on it (local Ollama or LibreTranslate). It's the companion for the cases doc-html-translate doesn't cover: documents that are pictures, where the browser stares hard and still finds no text.</p>
+          <p>Need to read <strong>screenshots, manga, photos or scanned pages</strong> - things that are images, not text? <strong>FastMediaSorter LITE</strong> is a free Windows app: it opens and sorts images and videos and can do <strong>OCR + on-image translation</strong>. Press <kbd>T</kbd> on a picture and the translation is overlaid right on it (local Ollama or LibreTranslate). It's the companion for the cases Doc-HTML-Translate doesn't cover: documents that are pictures, where the browser stares hard and still finds no text.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Copy">⧉ Copy</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>
@@ -927,7 +914,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Що це і навіщо</h2><span class="secteaser">Конвертер плюс найдешевший переклад - твій браузер</span></span></summary>
         <div class="secbody">
-          <p>Купив або завантажив книжку не своєю мовою - і опинився перед вибором: платити за переклад, мучитися зі спеціальними читалками чи читати як є. doc-html-translate вирішує це найдешевшим способом: перетворює файл на звичайний локальний HTML і віддає його браузеру, а переклад робить вбудований перекладач Chrome - безкоштовно й для будь-якої мови.</p>
+          <p>Купив або завантажив книжку не своєю мовою - і опинився перед вибором: платити за переклад, мучитися зі спеціальними читалками чи читати як є. Doc-HTML-Translate вирішує це найдешевшим способом: перетворює файл на звичайний локальний HTML і віддає його браузеру, а переклад робить вбудований перекладач Chrome - безкоштовно й для будь-якої мови.</p>
           <p>На вхід - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown і HTML</strong>. На виході - тека з чистими HTML-сторінками, змістом і посторінковою навігацією, що одразу відкривається в браузері. Текст лишається текстом (не картинкою), тож браузер перекладає його «на льоту».</p>
           <p>Це інструмент для Windows: є командний рядок (<code>doc-html-translate</code>) і віконний GUI-застосунок (<code>doc-html-ui</code>) - обирай, що зручніше.</p>
           <div class="note"><div class="tag">Головне</div><p>Жодного API-ключа та платних викликів у базовому сценарії. Конвертація локальна, переклад - засобами браузера - і жодної бухгалтерії. За бажанням підключаються Google Cloud або локальна Ollama.</p></div>
@@ -1045,7 +1032,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       <details class="sec">
         <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Супутник: FastMediaSorter LITE</h2><span class="secteaser">Коли документ - картинка, а не текст</span></span></summary>
         <div class="secbody">
-          <p>Треба читати <strong>скриншоти, мангу, фото чи скани сторінок</strong> - те, що є зображенням, а не текстом? <strong>FastMediaSorter LITE</strong> - безкоштовний застосунок для Windows: відкриває й сортує картинки та відео і вміє <strong>OCR + переклад прямо на зображенні</strong>. Натисни <kbd>T</kbd> на картинці - і поверх неї ляже переклад (локальна Ollama або LibreTranslate). Це доповнення для випадків, які doc-html-translate не покриває: документи-картинки, в які браузер вдивляється, але тексту так і не знаходить.</p>
+          <p>Треба читати <strong>скриншоти, мангу, фото чи скани сторінок</strong> - те, що є зображенням, а не текстом? <strong>FastMediaSorter LITE</strong> - безкоштовний застосунок для Windows: відкриває й сортує картинки та відео і вміє <strong>OCR + переклад прямо на зображенні</strong>. Натисни <kbd>T</kbd> на картинці - і поверх неї ляже переклад (локальна Ollama або LibreTranslate). Це доповнення для випадків, які Doc-HTML-Translate не покриває: документи-картинки, в які браузер вдивляється, але тексту так і не знаходить.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопіювати">⧉ Скопіювати</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>
@@ -1105,17 +1092,17 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
 <script>
   var I18N = {
     ru:{
-      title:'doc-html-translate - читай EPUB/PDF в браузере и переводи бесплатно',
+      title:'Doc-HTML-Translate - читай EPUB/PDF в браузере и переводи бесплатно',
       desc:'Маленький инструмент для Windows: конвертирует EPUB, PDF, MOBI, FB2, RTF, TXT, MD и HTML в чистый локальный HTML с навигацией - дальше читаешь в Chrome и переводишь любую страницу бесплатно. По желанию - Google или локальная Ollama. Страница на русском, английском и украинском.',
       langGroup:'Язык', theme:'Тема', toLight:'Включить светлую тему', toDark:'Включить тёмную тему', copied:'Скопировано'
     },
     en:{
-      title:'doc-html-translate - read EPUB/PDF in your browser, translate for free',
+      title:'Doc-HTML-Translate - read EPUB/PDF in your browser, translate for free',
       desc:'A small Windows tool that converts EPUB, PDF, MOBI, FB2, RTF, TXT, MD and HTML into clean local HTML with navigation - then you read in Chrome and translate any page for free. Optional Google or local Ollama translation. Page in English, Russian, and Ukrainian.',
       langGroup:'Language', theme:'Theme', toLight:'Switch to light theme', toDark:'Switch to dark theme', copied:'Copied'
     },
     uk:{
-      title:'doc-html-translate - читай EPUB/PDF у браузері та перекладай безкоштовно',
+      title:'Doc-HTML-Translate - читай EPUB/PDF у браузері та перекладай безкоштовно',
       desc:'Маленький інструмент для Windows: конвертує EPUB, PDF, MOBI, FB2, RTF, TXT, MD і HTML у чистий локальний HTML з навігацією - далі читаєш у Chrome і перекладаєш будь-яку сторінку безкоштовно. За бажанням - Google або локальна Ollama. Сторінка російською, англійською та українською.',
       langGroup:'Мова', theme:'Тема', toLight:'Увімкнути світлу тему', toDark:'Увімкнути темну тему', copied:'Скопійовано'
     }
