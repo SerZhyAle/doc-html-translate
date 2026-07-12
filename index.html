@@ -33,7 +33,7 @@
 <style>
   /* ===== DESIGN SYSTEM - SZA Web Kit "Pine + Gold" (dark-green primary, gold accent) ===== */
   :root{
-    --wide:1400px;
+    --wide:min(1760px, 94vw);
 
     --bg-color:#0a0f0a;
     --bg-elev:#0f1610;
@@ -130,14 +130,17 @@
   .blob-3{bottom:-130px; left:8%; width:420px; height:420px; background:radial-gradient(circle,var(--blob-3) 0%,transparent 70%)}
   @keyframes drift{0%{transform:translate(0,0) scale(1)} 100%{transform:translate(40px,30px) scale(1.1)}}
 
-  /* ===== header ===== */
+  /* ===== header: floating glass bar (sza.od.ua "site-header" pattern) ===== */
   header.top{
-    position:sticky; top:0; z-index:20;
+    position:sticky; top:12px; z-index:20;
+    max-width:var(--wide); margin:12px auto 18px; padding:10px 18px;
+    display:flex; align-items:center; gap:12px;
+    border:1px solid var(--border-color); border-radius:16px;
+    background:color-mix(in srgb, var(--bg-color) 78%, transparent);
     -webkit-backdrop-filter:saturate(150%) blur(12px); backdrop-filter:saturate(150%) blur(12px);
-    background:color-mix(in srgb, var(--bg-color) 72%, transparent);
-    border-bottom:1px solid var(--border-color);
+    box-shadow:var(--shadow);
   }
-  .top .wrap{max-width:var(--wide); margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:12px}
+  .top .wrap{display:flex; align-items:center; gap:12px; width:100%}
   .brand{font-family:var(--font-heading); font-weight:700; letter-spacing:.2px; margin-right:auto; font-size:15px}
   .brand .dot{color:var(--accent-purple)}
 
@@ -167,29 +170,33 @@
 
   main{max-width:var(--wide); margin:0 auto; padding:0 22px 56px; position:relative; z-index:1}
 
-  /* ===== hero ===== */
-  .hero{text-align:center; padding:1.4rem 1rem 1rem; margin-bottom:.2rem}
-  .avatar-glow{position:relative; width:88px; height:88px; margin:0 auto 1.3rem}
-  .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:24px; filter:blur(14px); opacity:.6; animation:pulse 3s infinite alternate}
-  .appicon{position:relative; width:100%; height:100%; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#22368a; color:#fff; font-family:var(--font-heading); font-weight:800; font-size:19px; line-height:1; letter-spacing:.5px; box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
+  /* ===== hero: compact inline identity row (sza.od.ua "hero-id" pattern) ===== */
+  .hero{text-align:left; padding:.2rem 0 .3rem}
+  .hero-id{display:flex; align-items:center; gap:1rem; margin-bottom:.9rem}
+  .hero-id .htext{min-width:0}
+  @media(max-width:420px){ .hero-id{align-items:flex-start} .avatar-glow{margin-top:.15rem} }
+  .avatar-glow{position:relative; width:60px; height:60px; margin:0; flex:none}
+  .avatar-glow::before{content:''; position:absolute; inset:0; background:var(--primary-gradient); border-radius:18px; filter:blur(12px); opacity:.6; animation:pulse 3s infinite alternate}
+  .appicon{position:relative; width:100%; height:100%; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; background:#22368a; color:#fff; font-family:var(--font-heading); font-weight:800; font-size:13px; line-height:1; letter-spacing:.3px; box-shadow:inset 0 2px 5px rgba(255,255,255,.12)}
   @keyframes pulse{0%{transform:scale(.95); opacity:.45} 100%{transform:scale(1.05); opacity:.75}}
 
-  .kicker{font-size:.92rem; color:var(--accent); font-weight:600; margin:0 0 1rem; letter-spacing:.01em}
+  .kicker{font-size:.86rem; color:var(--accent); font-weight:600; margin:0 0 .2rem; letter-spacing:.01em}
   .kicker b{color:var(--accent-strong); font-weight:700}
   .hero h1{
-    font-family:var(--font-heading); font-weight:800; font-size:clamp(2rem,4.6vw,2.85rem);
-    line-height:1.12; letter-spacing:-.02em; margin:0 auto .8rem; max-width:100%;
+    font-family:var(--font-heading); font-weight:800; font-size:clamp(1.6rem,3.4vw,2.3rem);
+    line-height:1.14; letter-spacing:-.02em; margin:0; max-width:none;
     background:var(--text-gradient); -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent;
   }
-  .hero p.lead{font-size:1.04rem; color:var(--text-secondary); max-width:1000px; margin:0 auto 1.3rem}
-  .hero .cta{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center}
+  .hero p.lead{font-size:1rem; color:var(--text-secondary); max-width:900px; margin:0 0 1rem}
+  .hero .cta{display:flex; gap:.7rem; flex-wrap:wrap; justify-content:flex-start}
   @supports not ((-webkit-background-clip:text) or (background-clip:text)){
     .hero h1{-webkit-text-fill-color:currentColor; color:var(--text-primary); background:none}
   }
 
   /* ===== showcase grid of collapsible sections ===== */
   .sections{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; margin-top:1rem}
+  @media(min-width:1500px){ .sections{grid-template-columns:repeat(4, minmax(0,1fr))} }
   @media(max-width:1040px){ .sections{grid-template-columns:repeat(2, minmax(0,1fr))} }
   @media(max-width:760px){ .sections{grid-template-columns:1fr} }
 
@@ -308,6 +315,7 @@
     letter-spacing:.14em; color:var(--text-muted); margin:0 0 .9rem; text-align:left}
   .tools-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin:0 0 1.4rem; text-align:left}
   @media(min-width:760px){ .tools-grid{grid-template-columns:repeat(3,1fr)} }
+  @media(min-width:1200px){ .tools-grid{grid-template-columns:repeat(4,1fr)} }
   .tools-grid a{display:block; padding:.7rem .9rem; border:1px solid var(--border-color); border-radius:10px;
     background:var(--glass-fill); color:var(--text-primary); font-size:.85rem; text-decoration:none;
     transition:border-color .25s ease, background .25s ease, transform .25s ease}
@@ -363,41 +371,45 @@
 <main>
   <!-- ===================== HERO ===================== -->
   <section class="hero">
-    <div class="avatar-glow" aria-hidden="true"><div class="appicon"><span>DOC</span><span>HTML</span></div></div>
-    <div class="kicker">
-      <span data-l="ru"><b>Бесплатный сценарий чтения:</b> конвертируй · читай в Chrome · переводи любую страницу</span>
-      <span data-l="en"><b>Free reading workflow:</b> convert · read in Chrome · translate any page</span>
-      <span data-l="uk"><b>Безкоштовний сценарій читання:</b> конвертуй · читай у Chrome · перекладай будь-яку сторінку</span>
+    <div class="hero-id">
+      <div class="avatar-glow" aria-hidden="true"><div class="appicon"><span>DOC</span><span>HTML</span></div></div>
+      <div class="htext">
+        <div class="kicker">
+          <span data-l="ru"><b>Бесплатный сценарий чтения:</b> конвертируй · читай в Chrome · переводи любую страницу</span>
+          <span data-l="en"><b>Free reading workflow:</b> convert · read in Chrome · translate any page</span>
+          <span data-l="uk"><b>Безкоштовний сценарій читання:</b> конвертуй · читай у Chrome · перекладай будь-яку сторінку</span>
+        </div>
+        <h1>
+          <span data-l="ru">Открывай EPUB и PDF в браузере и переводи на свой язык бесплатно</span>
+          <span data-l="en">Open EPUB and PDF in your browser, translate to your language for free</span>
+          <span data-l="uk">Відкривай EPUB і PDF у браузері та перекладай своєю мовою безкоштовно</span>
+        </h1>
+      </div>
     </div>
-    <h1>
-      <span data-l="ru">Открывай EPUB и PDF в браузере и переводи на свой язык бесплатно</span>
-      <span data-l="en">Open EPUB and PDF in your browser, translate to your language for free</span>
-      <span data-l="uk">Відкривай EPUB і PDF у браузері та перекладай своєю мовою безкоштовно</span>
-    </h1>
     <p class="lead">
       <span data-l="ru">Маленький инструмент для Windows: превращает EPUB, PDF, MOBI, FB2 и другие форматы в чистый локальный HTML с навигацией и оглавлением - дальше читаешь в Chrome и переводишь страницу встроенным переводчиком браузера. Без API-ключа, без платных запросов, одной командой. По желанию - перевод через Google Cloud или локальную Ollama. Подписки не предусмотрены - даже захочешь, не за что платить.</span>
       <span data-l="en">A small Windows tool that turns EPUB, PDF, MOBI, FB2 and other formats into clean local HTML with navigation and a table of contents - then you read in Chrome and translate the page with the browser's built-in translator. No API key, no paid calls, one command. Optionally translate through Google Cloud or a local Ollama model. No subscription either - there's simply nothing to charge you for.</span>
       <span data-l="uk">Маленький інструмент для Windows: перетворює EPUB, PDF, MOBI, FB2 та інші формати на чистий локальний HTML з навігацією та змістом - далі читаєш у Chrome і перекладаєш сторінку вбудованим перекладачем браузера. Без API-ключа, без платних запитів, однією командою. За бажанням - переклад через Google Cloud або локальну Ollama. Підписки немає - навіть якби схотів, платити нема за що.</span>
     </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
+        <span data-l="ru">⤓ Скачать релиз<span class="dl-ver"></span></span><span data-l="en">⤓ Download release<span class="dl-ver"></span></span><span data-l="uk">⤓ Завантажити реліз<span class="dl-ver"></span></span>
+      </a>
+      <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">
+        <span data-l="ru">Открыть на GitHub</span><span data-l="en">Browse on GitHub</span><span data-l="uk">Відкрити на GitHub</span>
+      </a>
+      <a class="btn" href="docs.ru.html" data-l="ru">Документация</a>
+      <a class="btn" href="docs.html" data-l="en">Documentation</a>
+      <a class="btn" href="docs.uk.html" data-l="uk">Документація</a>
+      <a class="btn" href="extension.html">
+        <span data-l="ru">🧩 Расширение для браузера</span><span data-l="en">🧩 Browser extension</span><span data-l="uk">🧩 Розширення для браузера</span>
+      </a>
+    </div>
   </section>
 
-  <!-- ===================== GET IT (header zone) ===================== -->
+  <!-- ===================== GET IT (quick install) ===================== -->
   <section aria-label="Get it">
     <div class="get">
-      <div class="channels">
-        <a class="btn primary" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">
-          <span data-l="ru">⤓ Скачать релиз<span class="dl-ver"></span></span><span data-l="en">⤓ Download release<span class="dl-ver"></span></span><span data-l="uk">⤓ Завантажити реліз<span class="dl-ver"></span></span>
-        </a>
-        <a class="btn" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">
-          <span data-l="ru">Открыть на GitHub</span><span data-l="en">Browse on GitHub</span><span data-l="uk">Відкрити на GitHub</span>
-        </a>
-        <a class="btn" href="docs.ru.html" data-l="ru">Документация</a>
-        <a class="btn" href="docs.html" data-l="en">Documentation</a>
-        <a class="btn" href="docs.uk.html" data-l="uk">Документація</a>
-        <a class="btn" href="extension.html">
-          <span data-l="ru">🧩 Расширение для браузера</span><span data-l="en">🧩 Browser extension</span><span data-l="uk">🧩 Розширення для браузера</span>
-        </a>
-      </div>
       <div class="copybox" data-cmd="winget install SerZhyAle.DocHtmlTranslate">
         <span class="tok">winget</span> install SerZhyAle.DocHtmlTranslate
         <button class="copy" type="button" onclick="copyBox(this)" aria-label="Copy">
