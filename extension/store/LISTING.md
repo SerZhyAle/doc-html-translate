@@ -34,8 +34,8 @@ Document Page Translator - PDF, EPUB & more (Free & Local)
 > all nine formats here. The full list still lives in the detailed description below, in prose.
 
 Re-render PDF, EPUB & other documents as clean HTML the browser's free Translate page can read - incl. image OCR. 100% local.
-- RU: Открывайте PDF, EPUB и другие документы как чистый HTML - и браузер бесплатно переводит их встроенным переводчиком. Локально.
-- UK: Відкривайте PDF, EPUB та інші документи як чистий HTML - і браузер безкоштовно перекладає їх вбудованим перекладачем. Локально.
+- RU: Открывайте PDF, EPUB и другие документы как чистый HTML - браузер переводит бесплатно, плюс OCR текста на картинках. Локально.
+- UK: Відкривайте PDF, EPUB та інші документи як чистий HTML - браузер перекладає безкоштовно, плюс OCR тексту на зображеннях. Локально.
 
 ## Category
 Productivity

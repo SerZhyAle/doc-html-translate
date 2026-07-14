@@ -8,7 +8,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "Відкривайте PDF, EPUB та інші документи як чистий HTML - і браузер безкоштовно перекладає їх вбудованим перекладачем. Локально.",
+    "message": "Відкривайте PDF, EPUB та інші документи як чистий HTML - браузер перекладає безкоштовно, плюс OCR тексту на зображеннях. Локально.",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {

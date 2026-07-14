@@ -7,6 +7,11 @@ that app's format extractors to run in-browser - PDF.js for PDF, a native unzip 
 hand-ported readers for TXT/RTF/FB2/HTML, the vendored `marked` for Markdown, and the vendored
 `foliate-js` for MOBI/AZW3 (replacing the desktop's Calibre dependency).
 
+It also does **image OCR**: right-click a picture ("OCR & translate this image"), open a standalone image
+file from the popup, or turn on "Use OCR for images" for PDFs/EPUBs - the extension recognizes the text
+baked into the picture and lays it over the image as real text, so the browser's **Translate page** reaches
+that too. English is bundled; more languages download on demand.
+
 **Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)** (Chrome and Edge / Chromium). An Edge Add-ons listing is still planned; you can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
 
 The make-or-break decision for PDF (see [the spec](../DEV/research/pdf_translate_extension_spec.md)):
