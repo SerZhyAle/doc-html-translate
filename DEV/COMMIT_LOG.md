@@ -599,3 +599,10 @@ Changed files:
 - internal/pdf/extract_test.go
 - internal/pipeline/pipeline.go
 
+| 2026-07-14 17:04:38 | main | 8c02055 | docs: changelog for 26.0714.1658 (image input) + 26.0712 (ext PDF mirror fix) |
+
+Changed files:
+- DEV/CHANGELOG.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+
