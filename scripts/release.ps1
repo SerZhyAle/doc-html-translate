@@ -99,6 +99,8 @@ Cmd  "  --urls https://github.com/SerZhyAle/doc-html-translate/releases/download
 Cmd  "  --submit"
 Note "To ALSO change description/tags: edit winget/ then 'wingetcreate submit winget' (update copies old metadata forward)."
 Note "Then sign the CLA on the PR if prompted: gh pr comment <PR#> --repo microsoft/winget-pkgs --body ""@microsoft-github-policy-service agree"""
+Note "Replace the empty auto-generated PR body (wingetcreate leaves an unchecked template):"
+Cmd  "gh pr edit <PR#> --repo microsoft/winget-pkgs --body-file <notes>   # version, release URL, 'SHA256 verified via winget install', tick the checklist"
 Note "Details: docs/how-i-posted-this-project-to-winget.md"
 Write-Host ""
 

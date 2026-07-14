@@ -62,7 +62,11 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
    version-only bump = `wingetcreate update SerZhyAle.DocHtmlTranslate --version <ver> --urls
    <zip-url> --submit`; **to also change the description/tags, edit `winget/` and `wingetcreate
    submit winget`** (`update` copies the old metadata forward). Sign the CLA on the PR if
-   prompted. See [docs/how-i-posted-this-project-to-winget.md](../docs/how-i-posted-this-project-to-winget.md).
+   prompted. **Then replace the auto-generated PR body** (`wingetcreate` leaves the empty template
+   with unchecked boxes): `gh pr edit <PR#> --repo microsoft/winget-pkgs --body-file <notes>` with a
+   real description (version, upstream release URL, "SHA256 verified via local `winget install`")
+   and the manifest checklist boxes ticked - moderators triage faster with a filled-in PR. See
+   [docs/how-i-posted-this-project-to-winget.md](../docs/how-i-posted-this-project-to-winget.md).
 4. **Windows Store (MSIX)** `[PUBLIC]` - build unsigned and upload by hand in Partner Center:
    `./msix/build-msix.ps1 -IdentityName "<name>"`. See [../msix/README.md](../msix/README.md).
 5. **Chrome / Edge extension** `[PAID]` `[PUBLIC]` - Chrome and Edge publish **independently**
