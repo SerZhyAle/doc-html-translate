@@ -28,6 +28,7 @@ The desktop app and the extension are independent and complementary: the app con
 ## Features
 
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
+- Translate a standalone image: pass a PNG/JPG/JPEG/WebP/GIF/BMP/TIFF and the app OCRs it and lays translatable text plates over the picture (Chrome's built-in page translation then works in place - the same behaviour as the browser extension). OCR needs a `tesseract` engine (see `-ocr-lang`)
 - Local HTML output with generated navigation and TOC
 - Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`-`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
 - Optional translation:

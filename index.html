@@ -542,6 +542,7 @@ doc-html-translate.exe "book.pdf"
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
           </div>
+          <p>Плюс одиночная картинка (PNG, JPG, WebP, GIF, BMP, TIFF): текст на ней распознаётся и ложится переводимыми плашками поверх изображения - открой в Chrome/Edge и переведи страницу, как обычный документ. То же, что делает расширение для браузера. Нужен OCR-движок <strong>Tesseract</strong>.</p>
           <p class="muted">MOBI и AZW3 требуют установленного <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файлы с DRM не поддерживаются - снимать чужие замки мы за тебя не возьмёмся.</p>
         </div>
       </details>
@@ -622,9 +623,9 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Спутник: FastMediaSorter LITE</h2><span class="secteaser">Когда документ - картинка, а не текст</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Спутник: Fast Media Sorter</h2><span class="secteaser">Сортируй тысячи фото - и переводи любое прямо в браузере</span></span></summary>
         <div class="secbody">
-          <p>Нужно читать <strong>скриншоты, мангу, фото или сканы страниц</strong> - то, что является изображением, а не текстом? <strong>FastMediaSorter LITE</strong> - бесплатное приложение для Windows: открывает и сортирует картинки и видео и умеет <strong>OCR + перевод прямо на изображении</strong>. Нажми <kbd>T</kbd> на картинке - и поверх неё ляжет перевод (локальная Ollama или LibreTranslate). Это дополнение для случаев, которые Doc-HTML-Translate не покрывает: документы-картинки, в которые браузер вглядывается, но текста так и не находит.</p>
+          <p><strong>Fast Media Sorter for Windows</strong> (в Microsoft Store и winget - под именем FastMediaSorter LITE) - бесплатный сортировщик и просмотрщик фото и видео: тысячи снимков в папке, слайдшоу, быстрые операции с файлами и собственный OCR-перевод прямо на изображении по клавише <kbd>T</kbd> (локальная Ollama / LibreTranslate). Теперь он работает в паре с этим приложением: одним кликом отдаёт картинку в doc-html-translate, и она открывается переведённой прямо в браузере - текст распознаётся и ложится плашками поверх изображения, а перевод делает встроенный переводчик Chrome/Edge. Скриншот, страница манги или скан - читаются на твоём языке.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопировать">⧉ Скопировать</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>
@@ -752,6 +753,7 @@ doc-html-translate.exe "book.pdf"
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
           </div>
+          <p>Plus a standalone image (PNG, JPG, WebP, GIF, BMP, TIFF): its text is OCR'd and laid over the picture as translatable plates - open it in Chrome/Edge and translate the page like any document. The same thing the browser extension does. Needs the <strong>Tesseract</strong> OCR engine.</p>
           <p class="muted">MOBI and AZW3 require <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a> installed. DRM-protected files are not supported - we won't pick someone else's lock for you.</p>
         </div>
       </details>
@@ -832,9 +834,9 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Companion: FastMediaSorter LITE</h2><span class="secteaser">When the document is a picture, not text</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Companion: Fast Media Sorter</h2><span class="secteaser">Sort thousands of photos - and translate any of them in your browser</span></span></summary>
         <div class="secbody">
-          <p>Need to read <strong>screenshots, manga, photos or scanned pages</strong> - things that are images, not text? <strong>FastMediaSorter LITE</strong> is a free Windows app: it opens and sorts images and videos and can do <strong>OCR + on-image translation</strong>. Press <kbd>T</kbd> on a picture and the translation is overlaid right on it (local Ollama or LibreTranslate). It's the companion for the cases Doc-HTML-Translate doesn't cover: documents that are pictures, where the browser stares hard and still finds no text.</p>
+          <p><strong>Fast Media Sorter for Windows</strong> (published as FastMediaSorter LITE in the Microsoft Store and winget) is a free photo &amp; video sorter and viewer: thousands of files in a folder, slideshow, quick file operations, and its own on-image OCR translation on the <kbd>T</kbd> key (local Ollama / LibreTranslate). It now pairs with this app: one click hands a picture to doc-html-translate and it opens translated right in your browser - the text is OCR'd and laid over the image as plates, and Chrome/Edge's built-in translation does the rest. A screenshot, a manga page or a scan - readable in your language.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Copy">⧉ Copy</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>
@@ -962,6 +964,7 @@ doc-html-translate.exe "book.pdf"
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
           </div>
+          <p>Плюс одиночна картинка (PNG, JPG, WebP, GIF, BMP, TIFF): текст на ній розпізнається і лягає перекладними плашками поверх зображення - відкрий у Chrome/Edge і переклади сторінку, як звичайний документ. Те саме, що робить розширення для браузера. Потрібен OCR-рушій <strong>Tesseract</strong>.</p>
           <p class="muted">MOBI та AZW3 потребують встановленого <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файли з DRM не підтримуються - знімати чужі замки замість тебе ми не беремося.</p>
         </div>
       </details>
@@ -1042,9 +1045,9 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Супутник: FastMediaSorter LITE</h2><span class="secteaser">Коли документ - картинка, а не текст</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">07</span><span class="sechead"><h2 class="sectitle">Супутник: Fast Media Sorter</h2><span class="secteaser">Сортуй тисячі фото - і перекладай будь-яке прямо в браузері</span></span></summary>
         <div class="secbody">
-          <p>Треба читати <strong>скриншоти, мангу, фото чи скани сторінок</strong> - те, що є зображенням, а не текстом? <strong>FastMediaSorter LITE</strong> - безкоштовний застосунок для Windows: відкриває й сортує картинки та відео і вміє <strong>OCR + переклад прямо на зображенні</strong>. Натисни <kbd>T</kbd> на картинці - і поверх неї ляже переклад (локальна Ollama або LibreTranslate). Це доповнення для випадків, які Doc-HTML-Translate не покриває: документи-картинки, в які браузер вдивляється, але тексту так і не знаходить.</p>
+          <p><strong>Fast Media Sorter for Windows</strong> (у Microsoft Store і winget - під іменем FastMediaSorter LITE) - безкоштовний сортувальник і переглядач фото та відео: тисячі знімків у теці, слайдшоу, швидкі операції з файлами і власний OCR-переклад прямо на зображенні по клавіші <kbd>T</kbd> (локальна Ollama / LibreTranslate). Тепер він працює в парі з цим застосунком: одним кліком віддає картинку в doc-html-translate, і вона відкривається перекладеною прямо в браузері - текст розпізнається і лягає плашками поверх зображення, а переклад робить вбудований перекладач Chrome/Edge. Скриншот, сторінка манги чи скан - читаються твоєю мовою.</p>
           <div class="cmd">
             <div class="prompt-actions"><button class="btn" type="button" onclick="copyCmd(this)" aria-label="Скопіювати">⧉ Скопіювати</button></div>
             <pre>winget install SerZhyAle.FastMediaSorter</pre>

@@ -821,7 +821,7 @@ func browseFile() (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
-$f.Filter = "Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|All files|*.*"
+$f.Filter = "Documents & images|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|All files|*.*"
 $f.Title = "Select input file"
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.FileName)) }`

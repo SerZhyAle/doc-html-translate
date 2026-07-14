@@ -252,6 +252,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
     <section class="card" style="margin-top: 10px;">
       <h2>Supported Formats</h2>
       <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. A reasonable spread, if we say so ourselves.</p>
+      <p>Also a <strong>standalone image</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): the app OCRs it and lays translatable text plates over the picture, so Chrome/Edge page translation works on it in place - the same overlay the browser extension produces. Needs the <strong>Tesseract</strong> OCR engine (see <code>-ocr-lang</code>).</p>
       <p class="small">MOBI and AZW3: requires <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported - the converter respects locks it cannot pick.</p>
     </section>
 

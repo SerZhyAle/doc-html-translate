@@ -17,6 +17,7 @@ import (
 	"doc-html-translate/internal/htmlgen"
 	"doc-html-translate/internal/htmlproc"
 	"doc-html-translate/internal/htmlsplit"
+	"doc-html-translate/internal/img"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/md"
 	"doc-html-translate/internal/mobi"
@@ -104,72 +105,86 @@ func (r Runner) Run() (int, error) {
 	}
 
 	var book *epub.Book
-	switch ext {
-	case ".epub":
-		logging.Println("[1/4] Extracting EPUB...")
-		book, err = epub.Extract(inputPath, outputDir)
+	// A standalone image has no text to extract: wrap it in a one-page HTML doc and
+	// force the OCR overlay below, so the browser shows the picture with translatable
+	// text plates laid over it (mirrors the extension's image OCR overlay).
+	forceOCR := false
+	if img.IsImage(ext) {
+		logging.Println("[1/4] Preparing image...")
+		book, err = img.Extract(inputPath, outputDir)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
-			return ExitEPUB, fmt.Errorf("extract epub: %w", err)
+			return ExitParse, fmt.Errorf("prepare image: %w", err)
 		}
-		logging.Printf("  Title: %s\n", book.Title)
-		logging.Printf("  Chapters: %d\n", len(book.Spine))
-	case ".pdf":
-		logging.Println("[1/4] Extracting PDF...")
-		book, err = pdf.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract pdf: %w", err)
-		}
-	case ".txt":
-		logging.Println("[1/4] Extracting TXT...")
-		book, err = txt.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract txt: %w", err)
-		}
-	case ".md":
-		logging.Println("[1/4] Extracting Markdown...")
-		book, err = md.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract markdown: %w", err)
-		}
-	case ".fb2":
-		logging.Println("[1/4] Extracting FB2...")
-		book, err = fb2.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract fb2: %w", err)
-		}
-	case ".rtf":
-		logging.Println("[1/4] Extracting RTF...")
-		book, err = rtf.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract rtf: %w", err)
-		}
-	case ".html", ".htm":
-		logging.Println("[1/4] Extracting HTML...")
-		book, err = htmlconv.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract html: %w", err)
-		}
-	case ".mobi", ".azw3":
-		logging.Println("[1/4] Extracting MOBI...")
-		book, err = mobi.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract mobi: %w", err)
-		}
-	default:
-		// Unknown extension — treat as plain text.
-		logging.Printf("[1/4] Unknown format %q — treating as plain text...\n", ext)
-		book, err = txt.Extract(inputPath, outputDir)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
-			return ExitParse, fmt.Errorf("extract as txt: %w", err)
+		forceOCR = true
+	} else {
+		switch ext {
+		case ".epub":
+			logging.Println("[1/4] Extracting EPUB...")
+			book, err = epub.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitEPUB, fmt.Errorf("extract epub: %w", err)
+			}
+			logging.Printf("  Title: %s\n", book.Title)
+			logging.Printf("  Chapters: %d\n", len(book.Spine))
+		case ".pdf":
+			logging.Println("[1/4] Extracting PDF...")
+			book, err = pdf.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract pdf: %w", err)
+			}
+		case ".txt":
+			logging.Println("[1/4] Extracting TXT...")
+			book, err = txt.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract txt: %w", err)
+			}
+		case ".md":
+			logging.Println("[1/4] Extracting Markdown...")
+			book, err = md.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract markdown: %w", err)
+			}
+		case ".fb2":
+			logging.Println("[1/4] Extracting FB2...")
+			book, err = fb2.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract fb2: %w", err)
+			}
+		case ".rtf":
+			logging.Println("[1/4] Extracting RTF...")
+			book, err = rtf.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract rtf: %w", err)
+			}
+		case ".html", ".htm":
+			logging.Println("[1/4] Extracting HTML...")
+			book, err = htmlconv.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract html: %w", err)
+			}
+		case ".mobi", ".azw3":
+			logging.Println("[1/4] Extracting MOBI...")
+			book, err = mobi.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract mobi: %w", err)
+			}
+		default:
+			// Unknown extension — treat as plain text.
+			logging.Printf("[1/4] Unknown format %q — treating as plain text...\n", ext)
+			book, err = txt.Extract(inputPath, outputDir)
+			if err != nil {
+				_ = os.RemoveAll(outputDir)
+				return ExitParse, fmt.Errorf("extract as txt: %w", err)
+			}
 		}
 	}
 
@@ -215,7 +230,7 @@ func (r Runner) Run() (int, error) {
 
 	// Optional: OCR document images and overlay translatable text plates. Runs before
 	// translation so the overlay text is translated too. Best-effort - never fatal.
-	if r.cfg.OCR {
+	if r.cfg.OCR || forceOCR {
 		r.overlayImages(book, outputDir)
 	}
 

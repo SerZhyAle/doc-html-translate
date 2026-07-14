@@ -200,12 +200,16 @@ These are by design. Do not "sync" them without a decision - document changes he
 - **Progress bar** looks identical (3px accent bar) but means **reading progress** in Go vs
   **load/OCR progress** in the extension.
 - **OCR execution:** Go OCRs eagerly at conversion time; the extension OCRs lazily on scroll
-  (IntersectionObserver). Two entry points for OCRing a **standalone image** are **JS-only**: the
+  (IntersectionObserver). The extension has two entry points for OCRing a **standalone image**: the
   right-click "OCR & translate this image", and opening a bare image file (PNG/JPEG/GIF/BMP/WebP) with the
   viewer's **Open file** picker (which OCRs it unconditionally, ignoring the "Use OCR for images" toggle).
-  The Go app has no standalone-image input at all - it OCRs images only *inside* a PDF/EPUB it converts.
+  The Go app now **also accepts a standalone image as input** ([`internal/img`](../internal/img/extract.go)):
+  a bare PNG/JPG/JPEG/WebP/GIF/BMP/TIFF is wrapped in a one-page HTML doc and the OCR overlay is forced on
+  (independent of the `-ocr` flag), so `doc-html-translate <image>` shows the picture with translatable
+  plates - the same result as the extension's picker. Both editions share the overlay logic; the remaining
+  difference is the engine (extension = tesseract.js WASM + `4.0.0_fast`; Go = the local `tesseract` CLI).
   There is deliberately **no** file-type association (DNR redirect) for image URLs on either side - unlike
-  PDF/EPUB, image links are never intercepted; only the explicit picker / right-click paths OCR images.
+  PDF/EPUB, image links are never intercepted; only the explicit picker / right-click / CLI paths OCR images.
 - **PDF paths not ported:** Go's pdftotext `-layout` path, its double-spaced/ZWSP paragraph merge, and
   its blank-page skip + `hrefForPDFPage` TOC remap have **no JS counterpart**. Conversely the JS reflow
   adds a **font-size dimension** (`FONT_BREAK_RATIO=0.25`, `big`/`veryBig` heading triggers) and

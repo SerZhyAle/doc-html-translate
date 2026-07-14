@@ -61,6 +61,7 @@ Notes:
   - internal/pipeline/pipeline.go
 - Format extractors:
   - internal/epub, internal/pdf, internal/mobi, internal/fb2, internal/rtf, internal/txt, internal/md, internal/htmlconv
+  - internal/img: standalone image input (PNG/JPG/WebP/..) - wraps the picture in a one-page HTML doc; the pipeline forces the OCR overlay so the image gets translatable text plates (see internal/ocr)
 - HTML processing/generation:
   - internal/htmlproc, internal/htmlsplit, internal/htmlgen
 - Translation:

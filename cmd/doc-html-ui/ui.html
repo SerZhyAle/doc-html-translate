@@ -257,7 +257,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
 </div>
 <input type="hidden" id="inputFile">
-<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.</div>
+<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
     <button type="button" class="inline-btn" id="btnDeletePrev" data-i18n="btnDeletePrev">Delete previous result</button>
@@ -320,7 +320,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <summary data-i18n="secOCR">Image OCR (translate text in pictures)</summary>
     <div class="body">
         <label class="chk"><input type="checkbox" id="chkOCR"> <span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
-        <div class="hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.</div>
+        <div class="hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
         <div class="field" style="margin-top:8px"><label data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
         <div class="field"><label data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
         <div class="hint" id="ocrStatus" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
@@ -370,7 +370,7 @@ const I18N = {
         dropPlaceholder: "Drag a document here, or click to choose one",
         dropChooseAnother: "click to choose another file",
         btnConvert: "Convert",
-        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. MOBI/AZW3 need Calibre installed.",
+        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.",
         prevResultFound: "A previous result already exists for this file.",
         btnDeletePrev: "Delete previous result",
         confirmDeletePrev: "Delete the previous conversion result for this file? This cannot be undone.",
@@ -403,7 +403,7 @@ const I18N = {
         lblContext: "Context:",
         secOCR: "Image OCR (translate text in pictures)",
         chkOCRLabel: "Overlay translatable text on images",
-        hintOCR: "Recognizes text baked into images (EPUB/PDF) and lays it over them as real text, so translation covers pictures too. Needs Tesseract installed.",
+        hintOCR: "Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.",
         lblOcrLang: "OCR language:",
         lblAddLang: "Add language:",
         btnDownload: "Download",
@@ -450,7 +450,7 @@ const I18N = {
         dropPlaceholder: "Перетащите документ сюда или щёлкните, чтобы выбрать",
         dropChooseAnother: "щёлкните, чтобы выбрать другой файл",
         btnConvert: "Конвертировать",
-        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 нужен установленный Calibre.",
+        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для наложения текста на изображения нужен Tesseract.",
         prevResultFound: "Для этого файла уже есть результат конвертации.",
         btnDeletePrev: "Удалить предыдущий результат",
         confirmDeletePrev: "Удалить предыдущий результат конвертации для этого файла? Это необратимо.",
@@ -483,7 +483,7 @@ const I18N = {
         lblContext: "Контекст:",
         secOCR: "OCR изображений (перевод текста на картинках)",
         chkOCRLabel: "Наложить переводимый текст поверх изображений",
-        hintOCR: "Распознаёт текст, впечатанный в изображения (EPUB/PDF), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Нужен установленный Tesseract.",
+        hintOCR: "Распознаёт текст, впечатанный в изображения (в EPUB/PDF или в отдельном файле-картинке, открытом напрямую), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Отдельная картинка распознаётся автоматически. Нужен установленный Tesseract.",
         lblOcrLang: "Язык OCR:",
         lblAddLang: "Добавить язык:",
         btnDownload: "Скачать",
@@ -530,7 +530,7 @@ const I18N = {
         dropPlaceholder: "Перетягніть документ сюди або клацніть, щоб обрати",
         dropChooseAnother: "клацніть, щоб обрати інший файл",
         btnConvert: "Конвертувати",
-        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF. Для MOBI/AZW3 потрібен встановлений Calibre.",
+        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для накладання тексту на зображення потрібен Tesseract.",
         prevResultFound: "Для цього файлу вже є результат конвертації.",
         btnDeletePrev: "Видалити попередній результат",
         confirmDeletePrev: "Видалити попередній результат конвертації для цього файлу? Це незворотно.",
@@ -563,7 +563,7 @@ const I18N = {
         lblContext: "Контекст:",
         secOCR: "OCR зображень (переклад тексту на картинках)",
         chkOCRLabel: "Накласти перекладний текст поверх зображень",
-        hintOCR: "Розпізнає текст, вбудований у зображення (EPUB/PDF), і накладає його зверху як справжній текст, щоб переклад охоплював і картинки. Потрібен встановлений Tesseract.",
+        hintOCR: "Розпізнає текст, вбудований у зображення (у EPUB/PDF або в окремому файлі-зображенні, відкритому напряму), і накладає його зверху як справжній текст, щоб переклад охоплював і картинки. Окреме зображення розпізнається автоматично. Потрібен встановлений Tesseract.",
         lblOcrLang: "Мова OCR:",
         lblAddLang: "Додати мову:",
         btnDownload: "Завантажити",
