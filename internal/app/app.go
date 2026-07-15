@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"doc-html-translate/internal/config"
@@ -21,27 +22,62 @@ func New(cfg config.Config) App {
 
 // Run executes the application logic. Returns exit code and error.
 func (a App) Run() (int, error) {
+	// Explicit opt-in: become the default handler for all supported types, and make
+	// sure the non-destructive right-click entry exists too.
 	if a.cfg.Register {
 		registered, err := windowsreg.RegisterHandler()
 		if err != nil {
 			return 1, err
 		}
-		printSplash(registered)
-		_, _ = fmt.Scanln() // pause — keep console open until user presses Enter
+		_, _ = windowsreg.RegisterContextMenu()
+		printSplash()
+		printDefaultHandlerResult(registered)
+		printPressEnterAndPause()
 		return 0, nil
 	}
 
-	// Non-destructive: add the app to the "Open with" list without becoming the
-	// default handler. Scriptable; prints its result and exits without pausing.
+	// First run (no args): register the non-destructive right-click "Convert to HTML"
+	// entry + "Open with" for every supported type, then OFFER to become the default
+	// handler. It never grabs defaults silently.
+	if a.cfg.FirstRun {
+		_, _ = windowsreg.RegisterOpenWith()
+		ctx, _ := windowsreg.RegisterContextMenu()
+		printSplash()
+		printFirstRunRegistered(ctx)
+		if promptSetDefault() {
+			registered, err := windowsreg.RegisterHandler()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Could not set as default handler:", err)
+			} else {
+				printDefaultHandlerResult(registered)
+			}
+		}
+		printPressEnterAndPause()
+		return 0, nil
+	}
+
+	// Non-destructive: add the app to the "Open with" list and the right-click menu
+	// without becoming the default handler. Scriptable; prints its result and exits.
 	if a.cfg.RegisterOpenWith {
 		advertised, err := windowsreg.RegisterOpenWith()
 		if err != nil {
 			return 1, err
 		}
-		fmt.Println(`Added to the Windows "Open with" list for:`)
+		_, _ = windowsreg.RegisterContextMenu()
+		fmt.Println(`Added to the Windows "Open with" list and right-click menu for:`)
 		for _, ext := range advertised {
 			fmt.Printf("  * %s\n", ext)
 		}
+		return 0, nil
+	}
+
+	// Release the default-handler association (leaves the right-click entry + "Open with").
+	if a.cfg.Unregister {
+		released, err := windowsreg.Unregister()
+		if err != nil {
+			return 1, err
+		}
+		printUnregistered(released)
 		return 0, nil
 	}
 
@@ -79,17 +115,112 @@ func printOCRLangs() {
 	}
 }
 
-// printSplash prints the welcome screen shown on first launch (no-args mode).
-func printSplash(registeredExts []string) {
+// printSplash prints the informational welcome screen (help, features, usage, links).
+// The registration result and the "Press Enter" pause are printed by the caller so the
+// first-run flow can slot its default-handler opt-in prompt in between.
+func printSplash() {
 	line := strings.Repeat("=", 62)
 	if syslocale.IsRussian() {
-		printSplashRU(line, registeredExts)
+		printSplashRU(line)
 	} else {
-		printSplashEN(line, registeredExts)
+		printSplashEN(line)
 	}
 }
 
-func printSplashEN(line string, registeredExts []string) {
+// printDefaultHandlerResult prints the "set as default handler" confirmation block.
+func printDefaultHandlerResult(exts []string) {
+	if syslocale.IsRussian() {
+		fmt.Println("  Регистрация в Windows: ВЫПОЛНЕНА")
+		fmt.Println("  Программа назначена обработчиком по умолчанию для:")
+	} else {
+		fmt.Println("  Windows registration: DONE")
+		fmt.Println("  Program set as default handler for:")
+	}
+	for _, ext := range exts {
+		fmt.Printf("    * %s\n", ext)
+	}
+	fmt.Println()
+	if syslocale.IsRussian() {
+		fmt.Println("  Теперь двойной клик на файле открывает эту программу.")
+	} else {
+		fmt.Println("  Double-clicking a file will now open it with this program.")
+	}
+}
+
+// printFirstRunRegistered notes the non-destructive right-click entries added on first
+// run, and makes clear the default handler was left untouched.
+func printFirstRunRegistered(exts []string) {
+	if len(exts) == 0 {
+		return
+	}
+	if syslocale.IsRussian() {
+		fmt.Println("  Добавлен пункт правого клика «Convert to HTML» и «Открыть с помощью» для:")
+	} else {
+		fmt.Println(`  Added a right-click "Convert to HTML" entry and "Open with" for:`)
+	}
+	for _, ext := range exts {
+		fmt.Printf("    * %s\n", ext)
+	}
+	fmt.Println()
+	if syslocale.IsRussian() {
+		fmt.Println("  Ассоциация по умолчанию НЕ изменена - это по желанию.")
+	} else {
+		fmt.Println("  Your default handlers were NOT changed - association is optional.")
+	}
+	fmt.Println()
+}
+
+// printUnregistered reports the result of releasing the default-handler association.
+func printUnregistered(released []string) {
+	if len(released) == 0 {
+		if syslocale.IsRussian() {
+			fmt.Println("Нечего снимать: программа не была обработчиком по умолчанию.")
+		} else {
+			fmt.Println("Nothing to remove: the program was not the default handler.")
+		}
+		return
+	}
+	if syslocale.IsRussian() {
+		fmt.Println("Ассоциация обработчика по умолчанию снята для:")
+	} else {
+		fmt.Println("Default-handler association removed for:")
+	}
+	for _, ext := range released {
+		fmt.Printf("  * %s\n", ext)
+	}
+}
+
+// promptSetDefault asks whether to become the default handler and returns the answer.
+// Anything but an explicit yes (y/yes/д/да) is treated as no, so pressing Enter declines.
+func promptSetDefault() bool {
+	if syslocale.IsRussian() {
+		fmt.Print("  Сделать DOC-HTML-TRANSLATE обработчиком по умолчанию для этих типов? [y/N]: ")
+	} else {
+		fmt.Print("  Make DOC-HTML-TRANSLATE the default handler for these file types? [y/N]: ")
+	}
+	var answer string
+	_, _ = fmt.Scanln(&answer)
+	switch strings.ToLower(strings.TrimSpace(answer)) {
+	case "y", "yes", "д", "да":
+		return true
+	}
+	return false
+}
+
+// printPressEnterAndPause prints the closing rule and keeps the console open until Enter.
+func printPressEnterAndPause() {
+	line := strings.Repeat("=", 62)
+	fmt.Println(line)
+	fmt.Println()
+	if syslocale.IsRussian() {
+		fmt.Println("  Нажмите Enter для закрытия.. (хотя вы всё равно закроете окно крестиком)")
+	} else {
+		fmt.Println("  Press Enter to close.. (we both know you'll close the window anyway)")
+	}
+	_, _ = fmt.Scanln() // pause — keep console open until user presses Enter
+}
+
+func printSplashEN(line string) {
 	fmt.Println(line)
 	fmt.Println("  DOC-HTML-TRANSLATE")
 	fmt.Println("  Document converter to HTML, with translation for the rest of us")
@@ -136,26 +267,9 @@ func printSplashEN(line string, registeredExts []string) {
 	fmt.Println("    Feedback:     sza@ukr.net")
 	fmt.Println()
 	fmt.Println(line)
-
-	if len(registeredExts) > 0 {
-		fmt.Println("  Windows registration: DONE")
-		fmt.Println("  Program set as default handler for:")
-		for _, ext := range registeredExts {
-			fmt.Printf("    * %s\n", ext)
-		}
-		fmt.Println()
-		fmt.Println("  Double-clicking a file will now open it with this program.")
-		fmt.Println()
-		fmt.Println("  Note: if Windows does not apply the setting,")
-		fmt.Println(`  select the file → "Open with" → "Always".`)
-	}
-
-	fmt.Println(line)
-	fmt.Println()
-	fmt.Println("  Press Enter to close.. (we both know you'll close the window anyway)")
 }
 
-func printSplashRU(line string, registeredExts []string) {
+func printSplashRU(line string) {
 	fmt.Println(line)
 	fmt.Println("  DOC-HTML-TRANSLATE")
 	fmt.Println("  Конвертер документов в HTML с переводом - для тех, кто не полиглот")
@@ -202,21 +316,4 @@ func printSplashRU(line string, registeredExts []string) {
 	fmt.Println("    Обратная связь: sza@ukr.net")
 	fmt.Println()
 	fmt.Println(line)
-
-	if len(registeredExts) > 0 {
-		fmt.Println("  Регистрация в Windows: ВЫПОЛНЕНА")
-		fmt.Println("  Программа назначена обработчиком по умолчанию для:")
-		for _, ext := range registeredExts {
-			fmt.Printf("    * %s\n", ext)
-		}
-		fmt.Println()
-		fmt.Println("  Теперь двойной клик на файле открывает эту программу.")
-		fmt.Println()
-		fmt.Println("  Примечание: если Windows не применяет настройку,")
-		fmt.Println(`  выберите файл → "Открыть с помощью" → "Всегда".`)
-	}
-
-	fmt.Println(line)
-	fmt.Println()
-	fmt.Println("  Нажмите Enter для закрытия.. (хотя вы всё равно закроете окно крестиком)")
 }

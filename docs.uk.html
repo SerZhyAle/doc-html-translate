@@ -36,7 +36,7 @@
       <p>Doc-HTML-Translate існує в кількох іпостасях; у них спільний конвертер і спільна ідея - віддати браузеру чистий HTML і дати йому перекласти. Обирай, що зручніше.</p>
       <ul>
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, конвертер командного рядка та обробник файлових асоціацій Windows. Його прапорці описані на цій сторінці.</li>
-        <li><strong>GUI-застосунок</strong> - <code>doc-html-ui.exe</code>, віконний інтерфейс з усіма прапорцями нижче: вибір файлу, drag &amp; drop і кнопка «Set as default handler».</li>
+        <li><strong>GUI-застосунок</strong> - <code>doc-html-ui.exe</code>, віконний інтерфейс з усіма прапорцями нижче: вибір файлу, drag &amp; drop і тумблер «обробник за замовчуванням» (за бажанням, типово вимкнено).</li>
         <li><strong>Застосунок у Microsoft Store</strong> - той самий десктоп (GUI + CLI) як авто-оновлюваний MSIX з підписом Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1">Microsoft Store</a>.</li>
         <li><strong>Розширення для браузера</strong> - перемальовує документи (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) у чистий HTML прямо в браузері, щоб вбудований <em>«Перекласти сторінку»</em> працював на них без встановлення застосунку: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Chrome Web Store</a> · <a href="extension.html">сторінка розширення</a>.</li>
       </ul>
@@ -138,11 +138,12 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-src</td><td>en</td><td>Мова джерела</td></tr>
           <tr><td>-dst</td><td>ru</td><td>Мова перекладу</td></tr>
           <tr><td>-force</td><td>false</td><td>Перезібрати навіть якщо output вже існує</td></tr>
-          <tr><td>-register</td><td>false</td><td>Призначити застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів (та сама кнопка "Set as default handler" у застосунку doc-html-ui)</td></tr>
-          <tr><td>-register-openwith</td><td>false</td><td>Додати застосунок до списку Windows "Відкрити за допомогою" без призначення обробником за замовчуванням. Застосунок doc-html-ui робить це автоматично під час запуску, тож програма з'являється у "Відкрити за допомогою", навіть якщо ви не призначали її за замовчуванням.</td></tr>
+          <tr><td>-register</td><td>false</td><td>За бажанням зробити застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів (типово вимкнено; та сама кнопка-тумблер у застосунку doc-html-ui). Перший запуск лише додає пункт правого кліку і пропонує це.</td></tr>
+          <tr><td>-unregister</td><td>false</td><td>Зняти асоціацію обробника за замовчуванням (пункт правого кліку «Convert to HTML» і «Відкрити за допомогою» залишаються).</td></tr>
+          <tr><td>-register-openwith</td><td>false</td><td>Додати застосунок до списку Windows "Відкрити за допомогою" і пункт правого кліку «Convert to HTML» без призначення обробником за замовчуванням. Застосунок doc-html-ui робить це автоматично під час запуску, тож програма завжди доступна, навіть якщо ви не призначали її за замовчуванням.</td></tr>
         </tbody>
       </table>
-      <p class="small" style="margin-top:10px;">Усі опції вище доступні й у графічному застосунку <strong>doc-html-ui</strong> - вибір файлу, drag &amp; drop, глибина змісту, ліміт вартості та кнопка "Set as default handler". У збірці Microsoft Store саме GUI - запускана точка входу, а подвійний клік по файлу досі запускає конвертер з командного рядка.</p>
+      <p class="small" style="margin-top:10px;">Усі опції вище доступні й у графічному застосунку <strong>doc-html-ui</strong> - вибір файлу, drag &amp; drop, глибина змісту, ліміт вартості та тумблер «обробник за замовчуванням» (за бажанням, типово вимкнено; пункт правого кліку «Convert to HTML» додається завжди). У збірці Microsoft Store саме GUI - запускана точка входу, а подвійний клік по файлу досі запускає конвертер з командного рядка.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">

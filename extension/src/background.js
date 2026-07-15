@@ -13,6 +13,14 @@ import { DEFAULT_OPTIONS } from "./defaults.js";
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
 
+// Extensions offered by the "Convert with doc-html-translate" right-click entry. Broader
+// than the DNR interception list (pdf/epub/rtf/fb2/mobi/azw3) because the viewer can also
+// render txt/md/html on demand - the context menu is always available even though
+// auto-interception is off by default. Match patterns ignore query strings, so `*.pdf`
+// still matches `file.pdf?download=1`.
+const CONVERT_EXTS = ["pdf", "epub", "rtf", "fb2", "mobi", "azw3", "txt", "md", "html", "htm"];
+const CONVERT_URL_PATTERNS = CONVERT_EXTS.flatMap((e) => [`*://*/*.${e}`, `file:///*.${e}`]);
+
 async function getOptions() {
   const got = await chrome.storage.local.get("options");
   return { ...DEFAULT_OPTIONS, ...(got.options || {}) };
@@ -64,10 +72,16 @@ async function syncRules() {
   });
 }
 
-// "OCR & translate this image": a right-click action on any image that opens the OCR
-// overlay page in a new tab for that image. removeAll first so re-running onInstalled /
-// onStartup never throws on a duplicate id.
+// Right-click actions. removeAll first so re-running onInstalled / onStartup never throws
+// on a duplicate id.
+//   - "OCR & translate this image": on any image, opens the OCR overlay page for it.
+//   - "Convert with doc-html-translate": on a link to a supported document, or on the page
+//     when viewing one directly, opens it in the reflow viewer. Always available even when
+//     auto-interception is off (the default), so it is how users convert on demand.
 const OCR_MENU_ID = "ocr-image";
+const CONVERT_LINK_MENU_ID = "convert-doc-link";
+const CONVERT_PAGE_MENU_ID = "convert-doc-page";
+
 function setupContextMenu() {
   try {
     chrome.contextMenus.removeAll(() => {
@@ -76,16 +90,40 @@ function setupContextMenu() {
         title: chrome.i18n.getMessage("ocrImageMenu") || "OCR & translate this image",
         contexts: ["image"],
       });
+      const convertTitle = chrome.i18n.getMessage("convertDocMenu") || "Convert with doc-html-translate";
+      chrome.contextMenus.create({
+        id: CONVERT_LINK_MENU_ID,
+        title: convertTitle,
+        contexts: ["link"],
+        targetUrlPatterns: CONVERT_URL_PATTERNS,
+      });
+      chrome.contextMenus.create({
+        id: CONVERT_PAGE_MENU_ID,
+        title: convertTitle,
+        contexts: ["page"],
+        documentUrlPatterns: CONVERT_URL_PATTERNS,
+      });
     });
   } catch (e) {
     console.warn("context menu setup failed", e);
   }
 }
 
+// Open a document URL in the reflow viewer. Encoding matches viewer.js's manual
+// `viewer.html?file=<encoded>` entry point (parseFileParam decodes it).
+function openInViewer(url) {
+  if (!url) return;
+  chrome.tabs.create({ url: `${viewerBase()}?file=${encodeURIComponent(url)}` });
+}
+
 chrome.contextMenus.onClicked.addListener((info) => {
-  if (info.menuItemId !== OCR_MENU_ID || !info.srcUrl) return;
-  const url = `${chrome.runtime.getURL("src/ocr.html")}?src=${encodeURIComponent(info.srcUrl)}`;
-  chrome.tabs.create({ url });
+  if (info.menuItemId === OCR_MENU_ID) {
+    if (!info.srcUrl) return;
+    chrome.tabs.create({ url: `${chrome.runtime.getURL("src/ocr.html")}?src=${encodeURIComponent(info.srcUrl)}` });
+    return;
+  }
+  if (info.menuItemId === CONVERT_LINK_MENU_ID) openInViewer(info.linkUrl);
+  else if (info.menuItemId === CONVERT_PAGE_MENU_ID) openInViewer(info.pageUrl);
 });
 
 chrome.runtime.onInstalled.addListener(() => { syncRules(); setupContextMenu(); });

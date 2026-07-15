@@ -73,6 +73,8 @@ func main() {
 	mux.HandleFunc("/api/delete-output", handleDeleteOutput)
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
+	mux.HandleFunc("/api/unregister", handleUnregister)
+	mux.HandleFunc("/api/assoc-status", handleAssocStatus)
 	mux.HandleFunc("/api/env", handleEnv)
 	mux.HandleFunc("/api/ocr-langs", handleOCRLangs)
 	mux.HandleFunc("/api/ocr-download", handleOCRDownload)
@@ -81,22 +83,24 @@ func main() {
 
 	go watchHeartbeat(srv)
 	go openAppWindow("http://" + addr)
-	go ensureOpenWithRegistered()
+	go ensureRightClickRegistered()
 
 	_ = srv.Serve(ln)
 }
 
-// ensureOpenWithRegistered advertises the app in Windows' "Open with" list on every
-// launch, so users find it there without having to click "Set as default handler"
-// first. It is non-destructive - it never changes the default handler - and a no-op
-// under MSIX (the package manifest already declares the associations) or when the
-// bundled CLI cannot be located. The associations point at the CLI so "Open with ->
-// DOC-HTML-TRANSLATE" converts and opens the result, matching double-click behavior.
-func ensureOpenWithRegistered() {
+// ensureRightClickRegistered advertises the app in Windows' "Open with" list AND adds
+// the "Convert to HTML" right-click verb on every launch, so users find it there without
+// making it the default handler. Both are non-destructive - they never change the default
+// handler - and a no-op under MSIX (the package manifest already declares the associations)
+// or when the bundled CLI cannot be located. The associations point at the CLI so the
+// right-click entry converts and opens the result, matching double-click behavior.
+func ensureRightClickRegistered() {
 	if isPackaged() || !cliAvailable() {
 		return
 	}
-	_, _ = windowsreg.RegisterOpenWithFor(findCLI())
+	cli := findCLI()
+	_, _ = windowsreg.RegisterOpenWithFor(cli)
+	_, _ = windowsreg.RegisterContextMenuFor(cli)
 }
 
 // ── HTTP handlers ───────────────────────────────────────────
@@ -597,10 +601,11 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleRegister sets this app as the default Windows handler for the supported
-// document types. It shells out to the bundled CLI's -register flow so the file
-// associations point at doc-html-translate.exe (the headless converter) rather than
-// at the GUI - matching the unpackaged double-click behavior. Under an MSIX/Store
-// install this is a no-op (HKCU is virtualized); the GUI hides the button there.
+// document types (the opt-in association, off by default). It shells out to the bundled
+// CLI's -register flow so the file associations point at doc-html-translate.exe (the
+// headless converter) rather than at the GUI - matching the unpackaged double-click
+// behavior. Under an MSIX/Store install this is a no-op (HKCU is virtualized); the GUI
+// hides the association toggle there.
 func handleRegister(w http.ResponseWriter, _ *http.Request) {
 	bin := findCLI()
 	cmd := exec.Command(bin, "-register")
@@ -618,6 +623,26 @@ func handleRegister(w http.ResponseWriter, _ *http.Request) {
 		resp["error"] = msg
 	}
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// handleUnregister releases the default-handler association (the "off" side of the
+// association toggle), leaving the non-destructive "Convert to HTML" right-click verb and
+// "Open with" entry in place. Deletion only clears HKCU values that point at our ProgID,
+// so it needs no CLI round-trip and does not depend on which exe wrote them.
+func handleUnregister(w http.ResponseWriter, _ *http.Request) {
+	_, err := windowsreg.Unregister()
+	resp := map[string]any{"ok": err == nil}
+	if err != nil {
+		resp["error"] = err.Error()
+	}
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// handleAssocStatus reports whether this app is currently the default handler for the
+// supported types, so the GUI can reflect the association toggle's on/off state and decide
+// whether to show the one-time first-run opt-in prompt.
+func handleAssocStatus(w http.ResponseWriter, _ *http.Request) {
+	_ = json.NewEncoder(w).Encode(map[string]any{"default": windowsreg.IsDefaultHandler()})
 }
 
 // handleEnv reports environment facts the GUI adapts to on load:

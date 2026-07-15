@@ -12,13 +12,29 @@ func TestParseArgsRegister(t *testing.T) {
 	}
 }
 
-func TestParseArgsNoArgsImplicitRegister(t *testing.T) {
+// No-arg invocation enters the first-run flow (non-destructive registration + an
+// interactive opt-in prompt), not the become-default handler. It must NOT auto-register
+// as the default anymore; Register stays false and FirstRun is set instead.
+func TestParseArgsNoArgsFirstRun(t *testing.T) {
 	cfg, err := ParseArgs([]string{})
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !cfg.Register {
-		t.Fatalf("expected Register=true for empty args")
+	if !cfg.FirstRun {
+		t.Fatalf("expected FirstRun=true for empty args")
+	}
+	if cfg.Register {
+		t.Fatalf("no-arg first run must not auto-register as the default handler")
+	}
+}
+
+func TestParseArgsUnregister(t *testing.T) {
+	cfg, err := ParseArgs([]string{"-unregister"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !cfg.Unregister {
+		t.Fatalf("expected Unregister=true")
 	}
 }
 

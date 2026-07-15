@@ -20,13 +20,22 @@ const msg = (key, fallback) => {
 
 // Render the nested OCR-language list: installed languages are selectable (radio),
 // others show a Download button that fetches + caches the language, then re-renders.
-// The whole block is disabled while "Use OCR for images" is off.
+// While "Use OCR for images" is off we show a call-to-action pointing at the switch
+// above instead of a greyed-out, dead-looking list (which reads as "unavailable").
 async function renderOcrLangs() {
   const o = await getOptions();
-  const installed = await getInstalledLangs();
   ocrLangsEl.replaceChildren();
-  ocrLangsEl.classList.toggle("disabled", !o.ocrImages);
+  ocrLangsEl.classList.remove("disabled");
 
+  if (!o.ocrImages) {
+    const off = document.createElement("div");
+    off.className = "hint";
+    off.textContent = msg("ocrOffHint", "Turn on to recognize text in images - then pick or download a language (English is built-in).");
+    ocrLangsEl.append(off);
+    return;
+  }
+
+  const installed = await getInstalledLangs();
   const hint = document.createElement("div");
   hint.className = "hint";
   hint.textContent = msg("ocrLangsHint", "Recognition language (English is built-in).");
@@ -42,7 +51,6 @@ async function renderOcrLangs() {
       radio.name = "ocrLang";
       radio.id = id;
       radio.checked = o.ocrLang === lang.code;
-      radio.disabled = !o.ocrImages;
       radio.addEventListener("change", async () => {
         const oo = await getOptions();
         oo.ocrLang = lang.code;
@@ -58,7 +66,6 @@ async function renderOcrLangs() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = msg("ocrDownload", "Download");
-      btn.disabled = !o.ocrImages;
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         try {

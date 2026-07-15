@@ -35,6 +35,10 @@
     "message": "Розпізнати й перекласти це зображення",
     "description": "Right-click context-menu item on images."
   },
+  "convertDocMenu": {
+    "message": "Відкрити через doc-html-translate",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
   "ocrProgress": {
     "message": "Розпізнавання тексту..",
     "description": "Status shown while OCR runs."
@@ -70,5 +74,9 @@
   "ocrLangsHint": {
     "message": "Мова розпізнавання (англійська вбудована).",
     "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "Увімкніть, щоб розпізнавати текст на зображеннях - потім виберіть або завантажте мову (англійська вбудована).",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
   }
 }

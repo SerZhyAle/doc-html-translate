@@ -84,7 +84,12 @@ Development key location used in this repo:
 ./scripts/test.ps1
 ./scripts/lint.ps1
 ./scripts/check.ps1
+./scripts/build-installer.ps1        # universal setup.exe (x86 + x64, per-user; needs Inno Setup / ISCC)
 ```
+
+Short aliases are available via `./a.ps1 <cmd>` (e.g. `a ch` = check gate, `a bl` = gated local build,
+`a inst` = build the installer, `a c` / `a cc` = quick commit +/- push, `a id` = local MSIX reinstall).
+Run `./a.ps1 help` for the full list.
 
 ## Core Code Areas
 

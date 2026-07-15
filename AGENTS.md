@@ -35,6 +35,7 @@ Run from repository root in PowerShell.
 - Local build + commit (the "сборка" flow): ./scripts/build-local.ps1 -Message "..."
 - Build CLI only: ./scripts/build.ps1
 - Build UI only: ./scripts/build-ui.ps1
+- Build universal installer (setup.exe, x86+x64, per-user, local/free): ./scripts/build-installer.ps1 (needs Inno Setup / ISCC)
 - Test: ./scripts/test.ps1
 - Lint: ./scripts/lint.ps1
 - Full local checks: ./scripts/check.ps1

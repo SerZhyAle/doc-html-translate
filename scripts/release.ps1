@@ -88,6 +88,9 @@ Note "Pushing a v* tag triggers .github/workflows/release.yml (builds exes + Git
 Cmd  "git tag -a $tag -m ""Release $tag"""
 Cmd  "git push origin $tag"
 Cmd  "gh run watch   # or: gh release view $tag --json assets"
+Note "Attach the universal installer (CI does not build it): build locally, then upload to the release:"
+Cmd  "./scripts/build-installer.ps1"
+Cmd  "gh release upload $tag dist/doc-html-translate-setup-$Version.exe"
 Write-Host ""
 
 Step "3" "winget (Microsoft community index)  [PUBLIC]"

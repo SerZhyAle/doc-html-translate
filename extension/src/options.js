@@ -21,12 +21,22 @@ const msg = (key, fallback) => {
 
 // Render the OCR-language manager: installed languages are selectable as the default
 // recognition language; others show a Download button (fetch + cache, then re-render).
+// While OCR is off we show a call-to-action pointing at the checkbox above instead of a
+// greyed-out list (kept in sync with popup.js's renderOcrLangs).
 async function renderOcrLangs() {
   const o = await getOptions();
-  const installed = await getInstalledLangs();
   ocrLangsEl.replaceChildren();
-  ocrLangsEl.classList.toggle("disabled", !o.ocrImages);
+  ocrLangsEl.classList.remove("disabled");
 
+  if (!o.ocrImages) {
+    const off = document.createElement("div");
+    off.className = "hint";
+    off.textContent = msg("ocrOffHint", "Turn on to recognize text in images - then pick or download a language (English is built-in).");
+    ocrLangsEl.append(off);
+    return;
+  }
+
+  const installed = await getInstalledLangs();
   for (const lang of LANGS) {
     const row = document.createElement("div");
     row.className = "ocr-lang";
@@ -37,7 +47,6 @@ async function renderOcrLangs() {
       radio.name = "ocrLang";
       radio.id = id;
       radio.checked = o.ocrLang === lang.code;
-      radio.disabled = !o.ocrImages;
       radio.addEventListener("change", async () => {
         const oo = await getOptions();
         oo.ocrLang = lang.code;
@@ -53,7 +62,6 @@ async function renderOcrLangs() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = msg("ocrDownload", "Download");
-      btn.disabled = !o.ocrImages;
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         try {

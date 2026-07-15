@@ -162,6 +162,17 @@ Invariant: **the GUI must expose every CLI flag** (see [`ui-cli-parity`](../CLAU
 default mismatches (GUI split=0, extension source-lang=auto, extension OCR-lang fixed `eng`) are tracked
 in the parity ticket.
 
+**File-type association is opt-in, off by default, on every edition** (2026-07-15). No edition makes
+itself the default handler / auto-interceptor without an explicit user action; instead each always
+offers a right-click "convert" entry. Desktop: the no-arg first run and GUI launch register only the
+non-destructive "Convert to HTML" verb + "Open with" ([`windowsreg`](../internal/windowsreg/register_windows.go)
+`RegisterContextMenu`/`RegisterOpenWith`); becoming the default handler is a separate opt-in (CLI
+`-register`, GUI association toggle, one-time first-run prompt) and `-unregister` reverses it. Extension:
+[`defaults.js`](../extension/src/defaults.js) `enabledByDefault` is **`false`** (no DNR interception until
+the popup toggle is on); the "Convert with doc-html-translate" right-click item
+([`background.js`](../extension/src/background.js)) is the always-available on-demand path. See
+[Intentional divergences](#intentional-divergences-do-not-fix) for the MSIX exception.
+
 ### Product URL and feedback address
 
 Every edition surfaces the same product page and the same feedback address. Both are duplicated string
@@ -222,6 +233,14 @@ These are by design. Do not "sync" them without a decision - document changes he
   built-in "Translate page", so `-dst` is CLI/GUI-only.
 - **Storage:** Go uses `localStorage`/`sessionStorage` string keys (`dht_*`); the extension uses
   `chrome.storage.local` objects. Reading preferences are not portable between the two.
+- **MSIX default-handler / right-click:** on the Store/MSIX build the file-type association comes from
+  the package manifest ([`AppxManifest.xml`](../msix/AppxManifest.xml) `windows.fileTypeAssociation`),
+  which Windows never force-defaults (it always prompts) and only surfaces in "Open with" - so it is
+  opt-in by OS design. The unpackaged `RegisterContextMenu` / `-register` / `-unregister` flows are a
+  no-op there because MSIX **virtualizes HKCU** writes, so the GUI hides the association toggle and the
+  first-run prompt when packaged ([`isPackaged`](../cmd/doc-html-ui/main.go)). A native `IExplorerCommand`
+  context-menu handler (a COM component in the package) would add a dedicated "Convert to HTML" verb under
+  MSIX too; it is deferred, not "missing". Do not try to write the HKCU verb from the packaged app.
 
 ## Process: keeping editions in sync
 

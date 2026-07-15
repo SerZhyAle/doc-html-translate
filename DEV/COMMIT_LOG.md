@@ -606,3 +606,61 @@ Changed files:
 - build/doc-html-translate.exe
 - build/doc-html-ui.exe
 
+| 2026-07-15 21:58:20 | main | f774ef8 | feat: opt-in file association + right-click Convert to HTML; universal setup.exe installer
+
+App (CLI + GUI): file-type association is now opt-in, off by default. Every launch / first-run
+registers only the non-destructive "Convert to HTML" right-click verb + "Open with" for all
+supported types; becoming the default handler is a separate opt-in (-register, GUI toggle,
+one-time first-run prompt), and new -unregister releases it.
+
+Extension: auto-interception off by default (enabledByDefault false); new
+"Convert with doc-html-translate" context menu opens supported doc links / pages in the viewer.
+
+Distribution: new universal setup.exe (Inno Setup, x86 + x64, per-user, no admin) built by
+scripts/build-installer.ps1; plus dev-workflow scripts (a.ps1 launcher, commit-push.ps1,
+reinstall.ps1). Docs updated across README, index.html (en/ru/uk), docs pages, PARITY,
+DEV/RELEASE, changelog.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com> |
+
+Changed files:
+- AGENTS.md
+- DEV/CHANGELOG.md
+- DEV/README.md
+- DEV/RELEASE.md
+- DEV/plan/2026-07-15_optional-file-association-context-menu.md
+- README.md
+- a.ps1
+- assets/doc-html-translate.ico
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-ui/favicon.ico
+- cmd/doc-html-ui/main.go
+- cmd/doc-html-ui/ui.html
+- configs/.typos.toml
+- docs.html
+- docs.ru.html
+- docs.uk.html
+- docs/PARITY.md
+- extension.html
+- extension/_locales/en/messages.json
+- extension/_locales/ru/messages.json
+- extension/_locales/uk/messages.json
+- extension/src/background.js
+- extension/src/defaults.js
+- extension/src/options.js
+- extension/src/popup.html
+- extension/src/popup.js
+- index.html
+- installer/doc-html-translate.iss
+- internal/app/app.go
+- internal/config/flags.go
+- internal/config/flags_test.go
+- internal/windowsreg/register_nonwindows.go
+- internal/windowsreg/register_windows.go
+- reinstall.ps1
+- scripts/build-installer.ps1
+- scripts/commit-push.ps1
+- scripts/release.ps1
+- tests/ui_cli_parity_test.go
+

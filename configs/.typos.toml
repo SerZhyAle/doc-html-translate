@@ -19,6 +19,7 @@ ein = "ein"      # German stop-word in extension/src/lang.js detection list
 [files]
 extend-exclude = [
   "temp",
+  "a.ps1",                          # scripts launcher: intentionally short mnemonic aliases (nd/ind/ivn/bd..), not prose
   "go.sum",
   "DEV/COMMIT_LOG.md",              # append-only build log: book filenames + hashes
   "manifests",                      # generated winget community-repo manifests

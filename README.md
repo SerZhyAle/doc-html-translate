@@ -18,7 +18,7 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 doc-html-translate comes in several forms - pick whichever fits; they all share the same converter:
 
 - **CLI** - `doc-html-translate.exe`, the command-line converter and Windows file-association handler. See [Quick Usage](#quick-usage).
-- **GUI desktop app** - `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (file picker, drag & drop, options dialog, a **Set as default handler** button).
+- **GUI desktop app** - `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (file picker, drag & drop, options dialog, a **default-handler toggle** - opt-in, off by default).
 - **Microsoft Store app** - the same desktop app (GUI + CLI) shipped as an MSIX package: Store-signed, auto-updating, no manual download. Under MSIX, `-register` is a no-op (file associations come from the package manifest). Packaging details: [`msix/README.md`](msix/README.md).
 - **Browser extension** - a Chromium MV3 extension that re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML) as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). (Edge Add-ons listing planned.)
 - **Website & docs** - the [landing page](https://serzhyale.github.io/doc-html-translate/), multi-language documentation, and a dedicated [extension page](https://serzhyale.github.io/doc-html-translate/extension.html).
@@ -39,7 +39,7 @@ The desktop app and the extension are independent and complementary: the app con
   - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
   - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
-- Optional Windows file association registration (`-register`); the app also adds itself to the Windows "Open with" list automatically (no default-handler change required)
+- File-type association is **optional and off by default**: the app always adds a **"Convert to HTML" right-click entry** (and an "Open with" entry) for all supported types, and becoming the default handler is a separate opt-in (`-register` / the GUI toggle / a one-time first-run prompt; `-unregister` reverses it)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 
 ## Installation
@@ -64,11 +64,14 @@ Prebuilt Windows x64 binaries are published on the Releases page:
 
 Each release contains:
 
-- `doc-html-translate-<version>-windows-x64.exe` - command-line tool
-- `doc-html-ui-<version>-windows-x64.exe` - GUI desktop app
+- `doc-html-translate-setup-<version>.exe` - **universal installer** (x86 + x64, per-user, no admin) - the easiest option: installs the GUI + CLI, with optional "Open with" + right-click "Convert to HTML" and browser-extension tasks
+- `doc-html-translate-<version>-windows-x64.exe` - command-line tool (portable)
+- `doc-html-ui-<version>-windows-x64.exe` - GUI desktop app (portable)
 - `doc-html-translate-<version>-windows-x64.zip` - full archive (both binaries + LICENSE + README)
 
-Install via winget:
+The installer runs on both 32- and 64-bit Windows and needs no administrator rights (it installs into your user profile). The portable exe/zip stay available for a no-install workflow.
+
+Install via winget (portable build):
 
 ```powershell
 winget install SerZhyAle.DocHtmlTranslate
@@ -98,8 +101,11 @@ doc-html-translate.exe -force "book.epub"
 # Cap paid (Google) translation: skip if the estimate exceeds $2.00
 doc-html-translate.exe -google -max-cost 2 "book.epub"
 
-# Register as handler in current user registry
+# Opt in to becoming the default handler for supported types (off by default)
 doc-html-translate.exe -register
+
+# Undo that - release the default-handler association (keeps the right-click entry + "Open with")
+doc-html-translate.exe -unregister
 ```
 
 ## Fastest Free Workflow (Recommended)
@@ -133,8 +139,9 @@ Why this workflow is popular (besides the obvious):
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-register` | `false` | Register app as document handler in HKCU |
-| `-register-openwith` | `false` | Add app to the Windows "Open with" list without making it the default handler (the `doc-html-ui` GUI does this automatically on launch) |
+| `-register` | `false` | Opt in to becoming the default handler in HKCU for all supported types (off by default - the first run only adds the right-click entry and offers this) |
+| `-unregister` | `false` | Release the default-handler association (leaves the "Convert to HTML" right-click entry and "Open with") |
+| `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI does this automatically on launch) |
 | `-notranslate` | `false` | Convert only, skip translation |
 | `-noopen` | `false` | Do not open browser after conversion |
 | `-google` | `false` | Translate via Google Cloud Translation API |
@@ -208,7 +215,7 @@ and PDF); other formats are unaffected.
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required).
 - In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.
-- `doc-html-ui` exposes the full CLI surface, including `-toc-depth` and `-max-cost`, plus a **Set as default handler** button (the GUI equivalent of `-register`). That button is hidden under the Microsoft Store (MSIX) build, where file associations come from the package manifest instead. If the converter exe is missing next to the GUI, it shows a warning rather than failing silently on Convert.
+- `doc-html-ui` exposes the full CLI surface, including `-toc-depth` and `-max-cost`, plus a **default-handler toggle** (the GUI equivalent of `-register` / `-unregister`; opt-in, off by default) and a one-time first-run prompt offering it. The toggle and prompt are hidden under the Microsoft Store (MSIX) build, where file associations come from the package manifest instead. The GUI always registers the non-destructive "Convert to HTML" right-click entry + "Open with" on launch. If the converter exe is missing next to the GUI, it shows a warning rather than failing silently on Convert.
 
 ## Development
 

@@ -41,6 +41,20 @@ body {
 }
 .col-main { min-width: 0; }
 .col-log { display: flex; flex-direction: column; min-width: 0; }
+/* one-time first-run opt-in banner for the default-handler association */
+.assoc-prompt {
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.assoc-prompt-actions { display: flex; gap: 8px; margin-top: 8px; }
+.assoc-prompt-actions button { padding: 5px 12px; font-size: 12px; }
+.assoc-prompt-actions button.primary { background: var(--accent); color: #11111b; border-color: var(--accent); }
+.assoc-prompt-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 @media (max-width: 900px) {
     .app { grid-template-columns: 1fr; }
 }
@@ -242,6 +256,15 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <div class="app">
 <div class="col-main">
 
+<!-- one-time opt-in: association is off by default; the right-click entry is always added -->
+<div id="assocPrompt" class="assoc-prompt" style="display:none">
+    <span data-i18n="assocPromptText">Make this app the default handler for EPUB, PDF and the other supported files? It is optional and off by default - the "Convert to HTML" right-click entry is always available. You can change this anytime under "Windows integration".</span>
+    <div class="assoc-prompt-actions">
+        <button class="primary" id="assocPromptYes" onclick="assocPromptAccept()" data-i18n="assocPromptYes">Yes, make default</button>
+        <button id="assocPromptNo" onclick="assocPromptDismiss()" data-i18n="assocPromptNo">No, thanks</button>
+    </div>
+</div>
+
 <!-- primary flow: pick a document (left) and run (right), on one line -->
 <div class="toprow">
     <div class="drop" id="dropZone" onclick="browseFile()">
@@ -337,10 +360,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <details id="integrationSection">
     <summary data-i18n="secIntegration">Windows integration</summary>
     <div class="body">
-        <div class="field">
-            <button onclick="registerHandler()" data-i18n="btnRegister">Set as default handler for EPUB, PDF, ..</button>
-        </div>
-        <div class="hint" id="registerStatus" data-i18n="registerHint">One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).</div>
+        <label class="chk"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
+        <div class="hint" id="registerStatus" data-i18n="registerHint">Optional and off by default. The "Convert to HTML" right-click entry is always added - this only makes double-clicking a document open it with this app (per-user file associations).</div>
     </div>
 </details>
 
@@ -413,8 +434,11 @@ const I18N = {
         chkForce: "Force re-process",
         chkVerbose: "Verbose log",
         secIntegration: "Windows integration",
-        btnRegister: "Set as default handler for EPUB, PDF, ..",
-        registerHint: "One-time setup: makes double-clicking a document open it with this app (writes per-user file associations).",
+        chkDefaultHandler: "Make this app the default handler for EPUB, PDF, ..",
+        registerHint: "Optional and off by default. The \"Convert to HTML\" right-click entry is always added - this only makes double-clicking a document open it with this app (per-user file associations).",
+        assocPromptText: "Make this app the default handler for EPUB, PDF and the other supported files? It is optional and off by default - the \"Convert to HTML\" right-click entry is always available. You can change this anytime under \"Windows integration\".",
+        assocPromptYes: "Yes, make default",
+        assocPromptNo: "No, thanks",
         secCmdLine: "Command line",
         cmdPlaceholder: "Pick a file and settings to see the command..",
         btnCopy: "Copy",
@@ -436,6 +460,8 @@ const I18N = {
         registering: "Registering..",
         registerDone: "Done - this app is now the default handler. Double-clicking a document opens it. (If Windows ignores it: right-click the file -> Open with -> Always.)",
         registerFail: "Registration failed: {msg}",
+        unregistering: "Removing..",
+        unregisterDone: "Done - this app is no longer the default handler. The \"Convert to HTML\" right-click entry stays available.",
         alertChooseFirst: "Choose an input file first - the converter can't read your mind (yet).",
         confirmNoKey: "No Google API key is saved - translation will be quietly skipped. Convert anyway?",
         ocrDownloading: "Downloading {lang}..",
@@ -493,8 +519,11 @@ const I18N = {
         chkForce: "Принудительно переобработать",
         chkVerbose: "Подробный лог",
         secIntegration: "Интеграция с Windows",
-        btnRegister: "Сделать обработчиком по умолчанию для EPUB, PDF, ..",
-        registerHint: "Однократная настройка: двойной щелчок по документу будет открывать его этим приложением (записывает пользовательские ассоциации файлов).",
+        chkDefaultHandler: "Сделать обработчиком по умолчанию для EPUB, PDF, ..",
+        registerHint: "По желанию, по умолчанию выключено. Пункт правого клика «Convert to HTML» добавляется всегда - это лишь делает так, что двойной щелчок по документу открывает его этим приложением (пользовательские ассоциации файлов).",
+        assocPromptText: "Сделать это приложение обработчиком по умолчанию для EPUB, PDF и других поддерживаемых файлов? Это по желанию и по умолчанию выключено - пункт правого клика «Convert to HTML» доступен всегда. Изменить можно в любой момент в разделе «Интеграция с Windows».",
+        assocPromptYes: "Да, сделать по умолчанию",
+        assocPromptNo: "Нет, спасибо",
         secCmdLine: "Командная строка",
         cmdPlaceholder: "Выберите файл и настройки, чтобы увидеть команду..",
         btnCopy: "Копировать",
@@ -516,6 +545,8 @@ const I18N = {
         registering: "Регистрация..",
         registerDone: "Готово - теперь это приложение обработчик по умолчанию. Двойной щелчок по документу открывает его. (Если Windows игнорирует: правый клик по файлу -> Открыть с помощью -> Всегда.)",
         registerFail: "Не удалось зарегистрировать: {msg}",
+        unregistering: "Удаление..",
+        unregisterDone: "Готово - приложение больше не обработчик по умолчанию. Пункт правого клика «Convert to HTML» остаётся доступным.",
         alertChooseFirst: "Сначала выберите входной файл - конвертер пока не умеет читать мысли.",
         confirmNoKey: "Ключ Google API не сохранён - перевод будет тихо пропущен. Всё равно конвертировать?",
         ocrDownloading: "Скачивание {lang}..",
@@ -573,8 +604,11 @@ const I18N = {
         chkForce: "Примусово переобробити",
         chkVerbose: "Докладний лог",
         secIntegration: "Інтеграція з Windows",
-        btnRegister: "Зробити обробником за замовчуванням для EPUB, PDF, ..",
-        registerHint: "Одноразове налаштування: подвійний клік по документу відкриватиме його цим застосунком (записує користувацькі асоціації файлів).",
+        chkDefaultHandler: "Зробити обробником за замовчуванням для EPUB, PDF, ..",
+        registerHint: "За бажанням, типово вимкнено. Пункт правого кліку «Convert to HTML» додається завжди - це лише робить так, що подвійний клік по документу відкриває його цим застосунком (користувацькі асоціації файлів).",
+        assocPromptText: "Зробити цей застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів? Це за бажанням і типово вимкнено - пункт правого кліку «Convert to HTML» доступний завжди. Змінити можна будь-коли в розділі «Інтеграція з Windows».",
+        assocPromptYes: "Так, зробити типовим",
+        assocPromptNo: "Ні, дякую",
         secCmdLine: "Командний рядок",
         cmdPlaceholder: "Оберіть файл і налаштування, щоб побачити команду..",
         btnCopy: "Копіювати",
@@ -596,6 +630,8 @@ const I18N = {
         registering: "Реєстрація..",
         registerDone: "Готово - тепер цей застосунок обробник за замовчуванням. Подвійний клік по документу відкриває його. (Якщо Windows ігнорує: правий клік по файлу -> Відкрити за допомогою -> Завжди.)",
         registerFail: "Не вдалося зареєструвати: {msg}",
+        unregistering: "Видалення..",
+        unregisterDone: "Готово - застосунок більше не обробник за замовчуванням. Пункт правого кліку «Convert to HTML» залишається доступним.",
         alertChooseFirst: "Спочатку оберіть вхідний файл - конвертер поки що не вміє читати думки.",
         confirmNoKey: "Ключ Google API не збережено - переклад буде тихо пропущено. Все одно конвертувати?",
         ocrDownloading: "Завантаження {lang}..",
@@ -774,10 +810,14 @@ fetch('/api/initial').then(r=>r.json()).then(d=>{
 }).catch(()=>{});
 
 fetch('/api/env').then(r=>r.json()).then(d=>{
+    integrationHidden = !!d.packaged;
     if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
     if (d.lang) { systemLang = d.lang; resolveLang(); }
-}).catch(()=>{});
+    envReady = true;
+    if (!integrationHidden) loadAssocStatus();
+    maybeShowAssocPrompt();
+}).catch(()=>{ envReady = true; maybeShowAssocPrompt(); });
 
 // ── browse buttons ──────────────────────────────────────
 async function browseFile() {
@@ -843,20 +883,55 @@ async function saveGoogleKey() {
     }
 }
 
-// ── register as default document handler ────────────────
-async function registerHandler() {
-    setStatus('registerStatus', 'registering');
+// ── default-handler association (opt-in, off by default) ──
+// The "Convert to HTML" right-click entry + "Open with" are registered on every launch
+// (ensureRightClickRegistered, Go side); this toggle only controls the *default* handler.
+let assocPrompted = false;   // persisted in settings: has the one-time prompt been answered?
+let envReady = false, statusReady = false, integrationHidden = false;
+
+async function loadAssocStatus() {
     try {
-        const r = await fetch('/api/register', {method:'POST'});
+        const d = await (await fetch('/api/assoc-status')).json();
+        el('chkDefaultHandler').checked = !!d.default;
+    } catch(e) { /* leave unchecked */ }
+    statusReady = true;
+    maybeShowAssocPrompt();
+}
+
+async function toggleDefaultHandler() {
+    const on = el('chkDefaultHandler').checked;
+    setStatus('registerStatus', on ? 'registering' : 'unregistering');
+    try {
+        const r = await fetch(on ? '/api/register' : '/api/unregister', {method:'POST'});
         const d = await r.json();
         if (d.ok) {
-            setStatus('registerStatus', 'registerDone', null, 'ok');
+            setStatus('registerStatus', on ? 'registerDone' : 'unregisterDone', null, 'ok');
         } else {
             setStatus('registerStatus', 'registerFail', {msg: d.error || t('unknownError')}, 'warn');
+            el('chkDefaultHandler').checked = !on; // revert the toggle on failure
         }
     } catch(e) {
         setStatus('registerStatus', 'registerFail', {msg: e.message}, 'warn');
+        el('chkDefaultHandler').checked = !on;
     }
+}
+
+// One-time first-run prompt: shown only when the integration section is available
+// (unpackaged), the app is not already the default, and the user has not answered before.
+function maybeShowAssocPrompt() {
+    if (!envReady || !statusReady || !settingsLoaded) return;
+    if (integrationHidden || assocPrompted || el('chkDefaultHandler').checked) return;
+    el('assocPrompt').style.display = '';
+}
+function assocPromptAccept() {
+    el('chkDefaultHandler').checked = true;
+    toggleDefaultHandler();
+    assocPromptDismiss();
+}
+function assocPromptDismiss() {
+    el('assocPrompt').style.display = 'none';
+    assocPrompted = true;
+    saveSettings();
 }
 
 // ── persist form state across sessions ─────────────────
@@ -885,6 +960,7 @@ function collectSettings() {
         verbose:        el('chkVerbose').checked,
         ocr:            el('chkOCR').checked,
         ocrLang:        el('ocrLang').value,
+        assocPrompted:  assocPrompted,
     };
 }
 function applySettings(s) {
@@ -904,6 +980,7 @@ function applySettings(s) {
     if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
     if (s.ocr     != null) el('chkOCR').checked     = !!s.ocr;
     if (s.ocrLang != null) el('ocrLang').dataset.want = s.ocrLang;
+    if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
     syncEngineUI();
 }
 
@@ -925,6 +1002,7 @@ fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).final
     resolveLang();
     fitWindow();
     updateCmdPreview();
+    maybeShowAssocPrompt();
 });
 document.addEventListener('change', saveSettings);
 

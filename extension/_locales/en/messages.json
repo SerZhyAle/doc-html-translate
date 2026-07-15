@@ -35,6 +35,10 @@
     "message": "OCR & translate this image",
     "description": "Right-click context-menu item on images."
   },
+  "convertDocMenu": {
+    "message": "Convert with doc-html-translate",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
   "ocrProgress": {
     "message": "Recognizing text..",
     "description": "Status shown while OCR runs."
@@ -70,5 +74,9 @@
   "ocrLangsHint": {
     "message": "Recognition language (English is built-in).",
     "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "Turn on to recognize text in images - then pick or download a language (English is built-in).",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
   }
 }

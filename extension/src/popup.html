@@ -10,6 +10,7 @@
     .row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 8px; }
     .row label { font-size: 13px; }
     .host { color: #555; font-size: 12px; word-break: break-all; }
+    .note { color: #666; font-size: 11px; margin: -2px 0 6px; line-height: 1.35; }
     .switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; inset: 0; background: #ccc; border-radius: 22px; transition: 0.2s; cursor: pointer; }
@@ -47,6 +48,7 @@
     <label for="global">Reflow PDFs &amp; EPUBs</label>
     <span class="switch"><input type="checkbox" id="global"><span class="slider"></span></span>
   </div>
+  <div class="note">Off by default. Or right-click a document link &rarr; &#8220;Convert with doc-html-translate&#8221;.</div>
   <div class="row">
     <label for="site">On this site<br><span class="host" id="host"></span></label>
     <span class="switch"><input type="checkbox" id="site"><span class="slider"></span></span>

@@ -8,6 +8,8 @@ import (
 type Config struct {
 	Register         bool
 	RegisterOpenWith bool
+	Unregister       bool // -unregister: release the default-handler association
+	FirstRun         bool // set when invoked with no args: non-destructive registration + opt-in prompt
 	NoTranslate      bool
 	NoOpen           bool
 	UseGoogle        bool
@@ -36,6 +38,7 @@ func ParseArgs(args []string) (Config, error) {
 
 	register := fs.Bool("register", false, "register app as document handler in HKCU")
 	registerOpenWith := fs.Bool("register-openwith", false, `add app to the Windows "Open with" list without making it the default handler`)
+	unregister := fs.Bool("unregister", false, `release the default-handler association (leaves the right-click "Convert to HTML" entry and "Open with")`)
 	noTranslate := fs.Bool("notranslate", false, "convert only, skip translation")
 	noOpen := fs.Bool("noopen", false, "do not open browser after conversion (batch mode)")
 	useGoogle := fs.Bool("google", false, "translate using Google Translate API")
@@ -70,6 +73,7 @@ func ParseArgs(args []string) (Config, error) {
 	cfg := Config{
 		Register:         *register,
 		RegisterOpenWith: *registerOpenWith,
+		Unregister:       *unregister,
 		NoTranslate:      *noTranslate,
 		NoOpen:           *noOpen,
 		UseGoogle:        *useGoogle,
@@ -92,13 +96,16 @@ func ParseArgs(args []string) (Config, error) {
 		OCRDownload:      *ocrDownload,
 	}
 
-	// First-click UX: running without any args behaves as registration mode.
+	// First-click UX: running without any args enters the first-run flow - a
+	// non-destructive registration (right-click entry + "Open with") plus an
+	// interactive opt-in prompt for the default handler. It no longer grabs defaults
+	// silently (see app.Run / windowsreg).
 	if len(args) == 0 {
-		cfg.Register = true
+		cfg.FirstRun = true
 	}
 
-	// OCR language management commands need no input file.
-	if !cfg.Register && !cfg.RegisterOpenWith && !cfg.OCRList && cfg.OCRDownload == "" {
+	// Registration and OCR-management commands need no input file.
+	if !cfg.Register && !cfg.RegisterOpenWith && !cfg.Unregister && !cfg.FirstRun && !cfg.OCRList && cfg.OCRDownload == "" {
 		rest := fs.Args()
 		if len(rest) == 0 {
 			return Config{}, errors.New("input file is required unless -register is used")

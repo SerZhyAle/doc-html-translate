@@ -40,6 +40,12 @@ Optional real-install test of the Store artifact (still local, still free):
 ./msix/build-msix.ps1 -SelfSign
 ```
 
+Optional universal installer - a single `setup.exe` for x86 + x64, per-user, no admin (local, free):
+
+```powershell
+./scripts/build-installer.ps1        # -> dist/doc-html-translate-setup-<ver>.exe (needs Inno Setup / ISCC)
+```
+
 ---
 
 ## Release ("релиз") - published, paid
@@ -55,6 +61,8 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
 2. **GitHub Release - app** `[PAID]` - push a `v*` tag → `.github/workflows/release.yml` builds
    the exes and creates the GitHub Release:
    `git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>`.
+   **Then attach the universal installer** (CI does not build it): `./scripts/build-installer.ps1`
+   then `gh release upload v<ver> dist/doc-html-translate-setup-<ver>.exe`.
 3. **winget** `[PUBLIC]` - after the release exists. **Always local-install-test the manifest
    first** - `winget install --manifest winget` (one-time: `winget settings --enable
    LocalManifestFiles`) - it downloads the release zip and verifies the SHA256 end-to-end, the

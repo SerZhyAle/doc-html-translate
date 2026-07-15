@@ -276,8 +276,8 @@
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">Способ 1</div><h3>Из попапа</h3><p>Клик по иконке расширения → <strong>Open a PDF or EPUB file…</strong> → в открывшейся вкладке <strong>Open file</strong> → выбери файл. Ни тумблеров, ни пути в адресе - никаких церемоний.</p></div>
-            <div class="card"><div class="num">Способ 2</div><h3>Открыть ссылку</h3><p>Просто открой ссылку на <code>.pdf</code> или <code>.epub</code> по http(s) - расширение само перенаправит её в свой вьюер.</p></div>
-            <div class="card"><div class="num">Способ 3</div><h3>Локальный файл</h3><p>Включи «Allow access to file URLs» и открывай <code>file://…pdf</code> или <code>file://…epub</code> напрямую - тоже перехватится.</p></div>
+            <div class="card"><div class="num">Способ 2</div><h3>Правый клик по ссылке</h3><p>Правый клик по ссылке на документ → <strong>Открыть через doc-html-translate</strong>. Работает без настройки - основной способ по требованию теперь, когда авто-перехват выключен по умолчанию.</p></div>
+            <div class="card"><div class="num">Способ 3</div><h3>Авто-перехват ссылок</h3><p>Включи <strong>«Reflow PDFs &amp; EPUBs»</strong> в попапе (по умолчанию выключено), чтобы ссылки на <code>.pdf</code>/<code>.epub</code> по http(s) сами перенаправлялись во вьюер; для <code>file://</code> включи ещё «Allow access to file URLs».</p></div>
           </div>
           <p>В любом случае дальше: меню браузера → <strong>«Перевести страницу»</strong> → твой язык.</p>
           <div class="note"><div class="tag">Совет</div><p>Способ через выбор файла самый надёжный: путь к файлу нигде не появляется в URL, поэтому сторонние блокировщики контента его не трогают, и не нужен тумблер доступа к файлам.</p></div>
@@ -311,7 +311,7 @@
         <div class="secbody">
           <ul>
             <li><strong>Сканы/картинки без текста:</strong> переводчику страницы нечего читать (нет текстового слоя). Включите OCR для изображений (или правый клик по картинке), и расширение распознаёт вшитый текст и накладывает его переводимым слоем; без OCR оно определяет пустую страницу и предлагает открыть оригинал.</li>
-            <li><strong>Авто-перехват по URL:</strong> срабатывает для адресов, оканчивающихся на <code>.pdf</code> или <code>.epub</code>; файлы, отдаваемые без такого расширения в адресе, открывай через попап («Open file»).</li>
+            <li><strong>Авто-перехват по URL:</strong> по умолчанию выключен - включи <strong>«Reflow PDFs &amp; EPUBs»</strong> в попапе; тогда он срабатывает для адресов, оканчивающихся на <code>.pdf</code> или <code>.epub</code>. Файлы без такого расширения в адресе (или при выключенном перехвате) открывай через попап («Open file») или правым кликом → <strong>Открыть через doc-html-translate</strong>.</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на странице вьюера:</strong> это другой блокировщик контента в твоём профиле режет навигацию по содержимому URL. Используй открытие файла через диалог (путь не попадает в URL) или отключи мешающее расширение.</li>
             <li><strong>Лигатуры:</strong> качество извлечения PDF.js чуть ниже Poppler на нестандартных шрифтах.</li>
             <li><strong>Стили EPUB:</strong> вьюер применяет свой чистый стиль чтения и отбрасывает авторские стили книги - это сделано намеренно, именно так книга переводится чисто.</li>
@@ -366,8 +366,8 @@
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">Way 1</div><h3>From the popup</h3><p>Click the extension icon → <strong>Open a PDF or EPUB file…</strong> → on the tab that opens click <strong>Open file</strong> → pick the file. No toggles, no path in the URL - no ceremony required.</p></div>
-            <div class="card"><div class="num">Way 2</div><h3>Open a link</h3><p>Just open an http(s) <code>.pdf</code> or <code>.epub</code> link - the extension redirects it to its viewer automatically.</p></div>
-            <div class="card"><div class="num">Way 3</div><h3>Local file</h3><p>Enable "Allow access to file URLs" and open <code>file://…pdf</code> or <code>file://…epub</code> directly - it's intercepted too.</p></div>
+            <div class="card"><div class="num">Way 2</div><h3>Right-click a link</h3><p>Right-click any document link → <strong>Convert with doc-html-translate</strong>. Works with no setup - the on-demand path now that auto-interception is off by default.</p></div>
+            <div class="card"><div class="num">Way 3</div><h3>Auto-intercept links</h3><p>Turn on <strong>Reflow PDFs &amp; EPUBs</strong> in the popup (off by default) so http(s) <code>.pdf</code>/<code>.epub</code> links redirect to the viewer automatically; for <code>file://</code> also enable "Allow access to file URLs".</p></div>
           </div>
           <p>Either way, then: browser menu → <strong>"Translate page"</strong> → your language.</p>
           <div class="note"><div class="tag">Tip</div><p>The file-picker route is the most robust: the file path never appears in any URL, so URL-based content blockers can't touch it, and no file-access toggle is needed.</p></div>
@@ -401,7 +401,7 @@
         <div class="secbody">
           <ul>
             <li><strong>Scanned / image-only PDFs:</strong> no text layer for the page translator. Turn on <strong>Use OCR for images</strong> (or right-click a picture) so the extension recognizes the baked-in text and overlays it as translatable text; without OCR it detects the empty page and offers the original.</li>
-            <li><strong>URL auto-interception:</strong> fires for addresses ending in <code>.pdf</code> or <code>.epub</code>; files served without a matching extension in the URL can be opened via the popup ("Open file").</li>
+            <li><strong>URL auto-interception:</strong> off by default - turn on <strong>Reflow PDFs &amp; EPUBs</strong> in the popup to enable it; it then fires for addresses ending in <code>.pdf</code> or <code>.epub</code>. Files served without a matching extension in the URL (or with interception off) open via the popup ("Open file") or the right-click <strong>Convert with doc-html-translate</strong> menu.</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> on the viewer page:</strong> a different content blocker in your profile is blocking the navigation by URL content. Use the file-picker route (path never in the URL) or disable the interfering extension.</li>
             <li><strong>Ligatures:</strong> PDF.js text extraction is slightly weaker than Poppler on non-standard fonts.</li>
             <li><strong>EPUB styling:</strong> the viewer applies its own clean reading CSS and drops the book's author styles - by design, that is what makes it translate cleanly.</li>
@@ -456,8 +456,8 @@
         <div class="secbody">
           <div class="grid">
             <div class="card"><div class="num">Спосіб 1</div><h3>З попапа</h3><p>Клік по іконці розширення → <strong>Open a PDF or EPUB file…</strong> → у відкритій вкладці <strong>Open file</strong> → обери файл. Без тумблерів і без шляху в адресі - без жодних церемоній.</p></div>
-            <div class="card"><div class="num">Спосіб 2</div><h3>Відкрити посилання</h3><p>Просто відкрий посилання на <code>.pdf</code> або <code>.epub</code> по http(s) - розширення само перенаправить його у свій вьюер.</p></div>
-            <div class="card"><div class="num">Спосіб 3</div><h3>Локальний файл</h3><p>Увімкни «Allow access to file URLs» і відкривай <code>file://…pdf</code> або <code>file://…epub</code> напряму - теж перехопиться.</p></div>
+            <div class="card"><div class="num">Спосіб 2</div><h3>Правий клік по посиланню</h3><p>Правий клік по посиланню на документ → <strong>Відкрити через doc-html-translate</strong>. Працює без налаштування - основний спосіб на вимогу тепер, коли авто-перехоплення вимкнено типово.</p></div>
+            <div class="card"><div class="num">Спосіб 3</div><h3>Авто-перехоплення посилань</h3><p>Увімкни <strong>«Reflow PDFs &amp; EPUBs»</strong> у попапі (типово вимкнено), щоб посилання на <code>.pdf</code>/<code>.epub</code> по http(s) самі перенаправлялися у вьюер; для <code>file://</code> увімкни ще «Allow access to file URLs».</p></div>
           </div>
           <p>У будь-якому разі далі: меню браузера → <strong>«Перекласти сторінку»</strong> → твоя мова.</p>
           <div class="note"><div class="tag">Порада</div><p>Спосіб через вибір файлу найнадійніший: шлях до файлу ніде не з'являється в URL, тож сторонні блокувальники контенту його не чіпають, і не потрібен тумблер доступу до файлів.</p></div>
@@ -491,7 +491,7 @@
         <div class="secbody">
           <ul>
             <li><strong>Скани/картинки без тексту:</strong> перекладачу сторінки нічого читати (немає текстового шару). Увімкніть OCR для зображень (або правий клік по зображенню), і розширення розпізнає вшитий текст і накладає його перекладним шаром; без OCR воно визначає порожню сторінку й пропонує відкрити оригінал.</li>
-            <li><strong>Авто-перехоплення за URL:</strong> спрацьовує для адрес, що закінчуються на <code>.pdf</code> або <code>.epub</code>; файли, що віддаються без відповідного розширення в адресі, відкривай через попап («Open file»).</li>
+            <li><strong>Авто-перехоплення за URL:</strong> типово вимкнено - увімкни <strong>«Reflow PDFs &amp; EPUBs»</strong> у попапі; тоді воно спрацьовує для адрес, що закінчуються на <code>.pdf</code> або <code>.epub</code>. Файли без відповідного розширення в адресі (або з вимкненим перехопленням) відкривай через попап («Open file») або правим кліком → <strong>Відкрити через doc-html-translate</strong>.</li>
             <li><strong><code>ERR_BLOCKED_BY_CLIENT</code> на сторінці вьюера:</strong> інший блокувальник контенту у твоєму профілі ріже навігацію за вмістом URL. Використовуй відкриття файлу через діалог (шлях не потрапляє в URL) або вимкни розширення, що заважає.</li>
             <li><strong>Лігатури:</strong> якість видобування PDF.js трохи нижча за Poppler на нестандартних шрифтах.</li>
             <li><strong>Стилі EPUB:</strong> вьюер застосовує власний чистий стиль читання й відкидає авторські стилі книги - це зроблено навмисно, саме так книга перекладається чисто.</li>
