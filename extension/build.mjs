@@ -43,6 +43,15 @@ async function vendorPdfjs() {
   await cp(join(pdfjs, "cmaps"), join(vendor, "cmaps"), { recursive: true });
   await cp(join(pdfjs, "standard_fonts"), join(vendor, "standard_fonts"), { recursive: true });
 
+  // From pdfjs 5 the JBIG2 and JPEG2000 image decoders and the QCMS colour engine live
+  // in WASM modules fetched at runtime from `wasmUrl` (and the ICC profile from
+  // `iccUrl`) instead of being compiled into the worker. JBIG2/JPX are exactly what
+  // scanned PDFs use, so failing to ship these silently breaks the documents this
+  // extension exists for. Both dirs are passed to getDocument() in viewer.js; the
+  // manifest CSP already allows 'wasm-unsafe-eval'.
+  await cp(join(pdfjs, "wasm"), join(vendor, "wasm"), { recursive: true });
+  await cp(join(pdfjs, "iccs"), join(vendor, "iccs"), { recursive: true });
+
   // Carry the upstream licence next to the vendored code.
   await cp(join(pdfjs, "LICENSE"), join(vendor, "LICENSE.pdfjs"));
 
@@ -137,7 +146,14 @@ async function vendorMarked() {
     process.exit(1);
   }
   await cp(join(marked, "lib", "marked.esm.js"), join(vendor, "marked.esm.js"));
-  await cp(join(marked, "LICENSE.md"), join(vendor, "LICENSE.marked"));
+  // marked shipped LICENSE.md up to v12 and LICENSE from v18; accept either so the
+  // vendored copy always carries the upstream licence.
+  const markedLicence = ["LICENSE.md", "LICENSE"].map((n) => join(marked, n)).find((p) => existsSync(p));
+  if (!markedLicence) {
+    console.error("marked: no LICENSE/LICENSE.md found - update build.mjs.");
+    process.exit(1);
+  }
+  await cp(markedLicence, join(vendor, "LICENSE.marked"));
   const version = JSON.parse(
     await import("node:fs/promises").then((fs) =>
       fs.readFile(join(marked, "package.json"), "utf8"),

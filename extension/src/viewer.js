@@ -25,9 +25,15 @@ import { DEFAULT_OPTIONS } from "./defaults.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
+// From pdfjs 5 the JBIG2 / JPEG2000 decoders and the QCMS colour engine are WASM
+// modules fetched from wasmUrl at runtime, and ICC profiles come from iccUrl. Scanned
+// PDFs are JBIG2/JPX, so these are not optional extras - without them the viewer fails
+// on exactly the documents it exists for. Vendored by build.mjs.
 const VENDOR = {
   cMapUrl: chrome.runtime.getURL("vendor/cmaps/"),
   standardFontDataUrl: chrome.runtime.getURL("vendor/standard_fonts/"),
+  wasmUrl: chrome.runtime.getURL("vendor/wasm/"),
+  iccUrl: chrome.runtime.getURL("vendor/iccs/"),
 };
 
 const $ = (id) => document.getElementById(id);
@@ -755,6 +761,8 @@ async function loadPdfData(data, title) {
       cMapUrl: VENDOR.cMapUrl,
       cMapPacked: true,
       standardFontDataUrl: VENDOR.standardFontDataUrl,
+      wasmUrl: VENDOR.wasmUrl,
+      iccUrl: VENDOR.iccUrl,
     });
     task.onProgress = (p) => {
       if (p && p.total) setProgress(Math.min(0.15, (p.loaded / p.total) * 0.15));

@@ -4,7 +4,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { composeTransform, paintFlips } from "../src/pdf-images.js";
+// pdf-images.js imports pdf.mjs (for the OPS enum), and from pdfjs 6 that module
+// constructs a DOMMatrix at top level - a browser global Node does not have, so the
+// import throws before any test runs. The extension itself is unaffected: every
+// context that loads pdf.mjs (the viewer page, the pdfjs worker) has DOMMatrix. Stub
+// the one constructor pdf.mjs touches at load time, then import dynamically so the
+// stub is in place first (static imports are hoisted).
+globalThis.DOMMatrix ??= class DOMMatrix {
+  constructor() {
+    this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0;
+  }
+};
+
+const { composeTransform, paintFlips } = await import("../src/pdf-images.js");
 
 const IDENTITY = [1, 0, 0, 1, 0, 0];
 
