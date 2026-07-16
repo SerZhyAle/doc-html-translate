@@ -848,17 +848,24 @@ function askPassword(updatePassword, reason) {
 
 // ---- Lazy page rendering ---------------------------------------------------
 // Long PDFs are rendered forward in chunks rather than in one pass. Reflowing a
-// thousand pages takes minutes during which the tab looks hung - but the sharper
-// problem is translation. Chrome's translator snapshots the DOM, ships the text off,
-// and patches the result back in; a render loop still appending pages underneath
-// pulls the rug out from under it, so "Translate page" during a long render used to
-// collapse and had to be toggled off and on again. Chunking bounds that: the reader
-// gets a readable document in seconds, and it then holds still, which is the state
-// the translator needs. The next chunk is built only once the reader nears the end of
-// the current one, so the pages that exist are the pages being read. See renderPages
-// for how a chunk reaches the DOM without disturbing a translation already in place.
-const PAGE_CHUNK = 50; // pages per chunk
-const CHUNK_LEAD = 2;  // build the next chunk once this page before the edge is reached
+// thousand pages takes minutes during which the tab looks hung - and worse, Chrome's
+// translator snapshots the DOM, ships the text off and patches it back, so a render
+// loop appending pages underneath pulls the rug out from under it: "Translate page"
+// during a long render collapses.
+//
+// The window is deliberately large, because native translate only ever covers what was
+// in the DOM at the moment it ran. Pages appended after that arrive untranslated, and
+// the reader has to toggle translate off and on to pick them up. So every chunk
+// boundary costs the reader an interruption, and the fix is fewer, bigger, faster
+// chunks - not smaller ones. PAGE_CHUNK is the balance: big enough that boundaries are
+// rare, small enough that the first pages are readable in seconds.
+const PAGE_CHUNK = 100; // pages per chunk
+const CHUNK_LEAD = 5;   // build the next chunk once this page before the edge is reached
+// Pages in flight to the pdfjs worker at once. Fetching a page is a round trip to that
+// worker, so awaiting them one at a time left both sides idle in turn - the main thread
+// waiting on the worker, the worker waiting while the main thread built DOM. Keeping a
+// few requests outstanding overlaps the two and bounds how many live pages are held.
+const PAGE_LOOKAHEAD = 8;
 
 let pdfDoc = null;    // live PDF.js document, held open for later chunks
 let pdfTotal = 0;
@@ -918,14 +925,31 @@ function renderChunk() {
   return p;
 }
 
+// fetchPage asks the pdfjs worker for one page and reflows its text. The live page is
+// handed back too: the OCR image pass needs it, and it must be cleaned up afterwards.
+// A page that fails to load resolves to no blocks rather than rejecting, so one bad
+// page cannot take the chunk (or the lookahead window) down with it.
+function fetchPage(n) {
+  return pdfDoc.getPage(n).then(async (page) => {
+    const viewport = page.getViewport({ scale: 1 });
+    const tc = await page.getTextContent();
+    return { page, blocks: reflowPage(tc, viewport) };
+  }).catch(() => ({ page: null, blocks: [] }));
+}
+
 // renderPages reflows [from..to] and inserts the result, streaming or in one shot.
 //
-// The first chunk streams, in batches, into an empty document: nothing is translated
-// yet, so incremental mutation costs nothing and the reader watches pages arrive
-// instead of a blank screen - which matters most exactly when a page is slowest to
-// build (image extraction with OCR on). Every later chunk lands mid-read, when a
-// translation may well be live, and so is built entirely off-DOM and inserted as a
-// single mutation the translator can absorb.
+// The first chunk streams, in batches, into an empty document: the reader watches pages
+// arrive instead of staring at a blank screen, which matters most exactly when a page is
+// slowest to build (image extraction with OCR on). Later chunks land mid-read, below the
+// reader, where watching them arrive is worth nothing and a hundred separate layout
+// passes are worth less than nothing - so they are built off-DOM and inserted once.
+//
+// This does not make them translated. Chrome's translator only covers what was in the
+// DOM when it ran; pages appended afterwards stay in the source language until the
+// reader toggles translate off and on. That is why PAGE_CHUNK is large and this function
+// is worth keeping fast - each boundary is an interruption, so the goal is to have few
+// of them, not to smooth them over.
 async function renderPages(from, to) {
   const gen = docGen;
   const stream = from === 1;
@@ -935,18 +959,24 @@ async function renderPages(from, to) {
   const frag = document.createDocumentFragment();
   $("status").classList.remove("done");
 
+  // Keep PAGE_LOOKAHEAD fetches outstanding, consumed strictly in page order. Refilling
+  // right after taking one means the worker is reflowing the next pages while this one's
+  // DOM is being built, instead of the two taking turns.
+  const inflight = new Map();
+  let nextFetch = from;
+  const pump = () => {
+    while (nextFetch <= to && inflight.size < PAGE_LOOKAHEAD) {
+      inflight.set(nextFetch, fetchPage(nextFetch));
+      nextFetch++;
+    }
+  };
+  pump();
+
   for (let n = from; n <= to; n++) {
     if (gen !== docGen) return; // another document was opened - drop this chunk
-    let blocks = [];
-    let page = null;
-    try {
-      page = await pdfDoc.getPage(n);
-      const viewport = page.getViewport({ scale: 1 });
-      const tc = await page.getTextContent();
-      blocks = reflowPage(tc, viewport);
-    } catch {
-      blocks = [];
-    }
+    const { page, blocks } = await inflight.get(n);
+    inflight.delete(n);
+    pump();
 
     const section = el("section");
     section.id = `page-${n}`;
