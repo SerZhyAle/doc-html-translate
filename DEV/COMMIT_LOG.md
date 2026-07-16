@@ -664,3 +664,16 @@ Changed files:
 - scripts/release.ps1
 - tests/ui_cli_parity_test.go
 
+| 2026-07-17 00:51:45 | main | b400f59 | fix: large PDFs stop freezing - one-pass PDF image extraction (2h20m -> 6.2s) + chunked extension render |
+
+Changed files:
+- DEV/CHANGELOG.md
+- assets/doc-html-translate.ico
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- cmd/doc-html-ui/favicon.ico
+- docs/PARITY.md
+- extension/README.md
+- extension/src/viewer.js
+- internal/pdf/extract.go
+

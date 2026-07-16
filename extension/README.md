@@ -106,6 +106,13 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
 - **Step 5 (hardening).** Large, corrupt, password-protected, and scanned PDFs each give a correct
   result or a clear fallback (no crashes/hangs). Scanned PDFs show a "little or no text" notice that
   points back to the desktop OCR flow.
+- **Step 6 (chunked rendering).** On a PDF of more than `PAGE_CHUNK` (50) pages: the status bar
+  settles on "Pages 1-50 of N" instead of rendering the whole book, and scrolling to page 48 loads
+  the next 50 without a jump or a flicker. Then the part that pays for the whole design: run
+  **Translate page** while sitting on page 10, scroll past 48, and confirm the newly appended pages
+  arrive translated and the existing translation survives. Jump to a far page via the page box and
+  the TOC - both must land on real text, not an empty section. Finally "&#8595; HTML" must save the
+  pages reached and say so in the status bar.
 
 ## Translate text in images (OCR)
 

@@ -208,6 +208,17 @@ These are by design. Do not "sync" them without a decision - document changes he
   browser's built-in translator has swapped in - the extension's way of "keeping the translation" without
   a translation API. The Go app has no equivalent: it never translates in place and already writes HTML to
   disk, so both downloads are extension-only by design ([`viewer.js`](../extension/src/viewer.js)).
+  Consequently "&#8595; HTML" on a chunk-rendered PDF (below) exports only the pages reached so far, and
+  says so in the status bar rather than rendering the remainder: finishing the render would reimpose the
+  freeze chunking removes *and* mix untranslated pages under translated ones.
+- **Chunked PDF rendering is extension-only.** The viewer renders a PDF forward `PAGE_CHUNK = 50` pages at
+  a time, building the next chunk when the reader reaches `CHUNK_LEAD = 2` pages from the edge
+  ([`viewer.js`](../extension/src/viewer.js)). This exists because the extension renders *while the reader
+  waits* in a live DOM that Chrome's translator is also mutating: an unbounded render loop both looks hung
+  on a large book and breaks a translation requested mid-render. Go writes static HTML to disk in a batch
+  job with no translator racing it, so it has no reason to chunk and no counterpart. The scanned /
+  image-only banner heuristic therefore judges the **first chunk** in JS but the **whole document** in Go -
+  same 30%-of-pages-with-text rule, different sample.
 - **Progress bar** looks identical (3px accent bar) but means **reading progress** in Go vs
   **load/OCR progress** in the extension.
 - **OCR execution:** Go OCRs eagerly at conversion time; the extension OCRs lazily on scroll

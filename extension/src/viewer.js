@@ -2,9 +2,11 @@
 //
 // Flow: read ?file= -> load the PDF with PDF.js -> detect the source language and
 // set <html lang> (so Chrome offers "Translate page") -> build the TOC from the
-// outline -> reflow every page's text into clean <p>/<h2>/<h3> and stream it into
-// the DOM. All *text* ends up in the DOM (never virtualized) so native translate
-// sees the whole document, including content that was off-screen at load.
+// outline -> reflow page text into clean <p>/<h2>/<h3> and insert it into the DOM.
+// Text is never hidden or unloaded once rendered, so native translate sees every
+// page the reader has reached, including whatever is off-screen. PDFs longer than
+// PAGE_CHUNK pages are rendered forward in chunks as the reader approaches the edge
+// (see "Lazy page rendering"); shorter ones land in a single pass, as before.
 
 import * as pdfjsLib from "../vendor/pdf.mjs";
 import { reflowPage } from "./reflow.js";
@@ -112,6 +114,14 @@ let revokeCurrent = null;
 function teardownCurrent() {
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
   if (ocrObserver) { ocrObserver.disconnect(); ocrObserver = null; }
+  // Bumping the generation strands any chunk still rendering from the old document,
+  // so it cannot insert its pages into the new one.
+  docGen++;
+  if (chunkObserver) { chunkObserver.disconnect(); chunkObserver = null; }
+  chunkPending = null;
+  pdfDoc = null;
+  pdfTotal = 0;
+  pdfRendered = 0;
   ocrTotal = 0;
   ocrDone = 0;
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
@@ -373,6 +383,19 @@ async function downloadHtml() {
   const url = URL.createObjectURL(blob);
   triggerDownload(url, `${safeBase(title)}.html`);
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+  reportPartialSave();
+}
+
+// A chunk-rendered PDF holds only the pages the reader has reached, so the export is
+// as long as the read. Say so instead of handing over a quietly truncated book.
+// Rendering the remainder here would cost exactly the long freeze the chunking exists
+// to avoid, and would bury untranslated pages under the ones Chrome already
+// translated - so the honest partial file wins over the confusing complete one.
+function reportPartialSave() {
+  if (!pdfDoc || pdfRendered >= pdfTotal) return;
+  $("status").classList.remove("done");
+  setStatus(`Saved pages 1-${pdfRendered} of ${pdfTotal} - scroll further and save again to include more`);
+  setTimeout(hideStatus, 5000);
 }
 
 function cssVar(name) {
@@ -524,9 +547,11 @@ function buildTocList(entries) {
   return ul;
 }
 
-function scrollToPage(n) {
+async function scrollToPage(n) {
   // Works for both PDF (id="page-N") and EPUB (id="epub-sec-i") sections, which
-  // both carry data-page as the 1-based navigation index.
+  // both carry data-page as the 1-based navigation index. A PDF target past the
+  // rendered edge is rendered on the way there.
+  await ensurePageRendered(n);
   const sec = document.querySelector(`#content section[data-page="${n}"]`);
   if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -813,6 +838,29 @@ function askPassword(updatePassword, reason) {
   input.focus();
 }
 
+// ---- Lazy page rendering ---------------------------------------------------
+// Long PDFs are rendered forward in chunks rather than in one pass. Reflowing a
+// thousand pages takes minutes during which the tab looks hung - but the sharper
+// problem is translation. Chrome's translator snapshots the DOM, ships the text off,
+// and patches the result back in; a render loop still appending pages underneath
+// pulls the rug out from under it, so "Translate page" during a long render used to
+// collapse and had to be toggled off and on again. Chunking bounds that: the reader
+// gets a readable document in seconds, and it then holds still, which is the state
+// the translator needs. The next chunk is built only once the reader nears the end of
+// the current one, so the pages that exist are the pages being read. See renderPages
+// for how a chunk reaches the DOM without disturbing a translation already in place.
+const PAGE_CHUNK = 50; // pages per chunk
+const CHUNK_LEAD = 2;  // build the next chunk once this page before the edge is reached
+
+let pdfDoc = null;    // live PDF.js document, held open for later chunks
+let pdfTotal = 0;
+let pdfRendered = 0;  // pages in the DOM; always the contiguous run 1..pdfRendered
+let pdfChars = 0;
+let pdfPagesWithText = 0;
+let chunkPending = null;  // in-flight chunk - concurrent callers await this one
+let chunkObserver = null; // watches the lead page of the rendered run
+let docGen = 0;           // bumped per loaded document; strands chunks from the old one
+
 async function renderDocument(pdf, title) {
   const total = pdf.numPages;
   $("page-total").textContent = `/ ${total}`;
@@ -828,16 +876,63 @@ async function renderDocument(pdf, title) {
   try { toc = await buildToc(pdf); } catch { toc = []; }
   renderToc(toc);
 
-  const content = $("content");
-  content.replaceChildren();
+  $("content").replaceChildren();
 
-  let totalChars = 0;
-  let pagesWithText = 0;
-  for (let n = 1; n <= total; n++) {
+  pdfDoc = pdf;
+  pdfTotal = total;
+  pdfRendered = 0;
+  pdfChars = 0;
+  pdfPagesWithText = 0;
+
+  await renderChunk();
+  // Judge "scanned, image-only PDF" on the first chunk alone: up to PAGE_CHUNK pages
+  // is a fair sample, and a scanned book is scanned throughout. Waiting for the whole
+  // document would mean never showing the banner on the files that most need it.
+  warnIfNoText();
+  $("btn-save-html").classList.remove("hidden");
+}
+
+// renderChunk renders the next PAGE_CHUNK pages. Callers that race (the scroll
+// sentinel, a page jump, a TOC click) share the in-flight promise instead of
+// pushing a second chunk into the same range.
+function renderChunk() {
+  if (chunkPending) return chunkPending;
+  if (!pdfDoc || pdfRendered >= pdfTotal) return Promise.resolve();
+  const gen = docGen;
+  const from = pdfRendered + 1;
+  const to = Math.min(pdfTotal, pdfRendered + PAGE_CHUNK);
+  const p = renderPages(from, to).finally(() => {
+    if (gen !== docGen) return; // stranded by a new document, which owns the state now
+    chunkPending = null;
+    armChunkSentinel();
+  });
+  chunkPending = p;
+  return p;
+}
+
+// renderPages reflows [from..to] and inserts the result, streaming or in one shot.
+//
+// The first chunk streams, in batches, into an empty document: nothing is translated
+// yet, so incremental mutation costs nothing and the reader watches pages arrive
+// instead of a blank screen - which matters most exactly when a page is slowest to
+// build (image extraction with OCR on). Every later chunk lands mid-read, when a
+// translation may well be live, and so is built entirely off-DOM and inserted as a
+// single mutation the translator can absorb.
+async function renderPages(from, to) {
+  const gen = docGen;
+  const stream = from === 1;
+  const content = $("content");
+  // Appending a fragment moves its children out, leaving it empty and reusable, so
+  // the same fragment serves both as the streaming batch and the one-shot buffer.
+  const frag = document.createDocumentFragment();
+  $("status").classList.remove("done");
+
+  for (let n = from; n <= to; n++) {
+    if (gen !== docGen) return; // another document was opened - drop this chunk
     let blocks = [];
     let page = null;
     try {
-      page = await pdf.getPage(n);
+      page = await pdfDoc.getPage(n);
       const viewport = page.getViewport({ scale: 1 });
       const tc = await page.getTextContent();
       blocks = reflowPage(tc, viewport);
@@ -848,7 +943,7 @@ async function renderDocument(pdf, title) {
     const section = el("section");
     section.id = `page-${n}`;
     section.dataset.page = String(n);
-    if (n > 1) content.append(el("hr", "page-sep"));
+    if (n > 1) frag.append(el("hr", "page-sep"));
     const label = el("div", "page-label");
     label.textContent = `Page ${n}`;
     section.append(label);
@@ -861,17 +956,58 @@ async function renderDocument(pdf, title) {
     if (page && options.ocrImages) await appendPdfImages(page, section, pageChars);
     if (page) { try { page.cleanup(); } catch { /* ignore */ } }
 
-    content.append(section);
+    frag.append(section);
 
-    totalChars += pageChars;
-    if (pageChars >= 20) pagesWithText++;
+    pdfChars += pageChars;
+    if (pageChars >= 20) pdfPagesWithText++;
 
-    setProgress(0.15 + 0.85 * (n / total));
-    setStatus(`Rendering page ${n} / ${total}`);
-    if (n % 4 === 0) await yieldToUI();
+    setProgress(0.15 + 0.85 * (n / pdfTotal));
+    setStatus(`Rendering page ${n} / ${pdfTotal}`);
+    if (n % 4 === 0) {
+      if (stream) content.append(frag);
+      await yieldToUI();
+    }
   }
 
-  finishDocument(total, totalChars, pagesWithText);
+  if (gen !== docGen) return;
+  content.append(frag); // the streaming remainder, or the whole chunk
+  pdfRendered = to;
+  reportRenderIdle();
+}
+
+// armChunkSentinel watches the page CHUNK_LEAD before the rendered edge: reaching it
+// means the reader is close enough that the next chunk should already be building.
+function armChunkSentinel() {
+  if (chunkObserver) { chunkObserver.disconnect(); chunkObserver = null; }
+  if (!pdfDoc || pdfRendered >= pdfTotal) return;
+  const lead = Math.max(1, pdfRendered - CHUNK_LEAD);
+  const sec = document.querySelector(`#content section[data-page="${lead}"]`);
+  if (!sec) return;
+  chunkObserver = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) renderChunk();
+  }, { rootMargin: "200px" });
+  chunkObserver.observe(sec);
+}
+
+// ensurePageRendered renders forward until page n exists. Rendered pages are one
+// contiguous run from page 1, so a jump past the edge fills in everything between
+// rather than leaving a hole - which is what keeps sections in document order for
+// both the translator and the HTML export. No-op for non-PDF documents.
+async function ensurePageRendered(n) {
+  while (pdfDoc && pdfRendered < Math.min(n, pdfTotal)) {
+    const before = pdfRendered;
+    await renderChunk();
+    if (pdfRendered === before) return; // no forward progress - do not spin
+  }
+}
+
+// reportRenderIdle reports where the rendered edge is once a chunk lands.
+function reportRenderIdle() {
+  setProgress(pdfRendered / pdfTotal);
+  setStatus(pdfRendered >= pdfTotal
+    ? `Done - ${pdfTotal} pages`
+    : `Pages 1-${pdfRendered} of ${pdfTotal} - keep scrolling to load more`);
+  setTimeout(hideStatus, 1400);
 }
 
 // ---- EPUB ------------------------------------------------------------------
@@ -956,11 +1092,13 @@ function renderBook(book, fallbackTitle) {
   setTimeout(hideStatus, 1200);
 }
 
-function finishDocument(total, totalChars, pagesWithText) {
+function warnIfNoText() {
   // Scanned / image-only heuristic: a large majority of pages have (almost) no
   // extractable text. Using per-page density rather than an absolute character
-  // floor avoids mislabeling a legitimately short one-page document.
-  const mostlyEmpty = total > 1 && pagesWithText / total < 0.3;
+  // floor avoids mislabeling a legitimately short one-page document. Judged over the
+  // pages rendered so far (the first chunk), not the whole file.
+  const totalChars = pdfChars;
+  const mostlyEmpty = pdfRendered > 1 && pdfPagesWithText / pdfRendered < 0.3;
   // When "Use OCR for images" is on and page images were queued for recognition, they become
   // translatable plates - so the "little or no text" banner (which judges only the PDF text layer)
   // would contradict what the viewer did. Skip it entirely when OCR is covering the images.
@@ -984,10 +1122,6 @@ function finishDocument(total, totalChars, pagesWithText) {
     banner.append(originalButton());
     content.prepend(banner);
   }
-  $("btn-save-html").classList.remove("hidden");
-  setProgress(1);
-  setStatus(`Done - ${total} pages`);
-  setTimeout(hideStatus, 1200);
 }
 
 async function collectSample(pdf, pages) {

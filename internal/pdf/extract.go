@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"doc-html-translate/internal/bundledtools"
 	"doc-html-translate/internal/dialog"
@@ -25,8 +26,33 @@ import (
 
 	pdflib "github.com/ledongthuc/pdf"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
+	pdfcpulib "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"golang.org/x/image/tiff"
 )
+
+// reportPageProgress prints an in-place "page N/total" line with rate and ETA, in the
+// same shape the translation loop uses. Callers throttle it to roughly one line per
+// second: the GUI streams the CLI's stdout and flushes per line, so a line per page
+// would shove thousands of them through the log pane on a large book. As in
+// pipeline.translateContent, the last call carries the newline that releases the line.
+func reportPageProgress(label string, done, total int, start time.Time) {
+	elapsed := time.Since(start).Seconds()
+	rate := 0.0
+	if elapsed > 0 {
+		rate = float64(done) / elapsed
+	}
+	if done >= total {
+		logging.Progress("  %s: %d pages in %.1fs (%.1f/s)     \n", label, total, elapsed, rate)
+		return
+	}
+	eta := ""
+	if rate > 0 {
+		remaining := time.Duration(float64(total-done) / rate * float64(time.Second))
+		eta = fmt.Sprintf(" ETA %s", remaining.Round(time.Second))
+	}
+	logging.Progress("  %s: page %d/%d  %.1f/s%s     ", label, done, total, rate, eta)
+}
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
@@ -527,7 +553,15 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	pdfPageToHref := make(map[int]string, totalPages)
 
 	generated := 0
+	textStart := time.Now()
+	lastReport := textStart
 	for i := 1; i <= totalPages; i++ {
+		// Throttled to ~1 line/s: this loop is silent for minutes on a long PDF, because
+		// the library re-walks the page tree from the root on every Page(i) call.
+		if time.Since(lastReport) >= time.Second {
+			lastReport = time.Now()
+			reportPageProgress("Reading text", i, totalPages, textStart)
+		}
 		pageContent, skip, pageErr := extractPage(reader, i)
 		if pageErr != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: skip PDF page %d: %v\n", i, pageErr)
@@ -592,6 +626,10 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		logging.Printf("  Fallback page created: %s\n", href)
 		logging.Printf("  Original PDF copied: %s\n", pdfCopyName)
 		return book, nil
+	}
+
+	if time.Since(textStart) >= time.Second {
+		reportPageProgress("Reading text", totalPages, totalPages, textStart)
 	}
 
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
@@ -816,9 +854,73 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 	return sb.String()
 }
 
+// writePDFImages dumps every embedded image into imagesDir in a single pass over the
+// PDF, reporting progress as it goes. Reports whether anything was written.
+//
+// The single pass is the point. api.ExtractImagesFile takes a file *path*, so every
+// call re-opens, re-reads, re-validates and re-optimizes the whole document; asking it
+// for one page at a time therefore bought one full parse per page. Measured on the
+// 379 MB, 2304-page PDF that prompted this: 3.6s per call, about 2h20m for the loop,
+// silent throughout - indistinguishable from a hang. The per-page form was there to cap
+// peak memory, but it never could: each call already loaded the entire document, and
+// images stream to disk one at a time either way. One pass over that same file takes
+// 8.9s and peaks at 1.1 GB - the memory the old loop paid 2304 times in a row.
+//
+// Pages are still walked one by one (rather than handing the whole selection to
+// api.ExtractImages) so that a single unreadable image stays a skipped page instead of
+// aborting the run, and so page numbers can drive a progress line.
+func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
+	f, err := os.Open(pdfPath)
+	if err != nil {
+		logging.Printf("  WARNING: could not open PDF for image extraction: %v\n", err)
+		return false
+	}
+	defer f.Close()
+
+	conf := model.NewDefaultConfiguration()
+	conf.Cmd = model.EXTRACTIMAGES
+	ctx, err := api.ReadValidateAndOptimize(f, conf)
+	if err != nil {
+		logging.Printf("  WARNING: could not read PDF for image extraction: %v\n", err)
+		return false
+	}
+
+	// pdfcpu builds image file names from the source name and the page number, and
+	// parseImagePageNum reads that number back out. maxPageDigits stays 1 - i.e. no
+	// zero padding - because a single-page selection is what the old per-page calls
+	// computed, so existing output directories keep matching names.
+	write := pdfcpulib.WriteImageToDisk(imagesDir, strings.TrimSuffix(filepath.Base(pdfPath), ".pdf"))
+	const maxPageDigits = 1
+
+	written := 0
+	start := time.Now()
+	lastReport := start
+	for pageNum := 1; pageNum <= totalPages && pageNum <= ctx.PageCount; pageNum++ {
+		imgs, err := pdfcpulib.ExtractPageImages(ctx, pageNum, false)
+		if err != nil {
+			continue // expected for pages with no (or unreadable) images
+		}
+		singleImgPerPage := len(imgs) == 1
+		for _, img := range imgs {
+			if err := write(img, singleImgPerPage, maxPageDigits); err != nil {
+				logging.Printf("  WARNING: could not write image from page %d: %v\n", pageNum, err)
+				continue
+			}
+			written++
+		}
+		if time.Since(lastReport) >= time.Second {
+			lastReport = time.Now()
+			reportPageProgress("Extracting images", pageNum, totalPages, start)
+		}
+	}
+	if written > 0 && time.Since(start) >= time.Second {
+		reportPageProgress("Extracting images", totalPages, totalPages, start)
+	}
+	return written > 0
+}
+
 // extractImages extracts all embedded images from the PDF using pdfcpu into
 // outputDir/pdf_images/ and returns a map of PDF page number -> relative image paths.
-// Images are extracted one page at a time to limit peak memory usage.
 // Returns nil map (non-fatal) if no images exist or extraction fails.
 func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 	imagesSubdir := "pdf_images"
@@ -828,19 +930,7 @@ func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 		return nil
 	}
 
-	// Extract page by page to limit peak memory — decompressing all images at
-	// once can exhaust memory for PDFs with large embedded images.
-	anyExtracted := false
-	for pageNum := 1; pageNum <= totalPages; pageNum++ {
-		pageStr := strconv.Itoa(pageNum)
-		if err := api.ExtractImagesFile(pdfPath, imagesDir, []string{pageStr}, nil); err != nil {
-			// Per-page errors are expected for pages without images — skip silently.
-			continue
-		}
-		anyExtracted = true
-	}
-
-	if !anyExtracted {
+	if !writePDFImages(pdfPath, imagesDir, totalPages) {
 		logging.Printf("  NOTE: no images extracted from PDF\n")
 		return nil
 	}
