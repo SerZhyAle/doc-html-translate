@@ -21,26 +21,37 @@
     --log-bg: #11111b;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* The window is the frame: the page itself never scrolls or grows. Content is pinned
+   to the top-left (no max-width + auto margins centring it), and the only thing that
+   scrolls is whichever column overflows - normally the log, which a long OCR run fills
+   with thousands of lines. */
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 16px 22px 28px;
-    max-width: 1180px;
-    margin: 0 auto;
+    padding: 16px 22px 20px;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     -webkit-font-smoothing: antialiased;
 }
 
-/* two-column layout: controls on the left, log filling the landscape space on the
-   right. Collapses to a single stacked column on a narrow window. */
+/* two-column layout: controls on the left at their natural width, log filling all the
+   landscape space that is left. Collapses to a single stacked column on a narrow window.
+   min-height:0 on the grid and its children is what lets .log scroll instead of growing:
+   a flex/grid item defaults to min-height:auto, which refuses to shrink below content. */
 .app {
     display: grid;
     grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
     gap: 22px;
     align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
 }
-.col-main { min-width: 0; }
-.col-log { display: flex; flex-direction: column; min-width: 0; }
+.col-main { min-width: 0; overflow-y: auto; overflow-x: hidden; }
+.col-log { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 /* one-time first-run opt-in banner for the default-handler association */
 .assoc-prompt {
     border: 1px solid var(--accent);
@@ -55,8 +66,14 @@ body {
 .assoc-prompt-actions button { padding: 5px 12px; font-size: 12px; }
 .assoc-prompt-actions button.primary { background: var(--accent); color: #11111b; border-color: var(--accent); }
 .assoc-prompt-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+/* Stacked on a narrow window: the log sits under the controls, so pinning everything
+   into one viewport would squeeze it to nothing. Hand scrolling back to the page and
+   give the log a real height of its own. */
 @media (max-width: 900px) {
     .app { grid-template-columns: 1fr; }
+    body { height: auto; overflow: auto; }
+    .col-main { overflow: visible; }
+    .log { min-height: 260px; }
 }
 .head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; }
 h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
@@ -197,7 +214,7 @@ details > .body { padding: 2px 12px 12px; }
     font-size: 10px;
     line-height: 1.35;
     flex: 1 1 auto;
-    min-height: 260px;
+    min-height: 0; /* see .app - without this the log grows instead of scrolling */
     overflow: auto;
     white-space: pre;
     word-break: normal;

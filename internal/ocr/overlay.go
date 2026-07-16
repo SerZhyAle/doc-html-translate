@@ -8,8 +8,10 @@ import (
 	_ "image/png"  //
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	_ "golang.org/x/image/tiff" // extracted PDF images may be TIFF
 	_ "golang.org/x/image/webp" // EPUB images may be WebP
@@ -38,11 +40,17 @@ const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:10
 // images overlaid. Best-effort: an image that fails OCR is left untouched, and the file is
 // only rewritten when at least one overlay was added.
 //
-// onProgress, when non-nil, is called before each image with the number already handled
-// and the total found. Recognizing one image shells out to Tesseract and takes about a
-// second, so a single-page book of scans keeps this loop busy for a long while; the
-// callback lets the caller show that without this package having to know about logging
-// (the same shape as translator.ProgressReporter).
+// onProgress, when non-nil, is called as images finish with the number done and the total
+// to do. Recognizing one image shells out to Tesseract for about a second, so a scanned
+// book keeps this busy for many minutes; the callback lets the caller show that without
+// this package having to know about logging (the shape translator.ProgressReporter uses).
+//
+// Recognition runs across ocrWorkers() Tesseract processes. One process pins about one
+// core, so a scanned book left 90% of a multi-core machine idle while the reader waited.
+// Only recognition is parallel: the results are applied afterwards, in document order,
+// because the HTML tree is not safe for concurrent mutation - and because decodeImage
+// happens there, one image at a time, rather than holding every decoded page in memory
+// at once.
 func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, total int)) (int, error) {
 	f, err := os.Open(htmlPath)
 	if err != nil {
@@ -55,29 +63,19 @@ func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, tota
 	}
 
 	baseDir := filepath.Dir(htmlPath)
-	count := 0
-	imgs := collectImgs(doc)
-	for i, img := range imgs {
-		if onProgress != nil {
-			onProgress(i, len(imgs))
-		}
-		src := attrVal(img, "src")
-		if src == "" || isExternal(src) {
-			continue
-		}
-		imgFile := filepath.Join(baseDir, filepath.FromSlash(src))
-		if _, err := os.Stat(imgFile); err != nil {
-			continue
-		}
-		res, err := Recognize(bin, imgFile, lang, dataDir)
-		if err != nil || res.Width <= 0 || res.Height <= 0 || len(res.Blocks) == 0 {
-			continue
-		}
-		wrapImage(img, res, decodeImage(imgFile))
-		count++
+	jobs := collectOverlayJobs(collectImgs(doc), baseDir)
+	if len(jobs) == 0 {
+		return 0, nil
 	}
-	if onProgress != nil {
-		onProgress(len(imgs), len(imgs))
+	recognizeJobs(bin, lang, dataDir, jobs, onProgress)
+
+	count := 0
+	for i := range jobs {
+		if !jobs[i].ok {
+			continue
+		}
+		wrapImage(jobs[i].node, jobs[i].res, decodeImage(jobs[i].file))
+		count++
 	}
 	if count == 0 {
 		return 0, nil
@@ -93,6 +91,88 @@ func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, tota
 		return 0, err
 	}
 	return count, nil
+}
+
+// overlayJob is one image to recognize and then wrap. res/ok are filled by the worker
+// pool; node/file are read-only once built.
+type overlayJob struct {
+	node *gohtml.Node
+	file string
+	res  Result
+	ok   bool
+}
+
+// collectOverlayJobs keeps the images that are actually recognizable: a local src that
+// resolves to a file on disk. Filtering up front means the progress total is the real
+// amount of work, not a count padded with images that get skipped instantly.
+func collectOverlayJobs(imgs []*gohtml.Node, baseDir string) []overlayJob {
+	jobs := make([]overlayJob, 0, len(imgs))
+	for _, img := range imgs {
+		src := attrVal(img, "src")
+		if src == "" || isExternal(src) {
+			continue
+		}
+		file := filepath.Join(baseDir, filepath.FromSlash(src))
+		if _, err := os.Stat(file); err != nil {
+			continue
+		}
+		jobs = append(jobs, overlayJob{node: img, file: file})
+	}
+	return jobs
+}
+
+// ocrWorkers is how many Tesseract processes to keep in flight. Each one is essentially
+// single-threaded, so the pool is what uses the machine; the cap keeps a couple of cores
+// for the rest of the system (and the GUI that is streaming this log) rather than
+// stalling the desktop to finish a background conversion slightly sooner.
+func ocrWorkers() int {
+	n := runtime.NumCPU() - 2
+	if n > 8 {
+		n = 8
+	}
+	if n < 1 {
+		n = 1
+	}
+	return n
+}
+
+// recognizeJobs fills res/ok for every job, running ocrWorkers() recognitions at a time
+// and reporting completions in order of finishing (not of document position).
+func recognizeJobs(bin, lang, dataDir string, jobs []overlayJob, onProgress func(done, total int)) {
+	if onProgress != nil {
+		onProgress(0, len(jobs))
+	}
+	queue := make(chan int)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	done := 0
+
+	for w := 0; w < ocrWorkers(); w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range queue {
+				// Recognize is self-contained (its own temp file, its own process), so it
+				// is safe to run concurrently; each worker writes only its own job slot.
+				res, err := Recognize(bin, jobs[i].file, lang, dataDir)
+				if err == nil && res.Width > 0 && res.Height > 0 && len(res.Blocks) > 0 {
+					jobs[i].res = res
+					jobs[i].ok = true
+				}
+				mu.Lock()
+				done++
+				if onProgress != nil {
+					onProgress(done, len(jobs))
+				}
+				mu.Unlock()
+			}
+		}()
+	}
+	for i := range jobs {
+		queue <- i
+	}
+	close(queue)
+	wg.Wait()
 }
 
 func collectImgs(n *gohtml.Node) []*gohtml.Node {
