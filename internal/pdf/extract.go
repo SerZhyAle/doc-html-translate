@@ -889,7 +889,7 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 	// parseImagePageNum reads that number back out. maxPageDigits stays 1 - i.e. no
 	// zero padding - because a single-page selection is what the old per-page calls
 	// computed, so existing output directories keep matching names.
-	write := pdfcpulib.WriteImageToDisk(imagesDir, strings.TrimSuffix(filepath.Base(pdfPath), ".pdf"))
+	write := api.WriteImageToDisk(imagesDir, strings.TrimSuffix(filepath.Base(pdfPath), ".pdf"))
 	const maxPageDigits = 1
 
 	written := 0
