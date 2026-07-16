@@ -16,7 +16,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"doc-html-translate/internal/bundledtools"
 	"doc-html-translate/internal/dialog"
@@ -30,29 +29,6 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"golang.org/x/image/tiff"
 )
-
-// reportPageProgress prints an in-place "page N/total" line with rate and ETA, in the
-// same shape the translation loop uses. Callers throttle it to roughly one line per
-// second: the GUI streams the CLI's stdout and flushes per line, so a line per page
-// would shove thousands of them through the log pane on a large book. As in
-// pipeline.translateContent, the last call carries the newline that releases the line.
-func reportPageProgress(label string, done, total int, start time.Time) {
-	elapsed := time.Since(start).Seconds()
-	rate := 0.0
-	if elapsed > 0 {
-		rate = float64(done) / elapsed
-	}
-	if done >= total {
-		logging.Progress("  %s: %d pages in %.1fs (%.1f/s)     \n", label, total, elapsed, rate)
-		return
-	}
-	eta := ""
-	if rate > 0 {
-		remaining := time.Duration(float64(total-done) / rate * float64(time.Second))
-		eta = fmt.Sprintf(" ETA %s", remaining.Round(time.Second))
-	}
-	logging.Progress("  %s: page %d/%d  %.1f/s%s     ", label, done, total, rate, eta)
-}
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
@@ -553,15 +529,11 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	pdfPageToHref := make(map[int]string, totalPages)
 
 	generated := 0
-	textStart := time.Now()
-	lastReport := textStart
+	// This loop is silent for minutes on a long PDF: the library re-walks the page tree
+	// from the root on every Page(i) call.
+	textTick := logging.NewTicker("Reading text", "pages")
 	for i := 1; i <= totalPages; i++ {
-		// Throttled to ~1 line/s: this loop is silent for minutes on a long PDF, because
-		// the library re-walks the page tree from the root on every Page(i) call.
-		if time.Since(lastReport) >= time.Second {
-			lastReport = time.Now()
-			reportPageProgress("Reading text", i, totalPages, textStart)
-		}
+		textTick.Report(i-1, totalPages)
 		pageContent, skip, pageErr := extractPage(reader, i)
 		if pageErr != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: skip PDF page %d: %v\n", i, pageErr)
@@ -628,8 +600,8 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		return book, nil
 	}
 
-	if time.Since(textStart) >= time.Second {
-		reportPageProgress("Reading text", totalPages, totalPages, textStart)
+	if !textTick.Quiet() {
+		textTick.Report(totalPages, totalPages)
 	}
 
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
@@ -893,9 +865,9 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 	const maxPageDigits = 1
 
 	written := 0
-	start := time.Now()
-	lastReport := start
+	tick := logging.NewTicker("Extracting images", "pages")
 	for pageNum := 1; pageNum <= totalPages && pageNum <= ctx.PageCount; pageNum++ {
+		tick.Report(pageNum-1, totalPages)
 		imgs, err := pdfcpulib.ExtractPageImages(ctx, pageNum, false)
 		if err != nil {
 			continue // expected for pages with no (or unreadable) images
@@ -908,13 +880,9 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 			}
 			written++
 		}
-		if time.Since(lastReport) >= time.Second {
-			lastReport = time.Now()
-			reportPageProgress("Extracting images", pageNum, totalPages, start)
-		}
 	}
-	if written > 0 && time.Since(start) >= time.Second {
-		reportPageProgress("Extracting images", totalPages, totalPages, start)
+	if written > 0 && !tick.Quiet() {
+		tick.Report(totalPages, totalPages)
 	}
 	return written > 0
 }

@@ -37,7 +37,13 @@ const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:10
 // container with opaque, translatable text plates over the image. Returns the number of
 // images overlaid. Best-effort: an image that fails OCR is left untouched, and the file is
 // only rewritten when at least one overlay was added.
-func OverlayFile(bin, htmlPath, lang, dataDir string) (int, error) {
+//
+// onProgress, when non-nil, is called before each image with the number already handled
+// and the total found. Recognizing one image shells out to Tesseract and takes about a
+// second, so a single-page book of scans keeps this loop busy for a long while; the
+// callback lets the caller show that without this package having to know about logging
+// (the same shape as translator.ProgressReporter).
+func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, total int)) (int, error) {
 	f, err := os.Open(htmlPath)
 	if err != nil {
 		return 0, err
@@ -50,7 +56,11 @@ func OverlayFile(bin, htmlPath, lang, dataDir string) (int, error) {
 
 	baseDir := filepath.Dir(htmlPath)
 	count := 0
-	for _, img := range collectImgs(doc) {
+	imgs := collectImgs(doc)
+	for i, img := range imgs {
+		if onProgress != nil {
+			onProgress(i, len(imgs))
+		}
 		src := attrVal(img, "src")
 		if src == "" || isExternal(src) {
 			continue
@@ -65,6 +75,9 @@ func OverlayFile(bin, htmlPath, lang, dataDir string) (int, error) {
 		}
 		wrapImage(img, res, decodeImage(imgFile))
 		count++
+	}
+	if onProgress != nil {
+		onProgress(len(imgs), len(imgs))
 	}
 	if count == 0 {
 		return 0, nil

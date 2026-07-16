@@ -493,6 +493,9 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 	dataDir := ocr.DataDir()
 	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, lang)
 
+	// Progress is reported per image, not per file: in single-page mode the whole book is
+	// one content file, so a per-file counter would sit at 0/1 for the entire run - which
+	// is exactly the silence that reads as a hang on a scanned book of thousands of pages.
 	total := 0
 	for _, item := range book.ContentFiles() {
 		href := item.Href
@@ -500,7 +503,8 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 			href = book.BasePath + "/" + href
 		}
 		filePath := filepath.Join(outputDir, filepath.FromSlash(href))
-		n, err := ocr.OverlayFile(bin, filePath, lang, dataDir)
+		tick := logging.NewTicker("OCR overlay", "images")
+		n, err := ocr.OverlayFile(bin, filePath, lang, dataDir, tick.Report)
 		if err != nil {
 			logging.Printf("  OCR overlay %s: %v\n", filepath.Base(filePath), err)
 			continue
