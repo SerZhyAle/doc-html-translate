@@ -3,7 +3,7 @@
 **Strategic spec:** [`../2026-07-01_ocr-image-overlay.md`](../2026-07-01_ocr-image-overlay.md)
 **Research inputs:** [`research/01__ocr-stack-decisions.md`](research/01__ocr-stack-decisions.md)
 **Tier:** Strategic · **Priority:** 50
-**Status:** Implemented - awaiting manual browser test
+**Status:** Verified - closed 2026-07-17; production use accepted as the manual test (see the strategic spec)
 **Phases:** 8 / 8 done
 **Last updated:** 2026-07-01
 

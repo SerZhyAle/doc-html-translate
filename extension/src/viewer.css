@@ -164,6 +164,9 @@ body {
    raster ends up in - full column width, own aspect ratio - so the document has its real
    height from the start and nothing below it shifts when the image lands. */
 #content .pdf-page-pending { width: 100%; margin: 1em auto; }
+/* Reserves a comic page's space (default portrait ratio) until its image is inflated
+   on scroll, so the scrollbar reflects the whole book from the start. */
+#content .comic-page-pending { width: 100%; margin: 1em auto; background: rgba(127, 127, 127, 0.06); }
 #content figure { margin: 1.2em 0; text-align: center; }
 #content figcaption { font-size: 0.85em; color: var(--muted); text-align: center; }
 #content h1 { font-size: 1.7em; text-align: center; margin: 1.6em 0 1em; }

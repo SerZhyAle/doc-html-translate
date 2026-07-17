@@ -148,7 +148,7 @@ func TestExtractSnippet_LongNoSentence(t *testing.T) {
 	path := filepath.Join(dir, "page.html")
 	_ = os.WriteFile(path, []byte(page), 0o644)
 	got := extractSnippet(path)
-	if !strings.HasSuffix(got, "…") {
+	if !strings.HasSuffix(got, "..") {
 		t.Errorf("expected ellipsis for long unbreakable text, got: %q", got)
 	}
 }

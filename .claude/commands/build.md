@@ -36,8 +36,16 @@ If on a protected/default branch and the change is non-trivial, offer to branch 
 **Step 2 — Confirm the change is complete.** The actual code/content edit should already be done
 (via `/fix`, `/quick`, `/spec-dev`, or this conversation). Do not start new feature work here.
 
-**Step 3 — Record "What's new".** Append one row per meaningful change to [DEV/CHANGELOG.md](../../DEV/CHANGELOG.md)
-(`| Timestamp | Path | Target | Description |`). Keep it factual and in project typography.
+**Step 3 — Record "What's new".** Stage the change (`git add -A`), then append one row per meaningful change
+via the changelog script (see `/changelog` for the house style) - it fills Timestamp + Path from git, you
+write only the Description:
+
+```powershell
+./scripts/add_to_dev_log.ps1 -Target "<conventional subject>" -Description @'
+<factual, evidence-rich summary in project typography>
+'@
+```
+
 This is the build-granularity record; at release time it feeds the version's "What's new".
 
 **Step 4 — Pick a clean commit subject.** The GitHub Release notes are auto-generated from commit

@@ -1,9 +1,16 @@
 package config
 
 import (
+	"bytes"
 	"errors"
 	"flag"
+	"os"
 )
+
+// ErrHelp is returned when -h/-help was requested. Usage has already been written to stdout
+// and the caller should exit 0 without reporting anything: help is a request, not a failure -
+// the same treatment -version already gets.
+var ErrHelp = flag.ErrHelp
 
 type Config struct {
 	Register         bool
@@ -62,7 +69,19 @@ func ParseArgs(args []string) (Config, error) {
 	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the app's tessdata, then exit")
 	version := fs.Bool("version", false, "print version and exit")
 
+	// flag writes both the usage block and any parse error to a single writer, but the two
+	// belong on different streams: -h is a request whose output a user pipes and reads, a bad
+	// flag is a failure. Buffer flag's output and route it once Parse has told us which of the
+	// two happened, rather than second-guessing it by scanning args for "-h" ourselves.
+	var out bytes.Buffer
+	fs.SetOutput(&out)
+
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			_, _ = os.Stdout.Write(out.Bytes())
+			return Config{}, ErrHelp
+		}
+		_, _ = os.Stderr.Write(out.Bytes())
 		return Config{}, err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/pipeline"
 	"doc-html-translate/internal/syslocale"
@@ -87,7 +88,7 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 	if a.cfg.OCRDownload != "" {
-		fmt.Printf("Downloading OCR language %q (%s)...\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
+		fmt.Printf("Downloading OCR language %q (%s)..\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
 		if err := ocr.Download(a.cfg.OCRDownload); err != nil {
 			return 1, err
 		}
@@ -208,16 +209,21 @@ func promptSetDefault() bool {
 }
 
 // printPressEnterAndPause prints the closing rule and keeps the console open until Enter.
+// Piped or redirected there is no window to hold open, so the invitation would be a lie and
+// the pause a hang: print the rule and return.
 func printPressEnterAndPause() {
 	line := strings.Repeat("=", 62)
 	fmt.Println(line)
 	fmt.Println()
+	if !logging.StdoutIsTerminal() {
+		return
+	}
 	if syslocale.IsRussian() {
 		fmt.Println("  Нажмите Enter для закрытия.. (хотя вы всё равно закроете окно крестиком)")
 	} else {
 		fmt.Println("  Press Enter to close.. (we both know you'll close the window anyway)")
 	}
-	_, _ = fmt.Scanln() // pause — keep console open until user presses Enter
+	_, _ = fmt.Scanln() // pause - keep console open until user presses Enter
 }
 
 func printSplashEN(line string) {
@@ -230,7 +236,7 @@ func printSplashEN(line string) {
 	fmt.Println("  in your default browser. No ceremony required.")
 	fmt.Println()
 	fmt.Println("  Features:")
-	fmt.Println("    - Convert EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 to readable HTML")
+	fmt.Println("    - Convert EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3, CBZ/CBR/CB7/CBT comics to readable HTML")
 	fmt.Println("    - Navigation between pages/chapters")
 	fmt.Println("    - Ctrl+scroll zoom with persistence")
 	fmt.Println("    - Text translation via Google Translate API")
@@ -245,6 +251,8 @@ func printSplashEN(line string) {
 	fmt.Println(`    doc-html-translate.exe "document.rtf"`)
 	fmt.Println(`    doc-html-translate.exe "page.html"`)
 	fmt.Println(`    doc-html-translate.exe "book.mobi"           # requires Calibre`)
+	fmt.Println(`    doc-html-translate.exe "comic.cbz"           # comic pages, text recognized via OCR`)
+	fmt.Println(`    doc-html-translate.exe "comic.cbr"           # CBR/CB7 require 7-Zip`)
 	fmt.Println(`    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine`)
 	fmt.Println(`    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent`)
 	fmt.Println(`    doc-html-translate.exe -google "book.epub"`)
@@ -279,7 +287,7 @@ func printSplashRU(line string) {
 	fmt.Println("  результат в браузере по умолчанию. Без лишних церемоний.")
 	fmt.Println()
 	fmt.Println("  Возможности:")
-	fmt.Println("    - Конвертация EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 в читаемый HTML")
+	fmt.Println("    - Конвертация EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3, комиксов CBZ/CBR/CB7/CBT в читаемый HTML")
 	fmt.Println("    - Навигация между страницами/главами")
 	fmt.Println("    - Масштабирование Ctrl+колёсико с сохранением")
 	fmt.Println("    - Перевод текста через Google Translate API")
@@ -294,6 +302,8 @@ func printSplashRU(line string) {
 	fmt.Println(`    doc-html-translate.exe "document.rtf"`)
 	fmt.Println(`    doc-html-translate.exe "page.html"`)
 	fmt.Println(`    doc-html-translate.exe "book.mobi"           # требуется Calibre`)
+	fmt.Println(`    doc-html-translate.exe "comic.cbz"           # страницы комикса, текст распознаётся через OCR`)
+	fmt.Println(`    doc-html-translate.exe "comic.cbr"           # CBR/CB7 требуют 7-Zip`)
 	fmt.Println(`    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine`)
 	fmt.Println(`    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent`)
 	fmt.Println(`    doc-html-translate.exe -google "book.epub"`)

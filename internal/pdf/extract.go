@@ -97,7 +97,7 @@ func tryInstallPoppler() string {
 	if err != nil {
 		return ""
 	}
-	logging.Printf("  Installing Poppler via winget...\n")
+	logging.Printf("  Installing Poppler via winget..\n")
 	cmd := exec.Command(winget, "install", "--id", "ossia.poppler",
 		"--accept-package-agreements", "--accept-source-agreements")
 	cmd.Stdout = os.Stdout
@@ -121,7 +121,7 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 		}
 		logging.Printf("  WARNING: pdftotext failed, falling back to pdflib: %v\n", err)
 		if isExecFileNotFound(err) {
-			logging.Printf("  pdftotext blocked (possibly by antivirus) — attempting auto-install...\n")
+			logging.Printf("  pdftotext blocked (possibly by antivirus) - attempting auto-install..\n")
 			if p := tryInstallPoppler(); p != "" {
 				logging.Printf("  Retrying with system pdftotext: %s\n", p)
 				if book2, err2 := extractWithPDFToText(p, pdfPath, outputDir); err2 == nil {
@@ -131,10 +131,10 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 			logging.Printf("  Auto-install failed. To install manually, run:\n")
 			logging.Printf("    winget install ossia.poppler\n")
 			dialog.ShowWarning(
-				"PDF Quality Reduced — pdftotext Unavailable",
+				"PDF Quality Reduced - pdftotext Unavailable",
 				"pdftotext could not run (blocked by antivirus or unavailable)\n"+
 					"and automatic installation failed.\n"+
-					"Text extraction fell back to a less accurate method — ligatures\n"+
+					"Text extraction fell back to a less accurate method - ligatures\n"+
 					"and complex fonts may not render correctly.\n\n"+
 					"To restore full quality, run:\n\n"+
 					"  winget install ossia.poppler\n\n"+
@@ -218,6 +218,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	pdfPageToHref := make(map[int]string, totalPages)
 
 	generated := 0
+	withText := 0
 	for i, rawPage := range pageTexts {
 		pdfPageNum := i + 1
 		imgs := pageImages[pdfPageNum]
@@ -228,6 +229,9 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 		}
 
 		generated++
+		if len(items) > 0 {
+			withText++
+		}
 		href := fmt.Sprintf("page_%03d.html", generated)
 		id := fmt.Sprintf("page_%03d", generated)
 		pdfPageToHref[pdfPageNum] = href
@@ -249,8 +253,34 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
-	logging.Printf("  Pages: %d (with text: %d)\n", totalPages, generated)
+	logPageCounts(totalPages, withText, generated)
 	return book, nil
+}
+
+// logPageCounts reports what the conversion actually produced, keeping the kinds of page
+// apart. One number cannot distinguish a book of prose from a book of scans, and that is
+// exactly what a reader checks this line for: "with text" counts pages carrying real text,
+// "image-only" counts pages that are a picture and nothing else - the shape of a scan, and
+// the hint that -ocr is what makes them readable. Pages yielding neither are emitted nowhere,
+// so they are named too rather than left as an unexplained gap below the total.
+//
+// The counts must come from the emit loop's own decisions. Reporting the number of *emitted*
+// pages under a "with text" label is what made this line untrue for every scanned PDF.
+func logPageCounts(totalPages, withText, generated int) {
+	logging.Printf("  Pages: %d (%s)\n", totalPages, pageCountSummary(totalPages, withText, generated))
+}
+
+// pageCountSummary is the pure half of logPageCounts, split out so the wording can be tested
+// without capturing stdout.
+func pageCountSummary(totalPages, withText, generated int) string {
+	summary := fmt.Sprintf("with text: %d", withText)
+	if imageOnly := generated - withText; imageOnly > 0 {
+		summary += fmt.Sprintf(", image-only: %d", imageOnly)
+	}
+	if empty := totalPages - generated; empty > 0 {
+		summary += fmt.Sprintf(", empty: %d", empty)
+	}
+	return summary
 }
 
 // zeroWidthSpaceMarker (U+200B) is emitted literally by pdftotext for some PDFs
@@ -540,6 +570,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	pdfPageToHref := make(map[int]string, totalPages)
 
 	generated := 0
+	withText := 0
 	// This loop is silent for minutes on a long PDF: the library re-walks the page tree
 	// from the root on every Page(i) call.
 	textTick := logging.NewTicker("Reading text", "pages")
@@ -553,16 +584,21 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 
 		imgs := pageImages[i]
 
+		hasText := true
 		if skip || strings.TrimSpace(pageContent) == "" {
 			if len(imgs) == 0 {
-				// Truly empty page — skip
+				// Truly empty page - skip
 				continue
 			}
-			// Image-only page — include it without text
+			// Image-only page - include it without text
 			pageContent = ""
+			hasText = false
 		}
 
 		generated++
+		if hasText {
+			withText++
+		}
 		href := fmt.Sprintf("page_%03d.html", generated)
 		id := fmt.Sprintf("page_%03d", generated)
 		pdfPageToHref[i] = href
@@ -618,7 +654,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
-	logging.Printf("  Pages: %d (with text: %d)\n", totalPages, generated)
+	logPageCounts(totalPages, withText, generated)
 
 	return book, nil
 }
@@ -886,6 +922,8 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 	const maxPageDigits = 1
 
 	written := 0
+	skippedThumbs := 0
+	skippedDups := 0
 	tick := logging.NewTicker("Extracting images", "pages")
 	for pageNum := 1; pageNum <= totalPages && pageNum <= ctx.PageCount; pageNum++ {
 		tick.Report(pageNum-1, totalPages)
@@ -893,8 +931,23 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 		if err != nil {
 			continue // expected for pages with no (or unreadable) images
 		}
-		singleImgPerPage := len(imgs) == 1
-		for _, img := range imgs {
+		// The real (non-stub) extraction leaves Width/Height zero; a stub pass fills
+		// them from the image dict without decoding any pixels. selectPageImages needs
+		// the dimensions to spot a page embedded twice at two resolutions.
+		if stubs, serr := pdfcpulib.ExtractPageImages(ctx, pageNum, true); serr == nil {
+			for objNr, img := range imgs {
+				if s, ok := stubs[objNr]; ok {
+					img.Width = s.Width
+					img.Height = s.Height
+					imgs[objNr] = img
+				}
+			}
+		}
+		kept, thumbs, dups := selectPageImages(imgs)
+		skippedThumbs += thumbs
+		skippedDups += dups
+		singleImgPerPage := len(kept) == 1
+		for _, img := range kept {
 			if err := write(img, singleImgPerPage, maxPageDigits); err != nil {
 				logging.Printf("  WARNING: could not write image from page %d: %v\n", pageNum, err)
 				continue
@@ -905,7 +958,81 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 	if written > 0 && !tick.Quiet() {
 		tick.Report(totalPages, totalPages)
 	}
+	// Say what was dropped so an image count of 0 (or of "fewer than the PDF holds")
+	// is explained rather than looking like a silent loss.
+	switch {
+	case skippedThumbs > 0 && skippedDups > 0:
+		logging.Printf("  NOTE: skipped %d page thumbnail(s) and %d duplicate raster(s), not page content\n", skippedThumbs, skippedDups)
+	case skippedThumbs > 0:
+		logging.Printf("  NOTE: skipped %d page thumbnail(s), not page content\n", skippedThumbs)
+	case skippedDups > 0:
+		logging.Printf("  NOTE: skipped %d duplicate raster(s) - same page embedded at another resolution\n", skippedDups)
+	}
 	return written > 0
+}
+
+// selectPageImages decides which of a page's extracted rasters are real page
+// content, dropping two kinds that otherwise reach the reader as bugs:
+//
+//   - Thumbnails. pdfcpu returns a page's /Thumb preview as one of its images;
+//     taken as content it renders a ~128px postage stamp where the page should be.
+//   - Proportional-scale duplicates. A scanned page is often embedded twice - the
+//     same picture at two resolutions (e.g. 1455x2065 and 4363x6193) - and emitting
+//     both shows the page twice. Only the largest of a same-shape group is kept.
+//
+// Images of different shapes are left alone: a composed page (an illustration beside
+// a figure) keeps all of them, because there guessing "the page" would be wrong as
+// often as right. The returned slice is ordered by object number so output is stable.
+func selectPageImages(imgs map[int]model.Image) (kept []model.Image, thumbs, dups int) {
+	list := make([]model.Image, 0, len(imgs))
+	for _, img := range imgs {
+		if img.Thumb {
+			thumbs++
+			continue
+		}
+		list = append(list, img)
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].ObjNr < list[j].ObjNr })
+
+	for _, img := range list {
+		merged := false
+		for k := range kept {
+			if sameShapeRaster(kept[k], img) {
+				dups++
+				if imagePixels(img) > imagePixels(kept[k]) {
+					kept[k] = img
+				}
+				merged = true
+				break
+			}
+		}
+		if !merged {
+			kept = append(kept, img)
+		}
+	}
+	return kept, thumbs, dups
+}
+
+func imagePixels(img model.Image) int64 {
+	return int64(img.Width) * int64(img.Height)
+}
+
+// aspectRatioTolerance is how close two rasters' aspect ratios must be to count as
+// the same picture at a different resolution: 1% absorbs rounding in stored pixel
+// dimensions without matching genuinely different shapes.
+const aspectRatioTolerance = 0.01
+
+// sameShapeRaster reports whether two rasters are the same picture at a different
+// scale: both dimensions positive and their aspect ratios equal within tolerance.
+// A uniform scale preserves the aspect ratio, so equal ratios is exactly the signal
+// for "one is a resized copy of the other".
+func sameShapeRaster(a, b model.Image) bool {
+	if a.Width <= 0 || a.Height <= 0 || b.Width <= 0 || b.Height <= 0 {
+		return false
+	}
+	ra := float64(a.Width) / float64(a.Height)
+	rb := float64(b.Width) / float64(b.Height)
+	return math.Abs(ra-rb) <= aspectRatioTolerance*math.Max(ra, rb)
 }
 
 // extractImages extracts all embedded images from the PDF using pdfcpu into
@@ -935,7 +1062,7 @@ func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
 			dialog.ShowWarning(
 				"PDF Images Not Displayed",
 				"This PDF contains images in JPEG2000 format (.jpx).\n"+
-					"Browsers cannot display JPEG2000 — images will be missing in the result.\n\n"+
+					"Browsers cannot display JPEG2000 - images will be missing in the result.\n\n"+
 					"To fix, install ffmpeg:\n"+
 					"  winget install ffmpeg\n\n"+
 					"Or download from: https://www.gyan.dev/ffmpeg/builds/\n"+

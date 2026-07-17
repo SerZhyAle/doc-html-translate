@@ -154,6 +154,7 @@ takes a few business days.
 - **`-register` is a no-op under MSIX** by design - `HKCU\Software\Classes` writes are virtualized
   and ignored. File associations come from the manifest instead (already declared).
 - **MOBI/AZW3 still need Calibre** installed on the user's machine (runtime dependency, non-DRM only).
+- **CBR/CB7 comics need 7-Zip** installed (runtime dependency); CBZ and CBT comics need nothing extra.
 - **Output location:** writing the HTML next to the source file or to a user-chosen folder works
   under `runFullTrust`. Only `%LOCALAPPDATA%`/`HKCU` writes are redirected into the container - the
   app doesn't depend on those for externally-read output.
@@ -164,20 +165,22 @@ takes a few business days.
 
 ### Description
 ```
-doc-html-translate converts documents - EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML - into clean, local HTML you can read in any browser, with generated navigation and a real multi-level table of contents.
+doc-html-translate converts documents - EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics - into clean, local HTML you can read in any browser, with generated navigation and a real multi-level table of contents.
 
 Open a file and the app extracts it to a self-contained HTML folder and opens it in your browser. The built-in reader has light/sepia/dark/night themes, adjustable text size and font, and remembers where you stopped. Read offline, or use your browser's built-in page translation to read in your own language - completely free. For automated translation it can optionally use the Google Cloud Translation API or a local Ollama model (with Ollama your text never leaves your machine).
 
 It can also recognize text inside images (OCR) and overlay it as selectable, translatable text - English is bundled and more languages download on demand. Prefer one long page? Convert to a single HTML file with no table of contents.
 
-It runs as a small desktop app: pick a file, choose options, convert. Re-opening an already-converted book is instant. It needs nothing extra on Windows 10/11 (MOBI/AZW3 additionally require Calibre, for non-DRM files only).
+It also reads comic archives (CBZ/CBR/CB7/CBT): each page opens in order with the speech-bubble text recognized (OCR) and overlaid so page translation works on it.
+
+It runs as a small desktop app: pick a file, choose options, convert. Re-opening an already-converted book is instant. It needs nothing extra on Windows 10/11 (MOBI/AZW3 additionally require Calibre for non-DRM files, and CBR/CB7 comics require 7-Zip).
 
 doc-html-translate runs entirely on your device, has no accounts and no telemetry, and is open source: https://github.com/SerZhyAle/doc-html-translate
 ```
 
 ### Product features (one per line, ≤ 200 chars each)
 ```
-Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML to clean local HTML
+Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics to clean local HTML
 Generated navigation and a real multi-level table of contents
 Recognize text inside images (OCR) and overlay it as translatable text
 Built-in reader: light/sepia/dark/night themes, text size and font, resume where you left off
@@ -194,7 +197,7 @@ Open source - no accounts, no telemetry, no ads, no data collection
 doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:
 - Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.
 - Launching the bundled command-line converter and the user's web browser to display the result.
-- Calling Calibre (for MOBI/AZW3) and a local Ollama server when those optional features are used.
+- Calling Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), and a local Ollama server when those optional features are used.
 These capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated translation (Google Cloud Translation API or a local Ollama model), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate
 ```
 

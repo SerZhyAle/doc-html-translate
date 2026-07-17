@@ -41,7 +41,7 @@ sanitized fragments. No new user-facing format is advertised in this phase.
 > multiple sections can share one document, exactly like epub.js `renderChapter`). It returns
 > `{ frag, label }` where `frag` is a `DocumentFragment` of the cleaned nodes and `label` is
 > the first `h1..h4` text (collapsed whitespace, sliced to 140 chars) or `""`. Model the
-> structure on `renderChapter` in [`epub.js`](../../../extension/src/epub.js) but keep it
+> structure on `renderChapter` in [`epub.js`](../../../../extension/src/epub.js) but keep it
 > standalone (no zip/blob/anchor params).
 
 **Verification:**
@@ -58,7 +58,7 @@ sanitized fragments. No new user-facing format is advertised in this phase.
 **Depends on:** - start of phase
 
 **Prompt for developer:**
-> In [`viewer.js`](../../../extension/src/viewer.js), add a `detectFormat(data, name)` helper
+> In [`viewer.js`](../../../../extension/src/viewer.js), add a `detectFormat(data, name)` helper
 > **next to** the existing `sniffType(data)` (do not remove `sniffType` yet - Step 01.4 rewires
 > its caller and deletes it, so the file stays runnable between steps). `detectFormat` returns a
 > format id string. Detection order: magic bytes first (authoritative), then filename
@@ -130,7 +130,7 @@ sanitized fragments. No new user-facing format is advertised in this phase.
 
 **Prompt for developer:**
 > Add `"src/sanitize.js"` to the `web_accessible_resources[0].resources` array in
-> [`manifest.json`](../../../extension/manifest.json), next to the other `src/*.js` entries.
+> [`manifest.json`](../../../../extension/manifest.json), next to the other `src/*.js` entries.
 
 **Verification:**
 - `src/sanitize.js` appears in `manifest.json`.

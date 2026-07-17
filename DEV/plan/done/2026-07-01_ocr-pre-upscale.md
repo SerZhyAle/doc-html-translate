@@ -43,9 +43,9 @@ original pixel space.
 
 ## Cross-references
 
-- Go: [`tesseract.go`](../../internal/ocr/tesseract.go) `Recognize`, `upscaleForOCR`, `scaleDown`,
+- Go: [`tesseract.go`](../../../internal/ocr/tesseract.go) `Recognize`, `upscaleForOCR`, `scaleDown`,
   `ocrUpscaleBelow` / `ocrUpscaleFactor`.
-- JS: [`ocr-overlay.js`](../../extension/src/ocr-overlay.js) `recognize`, `upscaleForOcr`, `collectLines`
+- JS: [`ocr-overlay.js`](../../../extension/src/ocr-overlay.js) `recognize`, `upscaleForOcr`, `collectLines`
   (scale arg), `OCR_UPSCALE_BELOW` / `OCR_UPSCALE_FACTOR`.
 
 ## Done criteria

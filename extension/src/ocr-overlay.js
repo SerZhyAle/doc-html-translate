@@ -103,12 +103,31 @@ async function toBitmap(src) {
 const OCR_MIN_LINE_CONF = 50;
 const OCR_CLUSTER_GAP_FACTOR = 1.2;
 
-// Upscale a small source before OCR so Tesseract reads low-res thumbnails/scans better, then
-// map coordinates back. Only images whose long side is below OCR_UPSCALE_BELOW are enlarged, by
-// OCR_UPSCALE_FACTOR (a high-quality 2x). Shared with tesseract.go ocrUpscaleBelow /
-// ocrUpscaleFactor (docs/PARITY.md).
-const OCR_UPSCALE_BELOW = 1000;
+// OCR resolution constants, shared with the desktop app's tesseract.go (docs/PARITY.md). We do not
+// gate on raw pixel count - a page scan is over 1000 px tall even at a poor ~100 DPI, so a pixel
+// threshold either upscales everything (4x the OCR cost on a clean render that gains nothing) or
+// nothing (the low-res scan that needs it most). Instead we estimate DPI from the long side against
+// an assumed page height and act on that: below OCR_UPSCALE_DPI_FLOOR the image is enlarged
+// OCR_UPSCALE_FACTOR-fold before recognition (coordinates divided back after), and in every case the
+// resolution is declared to Tesseract (clamped to >= OCR_MIN_DECLARED_DPI). Measured: a ~90-DPI
+// newsprint scan gains hugely from the upscale, while a ~150-DPI scan only needs the DPI declared -
+// the upscale over-segments it for no benefit.
 const OCR_UPSCALE_FACTOR = 2;
+const OCR_ASSUMED_PAGE_INCHES = 11; // assumed long-side page size (US Letter) for the DPI estimate
+const OCR_UPSCALE_DPI_FLOOR = 120; // estimated DPI below which an image is upscaled before OCR
+const OCR_MIN_DECLARED_DPI = 70; // never declare a DPI below this (Tesseract ignores sub-70 anyway)
+
+// estimateDpi approximates an image's resolution from its long side, treating it as one
+// OCR_ASSUMED_PAGE_INCHES-tall page. 0 when unknown. Crude, but enough to tell a low-res scan that
+// needs enlarging from a mid-res one that only needs its DPI declared.
+function estimateDpi(longSidePx) {
+  if (!longSidePx || longSidePx <= 0) return 0;
+  return Math.round(longSidePx / OCR_ASSUMED_PAGE_INCHES);
+}
+
+function clampDeclaredDpi(d) {
+  return d > 0 && d < OCR_MIN_DECLARED_DPI ? OCR_MIN_DECLARED_DPI : d;
+}
 
 // ---- Adaptive plate colours ------------------------------------------------
 // Sample the source image so each plate borrows the block's background ("paper") and text
@@ -248,13 +267,17 @@ function clusterLines(lines) {
   return blocks;
 }
 
-// Upscale a small source before OCR so Tesseract reads low-res thumbnails/scans better; the
-// caller divides recognized coordinates by the returned scale to return to the original space.
-// Only images whose long side is below OCR_UPSCALE_BELOW are enlarged (by OCR_UPSCALE_FACTOR);
-// larger ones pass through untouched. Best-effort: any failure returns the original blob with
-// scale 1. Mirrors the desktop app's tesseract.go upscaleForOCR (docs/PARITY.md).
+// Decide how to feed the image to Tesseract: estimate its DPI, upscale genuinely low-res images
+// (estimated DPI below the floor) by OCR_UPSCALE_FACTOR so recognition is legible, and compute the
+// DPI to declare (0 = none). The caller divides recognized coordinates by the returned scale to
+// return to the original space, and declares the DPI so layout analysis separates regions. Best-
+// effort: any failure returns the original blob with scale 1. Mirrors the desktop app's
+// tesseract.go prepareForOCR (docs/PARITY.md).
 async function upscaleForOcr(blob, width, height) {
-  if (Math.max(width, height) >= OCR_UPSCALE_BELOW) return { image: blob, scale: 1 };
+  const dpi = clampDeclaredDpi(estimateDpi(Math.max(width, height)));
+  if (estimateDpi(Math.max(width, height)) >= OCR_UPSCALE_DPI_FLOOR || !width || !height) {
+    return { image: blob, scale: 1, dpi };
+  }
   try {
     const bmp = await createImageBitmap(blob);
     const w = bmp.width * OCR_UPSCALE_FACTOR, h = bmp.height * OCR_UPSCALE_FACTOR;
@@ -267,9 +290,10 @@ async function upscaleForOcr(blob, width, height) {
     ctx.drawImage(bmp, 0, 0, w, h);
     if (bmp.close) bmp.close();
     const out = cv.convertToBlob ? await cv.convertToBlob() : await new Promise((r) => cv.toBlob(r));
-    return out ? { image: out, scale: OCR_UPSCALE_FACTOR } : { image: blob, scale: 1 };
+    const upDpi = clampDeclaredDpi(estimateDpi(Math.max(width, height)) * OCR_UPSCALE_FACTOR);
+    return out ? { image: out, scale: OCR_UPSCALE_FACTOR, dpi: upDpi } : { image: blob, scale: 1, dpi };
   } catch {
-    return { image: blob, scale: 1 };
+    return { image: blob, scale: 1, dpi };
   }
 }
 
@@ -281,7 +305,10 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
     const worker = await getWorker(lang);
     currentProgress = onProgress || null;
     try {
-      const { image, scale } = await upscaleForOcr(bitmap.source, bitmap.width, bitmap.height);
+      const { image, scale, dpi } = await upscaleForOcr(bitmap.source, bitmap.width, bitmap.height);
+      // Declare the resolution so layout analysis separates regions Tesseract otherwise merges
+      // (adjacent balloons read as one plate). Best-effort: keep going if the param won't set.
+      if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
       const blocks = clusterLines(collectLines(data, scale));
       await sampleColors(bitmap.source, blocks);
@@ -334,7 +361,61 @@ export function buildOverlay({ imageSrc, imageEl, blocks, width, height }) {
     plate.textContent = b.text;
     container.append(plate);
   }
+  scheduleFit(container);
   return container;
+}
+
+// fitPlate fits one plate's text to its box: it shrinks the cqw font down to a floor, and if the
+// text still overflows there it lets the box grow so nothing is ever clipped. The source region
+// height (the inline min-height) is the target the font is fitted to. Mirrors the desktop app's
+// ocrScript fit() (see docs/PARITY.md and overlay.go).
+function fitPlate(b) {
+  if (!b.dataset.ocrCqw) {
+    const m = /([0-9.]+)cqw/.exec(b.style.fontSize || "");
+    b.dataset.ocrCqw = m ? m[1] : "0";
+  }
+  const base = parseFloat(b.dataset.ocrCqw);
+  b.style.height = "";
+  const target = parseFloat(getComputedStyle(b).minHeight) || 0;
+  if (target > 0) b.style.height = target + "px";
+  if (base > 0) {
+    let s = base; const floor = base * 0.5; let g = 0;
+    b.style.fontSize = s + "cqw";
+    while (b.scrollHeight > b.clientHeight + 1 && s > floor && g < 40) {
+      s -= Math.max(0.3, s * 0.08); g++;
+      b.style.fontSize = s + "cqw";
+    }
+  }
+  if (b.scrollHeight > b.clientHeight + 1) b.style.height = "auto";
+}
+
+// scheduleFit fits every plate in a container once it is laid out in the DOM (the caller appends it
+// synchronously, so a setTimeout(0) sees it placed), and re-fits when the page translator swaps a
+// plate's text or the container resizes - the compile-time font size is computed from the source
+// geometry and cannot know the translated length. Mirrors the desktop app's ocrScript scheduling.
+function scheduleFit(container) {
+  const fitAll = () => { container.querySelectorAll(".ocr-plate").forEach(fitPlate); };
+  let t;
+  const go = () => { clearTimeout(t); t = setTimeout(fitAll, 0); };
+  go();
+  if (typeof window !== "undefined") {
+    window.addEventListener("load", go);
+    window.addEventListener("resize", go);
+  }
+  if (typeof MutationObserver !== "undefined") {
+    new MutationObserver((muts) => {
+      for (const mu of muts) {
+        let n = mu.target;
+        while (n && n !== container) {
+          if (n.classList && n.classList.contains("ocr-plate")) { go(); return; }
+          n = n.parentNode;
+        }
+      }
+    }).observe(container, { childList: true, characterData: true, subtree: true });
+  }
+  if (typeof ResizeObserver !== "undefined") {
+    try { new ResizeObserver(go).observe(container); } catch { /* ignore */ }
+  }
 }
 
 // A progress badge (styled by .ocr-badge) callers overlay on a pending image.

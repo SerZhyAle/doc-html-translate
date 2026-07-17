@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"doc-html-translate/internal/browser"
+	"doc-html-translate/internal/comic"
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
@@ -90,7 +92,7 @@ func (r Runner) Run() (int, error) {
 				logging.Println("Done.")
 				return ExitOK, nil
 			}
-			logging.Println("[4/4] Opening in browser...")
+			logging.Println("[4/4] Opening in browser..")
 			if err := browser.Open(indexPath); err != nil {
 				return ExitIOError, fmt.Errorf("open browser: %w", err)
 			}
@@ -110,17 +112,30 @@ func (r Runner) Run() (int, error) {
 	// text plates laid over it (mirrors the extension's image OCR overlay).
 	forceOCR := false
 	if img.IsImage(ext) {
-		logging.Println("[1/4] Preparing image...")
+		logging.Println("[1/4] Preparing image..")
 		book, err = img.Extract(inputPath, outputDir)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return ExitParse, fmt.Errorf("prepare image: %w", err)
 		}
 		forceOCR = true
+	} else if comic.IsComic(ext) {
+		// A comic archive is a container of page images with no text layer: wrap each
+		// page in a one-page HTML doc and force the OCR overlay below, so the browser
+		// shows every page with translatable text plates over the bubbles. Opening a
+		// comic *is* the request to read its text, so OCR is forced here rather than
+		// left to -ocr (same rationale as a standalone image).
+		logging.Println("[1/4] Extracting comic archive..")
+		book, err = comic.Extract(inputPath, outputDir)
+		if err != nil {
+			_ = os.RemoveAll(outputDir)
+			return ExitParse, fmt.Errorf("extract comic: %w", err)
+		}
+		forceOCR = true
 	} else {
 		switch ext {
 		case ".epub":
-			logging.Println("[1/4] Extracting EPUB...")
+			logging.Println("[1/4] Extracting EPUB..")
 			book, err = epub.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
@@ -129,57 +144,67 @@ func (r Runner) Run() (int, error) {
 			logging.Printf("  Title: %s\n", book.Title)
 			logging.Printf("  Chapters: %d\n", len(book.Spine))
 		case ".pdf":
-			logging.Println("[1/4] Extracting PDF...")
+			logging.Println("[1/4] Extracting PDF..")
 			book, err = pdf.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract pdf: %w", err)
 			}
 		case ".txt":
-			logging.Println("[1/4] Extracting TXT...")
+			logging.Println("[1/4] Extracting TXT..")
 			book, err = txt.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract txt: %w", err)
 			}
 		case ".md":
-			logging.Println("[1/4] Extracting Markdown...")
+			logging.Println("[1/4] Extracting Markdown..")
 			book, err = md.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract markdown: %w", err)
 			}
 		case ".fb2":
-			logging.Println("[1/4] Extracting FB2...")
+			logging.Println("[1/4] Extracting FB2..")
 			book, err = fb2.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract fb2: %w", err)
 			}
 		case ".rtf":
-			logging.Println("[1/4] Extracting RTF...")
+			logging.Println("[1/4] Extracting RTF..")
 			book, err = rtf.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract rtf: %w", err)
 			}
 		case ".html", ".htm":
-			logging.Println("[1/4] Extracting HTML...")
+			logging.Println("[1/4] Extracting HTML..")
 			book, err = htmlconv.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract html: %w", err)
 			}
 		case ".mobi", ".azw3":
-			logging.Println("[1/4] Extracting MOBI...")
+			logging.Println("[1/4] Extracting MOBI..")
 			book, err = mobi.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
 				return ExitParse, fmt.Errorf("extract mobi: %w", err)
 			}
 		default:
-			// Unknown extension — treat as plain text.
-			logging.Printf("[1/4] Unknown format %q — treating as plain text...\n", ext)
+			// Unknown extension: treat it as plain text - but only if it is text. A binary
+			// (a .docx, a .djvu, a comic archive) handed to the text extractor became a
+			// multi-megabyte document of raw bytes rendered as prose, reported as success. The
+			// browser extension routes on the byte signature and refuses these; this matches it.
+			if head, herr := readHead(inputPath, 4096); herr == nil {
+				if desc := txt.LooksBinary(head); desc != "" {
+					_ = os.RemoveAll(outputDir)
+					return ExitParse, fmt.Errorf("%s looks like %s, not a text document - refusing to convert it into garbage",
+						filepath.Base(inputPath), desc)
+				}
+			}
+			logging.Printf("[1/4] Unknown extension %q - reading as plain text..\n", ext)
 			book, err = txt.Extract(inputPath, outputDir)
 			if err != nil {
 				_ = os.RemoveAll(outputDir)
@@ -204,7 +229,7 @@ func (r Runner) Run() (int, error) {
 	}
 
 	// Step 2: Inject navigation bars (must happen before translation).
-	logging.Println("[2/4] Building HTML structure...")
+	logging.Println("[2/4] Building HTML structure..")
 	var generatedIndex string
 	switch {
 	case r.cfg.SinglePage:
@@ -213,14 +238,14 @@ func (r Runner) Run() (int, error) {
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate single page: %w", err)
 		}
-		logging.Println("  Single-page mode — all content merged, TOC skipped.")
+		logging.Println("  Single-page mode - all content merged, TOC skipped.")
 	case len(book.Spine) == 1:
 		// Single page — no TOC, no navigation bars needed.
 		generatedIndex, err = htmlgen.GenerateSinglePageIndex(book, outputDir)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate single-page index: %w", err)
 		}
-		logging.Println("  Single page — TOC and navigation skipped.")
+		logging.Println("  Single page - TOC and navigation skipped.")
 	default:
 		if err := htmlgen.InjectNavBars(book, outputDir, filepath.Base(inputPath)); err != nil {
 			return ExitIOError, fmt.Errorf("inject navbars: %w", err)
@@ -250,7 +275,7 @@ func (r Runner) Run() (int, error) {
 	case r.cfg.UseGoogle:
 		apiKey, keyErr := translator.LoadGoogleAPIKey()
 		if keyErr != nil {
-			logging.Printf("[3/4] Google Translate skipped — API key not available.\n")
+			logging.Printf("[3/4] Google Translate skipped - API key not available.\n")
 			logging.Printf("       To enable: save your Google Cloud Translation API key as 'google_api.key' in either:\n")
 			for _, p := range translator.GoogleAPIKeyPaths() {
 				logging.Printf("         %s\n", p)
@@ -270,7 +295,7 @@ func (r Runner) Run() (int, error) {
 				"Characters to send: %s\nEstimated cost: $%.2f USD\n\nProceed with Google Translate?",
 				formatInt(totalChars), estCost,
 			)
-			if !dialog.ConfirmYesNo("Google Translate — Cost Warning", msg) {
+			if !dialog.ConfirmYesNo("Google Translate - Cost Warning", msg) {
 				logging.Println("[3/4] Translation cancelled by user")
 				break
 			}
@@ -291,7 +316,7 @@ func (r Runner) Run() (int, error) {
 		go func() {
 			<-sigCh
 			fmt.Println()
-			logging.Println("Interrupted. Unloading Ollama model from VRAM...")
+			logging.Println("Interrupted. Unloading Ollama model from VRAM..")
 			ollamaWorker.Unload()
 			os.Exit(130)
 		}()
@@ -327,7 +352,7 @@ func (r Runner) Run() (int, error) {
 	if r.cfg.NoOpen {
 		logging.Println("[4/4] Browser open skipped (-noopen)")
 	} else {
-		logging.Println("[4/4] Opening in browser...")
+		logging.Println("[4/4] Opening in browser..")
 		if err := browser.Open(generatedIndex); err != nil {
 			return ExitIOError, fmt.Errorf("open browser: %w", err)
 		}
@@ -346,7 +371,7 @@ func (r Runner) translateContent(book *epub.Book, client translator.Client, page
 		return ExitOK, nil, nil
 	}
 
-	logging.Printf("[3/4] Translating %d pages...\n", total)
+	logging.Printf("[3/4] Translating %d pages..\n", total)
 	tocSnippets := make(map[string]string, total)
 
 	for i, page := range pages {
@@ -400,8 +425,10 @@ func (r Runner) translateContent(book *epub.Book, client translator.Client, page
 			logging.Errorf("\nTRANSLATION ERROR: %v\n", err)
 			logging.Errorf("Translation failed at page %d/%d (%s)\n", i+1, total, page.item.Href)
 			logging.Errorf("The book will be opened WITHOUT translation.\n")
-			logging.Errorf("Press Enter to continue...\n")
-			_, _ = fmt.Scanln()
+			if logging.StdoutIsTerminal() {
+				logging.Errorf("Press Enter to continue..\n")
+				_, _ = fmt.Scanln()
+			}
 			return ExitOK, nil, nil
 		}
 
@@ -493,25 +520,73 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 	dataDir := ocr.DataDir()
 	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, lang)
 
-	// Progress is reported per image, not per file: in single-page mode the whole book is
-	// one content file, so a per-file counter would sit at 0/1 for the entire run - which
-	// is exactly the silence that reads as a hang on a scanned book of thousands of pages.
-	total := 0
+	// Recognition batches across the whole book, not per content file: the Tesseract pool
+	// spans every page's images at once, so it stays at full width even in -multipage mode,
+	// where each page is one content file with one image and a per-file pool would recognize
+	// serially. Progress is per image (not per file): in single-page mode the whole book is
+	// one content file, so a per-file counter would sit at 0/1 for the entire run - the very
+	// silence that reads as a hang on a scanned book of thousands of pages.
+	filePaths := make([]string, 0, len(book.ContentFiles()))
 	for _, item := range book.ContentFiles() {
 		href := item.Href
 		if book.BasePath != "" && book.BasePath != "." {
 			href = book.BasePath + "/" + href
 		}
-		filePath := filepath.Join(outputDir, filepath.FromSlash(href))
-		tick := logging.NewTicker("OCR overlay", "images")
-		n, err := ocr.OverlayFile(bin, filePath, lang, dataDir, tick.Report)
-		if err != nil {
-			logging.Printf("  OCR overlay %s: %v\n", filepath.Base(filePath), err)
-			continue
-		}
-		total += n
+		filePaths = append(filePaths, filepath.Join(outputDir, filepath.FromSlash(href)))
 	}
-	logging.Printf("  OCR overlay: %d image(s) overlaid\n", total)
+	tick := logging.NewTicker("OCR overlay", "images")
+	stats := ocr.OverlayBook(bin, filePaths, lang, dataDir, tick.Report)
+	reportOverlay(stats)
+}
+
+// reportOverlay says what happened to every image, not just how many worked. The count alone
+// forces the reader to subtract and then guess at the remainder: a 2304-page graphic novel
+// reporting "1711 overlaid" is behaving perfectly (the other 593 are art panels with no
+// dialogue), while an 8-of-9 on a scanned contract was a real failure - and the old line made
+// those two look identical. A failure is named with its file and its reason; images that
+// simply hold no text are counted, because they are ordinary and listing them would bury the
+// failures.
+func reportOverlay(stats ocr.OverlayResult) {
+	summary := fmt.Sprintf("%d image(s) overlaid", stats.Overlaid)
+	if stats.NoText > 0 {
+		summary += fmt.Sprintf(", %d with no text found", stats.NoText)
+	}
+	if len(stats.Failed) > 0 {
+		summary += fmt.Sprintf(", %d failed", len(stats.Failed))
+	}
+	logging.Printf("  OCR overlay: %s\n", summary)
+
+	// Named on stdout beside the count they explain, as WARNING like the other best-effort
+	// problems in this pipeline - a reason that lands on a different stream from its summary
+	// is a reason the reader never sees when the log is redirected to a file.
+	//
+	// Capped: when the cause is systemic (no language data, a broken engine) every image
+	// fails with the same sentence, and a scanned book would bury the rest of the log under
+	// thousands of copies. The remainder is counted, never silently dropped.
+	const maxNamed = 5
+	for i, f := range stats.Failed {
+		if i == maxNamed {
+			logging.Printf("  WARNING: ..and %d more image(s) failed the same way\n", len(stats.Failed)-maxNamed)
+			break
+		}
+		logging.Printf("  WARNING: OCR failed on %s: %v\n", filepath.Base(f.File), f.Err)
+	}
+}
+
+// readHead returns up to n leading bytes of a file, for format sniffing. A short read (the
+// file is smaller than n) is not an error - it returns what there was.
+func readHead(path string, n int) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	buf := make([]byte, n)
+	got, err := io.ReadFull(f, buf)
+	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		return nil, err
+	}
+	return buf[:got], nil
 }
 
 func loadContentPages(book *epub.Book, outputDir string) []contentPage {

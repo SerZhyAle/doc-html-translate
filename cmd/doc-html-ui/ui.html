@@ -306,7 +306,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
 </div>
 <input type="hidden" id="inputFile">
-<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.</div>
+<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
     <button type="button" class="inline-btn" id="btnOpenPrev" data-i18n="btnOpenPrev">Open result</button>
@@ -425,7 +425,7 @@ const I18N = {
         dropPlaceholder: "Drag a document here, or click to choose one",
         dropChooseAnother: "click to choose another file",
         btnConvert: "Convert",
-        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.",
+        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.",
         prevResultFound: "A previous result already exists for this file.",
         btnOpenPrev: "Open result",
         btnDeletePrev: "Delete previous result",
@@ -514,7 +514,7 @@ const I18N = {
         dropPlaceholder: "Перетащите документ сюда или щёлкните, чтобы выбрать",
         dropChooseAnother: "щёлкните, чтобы выбрать другой файл",
         btnConvert: "Конвертировать",
-        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для наложения текста на изображения нужен Tesseract.",
+        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комиксы (CBZ/CBR/CB7/CBT) и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для CBR/CB7 нужен 7-Zip; для наложения текста на изображения и комиксы нужен Tesseract.",
         prevResultFound: "Для этого файла уже есть результат конвертации.",
         btnOpenPrev: "Открыть результат",
         btnDeletePrev: "Удалить предыдущий результат",
@@ -603,7 +603,7 @@ const I18N = {
         dropPlaceholder: "Перетягніть документ сюди або клацніть, щоб обрати",
         dropChooseAnother: "клацніть, щоб обрати інший файл",
         btnConvert: "Конвертувати",
-        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для накладання тексту на зображення потрібен Tesseract.",
+        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комікси (CBZ/CBR/CB7/CBT) та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для CBR/CB7 потрібен 7-Zip; для накладання тексту на зображення та комікси потрібен Tesseract.",
         prevResultFound: "Для цього файлу вже є результат конвертації.",
         btnOpenPrev: "Відкрити результат",
         btnDeletePrev: "Видалити попередній результат",

@@ -12,8 +12,91 @@ import (
 	pdflib "github.com/ledongthuc/pdf"
 
 	"github.com/go-pdf/fpdf"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"golang.org/x/image/tiff"
 )
+
+// The page counter used to report the number of *emitted* pages under a "with text" label,
+// so a scan with no text layer at all announced "Pages: 6 (with text: 6)" directly beneath
+// the warning that no text had been extracted. Each kind of page is now counted separately
+// and named for what it is.
+func TestPageCountSummary(t *testing.T) {
+	tests := []struct {
+		name                            string
+		totalPages, withText, generated int
+		want                            string
+	}{
+		{"prose: every page has text", 300, 300, 300, "with text: 300"},
+		{"a scan: no text layer anywhere", 6, 0, 6, "with text: 0, image-only: 6"},
+		{"mixed: text, plates and blanks", 300, 280, 295, "with text: 280, image-only: 15, empty: 5"},
+		{"blank pages are named, not hidden", 10, 4, 4, "with text: 4, empty: 6"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pageCountSummary(tt.totalPages, tt.withText, tt.generated); got != tt.want {
+				t.Errorf("pageCountSummary(%d, %d, %d)\n got: %q\nwant: %q",
+					tt.totalPages, tt.withText, tt.generated, got, tt.want)
+			}
+		})
+	}
+}
+
+// selectPageImages must (1) drop /Thumb previews, which pdfcpu returns among a page's
+// images and which render as a postage stamp where the page should be, and (2) collapse
+// the same picture embedded at two resolutions down to the largest, so a scanned page is
+// not shown twice - while leaving a genuinely composed page (differently-shaped images)
+// fully intact.
+func TestSelectPageImages(t *testing.T) {
+	// The measured duplicate from pdf-1page-blackletter_Plague-Proclamation-1625.pdf:
+	// the same page as 1455x2065 and 4363x6193 (exactly 3x).
+	small := model.Image{ObjNr: 1, Width: 1455, Height: 2065}
+	big := model.Image{ObjNr: 2, Width: 4363, Height: 6193}
+	thumb := model.Image{ObjNr: 3, Width: 128, Height: 104, Thumb: true}
+
+	t.Run("drops thumbnails", func(t *testing.T) {
+		kept, thumbs, dups := selectPageImages(map[int]model.Image{3: thumb, 2: big})
+		if thumbs != 1 || dups != 0 {
+			t.Fatalf("thumbs=%d dups=%d, want thumbs=1 dups=0", thumbs, dups)
+		}
+		if len(kept) != 1 || kept[0].ObjNr != 2 {
+			t.Fatalf("kept=%v, want only the page raster (objNr 2)", kept)
+		}
+	})
+
+	t.Run("collapses a proportional-scale duplicate to the largest", func(t *testing.T) {
+		kept, thumbs, dups := selectPageImages(map[int]model.Image{1: small, 2: big})
+		if thumbs != 0 || dups != 1 {
+			t.Fatalf("thumbs=%d dups=%d, want thumbs=0 dups=1", thumbs, dups)
+		}
+		if len(kept) != 1 || kept[0].ObjNr != 2 {
+			t.Fatalf("kept=%v, want only the largest raster (objNr 2)", kept)
+		}
+	})
+
+	t.Run("keeps every image of a composed page", func(t *testing.T) {
+		portrait := model.Image{ObjNr: 1, Width: 600, Height: 900}
+		landscape := model.Image{ObjNr: 2, Width: 900, Height: 600}
+		square := model.Image{ObjNr: 3, Width: 500, Height: 500}
+		kept, thumbs, dups := selectPageImages(map[int]model.Image{1: portrait, 2: landscape, 3: square})
+		if thumbs != 0 || dups != 0 {
+			t.Fatalf("thumbs=%d dups=%d, want both 0", thumbs, dups)
+		}
+		if len(kept) != 3 {
+			t.Fatalf("kept %d images, want 3 (composed page left intact)", len(kept))
+		}
+	})
+
+	t.Run("unknown dimensions are never treated as duplicates", func(t *testing.T) {
+		// The real (non-stub) extraction can leave Width/Height at zero; such images
+		// must pass through rather than collapse into each other.
+		a := model.Image{ObjNr: 1}
+		b := model.Image{ObjNr: 2}
+		kept, _, dups := selectPageImages(map[int]model.Image{1: a, 2: b})
+		if dups != 0 || len(kept) != 2 {
+			t.Fatalf("kept=%d dups=%d, want kept=2 dups=0", len(kept), dups)
+		}
+	})
+}
 
 // createTestPDF generates a minimal PDF with the given pages of text.
 // Each element in pages is the text content for one page.

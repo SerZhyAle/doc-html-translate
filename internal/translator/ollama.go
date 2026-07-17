@@ -311,7 +311,7 @@ func (c *OllamaClient) translateBatch(texts []string, srcLang, dstLang string) (
 	}
 	c.firstMu.Unlock()
 	if isFirst {
-		logging.Printf("  Loading model %s into VRAM...\n", c.model)
+		logging.Printf("  Loading model %s into VRAM..\n", c.model)
 	}
 
 	t0 := time.Now()

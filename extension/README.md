@@ -1,11 +1,13 @@
 # Documents -> translatable HTML (browser extension)
 
-A Chromium MV3 extension that opens **PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown and local HTML**
-and re-renders them as clean, semantic HTML so the browser's built-in **Translate page** works on them
-for free (no API key, no invoice, no catch). Spin-off of [doc-html-translate](../README.md); it ports
-that app's format extractors to run in-browser - PDF.js for PDF, a native unzip + DOM pipeline for EPUB,
-hand-ported readers for TXT/RTF/FB2/HTML, the vendored `marked` for Markdown, and the vendored
-`foliate-js` for MOBI/AZW3 (replacing the desktop's Calibre dependency).
+A Chromium MV3 extension that opens **PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML and
+CBZ/CBT comics** and re-renders them as clean, semantic HTML so the browser's built-in **Translate page**
+works on them for free (no API key, no invoice, no catch). Spin-off of [doc-html-translate](../README.md);
+it ports that app's format extractors to run in-browser - PDF.js for PDF, a native unzip + DOM pipeline
+for EPUB, hand-ported readers for TXT/RTF/FB2/HTML, the vendored `marked` for Markdown, and the vendored
+`foliate-js` for MOBI/AZW3 (replacing the desktop's Calibre dependency). Comic archives open page by page
+with each page's speech-bubble text recognized (OCR) and overlaid as translatable text; **CBR and CB7 are
+desktop-app only** - a browser has no RAR/7z decoder, so those show a "use the desktop app" notice.
 
 It also does **image OCR**: right-click a picture ("OCR & translate this image"), open a standalone image
 file from the popup, or turn on "Use OCR for images" for PDFs/EPUBs - the extension recognizes the text
@@ -47,6 +49,7 @@ src/
   epub.js              EPUB: unzip + OPF/spine + nav/NCX TOC + chapter sanitize, ported from internal/epub
   txt.js rtf.js html.js md.js fb2.js  ported readers for TXT / RTF / local HTML / Markdown / FB2
   ebook.js             MOBI + AZW3 (KF8) via vendored foliate-js (replaces the desktop's Calibre)
+  comic.js             CBZ (zip) + CBT (tar) comics: natural page order, entry filter, lazy inflate; CBR/CB7 declined
   sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
   lang.js              source-language detection -> <html lang>
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
@@ -149,6 +152,10 @@ network access, and only when you click **Download**. See [`store/PRIVACY.md`](s
 - MOBI/AZW3 are parsed in-browser by the vendored `foliate-js` (no Calibre needed); DRM-protected Kindle
   files cannot be read (same as the desktop app). TXT/RTF/Markdown/FB2/HTML are opened via the file picker
   (or, for FB2/RTF, a `*.fb2` / `*.rtf` URL); plain `.txt`/`.html` pages are left to the browser.
+- Comics: **CBZ (zip) and CBT (tar) only**. Pages load and OCR lazily as you scroll (OCR is forced on, since
+  a comic has no text layer); page order is the archive's natural filename order. **CBR (RAR) and CB7 (7z)
+  are declined** with a "use the desktop app" notice - a browser cannot decode RAR/7z. ZIP64 CBZs are not
+  supported (same as EPUB).
 - Firefox and mobile are out of scope (different PDF + interception story).
 - With OCR **off**, the viewer is text-extraction only (`getTextContent()`) and never rasterizes pages.
   OCR (Tesseract) uses WebAssembly, and scanned-PDF OCR rasterizes the page, so the manifest sets

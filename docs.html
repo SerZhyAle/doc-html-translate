@@ -217,7 +217,7 @@
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, the command-line converter and Windows file-association handler. This page documents its flags.</li>
         <li><strong>GUI desktop app</strong> - <code>doc-html-ui.exe</code>, a windowed front-end that exposes every flag below, with a file picker, drag &amp; drop and a default-handler toggle (opt-in, off by default).</li>
         <li><strong>Microsoft Store app</strong> - the same desktop app (GUI + CLI) shipped as an auto-updating, Store-signed MSIX: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1">Microsoft Store</a>.</li>
-        <li><strong>Browser extension</strong> - re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean HTML right in the browser so the built-in <em>Translate page</em> works on them, no app install needed: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Chrome Web Store</a> · <a href="extension.html">extension page</a>.</li>
+        <li><strong>Browser extension</strong> - re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT comics) as clean HTML right in the browser so the built-in <em>Translate page</em> works on them, no app install needed: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Chrome Web Store</a> · <a href="extension.html">extension page</a>.</li>
       </ul>
     </section>
 
@@ -251,9 +251,11 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 10px;">
       <h2>Supported Formats</h2>
-      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. A reasonable spread, if we say so ourselves.</p>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3, and CBZ/CBR/CB7/CBT comics. A reasonable spread, if we say so ourselves.</p>
+      <p>Also <strong>comic archives</strong> (CBZ / CBR / CB7 / CBT): a container of page images with no text layer, opened page by page with OCR forced on, so the speech-bubble text is recognized and laid over each page as translatable plates. CBZ and CBT need nothing extra; CBR and CB7 require <a href="https://www.7-zip.org">7-Zip</a> installed (the same external-tool pattern as MOBI needing Calibre).</p>
       <p>Also a <strong>standalone image</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): the app OCRs it and lays translatable text plates over the picture, so Chrome/Edge page translation works on it in place - the same overlay the browser extension produces. Needs the <strong>Tesseract</strong> OCR engine (see <code>-ocr-lang</code>).</p>
-      <p class="small">MOBI and AZW3: requires <a href="https://calibre-ebook.com">Calibre</a> installed. DRM-protected files are not supported - the converter respects locks it cannot pick.</p>
+      <p class="small">MOBI and AZW3: requires <a href="https://calibre-ebook.com">Calibre</a> installed. CBR and CB7 comics: require <a href="https://www.7-zip.org">7-Zip</a> installed (CBZ and CBT need nothing extra). DRM-protected files are not supported - the converter respects locks it cannot pick.</p>
+      <p class="small">Plain-text (.txt) input is decoded by sniffing its bytes - a UTF-8/UTF-16 byte-order mark, then valid UTF-8, then a legacy Cyrillic code page (Windows-1251, KOI8-R, CP866) by detection - so a DOS-era or Notepad "Unicode" .txt reads as text, not mojibake. An unreadable binary (a .docx, .djvu, or a comic archive with no 7-Zip) is refused with a named format instead of being turned into a garbage document.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">
@@ -293,9 +295,15 @@ doc-html-translate.exe -ollama "book.epub"</div>
             <td>Required for MOBI and AZW3 format support</td>
             <td><a href="https://calibre-ebook.com/download_windows">calibre-ebook.com</a></td>
           </tr>
+          <tr>
+            <td><strong>7-Zip</strong></td>
+            <td>Unpacks CBR (RAR) and CB7 (7z) comic archives into their page images</td>
+            <td>CBR and CB7 comics - CBZ and CBT need nothing extra</td>
+            <td><a href="https://www.7-zip.org">7-zip.org</a></td>
+          </tr>
         </tbody>
       </table>
-      <p class="small" style="margin-top:10px;">Without <strong>pdftotext</strong>: built-in Go PDF reader is used (slightly lower quality). Without <strong>ffmpeg</strong>: JPEG2000 images in PDFs will not be visible in the browser. Without <strong>Calibre</strong>: MOBI/AZW3 files cannot be opened.</p>
+      <p class="small" style="margin-top:10px;">Without <strong>pdftotext</strong>: built-in Go PDF reader is used (slightly lower quality). Without <strong>ffmpeg</strong>: JPEG2000 images in PDFs will not be visible in the browser. Without <strong>Calibre</strong>: MOBI/AZW3 files cannot be opened. Without <strong>7-Zip</strong>: CBR/CB7 comics cannot be opened.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">

@@ -118,6 +118,42 @@ async function imageObjToBlob(imgObj, flips = NO_FLIPS) {
   return null;
 }
 
+// ASPECT_RATIO_TOLERANCE mirrors the desktop app (internal/pdf/extract.go): two rasters
+// whose aspect ratios match within 1% are the same picture at a different resolution.
+const ASPECT_RATIO_TOLERANCE = 0.01;
+
+// sameShapeRaster reports whether two rasters are the same picture at a different scale:
+// both dimensions positive and their aspect ratios equal within tolerance. A uniform
+// scale preserves the aspect ratio, so equal ratios is the signal for "a resized copy".
+export function sameShapeRaster(a, b) {
+  if (!a.width || !a.height || !b.width || !b.height) return false;
+  const ra = a.width / a.height;
+  const rb = b.width / b.height;
+  return Math.abs(ra - rb) <= ASPECT_RATIO_TOLERANCE * Math.max(ra, rb);
+}
+
+// dedupeSameShape collapses proportional-scale duplicates - the same scanned page
+// embedded twice at two resolutions - keeping the largest, so a page is not shown twice.
+// Differently-shaped images (a composed page: an illustration beside a figure) are all
+// kept. Mirrors selectPageImages in the desktop app (internal/pdf/extract.go); the app
+// also drops /Thumb previews, which never reach here because a thumbnail is a page-dict
+// entry that the content stream never paints.
+export function dedupeSameShape(imgs) {
+  const kept = [];
+  for (const im of imgs) {
+    let merged = false;
+    for (let k = 0; k < kept.length; k++) {
+      if (sameShapeRaster(kept[k], im)) {
+        if (im.width * im.height > kept[k].width * kept[k].height) kept[k] = im;
+        merged = true;
+        break;
+      }
+    }
+    if (!merged) kept.push(im);
+  }
+  return kept;
+}
+
 // Extract embedded raster images from a page as { blob, width, height }. Images smaller
 // than minSize on a side are skipped (icons, bullets, rules).
 export async function extractPageImages(page, { minSize = 64 } = {}) {
@@ -158,7 +194,7 @@ export async function extractPageImages(page, { minSize = 64 } = {}) {
       /* skip this image */
     }
   }
-  return out;
+  return dedupeSameShape(out);
 }
 
 // Render the whole page as one image - the fallback for scanned pages that are a single

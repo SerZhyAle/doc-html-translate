@@ -300,7 +300,7 @@ func ExtractSnippetFromDoc(doc *gohtml.Node) string {
 	}
 	// Fewer than 2 sentences found within limit — return what we have.
 	if len(runes) > maxLen {
-		return strings.TrimRightFunc(string(runes[:maxLen]), unicode.IsSpace) + "…"
+		return strings.TrimRightFunc(string(runes[:maxLen]), unicode.IsSpace) + ".."
 	}
 	return text
 }

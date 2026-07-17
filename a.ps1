@@ -61,7 +61,7 @@
         r    - print the release checklist (RUNS NOTHING)            (scripts/release.ps1)
         s    - setup dev tools (golangci-lint + typos)              (scripts/bootstrap-tools.ps1)
         icon - regenerate assets/doc-html-translate.ico             (scripts/generate-icon.ps1)
-        log  - append a DEV/CHANGELOG.md row (-Path -Target -Description)
+        log  - append a DEV/CHANGELOG.md row (-Target -Description; Path auto from git)
 .EXAMPLE
     .\a.ps1 ch
 .EXAMPLE
@@ -143,7 +143,10 @@ $scripts = [ordered]@{
     'r'    = @{ Group = 'Release / tool';Path = 'scripts/release.ps1';          Args = @{};                   Desc = 'print the release checklist (RUNS NOTHING)' }
     's'    = @{ Group = 'Release / tool';Path = 'scripts/bootstrap-tools.ps1';  Args = @{};                   Desc = 'setup dev tools (golangci-lint + typos)' }
     'icon' = @{ Group = 'Release / tool';Path = 'scripts/generate-icon.ps1';    Args = @{};                   Desc = 'regenerate assets/doc-html-translate.ico' }
-    'log'  = @{ Group = 'Release / tool';Path = 'scripts/add_to_dev_log.ps1';   Args = @{};                   Desc = 'append a DEV/CHANGELOG.md row (-Path -Target -Description)' }
+    'log'  = @{ Group = 'Release / tool';Path = 'scripts/add_to_dev_log.ps1';   Args = @{};                   Desc = 'append a DEV/CHANGELOG.md row (-Target -Description; Path auto)' }
+    'rs'   = @{ Group = 'Release / tool';Path = 'scripts/release-state.ps1';     Args = @{};                   Desc = 'show/set release publish-state (DEV/RELEASE_STATE.md)' }
+    'v'    = @{ Group = 'Release / tool';Path = 'scripts/verify-html.ps1';        Args = @{};                   Desc = 'headless-verify converted HTML (-Path folder/file)' }
+    'pc'   = @{ Group = 'Check';         Path = 'scripts/parity-check.ps1';       Args = @{};                   Desc = 'warn on Go<->JS cross-edition drift (advisory)' }
 }
 
 function Show-Help {

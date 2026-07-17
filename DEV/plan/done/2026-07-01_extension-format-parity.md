@@ -1,13 +1,24 @@
 # Strategic spec: 2026-07-01_extension-format-parity - Extension document-format parity with the desktop app
 
 **Ticket:** 2026-07-01_extension-format-parity
-**Status:** BlockNeedUserTest
+**Status:** Verified
 **Priority:** 50
 **Date:** 2026-07-01
 **Tier:** Strategic
 **Tactical plan:** `DEV/plan/2026-07-01_extension-format-parity/` (created by /spec-tech)
 
-> **BlockNeedUserTest (2026-07-01):** all code + docs landed; `npm test` (31) and `npm run build`
+> **Closed 2026-07-17 by owner decision: production use is the acceptance.** The browser checklist below
+> was never run as a checklist, but all seven formats have been live in the Chrome Web Store and Edge
+> Add-ons for weeks, across several releases, in the owner's own use. Recorded plainly rather than dressed
+> up as a formal pass: accepted from the field, not ticked off one by one.
+>
+> **One caveat carried forward, found by the 2026-07-17 corpus sweep** - not a regression here, a gap this
+> ticket never claimed: the extension routes *any* `PK\x03\x04` to the EPUB reader before consulting the
+> filename, so a CBZ comic fails with a misleading "not an EPUB". That is
+> [`2026-07-17_comic-archives`](../2026-07-17_comic-archives.md)'s problem to disambiguate, and it is the
+> one place the extension's byte-signature routing is *wrong* where the desktop app's is merely absent.
+
+> **Original BlockNeedUserTest note (2026-07-01):** all code + docs landed; `npm test` (31) and `npm run build`
 > pass. Needs hands-on browser acceptance: load the unpacked extension and, via the file picker,
 > open one sample each of TXT, Markdown, FB2, RTF, local HTML, MOBI and AZW3 - each must reflow and
 > Chrome must offer "Translate page". Confirm PDF/EPUB still work; confirm a real .mobi and .azw3
@@ -17,8 +28,8 @@
 > **Scope:** STRATEGIC. Goals, constraints, open questions. No class names, paths, line
 > budgets, or framework module details - those belong to the tactical plan.
 
-Reference: [`docs/PARITY.md`](../../docs/PARITY.md) (JS<->Go port map) and the feasibility
-study [`DEV/research/extension_formats_feasibility_ru.md`](../research/extension_formats_feasibility_ru.md).
+Reference: [`docs/PARITY.md`](../../../docs/PARITY.md) (JS<->Go port map) and the feasibility
+study [`DEV/research/extension_formats_feasibility_ru.md`](../../research/extension_formats_feasibility_ru.md).
 
 ---
 
@@ -72,9 +83,9 @@ which already handles these formats).
 
 ### 3.3 Owner inputs (Approval gate)
 
-- **Related tickets:** [`2026-07-01_cross-edition-parity`](2026-07-01_cross-edition-parity.md)
+- **Related tickets:** [`2026-07-01_cross-edition-parity`](../2026-07-01_cross-edition-parity.md)
   (shared-invariant alignment across editions - this ticket is the extension-side format
-  catch-up). Feasibility: [`extension_formats_feasibility_ru.md`](../research/extension_formats_feasibility_ru.md).
+  catch-up). Feasibility: [`extension_formats_feasibility_ru.md`](../../research/extension_formats_feasibility_ru.md).
 - **Copy/tone policy:** the store name/short/long description move from "PDF & EPUB" to the
   wider range; the owner curates the final marketing wording at release.
 - **Localization:** EN/RU/UK for any new UI strings and the store listing.
@@ -197,9 +208,9 @@ file associations extended before the next publication; the changelog records th
 
 ## 10. Links to other specs
 
-- [`2026-07-01_cross-edition-parity`](2026-07-01_cross-edition-parity.md) - shared-invariant
+- [`2026-07-01_cross-edition-parity`](../2026-07-01_cross-edition-parity.md) - shared-invariant
   alignment; this ticket updates the parity mapping for the new formats.
-- [`DEV/research/extension_formats_feasibility_ru.md`](../research/extension_formats_feasibility_ru.md)
+- [`DEV/research/extension_formats_feasibility_ru.md`](../../research/extension_formats_feasibility_ru.md)
   - feasibility study feeding this spec.
 
 ## 11. Done criteria (strategic)

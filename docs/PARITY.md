@@ -36,11 +36,15 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | PDF outline -> TOC | [`internal/pdf/toc.go`](../internal/pdf/toc.go) | [`extension/src/toc.js`](../extension/src/toc.js) |
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
+| Plain text: source-encoding decode | [`internal/txt/extract.go`](../internal/txt/extract.go) (`decodeText`) | [`extension/src/txt.js`](../extension/src/txt.js) (`decodeText`) |
 | RTF strip + cp1251 decode | [`internal/rtf/`](../internal/rtf/) | [`extension/src/rtf.js`](../extension/src/rtf.js) |
 | Markdown -> HTML | [`internal/md/`](../internal/md/) (`goldmark`) | [`extension/src/md.js`](../extension/src/md.js) (vendored `marked`) |
 | FB2 XML -> sections/TOC | [`internal/fb2/`](../internal/fb2/) | [`extension/src/fb2.js`](../extension/src/fb2.js) |
 | HTML `<body>` extract | [`internal/htmlconv/`](../internal/htmlconv/) | [`extension/src/html.js`](../extension/src/html.js) |
 | MOBI / AZW3 (KF8) | [`internal/mobi/`](../internal/mobi/) (shells out to Calibre) | [`extension/src/ebook.js`](../extension/src/ebook.js) (vendored `foliate-js`) |
+| Comic archive -> page book | [`internal/comic/`](../internal/comic/) (CBZ/CBT stdlib; CBR/CB7 shell out to 7-Zip) | [`extension/src/comic.js`](../extension/src/comic.js) (CBZ/CBT only; CBR/CB7 declined) |
+| Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
+| Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) + `.css` |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
@@ -52,6 +56,76 @@ Each JS module re-implements the named Go code. A change to one side is a change
 
 These are duplicated across codebases with no shared source. Changing a value on one side without the
 other is a bug. Each row cites the two places that must agree.
+
+### Input format detection is by byte signature, not extension
+
+Both editions decide what a file *is* from its leading bytes, not its name, so a mislabelled or
+extensionless file still routes correctly and a binary is never fed to a text reader.
+
+- **Extension:** `extension/src/viewer.js` `detectFormat` tests `%PDF`, `PK..` (ZIP), `{\rtf`, MOBI's
+  `BOOKMOBI`, and image magics, before falling back to the filename extension. Both EPUB and CBZ are ZIP,
+  so the one case the signature cannot settle - `PK..` - is broken by the filename extension: a `.cbz`
+  routes to the comic reader, any other ZIP to the EPUB reader (the EPUB hot path is unchanged). Anything
+  unrecognized routes to the PDF reader, which reports an unreadable file clearly. So a `.docx` or DjVu
+  fails with a real error rather than rendering as garbage.
+- **Go:** the CLI still dispatches known extensions by name (its readers are extension-keyed), but the
+  `default:` "unknown extension" arm now sniffs the bytes via `internal/txt` `LooksBinary` before handing
+  them to the text extractor. A recognized binary signature - ZIP, RAR, 7z, tar (`ustar` at offset 257),
+  DjVu, and defensively PDF/MOBI/image - is refused and named; anything else with a NUL byte in the first
+  4 KB is refused as "binary data". A BOM is checked first, so UTF-16 text (which is full of NUL bytes) is
+  not mistaken for binary.
+
+The two are not byte-identical by design - the extension re-renders in a live tab and leans on the PDF
+reader's error path, while the Go CLI is a batch converter that must refuse with a non-zero exit and no
+output directory. What must stay true on both: **detection is signature-first, and a binary never
+becomes a document.** Go: `internal/txt/sniff.go`. JS: `extension/src/viewer.js` `detectFormat` /
+`imageMime` / `isMobiBytes`.
+
+### Plain-text source-encoding decode order
+
+Both editions decide a `.txt` file's encoding from its leading bytes, in this order. The **order is the
+invariant**: the same file must not read correctly on one edition and as mojibake on the other.
+
+| # | Test | Result |
+|---|---|---|
+| 1 | `EF BB BF` | UTF-8; the mark is removed, never shown |
+| 2 | `FF FE` | UTF-16LE |
+| 3 | `FE FF` | UTF-16BE |
+| 4 | the bytes are valid UTF-8 | UTF-8 as-is |
+| 5 | otherwise | a legacy Cyrillic code page by detection (below), else UTF-8 |
+
+Go: `internal/txt/extract.go` `decodeText` (`golang.org/x/text/encoding/unicode`, BOM tested explicitly).
+JS: `extension/src/txt.js` `decodeText` (`TextDecoder` with an explicit `utf-16le`/`utf-16be` label).
+
+**One difference that is not drift:** step 1 is implicit on the JS side. `TextDecoder` strips a leading
+BOM by itself unless `ignoreBOM` is set, so the extension never had the UTF-8-BOM leak the Go side did.
+Both arrive at the same text; only Go has to say so out loud.
+
+Scope: this covers `.txt` only. `md.js`, `html.js` and `fb2.js` still decode as UTF-8 unconditionally,
+matching their Go counterparts - a shared gap, not a divergence.
+
+#### Step 5: legacy Cyrillic code-page detection
+
+The candidate set, the letter-frequency table, and the confidence floor **must be identical** on both
+sides, or the same DOS-era `.txt` decodes to one code page here and another there.
+
+- **Candidates, most-likely-first:** Windows-1251, KOI8-R, CP866 (`ibm866` as a TextDecoder label),
+  ISO-8859-5. This is the RU/UA audience's set, not a general code-page sweep.
+- **Selection by frequency-weighted fit.** Each candidate's decoding is scored by the summed expected
+  frequency of the Russian letters it contains; the highest wins. This is load-bearing: cp1251 and
+  KOI8-R remap the *same* byte range, so both yield ~the same *number* of Cyrillic letters (fraction
+  0.761 vs 0.760 on the corpus fixture) - only the frequency weighting separates them (16718 vs 10612).
+- **Confidence by Cyrillic fraction.** Russian letters over all characters must reach **0.30**, or the
+  bytes pass through as UTF-8 unchanged. Measured: the real cp1251 fixture is 0.76; French Latin-1
+  mis-read as KOI8-R (which tops the *weight* score) is 0.17, so the floor rejects it. Selection needs
+  weight, confidence needs fraction - neither metric alone does both.
+- **Known limit, accepted:** a very short, accent-dense non-Russian string can exceed 0.30 and be
+  mis-decoded. Short files carry too little signal; the floor is the agreed trade.
+
+Go: `internal/txt/legacy.go` (`legacyCandidates`, `ruLetterFreq`, `cyrillicFit`, `minCyrillicFraction`,
+`detectLegacy`). JS: `extension/src/txt.js` (`LEGACY_CANDIDATES`, `RU_LETTER_FREQ`, `cyrillicFit`,
+`MIN_CYRILLIC_FRACTION`, `detectLegacy`). RTF's separate cp1251 decode (`\'XX` escapes) is unrelated and
+stays as-is.
 
 ### Reader theme palette
 
@@ -93,6 +167,23 @@ Both sides now name these constants (Go: a documented `const` block in `extract.
 `*_FACTOR`/`*_THRESHOLD` consts in `reflow.js`) and `tests/parity_test.go` asserts the values match. See
 the JS-only additions under [Intentional divergences](#intentional-divergences-do-not-fix).
 
+### PDF page-image selection
+
+When a PDF page yields more than one raster, both editions collapse **proportional-scale duplicates** -
+the same picture embedded at two resolutions - down to the largest, so a scanned page is not shown twice.
+The signal is the aspect ratio: a uniform scale preserves it, so two rasters whose ratios match within
+**`aspectRatioTolerance = 0.01` (1%)** are the same image and only the larger is kept. Differently-shaped
+images (a composed page: an illustration beside a figure) are all kept - guessing "the page" among genuinely
+distinct images would be wrong as often as right.
+
+Go: `internal/pdf/extract.go` `selectPageImages` / `sameShapeRaster` / `aspectRatioTolerance`.
+JS: `extension/src/pdf-images.js` `dedupeSameShape` / `sameShapeRaster` / `ASPECT_RATIO_TOLERANCE`.
+
+The **thumbnail** half of the problem is handled asymmetrically by construction, not by drift (see
+[Intentional divergences](#intentional-divergences-do-not-fix)): the Go extractor drops pdfcpu's `/Thumb`
+image explicitly (`img.Thumb`), while the extension never sees a thumbnail at all - it mines the page's
+paint operators, and a `/Thumb` is a page-dict entry the content stream never paints.
+
 ### EPUB TOC parsing
 
 | Rule | Both sides |
@@ -110,6 +201,30 @@ and the external-href definition (extension `isExternalHref` now mirrors `toc.go
 difference - Go keeps external TOC entries, the extension drops them (single in-memory DOM) - is listed
 under [Intentional divergences](#intentional-divergences-do-not-fix).
 
+### Comic archive page order and entry filter
+
+A comic archive (CBZ/CBR/CB7/CBT) is a container of page images with no text layer; the reader OCRs each
+page into translatable plates (forced on, like a standalone image - opening a comic *is* the request to
+read its bubbles). Two rules must match exactly on both editions, or the same archive reads with different
+pages, or the same pages in a different order:
+
+- **Page order is natural (numeric-aware) filename order.** Page order *is* archive entry order by
+  filename, so this is correctness, not cosmetics: a plain lexicographic sort puts `page10.jpg` before
+  `page2.jpg`. Runs of ASCII digits compare by value; equal value (`"2"` vs `"02"`) breaks toward the
+  shorter raw run so the order is total and stable. Go: [`internal/comic/natural.go`](../internal/comic/natural.go)
+  `naturalLess`. JS: [`extension/src/comic.js`](../extension/src/comic.js) `naturalCompare`.
+- **Page-entry filter.** A page is a regular file whose extension is one of **`png jpg jpeg gif webp bmp`**
+  (TIFF deliberately excluded - browsers cannot display it, and it is vanishingly rare in comics).
+  Ignored: directory entries, `ComicInfo.xml`, `Thumbs.db`, hidden dotfiles (`.DS_Store`, `._*`), and
+  anything under `__MACOSX/`. Go: `internal/comic/extract.go` `pageExts` / `isPageEntry`. JS:
+  `extension/src/comic.js` `PAGE_EXTS` / `isPageEntry`. Guarded by `tests/parity_test.go`
+  (`TestParityComicPageFilter`).
+
+Container support differs by capability, not drift (see [Intentional divergences](#intentional-divergences-do-not-fix)):
+the desktop app opens all four (CBR/CB7 by shelling out to 7-Zip, the MOBI/Calibre precedent), while the
+extension opens **CBZ (ZIP) and CBT (TAR) only** - a browser has no RAR/7z decoder and cannot shell out,
+so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice.
+
 ### OCR
 
 | Contract | Value / rule | Go | JS |
@@ -117,10 +232,11 @@ under [Intentional divergences](#intentional-divergences-do-not-fix).
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/build.ps1` -> `<exe>/tessdata/eng.traineddata` | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the vertical gap to the next line stays within `OCR_CLUSTER_GAP_FACTOR (1.2) x` the median line height and the lines share an x-extent; a bigger gap - a figure, a section break, a new column - starts a new plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `clusterLines` |
-| Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (so text fits its block, not overflow into the next plate); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); plates top-align their text (`align-items:flex-start`) and grow down via `min-height` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) |
+| Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) |
+| Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. Degrades safely (CSS `overflow:hidden`) if the script does not run | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `fitPlate` / `scheduleFit` |
 | Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = mean of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `0.015`/`6`-px min-ink threshold | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
 | Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
-| Pre-OCR upscale | an image whose long side is `< 1000 px` is enlarged `2 x` (high-quality) before recognition so Tesseract reads low-res scans/thumbnails better; recognized coordinates (and dimensions) are divided back by the factor so plates map onto the original picture. Larger images are recognized as-is | [`tesseract.go`](../internal/ocr/tesseract.go) `upscaleForOCR` / `scaleDown` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `upscaleForOcr` |
+| Pre-OCR resolution handling | Gate on **estimated DPI**, not raw pixel count (a page scan clears 1000 px even at ~100 DPI, so a pixel gate upscales clean renders for nothing or misses the scans that need it). Estimate DPI from the long side over an assumed `OCR_ASSUMED_PAGE_INCHES (11)`-tall page; below `OCR_UPSCALE_DPI_FLOOR (120)` enlarge `OCR_UPSCALE_FACTOR (2 x)` (high-quality) before recognition and divide recognized coordinates back; **always declare the resolution** to Tesseract (`user_defined_dpi`, clamped `>= OCR_MIN_DECLARED_DPI (70)`, doubled when upscaled) so layout analysis separates regions - adjacent balloons - it otherwise merges. Measured: a ~90-DPI newsprint scan gains hugely from the upscale, a ~150-DPI scan only needs the DPI declared (upscaling over-segments it) | [`tesseract.go`](../internal/ocr/tesseract.go) `prepareForOCR` / `estimateDPI` / `scaleDown` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `upscaleForOcr` / `estimateDpi` |
 | Page-segmentation mode | Tesseract runs in **PSM 3 (AUTO)** on both editions so layout analysis isolates real text regions on an illustrated/scanned page (a speech bubble, a caption) instead of reading the whole frame as one block. The desktop CLI's default is already PSM 3 (made explicit via `--psm`); the extension must set it because tesseract.js defaults to PSM 6 (SINGLE_BLOCK), which folds scene edges into the recognized text (stray punctuation, digits) and mis-merges separate regions into one plate | [`tesseract.go`](../internal/ocr/tesseract.go) `ocrPageSegMode` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `OCR_PSM` |
 
 **OCR download version and catalog are aligned** (2026-07-01 parity pass) and guarded by
@@ -135,8 +251,10 @@ under [Intentional divergences](#intentional-divergences-do-not-fix).
   kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`.
 - **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50` and `OCR_CLUSTER_GAP_FACTOR = 1.2`
   (`tesseract.go` `ocrMinLineConf` / `ocrClusterGapFactor` == `ocr-overlay.js`).
-- **Overlay upscaling constants** identical: `OCR_UPSCALE_BELOW = 1000` and `OCR_UPSCALE_FACTOR = 2`
-  (`tesseract.go` `ocrUpscaleBelow` / `ocrUpscaleFactor` == `ocr-overlay.js`).
+- **Overlay resolution constants** identical: `OCR_UPSCALE_DPI_FLOOR = 120`, `OCR_ASSUMED_PAGE_INCHES = 11`,
+  `OCR_MIN_DECLARED_DPI = 70` and `OCR_UPSCALE_FACTOR = 2` (`tesseract.go` `ocrUpscaleDPIFloor` /
+  `ocrAssumedPageInches` / `ocrMinDeclaredDPI` / `ocrUpscaleFactor` == `ocr-overlay.js`). Guarded by
+  `TestParityOCRClustering`.
 - **Page-segmentation mode** identical: PSM `3` (AUTO). `tesseract.go` `ocrPageSegMode` (passed to the
   CLI as `--psm 3`) == `ocr-overlay.js` `OCR_PSM` (applied via `setParameters({tessedit_pageseg_mode})`).
   The extension must set it explicitly because tesseract.js defaults to PSM 6 (SINGLE_BLOCK); the
@@ -198,6 +316,15 @@ These are by design. Do not "sync" them without a decision - document changes he
   **Calibre**, which the browser can't). New formats build their fragment via [`sanitize.js`](../extension/src/sanitize.js);
   EPUB keeps its own `renderChapter`. Behavioural parity ("opens and reads correctly") is the bar, not
   byte-identical HTML.
+- **How images reach the page differs by edition, but both show them.** FB2's embedded `<binary>` images:
+  Go decodes each referenced binary to a **sibling file** ([`internal/fb2`](../internal/fb2/extract.go),
+  `imageFileName`), the extension inlines it as a **`data:` URL** by id
+  ([`fb2.js`](../extension/src/fb2.js)) - the same file-vs-inline split as EPUB above. Local images
+  referenced by an HTML file: Go **copies the sibling files** from the source's directory subtree into the
+  output ([`internal/htmlconv`](../internal/htmlconv/extract.go), `copyLocalImages`, confined against `../`
+  traversal); the extension has **no analogue and needs none** - a URL-loaded page lets the browser resolve
+  relative images against the origin, and a file picked through the picker grants no directory access to
+  reach its siblings anyway. So HTML local-image copying is intentionally **Go-only**.
 - **Reader features that are Go-only:** reading-position persistence + "Continue reading", page zoom
   (Ctrl+wheel, `?z=`), Russian localization (`syslocale.IsRussian`), and the separate `index.html` TOC
   page / multi-file navigation.
@@ -237,6 +364,22 @@ These are by design. Do not "sync" them without a decision - document changes he
   difference is the engine (extension = tesseract.js WASM + `4.0.0_fast`; Go = the local `tesseract` CLI).
   There is deliberately **no** file-type association (DNR redirect) for image URLs on either side - unlike
   PDF/EPUB, image links are never intercepted; only the explicit picker / right-click / CLI paths OCR images.
+- **Comic archives CBR/CB7: desktop-only, by capability.** All four comic containers open on the desktop
+  app; the extension implements **CBZ (ZIP) and CBT (TAR) only**. CBR is RAR and CB7 is 7z, neither of
+  which has a pure-Go/JS decoder at acceptable weight, so the desktop app shells out to **7-Zip** (detected
+  on PATH plus known install paths, the MOBI/Calibre precedent) while the browser - which cannot shell out
+  or vendor a RAR/7z decoder - recognizes the RAR/7z signature and shows a "use the desktop app" notice
+  instead of a parse error ([`comic.js`](../extension/src/comic.js) `DesktopOnlyError`). This is an
+  intentional divergence, not a gap: the desktop side can do what the browser cannot. The desktop app is
+  therefore the second runtime-dependency format (after MOBI/Calibre): CBR/CB7 without 7-Zip fail with an
+  actionable "install 7-Zip" notice, never a crash or garbage.
+- **TIFF: Go transcodes it, the extension refuses it.** Chrome cannot decode TIFF, so both editions must do
+  *something* other than show it raw. The extension refuses (its `imageMime` has no TIFF entry, so a `.tif`
+  falls through to the PDF reader's clear "cannot read this"), because a browser tab has no decoder. The Go
+  app has one (`golang.org/x/image/tiff`), so `internal/img.extractTIFF` **transcodes** each frame to PNG on
+  the way in - a multi-page TIFF becomes one PNG page per frame - and honestly supports the format. This is
+  an intentional divergence, not drift: the Go side can do what the browser cannot. Keep TIFF out of the
+  extension's accepted-image set unless a browser-side TIFF decoder is ever vendored.
 - **PDF paths not ported:** Go's pdftotext `-layout` path, its double-spaced/ZWSP paragraph merge, and
   its blank-page skip + `hrefForPDFPage` TOC remap have **no JS counterpart**. Conversely the JS reflow
   adds a **font-size dimension** (`FONT_BREAK_RATIO=0.25`, `big`/`veryBig` heading triggers) and
@@ -245,6 +388,13 @@ These are by design. Do not "sync" them without a decision - document changes he
   extraction also normalizes **mirrored image placements** - a negative CTM scale at paint time means
   the raster is stored flipped, so [`pdf-images.js`](../extension/src/pdf-images.js) mirrors the pixels
   back to their rendered orientation; Go's pdfcpu extraction writes raw streams and has no counterpart yet.
+- **A vector page with no text and no usable raster is handled differently, by capability.** When a page
+  has no text layer and no page-covering image (a vector chart with outlined labels), the Go app copies the
+  original PDF beside the output and shows it in an `<embed>` with a "no extractable text layer" note
+  ([`buildFallbackPDFHTML`](../internal/pdf/extract.go)) - it never rasterizes a page itself. The extension
+  instead **rasterizes the whole page** to one image ([`rasterizePage`](../extension/src/pdf-images.js), the
+  `pageChars < 20` fallback), because pdf.js renders vector content in-tab where the Go side has no renderer.
+  Same goal - never a blank page or a thumbnail stamp - reached by each edition's available means.
 - **Translation target:** the extension has **no target language** - it delegates to the browser's
   built-in "Translate page", so `-dst` is CLI/GUI-only.
 - **Storage:** Go uses `localStorage`/`sessionStorage` string keys (`dht_*`); the extension uses
@@ -276,4 +426,13 @@ These are by design. Do not "sync" them without a decision - document changes he
 5. **Guard tests** parse both codebases and fail on drift: `tests/parity_test.go` (theme palette, OCR
    tessdata version, OCR language catalog, PDF reflow constants) and `tests/ui_cli_parity_test.go` (the
    GUI exposes every CLI flag). They run in the normal `scripts/test.ps1` gate - extend them whenever you
-   pin a new invariant here.
+   pin a new invariant here. These guard the **value** invariants. The extension's own DOM path (chapter
+   sanitize / image / link / TOC) is covered by `extension/test/epub-dom.test.mjs` +
+   `extension/test/sanitize.test.mjs` under `npm test` (a dev-only `linkedom` DOM, never bundled) - these
+   assert the JS-side behaviour that mirrors `internal/epub`, complementing the value guards above.
+6. **Structural drift-check (advisory):** `scripts/parity-check.ps1` (alias `a pc`, and run in the
+   `scripts/check.ps1` gate) mirrors the port map above and *warns* when a Go extractor changed without its
+   paired JS module, or vice versa. It never blocks - it turns silent drift into a prompt. Touching this
+   file (docs/PARITY.md) in the same change set silences it, so the escape hatch for an intentional
+   one-sided change is to record it here under [Intentional divergences](#intentional-divergences-do-not-fix).
+   Keep the port map in the script in sync with the table at the top of this file.

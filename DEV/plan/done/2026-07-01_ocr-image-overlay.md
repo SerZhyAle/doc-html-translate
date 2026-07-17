@@ -1,10 +1,20 @@
 # Strategic spec: 2026-07-01_ocr-image-overlay — OCR text overlay on images for in-browser translation
 
 **Ticket:** 2026-07-01_ocr-image-overlay
-**Status:** BlockNeedUserTest
+**Status:** Verified
 **Priority:** 50
 
-> **BlockNeedUserTest (2026-07-01):** All 8 tactical phases implemented; static checks (node --check,
+> **Closed 2026-07-17 by owner decision: production use is the acceptance.** The manual checklist below
+> was never run as a checklist, but the feature has been live in the Chrome Web Store and Edge Add-ons
+> for weeks, across several releases, in the owner's own daily use - which exercises the same paths the
+> checklist lists. Recorded plainly rather than dressed up as a formal pass: the §11 criteria were
+> accepted from the field, not ticked off one by one.
+>
+> Note the desktop twin is *not* closed with it. [`2026-07-01_app-ocr-image-overlay`](../2026-07-01_app-ocr-image-overlay.md)
+> is `Partial` - the 2026-07-17 corpus sweep found three defects in the Go-side overlay. This ticket
+> covers the extension only, whose OCR is a separate implementation.
+
+> **Original BlockNeedUserTest note (2026-07-01):** All 8 tactical phases implemented; static checks (node --check,
 > JSON validity, `npm run vendor`/`npm run zip`) pass. Needs hands-on verification in a real Chromium
 > browser (WASM OCR cannot run here). Verify the §11 done criteria: (1) right-click a web image ->
 > "OCR & translate this image" -> overlay + Translate page offered; (2) EPUB with image text, OCR on ->
@@ -245,7 +255,7 @@ pluggable so bubble detection can replace it later.
 
 ## 10. Links to other specs
 
-- `DEV/plan/2026-06-25_pdf-translate-extension.md` — the viewer/interception base this extends.
+- `DEV/plan/done/2026-06-25_pdf-translate-extension.md` — the viewer/interception base this extends.
 
 ## 11. Done criteria (strategic)
 

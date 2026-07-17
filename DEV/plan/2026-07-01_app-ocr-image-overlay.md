@@ -1,8 +1,32 @@
 # App + GUI: OCR text overlay on document images
 
-**Status:** Implemented - OCR engine path verified; full document/GUI flow pending manual test
-**Priority:** 50
-**Date:** 2026-07-01
+**Status:** Partial - all three defect tickets against it have landed (2026-07-17); the overlay is now
+correct on the real corpus. What remains for `Verified` is a by-hand release smoke of the GUI toggle +
+language download and an actual in-place translation of the plates.
+**Priority:** 20
+
+> **Update 2026-07-17 (defects closed).** The three tickets that superseded this one are all
+> **Implemented** and measured against the real corpus:
+> [`pdf-raster-extraction-takes-the-wrong-images`](done/2026-07-17_pdf-raster-extraction-takes-the-wrong-images.md)
+> (P8 - thumbnails/duplicates no longer reach OCR),
+> [`ocr-upscale-threshold-misses-page-scans`](2026-07-17_ocr-upscale-threshold-misses-page-scans.md)
+> (P9 - gate keys on estimated DPI; a formerly-salad page now reads as clean prose; the masked non-ASCII
+> path bug is fixed, so a Cyrillic-named book goes 2/6 -> 5/6 overlaid), and
+> [`ocr-plate-fit`](2026-07-17_ocr-plate-fit.md) (P10 - a runtime re-fit keeps text inside its plate
+> even after the translator swaps it; Chrome-verified 0 clipped). So criterion 1's *overlay* half is met
+> and both defect classes ("plates are defective", "wrong image gets OCR'd") are closed.
+>
+> **Audit 2026-07-17 (corpus sweep), retained for the record.** `-ocr` on `Aphrodite's Mirror (1).pdf`
+> (2304 pages, no text layer) overlaid 1711 images at ~40 images/s; on a clean 1600x1200 render the
+> recognition was already near-perfect (4 balloons -> 4 plates).
+>
+> **Remaining for `Verified` (a release-time by-hand smoke, not code):** criterion 1's translation half
+> in place (the sweep ran `-notranslate`; the plates are ordinary translatable HTML text and the P10
+> re-fit now absorbs the length change, but an end-to-end Google/Ollama/Chrome pass is unrun here),
+> criterion 2 (actually downloading a second language - the `-ocr-langs` catalog and `-ocr-download`
+> command are intact, network fetch unrun), and criterion 4 driven through the GUI. Criterion 3 (no
+> tesseract) is met by design: `overlayImages` logs `OCR skipped: <locate hint>` and the conversion
+> completes without overlays.
 
 > All 5 phases implemented and committed (build bc72494). Gate green (test + lint + typos); full
 > `go test ./...` passes. Tesseract 5.4.0 installed locally (winget UB-Mannheim, added to user PATH);

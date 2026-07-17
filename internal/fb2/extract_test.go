@@ -139,3 +139,118 @@ func TestExtract_FB2FileNotFound(t *testing.T) {
 		t.Error("expected error for missing file")
 	}
 }
+
+// A 1x1 PNG, base64-encoded, for embedding in a <binary>.
+const onePixelPNGB64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQBS5f4CAAAAAElFTkSuQmCC"
+
+// An illustrated FB2 must produce its images on disk and reference them from the HTML - the
+// cover (in <description>), an image wrapped in its own <p> (the common FB2 shape), and a
+// block-level image between paragraphs. Before this, every picture was silently dropped.
+func TestExtract_FB2Images(t *testing.T) {
+	dir := t.TempDir()
+	content := `<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+  <description>
+    <title-info>
+      <book-title>Illustrated</book-title>
+      <coverpage><image l:href="#cover.png"/></coverpage>
+    </title-info>
+  </description>
+  <body>
+    <section>
+      <p>Before the picture.</p>
+      <p><image l:href="#fig1"/></p>
+      <image l:href="#fig2"/>
+      <p>After the picture.</p>
+      <p><image l:href="#missing"/></p>
+    </section>
+  </body>
+  <binary id="cover.png" content-type="image/png">` + onePixelPNGB64 + `</binary>
+  <binary id="fig1" content-type="image/png">` + onePixelPNGB64 + `</binary>
+  <binary id="fig2" content-type="image/jpeg">` + onePixelPNGB64 + `</binary>
+</FictionBook>`
+	fb2Path := filepath.Join(dir, "illustrated.fb2")
+	if err := os.WriteFile(fb2Path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	outDir := filepath.Join(dir, "out")
+	_ = os.MkdirAll(outDir, 0o755)
+
+	if _, err := fb2.Extract(fb2Path, outDir); err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+
+	// The three real binaries became sibling files.
+	for _, name := range []string{"cover.png", "fig1.png", "fig2.jpg"} {
+		if _, err := os.Stat(filepath.Join(outDir, name)); err != nil {
+			t.Errorf("image %q not written: %v", name, err)
+		}
+	}
+
+	all := readAllPages(t, outDir)
+	// The cover opens the book, referenced first.
+	if !strings.Contains(all, `src="cover.png"`) {
+		t.Error("cover image not referenced")
+	}
+	// The <p>-wrapped image and the block-level image are both present.
+	for _, want := range []string{`src="fig1.png"`, `src="fig2.jpg"`} {
+		if !strings.Contains(all, want) {
+			t.Errorf("expected %s in output", want)
+		}
+	}
+	// A dangling reference degrades visibly, not silently.
+	if !strings.Contains(all, "image not found: missing") {
+		t.Error("a dangling image reference should show a visible placeholder")
+	}
+	// Text still flows around the pictures.
+	for _, want := range []string{"Before the picture.", "After the picture."} {
+		if !strings.Contains(all, want) {
+			t.Errorf("expected text %q preserved", want)
+		}
+	}
+}
+
+// A reference used twice shares one written file (dedup), not two copies.
+func TestExtract_FB2ImageDedup(t *testing.T) {
+	dir := t.TempDir()
+	content := `<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+  <description><title-info><book-title>Dup</book-title></title-info></description>
+  <body><section>
+    <p><image l:href="#same"/></p>
+    <p>middle</p>
+    <p><image l:href="#same"/></p>
+  </section></body>
+  <binary id="same" content-type="image/png">` + onePixelPNGB64 + `</binary>
+</FictionBook>`
+	fb2Path := filepath.Join(dir, "dup.fb2")
+	_ = os.WriteFile(fb2Path, []byte(content), 0o644)
+	outDir := filepath.Join(dir, "out")
+	_ = os.MkdirAll(outDir, 0o755)
+
+	if _, err := fb2.Extract(fb2Path, outDir); err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	pngs, _ := filepath.Glob(filepath.Join(outDir, "*.png"))
+	if len(pngs) != 1 {
+		t.Errorf("expected 1 shared image file, got %d: %v", len(pngs), pngs)
+	}
+	if n := strings.Count(readAllPages(t, outDir), `src="same.png"`); n != 2 {
+		t.Errorf("expected the image referenced twice, got %d", n)
+	}
+}
+
+// readAllPages concatenates every generated page_*.html for content assertions.
+func readAllPages(t *testing.T, dir string) string {
+	t.Helper()
+	pages, _ := filepath.Glob(filepath.Join(dir, "page_*.html"))
+	var sb strings.Builder
+	for _, p := range pages {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sb.Write(data)
+	}
+	return sb.String()
+}

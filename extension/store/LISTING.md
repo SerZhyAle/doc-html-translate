@@ -7,8 +7,9 @@ action is automated.
 The Edge Add-ons submission is still pending - reuse the same copy below (see the Edge notes at the end).
 Keep this file in sync with the published listing when the description changes.
 
-> **Owner sign-off required (ticket 2026-07-01_extension-format-parity):** the extension now opens nine
-> formats (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML), not just PDF/EPUB. The name,
+> **Owner sign-off required (ticket 2026-07-01_extension-format-parity):** the extension now opens eleven
+> formats (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML, and CBZ/CBT comics; CBR/CB7 comics
+> remain desktop-app only), not just PDF/EPUB. The name,
 > short and detailed copy below is a draft reflecting the wider range - review and finalize the marketing
 > wording (especially the store **name**, which changes the listing identity) before the next publication.
 
@@ -60,7 +61,7 @@ Your browser has an excellent built-in translator that translates any webpage in
 1. **PDFs** are rendered on a canvas, making the text invisible to the browser's translator.
 2. **EPUBs** cannot be opened in the browser at all; they just trigger a download.
 
-**This extension quietly solves both problems - and opens seven more document formats too!**
+**This extension quietly solves both problems - and opens nine more document formats too!**
 
 ### How it works:
 When you open a supported document, this extension converts its text into a clean, reflowed HTML webpage. Since it is now a normal webpage, you can simply right-click and select **"Translate to [Your Language]"**!

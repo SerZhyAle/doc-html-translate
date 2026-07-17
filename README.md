@@ -1,6 +1,6 @@
 # doc-html-translate
 
-Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model. No cloud account required, no ceremony, and yes, it still runs on plain old Windows in 2026.
+Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model. No cloud account required, no ceremony, and yes, it still runs on plain old Windows in 2026.
 
 Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb2` `ebook` `html-converter` `translation` `ollama`
 
@@ -20,7 +20,7 @@ doc-html-translate comes in several forms - pick whichever fits; they all share 
 - **CLI** - `doc-html-translate.exe`, the command-line converter and Windows file-association handler. See [Quick Usage](#quick-usage).
 - **GUI desktop app** - `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (file picker, drag & drop, options dialog, a **default-handler toggle** - opt-in, off by default).
 - **Microsoft Store app** - the same desktop app (GUI + CLI) shipped as an MSIX package: Store-signed, auto-updating, no manual download. Under MSIX, `-register` is a no-op (file associations come from the package manifest). Packaging details: [`msix/README.md`](msix/README.md).
-- **Browser extension** - a Chromium MV3 extension that re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML) as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). (Edge Add-ons listing planned.)
+- **Browser extension** - a Chromium MV3 extension that re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML, and CBZ/CBT comics) as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). (Edge Add-ons listing planned.)
 - **Website & docs** - the [landing page](https://serzhyale.github.io/doc-html-translate/), multi-language documentation, and a dedicated [extension page](https://serzhyale.github.io/doc-html-translate/extension.html).
 
 The desktop app and the extension are independent and complementary: the app converts a file into a local HTML folder you keep; the extension does the same reflow live inside a browser tab. Both lean on the same "free" idea - hand the browser clean HTML and let its built-in translator do the rest.
@@ -28,6 +28,7 @@ The desktop app and the extension are independent and complementary: the app con
 ## Features
 
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
+- Read comics: CBZ / CBR / CB7 / CBT comic archives open page by page, with the text in speech bubbles recognized (OCR) and laid over each page as translatable plates - so Chrome's "Translate page" works on the bubbles. OCR is automatic (a comic has no text layer to translate otherwise)
 - Translate a standalone image: pass a PNG/JPG/JPEG/WebP/GIF/BMP/TIFF and the app OCRs it and lays translatable text plates over the picture (Chrome's built-in page translation then works in place - the same behaviour as the browser extension). OCR needs a `tesseract` engine (see `-ocr-lang`)
 - Local HTML output with generated navigation and TOC
 - Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`-`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
@@ -41,6 +42,7 @@ The desktop app and the extension are independent and complementary: the app con
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
 - File-type association is **optional and off by default**: the app always adds a **"Convert to HTML" right-click entry** (and an "Open with" entry) for all supported types, and becoming the default handler is a separate opt-in (`-register` / the GUI toggle / a one-time first-run prompt; `-unregister` reverses it)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
+- CBR/CB7 comics: require [7-Zip](https://www.7-zip.org) installed (CBZ and CBT need nothing extra)
 
 ## Installation
 
@@ -207,13 +209,15 @@ and PDF); other formats are unaffected.
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
+- Plain-text (`.txt`) input is decoded by sniffing its leading bytes: a UTF-8/UTF-16 byte-order mark first, then valid UTF-8, then a legacy Cyrillic code page (Windows-1251, KOI8-R, CP866) by detection - so a DOS-era or Notepad "Unicode" `.txt` reads as text, not mojibake.
+- An unreadable binary (a `.docx`, `.djvu`, or a comic archive with no 7-Zip) is refused with a named format instead of being converted into a garbage document.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`-`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
 - For paid engines the estimated cost is `chars / 1e6 * $20`. `-max-cost N` turns the existing advisory dialog into a hard pre-flight guard: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated.
 - PDF extraction is best-effort and includes fallback flows for difficult files (PDFs have opinions, and they are rarely kind).
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
-- `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required).
+- `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required) and CBZ/CBR/CB7/CBT comics (CBR/CB7 need 7-Zip).
 - In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.
 - `doc-html-ui` exposes the full CLI surface, including `-toc-depth` and `-max-cost`, plus a **default-handler toggle** (the GUI equivalent of `-register` / `-unregister`; opt-in, off by default) and a one-time first-run prompt offering it. The toggle and prompt are hidden under the Microsoft Store (MSIX) build, where file associations come from the package manifest instead. The GUI always registers the non-destructive "Convert to HTML" right-click entry + "Open with" on launch. If the converter exe is missing next to the GUI, it shows a warning rather than failing silently on Convert.
 

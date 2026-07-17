@@ -16,7 +16,7 @@ globalThis.DOMMatrix ??= class DOMMatrix {
   }
 };
 
-const { composeTransform, paintFlips } = await import("../src/pdf-images.js");
+const { composeTransform, paintFlips, sameShapeRaster, dedupeSameShape } = await import("../src/pdf-images.js");
 
 const IDENTITY = [1, 0, 0, 1, 0, 0];
 
@@ -50,4 +50,33 @@ test("paintFlips: negative both axes = 180 degree placement", () => {
 
 test("paintFlips: rotated placement is left as stored", () => {
   assert.deepEqual(paintFlips([0, 100, -200, 0, 0, 0]), { flipX: false, flipY: false });
+});
+
+test("sameShapeRaster: same scan at two resolutions matches (Plague proclamation)", () => {
+  // The measured duplicate: one page embedded as 1455x2065 and 4363x6193 (exactly 3x).
+  assert.equal(sameShapeRaster({ width: 1455, height: 2065 }, { width: 4363, height: 6193 }), true);
+});
+
+test("sameShapeRaster: different shapes do not match", () => {
+  assert.equal(sameShapeRaster({ width: 800, height: 600 }, { width: 600, height: 800 }), false);
+});
+
+test("sameShapeRaster: zero dimensions never match", () => {
+  assert.equal(sameShapeRaster({ width: 0, height: 0 }, { width: 100, height: 100 }), false);
+});
+
+test("dedupeSameShape: keeps the largest of a proportional-scale group", () => {
+  const small = { blob: "a", width: 1455, height: 2065 };
+  const big = { blob: "b", width: 4363, height: 6193 };
+  const kept = dedupeSameShape([small, big]);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].blob, "b"); // the larger raster wins regardless of order
+  assert.deepEqual(dedupeSameShape([big, small]).map((i) => i.blob), ["b"]);
+});
+
+test("dedupeSameShape: a composed page of differently-shaped images keeps all", () => {
+  const portrait = { blob: "p", width: 600, height: 900 };
+  const landscape = { blob: "l", width: 900, height: 600 };
+  const square = { blob: "s", width: 500, height: 500 };
+  assert.equal(dedupeSameShape([portrait, landscape, square]).length, 3);
 });

@@ -37,7 +37,7 @@ desktop's Calibre dependency with client-side parsing.
 **Prompt for developer:**
 > Add foliate-js as a pinned dependency: prefer `foliate-js` on npm pinned to an exact version
 > if it is johnfactotum's package; otherwise vendor from a pinned GitHub commit. Add
-> `async function vendorFoliate()` to [`build.mjs`](../../../extension/build.mjs) that copies
+> `async function vendorFoliate()` to [`build.mjs`](../../../../extension/build.mjs) that copies
 > into `vendor/foliate/` the MOBI/KF8 entry module (`mobi.js`) plus its transitive **local**
 > imports only - follow each `import` in `mobi.js` and copy the referenced module, repeating
 > until the set is closed (expected: `mobi.js` and a small number of helpers; `fflate` for KF8
@@ -90,7 +90,7 @@ desktop's Calibre dependency with client-side parsing.
 > the foliate book exposes for that resource (inspect the vendored module for its resource
 > accessor). Cache one blob URL per resource, drop `<img>` elements whose resource cannot be
 > resolved, and return a `revoke()` that revokes every minted blob URL (mirroring
-> [`epub.js`](../../../extension/src/epub.js) `blobFor`/`revoke`). `renderBook` already stores
+> [`epub.js`](../../../../extension/src/epub.js) `blobFor`/`revoke`). `renderBook` already stores
 > and calls `book.revoke` on teardown.
 
 **Verification:**
@@ -106,12 +106,12 @@ desktop's Calibre dependency with client-side parsing.
 **Depends on:** Step 04.3
 
 **Prompt for developer:**
-> In [`viewer.js`](../../../extension/src/viewer.js): import `parseEbook` and `isMobiBytes`.
+> In [`viewer.js`](../../../../extension/src/viewer.js): import `parseEbook` and `isMobiBytes`.
 > Extend `FORMAT_EXT` with `mobi:"mobi", azw3:"mobi"` (both route to the one adapter; foliate
 > distinguishes MOBI vs KF8 internally). Add a magic-byte check to `detectFormat` using
 > `isMobiBytes(data)` -> `"mobi"`. Add the dispatch case `"mobi"` ->
 > `loadBook(data, title, parseEbook, "Reading e-book..")`. In
-> [`viewer.html`](../../../extension/src/viewer.html), extend `#file-input` `accept` to add
+> [`viewer.html`](../../../../extension/src/viewer.html), extend `#file-input` `accept` to add
 > `.mobi,.azw3`. Now that the full set is wired, update the user-facing copy in `viewer.js`
 > that still says "PDF or EPUB" - the empty-state notice in `main()`, the
 > `filePickerButton`/`openFilePicker` default labels, and the `#btn-open` title - to name the
@@ -134,8 +134,8 @@ desktop's Calibre dependency with client-side parsing.
 
 **Prompt for developer:**
 > Add `"src/ebook.js"` to `web_accessible_resources[0].resources` in
-> [`manifest.json`](../../../extension/manifest.json) (the vendored foliate files are covered
-> by the existing `vendor/*` entry). In [`background.js`](../../../extension/src/background.js),
+> [`manifest.json`](../../../../extension/manifest.json) (the vendored foliate files are covered
+> by the existing `vendor/*` entry). In [`background.js`](../../../../extension/src/background.js),
 > add `mobi` and `azw3` to the DNR `regexFilter` alternation in both rules
 > (`(?:pdf|epub|rtf|fb2|mobi|azw3)`).
 

@@ -38,9 +38,9 @@ same TSV there.
 
 ## Cross-references
 
-- Go: [`internal/ocr/tesseract.go`](../../internal/ocr/tesseract.go) `Recognize` (args), `parseTSV`.
-- Related: [`internal/ocr/tessdata.go`](../../internal/ocr/tessdata.go) `DataDir` (the bundled dir with
-  no `configs/`), [`internal/pipeline/pipeline.go`](../../internal/pipeline/pipeline.go) (passes
+- Go: [`internal/ocr/tesseract.go`](../../../internal/ocr/tesseract.go) `Recognize` (args), `parseTSV`.
+- Related: [`internal/ocr/tessdata.go`](../../../internal/ocr/tessdata.go) `DataDir` (the bundled dir with
+  no `configs/`), [`internal/pipeline/pipeline.go`](../../../internal/pipeline/pipeline.go) (passes
   `ocr.DataDir()` into `OverlayFile` -> `Recognize`).
 
 ## Done criteria

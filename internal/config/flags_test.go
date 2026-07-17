@@ -1,6 +1,32 @@
 package config
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
+
+// -h is a request, not a failure. It must come back as ErrHelp so main can exit 0 with the
+// usage on stdout, the same way -version already exits 0 - not as a generic error that gets
+// an "Error:" prefix and exit 1.
+func TestParseArgsHelpIsNotAnError(t *testing.T) {
+	for _, arg := range []string{"-h", "-help"} {
+		_, err := ParseArgs([]string{arg})
+		if !errors.Is(err, ErrHelp) {
+			t.Fatalf("ParseArgs(%q): expected ErrHelp, got %v", arg, err)
+		}
+	}
+}
+
+// A real flag error must stay an error, so it keeps its non-zero exit and stderr reporting.
+func TestParseArgsBadFlagIsAnError(t *testing.T) {
+	_, err := ParseArgs([]string{"-nosuchflag"})
+	if err == nil {
+		t.Fatal("expected an error for an undefined flag")
+	}
+	if errors.Is(err, ErrHelp) {
+		t.Fatalf("an undefined flag must not be reported as a help request: %v", err)
+	}
+}
 
 func TestParseArgsRegister(t *testing.T) {
 	cfg, err := ParseArgs([]string{"-register"})

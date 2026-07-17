@@ -36,7 +36,12 @@ dirty tree, last `v*`/`ext-v*` tags, current versions) and the exact commands:
 
 ```powershell
 ./scripts/release.ps1            # prints only, executes nothing
+./scripts/release-state.ps1 -Version <ver>   # seed/print the 5-channel publish-state (a rs)
 ```
+
+Track publish-state in [DEV/RELEASE_STATE.md](../../DEV/RELEASE_STATE.md), not in prose - after each
+`[PUBLIC]` step below, record it (`a rs -Channel <name> -Status <pending|submitted|live|blocked>`), so a
+later session reads the file instead of guessing.
 
 **Step B — Decide scope & version.** Confirm with the user: version stamp (`yy.MMdd.HHmm`, default
 = now), and which targets ship (GitHub / winget / Store / extension). Not every release needs all.
@@ -56,10 +61,10 @@ dirty tree, last `v*`/`ext-v*` tags, current versions) and the exact commands:
 ./scripts/build-local.ps1 -Message "..."
 ```
 
-**Step E — Docs & site (free, local commit).** Update version-bearing content, then commit via
-`build-local.ps1`: README.md, `docs.html` / `docs.ru.html` / `docs.uk.html`, `index.html`,
-`extension.html`, `extension/store/LISTING.md`, `extension/README.md`, and the `DEV/CHANGELOG.md`
-"What's new" entries from Step C.
+**Step E — Docs & site (free, local commit).** Update every surface via `/docs-sync` (manifest
+[DEV/DOCS_SURFACES.md](../../DEV/DOCS_SURFACES.md) - README.md, the `docs.*` en/ru/uk trio, `index.html`,
+`extension.html`, `extension/store/LISTING.md`, `extension/README.md`, `_locales/*/messages.json`) plus the
+`DEV/CHANGELOG.md` "What's new" entries from Step C, then commit via `build-local.ps1`.
 
 **Step F — GitHub Release `[PAID]`.** Confirm, then push the tag (triggers `release.yml`):
 
@@ -103,5 +108,7 @@ Details: [extension/PUBLISHING.md](../../extension/PUBLISHING.md).
 **Step J — Verify.** `gh release view v<ver> --json assets`; `winget search SerZhyAle.DocHtmlTranslate`
 (≈30-60 min after the winget PR merges); confirm Store and Chrome/Edge dashboards show the new version.
 
-**Step K — Report.** What shipped to which targets, the version, the published "What's new", and any
-target intentionally skipped or still pending review (winget PR, Store certification).
+**Step K — Report & record state.** Update [DEV/RELEASE_STATE.md](../../DEV/RELEASE_STATE.md) for every
+channel (`a rs -Channel <name> -Status <live|submitted|blocked> -Ref <PR#/tag/id> -Note "..."`) so the
+publish-state lives in a file, not in memory. Then report: what shipped to which targets, the version, the
+published "What's new", and any target still pending review (winget PR, Store certification, Edge cert).

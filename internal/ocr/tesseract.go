@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -81,18 +83,19 @@ const ocrPageSegMode = 3
 // Recognize runs tesseract on imgPath for the given language and returns the recognized
 // blocks plus the image's pixel dimensions. dataDir is passed as --tessdata-dir only when
 // it actually contains the requested language, so a system tesseract still works when the
-// app ships no bundled data. A small image is transparently upscaled before recognition (so
-// Tesseract reads low-res scans/thumbnails better) and the coordinates are mapped back after.
+// app ships no bundled data.
+//
+// prepareForOCR decides how to feed the image to tesseract: it estimates the image's DPI,
+// upscales genuinely low-res scans so recognition is legible, declares the resolution so
+// Tesseract's layout analysis separates regions (e.g. speech balloons) instead of merging
+// them, and always hands tesseract an ASCII path.
 func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	if lang == "" {
 		lang = "eng"
 	}
 
-	ocrPath, scale := imgPath, 1
-	if up, cleanup, ok := upscaleForOCR(imgPath); ok {
-		defer cleanup()
-		ocrPath, scale = up, ocrUpscaleFactor
-	}
+	ocrPath, scale, dpi, cleanup := prepareForOCR(imgPath)
+	defer cleanup()
 
 	args := []string{ocrPath, "stdout"}
 	if dataDir != "" && hasLangFile(dataDir, lang) {
@@ -104,6 +107,12 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	// and tesseract falls back to plain text, which parseTSV can't read (zero blocks -> no overlay).
 	// Setting the renderer flag directly is independent of any configs/ directory.
 	args = append(args, "--psm", strconv.Itoa(ocrPageSegMode), "-l", lang, "-c", "tessedit_create_tsv=1")
+	// Declaring the resolution lets layout analysis separate regions Tesseract otherwise merges
+	// (adjacent balloons read as one plate): its own estimate on a bare page scan runs far below
+	// reality (~70 DPI for a ~180 DPI page). dpi==0 means we could not estimate one - leave it to guess.
+	if dpi > 0 {
+		args = append(args, "-c", "user_defined_dpi="+strconv.Itoa(dpi))
+	}
 
 	cmd := exec.Command(bin, args...)
 	var out, errb bytes.Buffer
@@ -122,26 +131,81 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	return res, nil
 }
 
-// OCR upscaling constants, shared with the extension's ocr-overlay.js OCR_UPSCALE_BELOW /
-// OCR_UPSCALE_FACTOR (docs/PARITY.md). An image whose long side is below ocrUpscaleBelow is
-// enlarged ocrUpscaleFactor-fold before recognition so Tesseract reads small scans/thumbnails
-// better; recognized coordinates are divided back by the factor so the overlay still maps onto
-// the original picture. Larger images are recognized as-is.
+// OCR resolution constants, shared with the extension's ocr-overlay.js (docs/PARITY.md). We do not
+// gate on raw pixel count - a page scan is over 1000 px tall even at a poor ~100 DPI, so a pixel
+// threshold either upscales everything (4x the OCR cost on a clean render that gains nothing) or
+// nothing (the low-res scan that needs it most). Instead we estimate DPI from the long side against
+// an assumed page height and act on that: below ocrUpscaleDPIFloor the image is enlarged
+// ocrUpscaleFactor-fold before recognition (and coordinates divided back after), and in every case
+// the resolution is declared to Tesseract (clamped to >= ocrMinDeclaredDPI). Measured: a ~90-DPI
+// newsprint scan gains hugely from the upscale, while a ~150-DPI scan only needs the DPI declared -
+// the upscale over-segments it for no benefit.
 const (
-	ocrUpscaleBelow  = 1000
-	ocrUpscaleFactor = 2
+	ocrUpscaleFactor     = 2
+	ocrAssumedPageInches = 11.0 // assumed long-side page size (US Letter) for the DPI estimate
+	ocrUpscaleDPIFloor   = 120  // estimated DPI below which an image is upscaled before OCR
+	ocrMinDeclaredDPI    = 70   // never declare a DPI below this (Tesseract ignores sub-70 anyway)
 )
 
-// upscaleForOCR writes an ocrUpscaleFactor-enlarged copy of a small image to a temp PNG so
-// Tesseract reads it better, returning the temp path and a cleanup func. Best-effort: a large
-// image, or any decode/scale/encode failure, returns ok=false (recognize the original).
+// estimateDPI approximates an image's resolution from its long side, treating it as one
+// ocrAssumedPageInches-tall page. 0 when the size is unknown. Crude, but enough to tell a low-res
+// scan that needs enlarging from a mid-res one that only needs its DPI declared.
+func estimateDPI(longSidePx int) int {
+	if longSidePx <= 0 {
+		return 0
+	}
+	return int(math.Round(float64(longSidePx) / ocrAssumedPageInches))
+}
+
+func clampDeclaredDPI(d int) int {
+	if d > 0 && d < ocrMinDeclaredDPI {
+		return ocrMinDeclaredDPI
+	}
+	return d
+}
+
+// prepareForOCR returns the path to hand tesseract, the scale factor applied (to map coordinates
+// back), the DPI to declare (0 = none), and a cleanup func (never nil). It upscales images whose
+// estimated DPI is below the floor, and always resolves to an ASCII path: tesseract/leptonica open
+// a path with the Windows ANSI codepage and mangle any byte outside it, so a book under a Cyrillic
+// name would otherwise fail recognition silently. Best-effort: any failure recognizes the original.
+func prepareForOCR(imgPath string) (path string, scale, dpi int, cleanup func()) {
+	dpi = estimateDPI(imageLongSide(imgPath))
+	if dpi > 0 && dpi < ocrUpscaleDPIFloor {
+		if up, cl, ok := upscaleForOCR(imgPath); ok {
+			return up, ocrUpscaleFactor, clampDeclaredDPI(dpi * ocrUpscaleFactor), cl
+		}
+	}
+	staged, cl := stageASCIIPath(imgPath)
+	return staged, 1, clampDeclaredDPI(dpi), cl
+}
+
+// imageLongSide reads only the image header (cheap, no full decode) and returns its longer pixel
+// dimension, or 0 if the size can't be read. Go opens the non-ASCII path fine - only the external
+// tesseract binary can't, which stageASCIIPath handles.
+func imageLongSide(path string) int {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0
+	}
+	defer f.Close()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil {
+		return 0
+	}
+	return max(cfg.Width, cfg.Height)
+}
+
+// upscaleForOCR writes an ocrUpscaleFactor-enlarged copy of the image to a temp PNG (ASCII path) so
+// Tesseract reads it better, returning the temp path and a cleanup func. Best-effort: any
+// decode/scale/encode failure returns ok=false (recognize the original).
 func upscaleForOCR(imgPath string) (path string, cleanup func(), ok bool) {
 	src := decodeImage(imgPath)
 	if src == nil {
 		return "", nil, false
 	}
 	b := src.Bounds()
-	if b.Dx() <= 0 || b.Dy() <= 0 || max(b.Dx(), b.Dy()) >= ocrUpscaleBelow {
+	if b.Dx() <= 0 || b.Dy() <= 0 {
 		return "", nil, false
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*ocrUpscaleFactor, b.Dy()*ocrUpscaleFactor))
@@ -158,6 +222,49 @@ func upscaleForOCR(imgPath string) (path string, cleanup func(), ok bool) {
 	f.Close()
 	name := f.Name()
 	return name, func() { os.Remove(name) }, true
+}
+
+// stageASCIIPath returns a path safe to hand tesseract. A path with non-ASCII bytes is copied to an
+// ASCII temp file (tesseract/leptonica open it via the Windows ANSI codepage and mangle any byte
+// outside it, failing recognition silently); an all-ASCII path is returned unchanged. The cleanup
+// func removes any copy and is never nil. Mirrors internal/pdf's stagePDFForPDFToText.
+func stageASCIIPath(imgPath string) (string, func()) {
+	noop := func() {}
+	if isASCIIPath(imgPath) {
+		return imgPath, noop
+	}
+	ext := filepath.Ext(imgPath)
+	if !isASCIIPath(ext) {
+		ext = "" // tesseract sniffs the format from content; a mangled ext is worse than none
+	}
+	f, err := os.CreateTemp("", "docht-ocr-*"+ext)
+	if err != nil {
+		return imgPath, noop
+	}
+	name := f.Name()
+	src, err := os.Open(imgPath)
+	if err != nil {
+		f.Close()
+		os.Remove(name)
+		return imgPath, noop
+	}
+	_, cerr := io.Copy(f, src)
+	src.Close()
+	f.Close()
+	if cerr != nil {
+		os.Remove(name)
+		return imgPath, noop
+	}
+	return name, func() { os.Remove(name) }
+}
+
+func isASCIIPath(p string) bool {
+	for _, r := range p {
+		if r > 127 {
+			return false
+		}
+	}
+	return true
 }
 
 // scaleDown maps a Result recognized on an s-fold enlarged image back to the original pixel

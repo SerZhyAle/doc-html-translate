@@ -44,11 +44,11 @@ nothing else.
 
 ## Cross-references
 
-- Go: [`internal/ocr/tesseract.go`](../../internal/ocr/tesseract.go) `ocrPageSegMode`, `Recognize`
+- Go: [`internal/ocr/tesseract.go`](../../../internal/ocr/tesseract.go) `ocrPageSegMode`, `Recognize`
   (`--psm`).
-- JS: [`extension/src/ocr-overlay.js`](../../extension/src/ocr-overlay.js) `OCR_PSM`, `getWorker`
+- JS: [`extension/src/ocr-overlay.js`](../../../extension/src/ocr-overlay.js) `OCR_PSM`, `getWorker`
   (`setParameters`).
-- Guard: [`tests/parity_test.go`](../../tests/parity_test.go) `TestParityOCRClustering` ("page-seg mode").
+- Guard: [`tests/parity_test.go`](../../../tests/parity_test.go) `TestParityOCRClustering` ("page-seg mode").
 
 ## Done criteria
 

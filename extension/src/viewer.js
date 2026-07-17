@@ -19,6 +19,7 @@ import { parseHtml } from "./html.js";
 import { parseMarkdown } from "./md.js";
 import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
+import { parseComic, DesktopOnlyError } from "./comic.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang } from "./ocr-overlay.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
@@ -78,7 +79,7 @@ function fileTitle(url) {
 // FORMAT_EXT maps a filename extension to the internal format id. Each format
 // phase extends this map; magic-byte detection below takes priority when a
 // signature exists.
-const FORMAT_EXT = { pdf: "pdf", epub: "epub", txt: "txt", rtf: "rtf", htm: "html", html: "html", md: "md", markdown: "md", fb2: "fb2", mobi: "mobi", azw3: "mobi", png: "image", jpg: "image", jpeg: "image", gif: "image", bmp: "image", webp: "image" };
+const FORMAT_EXT = { pdf: "pdf", epub: "epub", txt: "txt", rtf: "rtf", htm: "html", html: "html", md: "md", markdown: "md", fb2: "fb2", mobi: "mobi", azw3: "mobi", png: "image", jpg: "image", jpeg: "image", gif: "image", bmp: "image", webp: "image", cbz: "comic", cbr: "comic", cb7: "comic", cbt: "comic" };
 
 function fileExt(name) {
   const clean = String(name || "").split(/[?#]/)[0];
@@ -92,7 +93,12 @@ function fileExt(name) {
 function detectFormat(data, name) {
   const b = new Uint8Array(data, 0, Math.min(12, data.byteLength));
   if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return "pdf";   // %PDF
-  if (b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04) return "epub";  // PK..
+  // Both EPUB and CBZ are ZIP (PK..). The signature alone cannot tell them apart, so the
+  // filename extension breaks the tie: a .cbz is a comic, anything else ZIP is an EPUB.
+  // This keeps the EPUB hot path (a .epub, or a ZIP with no comic extension) unchanged.
+  if (b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04) {
+    return FORMAT_EXT[fileExt(name)] === "comic" ? "comic" : "epub"; // PK..
+  }
   if (b[0] === 0x7b && b[1] === 0x5c && b[2] === 0x72 && b[3] === 0x74 && b[4] === 0x66) return "rtf"; // {\rtf
   if (isMobiBytes(data)) return "mobi"; // MOBI / AZW3 (PDB "BOOKMOBI" at offset 60)
   if (imageMime(data, "")) return "image"; // PNG / JPEG / GIF / BMP / WebP by signature
@@ -126,6 +132,9 @@ function teardownCurrent() {
   if (chunkObserver) { chunkObserver.disconnect(); chunkObserver = null; }
   if (pdfImageObserver) { pdfImageObserver.disconnect(); pdfImageObserver = null; }
   pdfImagesDeferred = 0;
+  if (comicImageObserver) { comicImageObserver.disconnect(); comicImageObserver = null; }
+  comicTotal = 0;
+  comicRendered = 0;
   chunkPending = null;
   pdfDoc = null;
   pdfTotal = 0;
@@ -249,9 +258,12 @@ async function ocrProcessImage(img) {
   }
 }
 
-// Register every <img> under `root` for lazy OCR. No-op when OCR is off.
-function registerImagesForOcr(root) {
-  if (!options.ocrImages) return;
+// Register every <img> under `root` for lazy OCR. No-op when OCR is off, unless
+// `force` is set - comics force OCR on regardless of the "Use OCR for images"
+// toggle, because opening a comic is itself the request to read its bubbles (the
+// same rationale as a standalone image).
+function registerImagesForOcr(root, force = false) {
+  if (!options.ocrImages && !force) return;
   const imgs = root.querySelectorAll("img");
   if (!imgs.length) return;
   ensureOcrCss();
@@ -278,6 +290,15 @@ function registerImagesForOcr(root) {
 // decoded only if the reader actually reaches it.
 let pdfImageObserver = null;
 let pdfImagesDeferred = 0;
+
+// ---- Comic page state ------------------------------------------------------
+// A comic archive renders like a scanned PDF: placeholder sections up front, each
+// page's image inflated and inserted only as it scrolls near view (comicImageObserver),
+// then OCR'd by the shared lazy-OCR observer. comicTotal/comicRendered drive the
+// partial-save warning, mirroring the PDF counters.
+let comicImageObserver = null;
+let comicTotal = 0;
+let comicRendered = 0;
 
 function getPdfImageObserver() {
   if (pdfImageObserver) return pdfImageObserver;
@@ -494,6 +515,14 @@ async function downloadHtml() {
 // to avoid, and would bury untranslated pages under the ones Chrome already
 // translated - so the honest partial file wins over the confusing complete one.
 function reportPartialSave() {
+  // A comic inflates its pages on scroll, so the export holds only the pages reached.
+  if (comicTotal > 0) {
+    if (comicRendered >= comicTotal) return;
+    $("status").classList.remove("done");
+    setStatus(`Saved ${comicRendered} of ${comicTotal} pages - scroll further and save again to include more`);
+    setTimeout(hideStatus, 5000);
+    return;
+  }
   if (!pdfDoc || pdfRendered >= pdfTotal) return;
   $("status").classList.remove("done");
   setStatus(`Saved pages 1-${pdfRendered} of ${pdfTotal} - scroll further and save again to include more`);
@@ -767,6 +796,7 @@ async function loadFromData(data, title, name) {
     case "fb2": await loadBook(data, title, parseFb2, "Reading FB2.."); return;
     case "mobi": await loadBook(data, title, parseEbook, "Reading e-book.."); return;
     case "image": await loadImageData(data, title, imageMime(data, name)); return;
+    case "comic": await loadComicData(data, title); return;
     default: await loadPdfData(data, title);
   }
 }
@@ -839,6 +869,120 @@ async function loadImageData(data, title, mime) {
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
   setTimeout(hideStatus, 1400);
+}
+
+// comicLoaders maps a placeholder <section> to its lazy page loader until the page
+// scrolls near view. A WeakMap so a section removed on teardown is collectable.
+const comicLoaders = new WeakMap();
+
+// loadComicData opens a comic archive (CBZ / CBT) and renders it page by page with
+// forced OCR: each page image is inflated and inserted only as it nears the viewport,
+// then OCR'd into translatable plates so the browser's "Translate page" reaches the
+// speech bubbles. CBR/CB7 (RAR/7z) have no in-browser decoder and are declined with a
+// notice pointing at the desktop app.
+async function loadComicData(data, title) {
+  $("doc-title").textContent = title;
+  document.title = title;
+  $("btn-original").classList.add("hidden"); // no "native viewer" concept for a comic
+  $("status").classList.remove("done");
+  setStatus("Reading comic..");
+  setProgress(0.1);
+  ensureOcrCss();
+
+  let pages;
+  try {
+    pages = await parseComic(data);
+  } catch (err) {
+    if (err instanceof DesktopOnlyError) {
+      showNotice("This comic needs the desktop app", [
+        para(err.message),
+        para("Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed)."),
+        filePickerButton(),
+      ]);
+    } else {
+      showNotice("Couldn't open this comic", [
+        para(err && err.message ? `Details: ${err.message}` : "The archive may be corrupt or hold no page images."),
+        filePickerButton(),
+      ]);
+    }
+    return;
+  }
+  renderComic(pages);
+}
+
+// renderComic lays out one placeholder section per page up front (so the scrollbar
+// reflects the whole book immediately) and defers each page's image inflation and OCR
+// to scroll via the comic image observer. Mirrors the scanned-PDF path.
+function renderComic(pages) {
+  applyLang(ocrLangToHtmlLang(options.ocrLang || "eng"));
+  comicTotal = pages.length;
+  comicRendered = 0;
+  $("page-total").textContent = `/ ${comicTotal}`;
+  $("page-jump").max = String(comicTotal);
+  renderToc(null); // comics carry no authored table of contents
+
+  const content = $("content");
+  content.replaceChildren();
+  const obs = getComicImageObserver();
+  pages.forEach((pg, i) => {
+    const n = i + 1;
+    const section = el("section");
+    section.id = `comic-page-${n}`;
+    section.dataset.page = String(n);
+    if (i > 0) content.append(el("hr", "page-sep"));
+    // Reserve a page-shaped box so layout does not jump much when the real image lands;
+    // a default portrait ratio is close enough for the moments before it decodes.
+    const box = el("div", "comic-page-pending");
+    box.style.aspectRatio = "2 / 3";
+    section.append(box);
+    comicLoaders.set(section, pg);
+    content.append(section);
+    obs.observe(section);
+  });
+
+  $("btn-save-html").classList.remove("hidden");
+  setProgress(1);
+  setStatus(`Ready - ${comicTotal} ${comicTotal === 1 ? "page" : "pages"}, text is recognized as you scroll`);
+  setTimeout(hideStatus, 1800);
+}
+
+function getComicImageObserver() {
+  if (comicImageObserver) return comicImageObserver;
+  comicImageObserver = new IntersectionObserver((entries, obs) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      insertComicPage(e.target);
+    }
+    // A wide margin so a page's image is inflated before it is looked at.
+  }, { rootMargin: "1500px" });
+  return comicImageObserver;
+}
+
+// insertComicPage inflates one page's bytes, inserts it as an <img>, drops the reserved
+// box, and registers it for forced OCR. Guarded by docGen so a page still inflating from
+// a torn-down comic cannot insert itself into the next document.
+async function insertComicPage(section) {
+  const pg = comicLoaders.get(section);
+  if (!pg) return;
+  comicLoaders.delete(section);
+  const gen = docGen;
+  let bytes;
+  try {
+    bytes = await pg.load();
+  } catch (err) {
+    console.warn("comic page load failed", err);
+    return; // leave the reserved box; a page that will not inflate just stays blank
+  }
+  if (gen !== docGen) return;
+  const url = URL.createObjectURL(new Blob([bytes], { type: pg.mime }));
+  pdfImageUrls.push(url); // revoked on the next teardownCurrent()
+  const img = el("img");
+  img.addEventListener("load", () => { comicRendered++; }, { once: true });
+  img.src = url;
+  section.append(img);
+  section.querySelector(".comic-page-pending")?.remove();
+  registerImagesForOcr(section, true); // comics force OCR on
 }
 
 // loadPdfData runs the PDF.js + reflow pipeline over PDF bytes.

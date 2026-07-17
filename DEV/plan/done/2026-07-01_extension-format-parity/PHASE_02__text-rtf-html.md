@@ -37,7 +37,7 @@ URL interception.
 
 **Prompt for developer:**
 > Create `extension/src/txt.js`. Export a pure `splitParagraphs(text)` that mirrors
-> [`internal/txt/extract.go`](../../../internal/txt/extract.go): normalize CRLF/CR to LF; if
+> [`internal/txt/extract.go`](../../../../internal/txt/extract.go): normalize CRLF/CR to LF; if
 > the text has blank lines, split into paragraphs on blank-line boundaries; otherwise treat
 > each non-empty line as its own paragraph. Also export `async function parseText(data)` that
 > decodes the bytes as UTF-8, calls `splitParagraphs`, chunks paragraphs into sections of 30
@@ -61,7 +61,7 @@ URL interception.
 **Depends on:** - start of phase
 
 **Prompt for developer:**
-> Create `extension/src/rtf.js`. Port [`internal/rtf/extract.go`](../../../internal/rtf/extract.go)
+> Create `extension/src/rtf.js`. Port [`internal/rtf/extract.go`](../../../../internal/rtf/extract.go)
 > to a pure `stripRtf(bytes)` returning plain text: strip control words (`\word` + optional
 > numeric arg), handle `{`/`}` groups, decode `\'XX` hex escapes, and decode Windows-1251
 > bytes with `new TextDecoder("windows-1251")` (available in Chrome and node). Preserve the Go
@@ -88,9 +88,9 @@ URL interception.
 > Create `extension/src/html.js` exporting `async function parseHtml(data)`. Decode the bytes
 > as UTF-8, parse with `DOMParser` to read `<title>` (title) and the `<html lang>` attribute
 > (lang), then hand the `<body>` inner HTML to `sanitizeToFragment` from
-> [`sanitize.js`](../../../extension/src/sanitize.js) (index 0) to get one section frag.
+> [`sanitize.js`](../../../../extension/src/sanitize.js) (index 0) to get one section frag.
 > Return the book shape: `{ title, lang, sampleText:<frag text, ~8000 chars>, sections:[{id:"html-sec-0",label,frag}], toc:[], revoke:()=>{} }`.
-> Mirror [`internal/htmlconv/extract.go`](../../../internal/htmlconv/extract.go) for the
+> Mirror [`internal/htmlconv/extract.go`](../../../../internal/htmlconv/extract.go) for the
 > title/body extraction intent.
 
 **Verification:**
@@ -106,14 +106,14 @@ URL interception.
 **Depends on:** Step 02.1, Step 02.2, Step 02.3
 
 **Prompt for developer:**
-> In [`viewer.js`](../../../extension/src/viewer.js): import `parseText`, `parseRtf`,
+> In [`viewer.js`](../../../../extension/src/viewer.js): import `parseText`, `parseRtf`,
 > `parseHtml`. Extend `FORMAT_EXT` with `txt:"txt", rtf:"rtf", htm:"html", html:"html"`. Add
 > an RTF magic-byte check to `detectFormat` (`{\rtf` -> `"rtf"`). Add dispatch cases in
 > `loadFromData`: `"txt"` -> `loadBook(data, title, parseText, "Reading text..")`, `"rtf"` ->
 > `loadBook(data, title, parseRtf, "Reading RTF..")`, `"html"` ->
 > `loadBook(data, title, parseHtml, "Reading HTML..")`. Extend the extension-stripping regex
 > used by `fileTitle` and `openFilePicker` to include `txt|rtf|html?|md|fb2|mobi|azw3` (cover
-> the whole planned set now to avoid churn). In [`viewer.html`](../../../extension/src/viewer.html),
+> the whole planned set now to avoid churn). In [`viewer.html`](../../../../extension/src/viewer.html),
 > extend the `#file-input` `accept` attribute to add `.txt,.rtf,.html,.htm`.
 
 **Verification:**
@@ -132,8 +132,8 @@ URL interception.
 
 **Prompt for developer:**
 > Add `"src/txt.js"`, `"src/rtf.js"`, `"src/html.js"` to `web_accessible_resources[0].resources`
-> in [`manifest.json`](../../../extension/manifest.json). In
-> [`background.js`](../../../extension/src/background.js), add `rtf` to the DNR `regexFilter`
+> in [`manifest.json`](../../../../extension/manifest.json). In
+> [`background.js`](../../../../extension/src/background.js), add `rtf` to the DNR `regexFilter`
 > alternation in both `httpsRule` and `fileRule` (`(?:pdf|epub|rtf)`). Do NOT add `txt`, `html`,
 > or `htm` to the DNR rules - those are normal browser-viewable resources and must not be
 > intercepted; they are reachable via the file picker only.

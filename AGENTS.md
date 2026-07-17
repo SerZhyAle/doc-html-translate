@@ -63,6 +63,7 @@ Notes:
 - Format extractors:
   - internal/epub, internal/pdf, internal/mobi, internal/fb2, internal/rtf, internal/txt, internal/md, internal/htmlconv
   - internal/img: standalone image input (PNG/JPG/WebP/..) - wraps the picture in a one-page HTML doc; the pipeline forces the OCR overlay so the image gets translatable text plates (see internal/ocr)
+  - internal/comic: comic archives (CBZ/CBR/CB7/CBT) - one page image per spine entry in natural filename order, forced OCR (same rationale as internal/img). CBZ=zip, CBT=tar (stdlib); CBR/CB7 shell out to 7-Zip (LookPath + probe paths, the MOBI/Calibre precedent)
 - HTML processing/generation:
   - internal/htmlproc, internal/htmlsplit, internal/htmlgen
 - Translation:
@@ -98,7 +99,7 @@ gaps are tracked in [DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-
 
 - scripts/build.ps1 and scripts/build-ui.ps1 copy artifacts to C:/GD/tc/SZA/_APP. This is environment-specific and may fail on other machines.
 - Build scripts rely on goversioninfo for Windows resource embedding.
-- MOBI/AZW3 conversion depends on Calibre at runtime.
+- MOBI/AZW3 conversion depends on Calibre at runtime; CBR/CB7 comics depend on 7-Zip at runtime (CBZ/CBT need nothing).
 
 ## Editing Guidance
 

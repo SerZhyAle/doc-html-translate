@@ -155,7 +155,9 @@ func TestParityOCRClustering(t *testing.T) {
 	pairs := []struct{ name, goRe, jsRe string }{
 		{"min line confidence", `ocrMinLineConf\s*=\s*([\d.]+)`, `OCR_MIN_LINE_CONF\s*=\s*([\d.]+)`},
 		{"cluster gap factor", `ocrClusterGapFactor\s*=\s*([\d.]+)`, `OCR_CLUSTER_GAP_FACTOR\s*=\s*([\d.]+)`},
-		{"upscale threshold", `ocrUpscaleBelow\s*=\s*([\d.]+)`, `OCR_UPSCALE_BELOW\s*=\s*([\d.]+)`},
+		{"upscale dpi floor", `ocrUpscaleDPIFloor\s*=\s*([\d.]+)`, `OCR_UPSCALE_DPI_FLOOR\s*=\s*([\d.]+)`},
+		{"assumed page inches", `ocrAssumedPageInches\s*=\s*([\d.]+)`, `OCR_ASSUMED_PAGE_INCHES\s*=\s*([\d.]+)`},
+		{"min declared dpi", `ocrMinDeclaredDPI\s*=\s*([\d.]+)`, `OCR_MIN_DECLARED_DPI\s*=\s*([\d.]+)`},
 		{"upscale factor", `ocrUpscaleFactor\s*=\s*([\d.]+)`, `OCR_UPSCALE_FACTOR\s*=\s*([\d.]+)`},
 		{"page-seg mode", `ocrPageSegMode\s*=\s*([\d.]+)`, `OCR_PSM\s*=\s*"?([\d.]+)"?`},
 	}
@@ -195,6 +197,22 @@ func TestParityReflowConstants(t *testing.T) {
 		if gv != jv {
 			t.Errorf("%s drift: extract.go=%v reflow.js=%v (must match - see docs/PARITY.md)", p.name, gv, jv)
 		}
+	}
+}
+
+// TestParityComicPageFilter: the comic page-image extension set must be identical on both
+// editions, or the two disagree on which archive entries count as pages. See docs/PARITY.md
+// "Comic archive page order and entry filter".
+func TestParityComicPageFilter(t *testing.T) {
+	goBlock := between(readRepoFile(t, "internal", "comic", "extract.go"), "var pageExts = map[string]bool{", "}")
+	jsBlock := between(readRepoFile(t, "extension", "src", "comic.js"), "export const PAGE_EXTS = [", "]")
+	goExts := codeSet(regexp.MustCompile(`"\.([a-z0-9]+)"`).FindAllStringSubmatch(goBlock, -1))
+	jsExts := codeSet(regexp.MustCompile(`"([a-z0-9]+)"`).FindAllStringSubmatch(jsBlock, -1))
+	if len(goExts) == 0 || len(jsExts) == 0 {
+		t.Fatalf("comic page-ext set not parsed (extract.go=%d comic.js=%d)", len(goExts), len(jsExts))
+	}
+	if strings.Join(goExts, ",") != strings.Join(jsExts, ",") {
+		t.Errorf("comic page-ext set drift:\n  internal/comic pageExts: %v\n  comic.js PAGE_EXTS     : %v\n  must match - see docs/PARITY.md", goExts, jsExts)
 	}
 }
 

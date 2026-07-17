@@ -51,7 +51,9 @@ update docs/PARITY.md when you change a shared invariant. Open gaps:
 ## Content conventions
 
 - **Typography:** use short hyphens (no long dashes), Russian **ё** where applicable, and ".." not "...".
-  Applies to generated output, docs, and commit messages.
+  Applies to generated output, docs, and commit messages. **One deliberate exception:** the converted
+  page `<title>Book — Page N</title>` keeps an em dash - that is conventional book typography, not chatter,
+  and the drift guard (`tests/typography_test.go`) allowlists an em dash only inside a `<title>` literal.
 - Platform-specific code is split via `*_windows.go` / `*_nonwindows.go` - keep both sides in sync.
 
 ## High-value invariants (full list in AGENTS.md)
@@ -87,6 +89,10 @@ Where these conflict with [AGENTS.md](AGENTS.md), **AGENTS.md wins**.
 
 - One ticket = one Markdown file `DEV/plan/<YYYY-MM-DD>_<slug>.md`. The status is the first
   `**Status:**` line in the file; keep it honest by hand.
+- **[DEV/plan/ROADMAP.md](DEV/plan/ROADMAP.md) is the queue.** `**Priority:** N` is a position in it -
+  lower runs first. Finished tickets move to `DEV/plan/done/` (fix relative links when you move one).
+  When priorities and a ticket's own prose disagree, the prose usually wins - it was written against
+  evidence.
 - Lifecycle: `Draft -> Approved -> Tactical -> In Progress -> Implemented -> Verified` (plus
   `Partial` / `Broken` from an audit, and explicit `Block*` states). Status comes from the code +
   checks, never inferred from the filename. No time/effort estimates in spec files.

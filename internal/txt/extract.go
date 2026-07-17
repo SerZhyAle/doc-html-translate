@@ -3,17 +3,86 @@
 package txt
 
 import (
+	"bytes"
 	"fmt"
 	"html"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
+
+	"golang.org/x/text/encoding/unicode"
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 )
+
+// Byte-order marks, in the order they must be tested. UTF-8's is three bytes and cannot be
+// confused with the others; the two UTF-16 marks are each other's reverse, which is the whole
+// point of them.
+var (
+	bomUTF8    = []byte{0xEF, 0xBB, 0xBF}
+	bomUTF16LE = []byte{0xFF, 0xFE}
+	bomUTF16BE = []byte{0xFE, 0xFF}
+)
+
+// decodeText turns a text file's raw bytes into a string, honouring the encoding those bytes
+// declare instead of assuming every byte is a character.
+//
+// Reading the bytes as-is is what turned a Notepad "Unicode" save into mojibake: UTF-16 text
+// is two bytes per character, so a Cyrillic file came out as its low bytes
+// ("Это обычное" -> "-B> >1KG=>5"). ASCII-in-UTF-16 survived only by accident - it is exactly
+// "every character followed by a NUL", and the single-page merge strips control characters on
+// its way past - which is why the same file read correctly, or as spaced-out letters, or as
+// mojibake, depending on the alphabet and on -multipage. The decode belongs here; the merge's
+// NUL-stripping is a coincidence, not a fix.
+//
+// A BOM is authoritative when present. Without one, valid UTF-8 is taken at face value (the
+// overwhelmingly common case, and free to check), and anything else is handed to
+// decodeLegacy.
+func decodeText(raw []byte) string {
+	switch {
+	case bytes.HasPrefix(raw, bomUTF8):
+		// x/text would decode this too, but trimming says exactly what happens: the bytes
+		// after the mark are already UTF-8. Left in place, the mark showed up as an
+		// invisible character opening the first paragraph.
+		return string(bytes.TrimPrefix(raw, bomUTF8))
+
+	case bytes.HasPrefix(raw, bomUTF16LE), bytes.HasPrefix(raw, bomUTF16BE):
+		// UseBOM reads the endianness off the mark and removes it, so one branch covers both
+		// orders; the LittleEndian argument is only the fallback for BOM-less input, which
+		// cannot reach here.
+		out, err := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewDecoder().Bytes(raw)
+		if err != nil {
+			// Truncated or malformed UTF-16. Returning the raw bytes keeps the old
+			// behaviour for a file we cannot honestly decode, rather than losing it.
+			return string(raw)
+		}
+		return string(out)
+	}
+
+	if utf8.Valid(raw) {
+		return string(raw)
+	}
+	return decodeLegacy(raw)
+}
+
+// decodeLegacy handles bytes that carry no BOM and are not valid UTF-8 - a text file saved in
+// a pre-Unicode Cyrillic code page (Windows-1251, KOI8-R, CP866, ISO-8859-5). It commits to a
+// code page only when the decode is confidently Russian; otherwise the bytes pass through
+// unchanged, exactly as before, so a non-Cyrillic file is never forced into an alphabet.
+// The detected encoding is logged, so a reader whose decades-old .txt suddenly reads correctly
+// can see why.
+func decodeLegacy(raw []byte) string {
+	text, encName, ok := detectLegacy(raw)
+	if !ok {
+		return string(raw)
+	}
+	logging.Printf("  Decoded from %s\n", encName)
+	return text
+}
 
 // paragraphsPerPage controls how many paragraphs go into one HTML page.
 const paragraphsPerPage = 30
@@ -81,7 +150,7 @@ func parseParagraphs(r io.Reader) []string {
 	if err != nil {
 		return nil
 	}
-	normalized := textutil.NormalizeLineSeparators(string(raw))
+	normalized := textutil.NormalizeLineSeparators(decodeText(raw))
 
 	hasBlankLine := strings.Contains(normalized, "\n\n")
 

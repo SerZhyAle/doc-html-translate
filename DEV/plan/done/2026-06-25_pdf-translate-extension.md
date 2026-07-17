@@ -1,9 +1,15 @@
 # PDF / EPUB -> translatable HTML browser extension
 
-**Status:** In Progress
+**Status:** Verified
+
+> **Closed 2026-07-17.** Steps 0-5 (the code drop this ticket tracks) are done and verified below.
+> Steps 6-7 were scoped out as "needs accounts" and have since happened in reality: the extension is
+> published on the Chrome Web Store and Edge Add-ons and has shipped through several releases. Later
+> work on the same codebase moved to its own tickets - `2026-07-01_extension-format-parity` (the other
+> seven formats) and `2026-07-01_ocr-image-overlay` (OCR).
 
 Tactical plan for the spin-off browser extension specified in
-[DEV/research/pdf_translate_extension_spec.md](../research/pdf_translate_extension_spec.md).
+[DEV/research/pdf_translate_extension_spec.md](../../research/pdf_translate_extension_spec.md).
 This ticket tracks the implementation of Steps 0-5 (a loadable, store-shaped MV3 extension);
 Steps 6-7 (store submission, $5 registration, listing assets) need accounts and are out of scope
 for the code drop and are only scaffolded.

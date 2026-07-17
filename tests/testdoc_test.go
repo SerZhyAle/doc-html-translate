@@ -37,6 +37,10 @@ var supportedExts = map[string]bool{
 	".htm":  true,
 	".mobi": true,
 	".azw3": true,
+	".cbz":  true,
+	".cbr":  true,
+	".cb7":  true,
+	".cbt":  true,
 }
 
 // TestConvertTestDoc converts every supported sample in test_doc/ through the
@@ -76,6 +80,20 @@ func TestConvertTestDoc(t *testing.T) {
 			if ext == ".mobi" || ext == ".azw3" {
 				if _, err := exec.LookPath("ebook-convert"); err != nil {
 					t.Skipf("ebook-convert (Calibre) not on PATH - skipping %s", name)
+				}
+			}
+			// CBR/CB7 comics shell out to 7-Zip (RAR/7z have no pure-Go decoder).
+			// CBZ/CBT need no external tool. See internal/comic.
+			if ext == ".cbr" || ext == ".cb7" {
+				sevenZip := false
+				for _, n := range []string{"7z", "7za", "7zr"} {
+					if _, err := exec.LookPath(n); err == nil {
+						sevenZip = true
+						break
+					}
+				}
+				if !sevenZip {
+					t.Skipf("7-Zip not on PATH - skipping %s", name)
 				}
 			}
 

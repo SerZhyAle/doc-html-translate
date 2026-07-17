@@ -14,11 +14,12 @@ const RULE_HTTPS = 1;
 const RULE_FILE = 2;
 
 // Extensions offered by the "Convert with doc-html-translate" right-click entry. Broader
-// than the DNR interception list (pdf/epub/rtf/fb2/mobi/azw3) because the viewer can also
-// render txt/md/html on demand - the context menu is always available even though
-// auto-interception is off by default. Match patterns ignore query strings, so `*.pdf`
-// still matches `file.pdf?download=1`.
-const CONVERT_EXTS = ["pdf", "epub", "rtf", "fb2", "mobi", "azw3", "txt", "md", "html", "htm"];
+// than the DNR interception list (pdf/epub/rtf/fb2/mobi/azw3/cbz/cbt) because the viewer
+// can also render txt/md/html on demand, and CBR/CB7 are offered here so the viewer can
+// give a clear "desktop app only" notice on explicit request (they cannot be decoded in
+// the browser, so they are not auto-intercepted). Match patterns ignore query strings, so
+// `*.pdf` still matches `file.pdf?download=1`.
+const CONVERT_EXTS = ["pdf", "epub", "rtf", "fb2", "mobi", "azw3", "txt", "md", "html", "htm", "cbz", "cbt", "cbr", "cb7"];
 const CONVERT_URL_PATTERNS = CONVERT_EXTS.flatMap((e) => [`*://*/*.${e}`, `file:///*.${e}`]);
 
 async function getOptions() {
@@ -41,7 +42,7 @@ function buildRules(options) {
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
       // Capture the whole URL so the substitution keeps any query string intact.
-      regexFilter: "^(https?://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
+      regexFilter: "^(https?://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)(?:[?#].*)?)$",
       resourceTypes: ["main_frame"],
     },
   };
@@ -56,7 +57,7 @@ function buildRules(options) {
       // Three slashes: only empty-host file URLs. UNC paths (file://server/share)
       // can't be granted to extensions by any match pattern, so the viewer could
       // never fetch them - leave those to Chrome's built-in viewer.
-      regexFilter: "^(file:///.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3)(?:[?#].*)?)$",
+      regexFilter: "^(file:///.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)(?:[?#].*)?)$",
       resourceTypes: ["main_frame"],
     },
   };

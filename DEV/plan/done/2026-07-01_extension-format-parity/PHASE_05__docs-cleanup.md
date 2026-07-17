@@ -37,7 +37,7 @@ documentation" step; no parser code changes here.
 **Depends on:** - start of phase
 
 **Prompt for developer:**
-> In [`docs/PARITY.md`](../../../docs/PARITY.md) "The port map (Go <-> JS)" table, add one row
+> In [`docs/PARITY.md`](../../../../docs/PARITY.md) "The port map (Go <-> JS)" table, add one row
 > per new format mapping the Go extractor to the JS module: `internal/txt` <-> `src/txt.js`,
 > `internal/rtf` <-> `src/rtf.js`, `internal/md` <-> `src/md.js`, `internal/fb2` <->
 > `src/fb2.js`, `internal/htmlconv` <-> `src/html.js`, `internal/mobi` (Calibre) <->
@@ -59,7 +59,7 @@ documentation" step; no parser code changes here.
 **Depends on:** - start of phase
 
 **Prompt for developer:**
-> In [`extension/README.md`](../../../extension/README.md), replace the "PDF and EPUB" framing
+> In [`extension/README.md`](../../../../extension/README.md), replace the "PDF and EPUB" framing
 > with the full supported set (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML) and
 > list the new `src/*.js` parser modules plus the vendored `marked` and `foliate-js`
 > dependencies in the layout/architecture section.
@@ -77,12 +77,12 @@ documentation" step; no parser code changes here.
 **Depends on:** - start of phase
 
 **Prompt for developer:**
-> In [`extension/store/LISTING.md`](../../../extension/store/LISTING.md): change the item name
+> In [`extension/store/LISTING.md`](../../../../extension/store/LISTING.md): change the item name
 > away from "PDF & EPUB Page Translator" to a wider-format name (draft, e.g. "Document Page
 > Translator - PDF, EPUB, MOBI & more"), update the short and long descriptions to enumerate
 > the full format set, and refresh the EN/RU/UK caption blocks. Mark the final name/wording
 > **owner-curated at release** (strategic §3.3). In
-> [`extension/store/PRIVACY.md`](../../../extension/store/PRIVACY.md), extend any "what the
+> [`extension/store/PRIVACY.md`](../../../../extension/store/PRIVACY.md), extend any "what the
 > extension processes" wording so it covers the new formats and reaffirms that all parsing is
 > local (no upload).
 
@@ -140,7 +140,7 @@ documentation" step; no parser code changes here.
 **Depends on:** Step 05.1, Step 05.2, Step 05.3, Step 05.4, Step 05.5
 
 **Prompt for developer:**
-> Add a single headline entry to [`DEV/CHANGELOG.md`](../../../DEV/CHANGELOG.md) summarizing the
+> Add a single headline entry to [`DEV/CHANGELOG.md`](../../../../DEV/CHANGELOG.md) summarizing the
 > feature: the extension now opens TXT, Markdown, FB2, RTF, local HTML, MOBI and AZW3 in
 > addition to PDF and EPUB (client-side, offline; MOBI/AZW3 via vendored foliate-js). Follow the
 > existing changelog format and typography (short hyphens, `..` not `...`).

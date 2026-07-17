@@ -12,6 +12,8 @@ Developer-oriented README for local builds and maintenance.
 doc-html-translate.exe "book.epub"
 doc-html-translate.exe "book.mobi"           # requires Calibre
 doc-html-translate.exe "book.azw3"           # requires Calibre
+doc-html-translate.exe "comic.cbz"           # comic pages, OCR forced on
+doc-html-translate.exe "comic.cbr"           # CBR/CB7 require 7-Zip
 doc-html-translate.exe -google "book.epub"
 doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"
 doc-html-translate.exe -src en -dst ru "book.epub"

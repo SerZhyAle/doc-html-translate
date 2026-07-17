@@ -17,13 +17,16 @@
   height: auto;
 }
 
-/* Opaque plate covering the source text, carrying the recognized text. Grows downward
-   so translated text (often longer) wraps instead of clipping. */
+/* Opaque plate covering the source text, carrying the recognized text. Text is centred in its
+   source region; the runtime re-fit (fitPlate in ocr-overlay.js) shrinks the font so a longer
+   string - a translation - fits, and only lets the box grow if it still won't fit at the font
+   floor, so nothing clips. overflow:hidden gives the fit a bounded box to measure against. */
 .ocr-plate {
   position: absolute;
   box-sizing: border-box;
+  overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding: 0.05em 0.15em;
   border-radius: 2px;

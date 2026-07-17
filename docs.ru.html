@@ -38,7 +38,7 @@
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, конвертер командной строки и обработчик файловых ассоциаций Windows. Его флаги описаны на этой странице.</li>
         <li><strong>GUI-приложение</strong> - <code>doc-html-ui.exe</code>, оконный интерфейс со всеми флагами ниже: выбор файла, drag &amp; drop и тумблер «обработчик по умолчанию» (по желанию, по умолчанию выключен).</li>
         <li><strong>Приложение в Microsoft Store</strong> - тот же десктоп (GUI + CLI) как авто-обновляемый MSIX с подписью Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1">Microsoft Store</a>.</li>
-        <li><strong>Расширение для браузера</strong> - перерисовывает документы (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) в чистый HTML прямо в браузере, чтобы встроенный <em>«Перевести страницу»</em> работал на них без установки приложения: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Chrome Web Store</a> · <a href="extension.html">страница расширения</a>.</li>
+        <li><strong>Расширение для браузера</strong> - перерисовывает документы (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT-комиксы) в чистый HTML прямо в браузере, чтобы встроенный <em>«Перевести страницу»</em> работал на них без установки приложения: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic">Chrome Web Store</a> · <a href="extension.html">страница расширения</a>.</li>
       </ul>
     </section>
 
@@ -72,9 +72,11 @@ doc-html-translate.exe -ollama "book.epub"</div>
 
     <section class="card" style="margin-top: 10px;">
       <h2>Поддерживаемые форматы</h2>
-      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3. Набор, прямо скажем, приличный.</p>
+      <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 и комиксы CBZ/CBR/CB7/CBT. Набор, прямо скажем, приличный.</p>
+      <p>А ещё <strong>комиксы</strong> (CBZ / CBR / CB7 / CBT): это контейнер со страницами-картинками без текстового слоя, он открывается страница за страницей с принудительно включённым OCR, поэтому текст в «пузырях» распознаётся и ложится переводимыми плашками поверх каждой страницы. CBZ и CBT не требуют ничего дополнительно; CBR и CB7 требуют установленного <a href="https://www.7-zip.org">7-Zip</a> (тот же приём с внешним инструментом, что и MOBI с Calibre).</p>
       <p>А ещё <strong>одиночная картинка</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): приложение распознаёт на ней текст и накладывает его переводимыми плашками поверх изображения, чтобы встроенный перевод страницы в Chrome/Edge работал прямо на картинке - тот же оверлей, что делает расширение для браузера. Нужен OCR-движок <strong>Tesseract</strong> (см. <code>-ocr-lang</code>).</p>
-      <p class="small">MOBI и AZW3: требуется установленный <a href="https://calibre-ebook.com">Calibre</a>. Файлы с DRM не поддерживаются - конвертер уважает замки, которые не умеет вскрывать.</p>
+      <p class="small">MOBI и AZW3: требуется установленный <a href="https://calibre-ebook.com">Calibre</a>. Комиксы CBR и CB7: требуется установленный <a href="https://www.7-zip.org">7-Zip</a> (CBZ и CBT не требуют ничего дополнительно). Файлы с DRM не поддерживаются - конвертер уважает замки, которые не умеет вскрывать.</p>
+      <p class="small">Обычный текст (.txt) декодируется по ведущим байтам - метка порядка байтов UTF-8/UTF-16, затем корректный UTF-8, затем устаревшая кириллическая кодовая страница (Windows-1251, KOI8-R, CP866) по детекции - так что .txt из времён DOS или сохранённый в Notepad как «Unicode» читается текстом, а не «кракозябрами». Нечитаемый бинарник (.docx, .djvu или архив комикса без 7-Zip) отклоняется с указанием формата, а не превращается в мусорный документ.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">
@@ -112,9 +114,15 @@ doc-html-translate.exe -ollama "book.epub"</div>
             <td>Обязателен для поддержки форматов MOBI и AZW3</td>
             <td><a href="https://calibre-ebook.com/download_windows">calibre-ebook.com</a></td>
           </tr>
+          <tr>
+            <td><strong>7-Zip</strong></td>
+            <td>Распаковывает комиксы CBR (RAR) и CB7 (7z) в страницы-картинки</td>
+            <td>Комиксы CBR и CB7 - CBZ и CBT не требуют ничего дополнительно</td>
+            <td><a href="https://www.7-zip.org">7-zip.org</a></td>
+          </tr>
         </tbody>
       </table>
-      <p class="small" style="margin-top:10px;">Без <strong>pdftotext</strong>: используется встроенный Go-ридер PDF (чуть ниже качество). Без <strong>ffmpeg</strong>: изображения JPEG2000 в PDF не будут видны в браузере. Без <strong>Calibre</strong>: файлы MOBI/AZW3 не открываются.</p>
+      <p class="small" style="margin-top:10px;">Без <strong>pdftotext</strong>: используется встроенный Go-ридер PDF (чуть ниже качество). Без <strong>ffmpeg</strong>: изображения JPEG2000 в PDF не будут видны в браузере. Без <strong>Calibre</strong>: файлы MOBI/AZW3 не открываются. Без <strong>7-Zip</strong>: комиксы CBR/CB7 не открываются.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">

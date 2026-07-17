@@ -237,7 +237,7 @@ function parseNavList(ol) {
 // parseNavToc reads an EPUB3 navigation document, preferring the <nav
 // epub:type="toc"> (then role="doc-toc", then the first nav). Lenient HTML parse,
 // matching the desktop app's use of x/net/html for nav docs.
-function parseNavToc(html) {
+export function parseNavToc(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const navs = Array.from(doc.querySelectorAll("nav"));
   const nav =
@@ -250,7 +250,7 @@ function parseNavToc(html) {
 }
 
 // parseNcxToc reads an EPUB2 NCX navMap into raw {title, href, children} entries.
-function parseNcxToc(xml) {
+export function parseNcxToc(xml) {
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const navMap = doc.getElementsByTagNameNS("*", "navMap")[0];
   if (!navMap) return [];
@@ -332,7 +332,7 @@ const DROP_TAGS = "script,style,link,base,meta,title,noscript,iframe,object,embe
 // rewriteImg points a relative <img src> at a blob: URL of the in-archive image,
 // or removes the image when the target is missing. http(s)/data sources are left
 // alone. srcset (which would carry now-broken relative refs) is dropped.
-function rewriteImg(img, docDir, blobFor) {
+export function rewriteImg(img, docDir, blobFor) {
   const src = img.getAttribute("src");
   if (!src) { img.remove(); return; }
   img.removeAttribute("srcset");
@@ -346,7 +346,7 @@ function rewriteImg(img, docDir, blobFor) {
 // single image (the Calibre/Kindlegen cover idiom) the whole <svg> is replaced, so
 // the injected img CSS controls sizing and the browser applies EXIF orientation -
 // mirroring the desktop normalizeCoverImages.
-function convertSvgImage(im, docDir, blobFor) {
+export function convertSvgImage(im, docDir, blobFor) {
   const href = im.getAttribute("href") || im.getAttribute("xlink:href") ||
     im.getAttributeNS("http://www.w3.org/1999/xlink", "href");
   const img = document.createElement("img");
@@ -366,7 +366,7 @@ function convertSvgImage(im, docDir, blobFor) {
 // open in a new tab; a same-document #fragment and cross-chapter file links are
 // remapped onto the namespaced ids the combined document uses; links outside the
 // rendered spine lose their href (kept as inert text).
-function rewriteAnchor(a, index, docDir, pathToIndex) {
+export function rewriteAnchor(a, index, docDir, pathToIndex) {
   const nm = a.getAttribute("name");
   if (nm && !a.id) a.id = nm;
   const href = a.getAttribute("href");
@@ -390,7 +390,7 @@ function rewriteAnchor(a, index, docDir, pathToIndex) {
 // rewrites images and links, namespaces ids so chapters can share one document,
 // and returns a fragment plus a heading-derived label. The fragment's text is read
 // by the caller (for language detection) before it is appended.
-function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
+export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
   const parsed = new DOMParser().parseFromString(xhtml, "text/html");
   const body = parsed.body;
   const host = document.createElement("div");

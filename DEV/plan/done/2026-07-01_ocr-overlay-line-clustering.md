@@ -62,11 +62,11 @@ Net effect on the repro: heading plate + one body plate + fully-visible illustra
 
 ## Cross-references
 
-- Go: [`internal/ocr/tesseract.go`](../../internal/ocr/tesseract.go) `parseTSV`, `clusterLines`,
+- Go: [`internal/ocr/tesseract.go`](../../../internal/ocr/tesseract.go) `parseTSV`, `clusterLines`,
   `ocrMinLineConf`, `ocrClusterGapFactor`.
-- JS: [`extension/src/ocr-overlay.js`](../../extension/src/ocr-overlay.js) `recognize`, `collectLines`,
+- JS: [`extension/src/ocr-overlay.js`](../../../extension/src/ocr-overlay.js) `recognize`, `collectLines`,
   `clusterLines`, `OCR_MIN_LINE_CONF`, `OCR_CLUSTER_GAP_FACTOR`.
-- Guard: [`tests/parity_test.go`](../../tests/parity_test.go) `TestParityOCRClustering`.
+- Guard: [`tests/parity_test.go`](../../../tests/parity_test.go) `TestParityOCRClustering`.
 
 ## Done criteria
 

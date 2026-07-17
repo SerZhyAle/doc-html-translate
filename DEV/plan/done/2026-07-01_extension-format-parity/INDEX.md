@@ -1,9 +1,9 @@
 # Tactical plan: 2026-07-01_extension-format-parity - extension-format-parity
 
 **Strategic spec:** [`../2026-07-01_extension-format-parity.md`](../2026-07-01_extension-format-parity.md)
-**Research inputs:** [`../../research/extension_formats_feasibility_ru.md`](../../research/extension_formats_feasibility_ru.md)
+**Research inputs:** [`DEV/research/extension_formats_feasibility_ru.md`](../../../research/extension_formats_feasibility_ru.md)
 **Tier:** Strategic · **Priority:** 50
-**Status:** Code complete - awaiting manual browser acceptance
+**Status:** Verified - closed 2026-07-17; production use accepted as the manual acceptance (see the strategic spec)
 **Phases:** 5 / 5 done
 **Last updated:** 2026-07-01
 
@@ -40,7 +40,7 @@ Legend: ⬜ Not started · 🚧 In Progress · ✅ Done · ⛔ Blocked · ⏭️
 
 ## Architecture seam (read once before Phase 01)
 Every format parser returns the same render-ready **book** shape that
-[`epub.js`](../../../extension/src/epub.js) `loadEpub` already returns:
+[`epub.js`](../../../../extension/src/epub.js) `loadEpub` already returns:
 
 ```
 { title, lang, sampleText, sections: [ { id, label, frag } ], toc, revoke }
@@ -48,7 +48,7 @@ Every format parser returns the same render-ready **book** shape that
 
 - `frag` is a sanitized `DocumentFragment`; `toc` is `[ { title, anchor, children } ]`
   (anchor = an element id inside a section) or `[]`.
-- [`viewer.js`](../../../extension/src/viewer.js) `renderEpubDocument` already renders this
+- [`viewer.js`](../../../../extension/src/viewer.js) `renderEpubDocument` already renders this
   shape generically. Phase 01 renames it `renderBook` and routes all formats through it.
 - New parsers turn source HTML into a `frag` via the shared `src/sanitize.js` helper created
   in Phase 01 (they do **not** reuse epub.js `renderChapter`, which stays EPUB-specific).

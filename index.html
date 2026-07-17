@@ -450,9 +450,9 @@
     <!-- capabilities summary -->
     <section class="panel" aria-label="Что умеет">
       <h2>Что умеет</h2>
-      <p class="plead">Девять форматов документов на входе, чистый локальный HTML на выходе - с настоящим оглавлением, постраничной навигацией и темами чтения. Дальше читаешь в браузере и переводишь на любой язык бесплатно.</p>
+      <p class="plead">Десять форматов документов на входе, чистый локальный HTML на выходе - с настоящим оглавлением, постраничной навигацией и темами чтения. Дальше читаешь в браузере и переводишь на любой язык бесплатно.</p>
       <div class="grid">
-        <div class="card"><div class="num">Конвертирует</div><h3>9 форматов → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML превращаются в чистые локальные страницы.</p></div>
+        <div class="card"><div class="num">Конвертирует</div><h3>10 форматов → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML и комиксы CBZ/CBR/CB7/CBT превращаются в чистые локальные страницы.</p></div>
         <div class="card"><div class="num">Читаешь</div><h3>Оглавление + навигация</h3><p>Многоуровневое оглавление, постраничная навигация, темы чтения (свет/сепия/тёмная/ночь) и сохранение позиции.</p></div>
         <div class="card"><div class="num">Переводишь</div><h3>Любой язык, бесплатно</h3><p>Текст остаётся текстом, поэтому Chrome и Edge переводят всю страницу на лету - без API-ключа и без счёта.</p></div>
         <div class="card"><div class="num">По желанию</div><h3>Google · Ollama · OCR</h3><p>Подключается Google Cloud или локальная Ollama; OCR достаёт текст из картинок внутри страниц.</p></div>
@@ -461,6 +461,7 @@
         <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
         <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
         <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+        <span class="pill"><b>Комиксы</b></span>
       </div>
     </section>
 
@@ -473,7 +474,7 @@
       <div class="grid">
         <div class="card"><div class="num">Путь A</div><h3>Двойной клик (GUI)</h3><p>Открой <code>doc-html-ui</code>, перетащи файл, выбери исходный и целевой язык и нажми «Конвертировать». Или зарегистрируй как обработчик файлов и открывай книги двойным кликом.</p></div>
         <div class="card"><div class="num">Путь B</div><h3>Одна команда (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> конвертирует файл и открывает его в браузере. Флаги добавляют перевод и разбивку на страницы.</p></div>
-        <div class="card"><div class="num">Путь C</div><h3>Расширение для браузера</h3><p>Не хочешь ставить десктоп? Установи <a href="extension.html">расширение для Chrome/Edge</a> и открывай PDF, EPUB, MOBI, FB2, RTF, TXT и Markdown прямо в браузере.</p></div>
+        <div class="card"><div class="num">Путь C</div><h3>Расширение для браузера</h3><p>Не хочешь ставить десктоп? Установи <a href="extension.html">расширение для Chrome/Edge</a> и открывай PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown и CBZ/CBT-комиксы прямо в браузере.</p></div>
       </div>
 
       <p class="ksub">Выбери перевод</p>
@@ -507,7 +508,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Что это и зачем</h2><span class="secteaser">Конвертер плюс самый дешёвый перевод - твой браузер</span></span></summary>
         <div class="secbody">
           <p>Купил или скачал книгу не на своём языке - и упёрся в выбор: платить за перевод, мучиться со специальными читалками или читать как есть. Doc-HTML-Translate решает это самым дешёвым способом: превращает файл в обычный локальный HTML и отдаёт его браузеру, а перевод делает встроенный переводчик Chrome - бесплатно и для любого языка.</p>
-          <p>На вход - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown и HTML</strong>. На выходе - папка с чистыми HTML-страницами, оглавлением и постраничной навигацией, которая сразу открывается в браузере. Текст остаётся текстом (не картинкой), поэтому браузер переводит его «на лету».</p>
+          <p>На вход - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML и комиксы CBZ/CBR/CB7/CBT</strong>. На выходе - папка с чистыми HTML-страницами, оглавлением и постраничной навигацией, которая сразу открывается в браузере. Текст остаётся текстом (не картинкой), поэтому браузер переводит его «на лету».</p>
           <p>Это инструмент для Windows: есть командная строка (<code>doc-html-translate</code>) и оконное GUI-приложение (<code>doc-html-ui</code>) - выбирай, что удобнее.</p>
           <div class="note"><div class="tag">Главное</div><p>Никакого API-ключа и платных вызовов в базовом сценарии. Конвертация локальная, перевод - средствами браузера - и никакой бухгалтерии. По желанию подключаются Google Cloud или локальная Ollama.</p></div>
         </div>
@@ -534,14 +535,16 @@ doc-html-translate.exe "book.pdf"
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Поддерживаемые форматы</h2><span class="secteaser">Девять форматов на входе, чистый HTML на выходе</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Поддерживаемые форматы</h2><span class="secteaser">Десять форматов на входе, чистый HTML на выходе</span></span></summary>
         <div class="secbody">
-          <p>Из коробки работают EPUB, TXT, FB2, RTF, HTML и Markdown. Для PDF используется встроенный движок (его можно усилить внешними утилитами - см. ниже). MOBI и AZW3 конвертируются через Calibre.</p>
+          <p>Из коробки работают EPUB, TXT, FB2, RTF, HTML и Markdown. Для PDF используется встроенный движок (его можно усилить внешними утилитами - см. ниже). MOBI и AZW3 конвертируются через Calibre. Комиксы CBZ и CBT открываются из коробки, CBR и CB7 - через 7-Zip.</p>
           <div class="pills">
             <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+            <span class="pill"><b>Комиксы</b></span>
           </div>
+          <p>Плюс комиксы CBZ / CBR / CB7 / CBT: архив страниц открывается страница за страницей, текст в «пузырях» распознаётся (OCR) и ложится переводимыми плашками поверх - открой в Chrome/Edge и переведи страницу, как обычный документ. CBZ и CBT работают из коробки, CBR и CB7 требуют <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a>.</p>
           <p>Плюс одиночная картинка (PNG, JPG, WebP, GIF, BMP, TIFF): текст на ней распознаётся и ложится переводимыми плашками поверх изображения - открой в Chrome/Edge и переведи страницу, как обычный документ. То же, что делает расширение для браузера. Нужен OCR-движок <strong>Tesseract</strong>.</p>
           <p class="muted">MOBI и AZW3 требуют установленного <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файлы с DRM не поддерживаются - снимать чужие замки мы за тебя не возьмёмся.</p>
         </div>
@@ -609,7 +612,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Дополнительные внешние утилиты</h2><span class="secteaser">Лучшее качество PDF и поддержка MOBI/AZW3</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Дополнительные внешние утилиты</h2><span class="secteaser">Лучшее качество PDF, поддержка MOBI/AZW3 и комиксов CBR/CB7</span></span></summary>
         <div class="secbody">
           <p>Приложение работает «из коробки» для EPUB, TXT, FB2, RTF, HTML и Markdown. Эти утилиты добавляют полноценную поддержку PDF-картинок и дополнительных форматов:</p>
           <table>
@@ -618,9 +621,10 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>Качественное извлечение текста из PDF: сложные шрифты, лигатуры, многоколоночная вёрстка</td><td>PDF - по желанию, есть встроенный запасной движок</td></tr>
               <tr><td><strong>ffmpeg</strong></td><td>Конвертирует картинки JPEG 2000 (.jpx) из PDF в JPEG - браузеры не умеют JPEG 2000</td><td>PDF с изображениями JPEG2000</td></tr>
               <tr><td><strong>Calibre</strong></td><td>Конвертирует MOBI / AZW3 в EPUB перед обработкой</td><td>Обязательна для MOBI и AZW3</td></tr>
+              <tr><td><strong>7-Zip</strong></td><td>Распаковывает комиксы CBR (RAR) и CB7 (7z) - CBZ и CBT читаются без него</td><td>Обязателен для CBR и CB7</td></tr>
             </tbody>
           </table>
-          <p class="muted">Без <strong>pdftotext</strong> используется встроенный Go-движок (качество чуть ниже). Без <strong>ffmpeg</strong> картинки JPEG2000 в PDF не отобразятся. Без <strong>Calibre</strong> файлы MOBI/AZW3 не открыть. Ставь только то, чего реально требуют твои книги - всё подряд тащить незачем.</p>
+          <p class="muted">Без <strong>pdftotext</strong> используется встроенный Go-движок (качество чуть ниже). Без <strong>ffmpeg</strong> картинки JPEG2000 в PDF не отобразятся. Без <strong>Calibre</strong> файлы MOBI/AZW3 не открыть. Без <strong>7-Zip</strong> не открыть комиксы CBR/CB7. Ставь только то, чего реально требуют твои книги - всё подряд тащить незачем.</p>
         </div>
       </details>
 
@@ -663,9 +667,9 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
     <!-- capabilities summary -->
     <section class="panel" aria-label="What it does">
       <h2>What it does</h2>
-      <p class="plead">Nine document formats in, clean local HTML out - with a real table of contents, page navigation and reading themes. Then read in your browser and translate into any language, free.</p>
+      <p class="plead">Ten document formats in, clean local HTML out - with a real table of contents, page navigation and reading themes. Then read in your browser and translate into any language, free.</p>
       <div class="grid">
-        <div class="card"><div class="num">Convert</div><h3>9 formats → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML become clean local pages.</p></div>
+        <div class="card"><div class="num">Convert</div><h3>10 formats → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics become clean local pages.</p></div>
         <div class="card"><div class="num">Read</div><h3>TOC + navigation</h3><p>Multi-level table of contents, per-page navigation, reading themes (light/sepia/dark/night) and a saved position.</p></div>
         <div class="card"><div class="num">Translate</div><h3>Any language, free</h3><p>Text stays text, so Chrome and Edge translate the whole page on the fly - no API key, no bill.</p></div>
         <div class="card"><div class="num">Optional</div><h3>Google · Ollama · OCR</h3><p>Wire in Google Cloud or a local Ollama model; OCR pulls text out of images inside the pages.</p></div>
@@ -674,6 +678,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
         <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
         <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
         <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+        <span class="pill"><b>Comics</b></span>
       </div>
     </section>
 
@@ -686,7 +691,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       <div class="grid">
         <div class="card"><div class="num">Path A</div><h3>Double-click (GUI)</h3><p>Open <code>doc-html-ui</code>, drop your file in, pick source &amp; target language and hit Convert. Or register it as a file handler and open books with a double-click.</p></div>
         <div class="card"><div class="num">Path B</div><h3>One command (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> converts the file and opens it in your browser. Flags add translation and paging.</p></div>
-        <div class="card"><div class="num">Path C</div><h3>Browser extension</h3><p>Don't want the desktop app? Install the <a href="extension.html">Chrome/Edge extension</a> and open PDF, EPUB, MOBI, FB2, RTF, TXT and Markdown right in the browser.</p></div>
+        <div class="card"><div class="num">Path C</div><h3>Browser extension</h3><p>Don't want the desktop app? Install the <a href="extension.html">Chrome/Edge extension</a> and open PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown and CBZ/CBT comics right in the browser.</p></div>
       </div>
 
       <p class="ksub">Pick your translation</p>
@@ -720,7 +725,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">What it is and why</h2><span class="secteaser">A converter plus the cheapest translation there is - your browser</span></span></summary>
         <div class="secbody">
           <p>You bought or downloaded a book that isn't in your language, and now you face a choice: pay for translation, fight with special readers, or read it as-is. Doc-HTML-Translate solves this the cheapest way possible: it turns the file into plain local HTML and hands it to the browser, while the translation is done by Chrome's built-in translator - free, for any language.</p>
-          <p>Input is <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML</strong>. Output is a folder of clean HTML pages with a table of contents and per-page navigation that opens straight in your browser. Text stays text (not an image), so the browser translates it on the fly.</p>
+          <p>Input is <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics</strong>. Output is a folder of clean HTML pages with a table of contents and per-page navigation that opens straight in your browser. Text stays text (not an image), so the browser translates it on the fly.</p>
           <p>It's a Windows tool: there is a command line (<code>doc-html-translate</code>) and a windowed GUI app (<code>doc-html-ui</code>) - pick whichever you prefer.</p>
           <div class="note"><div class="tag">The point</div><p>No API key and no paid calls in the default scenario. Conversion is local, translation is the browser's job - and no accounting required. Google Cloud or a local Ollama can be wired in optionally.</p></div>
         </div>
@@ -747,14 +752,16 @@ doc-html-translate.exe "book.pdf"
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Supported formats</h2><span class="secteaser">Nine input formats, clean HTML out</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Supported formats</h2><span class="secteaser">Ten input formats, clean HTML out</span></span></summary>
         <div class="secbody">
-          <p>EPUB, TXT, FB2, RTF, HTML and Markdown work out of the box. PDF uses a built-in engine (boostable with external tools - see below). MOBI and AZW3 are converted through Calibre.</p>
+          <p>EPUB, TXT, FB2, RTF, HTML and Markdown work out of the box. PDF uses a built-in engine (boostable with external tools - see below). MOBI and AZW3 are converted through Calibre. Comic archives CBZ and CBT open out of the box; CBR and CB7 go through 7-Zip.</p>
           <div class="pills">
             <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+            <span class="pill"><b>Comics</b></span>
           </div>
+          <p>Plus comics CBZ / CBR / CB7 / CBT: the archive opens page by page, the text in speech bubbles is recognized (OCR) and laid over each page as translatable plates - open it in Chrome/Edge and translate the page like any document. CBZ and CBT work out of the box; CBR and CB7 need <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a>.</p>
           <p>Plus a standalone image (PNG, JPG, WebP, GIF, BMP, TIFF): its text is OCR'd and laid over the picture as translatable plates - open it in Chrome/Edge and translate the page like any document. The same thing the browser extension does. Needs the <strong>Tesseract</strong> OCR engine.</p>
           <p class="muted">MOBI and AZW3 require <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a> installed. DRM-protected files are not supported - we won't pick someone else's lock for you.</p>
         </div>
@@ -822,7 +829,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Optional external tools</h2><span class="secteaser">Better PDF quality and MOBI/AZW3 support</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Optional external tools</h2><span class="secteaser">Better PDF quality, MOBI/AZW3 and CBR/CB7 comic support</span></span></summary>
         <div class="secbody">
           <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML and Markdown. These tools add full PDF image support and extra formats:</p>
           <table>
@@ -831,9 +838,10 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>High-quality PDF text extraction: complex fonts, ligatures, multi-column layout</td><td>PDF - optional, built-in fallback exists</td></tr>
               <tr><td><strong>ffmpeg</strong></td><td>Converts JPEG 2000 (.jpx) images from PDFs to JPEG - browsers don't support JPEG 2000</td><td>PDFs with JPEG2000 images</td></tr>
               <tr><td><strong>Calibre</strong></td><td>Converts MOBI / AZW3 to EPUB before processing</td><td>Required for MOBI and AZW3</td></tr>
+              <tr><td><strong>7-Zip</strong></td><td>Unpacks CBR (RAR) and CB7 (7z) comics - CBZ and CBT read without it</td><td>Required for CBR and CB7</td></tr>
             </tbody>
           </table>
-          <p class="muted">Without <strong>pdftotext</strong>, the built-in Go reader is used (slightly lower quality). Without <strong>ffmpeg</strong>, JPEG2000 images in PDFs won't show. Without <strong>Calibre</strong>, MOBI/AZW3 files can't be opened. Install only the ones your books actually demand - no need to hoard the lot.</p>
+          <p class="muted">Without <strong>pdftotext</strong>, the built-in Go reader is used (slightly lower quality). Without <strong>ffmpeg</strong>, JPEG2000 images in PDFs won't show. Without <strong>Calibre</strong>, MOBI/AZW3 files can't be opened. Without <strong>7-Zip</strong>, CBR/CB7 comics can't be opened. Install only the ones your books actually demand - no need to hoard the lot.</p>
         </div>
       </details>
 
@@ -876,9 +884,9 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
     <!-- capabilities summary -->
     <section class="panel" aria-label="Що вміє">
       <h2>Що вміє</h2>
-      <p class="plead">Дев'ять форматів документів на вході, чистий локальний HTML на виході - зі справжнім змістом, посторінковою навігацією та темами читання. Далі читаєш у браузері й перекладаєш будь-якою мовою безкоштовно.</p>
+      <p class="plead">Десять форматів документів на вході, чистий локальний HTML на виході - зі справжнім змістом, посторінковою навігацією та темами читання. Далі читаєш у браузері й перекладаєш будь-якою мовою безкоштовно.</p>
       <div class="grid">
-        <div class="card"><div class="num">Конвертує</div><h3>9 форматів → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown і HTML стають чистими локальними сторінками.</p></div>
+        <div class="card"><div class="num">Конвертує</div><h3>10 форматів → HTML</h3><p>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML і комікси CBZ/CBR/CB7/CBT стають чистими локальними сторінками.</p></div>
         <div class="card"><div class="num">Читаєш</div><h3>Зміст + навігація</h3><p>Багаторівневий зміст, посторінкова навігація, теми читання (світла/сепія/темна/ніч) і збереження позиції.</p></div>
         <div class="card"><div class="num">Перекладаєш</div><h3>Будь-яка мова, безкоштовно</h3><p>Текст лишається текстом, тож Chrome і Edge перекладають усю сторінку на льоту - без API-ключа й без рахунку.</p></div>
         <div class="card"><div class="num">За бажанням</div><h3>Google · Ollama · OCR</h3><p>Підключається Google Cloud або локальна Ollama; OCR дістає текст із картинок усередині сторінок.</p></div>
@@ -887,6 +895,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
         <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>MOBI</b></span>
         <span class="pill"><b>AZW3</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
         <span class="pill"><b>TXT</b></span><span class="pill"><b>Markdown</b></span><span class="pill"><b>HTML</b></span>
+        <span class="pill"><b>Комікси</b></span>
       </div>
     </section>
 
@@ -899,7 +908,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       <div class="grid">
         <div class="card"><div class="num">Шлях A</div><h3>Подвійний клік (GUI)</h3><p>Відкрий <code>doc-html-ui</code>, перетягни файл, обери вихідну й цільову мову та натисни «Конвертувати». Або зареєструй як обробник файлів і відкривай книжки подвійним кліком.</p></div>
         <div class="card"><div class="num">Шлях B</div><h3>Одна команда (CLI)</h3><p><code>doc-html-translate.exe "book.epub"</code> конвертує файл і відкриває його в браузері. Прапорці додають переклад і розбивку на сторінки.</p></div>
-        <div class="card"><div class="num">Шлях C</div><h3>Розширення для браузера</h3><p>Не хочеш ставити десктоп? Встанови <a href="extension.html">розширення для Chrome/Edge</a> і відкривай PDF, EPUB, MOBI, FB2, RTF, TXT та Markdown прямо в браузері.</p></div>
+        <div class="card"><div class="num">Шлях C</div><h3>Розширення для браузера</h3><p>Не хочеш ставити десктоп? Встанови <a href="extension.html">розширення для Chrome/Edge</a> і відкривай PDF, EPUB, MOBI, FB2, RTF, TXT, Markdown та CBZ/CBT-комікси прямо в браузері.</p></div>
       </div>
 
       <p class="ksub">Обери переклад</p>
@@ -933,7 +942,7 @@ doc-html-translate.exe -google -src fr -dst pl "book.epub"</pre>
         <summary><span class="secnum" aria-hidden="true">00</span><span class="sechead"><h2 class="sectitle">Що це і навіщо</h2><span class="secteaser">Конвертер плюс найдешевший переклад - твій браузер</span></span></summary>
         <div class="secbody">
           <p>Купив або завантажив книжку не своєю мовою - і опинився перед вибором: платити за переклад, мучитися зі спеціальними читалками чи читати як є. Doc-HTML-Translate вирішує це найдешевшим способом: перетворює файл на звичайний локальний HTML і віддає його браузеру, а переклад робить вбудований перекладач Chrome - безкоштовно й для будь-якої мови.</p>
-          <p>На вхід - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown і HTML</strong>. На виході - тека з чистими HTML-сторінками, змістом і посторінковою навігацією, що одразу відкривається в браузері. Текст лишається текстом (не картинкою), тож браузер перекладає його «на льоту».</p>
+          <p>На вхід - <strong>EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML і комікси CBZ/CBR/CB7/CBT</strong>. На виході - тека з чистими HTML-сторінками, змістом і посторінковою навігацією, що одразу відкривається в браузері. Текст лишається текстом (не картинкою), тож браузер перекладає його «на льоту».</p>
           <p>Це інструмент для Windows: є командний рядок (<code>doc-html-translate</code>) і віконний GUI-застосунок (<code>doc-html-ui</code>) - обирай, що зручніше.</p>
           <div class="note"><div class="tag">Головне</div><p>Жодного API-ключа та платних викликів у базовому сценарії. Конвертація локальна, переклад - засобами браузера - і жодної бухгалтерії. За бажанням підключаються Google Cloud або локальна Ollama.</p></div>
         </div>
@@ -960,14 +969,16 @@ doc-html-translate.exe "book.pdf"
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Підтримувані формати</h2><span class="secteaser">Дев'ять форматів на вході, чистий HTML на виході</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">02</span><span class="sechead"><h2 class="sectitle">Підтримувані формати</h2><span class="secteaser">Десять форматів на вході, чистий HTML на виході</span></span></summary>
         <div class="secbody">
-          <p>З коробки працюють EPUB, TXT, FB2, RTF, HTML і Markdown. Для PDF використовується вбудований рушій (його можна підсилити зовнішніми утилітами - див. нижче). MOBI та AZW3 конвертуються через Calibre.</p>
+          <p>З коробки працюють EPUB, TXT, FB2, RTF, HTML і Markdown. Для PDF використовується вбудований рушій (його можна підсилити зовнішніми утилітами - див. нижче). MOBI та AZW3 конвертуються через Calibre. Комікси CBZ і CBT відкриваються з коробки, CBR і CB7 - через 7-Zip.</p>
           <div class="pills">
             <span class="pill"><b>EPUB</b></span><span class="pill"><b>PDF</b></span><span class="pill"><b>TXT</b></span>
             <span class="pill"><b>MD</b></span><span class="pill"><b>FB2</b></span><span class="pill"><b>RTF</b></span>
             <span class="pill"><b>HTML</b></span><span class="pill"><b>MOBI</b></span><span class="pill"><b>AZW3</b></span>
+            <span class="pill"><b>Комікси</b></span>
           </div>
+          <p>Плюс комікси CBZ / CBR / CB7 / CBT: архів сторінок відкривається сторінка за сторінкою, текст у «бульбашках» розпізнається (OCR) і лягає перекладними плашками поверх - відкрий у Chrome/Edge і переклади сторінку, як звичайний документ. CBZ і CBT працюють з коробки, CBR і CB7 потребують <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a>.</p>
           <p>Плюс одиночна картинка (PNG, JPG, WebP, GIF, BMP, TIFF): текст на ній розпізнається і лягає перекладними плашками поверх зображення - відкрий у Chrome/Edge і переклади сторінку, як звичайний документ. Те саме, що робить розширення для браузера. Потрібен OCR-рушій <strong>Tesseract</strong>.</p>
           <p class="muted">MOBI та AZW3 потребують встановленого <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Файли з DRM не підтримуються - знімати чужі замки замість тебе ми не беремося.</p>
         </div>
@@ -1035,7 +1046,7 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
       </details>
 
       <details class="sec">
-        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Додаткові зовнішні утиліти</h2><span class="secteaser">Краща якість PDF і підтримка MOBI/AZW3</span></span></summary>
+        <summary><span class="secnum" aria-hidden="true">06</span><span class="sechead"><h2 class="sectitle">Додаткові зовнішні утиліти</h2><span class="secteaser">Краща якість PDF, підтримка MOBI/AZW3 і коміксів CBR/CB7</span></span></summary>
         <div class="secbody">
           <p>Застосунок працює «з коробки» для EPUB, TXT, FB2, RTF, HTML і Markdown. Ці утиліти додають повноцінну підтримку PDF-картинок і додаткових форматів:</p>
           <table>
@@ -1044,9 +1055,10 @@ doc-html-translate.exe -ollama -ollama-model gemma3:12b "book.epub"</pre></div>
               <tr><td><strong>pdftotext</strong><br><span class="muted">(Xpdf / Poppler)</span></td><td>Якісне видобування тексту з PDF: складні шрифти, лігатури, багатоколонкова верстка</td><td>PDF - за бажанням, є вбудований запасний рушій</td></tr>
               <tr><td><strong>ffmpeg</strong></td><td>Конвертує картинки JPEG 2000 (.jpx) з PDF у JPEG - браузери не вміють JPEG 2000</td><td>PDF із зображеннями JPEG2000</td></tr>
               <tr><td><strong>Calibre</strong></td><td>Конвертує MOBI / AZW3 у EPUB перед обробкою</td><td>Обов'язкова для MOBI та AZW3</td></tr>
+              <tr><td><strong>7-Zip</strong></td><td>Розпаковує комікси CBR (RAR) і CB7 (7z) - CBZ і CBT читаються без нього</td><td>Обов'язковий для CBR і CB7</td></tr>
             </tbody>
           </table>
-          <p class="muted">Без <strong>pdftotext</strong> використовується вбудований Go-рушій (якість трохи нижча). Без <strong>ffmpeg</strong> картинки JPEG2000 у PDF не відобразяться. Без <strong>Calibre</strong> файли MOBI/AZW3 не відкрити. Став лише те, чого справді вимагають твої книжки - тягнути все підряд ні до чого.</p>
+          <p class="muted">Без <strong>pdftotext</strong> використовується вбудований Go-рушій (якість трохи нижча). Без <strong>ffmpeg</strong> картинки JPEG2000 у PDF не відобразяться. Без <strong>Calibre</strong> файли MOBI/AZW3 не відкрити. Без <strong>7-Zip</strong> не відкрити комікси CBR/CB7. Став лише те, чого справді вимагають твої книжки - тягнути все підряд ні до чого.</p>
         </div>
       </details>
 

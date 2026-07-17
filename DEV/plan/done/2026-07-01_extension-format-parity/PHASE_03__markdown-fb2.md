@@ -35,8 +35,8 @@ table of contents.
 
 **Prompt for developer:**
 > Add `"marked"` (pin a current major, e.g. `^12`) to `devDependencies` in
-> [`package.json`](../../../extension/package.json). In
-> [`build.mjs`](../../../extension/build.mjs), add `async function vendorMarked()` modelled on
+> [`package.json`](../../../../extension/package.json). In
+> [`build.mjs`](../../../../extension/build.mjs), add `async function vendorMarked()` modelled on
 > `vendorPdfjs`: copy `node_modules/marked/lib/marked.esm.js` to `vendor/marked.esm.js` and
 > `node_modules/marked/LICENSE.md` to `vendor/LICENSE.marked`, and log the vendored version.
 > Call `vendorMarked()` from the `vendor` command branch (after `vendorTesseract()`). The `zip`
@@ -60,7 +60,7 @@ table of contents.
 > UTF-8, convert to HTML with `marked` (`import { marked } from "../vendor/marked.esm.js"`),
 > run the HTML through `sanitizeToFragment` (index 0), then split the resulting fragment into
 > sections at each `H1`/`H2` boundary (mirror the heading split in
-> [`internal/md/extract.go`](../../../internal/md/extract.go) `splitBySections`): accumulate
+> [`internal/md/extract.go`](../../../../internal/md/extract.go) `splitBySections`): accumulate
 > nodes into the current section, starting a new section whenever an `H1`/`H2` is encountered.
 > Give each section `id:"md-sec-<i>"` and a `label` from its leading heading, and build a flat
 > `toc` of `{ title:<heading>, anchor:"md-sec-<i>", children:[] }`. Return the book shape
@@ -81,7 +81,7 @@ table of contents.
 
 **Prompt for developer:**
 > Create `extension/src/fb2.js` exporting `async function parseFb2(data)`. Decode as UTF-8,
-> parse with `DOMParser` (`application/xml`). Port [`internal/fb2/extract.go`](../../../internal/fb2/extract.go):
+> parse with `DOMParser` (`application/xml`). Port [`internal/fb2/extract.go`](../../../../internal/fb2/extract.go):
 > read `<description><title-info><book-title>` (title) and `<lang>` (lang); walk `<body>`
 > `<section>` recursively; each `<section>` becomes one output section, its `<title>` text the
 > label, its `<p>` elements `<p>` nodes (set via `textContent`). Handle images: collect every
@@ -104,11 +104,11 @@ table of contents.
 **Depends on:** Step 03.2, Step 03.3
 
 **Prompt for developer:**
-> In [`viewer.js`](../../../extension/src/viewer.js): import `parseMarkdown` and `parseFb2`.
+> In [`viewer.js`](../../../../extension/src/viewer.js): import `parseMarkdown` and `parseFb2`.
 > Extend `FORMAT_EXT` with `md:"md", markdown:"md", fb2:"fb2"`. Add dispatch cases in
 > `loadFromData`: `"md"` -> `loadBook(data, title, parseMarkdown, "Reading Markdown..")`,
 > `"fb2"` -> `loadBook(data, title, parseFb2, "Reading FB2..")`. In
-> [`viewer.html`](../../../extension/src/viewer.html), extend `#file-input` `accept` to add
+> [`viewer.html`](../../../../extension/src/viewer.html), extend `#file-input` `accept` to add
 > `.md,.markdown,.fb2` (the strip regex was already widened in Phase 02).
 
 **Verification:**
@@ -127,8 +127,8 @@ table of contents.
 
 **Prompt for developer:**
 > Add `"src/md.js"` and `"src/fb2.js"` to `web_accessible_resources[0].resources` in
-> [`manifest.json`](../../../extension/manifest.json). In
-> [`background.js`](../../../extension/src/background.js), add `fb2` to the DNR `regexFilter`
+> [`manifest.json`](../../../../extension/manifest.json). In
+> [`background.js`](../../../../extension/src/background.js), add `fb2` to the DNR `regexFilter`
 > alternation in both rules (`(?:pdf|epub|rtf|fb2)`). Do NOT add `md`/`markdown` (rarely served
 > as a document; reachable via the file picker).
 

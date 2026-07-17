@@ -1,7 +1,12 @@
 # Cross-edition parity: close the drift between the Go app and the JS extension
 
 **Status:** In Progress - all P0 + the safe P1 aligns done and guarded by tests; P2 (product decisions) documented
-**Priority:** 40
+**Priority:** 90 - living tracker, not a queue item
+
+> **Not a fix task.** This is the standing parity backlog referenced from `CLAUDE.md`; it closes items as
+> other tickets land rather than being "done" itself. Numbered 90 to keep it out of the fix queue in
+> [`ROADMAP.md`](ROADMAP.md). The 2026-07-17 corpus sweep found three fresh parity gaps that belong here
+> and are already filed as their own tickets - see the roadmap's "the extension is the reference" note.
 **Date:** 2026-07-01
 
 Reference: [`docs/PARITY.md`](../../docs/PARITY.md) (invariants + port map + intentional divergences).
@@ -52,9 +57,16 @@ Verified: `go build ./...`, `go test ./internal/... ./cmd/... ./tests/...` green
   `TestClassifyBlock` (internal/pdf). The remaining #15 gap (JS font-size heading dimension) stays a
   documented JS-only improvement. `docs/PARITY.md` updated.
 
+**Aligned later (2026-07-17):**
+- #22 extension DOM-path unit tests added: `extension/test/epub-dom.test.mjs` covers `parseNavToc` /
+  `parseNcxToc` / `rewriteImg` / `convertSvgImage` / `rewriteAnchor` / `renderChapter`, and
+  `extension/test/sanitize.test.mjs` covers `sanitizeToFragment` (25 new cases, 75/75 green). These paths
+  need a DOM, so a dev-only `linkedom` shim (`extension/test/_dom.mjs`, never bundled - `build.mjs` vendors
+  only the runtime deps) provides `document`/`DOMParser`. The six epub.js helpers were given `export` to be
+  testable, matching the reflow.js/ebook.js convention. `docs/PARITY.md` guard-test note updated.
+
 **Deferred (still open):**
 - #8 class-name unification, and the P2 ports (#11-#14, #16-#20) if/when the product wants full parity.
-- #22 extension DOM-path unit tests (large; the concurrent format-parity work is adding coverage here).
 
 ## P0 - unintended drift / probable bugs (Align)
 
@@ -96,7 +108,7 @@ Verified: `go build ./...`, `go test ./internal/... ./cmd/... ./tests/...` green
 | # | Gap | Target |
 |---|---|---|
 | 21 | No automated parity guard for shared constants | Add a test that asserts the palette hexes / reflow constants / OCR host+catalog match across Go and JS (fixture compare) |
-| 22 | Extension DOM path (sanitize/image/link/TOC) has zero automated tests | Add `node --test` coverage for `renderChapter`/`rewriteImg`/`convertSvgImage`/`rewriteAnchor`/`parseNavToc`/`parseNcxToc` |
+| 22 | ~~Extension DOM path (sanitize/image/link/TOC) has zero automated tests~~ **Done (2026-07-17)**: `extension/test/epub-dom.test.mjs` + `sanitize.test.mjs` cover `renderChapter`/`rewriteImg`/`convertSvgImage`/`rewriteAnchor`/`parseNavToc`/`parseNcxToc`/`sanitizeToFragment` via a dev-only `linkedom` DOM | Done |
 | 23 | No "GUI exposes every CLI flag" test | Add a parity test enumerating flags vs GUI controls (enforce the `ui-cli-parity` invariant by code) |
 
 ## Done criteria

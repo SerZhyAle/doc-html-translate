@@ -42,6 +42,15 @@ func Progress(format string, args ...any) {
 	fmt.Printf(ts()+format+"\n", args...)
 }
 
+// StdoutIsTerminal reports whether stdout is an interactive console rather than a pipe, a
+// file, or a stream captured by a parent process.
+//
+// Use it to gate a *pause* - "press Enter so the window does not vanish" only serves a human
+// looking at a console, and blocks forever when the output is piped into a script, CI, or the
+// GUI's shell-out. Do not use it to gate a *question*: whether an answer can be read depends
+// on stdin, not stdout, and reading one already handles EOF by taking the safe default.
+func StdoutIsTerminal() bool { return stdoutIsTerminal }
+
 func detectStdoutTerminal() bool {
 	fi, err := os.Stdout.Stat()
 	if err != nil {
