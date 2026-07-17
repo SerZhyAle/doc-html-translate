@@ -248,6 +248,15 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 /* "previous result" hint: appears under the drop zone when the current input already
    has a converted output, with an inline button to clear it. */
 .hint .inline-btn { padding: 2px 9px; font-size: 11px; margin-left: 6px; }
+/* The output path, shown so a result is never lost, and clickable to reveal its folder.
+   The path is the long part, so it - and only it - is allowed to ellipsize. */
+.hint .prev-dir { display: flex; align-items: baseline; gap: 5px; margin-top: 4px; min-width: 0; }
+.hint .path-btn {
+    background: none; border: none; padding: 0; min-width: 0; cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hint .path-btn code { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.hint .path-btn:hover code { color: var(--accent-hover); }
 </style>
 </head>
 <body>
@@ -300,7 +309,15 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
+    <button type="button" class="inline-btn" id="btnOpenPrev" data-i18n="btnOpenPrev">Open result</button>
     <button type="button" class="inline-btn" id="btnDeletePrev" data-i18n="btnDeletePrev">Delete previous result</button>
+    <!-- Where it landed. A dropped file is copied into the app's own data folder and the
+         result lands beside it, so without this the reader has no idea where it went. -->
+    <div class="prev-dir" id="prevDirRow">
+        <span data-i18n="prevResultIn">Saved in:</span>
+        <button type="button" class="path-btn" id="btnOpenPrevFolder"
+                data-i18n-title="ttOpenFolder" title="Open the containing folder"><code id="prevResultDir"></code></button>
+    </div>
 </div>
 
 <!-- output folder -->
@@ -410,7 +427,11 @@ const I18N = {
         btnConvert: "Convert",
         dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; image text overlay needs Tesseract.",
         prevResultFound: "A previous result already exists for this file.",
+        btnOpenPrev: "Open result",
         btnDeletePrev: "Delete previous result",
+        prevResultIn: "Saved in:",
+        ttOpenFolder: "Open the folder holding the result",
+        openPrevFail: "Could not open the result: {msg}",
         confirmDeletePrev: "Delete the previous conversion result for this file? This cannot be undone.",
         confirmParamsChanged: "The existing result was built with different options. Delete it and rebuild with the current settings?",
         deletePrevFail: "Could not delete the previous result: {msg}",
@@ -495,7 +516,11 @@ const I18N = {
         btnConvert: "Конвертировать",
         dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для наложения текста на изображения нужен Tesseract.",
         prevResultFound: "Для этого файла уже есть результат конвертации.",
+        btnOpenPrev: "Открыть результат",
         btnDeletePrev: "Удалить предыдущий результат",
+        prevResultIn: "Сохранён в:",
+        ttOpenFolder: "Открыть папку с результатом",
+        openPrevFail: "Не удалось открыть результат: {msg}",
         confirmDeletePrev: "Удалить предыдущий результат конвертации для этого файла? Это необратимо.",
         confirmParamsChanged: "Существующий результат собран с другими параметрами. Удалить его и пересобрать с текущими настройками?",
         deletePrevFail: "Не удалось удалить предыдущий результат: {msg}",
@@ -580,7 +605,11 @@ const I18N = {
         btnConvert: "Конвертувати",
         dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для накладання тексту на зображення потрібен Tesseract.",
         prevResultFound: "Для цього файлу вже є результат конвертації.",
+        btnOpenPrev: "Відкрити результат",
         btnDeletePrev: "Видалити попередній результат",
+        prevResultIn: "Збережено в:",
+        ttOpenFolder: "Відкрити теку з результатом",
+        openPrevFail: "Не вдалося відкрити результат: {msg}",
         confirmDeletePrev: "Видалити попередній результат конвертації для цього файлу? Це незворотно.",
         confirmParamsChanged: "Наявний результат зібрано з іншими параметрами. Видалити його та перезібрати з поточними налаштуваннями?",
         deletePrevFail: "Не вдалося видалити попередній результат: {msg}",
@@ -1138,6 +1167,9 @@ document.addEventListener('input', updateCmdPreview);
 let outputStatus = {exists: false, paramsChanged: false};
 function renderPrevResultHint() {
     el('prevResultHint').style.display = outputStatus.exists ? '' : 'none';
+    const dir = outputStatus.outputDir || '';
+    el('prevResultDir').textContent = dir;
+    el('prevDirRow').style.display = dir ? '' : 'none';
 }
 let statusTimer = null;
 async function checkOutputStatus() {
@@ -1164,6 +1196,27 @@ function scheduleOutputStatus() {
 }
 document.addEventListener('change', scheduleOutputStatus);
 document.addEventListener('input', scheduleOutputStatus);
+
+// Open the finished result: the page itself, or the folder it sits in. A dropped file is
+// copied into the app's own data folder, so "where did it go?" is otherwise a fair question.
+async function openPrevResult(folder) {
+    try {
+        const r = await (await fetch('/api/open-output', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                input: el('inputFile').value.trim(),
+                output: el('outputFolder').value.trim(),
+                folder,
+            }),
+        })).json();
+        if (!r.ok) alert(t('openPrevFail', {msg: r.error || t('unknownError')}));
+    } catch (e) {
+        alert(t('openPrevFail', {msg: e.message}));
+    }
+}
+el('btnOpenPrev').addEventListener('click', () => openPrevResult(false));
+el('btnOpenPrevFolder').addEventListener('click', () => openPrevResult(true));
 
 el('btnDeletePrev').addEventListener('click', async () => {
     if (!confirm(t('confirmDeletePrev'))) return;
@@ -1254,6 +1307,10 @@ async function runConvert() {
         log.appendChild(document.createTextNode('\n[ERROR] ' + e.message + '\n'));
     } finally {
         btn.disabled = false;
+        // The run just created (or replaced) the result, so re-read its status: this is
+        // what puts "Open result" and the output path on screen the moment it is ready,
+        // rather than leaving the reader to hunt for where it landed.
+        await checkOutputStatus();
     }
 }
 </script>

@@ -124,6 +124,8 @@ function teardownCurrent() {
   // so it cannot insert its pages into the new one.
   docGen++;
   if (chunkObserver) { chunkObserver.disconnect(); chunkObserver = null; }
+  if (pdfImageObserver) { pdfImageObserver.disconnect(); pdfImageObserver = null; }
+  pdfImagesDeferred = 0;
   chunkPending = null;
   pdfDoc = null;
   pdfTotal = 0;
@@ -247,6 +249,76 @@ function registerImagesForOcr(root) {
   ocrUpdateStatus();
 }
 
+// ---- Deferred PDF image extraction -----------------------------------------
+// Pulling the raster out of a page is expensive: pdf.js decodes the image, we draw it to
+// a canvas and re-encode it, and a page with no image of its own gets rasterized whole.
+// Doing that inline for every page made a scanned book take minutes to render - the very
+// wait chunking exists to remove - while the *recognition* of those same images was
+// already deferred to scroll. That split was incoherent: eager extraction bought nothing,
+// because the plate that carries the readable text only ever arrived on scroll anyway.
+//
+// So extraction now rides the same trigger as OCR. This costs nothing in translation
+// coverage (the plates were always going to appear late), and it means a page's raster is
+// decoded only if the reader actually reaches it.
+let pdfImageObserver = null;
+let pdfImagesDeferred = 0;
+
+function getPdfImageObserver() {
+  if (pdfImageObserver) return pdfImageObserver;
+  pdfImageObserver = new IntersectionObserver((entries, obs) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      extractSectionImages(e.target);
+    }
+    // A wide margin so a page's raster is decoded well before it is looked at: the work
+    // is slow enough to be visible, and the reader is heading this way.
+  }, { rootMargin: "1500px" });
+  return pdfImageObserver;
+}
+
+// deferPageImages marks a rendered section as "images still to come" and reserves their
+// space. No-op when OCR is off, which is also the only time page images are extracted.
+function deferPageImages(section, pageNum, pageChars, width, height) {
+  if (!options.ocrImages) return;
+  section.dataset.pdfPage = String(pageNum);
+  section.dataset.pdfChars = String(pageChars);
+  pdfImagesDeferred++;
+  // Reserve the page's own shape only for a page with no text. That is exactly when
+  // appendPdfImages rasterizes the whole page, so the pending raster is known to fill the
+  // column and the reserved box is the right one - the scanned-book case, where getting
+  // it wrong would mean the document growing by a page-height under the reader's eyes on
+  // every scroll. A text page's figures are small and unpredictable, and its text already
+  // gives the section a height, so a guess there would be wrong in both directions.
+  if (pageChars < 20 && width > 0 && height > 0) {
+    const box = el("div", "pdf-page-pending");
+    box.style.aspectRatio = `${width} / ${height}`;
+    section.append(box);
+  }
+  getPdfImageObserver().observe(section);
+}
+
+// extractSectionImages runs the image pass for one section, re-opening its page (the
+// render loop released it) and dropping the reserved box once the real images land.
+async function extractSectionImages(section) {
+  const pageNum = Number(section.dataset.pdfPage);
+  if (!pdfDoc || !pageNum) return;
+  delete section.dataset.pdfPage;
+  const gen = docGen;
+  const pageChars = Number(section.dataset.pdfChars) || 0;
+  let page = null;
+  try {
+    page = await pdfDoc.getPage(pageNum);
+    if (gen !== docGen) return;
+    await appendPdfImages(page, section, pageChars);
+  } catch {
+    /* a page that will not yield its images just stays text-only */
+  } finally {
+    if (page) { try { page.cleanup(); } catch { /* ignore */ } }
+    if (gen === docGen) section.querySelector(".pdf-page-pending")?.remove();
+  }
+}
+
 // Extract raster images from a PDF page (scanned pages fall back to a full-page raster),
 // append them to the page section as <img>, and register them for lazy OCR. Must run
 // before page.cleanup(). No-op unless it finds usable images.
@@ -267,6 +339,14 @@ async function appendPdfImages(page, section, pageChars) {
     const url = URL.createObjectURL(im.blob);
     pdfImageUrls.push(url);
     const imgEl = el("img");
+    // Publish the intrinsic size so the browser reserves the box from the aspect ratio
+    // before the blob decodes. Without it a blob: image is zero-height until decoded, so
+    // the page would collapse and snap back the moment it loaded - which the reserved
+    // box above exists to prevent.
+    if (im.width > 0 && im.height > 0) {
+      imgEl.width = im.width;
+      imgEl.height = im.height;
+    }
     imgEl.src = url;
     section.append(imgEl);
   }
@@ -933,8 +1013,10 @@ function fetchPage(n) {
   return pdfDoc.getPage(n).then(async (page) => {
     const viewport = page.getViewport({ scale: 1 });
     const tc = await page.getTextContent();
-    return { page, blocks: reflowPage(tc, viewport) };
-  }).catch(() => ({ page: null, blocks: [] }));
+    // The page's own dimensions are kept for the deferred image pass, which reserves a
+    // box of the right shape before the raster exists.
+    return { page, blocks: reflowPage(tc, viewport), width: viewport.width, height: viewport.height };
+  }).catch(() => ({ page: null, blocks: [], width: 0, height: 0 }));
 }
 
 // renderPages reflows [from..to] and inserts the result, streaming or in one shot.
@@ -974,7 +1056,7 @@ async function renderPages(from, to) {
 
   for (let n = from; n <= to; n++) {
     if (gen !== docGen) return; // another document was opened - drop this chunk
-    const { page, blocks } = await inflight.get(n);
+    const { page, blocks, width, height } = await inflight.get(n);
     inflight.delete(n);
     pump();
 
@@ -990,8 +1072,9 @@ async function renderPages(from, to) {
     let pageChars = 0;
     for (const b of blocks) pageChars += b.text.length;
 
-    // Image OCR must run before cleanup (it needs the live page). No-op when off.
-    if (page && options.ocrImages) await appendPdfImages(page, section, pageChars);
+    // Images are pulled out later, on the same scroll trigger that drives OCR. No-op
+    // when OCR is off - nothing extracts page images then anyway.
+    deferPageImages(section, n, pageChars, width, height);
     if (page) { try { page.cleanup(); } catch { /* ignore */ } }
 
     frag.append(section);
@@ -1137,10 +1220,13 @@ function warnIfNoText() {
   // pages rendered so far (the first chunk), not the whole file.
   const totalChars = pdfChars;
   const mostlyEmpty = pdfRendered > 1 && pdfPagesWithText / pdfRendered < 0.3;
-  // When "Use OCR for images" is on and page images were queued for recognition, they become
-  // translatable plates - so the "little or no text" banner (which judges only the PDF text layer)
-  // would contradict what the viewer did. Skip it entirely when OCR is covering the images.
-  const ocrCovering = options.ocrImages && ocrTotal > 0;
+  // When "Use OCR for images" is on the page images become translatable plates, so the
+  // "little or no text" banner - which judges only the PDF text layer - would contradict what
+  // the viewer is doing. This asks whether pages are queued for extraction, not whether images
+  // have been found yet (ocrTotal): extraction is deferred to scroll now, so nothing has been
+  // pulled out at banner time. A queued page always ends up with a plate anyway - a page with
+  // no text is exactly the case appendPdfImages rasterizes whole.
+  const ocrCovering = options.ocrImages && pdfImagesDeferred > 0;
   if ((totalChars === 0 || mostlyEmpty) && !ocrCovering) {
     const content = $("content");
     const banner = el("div", "notice");

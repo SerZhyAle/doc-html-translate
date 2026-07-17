@@ -20,6 +20,7 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"doc-html-translate/internal/browser"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/syslocale"
@@ -70,6 +71,7 @@ func main() {
 	mux.HandleFunc("/api/google-key", handleGoogleKey)
 	mux.HandleFunc("/api/preview", handlePreview)
 	mux.HandleFunc("/api/output-status", handleOutputStatus)
+	mux.HandleFunc("/api/open-output", handleOpenOutput)
 	mux.HandleFunc("/api/delete-output", handleDeleteOutput)
 	mux.HandleFunc("/api/run", handleRun)
 	mux.HandleFunc("/api/register", handleRegister)
@@ -487,6 +489,51 @@ func handleOutputStatus(w http.ResponseWriter, r *http.Request) {
 		resp["paramsChanged"] = true
 	}
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// openTarget hands a path to the OS. Indirected so the guard below can be tested without
+// a test run spawning a browser or a file manager.
+var openTarget = browser.Open
+
+// handleOpenOutput opens a previous conversion result: the page itself, or the folder
+// holding it when the caller asks for that. A dropped file is copied into the app's own
+// data folder and the result lands beside it, so without this the reader is left with a
+// result they cannot find again once the browser tab is gone. Like handleDeleteOutput it
+// only ever acts on a directory that actually contains index.html, so a stray
+// output-folder value can't steer it into opening something unrelated.
+func handleOpenOutput(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Input  string `json:"input"`
+		Output string `json:"output"`
+		Folder bool   `json:"folder"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	index := filepath.Join(outputDir, "index.html")
+	if _, err := os.Stat(index); err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": "no result found"})
+		return
+	}
+	target := index
+	if req.Folder {
+		target = outputDir
+	}
+	if err := openTarget(target); err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
 // handleDeleteOutput removes a previous conversion result so the next run starts

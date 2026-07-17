@@ -221,8 +221,13 @@ These are by design. Do not "sync" them without a decision - document changes he
   same 30%-of-pages-with-text rule, different sample.
 - **Progress bar** looks identical (3px accent bar) but means **reading progress** in Go vs
   **load/OCR progress** in the extension.
-- **OCR execution:** Go OCRs eagerly at conversion time; the extension OCRs lazily on scroll
-  (IntersectionObserver). The extension has two entry points for OCRing a **standalone image**: the
+- **OCR execution:** Go OCRs eagerly at conversion time, across a pool of `tesseract` processes
+  (`ocr.ocrWorkers`), because nothing is readable until the whole file is written; the extension
+  both **extracts** a PDF page's rasters and OCRs them lazily on scroll (IntersectionObserver),
+  on one worker, because a reader only ever needs the page in front of them and the tab is shared
+  with the reading itself. Extraction and recognition deliberately ride the same trigger: doing
+  either eagerly costs minutes on a scanned book and buys nothing, since the plate that carries
+  the readable text arrives on scroll regardless. The extension has two entry points for OCRing a **standalone image**: the
   right-click "OCR & translate this image", and opening a bare image file (PNG/JPEG/GIF/BMP/WebP) with the
   viewer's **Open file** picker (which OCRs it unconditionally, ignoring the "Use OCR for images" toggle).
   The Go app now **also accepts a standalone image as input** ([`internal/img`](../internal/img/extract.go)):

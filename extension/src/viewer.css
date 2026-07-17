@@ -159,6 +159,11 @@ body {
 
 /* ---- EPUB content (richer markup than the PDF reflow path) ---- */
 #content img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
+/* Holds a scanned page's height while its raster is still being decoded (extraction is
+   deferred until the reader nears the page). Mirrors the "#content img" box a full-page
+   raster ends up in - full column width, own aspect ratio - so the document has its real
+   height from the start and nothing below it shifts when the image lands. */
+#content .pdf-page-pending { width: 100%; margin: 1em auto; }
 #content figure { margin: 1.2em 0; text-align: center; }
 #content figcaption { font-size: 0.85em; color: var(--muted); text-align: center; }
 #content h1 { font-size: 1.7em; text-align: center; margin: 1.6em 0 1em; }

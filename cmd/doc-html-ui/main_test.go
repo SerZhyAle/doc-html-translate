@@ -111,6 +111,94 @@ func TestSaveGoogleAPIKeyRejectsEmpty(t *testing.T) {
 	}
 }
 
+// The only thing between "open the result" and shell-executing an arbitrary path is the
+// index.html check: the request carries an input and an output folder, both of which the
+// page can set. Refusing a directory that holds no result is what keeps a stray (or
+// crafted) Output value from steering the app into opening something unrelated.
+func TestOpenOutputRefusesDirWithoutIndexHTML(t *testing.T) {
+	dir := t.TempDir()
+	body, err := json.Marshal(map[string]any{
+		"input":  filepath.Join(dir, "book.pdf"),
+		"output": "",
+	})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/open-output", strings.NewReader(string(body)))
+	rec := httptest.NewRecorder()
+	handleOpenOutput(rec, req)
+
+	var resp struct {
+		OK    bool   `json:"ok"`
+		Error string `json:"error"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v (body %q)", err, rec.Body.String())
+	}
+	if resp.OK {
+		t.Fatal("open-output accepted a directory with no index.html")
+	}
+	if resp.Error == "" {
+		t.Error("refusal carried no reason")
+	}
+}
+
+// A real result is opened, and "folder" decides whether that means the page or the
+// directory holding it - the answer to "where did my conversion go?".
+func TestOpenOutputOpensExistingResult(t *testing.T) {
+	dir := t.TempDir()
+	outDir := filepath.Join(dir, "book")
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	index := filepath.Join(outDir, "index.html")
+	if err := os.WriteFile(index, []byte("<html></html>"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	var opened string
+	prev := openTarget
+	openTarget = func(target string) error { opened = target; return nil }
+	t.Cleanup(func() { openTarget = prev })
+
+	for _, tc := range []struct {
+		folder bool
+		want   string
+	}{
+		{false, index},
+		{true, outDir},
+	} {
+		opened = ""
+		// resolveOutputDir maps input "<dir>/book.pdf" with no explicit output folder
+		// onto "<dir>/book" - the directory populated above.
+		body, err := json.Marshal(map[string]any{
+			"input":  filepath.Join(dir, "book.pdf"),
+			"output": "",
+			"folder": tc.folder,
+		})
+		if err != nil {
+			t.Fatalf("marshal: %v", err)
+		}
+		req := httptest.NewRequest(http.MethodPost, "/api/open-output", strings.NewReader(string(body)))
+		rec := httptest.NewRecorder()
+		handleOpenOutput(rec, req)
+
+		var resp struct {
+			OK    bool   `json:"ok"`
+			Error string `json:"error"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+			t.Fatalf("decode: %v (body %q)", err, rec.Body.String())
+		}
+		if !resp.OK {
+			t.Fatalf("folder=%v: existing result refused: %s", tc.folder, resp.Error)
+		}
+		if opened != tc.want {
+			t.Errorf("folder=%v: opened %q, want %q", tc.folder, opened, tc.want)
+		}
+	}
+}
+
 func TestDroppedFilesDirUsesLocalAppData(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("LOCALAPPDATA", tmp)
