@@ -140,7 +140,7 @@ function teardownCurrent() {
 // size must match viewer.css's --reader-size fallback, which styles the document before
 // this runs. A+/A- move it and persist; nothing is stored until the reader asks for a
 // change, so this default reaches everyone who never expressed a preference.
-const DEFAULT_PREFS = { size: 25, family: "serif", theme: null };
+const DEFAULT_PREFS = { size: 28, family: "serif", theme: null };
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 

@@ -232,7 +232,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 		id := fmt.Sprintf("page_%03d", generated)
 		pdfPageToHref[pdfPageNum] = href
 
-		pageHTML := buildPDFPageHTML(title, pdfPageNum, totalPages, items, imgs)
+		pageHTML := buildPDFPageHTML(outputDir, title, pdfPageNum, totalPages, items, imgs)
 		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pdfPageNum, err)
 		}
@@ -441,10 +441,17 @@ func isLigaturesArtifact(s string) bool {
 // When both text and images are present the image floats left and text flows
 // to its right. Text elements stay at body level so htmlsplit can still
 // partition them across pages without creating image-less or text-less chunks.
-func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageItem, images []string) string {
+func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, items []pageItem, images []string) string {
 	hasText := len(items) > 0
 	hasImages := len(images) > 0
 	sideBySide := hasText && hasImages
+	// One image and no text is a scanned page: it should fill the window rather than the
+	// text measure. More than one image is a composed page, so leave it to the ordinary
+	// column rules - guessing which of them is "the page" would be wrong as often as right.
+	scanBox := ""
+	if hasImages && !hasText && len(images) == 1 {
+		scanBox = pageScanBox(outputDir, images[0])
+	}
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
@@ -482,7 +489,11 @@ func buildPDFPageHTML(bookTitle string, pageNum, totalPages int, items []pageIte
 			sb.WriteString(fmt.Sprintf("  <%s>%s</%s>\n", item.tag, html.EscapeString(item.text), item.tag))
 		}
 		if hasImages {
-			sb.WriteString("  <div class=\"pdf-images\">\n")
+			if scanBox != "" {
+				sb.WriteString(fmt.Sprintf("  <div class=\"pdf-images pdf-page-scan\"%s>\n", scanBox))
+			} else {
+				sb.WriteString("  <div class=\"pdf-images\">\n")
+			}
 			for _, imgPath := range images {
 				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 			}
@@ -556,7 +567,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		id := fmt.Sprintf("page_%03d", generated)
 		pdfPageToHref[i] = href
 
-		pageHTML := buildPageHTML(title, i, totalPages, pageContent, imgs)
+		pageHTML := buildPageHTML(outputDir, title, i, totalPages, pageContent, imgs)
 		pagePath := filepath.Join(outputDir, href)
 		if err := os.WriteFile(pagePath, []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", i, err)
@@ -762,10 +773,16 @@ func rowsToText(rows pdflib.Rows) string {
 // When both text and images are present the image floats left and text flows
 // to its right. Text elements stay at body level so htmlsplit can still
 // partition them across pages without creating image-less or text-less chunks.
-func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, images []string) string {
+func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text string, images []string) string {
 	hasText := strings.TrimSpace(text) != ""
 	hasImages := len(images) > 0
 	sideBySide := hasText && hasImages
+	// See buildPDFPageHTML: one image and no text is a scanned page, and it should fill
+	// the window rather than the text measure.
+	scanBox := ""
+	if hasImages && !hasText && len(images) == 1 {
+		scanBox = pageScanBox(outputDir, images[0])
+	}
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
@@ -813,7 +830,11 @@ func buildPageHTML(bookTitle string, pageNum, totalPages int, text string, image
 			}
 		}
 		if hasImages {
-			sb.WriteString("  <div class=\"pdf-images\">\n")
+			if scanBox != "" {
+				sb.WriteString(fmt.Sprintf("  <div class=\"pdf-images pdf-page-scan\"%s>\n", scanBox))
+			} else {
+				sb.WriteString("  <div class=\"pdf-images\">\n")
+			}
 			for _, imgPath := range images {
 				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
 			}
@@ -1012,6 +1033,44 @@ func convertJPXFile(jpxPath string) (string, error) {
 	}
 	_ = os.Remove(jpxPath)
 	return jpgPath, nil
+}
+
+// pageScanBox sizes the box holding a page that is nothing but a scan.
+//
+// Such a page is a page, not an illustration sitting in a column of text: held to the
+// reading measure it renders at roughly half the window, which is why it ends up being
+// read at browser zoom instead. This gives it the window, bounded three ways - the
+// image's own pixel width (never upscaled into mush), the window's width, and the
+// window's height via the image's aspect ratio - so one scanned page lands on about one
+// screen and scrolling moves page by page.
+//
+// It sizes the *box*, never the image: the OCR overlay positions its plates as
+// percentages of a container carrying the image's aspect ratio, so bounding the image's
+// height directly would clamp the container and drift every plate off the text it covers.
+// Returns "" when the size can't be read, leaving the page to the ordinary rules.
+func pageScanBox(outputDir, imgHref string) string {
+	w, h := imageSize(filepath.Join(outputDir, filepath.FromSlash(imgHref)))
+	if w <= 0 || h <= 0 {
+		return ""
+	}
+	// height = width / (w/h), so height <= scanMaxVH  =>  width <= scanMaxVH * (w/h).
+	const scanMaxVH = 92.0 // leaves room for the navigation bar
+	byHeight := scanMaxVH * float64(w) / float64(h)
+	return fmt.Sprintf(` style="width:min(%dpx,96vw,%.1fvh)"`, w, byHeight)
+}
+
+// imageSize reads just the header of an image file for its pixel dimensions.
+func imageSize(path string) (int, int) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, 0
+	}
+	defer f.Close()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil {
+		return 0, 0
+	}
+	return cfg.Width, cfg.Height
 }
 
 func imageHTMLClassAttr(path string) string {

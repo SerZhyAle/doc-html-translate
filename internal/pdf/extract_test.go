@@ -3,6 +3,7 @@ package pdf
 import (
 	"image"
 	"image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -152,7 +153,7 @@ func TestParsePDFLayoutPage_NormalNotMerged(t *testing.T) {
 }
 
 func TestBuildPageHTML(t *testing.T) {
-	html := buildPageHTML("Test Book", 3, 10, "Hello World\nSecond line", nil)
+	html := buildPageHTML(t.TempDir(), "Test Book", 3, 10, "Hello World\nSecond line", nil)
 
 	// Check structure
 	if !strings.Contains(html, "<!DOCTYPE html>") {
@@ -173,8 +174,49 @@ func TestBuildPageHTML(t *testing.T) {
 	}
 }
 
+// A page holding one image and no text is a scan, and it gets a box sized to the window
+// rather than to the text measure. The three caps are what make "one page, one screen"
+// work without upscaling the image into mush.
+func TestBuildPageHTMLSizesAFullPageScan(t *testing.T) {
+	dir := t.TempDir()
+	writeTestPNG(t, filepath.Join(dir, "scan.png"), 1600, 1200)
+
+	html := buildPageHTML(dir, "Book", 1, 1, "", []string{"scan.png"})
+	if !strings.Contains(html, `class="pdf-images pdf-page-scan"`) {
+		t.Errorf("text-less single-image page not marked as a scan:\n%s", html)
+	}
+	// 92vh of height at 1600/1200 allows 122.7vh of width.
+	if !strings.Contains(html, `style="width:min(1600px,96vw,122.7vh)"`) {
+		t.Errorf("scan box not sized from the image:\n%s", html)
+	}
+}
+
+// A page with text alongside its image is a normal page: it keeps the reading measure,
+// because widening it would be widening a column of text.
+func TestBuildPageHTMLLeavesTextPagesAlone(t *testing.T) {
+	dir := t.TempDir()
+	writeTestPNG(t, filepath.Join(dir, "fig.png"), 400, 300)
+
+	html := buildPageHTML(dir, "Book", 1, 1, "Some text", []string{"fig.png"})
+	if strings.Contains(html, "pdf-page-scan") {
+		t.Errorf("a page with text was treated as a scan:\n%s", html)
+	}
+}
+
+func writeTestPNG(t *testing.T, path string, w, h int) {
+	t.Helper()
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, image.NewRGBA(image.Rect(0, 0, w, h))); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+}
+
 func TestBuildPageHTML_EscapesHTML(t *testing.T) {
-	html := buildPageHTML("Book <script>", 1, 1, "<b>bold</b>", nil)
+	html := buildPageHTML(t.TempDir(), "Book <script>", 1, 1, "<b>bold</b>", nil)
 	if strings.Contains(html, "<script>") {
 		t.Error("title not escaped")
 	}

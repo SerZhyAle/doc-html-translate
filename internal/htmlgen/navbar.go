@@ -357,7 +357,7 @@ const readerCSS = `
     --dht-accent:#2563eb; --dht-link:#1a4fb4;
     /* keep in step with DEFSZ in the reader script: this styles the page before that
        runs, so a mismatch shows as the text resizing under the reader on every load */
-    --dht-reader-size:130%; --dht-reader-font:Georgia,"Times New Roman",serif;
+    --dht-reader-size:175%; --dht-reader-font:Georgia,"Times New Roman",serif;
   }
   html[data-dht-theme="sepia"] {
     --dht-bg:#f4ecd8; --dht-fg:#4a3f2f; --dht-muted:#7a6c54;
@@ -377,6 +377,14 @@ const readerCSS = `
   html, body { background:var(--dht-bg) !important; color:var(--dht-fg) !important; }
   body { font-size:var(--dht-reader-size); font-family:var(--dht-reader-font); }
   body a { color:var(--dht-link); }
+  /* A page that is nothing but a scan. The converter has already sized this box to the
+     window (see pdf.pageScanBox: min of the image's own width, 96vw and its height in vh),
+     so all that is left is to centre it out of the narrow text column it sits in - by
+     shifting the box, not by widening the column, which would wreck the measure of a page
+     that does have text. The image fills the box; with OCR on, .ocr-fig fills it instead
+     and the image fills that, so the plates stay pinned to what they cover. */
+  .pdf-page-scan { margin-left:50%; transform:translateX(-50%); }
+  .pdf-page-scan img { display:block; width:100%; height:auto; max-height:none; margin:0; }
   .dht-btn, .dht-navbar select, .dht-toolbar select {
     background:transparent; color:var(--dht-bar-fg); border:1px solid var(--dht-border);
     border-radius:6px; padding:3px 8px; font:inherit; font-size:13px; cursor:pointer;
@@ -409,10 +417,11 @@ func readerScript(bookKey, self string, idx, total int) string {
 		sans: '"Segoe UI",system-ui,Arial,sans-serif',
 		mono: '"Cascadia Code",Consolas,monospace'
 	};
-	// DEFSZ is a percentage of the browser's own body size, and it sits above 100 on
-	// purpose: this is a reading view, not a web page. On the STEPSZ grid, so A+/A- stay
-	// on round numbers.
-	var MINSZ = 70, MAXSZ = 180, STEPSZ = 10, DEFSZ = 130;
+	// DEFSZ is a percentage of the browser's own body size (16px unless the reader changed
+	// it), so 175 lands on ~28px - matching the extension viewer's own default. It sits far
+	// above 100 on purpose: this is a reading view, not a web page. MAXSZ has to stay well
+	// clear of DEFSZ, or A+ would have nowhere to go.
+	var MINSZ = 70, MAXSZ = 300, STEPSZ = 10, DEFSZ = 175;
 
 	// Theme (dropdown, 4 themes; global, localStorage).
 	function getTheme(){ try { return localStorage.getItem(THEME_KEY) || "light"; } catch(e){ return "light"; } }
