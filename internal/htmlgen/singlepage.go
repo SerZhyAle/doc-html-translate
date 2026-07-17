@@ -86,6 +86,9 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s</title>\n", html.EscapeString(title)))
+	// The icon is written to the output root, but the merged page can live one level down
+	// inside the book's base dir, so link it relative to that.
+	sb.WriteString("  " + faviconLink(book.BasePath))
 	if len(cssLinks) > 0 {
 		sb.WriteString(strings.Join(cssLinks, "\n") + "\n")
 	}
@@ -101,6 +104,8 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString(navBarScript)
 	sb.WriteString(readerScript(bookStorageKey(book.Title, 1), "index.html", 1, 1))
 	sb.WriteString("</body>\n</html>\n")
+
+	WriteFavicon(outputDir)
 
 	// Write the merged file inside the base directory so relative refs resolve.
 	mergedPath := bookPath(outputDir, book.BasePath, "index.html")

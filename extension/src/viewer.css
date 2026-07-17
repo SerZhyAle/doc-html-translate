@@ -4,7 +4,7 @@
 
 :root {
   --reader-font: Georgia, "Times New Roman", serif;
-  --reader-size: 19px;
+  --reader-size: 25px; /* keep in step with viewer.js DEFAULT_PREFS.size */
   --bg: #faf9f7;
   --fg: #1b1b1b;
   --muted: #6b6b6b;

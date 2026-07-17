@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"html"
 	"os"
+	"path" // hrefs are URLs, not OS paths
 	"path/filepath"
 	"strings"
 
@@ -354,7 +355,9 @@ const readerCSS = `
     --dht-bg:#faf9f7; --dht-fg:#1b1b1b; --dht-muted:#6b6b6b;
     --dht-bar-bg:#ffffff; --dht-bar-fg:#222222; --dht-border:#e2e0db;
     --dht-accent:#2563eb; --dht-link:#1a4fb4;
-    --dht-reader-size:100%; --dht-reader-font:Georgia,"Times New Roman",serif;
+    /* keep in step with DEFSZ in the reader script: this styles the page before that
+       runs, so a mismatch shows as the text resizing under the reader on every load */
+    --dht-reader-size:130%; --dht-reader-font:Georgia,"Times New Roman",serif;
   }
   html[data-dht-theme="sepia"] {
     --dht-bg:#f4ecd8; --dht-fg:#4a3f2f; --dht-muted:#7a6c54;
@@ -406,7 +409,10 @@ func readerScript(bookKey, self string, idx, total int) string {
 		sans: '"Segoe UI",system-ui,Arial,sans-serif',
 		mono: '"Cascadia Code",Consolas,monospace'
 	};
-	var MINSZ = 70, MAXSZ = 180, STEPSZ = 10;
+	// DEFSZ is a percentage of the browser's own body size, and it sits above 100 on
+	// purpose: this is a reading view, not a web page. On the STEPSZ grid, so A+/A- stay
+	// on round numbers.
+	var MINSZ = 70, MAXSZ = 180, STEPSZ = 10, DEFSZ = 130;
 
 	// Theme (dropdown, 4 themes; global, localStorage).
 	function getTheme(){ try { return localStorage.getItem(THEME_KEY) || "light"; } catch(e){ return "light"; } }
@@ -421,18 +427,21 @@ func readerScript(bookKey, self string, idx, total int) string {
 	if (tsel) tsel.addEventListener("change", function(){ setTheme(tsel.value); });
 
 	// Text size (A-/A+), scales the em-based content without touching images.
-	function getSize(){ var n; try { n = parseInt(localStorage.getItem(SIZE_KEY), 10); } catch(e){} return (!n || Number.isNaN(n)) ? 100 : n; }
-	function applySize(n){
+	function getSize(){ var n; try { n = parseInt(localStorage.getItem(SIZE_KEY), 10); } catch(e){} return (!n || Number.isNaN(n)) ? DEFSZ : n; }
+	// persist only when the reader actually asked for a size. Writing it on every load
+	// would stamp the current default into storage the first time any book is opened, and
+	// a later change to DEFSZ could then never reach anyone who had ever read anything.
+	function applySize(n, persist){
 		if (n < MINSZ) n = MINSZ; if (n > MAXSZ) n = MAXSZ;
 		document.documentElement.style.setProperty("--dht-reader-size", n + "%%");
-		try { localStorage.setItem(SIZE_KEY, String(n)); } catch(e){}
+		if (persist) { try { localStorage.setItem(SIZE_KEY, String(n)); } catch(e){} }
 		return n;
 	}
-	var sizeNow = applySize(getSize());
+	var sizeNow = applySize(getSize(), false);
 	var dec = document.getElementById("dht-font-dec");
-	if (dec) dec.addEventListener("click", function(){ sizeNow = applySize(sizeNow - STEPSZ); });
+	if (dec) dec.addEventListener("click", function(){ sizeNow = applySize(sizeNow - STEPSZ, true); });
 	var inc = document.getElementById("dht-font-inc");
-	if (inc) inc.addEventListener("click", function(){ sizeNow = applySize(sizeNow + STEPSZ); });
+	if (inc) inc.addEventListener("click", function(){ sizeNow = applySize(sizeNow + STEPSZ, true); });
 
 	// Font family (dropdown).
 	function getFam(){ try { return localStorage.getItem(FAM_KEY) || "serif"; } catch(e){ return "serif"; } }
@@ -589,6 +598,7 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 	if total == 0 {
 		return nil
 	}
+	WriteFavicon(outputDir)
 	bookKey := bookStorageKey(book.Title, total)
 
 	// Build full href paths (with BasePath prefix)
@@ -647,9 +657,10 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 	content := string(data)
 	navHTML := buildNavBarHTML(nav)
 
-	// Inject CSS before </head>
+	// Inject the tab icon + CSS before </head>. The icon lives at the output root, so the
+	// link is relative to this page's own depth.
 	if idx := strings.Index(strings.ToLower(content), "</head>"); idx >= 0 {
-		content = content[:idx] + navBarCSS + readerCSS + content[idx:]
+		content = content[:idx] + faviconLink(path.Dir(nav.SelfHref)) + navBarCSS + readerCSS + content[idx:]
 	}
 
 	// Inject navbar after <body> (or <body ...>)

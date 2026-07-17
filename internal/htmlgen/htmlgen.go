@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"os"
+	"path" // hrefs are URLs, not OS paths
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -34,6 +35,7 @@ func GenerateIndexWithSnippets(book *epub.Book, outputDir string, snippets map[s
 // Otherwise it falls back to the flat, one-entry-per-spine-page list.
 func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets map[string]string, depth int) (string, error) {
 	indexPath := filepath.Join(outputDir, "index.html")
+	WriteFavicon(outputDir)
 
 	// Collect CSS files from manifest
 	var cssLinks []string
@@ -71,6 +73,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s</title>\n", html.EscapeString(title)))
+	sb.WriteString("  " + faviconLink("")) // the TOC index sits at the output root
 	if len(cssLinks) > 0 {
 		sb.WriteString(strings.Join(cssLinks, "\n") + "\n")
 	}
@@ -350,6 +353,12 @@ func GenerateSinglePageIndex(book *epub.Book, outputDir string) (string, error) 
 	if book.BasePath != "" && book.BasePath != "." {
 		target = book.BasePath + "/" + target
 	}
+
+	// This path skips the navbar injection, so the icon has to be put on the content page
+	// directly. The redirect page below is replaced before it ever paints, so it needs no
+	// icon of its own - the page the reader lands on does.
+	WriteFavicon(outputDir)
+	injectFavicon(filepath.Join(outputDir, filepath.FromSlash(target)), path.Dir(target))
 
 	// JS redirect (instant, preserves browser history correctly vs meta-refresh)
 	html := fmt.Sprintf(`<!DOCTYPE html>

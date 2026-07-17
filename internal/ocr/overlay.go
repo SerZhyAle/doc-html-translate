@@ -122,13 +122,16 @@ func collectOverlayJobs(imgs []*gohtml.Node, baseDir string) []overlayJob {
 }
 
 // ocrWorkers is how many Tesseract processes to keep in flight. Each one is essentially
-// single-threaded, so the pool is what uses the machine; the cap keeps a couple of cores
-// for the rest of the system (and the GUI that is streaming this log) rather than
-// stalling the desktop to finish a background conversion slightly sooner.
+// single-threaded, so the pool is what uses the machine. NumCPU-2 leaves the desktop (and
+// the GUI streaming this log) a core to breathe rather than stalling the whole machine to
+// finish a background conversion slightly sooner; the ceiling stops a very wide server
+// from launching a process per core, where the per-process startup and the disk reads
+// stop paying for themselves.
 func ocrWorkers() int {
+	const maxWorkers = 16
 	n := runtime.NumCPU() - 2
-	if n > 8 {
-		n = 8
+	if n > maxWorkers {
+		n = maxWorkers
 	}
 	if n < 1 {
 		n = 1

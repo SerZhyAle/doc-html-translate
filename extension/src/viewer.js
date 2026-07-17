@@ -137,7 +137,10 @@ function teardownCurrent() {
 }
 
 // ---- Preferences -----------------------------------------------------------
-const DEFAULT_PREFS = { size: 19, family: "serif", theme: null };
+// size must match viewer.css's --reader-size fallback, which styles the document before
+// this runs. A+/A- move it and persist; nothing is stored until the reader asks for a
+// change, so this default reaches everyone who never expressed a preference.
+const DEFAULT_PREFS = { size: 25, family: "serif", theme: null };
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 
@@ -191,10 +194,23 @@ function ensureOcrCss() {
   document.head.append(link);
 }
 
+// docExtent says where the reader is in the document as a whole. Any other counter is
+// about some slice of it, so this is what stops a number like "3/5" from being read as a
+// statement about the book. Empty for formats with no page dimension of their own.
+function docExtent() {
+  if (!pdfTotal) return "";
+  if (pdfRendered >= pdfTotal) return `${pdfTotal} pages`;
+  return `pages 1-${pdfRendered} of ${pdfTotal}`;
+}
+
 function ocrUpdateStatus() {
   if (ocrTotal === 0) return;
   $("status").classList.remove("done");
-  setStatus(`OCR: ${ocrDone}/${ocrTotal}`);
+  // The denominator is images found so far, not the document's - extraction is deferred,
+  // so it climbs as the reader scrolls. Naming the unit and saying where we are in the
+  // book keeps "OCR: 3/5" from looking like a claim that the book holds five of anything.
+  const where = docExtent();
+  setStatus(`OCR: ${ocrDone}/${ocrTotal} images${where ? ` - ${where}` : ""}`);
   setProgress(ocrDone / ocrTotal);
   if (ocrDone >= ocrTotal) setTimeout(hideStatus, 1000);
 }

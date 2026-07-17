@@ -50,11 +50,15 @@ func detectStdoutTerminal() bool {
 	return (fi.Mode() & os.ModeCharDevice) != 0
 }
 
+// progressInterval is how often a Ticker is allowed to speak. A loop that runs for
+// minutes in silence is indistinguishable from a hang, but every line is flushed
+// separately into the GUI's log pane, and a rate + ETA that redraws every second is
+// noise: the numbers barely move and they bury the lines around them. Four seconds is
+// often enough to prove the run is alive and rare enough to stay readable.
+const progressInterval = 4 * time.Second
+
 // Ticker rate-limits an in-place progress line for a long per-item loop, then closes it
-// with a summary. Two constraints meet here: a loop that runs for minutes with no output
-// is indistinguishable from a hang, but a line per item would push thousands of lines
-// through the GUI's log pane, which streams the CLI's stdout and flushes per line. One
-// line per second satisfies both. Shared by the PDF page loops and the OCR overlay.
+// with a summary. Shared by the PDF page loops and the OCR overlay.
 type Ticker struct {
 	label string
 	unit  string
@@ -69,11 +73,12 @@ func NewTicker(label, unit string) *Ticker {
 	return &Ticker{label: label, unit: unit, start: now, last: now}
 }
 
-// Report announces `done` of `total` items. Intermediate calls are dropped unless a second
-// has passed since the last one, so callers can call it every iteration; done >= total
-// always prints and carries the newline that releases the line for the next message.
+// Report announces `done` of `total` items. Intermediate calls are dropped unless
+// progressInterval has passed since the last one, so callers can call it every iteration;
+// done >= total always prints and carries the newline that releases the line for the next
+// message.
 func (t *Ticker) Report(done, total int) {
-	if done < total && time.Since(t.last) < time.Second {
+	if done < total && time.Since(t.last) < progressInterval {
 		return
 	}
 	t.last = time.Now()
@@ -94,6 +99,6 @@ func (t *Ticker) Report(done, total int) {
 	Progress("  %s: %d/%d %s  %.1f/s%s     ", t.label, done, total, t.unit, rate, eta)
 }
 
-// Quiet reports whether the loop finished fast enough that no progress line was ever
-// worth printing, so a caller can skip the closing summary for a trivial run.
-func (t *Ticker) Quiet() bool { return time.Since(t.start) < time.Second }
+// Quiet reports whether the loop finished before Report ever spoke, so a caller can skip
+// the closing summary for a run too short to have looked stuck.
+func (t *Ticker) Quiet() bool { return time.Since(t.start) < progressInterval }

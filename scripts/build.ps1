@@ -37,6 +37,11 @@ $iconSource = "assets/doc-html-translate.ico"
 New-Item -ItemType Directory -Force -Path "assets" | Out-Null
 ./scripts/generate-icon.ps1 -Output $iconSource
 
+# Keep the favicon embedded in the converter (written next to every generated index.html,
+# so a converted book carries our icon in the browser tab) in sync with the app icon -
+# same arrangement as cmd/doc-html-ui/favicon.ico in build-ui.ps1.
+Copy-Item $iconSource "internal/htmlgen/favicon.ico" -Force
+
 # Step 2: Embed icon into exe via goversioninfo (generates resource.syso)
 $cmdDir = "cmd/doc-html-translate"
 $versionDate = Get-Date
