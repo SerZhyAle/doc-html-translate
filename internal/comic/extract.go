@@ -56,9 +56,9 @@ var pageExts = map[string]bool{
 // single entry, the whole archive, and the page count are each bounded. These are
 // generous enough for any real book and only exist to refuse a decompression bomb.
 const (
-	maxPageBytes  = 200 * 1024 * 1024        // 200 MB for one page image
+	maxPageBytes  = 200 * 1024 * 1024             // 200 MB for one page image
 	maxTotalBytes = int64(4 * 1024 * 1024 * 1024) // 4 GB inflated total
-	maxPages      = 20000                     // page count ceiling
+	maxPages      = 20000                         // page count ceiling
 )
 
 // page is one decoded archive entry: its original name (used only for ordering)

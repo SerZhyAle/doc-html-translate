@@ -677,3 +677,19 @@ Changed files:
 - extension/src/viewer.js
 - internal/pdf/extract.go
 
+| 2026-07-18 02:12:43 | main | 474072d | chore(gate): pin amd64 test arch, skip oversized corpus samples, sweep run-2 notes |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/RELEASE_STATE.md
+- DEV/research/format_verification_sweep.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- configs/.typos.toml
+- internal/comic/comic_test.go
+- internal/comic/extract.go
+- internal/ocr/batch_test.go
+- internal/ocr/overlay.go
+- scripts/test.ps1
+- tests/testdoc_test.go
+

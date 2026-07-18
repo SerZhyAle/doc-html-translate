@@ -413,3 +413,82 @@ are the same mistake: a claim written as *measured* that was never measured.
   `boarding-pass (5)` untouched at its original 07/01 date). The harness now passes flags before the
   path. Worth noting the trap fired *through* a product bug, not through carelessness alone - which
   is why W1-01 is filed as D1/D2 rather than a docs nit.
+
+## Run 2 - 2026-07-18 post-fix re-test
+
+Second pass, after the fourteen `2026-07-17_*` tickets were implemented and moved to
+`DEV/plan/done/`. Binary: fresh `build/doc-html-translate.exe` `26.0718.0052` (gate green - full
+`go test` incl. the corpus-driven `tests/testdoc_test.go`, lint, typos). This run does what the
+first pass never reached: it carries D2/D3 across **all seven waves**, not just PDF. Same rules of
+engagement (own `-folder`, flags before the path per W1-01, never next to the input). Stress file
+`Aphrodite's Mirror (1).pdf` excluded as before. Harness + raw data: `temp/sweep/` (gitignored) -
+`results.csv`, `shots/*.png`.
+
+**Headline: the re-test is clean. Zero `silently-wrong` anywhere.** Every converted fixture has a
+control-char ratio of 0 % on its content page; every unsupported binary now exits 3 with an
+actionable refusal instead of emitting garbage. The old pre-flight verdict ("a `.cbz` is 24 MB of
+binary-as-text at exit 0") is gone.
+
+### D2/D3 - all waves (both single-page and -multipage)
+
+| Wave | Fixtures | Result |
+|---|---|---|
+| W1 PDF | 11 | all exit 0, ctrl 0 %. Text layers clean (Кэрролл 317 pp 5 s, Pelevin 607 pp 1.7 s). Both non-ANSI-path "known bugs" convert (Kupní 9 pp, První 6 pp). Scan counter now honest: `Pages: 6 (with text: 0, image-only: 6)` (W1-04 fixed) |
+| W2 EPUB | 8 | all exit 0, ctrl 0 %. Single-page `index.html` is a 142 B redirect to `OEBPS/index.html` (by design, not empty output) |
+| W3 DOCX/TXT | 3 | docx **exit 3** - `looks like a ZIP archive .. refusing to convert it into garbage`; txt clean (86/196 pp) |
+| W4 FB2/MOBI/AZW3 | 4 | all exit 0, ctrl 0 %. FB2 15/12 pp; MOBI/AZW3 via Calibre |
+| W5 HTML/RTF/MD | 5 (+html-images) | all exit 0, ctrl 0 %. html-images (missed in W5 list, run separately) resolves 28/28 |
+| W6 images | 9 | all exit 0, ctrl 0 %. TIFF transcodes to PNG and renders. Forced OCR overlay on every one |
+| W7 roadmap | 8 | **comics now convert**: cbz/cbt/cb7 37 pp, cbr 36 pp (7-Zip), ctrl 0 %. djvu + xlsx/pptx/odt **exit 3** with a named refusal each |
+
+### D4 - visual (headless Edge, full-page PNG, eyeballed)
+
+| Case | Verdict |
+|---|---|
+| fb2-illustrated | 55 imgs, 0 broken - cover + text render (fixes `fb2-drops-every-image`) |
+| html-images resolvable | 28 imgs, 0 broken - CORPUS said "all 28 come out broken"; now none (fixes `html-input-drops-local-images`) |
+| epub-illustrated | 55 imgs, 0 broken |
+| cbz-tiny comic | 37 pages render; OCR plate over the masthead sits tight and readable |
+| img-tif (TIFF->PNG) | renders; **OCR overlay plates on this 800 px low-DPI indicia page are loose - oversized and overlapping**. Documented resolution-limited case, not a regression (archive/scan path looks clean) |
+| html-danglingimages | 164 refs resolve to nothing (by design); page degrades gracefully - text + TOC intact, only broken-image glyphs |
+| Кэрролл multi | TOC tree "Chapters: 317", nested expanders, Cyrillic clean, links live |
+
+### D1 / D5 - claims and docs
+
+Both dimensions run read-only over every published surface. **Regression is clean**: every
+prior-broken claim now matches the code - extension picker accepts `.mobi/.azw3` again; comics are
+claimed on README/site/docs/PARITY and registered in the MSIX FTA; `.tif` absence from the extension
+picker is correct (no browser TIFF decoder), so that pre-flight item is withdrawn as a non-bug. All
+hand-authored site/README copy is mirrored across en/ru/uk - no "English-only moved" break.
+
+The only gap is a small cluster where the 07-17 work did not reach the **metadata** surfaces:
+
+- **winget en-US locale** (`winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml`) omits comics +
+  standalone images + the 7-Zip dependency, and its version is stale (`26.0702.1530`). wingetcreate
+  carries locale text forward, so this ships unless edited at the next submission.
+- **MSIX VisualElements Description** (`msix/AppxManifest.xml:65`) lags its own file associations -
+  the FTA registers `.cbz/.cbr/.cb7/.cbt`, the description still lists only the nine doc formats.
+- **Store-copy typography**: em dash in `extension/store/LISTING.md:84` and
+  `extension/store/PRIVACY.md:5`, `...` in `extension.html` UI-label quotes. House rule is short
+  hyphens / `..`; these slipped the typos gate (it does not scan `.md`/`.html` for em dashes).
+- **Extension screenshots** incomplete: only `shot1/2-en,-ru`; no `shot3-*`, no `-uk`, none depict
+  the new comic/image features.
+- **(minor)** standalone image input under-surfaced on the site meta descriptions.
+- **Ollama prerequisite**: default `-free`/`-ollama` silently needs `ollama pull gemma3:12b`; no
+  buyer surface states it, only a raw runtime error does.
+
+### Still-open pre-existing (not regressions, carried from Run 1)
+
+- **W1-01** flags after the input path are silently ignored (`flags.go:109-113`) - reconfirmed this
+  run (it is what voided `-folder` on the first harness attempt). Bites hand-typed / scripted use
+  only; every shipped surface orders flags first.
+- **W1-07** a per-image OCR failure is not surfaced (aggregate count only, exit 0).
+
+### Verdict
+
+All fourteen `2026-07-17_*` fixes hold under a full-corpus re-run. No functional regression, no
+`silently-wrong`, refusals are clean and actionable. Remaining work is documentation/metadata polish
+(the winget/MSIX/store-copy cluster) plus two pre-existing low-severity CLI-diagnostics items, and
+one visual judgement call on OCR plate density for low-DPI standalone images. The extension edition
+(D2/D4 by hand in Chrome) is **not covered by this pass** - it needs a human driver; checklist in
+the run notes.

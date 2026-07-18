@@ -122,13 +122,13 @@ func makeCBT(t *testing.T, entries map[string][]byte) string {
 // cruft that must be filtered.
 func sampleEntries() map[string][]byte {
 	return map[string][]byte{
-		"page10.jpg":       []byte("TEN"),
-		"page2.jpg":        []byte("TWO"),
-		"page1.jpg":        []byte("ONE"),
-		"ComicInfo.xml":    []byte("<meta/>"),
-		"Thumbs.db":        []byte("junk"),
-		"__MACOSX/x.jpg":   []byte("resource"),
-		"notes.txt":        []byte("ignore me"),
+		"page10.jpg":     []byte("TEN"),
+		"page2.jpg":      []byte("TWO"),
+		"page1.jpg":      []byte("ONE"),
+		"ComicInfo.xml":  []byte("<meta/>"),
+		"Thumbs.db":      []byte("junk"),
+		"__MACOSX/x.jpg": []byte("resource"),
+		"notes.txt":      []byte("ignore me"),
 	}
 }
 

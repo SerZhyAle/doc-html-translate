@@ -75,7 +75,7 @@ func TestApplyOverlays(t *testing.T) {
 		filepath.Join(dir, "ok.png"): {ok: true, res: Result{
 			Width: 100, Height: 200, Blocks: []Block{{Text: "hi", X0: 1, Y0: 1, X1: 50, Y1: 20, LineH: 10}},
 		}},
-		filepath.Join(dir, "empty.png"): {ok: false},              // read fine, no text
+		filepath.Join(dir, "empty.png"): {ok: false},               // read fine, no text
 		filepath.Join(dir, "bad.png"):   {err: errors.New("boom")}, // recognition failed
 	}
 

@@ -78,9 +78,9 @@ if(document.body)watch();else document.addEventListener("DOMContentLoaded",watch
 // to serial (the defect this replaced). Recognition needs only the image's path, so it is
 // decoupled from the DOM in three phases:
 //
-//	1. parse each file, collect the recognizable image paths (deduped) - docs are released;
-//	2. recognize every unique image once, across one book-wide pool;
-//	3. re-parse each file one at a time and wrap its images from the precomputed results.
+//  1. parse each file, collect the recognizable image paths (deduped) - docs are released;
+//  2. recognize every unique image once, across one book-wide pool;
+//  3. re-parse each file one at a time and wrap its images from the precomputed results.
 //
 // Only the small results map (text + geometry) is held across the book - never every parsed
 // page or decoded image at once - so memory stays close to the old per-file cost. decodeImage

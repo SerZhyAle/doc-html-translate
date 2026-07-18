@@ -2,6 +2,7 @@
 extend-ignore-re = [
   "doc-html-translate",
   "epub2html",
+  "\\b[0-9a-f]{7,40}\\b",   # git commit SHAs quoted in DEV/research + plan docs
 ]
 
 # Project proper nouns / format acronyms typos misreads as misspellings.
@@ -15,6 +16,7 @@ opf = "opf"      # EPUB OPF package format, not a typo of "of"
 mis = "mis"      # valid English prefix, e.g. "mis-tagged"
 ist = "ist"      # German stop-word in extension/src/lang.js detection list
 ein = "ein"      # German stop-word in extension/src/lang.js detection list
+ane = "ane"      # inside a verbatim garbled-OCR evidence excerpt in a done-ticket
 
 [files]
 extend-exclude = [
