@@ -81,7 +81,7 @@ When you open a supported document, this extension converts its text into a clea
 2. Open any supported document in your browser, or click the extension icon to select a local file.
 3. Right-click anywhere on the page and select **"Translate"** to translate the entire document into your language for free!
 
-Privacy: Everything runs on your device. The extension never uploads your documents anywhere — it has no server to send them to and no interest in your reading list. The only network access is your browser's own translation feature, which you trigger yourself.
+Privacy: Everything runs on your device. The extension never uploads your documents anywhere - it has no server to send them to and no interest in your reading list. The only network access is your browser's own translation feature, which you trigger yourself.
 
 Limitations: Scanned/image-only PDFs have no text to translate (the extension detects this and offers the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
 
@@ -125,9 +125,9 @@ so each localized listing gets matching shots. The captions below come verbatim 
   - UK: Книжки EPUB відкриваються зі згортуваним змістом і зручними темами читання.
 - **Screenshot 3 - Right-click flow + toolbar popup:** the right-click menu "Translate to [language]" over the
   reflowed document, with the extension's toolbar popup (toggles) in the corner.
-  - EN: Right-click, "Translate to ...", done - 100% local, nothing leaves your device.
-  - RU: Правый клик, «Перевести на ...», готово - 100% локально, ничего не покидает ваше устройство.
-  - UK: Правий клік, «Перекласти на ...», готово - 100% локально, нічого не залишає ваш пристрій.
+  - EN: Right-click, "Translate to ..", done - 100% local, nothing leaves your device.
+  - RU: Правый клик, «Перевести на ..», готово - 100% локально, ничего не покидает ваше устройство.
+  - UK: Правий клік, «Перекласти на ..», готово - 100% локально, нічого не залишає ваш пристрій.
 - Small promo tile 440x280 (optional), marquee 1400x560 (optional).
 - Hosted privacy-policy URL: **already prepared** at `extension-privacy.html` in the repo root - once the
   GitHub Pages site is deployed it is served at

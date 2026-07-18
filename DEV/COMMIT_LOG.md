@@ -693,3 +693,14 @@ Changed files:
 - scripts/test.ps1
 - tests/testdoc_test.go
 
+| 2026-07-18 02:18:29 | main | 9e03eba | docs: metadata + store-copy polish for release 26.0718 (comics in MSIX/description, typography) |
+
+Changed files:
+- DEV/CHANGELOG.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- extension.html
+- extension/store/LISTING.md
+- extension/store/PRIVACY.md
+- msix/AppxManifest.xml
+

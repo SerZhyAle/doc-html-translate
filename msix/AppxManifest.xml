@@ -62,7 +62,7 @@
     <Application Id="DocHtmlUi" Executable="doc-html-ui.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
           DisplayName="doc-html-translate"
-          Description="Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML documents into clean local HTML, with optional translation through Google Cloud or a local Ollama model."
+          Description="Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives (CBZ, CBR, CB7, CBT) and images into clean local HTML, with optional translation through Google Cloud or a local Ollama model."
           BackgroundColor="#1E3A8A"
           Square150x150Logo="Assets\Square150x150Logo.png"
           Square44x44Logo="Assets\Square44x44Logo.png">

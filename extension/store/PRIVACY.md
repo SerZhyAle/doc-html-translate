@@ -2,7 +2,7 @@
 
 _Last updated: 2026-07-01_
 
-_Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html — rendered from this text as `extension-privacy.html` in the repo root._
+_Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html - rendered from this text as `extension-privacy.html` in the repo root._
 
 ## Summary
 This extension processes documents - PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML -
