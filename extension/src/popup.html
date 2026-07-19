@@ -25,8 +25,9 @@
     .cta { display: block; width: 100%; margin: 4px 0 12px; padding: 9px 12px; font: inherit; font-weight: 600;
            color: #fff; background: #2563eb; border: 0; border-radius: 8px; cursor: pointer; }
     .cta:hover { background: #1d4fd0; }
-    .ocr-langs { margin: 2px 0 10px; padding-left: 8px; border-left: 2px solid #eee; }
-    .ocr-langs.disabled { opacity: 0.5; }
+    .ocr-langs { margin: 2px 0 10px; }
+    .ocr-langs summary { color: #2563eb; cursor: pointer; font-size: 12px; }
+    .ocr-langs-content { margin-top: 6px; padding-left: 8px; border-left: 2px solid #eee; }
     .ocr-langs .hint { color: #666; font-size: 11px; margin: 2px 0 6px; }
     .ocr-lang { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
     .ocr-lang label, .ocr-lang > span { font-size: 13px; }
@@ -40,18 +41,21 @@
   <button id="open-pdf" class="cta" type="button">Open a document&hellip;</button>
   <div class="row">
     <label for="ocr-images">Use OCR for images</label>
-    <span class="switch"><input type="checkbox" id="ocr-images"><span class="slider"></span></span>
+    <label class="switch"><input type="checkbox" id="ocr-images"><span class="slider"></span></label>
   </div>
-  <div id="ocr-langs" class="ocr-langs"></div>
+  <details id="ocr-langs-details" class="ocr-langs">
+    <summary>Recognition languages</summary>
+    <div id="ocr-langs" class="ocr-langs-content"></div>
+  </details>
   <hr>
   <div class="row">
     <label for="global">Reflow PDFs &amp; EPUBs</label>
-    <span class="switch"><input type="checkbox" id="global"><span class="slider"></span></span>
+    <label class="switch"><input type="checkbox" id="global"><span class="slider"></span></label>
   </div>
   <div class="note">Off by default. Or right-click a document link &rarr; &#8220;Convert with doc-html-translate&#8221;.</div>
   <div class="row">
     <label for="site">On this site<br><span class="host" id="host"></span></label>
-    <span class="switch"><input type="checkbox" id="site"><span class="slider"></span></span>
+    <label class="switch"><input type="checkbox" id="site"><span class="slider"></span></label>
   </div>
   <hr>
   <div class="links">

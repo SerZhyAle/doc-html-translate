@@ -8,6 +8,7 @@ const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
 const hostEl = document.getElementById("host");
 const ocrImagesEl = document.getElementById("ocr-images");
+const ocrLangsDetailsEl = document.getElementById("ocr-langs-details");
 const ocrLangsEl = document.getElementById("ocr-langs");
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
@@ -114,6 +115,9 @@ async function init() {
     const o = await getOptions();
     o.ocrImages = ocrImagesEl.checked;
     await setOptions(o);
+    // Keep the popup compact when it opens, but reveal the next OCR step when
+    // the user has just opted in.
+    if (ocrImagesEl.checked) ocrLangsDetailsEl.open = true;
     renderOcrLangs();
   });
   renderOcrLangs();
