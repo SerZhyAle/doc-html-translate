@@ -4,6 +4,10 @@ Claude Code guidance for this repo. **Canonical agent guide: [AGENTS.md](AGENTS.
 (architecture map, build/test/lint, conventions, pitfalls). This file only adds Claude-Code-specific notes,
 so the two don't drift. Other docs: [README.md](README.md) (user-facing), [DEV/README.md](DEV/README.md) (dev notes).
 
+The portfolio-wide **SZA Unified Rules** canon (`P:\WEB\sites.google.comsiteszaodua\Unified_Rules`) and
+this repo's overlay record are pinned in AGENTS.md ("SZA Unified Rules" section) - this repo consumes
+them by reference; the delta record is `<canon>/contrib/epub_2_html.md`.
+
 ## What this is
 
 `doc-html-translate` - a Go 1.25 Windows app that converts EPUB / PDF / MOBI / AZW3 / FB2 / RTF / TXT /

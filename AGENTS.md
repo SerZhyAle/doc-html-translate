@@ -2,6 +2,34 @@
 
 Purpose: help coding agents become productive in this repository quickly.
 
+## SZA Unified Rules (canon)
+
+This repo follows the portfolio-wide **SZA Unified Rules** by *reference* (not a mirror - there is
+nothing to keep in sync here). Canon / source of truth:
+`P:\WEB\sites.google.comsiteszaodua\Unified_Rules` - read its `README.md` for the universal core
+(repository layout, documentation, development, testing, release & distribution, localization,
+security & privacy). This file keeps only the **deltas and repo specifics** below; it does not restate
+the universal rules. The full evidence-backed delta record for this project is
+`<canon>/contrib/epub_2_html.md`.
+
+This repo's overlay shape (four overlay facts):
+
+- **Overlay A distribution (GitHub + winget + Microsoft Store) on an Overlay C Go source body**
+  (`cmd/` + `internal/`, module `doc-html-translate`), plus a second, code-independent JS **extension
+  edition** (Chrome Web Store + Edge Add-ons) under `extension/`. The two editions share no code and are
+  kept in sync by [docs/PARITY.md](docs/PARITY.md) + gates (see "Cross-Edition Parity").
+- **No `publishing/` umbrella** - channels are top-level siblings: `winget/`, `msix/`, `installer/`,
+  `tools/store/`, `extension/`. Internal docs live under the **`DEV/`** umbrella, not `docs/`; the
+  changelog is the engineering ledger `DEV/CHANGELOG.md`, not a root Keep-a-Changelog.
+- **Version shape `YY.MMDD.HHmm`** (MMDD zero-padded, a per-project frozen choice), stamped via
+  `-ldflags "-X main.Version=.."`; the extension edition versions on its own clock.
+- **Release is up to 5 independent one-way ops**, each its own trigger and cost tag - see
+  [DEV/RELEASE.md](DEV/RELEASE.md) and `<canon>/CHANNEL_MATRIX.md`.
+- **Frozen anchors** (reserve once, never change): winget `SerZhyAle.DocHtmlTranslate`, Go module
+  `doc-html-translate`, MSIX Identity `SZA.Doc-HTML-Translate`, Inno AppId
+  `{E8B4F1C7-2A9D-4E63-9F1B-7C3A5D8E2B04}`, and distinct Chrome / Edge store ids (never a shared or
+  pinned manifest key).
+
 ## Project Snapshot
 
 - Language: Go (module: doc-html-translate, go 1.25)
