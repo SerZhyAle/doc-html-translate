@@ -6,7 +6,8 @@ Purpose: help coding agents become productive in this repository quickly.
 
 This repo follows the portfolio-wide **SZA Unified Rules** by *reference* (not a mirror - there is
 nothing to keep in sync here). Canon / source of truth:
-`P:\WEB\sites.google.comsiteszaodua\Unified_Rules` - read its `README.md` for the universal core
+the **`sza` Claude Code plugin**, from `github.com/SerZhyAle/sza-unified-rules` - read its `rules/README.md`
+for the universal core
 (repository layout, documentation, development, testing, release & distribution, localization,
 security & privacy). This file keeps only the **deltas and repo specifics** below; it does not restate
 the universal rules. The full evidence-backed delta record for this project is
