@@ -1,0 +1,41 @@
+{
+  "canon": {
+    "version": "2026.07.27",
+    "coreDigest": "sha256:dae220bfd389416d775986ac24913efdf8b0a8b9e881608157c41e5371d23663",
+    "adoptedOn": "2026-07-27",
+    "model": "reference",
+    "contribRecord": "contrib/epub_2_html.md"
+  },
+
+  "role": "product",
+
+  "overlay": ["A"],
+  "shapes": [],
+  "editions": ["browser-extension"],
+
+  "versionShape": {
+    "tagRegex": "^v\\d{2}\\.\\d{4}\\.\\d{4}$",
+    "editionTagPrefixes": ["ext-cws-", "ext-edge-"]
+  },
+
+  "ledgerShape": 2,
+  "ledgerFile": "DEV/CHANGELOG.md",
+
+  "channels": ["github", "winget", "msstore", "installer", "chrome", "edge"],
+
+  "site": {
+    "kind": "product",
+    "root": ".",
+    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "extension.html", "extension-privacy.html"]
+  },
+
+  "privacy": {
+    "page": "privacy.html",
+    "carveOut": null,
+    "sensitiveAccess": false
+  },
+
+  "byteIdenticalPairs": [],
+  "vendorAllow": [],
+  "exemptions": []
+}

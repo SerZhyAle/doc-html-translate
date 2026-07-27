@@ -54,7 +54,8 @@ update docs/PARITY.md when you change a shared invariant. Open gaps:
 
 ## Content conventions
 
-- **Typography:** use short hyphens (no long dashes), Russian **ё** where applicable, and ".." not "...".
+- **Typography:** the house text style has one home in the canon (`DOCUMENTATION_CONCEPT.md` §5) and is
+  not restated here. The one repo-specific exception is on the next line.
   Applies to generated output, docs, and commit messages. **One deliberate exception:** the converted
   page `<title>Book — Page N</title>` keeps an em dash - that is conventional book typography, not chatter,
   and the drift guard (`tests/typography_test.go`) allowlists an em dash only inside a `<title>` literal.

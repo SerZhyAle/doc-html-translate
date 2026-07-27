@@ -3,7 +3,12 @@ temp/
 *.test
 coverage.out
 *.exe
+# The two build/ exes are committed on purpose: they are this product's own release output and the
+# winget/MSIX manifests point a clone at them without a local Go toolchain.
 !build/*.exe
+# pdftotext and its three MinGW runtime DLLs are a vendored upstream binary (Poppler), not build
+# output - the converter shells out to them and they ship inside every package.
+!internal/bundledtools/pdftotext/*.dll
 # Extracted EPUB directories in test_epub
 test_epub/
 test_pdf/
@@ -12,3 +17,11 @@ test_txt/
 # The files are private and must never be committed; the tests skip when absent.
 test_doc/
 DEV/private/
+# Secrets and signing material - pre-empt the leak, never catch it afterwards.
+*.pfx
+*.snk
+*.jks
+*.keystore
+.env
+*token*
+*secret*
