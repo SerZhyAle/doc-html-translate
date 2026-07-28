@@ -40,7 +40,21 @@
   </Dependencies>
 
   <Resources>
+    <!-- One entry per interface language the app ships, in Store locale tags. A locale absent here
+         is a locale the Store will not offer the listing in, however well the app speaks it. -->
     <Resource Language="en-us" />
+    <Resource Language="ru" />
+    <Resource Language="uk" />
+    <Resource Language="de" />
+    <Resource Language="it" />
+    <Resource Language="es" />
+    <Resource Language="fr" />
+    <Resource Language="pt-br" />
+    <Resource Language="ar" />
+    <Resource Language="hi" />
+    <Resource Language="bn" />
+    <Resource Language="ur" />
+    <Resource Language="zh-hans" />
   </Resources>
 
   <Applications>

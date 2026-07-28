@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  दस्तावेज़ों को HTML में बदलने वाला उपकरण, अनुवाद के साथ
+{{rule}}
+
+  दस्तावेज़ों को HTML में बदलता है और परिणाम आपके
+  डिफ़ॉल्ट ब्राउज़र में खोलता है। बिना किसी झंझट के।
+
+  विशेषताएँ:
+    - EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 और CBZ/CBR/CB7/CBT कॉमिक्स को पढ़ने योग्य HTML में बदलता है
+    - पृष्ठों और अध्यायों के बीच नेविगेशन
+    - Ctrl+स्क्रॉल ज़ूम, सेटिंग सहेजी जाती है
+    - Google Translate API से पाठ का अनुवाद
+    - दोबारा चलाने पर पहले से बना HTML खुलता है
+
+  उपयोग:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # Calibre आवश्यक है
+    doc-html-translate.exe "comic.cbz"           # कॉमिक पृष्ठ, पाठ OCR से पहचाना जाता है
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 के लिए 7-Zip चाहिए
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  विकल्प:
+    -notranslate    केवल रूपांतरण, अनुवाद नहीं
+    -google         Google Translate API से अनुवाद (सशुल्क)
+    -ollama         स्थानीय Ollama से अनुवाद (निःशुल्क)
+    -ollama-model   Ollama मॉडल (डिफ़ॉल्ट: gemma3:12b)
+    -toc-depth N    index.html पर विषय-सूची की गहराई (0 = असीमित)
+    -force          पुनः निर्माण बाध्य करें
+    -src LANG       स्रोत भाषा (डिफ़ॉल्ट: en)
+    -dst LANG       लक्ष्य भाषा (डिफ़ॉल्ट: ru)
+    -ui-lang CODE   इंटरफ़ेस की भाषा (डिफ़ॉल्ट: Windows की भाषा)
+
+  लिंक:
+    उत्पाद साइट: https://serzhyale.github.io/doc-html-translate/
+    प्रतिक्रिया:  sza@ukr.net
+
+{{rule}}

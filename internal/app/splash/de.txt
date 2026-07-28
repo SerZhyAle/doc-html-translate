@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  Dokumentkonverter nach HTML, mit Übersetzung für den Rest von uns
+{{rule}}
+
+  Wandelt Dokumente in HTML um und öffnet das Ergebnis
+  im Standardbrowser. Ganz ohne Umstände.
+
+  Funktionen:
+    - Wandelt EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 und CBZ/CBR/CB7/CBT-Comics in lesbares HTML um
+    - Navigation zwischen Seiten und Kapiteln
+    - Zoom mit Strg+Mausrad, wird gespeichert
+    - Textübersetzung über die Google Translate API
+    - Ein erneuter Aufruf öffnet das bereits erzeugte HTML
+
+  Verwendung:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # benötigt Calibre
+    doc-html-translate.exe "comic.cbz"           # Comicseiten, Text wird per OCR erkannt
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 benötigen 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  Optionen:
+    -notranslate    Nur umwandeln, nicht übersetzen
+    -google         Über die Google Translate API übersetzen (kostenpflichtig)
+    -ollama         Über lokales Ollama übersetzen (kostenlos)
+    -ollama-model   Ollama-Modell (Standard: gemma3:12b)
+    -toc-depth N    Verschachtelungstiefe des Inhaltsverzeichnisses (0 = unbegrenzt)
+    -force          Erneut erzeugen erzwingen
+    -src LANG       Ausgangssprache (Standard: en)
+    -dst LANG       Zielsprache (Standard: ru)
+    -ui-lang CODE   Oberflächensprache (Standard: die Windows-Anzeigesprache)
+
+  Links:
+    Produktseite: https://serzhyale.github.io/doc-html-translate/
+    Rückmeldung:  sza@ukr.net
+
+{{rule}}

@@ -298,8 +298,32 @@ constants - changing either is a cross-edition change; update all rows together.
 
 | Element | Value | Sources |
 |---|---|---|
-| Product site | `https://serzhyale.github.io/doc-html-translate/` | CLI splash [`app.go`](../internal/app/app.go) (`printSplashEN`/`printSplashRU`), navbar [`projectURL`](../internal/htmlgen/navbar.go#L17), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
+| Product site | `https://serzhyale.github.io/doc-html-translate/` | CLI splash [`app.go`](../internal/app/app.go) (`internal/app/splash/*.txt`), navbar [`projectURL`](../internal/htmlgen/navbar.go#L17), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
 | Feedback | `mailto:sza@ukr.net` | CLI splash [`app.go`](../internal/app/app.go), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
+
+### Interface language set, and what the interface language must never touch
+
+Both editions ship the same 13 interface languages, in this order, `en` first:
+
+`en ru uk de it es fr pt ar hi bn ur zh`
+
+RTL is `ar` and `ur`. Script fonts: `Nirmala UI` for `hi`/`bn`, `Microsoft YaHei UI` for `zh`. The extension's
+`_locales` directories use Chrome's own naming (`pt`, `zh_CN`); Store locale tags use `pt-br` and `zh-hans`.
+Adding a language means adding it on **both** sides plus the site, the installer and the listings.
+
+| Element | Go app | Extension |
+|---|---|---|
+| Code list | [`i18n.Codes`](../internal/i18n/i18n.go) | [`test/i18n.test.mjs`](../extension/test/i18n.test.mjs) `LOCALES` + `_locales/` dirs |
+| Resolution order | explicit `-ui-lang` -> saved -> system ([`i18n.Resolve`](../internal/i18n/i18n.go)) | stored override -> `chrome.i18n.getUILanguage()` -> `en` ([`src/i18n.js`](../extension/src/i18n.js)) |
+| RTL / fonts | `i18n.IsRTL`, `i18n.FontFamily` | `RTL_UI_LANGS` in `src/i18n.js`, `FONT_STACKS` in `cmd/doc-html-ui/i18n.js` for the GUI |
+
+**The invariant both sides must keep:** the interface language dresses the *chrome* only. The converted
+document keeps its own `<html lang>` and its own direction - the Go side sets `lang`/`dir` on the navbar
+div ([`chromeDirAttr`](../internal/htmlgen/navbar.go)), the extension sets them on the toolbar and TOC
+scope only ([`applyI18n`](../extension/src/i18n.js)). Carrying the UI language on `<html lang>` would stop
+Chrome offering "Translate page", which is the product's entire free workflow. Guarded by
+[`TestConvertedChromeLanguage`](../tests/smoke_test.go) and the RTL assertions in
+[`make-screenshot.ps1`](../tools/store/make-screenshot.ps1).
 
 ## Intentional divergences (do NOT "fix")
 
@@ -326,8 +350,9 @@ These are by design. Do not "sync" them without a decision - document changes he
   relative images against the origin, and a file picked through the picker grants no directory access to
   reach its siblings anyway. So HTML local-image copying is intentionally **Go-only**.
 - **Reader features that are Go-only:** reading-position persistence + "Continue reading", page zoom
-  (Ctrl+wheel, `?z=`), Russian localization (`syslocale.IsRussian`), and the separate `index.html` TOC
-  page / multi-file navigation.
+  (Ctrl+wheel, `?z=`), and the separate `index.html` TOC page / multi-file navigation. Interface
+  localization is **no longer** on this list - both editions ship the same 13 languages, see the invariant
+  above.
 - **Reader features that are JS-only:** heuristic source-language detection ([`lang.js`](../extension/src/lang.js)),
   the collapsible sidebar TOC, the single continuous-scroll document, and the two toolbar downloads -
   "&#8595; File" (the untouched source bytes) and "&#8595; HTML" (the current on-screen view saved as a

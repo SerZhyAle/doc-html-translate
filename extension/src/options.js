@@ -3,6 +3,15 @@
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
+import { t, initI18n, applyI18n, loadMessages, setUiLang, uiLang } from "./i18n.js";
+
+// UI languages the extension ships, by endonym - the only label that helps a reader who cannot
+// read the language currently on screen. Mirrors internal/i18n.Codes on the desktop side.
+const UI_LANGUAGES = [
+  ["en", "English"], ["ru", "Русский"], ["uk", "Українська"], ["de", "Deutsch"],
+  ["it", "Italiano"], ["es", "Español"], ["fr", "Français"], ["pt", "Português"],
+  ["ar", "العربية"], ["hi", "हिन्दी"], ["bn", "বাংলা"], ["ur", "اردو"], ["zh", "中文"],
+];
 
 const enabledEl = document.getElementById("enabled");
 const themeEl = document.getElementById("theme");
@@ -15,9 +24,9 @@ const ocrLangsEl = document.getElementById("ocr-langs");
 const verEl = document.getElementById("ver");
 if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
 
-const msg = (key, fallback) => {
-  try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
-};
+// Routed through i18n.js so the interface-language override below applies to these strings too,
+// not only to the ones Chrome serves by browser language.
+const msg = (key, fallback) => t(key, fallback);
 
 // Render the OCR-language manager: installed languages are selectable as the default
 // recognition language; others show a Download button (fetch + cache, then re-render).
@@ -160,6 +169,40 @@ async function init() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.options) renderHosts((changes.options.newValue || {}).disabledHosts || []);
   });
+
+  await initUiLanguage();
+}
+
+// initUiLanguage fills the interface-language selector and applies the stored choice. The first
+// entry means "follow the browser", which is the default: the browser's language is a good guess,
+// just not the only reasonable one - someone on an English work browser still reads in their own
+// language.
+async function initUiLanguage() {
+  const sel = document.getElementById("ui-lang");
+  if (!sel) return;
+
+  const stored = await initI18n();
+  if (stored) await loadMessages(stored);
+
+  const follow = document.createElement("option");
+  follow.value = "";
+  follow.textContent = msg("optFollowBrowser", "Follow the browser");
+  sel.appendChild(follow);
+  for (const [code, name] of UI_LANGUAGES) {
+    const o = document.createElement("option");
+    o.value = code;
+    o.textContent = name;
+    sel.appendChild(o);
+  }
+  sel.value = stored || "";
+
+  sel.addEventListener("change", async () => {
+    await setUiLang(sel.value);
+    applyI18n(document);
+    flash("saved-theme");
+  });
+
+  applyI18n(document);
 }
 
 init();

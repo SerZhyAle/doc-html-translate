@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
-	"doc-html-translate/internal/syslocale"
 )
 
 // projectURL is the home page opened from the version link in the navbar.
@@ -524,10 +524,7 @@ func bookStorageKey(title string, total int) string {
 
 // buildNavBarHTML generates the HTML for the navigation bar.
 func buildNavBarHTML(nav NavInfo) string {
-	labelPrev, labelNext, labelTOC := "Back", "Forward", "Contents"
-	if syslocale.IsRussian() {
-		labelPrev, labelNext, labelTOC = "Назад", "Вперёд", "Оглавление"
-	}
+	labelPrev, labelNext, labelTOC := i18n.S("Back"), i18n.S("Forward"), i18n.S("Contents")
 
 	prevLink := fmt.Sprintf(`<a class="disabled">&#9664; %s</a>`, labelPrev)
 	if nav.PrevHref != "" {
@@ -562,27 +559,42 @@ func buildNavBarHTML(nav NavInfo) string {
 	// so "next" is the easiest button to hit while reading.
 	turn := fmt.Sprintf(`<span class="nav-turn">%s%s</span>`, prevLink, nextLink)
 
-	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s`,
+	// The bar declares its own language and direction. <html lang> carries the *document's*
+	// language - that is what makes Chrome offer "Translate page", the product's free flow - so
+	// interface words in a different language must be attributed to themselves here, or the
+	// detector can be pulled towards the chrome and the offer never appears.
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s`,
+		i18n.Language(), chromeDirAttr(),
 		fileEl, titleEl, indexLink, readerControlsHTML(), versionLink, info, turn, navBarScript,
 		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total))
+}
+
+// chromeDirAttr returns ` dir="rtl"` for a right-to-left interface language, or "" otherwise.
+// It applies to the chrome only: an Arabic *interface* over a left-to-right book must not
+// mirror the book, so this never reaches the content area.
+func chromeDirAttr() string {
+	if i18n.IsRTL(i18n.Language()) {
+		return ` dir="rtl"`
+	}
+	return ""
 }
 
 // readerControlsHTML returns the shared reader controls (text size, font family, theme
 // dropdown) used identically in the chapter navbar and the index toolbar, so both the
 // generated HTML and the browser extension expose the same operations.
 func readerControlsHTML() string {
-	titleSmaller, titleLarger, titleFont, titleTheme := "Smaller text", "Larger text", "Font", "Theme"
-	tLight, tSepia, tDark, tNight := "Light", "Sepia", "Dark", "Night"
-	if syslocale.IsRussian() {
-		titleSmaller, titleLarger, titleFont, titleTheme = "Мельче", "Крупнее", "Шрифт", "Тема"
-		tLight, tSepia, tDark, tNight = "Светлая", "Сепия", "Тёмная", "Ночь"
-	}
+	titleSmaller := i18n.S("Smaller text")
+	titleLarger := i18n.S("Larger text")
+	titleFont, titleTheme := i18n.S("Font"), i18n.S("Theme")
+	tLight, tSepia := i18n.S("Light"), i18n.S("Sepia")
+	tDark, tNight := i18n.S("Dark"), i18n.S("Night")
+	fSerif, fSans, fMono := i18n.S("Serif"), i18n.S("Sans"), i18n.S("Mono")
 	return fmt.Sprintf(
 		`<button id="dht-font-dec" class="dht-btn" type="button" title="%s">A&minus;</button>`+
 			`<button id="dht-font-inc" class="dht-btn" type="button" title="%s">A+</button>`+
-			`<select id="dht-family-sel" title="%s"><option value="serif">Serif</option><option value="sans">Sans</option><option value="mono">Mono</option></select>`+
+			`<select id="dht-family-sel" title="%s"><option value="serif">%s</option><option value="sans">%s</option><option value="mono">%s</option></select>`+
 			`<select id="dht-theme-sel" title="%s"><option value="light">&#9728; %s</option><option value="sepia">&#9681; %s</option><option value="dark">&#9790; %s</option><option value="night">&#9679; %s</option></select>`,
-		titleSmaller, titleLarger, titleFont, titleTheme, tLight, tSepia, tDark, tNight)
+		titleSmaller, titleLarger, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight)
 }
 
 // versionLabel formats the running app version for display in the navbar.

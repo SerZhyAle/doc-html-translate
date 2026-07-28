@@ -34,20 +34,26 @@
   </div>
 
   <div class="field">
-    <label for="theme">Reading theme</label>
+    <label for="ui-lang" data-i18n="optUiLang">Interface language</label>
+    <select id="ui-lang"></select>
+    <div class="hint" data-i18n="optUiLangHint">The language of this extension's own buttons and menus. "Follow the browser" uses your browser's language. Applies to the viewer the next time you open a document.</div>
+  </div>
+
+  <div class="field">
+    <label for="theme" data-i18n="optTheme">Reading theme</label>
     <select id="theme">
       <option value="light">Light</option>
       <option value="sepia">Sepia</option>
       <option value="dark">Dark</option>
       <option value="night">Night</option>
     </select>
-    <span class="saved" id="saved-theme">Saved</span>
+    <span class="saved" id="saved-theme" data-i18n="optSaved">Saved</span>
   </div>
 
   <div class="field">
-    <label for="lang">Source language</label>
+    <label for="lang" data-i18n="optSourceLang">Source language</label>
     <select id="lang">
-      <option value="auto">Auto-detect</option>
+      <option value="auto" data-i18n="optAutoDetect">Auto-detect</option>
       <option value="en">English</option>
       <option value="ru">Russian</option>
       <option value="uk">Ukrainian</option>
@@ -73,16 +79,16 @@
   </div>
 
   <div class="field">
-    <label>Sites where reflow is off</label>
+    <label data-i18n="optDisabledSites">Sites where reflow is off</label>
     <ul class="hosts" id="hosts"><li class="hint">None</li></ul>
     <div class="hint">Manage these from the toolbar popup's "On this site" switch.</div>
   </div>
 
   <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
     <span id="ver" style="float: right;"></span>
-    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site</a>
+    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="linkProductSite">Product site</a>
     &#183;
-    <a href="mailto:sza@ukr.net">Feedback</a>
+    <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>
   </footer>
 
   <script type="module" src="options.js"></script>

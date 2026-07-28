@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  Конвертер документів у HTML з перекладом - для тих, хто не поліглот
+{{rule}}
+
+  Програма перетворює документи на HTML і відкриває
+  результат у браузері за замовчуванням. Без зайвих церемоній.
+
+  Можливості:
+    - Конвертація EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3, коміксів CBZ/CBR/CB7/CBT у читабельний HTML
+    - Навігація між сторінками/розділами
+    - Масштабування Ctrl+коліщатко зі збереженням
+    - Переклад тексту через Google Translate API
+    - Повторний запуск відкриває вже готовий HTML
+
+  Використання:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # потрібен Calibre
+    doc-html-translate.exe "comic.cbz"           # сторінки коміксу, текст розпізнається через OCR
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 потребують 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  Прапорці:
+    -notranslate    Тільки конвертація, без перекладу
+    -google         Перекласти через Google Translate API (платно)
+    -ollama         Перекласти через локальний Ollama (безкоштовно)
+    -ollama-model   Модель Ollama (за замовчуванням: gemma3:12b)
+    -toc-depth N    Глибина змісту на index.html (0 = без обмежень)
+    -force          Примусова перегенерація
+    -src LANG       Вихідна мова (за замовчуванням: en)
+    -dst LANG       Цільова мова  (за замовчуванням: ru)
+    -ui-lang CODE   Мова інтерфейсу (за замовчуванням: мова інтерфейсу Windows)
+
+  Посилання:
+    Сайт продукту:   https://serzhyale.github.io/doc-html-translate/
+    Зворотний зв'язок: sza@ukr.net
+
+{{rule}}

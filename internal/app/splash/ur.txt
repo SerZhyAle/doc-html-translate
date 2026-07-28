@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  دستاویزات کو HTML میں بدلنے کا آلہ، ترجمے کے ساتھ
+{{rule}}
+
+  دستاویزات کو HTML میں بدلتا ہے اور نتیجہ آپ کے
+  پہلے سے طے شدہ براؤزر میں کھولتا ہے۔ بغیر کسی جھنجھٹ کے۔
+
+  خصوصیات:
+    - EPUB، PDF، TXT، Markdown، FB2، RTF، HTML، MOBI، AZW3 اور CBZ/CBR/CB7/CBT کامکس کو پڑھنے کے قابل HTML میں بدلتا ہے
+    - صفحات اور ابواب کے درمیان نقل و حرکت
+    - Ctrl+سکرول سے زوم، ترتیب محفوظ رہتی ہے
+    - Google Translate API کے ذریعے متن کا ترجمہ
+    - دوبارہ چلانے پر پہلے سے تیار HTML کھلتا ہے
+
+  استعمال:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # Calibre درکار ہے
+    doc-html-translate.exe "comic.cbz"           # کامک صفحات، متن OCR سے پہچانا جاتا ہے
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 کے لیے 7-Zip چاہیے
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  اختیارات:
+    -notranslate    صرف تبدیلی، ترجمہ نہیں
+    -google         Google Translate API سے ترجمہ (ادائیگی کے ساتھ)
+    -ollama         مقامی Ollama سے ترجمہ (مفت)
+    -ollama-model   Ollama ماڈل (طے شدہ: gemma3:12b)
+    -toc-depth N    index.html پر فہرست کی گہرائی (0 = بلا حد)
+    -force          دوبارہ تیار کرنے پر مجبور کریں
+    -src LANG       ماخذ زبان (طے شدہ: en)
+    -dst LANG       ہدف زبان (طے شدہ: ru)
+    -ui-lang CODE   انٹرفیس کی زبان (طے شدہ: Windows کی زبان)
+
+  روابط:
+    مصنوع کی سائٹ: https://serzhyale.github.io/doc-html-translate/
+    رابطہ:         sza@ukr.net
+
+{{rule}}

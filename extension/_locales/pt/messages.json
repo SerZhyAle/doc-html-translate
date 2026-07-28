@@ -1,0 +1,412 @@
+{
+  "appName": {
+    "message": "Tradutor de páginas de documentos - PDF, EPUB e mais (grátis e local)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "DocTranslate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "Mostra PDF, EPUB e outros documentos como HTML limpo que a tradução gratuita do navegador consegue ler - com OCR de imagens. 100% local.",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "Refluxo de PDF/EPUB + tradução",
+    "description": "Tooltip on the toolbar button."
+  },
+  "ocrImageMenu": {
+    "message": "Reconhecer e traduzir esta imagem",
+    "description": "Right-click context-menu item on images."
+  },
+  "convertDocMenu": {
+    "message": "Converter com o doc-html-translate",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
+  "ocrProgress": {
+    "message": "Reconhecendo o texto..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "Nenhum texto encontrado na imagem.",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "Não foi possível carregar o reconhecimento de texto.",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "Texto reconhecido - agora a página pode ser traduzida.",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "Usar OCR nas imagens",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "Baixar",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "Baixando",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "instalado",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "Idioma de reconhecimento (o inglês já vem incluído).",
+    "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "Ative para reconhecer texto nas imagens - depois escolha ou baixe um idioma (o inglês já vem incluído).",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "Visualização com refluxo",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "Carregando..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "Sumário",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "Tamanho do texto",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "Com serifa",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "Sem serifa",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "Monoespaçada",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "Claro",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "Sépia",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "Escuro",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "Noite",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "Ir para a página",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "Página",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "Abrir arquivo",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "Abrir um documento local pelo seletor de arquivos",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "PDF original",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "Abrir o PDF intacto no visualizador nativo",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "Baixar o arquivo original",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "Salvar a visualização atual como um arquivo HTML independente (mantém a tradução, se você traduziu a página)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "Contato",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "Site do produto",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "Sumário",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "Abrir um documento..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "Usar OCR nas imagens",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "Idiomas de reconhecimento",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "Refluxo de PDFs e EPUBs",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "Neste site",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "Opções",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "Tema de leitura",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "Idioma de origem",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "Detectar automaticamente",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "Sites sem refluxo",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "Salvo",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "Idioma da interface",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "O idioma dos botões e menus desta extensão. \"Seguir o navegador\" usa o idioma do seu navegador. O visualizador adota na próxima vez que você abrir um documento.",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "Seguir o navegador",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "Contato",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "OCR: {1}/{2} imagens"
+  },
+  "vOcrStatusWhere": {
+    "message": "OCR: {1}/{2} imagens - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} páginas"
+  },
+  "vExtentPartial": {
+    "message": "páginas 1-{1} de {2}"
+  },
+  "vSavedComic": {
+    "message": "Guardadas {1} de {2} páginas - percorra mais e guarde de novo para incluir mais"
+  },
+  "vSavedPdf": {
+    "message": "Guardadas as páginas 1-{1} de {2} - percorra mais e guarde de novo para incluir mais"
+  },
+  "vTocSection": {
+    "message": "Secção"
+  },
+  "vPageN": {
+    "message": "Página {1}"
+  },
+  "vSectionN": {
+    "message": "Secção {1}"
+  },
+  "vFrameTitle": {
+    "message": "Não pode ser executado num frame"
+  },
+  "vFrameBody": {
+    "message": "Abra este documento num separador principal."
+  },
+  "vOpenDocTitle": {
+    "message": "Abrir um documento"
+  },
+  "vOpenDocBody": {
+    "message": "Escolha um documento local para ler (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - ou uma imagem (PNG, JPEG, GIF, BMP, WebP) para reconhecer o texto. Uma ligação para um documento também abre aqui - a extensão trata disso."
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "URL não suportado"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "A partir de um URL só é possível abrir documentos http(s) e ficheiros locais."
+  },
+  "vUncTitle": {
+    "message": "Os caminhos de rede não são suportados"
+  },
+  "vUncBody": {
+    "message": "As extensões não conseguem ler caminhos de rede (\\\\servidor\\partilha). Ligue a partilha a uma letra de unidade e abra o ficheiro localmente, ou escolha-o abaixo."
+  },
+  "vBtnBuiltinViewer": {
+    "message": "Abrir no leitor integrado"
+  },
+  "vStatusDownloading": {
+    "message": "A transferir o documento.."
+  },
+  "vLoadFailTitle": {
+    "message": "Não foi possível carregar este documento"
+  },
+  "vLoadFailBody": {
+    "message": "A extensão não conseguiu transferir o ficheiro."
+  },
+  "vLoadFailFile": {
+    "message": "Para ficheiros locais use «Abrir ficheiro» abaixo ou ative «Permitir acesso a URLs de ficheiros» para esta extensão em chrome://extensions."
+  },
+  "vReason": {
+    "message": "Motivo: {1}"
+  },
+  "vDetails": {
+    "message": "Detalhes: {1}"
+  },
+  "vStatusReadingText": {
+    "message": "A ler o texto.."
+  },
+  "vStatusReadingRtf": {
+    "message": "A ler RTF.."
+  },
+  "vStatusReadingHtml": {
+    "message": "A ler HTML.."
+  },
+  "vStatusReadingMd": {
+    "message": "A ler Markdown.."
+  },
+  "vStatusReadingFb2": {
+    "message": "A ler FB2.."
+  },
+  "vStatusReadingEbook": {
+    "message": "A ler o e-book.."
+  },
+  "vStatusReadingEpub": {
+    "message": "A ler EPUB.."
+  },
+  "vStatusReadingComic": {
+    "message": "A ler a banda desenhada.."
+  },
+  "vStatusReadingFile": {
+    "message": "A ler o ficheiro.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "Não foi possível abrir este ficheiro"
+  },
+  "vCorruptBody": {
+    "message": "O ficheiro pode estar danificado ou não ser um documento suportado."
+  },
+  "vImageFailTitle": {
+    "message": "Não foi possível ler esta imagem"
+  },
+  "vImageFailBody": {
+    "message": "Não foi possível processar a imagem."
+  },
+  "vComicAppTitle": {
+    "message": "Esta banda desenhada precisa da aplicação de ambiente de trabalho"
+  },
+  "vComicAppBody": {
+    "message": "A aplicação gratuita doc-html-translate está em https://serzhyale.github.io/doc-html-translate/ - abre CBR e CB7 (com o 7-Zip instalado)."
+  },
+  "vComicFailTitle": {
+    "message": "Não foi possível abrir esta banda desenhada"
+  },
+  "vComicFailBody": {
+    "message": "O arquivo pode estar danificado ou não conter imagens de páginas."
+  },
+  "vComicReady": {
+    "message": "Pronto - {1} páginas, o texto é reconhecido à medida que percorre"
+  },
+  "vComicReadyOne": {
+    "message": "Pronto - 1 página, o texto é reconhecido à medida que percorre"
+  },
+  "vReadFileFailTitle": {
+    "message": "Não foi possível ler o ficheiro"
+  },
+  "vPwdTitle": {
+    "message": "Palavra-passe necessária"
+  },
+  "vPwdMissing": {
+    "message": "Este PDF está protegido por palavra-passe e nenhuma foi indicada."
+  },
+  "vPdfFailTitle": {
+    "message": "Não foi possível abrir este PDF"
+  },
+  "vPdfFailBody": {
+    "message": "O ficheiro pode estar danificado, truncado ou num formato não suportado."
+  },
+  "vPwdPlaceholder": {
+    "message": "Palavra-passe do PDF"
+  },
+  "vBtnUnlock": {
+    "message": "Desbloquear"
+  },
+  "vPwdIncorrect": {
+    "message": "Palavra-passe incorreta - tente de novo."
+  },
+  "vPwdPrompt": {
+    "message": "Este PDF está protegido. Introduza a palavra-passe para o ler."
+  },
+  "vStatusUnlocking": {
+    "message": "A desbloquear.."
+  },
+  "vStatusDetecting": {
+    "message": "A detetar o idioma.."
+  },
+  "vStatusRendering": {
+    "message": "A processar a página {1} / {2}"
+  },
+  "vStatusDonePages": {
+    "message": "Concluído - {1} páginas"
+  },
+  "vStatusPagesSoFar": {
+    "message": "Páginas 1-{1} de {2} - continue a percorrer para carregar mais"
+  },
+  "vEpubFailTitle": {
+    "message": "Não foi possível abrir este EPUB"
+  },
+  "vEpubFailBody": {
+    "message": "O ficheiro pode estar danificado ou não ser um EPUB válido."
+  },
+  "vLittleTextTitle": {
+    "message": "Pouco ou nenhum texto encontrado"
+  },
+  "vLittleTextEpub": {
+    "message": "Este EPUB não tem texto extraível (pode ser feito apenas de imagens). A tradução de página integrada precisa de texto real, não de uma bonita imagem dele."
+  },
+  "vStatusDoneSections": {
+    "message": "Concluído - {1} secções"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "Concluído - 1 secção"
+  },
+  "vLittleTextPdf": {
+    "message": "Isto parece um PDF digitalizado ou feito só de imagens, por isso há pouco texto para traduzir - o navegador traduz palavras, não píxeis."
+  },
+  "vLittleTextOcrHint": {
+    "message": "Para traduzir páginas digitalizadas, passe-as primeiro pelo OCR (ative «Usar OCR nas imagens» ou use a aplicação doc-html-translate) e volte a abrir o resultado."
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "Abrir o PDF original"
+  }
+}

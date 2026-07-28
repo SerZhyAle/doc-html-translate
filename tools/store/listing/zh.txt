@@ -1,0 +1,93 @@
+# Store listing source for zh (Partner Center locale: zh-hans).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+把 EPUB、PDF、MOBI、漫画等转换为干净的本地 HTML，带真正的目录、文字识别和可选翻译。
+
+@@Description
+把你的电子书和文档变成干净、易读的网页 - 就在自己的电脑上，无需账号。
+
+doc-html-translate 可把 EPUB、PDF、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML、漫画压缩包
+（CBZ、CBR、CB7、CBT）和图片转换为干净的本地 HTML，并生成导航和真正的多级目录。用任意浏览器打开结果即可
+阅读 - 或者直接交给浏览器自带的页面翻译，免费译成任何语言，不需要密钥。
+
+内置阅读器提供 light / sepia / dark / night 主题、字号与字体控制，并记住你读到哪里。可以选择一个长长的
+单页，也可以保留带目录的章节；重新打开已转换过的书籍是瞬间完成的。
+
+可选的图片文字识别能读出图片和扫描页中的文字（内置英语，其他语言按需下载），并可翻译全部内容 - 通过
+Google Cloud Translation API，或者完全本地的 Ollama 模型，这样任何内容都不必离开你的电脑。
+
+界面提供 13 种语言：英语、俄语、乌克兰语、德语、意大利语、西班牙语、法语、葡萄牙语、阿拉伯语、印地语、
+孟加拉语、乌尔都语和中文。
+
+大体积 PDF 依然流畅，扫描页得到妥善处理，各种文本编码都能直接工作。软件包同时包含命令行程序
+（doc-html-translate）和一个小巧的图形界面（doc-html-ui）。pdftotext 已内置于可执行文件中；MOBI 和
+AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
+
+没有账号，没有广告，没有遥测。开源地址：https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+把 EPUB、PDF、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML、漫画压缩包（CBZ/CBR/CB7/CBT）和图片转换为干净的本地 HTML
+
+@@Feature2
+带生成导航的真正多级目录
+
+@@Feature3
+内置阅读器：light / sepia / dark / night 主题、字体与字号控制，记住阅读位置
+
+@@Feature4
+图片与扫描页文字识别（内置英语，其他语言按需下载）
+
+@@Feature5
+可选翻译：Google Cloud Translation API 或本地 Ollama 模型 - 也可以直接用浏览器免费的页面翻译
+
+@@Feature6
+处理大体积 PDF 依然快速；已转换的书籍瞬间重新打开
+
+@@Feature7
+同时提供命令行（doc-html-translate）和图形界面（doc-html-ui）；无账号、无广告、无遥测
+
+@@Feature8
+用浏览器内置的页面翻译一键免费翻译 - 无需 API 密钥
+
+@@Feature9
+完全离线可用；基于 MIT 许可证开源
+
+@@Feature10
+输出是普通 HTML - 任何浏览器、任何设备都能打开，并且长久可读
+
+@@Feature11
+命令行适合一次批量转换大量文档
+
+@@Feature12
+单个长页面，或按章节拆分并附目录 - 由你决定
+
+@@Feature13
+13 种语言的界面，按你的 Windows 语言自动选择
+
+@@SearchTerm1
+epub 转 html
+
+@@SearchTerm2
+pdf 转 html
+
+@@SearchTerm3
+电子书转换器
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+文字识别 文档翻译
+
+@@SearchTerm6
+漫画 cbz cbr
+
+@@SearchTerm7
+离线翻译

@@ -1,0 +1,412 @@
+{
+  "appName": {
+    "message": "文档页面翻译器 - PDF、EPUB 及更多（免费、本地）",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "DocTranslate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "把 PDF、EPUB 等文档重新呈现为干净的 HTML，让浏览器自带的免费网页翻译能够读取 - 含图片 OCR。100% 本地运行。",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "PDF/EPUB 重排 + 翻译",
+    "description": "Tooltip on the toolbar button."
+  },
+  "ocrImageMenu": {
+    "message": "识别并翻译这张图片",
+    "description": "Right-click context-menu item on images."
+  },
+  "convertDocMenu": {
+    "message": "用 doc-html-translate 转换",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
+  "ocrProgress": {
+    "message": "正在识别文字..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "图片中没有找到文字。",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "无法加载文字识别。",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "文字已识别 - 现在可以翻译这个页面了。",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "对图片使用 OCR",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "下载",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "正在下载",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "已安装",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "识别语言（英语已内置）。",
+    "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "打开后可识别图片中的文字 - 然后选择或下载一种语言（英语已内置）。",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "重排阅读视图",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "正在加载..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "目录",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "字号",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "衬线",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "无衬线",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "等宽",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "浅色",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "棕褐色",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "深色",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "夜间",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "跳转到页面",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "页",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "打开文件",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "通过文件选择器打开本地文档",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "原始 PDF",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "在浏览器自带阅读器中打开未处理的 PDF",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "下载原始文档文件",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "把当前视图另存为独立的 HTML 文件（若已翻译页面，翻译也会保留）",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "反馈",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "产品网站",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "目录",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "打开文档..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "对图片使用 OCR",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "识别语言",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "重排 PDF 与 EPUB",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "在本站",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "选项",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "阅读主题",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "源语言",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "自动检测",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "已关闭重排的网站",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "已保存",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "界面语言",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "本扩展自身按钮和菜单的语言。「跟随浏览器」使用你浏览器的语言。阅读视图会在下次打开文档时应用。",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "跟随浏览器",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "反馈",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "OCR：{1}/{2} 张图片"
+  },
+  "vOcrStatusWhere": {
+    "message": "OCR：{1}/{2} 张图片 - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} 页"
+  },
+  "vExtentPartial": {
+    "message": "第 1-{1} 页，共 {2} 页"
+  },
+  "vSavedComic": {
+    "message": "已保存 {2} 页中的 {1} 页 - 继续滚动后再次保存可包含更多"
+  },
+  "vSavedPdf": {
+    "message": "已保存第 1-{1} 页，共 {2} 页 - 继续滚动后再次保存可包含更多"
+  },
+  "vTocSection": {
+    "message": "章节"
+  },
+  "vPageN": {
+    "message": "第 {1} 页"
+  },
+  "vSectionN": {
+    "message": "第 {1} 节"
+  },
+  "vFrameTitle": {
+    "message": "无法在框架中运行"
+  },
+  "vFrameBody": {
+    "message": "请在独立标签页中打开此文档。"
+  },
+  "vOpenDocTitle": {
+    "message": "打开文档"
+  },
+  "vOpenDocBody": {
+    "message": "选择要阅读的本地文档（PDF、EPUB、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML）- 或选择图片（PNG、JPEG、GIF、BMP、WebP）以识别其中的文字。文档链接同样会在这里打开 - 这正是本扩展的用处。"
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "不支持的网址"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "只能通过网址打开 http(s) 文档和本地文件。"
+  },
+  "vUncTitle": {
+    "message": "不支持网络路径"
+  },
+  "vUncBody": {
+    "message": "扩展无法读取网络路径（\\\\服务器\\共享）。请将共享映射为驱动器盘符并作为本地文件打开，或在下方选择文件。"
+  },
+  "vBtnBuiltinViewer": {
+    "message": "在内置阅读器中打开"
+  },
+  "vStatusDownloading": {
+    "message": "正在下载文档.."
+  },
+  "vLoadFailTitle": {
+    "message": "无法加载此文档"
+  },
+  "vLoadFailBody": {
+    "message": "扩展无法下载该文件。"
+  },
+  "vLoadFailFile": {
+    "message": "对于本地文件，请使用下方的「打开文件」，或在 chrome://extensions 中为本扩展启用「允许访问文件网址」。"
+  },
+  "vReason": {
+    "message": "原因：{1}"
+  },
+  "vDetails": {
+    "message": "详情：{1}"
+  },
+  "vStatusReadingText": {
+    "message": "正在读取文本.."
+  },
+  "vStatusReadingRtf": {
+    "message": "正在读取 RTF.."
+  },
+  "vStatusReadingHtml": {
+    "message": "正在读取 HTML.."
+  },
+  "vStatusReadingMd": {
+    "message": "正在读取 Markdown.."
+  },
+  "vStatusReadingFb2": {
+    "message": "正在读取 FB2.."
+  },
+  "vStatusReadingEbook": {
+    "message": "正在读取电子书.."
+  },
+  "vStatusReadingEpub": {
+    "message": "正在读取 EPUB.."
+  },
+  "vStatusReadingComic": {
+    "message": "正在读取漫画.."
+  },
+  "vStatusReadingFile": {
+    "message": "正在读取文件.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "无法打开此文件"
+  },
+  "vCorruptBody": {
+    "message": "该文件可能已损坏，或不是受支持的文档。"
+  },
+  "vImageFailTitle": {
+    "message": "无法读取此图片"
+  },
+  "vImageFailBody": {
+    "message": "无法处理该图片。"
+  },
+  "vComicAppTitle": {
+    "message": "此漫画需要桌面应用"
+  },
+  "vComicAppBody": {
+    "message": "免费应用 doc-html-translate 请访问 https://serzhyale.github.io/doc-html-translate/ - 它可打开 CBR 和 CB7（需已安装 7-Zip）。"
+  },
+  "vComicFailTitle": {
+    "message": "无法打开此漫画"
+  },
+  "vComicFailBody": {
+    "message": "压缩包可能已损坏，或不含页面图片。"
+  },
+  "vComicReady": {
+    "message": "就绪 - 共 {1} 页，滚动时会识别文字"
+  },
+  "vComicReadyOne": {
+    "message": "就绪 - 共 1 页，滚动时会识别文字"
+  },
+  "vReadFileFailTitle": {
+    "message": "无法读取该文件"
+  },
+  "vPwdTitle": {
+    "message": "需要密码"
+  },
+  "vPwdMissing": {
+    "message": "此 PDF 受密码保护，且未提供密码。"
+  },
+  "vPdfFailTitle": {
+    "message": "无法打开此 PDF"
+  },
+  "vPdfFailBody": {
+    "message": "该文件可能已损坏、被截断，或格式不受支持。"
+  },
+  "vPwdPlaceholder": {
+    "message": "PDF 密码"
+  },
+  "vBtnUnlock": {
+    "message": "解锁"
+  },
+  "vPwdIncorrect": {
+    "message": "密码不正确 - 请重试。"
+  },
+  "vPwdPrompt": {
+    "message": "此 PDF 受保护。请输入密码以阅读。"
+  },
+  "vStatusUnlocking": {
+    "message": "正在解锁.."
+  },
+  "vStatusDetecting": {
+    "message": "正在检测语言.."
+  },
+  "vStatusRendering": {
+    "message": "正在渲染第 {1} / {2} 页"
+  },
+  "vStatusDonePages": {
+    "message": "完成 - 共 {1} 页"
+  },
+  "vStatusPagesSoFar": {
+    "message": "第 1-{1} 页，共 {2} 页 - 继续滚动以加载更多"
+  },
+  "vEpubFailTitle": {
+    "message": "无法打开此 EPUB"
+  },
+  "vEpubFailBody": {
+    "message": "该文件可能已损坏，或不是有效的 EPUB。"
+  },
+  "vLittleTextTitle": {
+    "message": "未找到文字或文字极少"
+  },
+  "vLittleTextEpub": {
+    "message": "此 EPUB 没有可提取的文字（可能只由图片组成）。浏览器的页面翻译需要真正的文字，而不是文字的漂亮图片。"
+  },
+  "vStatusDoneSections": {
+    "message": "完成 - 共 {1} 节"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "完成 - 共 1 节"
+  },
+  "vLittleTextPdf": {
+    "message": "这看起来是扫描件或纯图片 PDF，可翻译的文字很少 - 浏览器翻译的是文字，不是像素。"
+  },
+  "vLittleTextOcrHint": {
+    "message": "要翻译扫描页面，请先对其进行 OCR（开启「对图片使用 OCR」，或使用 doc-html-translate 桌面应用），然后重新打开结果。"
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "打开原始 PDF"
+  }
+}

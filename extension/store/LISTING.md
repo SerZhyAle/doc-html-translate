@@ -13,16 +13,43 @@ Keep this file in sync with the published listing when the description changes.
 > short and detailed copy below is a draft reflecting the wider range - review and finalize the marketing
 > wording (especially the store **name**, which changes the listing identity) before the next publication.
 
-## Localization (RU / UK)
-The extension is localized via `_locales/{en,ru,uk}/messages.json` (`default_locale: en`). Chrome and Edge
-auto-serve the localized **name** and **short description** from those files based on the user's browser
-language - no per-language dashboard step is needed for those two fields. The long **detailed description**
-and the **screenshot captions** are NOT auto-localized by the store, so paste them by hand from the same
-message keys (`storeDescription`, `shot1Caption`..`shot3Caption`) into each store's localized-listing editor:
-- Chrome Web Store: Store listing -> language dropdown (top right) -> add Russian and Ukrainian, paste the
-  RU/UK `storeDescription` and the localized screenshots/captions.
-- Edge Add-ons: Properties -> Availability -> add the same two languages, paste the same copy.
-The RU/UK strings below are the canonical source; keep them in sync with `_locales`.
+## Localization (13 languages)
+The extension is localized via `_locales/<code>/messages.json` (`default_locale: en`), in 13 languages:
+`en ru uk de it es fr pt ar hi bn ur zh_CN` (Chrome names the Chinese directory `zh_CN`).
+
+Chrome and Edge **auto-serve the localized name and short description** from those files based on the
+user's browser language - no per-language dashboard step is needed for those two fields, and both are
+already translated for all 13. `_locales` is the canonical source; the strings under **Name** and
+**Short description** below are the English originals kept here for review, not a second source of truth.
+
+| Language | Store name | Short description |
+|---|---|---|
+| en | Document Page Translator - PDF, EPUB & more (Free & Local) | see below |
+| ru | Переводчик страниц: PDF, EPUB и другие (бесплатно, локально) | `_locales/ru` |
+| uk | Перекладач сторінок: PDF, EPUB та інші (безкоштовно, локально) | `_locales/uk` |
+| de | Dokument-Seitenübersetzer - PDF, EPUB & mehr (kostenlos & lokal) | `_locales/de` |
+| it | Traduttore di pagine documento - PDF, EPUB e altro (gratis e locale) | `_locales/it` |
+| es | Traductor de páginas de documentos - PDF, EPUB y más (gratis y local) | `_locales/es` |
+| fr | Traducteur de pages de documents - PDF, EPUB et plus (gratuit et local) | `_locales/fr` |
+| pt | Tradutor de páginas de documentos - PDF, EPUB e mais (grátis e local) | `_locales/pt` |
+| ar | مترجم صفحات المستندات - PDF و EPUB وغيرها (مجاني ومحلي) | `_locales/ar` |
+| hi | दस्तावेज़ पृष्ठ अनुवादक - PDF, EPUB और अन्य (निःशुल्क और स्थानीय) | `_locales/hi` |
+| bn | নথি পৃষ্ঠা অনুবাদক - PDF, EPUB ও আরও (বিনামূল্যে ও স্থানীয়) | `_locales/bn` |
+| ur | دستاویزی صفحہ مترجم - PDF، EPUB اور مزید (مفت اور مقامی) | `_locales/ur` |
+| zh | 文档页面翻译器 - PDF、EPUB 及更多（免费、本地） | `_locales/zh_CN` |
+
+The long **detailed description** and the **screenshot captions** are NOT auto-localized by the store and
+must be pasted by hand per language:
+- Chrome Web Store: Store listing -> language dropdown (top right) -> add the language, paste the
+  `storeDescription` and the localized screenshots/captions.
+- Edge Add-ons: Properties -> Availability -> add the same languages, paste the same copy.
+
+**The detailed description stays in English, Russian and Ukrainian only - deliberately.** Chrome review
+rejected this exact copy twice (Jul 2026, "excessive keywords") and the wording that finally passed is
+tuned word by word; see the notes under **Detailed description** below. A machine translation of copy
+that is already on thin ice with the review team is a submission risk, not a nicety - a listing whose
+long description is in English while its name and short description are localized is normal and passes.
+If you want the other ten, have them written by a person and re-read the rejection notes first.
 
 ## Name
 Document Page Translator - PDF, EPUB & more (Free & Local)

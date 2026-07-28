@@ -12,7 +12,7 @@ import (
 	"unicode"
 
 	"doc-html-translate/internal/epub"
-	"doc-html-translate/internal/syslocale"
+	"doc-html-translate/internal/i18n"
 
 	gohtml "golang.org/x/net/html"
 )
@@ -97,12 +97,9 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
 	sb.WriteString(fmt.Sprintf("  <h1>%s</h1>\n", html.EscapeString(title)))
-	sb.WriteString(fmt.Sprintf("  <p class=\"meta\">Chapters: %d</p>\n", len(spineHrefs)))
-	continueLabel := "Continue reading"
-	if syslocale.IsRussian() {
-		continueLabel = "Продолжить чтение"
-	}
-	sb.WriteString("  <div class=\"dht-toolbar\">")
+	sb.WriteString(fmt.Sprintf("  <p class=\"meta\">%s</p>\n", html.EscapeString(i18n.S("Chapters: %d", len(spineHrefs)))))
+	continueLabel := i18n.S("Continue reading")
+	sb.WriteString(fmt.Sprintf("  <div class=\"dht-toolbar\" lang=\"%s\"%s>", i18n.Language(), chromeDirAttr()))
 	sb.WriteString(readerControlsHTML())
 	sb.WriteString(fmt.Sprintf(`<a id="dht-continue" class="dht-continue" href="#">&#9656; %s</a>`, continueLabel))
 	sb.WriteString("</div>\n")

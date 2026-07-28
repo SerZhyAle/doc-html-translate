@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  Convertisseur de documents en HTML, avec traduction pour le commun des mortels
+{{rule}}
+
+  Convertit des documents en HTML et ouvre le résultat
+  dans le navigateur par défaut. Sans cérémonie.
+
+  Fonctions :
+    - Convertit EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 et bandes dessinées CBZ/CBR/CB7/CBT en HTML lisible
+    - Navigation entre pages et chapitres
+    - Zoom Ctrl+molette, conservé d'une fois sur l'autre
+    - Traduction du texte via l'API Google Translate
+    - Une nouvelle exécution ouvre le HTML déjà généré
+
+  Utilisation :
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # nécessite Calibre
+    doc-html-translate.exe "comic.cbz"           # pages de BD, texte reconnu par OCR
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 nécessitent 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  Options :
+    -notranslate    Convertir seulement, sans traduire
+    -google         Traduire via l'API Google Translate (payant)
+    -ollama         Traduire via Ollama local (gratuit)
+    -ollama-model   Modèle Ollama (par défaut : gemma3:12b)
+    -toc-depth N    Profondeur de la table des matières (0 = illimitée)
+    -force          Forcer la régénération
+    -src LANG       Langue source (par défaut : en)
+    -dst LANG       Langue cible (par défaut : ru)
+    -ui-lang CODE   Langue de l'interface (par défaut : celle de Windows)
+
+  Liens :
+    Site du produit : https://serzhyale.github.io/doc-html-translate/
+    Contact :        sza@ukr.net
+
+{{rule}}

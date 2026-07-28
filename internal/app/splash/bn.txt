@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  নথিকে HTML-এ রূপান্তরের সরঞ্জাম, অনুবাদসহ
+{{rule}}
+
+  নথিকে HTML-এ রূপান্তর করে এবং ফলাফল আপনার
+  ডিফল্ট ব্রাউজারে খোলে। বাড়তি ঝামেলা ছাড়াই।
+
+  বৈশিষ্ট্য:
+    - EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 এবং CBZ/CBR/CB7/CBT কমিক পাঠযোগ্য HTML-এ রূপান্তর
+    - পৃষ্ঠা ও অধ্যায়ের মধ্যে চলাচল
+    - Ctrl+স্ক্রল দিয়ে জুম, সেটিং সংরক্ষিত থাকে
+    - Google Translate API দিয়ে লেখার অনুবাদ
+    - আবার চালালে আগে তৈরি হওয়া HTML খোলে
+
+  ব্যবহার:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # Calibre প্রয়োজন
+    doc-html-translate.exe "comic.cbz"           # কমিক পৃষ্ঠা, লেখা OCR দিয়ে শনাক্ত হয়
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7-এর জন্য 7-Zip দরকার
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  বিকল্প:
+    -notranslate    কেবল রূপান্তর, অনুবাদ নয়
+    -google         Google Translate API দিয়ে অনুবাদ (সশুল্ক)
+    -ollama         স্থানীয় Ollama দিয়ে অনুবাদ (বিনামূল্যে)
+    -ollama-model   Ollama মডেল (ডিফল্ট: gemma3:12b)
+    -toc-depth N    index.html-এ সূচির গভীরতা (0 = সীমাহীন)
+    -force          পুনরায় তৈরি করতে বাধ্য করুন
+    -src LANG       উৎস ভাষা (ডিফল্ট: en)
+    -dst LANG       লক্ষ্য ভাষা (ডিফল্ট: ru)
+    -ui-lang CODE   ইন্টারফেসের ভাষা (ডিফল্ট: Windows-এর ভাষা)
+
+  লিঙ্ক:
+    পণ্যের সাইট: https://serzhyale.github.io/doc-html-translate/
+    মতামত:      sza@ukr.net
+
+{{rule}}

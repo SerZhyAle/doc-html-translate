@@ -1,0 +1,412 @@
+{
+  "appName": {
+    "message": "مترجم صفحات المستندات - PDF و EPUB وغيرها (مجاني ومحلي)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "DocTranslate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "يعرض ملفات PDF و EPUB وغيرها كصفحة HTML نظيفة يقرأها مترجم الصفحات المجاني في المتصفح - مع التعرف الضوئي على الصور. محلي بالكامل.",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "إعادة تدفق PDF/EPUB + ترجمة",
+    "description": "Tooltip on the toolbar button."
+  },
+  "ocrImageMenu": {
+    "message": "تعرف على هذه الصورة وترجمها",
+    "description": "Right-click context-menu item on images."
+  },
+  "convertDocMenu": {
+    "message": "التحويل باستخدام doc-html-translate",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
+  "ocrProgress": {
+    "message": "جارٍ التعرف على النص..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "لم يُعثر على نص في الصورة.",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "تعذر تحميل محرك التعرف على النص.",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "تم التعرف على النص - يمكن الآن ترجمة الصفحة.",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "استخدم التعرف الضوئي للصور",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "تنزيل",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "جارٍ التنزيل",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "مثبت",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "لغة التعرف (الإنجليزية مضمنة).",
+    "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "فعّله للتعرف على النص داخل الصور - ثم اختر لغة أو نزّلها (الإنجليزية مضمنة).",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "عرض معاد التدفق",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "جارٍ التحميل..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "المحتويات",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "حجم النص",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "مذيل",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "غير مذيل",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "ثابت العرض",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "فاتح",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "بني داكن",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "داكن",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "ليلي",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "الانتقال إلى صفحة",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "صفحة",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "فتح ملف",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "فتح مستند محلي عبر منتقي الملفات",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "PDF الأصلي",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "فتح ملف PDF الأصلي في العارض الأصلي",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "تنزيل ملف المستند الأصلي",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "حفظ العرض الحالي كملف HTML مستقل (يحتفظ بالترجمة إن كنت قد ترجمت الصفحة)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "للتواصل",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "موقع المنتج",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "المحتويات",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "فتح مستند..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "استخدم التعرف الضوئي للصور",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "لغات التعرف",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "إعادة تدفق ملفات PDF و EPUB",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "في هذا الموقع",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "الخيارات",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "مظهر القراءة",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "لغة المصدر",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "كشف تلقائي",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "المواقع التي أُوقفت فيها إعادة التدفق",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "تم الحفظ",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "لغة الواجهة",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "لغة أزرار هذه الإضافة وقوائمها. يستخدم خيار «اتبع المتصفح» لغة متصفحك. ويطبقها العارض عند فتح المستند التالي.",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "اتبع المتصفح",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "للتواصل",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "التعرف الضوئي: {1}/{2} صورة"
+  },
+  "vOcrStatusWhere": {
+    "message": "التعرف الضوئي: {1}/{2} صورة - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} صفحة"
+  },
+  "vExtentPartial": {
+    "message": "الصفحات 1-{1} من {2}"
+  },
+  "vSavedComic": {
+    "message": "تم حفظ {1} من {2} صفحة - تابع التمرير ثم احفظ مرة أخرى لتضمين المزيد"
+  },
+  "vSavedPdf": {
+    "message": "تم حفظ الصفحات 1-{1} من {2} - تابع التمرير ثم احفظ مرة أخرى لتضمين المزيد"
+  },
+  "vTocSection": {
+    "message": "قسم"
+  },
+  "vPageN": {
+    "message": "صفحة {1}"
+  },
+  "vSectionN": {
+    "message": "قسم {1}"
+  },
+  "vFrameTitle": {
+    "message": "لا يمكن التشغيل داخل إطار"
+  },
+  "vFrameBody": {
+    "message": "افتح هذا المستند في علامة تبويب مستقلة."
+  },
+  "vOpenDocTitle": {
+    "message": "افتح مستندًا"
+  },
+  "vOpenDocBody": {
+    "message": "اختر مستندًا محليًا للقراءة (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - أو صورة (PNG, JPEG, GIF, BMP, WebP) لاستخراج نصها. ورابط أي مستند يُفتح هنا أيضًا - هذا ما تفعله الإضافة."
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "عنوان غير مدعوم"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "لا يمكن فتح سوى مستندات http(s) والملفات المحلية من عنوان."
+  },
+  "vUncTitle": {
+    "message": "مسارات الشبكة غير مدعومة"
+  },
+  "vUncBody": {
+    "message": "لا تستطيع الإضافات قراءة مسارات الشبكة (\\\\server\\share). اربط المجلد المشترك بحرف محرك أقراص وافتح الملف محليًا، أو اختر الملف أدناه."
+  },
+  "vBtnBuiltinViewer": {
+    "message": "الفتح في القارئ المدمج"
+  },
+  "vStatusDownloading": {
+    "message": "جارٍ تنزيل المستند.."
+  },
+  "vLoadFailTitle": {
+    "message": "تعذّر تحميل هذا المستند"
+  },
+  "vLoadFailBody": {
+    "message": "لم تتمكن الإضافة من تنزيل الملف."
+  },
+  "vLoadFailFile": {
+    "message": "للملفات المحلية استخدم «فتح ملف» أدناه، أو فعّل «السماح بالوصول إلى عناوين الملفات» لهذه الإضافة في chrome://extensions."
+  },
+  "vReason": {
+    "message": "السبب: {1}"
+  },
+  "vDetails": {
+    "message": "التفاصيل: {1}"
+  },
+  "vStatusReadingText": {
+    "message": "جارٍ قراءة النص.."
+  },
+  "vStatusReadingRtf": {
+    "message": "جارٍ قراءة RTF.."
+  },
+  "vStatusReadingHtml": {
+    "message": "جارٍ قراءة HTML.."
+  },
+  "vStatusReadingMd": {
+    "message": "جارٍ قراءة Markdown.."
+  },
+  "vStatusReadingFb2": {
+    "message": "جارٍ قراءة FB2.."
+  },
+  "vStatusReadingEbook": {
+    "message": "جارٍ قراءة الكتاب.."
+  },
+  "vStatusReadingEpub": {
+    "message": "جارٍ قراءة EPUB.."
+  },
+  "vStatusReadingComic": {
+    "message": "جارٍ قراءة القصة المصورة.."
+  },
+  "vStatusReadingFile": {
+    "message": "جارٍ قراءة الملف.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "تعذّر فتح هذا الملف"
+  },
+  "vCorruptBody": {
+    "message": "قد يكون الملف تالفًا أو ليس مستندًا مدعومًا."
+  },
+  "vImageFailTitle": {
+    "message": "تعذّرت قراءة هذه الصورة"
+  },
+  "vImageFailBody": {
+    "message": "تعذّرت معالجة الصورة."
+  },
+  "vComicAppTitle": {
+    "message": "تحتاج هذه القصة المصورة إلى تطبيق سطح المكتب"
+  },
+  "vComicAppBody": {
+    "message": "التطبيق المجاني doc-html-translate متاح على https://serzhyale.github.io/doc-html-translate/ - وهو يفتح CBR و CB7 (مع تثبيت 7-Zip)."
+  },
+  "vComicFailTitle": {
+    "message": "تعذّر فتح هذه القصة المصورة"
+  },
+  "vComicFailBody": {
+    "message": "قد يكون الأرشيف تالفًا أو لا يحتوي على صور صفحات."
+  },
+  "vComicReady": {
+    "message": "جاهز - {1} صفحة، ويُستخرج النص أثناء التمرير"
+  },
+  "vComicReadyOne": {
+    "message": "جاهز - صفحة واحدة، ويُستخرج النص أثناء التمرير"
+  },
+  "vReadFileFailTitle": {
+    "message": "تعذّرت قراءة الملف"
+  },
+  "vPwdTitle": {
+    "message": "كلمة المرور مطلوبة"
+  },
+  "vPwdMissing": {
+    "message": "ملف PDF هذا محمي بكلمة مرور ولم تُدخل كلمة المرور."
+  },
+  "vPdfFailTitle": {
+    "message": "تعذّر فتح ملف PDF هذا"
+  },
+  "vPdfFailBody": {
+    "message": "قد يكون الملف تالفًا أو مبتورًا أو بتنسيق غير مدعوم."
+  },
+  "vPwdPlaceholder": {
+    "message": "كلمة مرور PDF"
+  },
+  "vBtnUnlock": {
+    "message": "فتح القفل"
+  },
+  "vPwdIncorrect": {
+    "message": "كلمة المرور غير صحيحة - حاول مرة أخرى."
+  },
+  "vPwdPrompt": {
+    "message": "ملف PDF هذا محمي. أدخل كلمة المرور لقراءته."
+  },
+  "vStatusUnlocking": {
+    "message": "جارٍ فتح القفل.."
+  },
+  "vStatusDetecting": {
+    "message": "جارٍ تحديد اللغة.."
+  },
+  "vStatusRendering": {
+    "message": "عرض الصفحة {1} / {2}"
+  },
+  "vStatusDonePages": {
+    "message": "تم - {1} صفحة"
+  },
+  "vStatusPagesSoFar": {
+    "message": "الصفحات 1-{1} من {2} - تابع التمرير لتحميل المزيد"
+  },
+  "vEpubFailTitle": {
+    "message": "تعذّر فتح ملف EPUB هذا"
+  },
+  "vEpubFailBody": {
+    "message": "قد يكون الملف تالفًا أو ليس ملف EPUB صالحًا."
+  },
+  "vLittleTextTitle": {
+    "message": "لم يُعثر على نص أو النص قليل"
+  },
+  "vLittleTextEpub": {
+    "message": "لا يحتوي ملف EPUB هذا على نص قابل للاستخراج (ربما كان مكوّنًا من صور فقط). ترجمة الصفحة المدمجة تحتاج إلى نص حقيقي، لا إلى صورة جميلة له."
+  },
+  "vStatusDoneSections": {
+    "message": "تم - {1} قسمًا"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "تم - قسم واحد"
+  },
+  "vLittleTextPdf": {
+    "message": "يبدو أن هذا ملف PDF ممسوح ضوئيًا أو مكوّن من صور فقط، لذا لا يوجد نص يُترجم تقريبًا - المتصفح يترجم الكلمات لا البكسلات."
+  },
+  "vLittleTextOcrHint": {
+    "message": "لترجمة الصفحات الممسوحة ضوئيًا، مرّرها أولًا عبر التعرف الضوئي على الحروف (فعّل «استخدام التعرف الضوئي للصور» أو استخدم تطبيق doc-html-translate)، ثم افتح النتيجة من جديد."
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "فتح ملف PDF الأصلي"
+  }
+}

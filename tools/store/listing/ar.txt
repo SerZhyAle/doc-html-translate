@@ -1,0 +1,96 @@
+# Store listing source for ar (Partner Center locale: ar).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+يحوّل EPUB وPDF وMOBI والقصص المصورة وغيرها إلى HTML محلي نظيف، بفهرس حقيقي واستخراج للنص وترجمة اختيارية.
+
+@@Description
+حوّل كتبك ومستنداتك إلى صفحات ويب نظيفة وسهلة القراءة - على جهازك نفسه، دون حساب.
+
+يحوّل doc-html-translate ملفات EPUB وPDF وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML وأرشيفات القصص
+المصورة (CBZ وCBR وCB7 وCBT) والصور إلى HTML محلي نظيف، مع تنقّل مُولَّد وفهرس حقيقي متعدد المستويات.
+افتح النتيجة في أي متصفح واقرأ - أو سلّمها مباشرة إلى ترجمة الصفحة في متصفحك للحصول على ترجمة مجانية إلى
+أي لغة، دون مفتاح.
+
+يضيف القارئ المدمج سمات light وsepia وdark وnight، والتحكم في حجم الخط ونوعه، ويتذكر أين توقفت. اختر
+صفحة واحدة طويلة أو فصولًا مع فهرس؛ وإعادة فتح كتاب سبق تحويله فورية.
+
+يتعرّف التعرف الضوئي الاختياري على النص داخل الصور والصفحات الممسوحة ضوئيًا (الإنجليزية مضمّنة وبقية
+اللغات عند الطلب)، ويمكنه ترجمة كل شيء - عبر Google Cloud Translation API أو نموذج Ollama محلي بالكامل،
+فلا يضطر أي شيء إلى مغادرة جهازك.
+
+تتحدث الواجهة ثلاث عشرة لغة: الإنجليزية والروسية والأوكرانية والألمانية والإيطالية والإسبانية والفرنسية
+والبرتغالية والعربية والهندية والبنغالية والأردية والصينية.
+
+تبقى ملفات PDF الكبيرة سريعة، وتُعالَج الصفحات الممسوحة ضوئيًا، وتعمل مجموعة واسعة من ترميزات النصوص من
+تلقاء نفسها. تضم الحزمة أداة سطر أوامر (doc-html-translate) وواجهة رسومية صغيرة (doc-html-ui). أداة
+pdftotext مضمّنة داخل الملف التنفيذي؛ أما MOBI وAZW3 فتحتاج إلى تثبيت Calibre (الملفات الخالية من
+الحماية الرقمية فقط).
+
+لا حساب ولا إعلانات ولا تتبّع. مفتوح المصدر: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+يحوّل EPUB وPDF وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML وأرشيفات القصص المصورة (CBZ/CBR/CB7/CBT) والصور إلى HTML محلي نظيف
+
+@@Feature2
+فهرس حقيقي متعدد المستويات مع تنقّل مُولَّد
+
+@@Feature3
+قارئ مدمج: سمات light وsepia وdark وnight، والخط وحجم النص، ويتذكر موضع القراءة
+
+@@Feature4
+تعرف ضوئي على النص في الصور والصفحات الممسوحة (الإنجليزية مضمّنة وغيرها عند الطلب)
+
+@@Feature5
+ترجمة اختيارية عبر Google Cloud Translation API أو نموذج Ollama محلي - أو ببساطة ترجمة الصفحة المجانية في متصفحك
+
+@@Feature6
+سريع مع ملفات PDF الكبيرة؛ وفتح فوري للكتب المحوّلة سابقًا
+
+@@Feature7
+يضم واجهة سطر أوامر (doc-html-translate) وواجهة رسومية (doc-html-ui)؛ دون حساب أو إعلانات أو تتبّع
+
+@@Feature8
+ترجمة مجانية بنقرة واحدة بترجمة الصفحة المدمجة في المتصفح - دون مفتاح API
+
+@@Feature9
+يعمل دون اتصال بالكامل؛ مفتوح المصدر برخصة MIT
+
+@@Feature10
+الناتج HTML عادي - يُفتح في أي متصفح وعلى أي جهاز ويبقى مقروءًا
+
+@@Feature11
+سطر أوامر مناسب لتحويل عدد كبير من المستندات دفعة واحدة
+
+@@Feature12
+صفحة واحدة طويلة أو فصول مع فهرس - القرار لك
+
+@@Feature13
+واجهة بثلاث عشرة لغة، تُختار تلقائيًا حسب لغة Windows
+
+@@SearchTerm1
+epub إلى html
+
+@@SearchTerm2
+pdf إلى html
+
+@@SearchTerm3
+محول كتب
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+استخراج النص وترجمته
+
+@@SearchTerm6
+قصص مصورة cbz
+
+@@SearchTerm7
+ترجمة دون اتصال

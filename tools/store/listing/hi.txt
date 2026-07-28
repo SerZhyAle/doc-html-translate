@@ -1,0 +1,96 @@
+# Store listing source for hi (Partner Center locale: hi).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+EPUB, PDF, MOBI, कॉमिक्स और अन्य को साफ़ स्थानीय HTML में बदलता है - असली विषय-सूची, OCR और वैकल्पिक अनुवाद के साथ।
+
+@@Description
+अपनी ई-पुस्तकों और दस्तावेज़ों को साफ़, पढ़ने योग्य वेब पृष्ठों में बदलें - अपने ही कंप्यूटर पर, बिना किसी खाते के।
+
+doc-html-translate EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, कॉमिक संग्रह (CBZ, CBR, CB7,
+CBT) और छवियों को साफ़ स्थानीय HTML में बदलता है, जिसमें बनी हुई नेविगेशन और असली बहुस्तरीय विषय-सूची
+होती है। परिणाम किसी भी ब्राउज़र में खोलकर पढ़ें - या उसे सीधे ब्राउज़र के अपने पृष्ठ अनुवाद को सौंप दें
+और बिना किसी कुंजी के किसी भी भाषा में मुफ़्त अनुवाद पाएँ।
+
+अंतर्निहित रीडर light / sepia / dark / night थीम, पाठ का आकार और फ़ॉन्ट नियंत्रण जोड़ता है और याद रखता
+है कि आप कहाँ रुके थे। एक लंबा पृष्ठ चुनें या विषय-सूची सहित अध्याय; पहले से बदली गई पुस्तक दोबारा खोलना
+तुरंत होता है।
+
+वैकल्पिक OCR चित्रों और स्कैन किए गए पृष्ठों के भीतर का पाठ पहचानता है (अंग्रेज़ी साथ में, बाकी भाषाएँ
+माँग पर) और सब कुछ अनुवाद कर सकता है - Google Cloud Translation API से या पूरी तरह स्थानीय Ollama मॉडल
+से, ताकि कुछ भी आपके कंप्यूटर से बाहर न जाए।
+
+इंटरफ़ेस 13 भाषाएँ बोलता है: अंग्रेज़ी, रूसी, यूक्रेनी, जर्मन, इतालवी, स्पेनी, फ़्रेंच, पुर्तगाली,
+अरबी, हिन्दी, बांग्ला, उर्दू और चीनी।
+
+बड़े PDF तेज़ बने रहते हैं, स्कैन किए गए पृष्ठ संभाले जाते हैं, और तमाम पाठ एन्कोडिंग यूँ ही काम करती
+हैं। पैकेज में एक कमांड-लाइन उपकरण (doc-html-translate) और एक छोटा GUI (doc-html-ui), दोनों हैं।
+pdftotext बाइनरी के भीतर ही है; MOBI और AZW3 के लिए Calibre स्थापित होना चाहिए (केवल DRM-रहित फ़ाइलें)।
+
+कोई खाता नहीं, कोई विज्ञापन नहीं, कोई टेलीमेट्री नहीं। मुक्त स्रोत: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, कॉमिक संग्रह (CBZ/CBR/CB7/CBT) और छवियों को साफ़ स्थानीय HTML में बदलता है
+
+@@Feature2
+बनी हुई नेविगेशन के साथ असली बहुस्तरीय विषय-सूची
+
+@@Feature3
+अंतर्निहित रीडर: light / sepia / dark / night थीम, फ़ॉन्ट और पाठ का आकार, आपकी जगह याद रखता है
+
+@@Feature4
+छवियों और स्कैन किए गए पृष्ठों पर OCR (अंग्रेज़ी साथ में, बाकी भाषाएँ माँग पर)
+
+@@Feature5
+Google Cloud Translation API या स्थानीय Ollama मॉडल से वैकल्पिक अनुवाद - या बस ब्राउज़र का मुफ़्त पृष्ठ अनुवाद
+
+@@Feature6
+बड़े PDF पर तेज़; पहले से बदली गई पुस्तकें तुरंत खुलती हैं
+
+@@Feature7
+CLI (doc-html-translate) और GUI (doc-html-ui) दोनों शामिल; कोई खाता, विज्ञापन या टेलीमेट्री नहीं
+
+@@Feature8
+ब्राउज़र के अंतर्निहित पृष्ठ अनुवाद से एक क्लिक में मुफ़्त अनुवाद - API कुंजी की ज़रूरत नहीं
+
+@@Feature9
+पूरी तरह ऑफ़लाइन काम करता है; MIT लाइसेंस के तहत मुक्त स्रोत
+
+@@Feature10
+परिणाम सादा HTML है - किसी भी ब्राउज़र में, किसी भी उपकरण पर खुलता है और पढ़ने योग्य बना रहता है
+
+@@Feature11
+कई दस्तावेज़ एक साथ बदलने के लिए सुविधाजनक कमांड लाइन
+
+@@Feature12
+एक लंबा पृष्ठ या विषय-सूची सहित अध्यायों में विभाजित - आपकी पसंद
+
+@@Feature13
+13 भाषाओं में इंटरफ़ेस, आपकी Windows भाषा के अनुसार अपने आप चुना जाता है
+
+@@SearchTerm1
+epub से html
+
+@@SearchTerm2
+pdf से html
+
+@@SearchTerm3
+ईबुक कनवर्टर
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+ocr दस्तावेज़ अनुवाद
+
+@@SearchTerm6
+कॉमिक cbz cbr
+
+@@SearchTerm7
+ऑफ़लाइन अनुवाद

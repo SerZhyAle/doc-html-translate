@@ -27,10 +27,26 @@ import (
 	"testing"
 )
 
-// badTypography returns a reason if v breaks the rule, or "" if it is clean. A literal that
-// contains "<title>" is allowed to carry an em dash (the page-title exception); everything
-// else must use a short hyphen. Nobody may use "..." or a "..." ellipsis.
-func badTypography(v string) string {
+// houseStyleLangs are the languages the author writes and proofreads. CLAUDE.md's typography
+// rule is an author-language rule: it says how *we* write, not how every script punctuates.
+// Chinese uses "——" as its dash and "……" as its ellipsis, German and French use "–", and the
+// Arabic-script languages have their own marks - enforcing the house style on those would mean
+// shipping mistranslated punctuation, so they are checked by the weaker rule below.
+var houseStyleLangs = map[string]bool{"en": true, "ru": true, "uk": true}
+
+// badTypography returns a reason if v breaks the rule for lang, or "" if it is clean.
+//
+// For an author language: no ellipsis character, no three-dot ellipsis, and no em dash - except
+// inside a literal that also contains "<title>", which is the page-title exception settled
+// 2026-07-18. For every other language only an ASCII three-dot "..." is rejected, and not even
+// that in Chinese, whose own ellipsis is a doubled U+2026.
+func badTypography(lang, v string) string {
+	if !houseStyleLangs[lang] {
+		if lang != "zh" && strings.Contains(v, "...") {
+			return "ASCII three-dot ellipsis (...) - use the script's own ellipsis"
+		}
+		return ""
+	}
 	if strings.Contains(v, "…") {
 		return "ellipsis character (…) - use '..'"
 	}
@@ -69,7 +85,8 @@ func TestTypographyGoOutput(t *testing.T) {
 				if uerr != nil {
 					return true
 				}
-				if reason := badTypography(v); reason != "" {
+				// Go source literals are English by canon, so they are always an author language.
+				if reason := badTypography("en", v); reason != "" {
 					pos := fset.Position(lit.Pos())
 					t.Errorf("%s:%d: %s in %q", filepath.ToSlash(path), pos.Line, reason, v)
 				}
@@ -108,13 +125,72 @@ func TestTypographyLocaleMessages(t *testing.T) {
 			continue
 		}
 		seen++
+		// The language is the directory name; Chrome's regional dirs ("pt_BR", "zh_CN") carry
+		// the variant after an underscore. An unknown directory falls through to the weaker
+		// rule rather than to the house style - a new locale must never fail the build for
+		// punctuating in its own script.
+		code, _, _ := strings.Cut(lang.Name(), "_")
 		for key, m := range msgs {
-			if reason := badTypography(m.Message); reason != "" {
+			if reason := badTypography(code, m.Message); reason != "" {
 				t.Errorf("%s [%s]: %s in %q", filepath.ToSlash(path), key, reason, m.Message)
 			}
 		}
 	}
 	if seen == 0 {
 		t.Fatal("no _locales/*/messages.json scanned - path may have moved")
+	}
+}
+
+// TestBadTypographyLanguageScope pins the rule itself: the house style binds the author
+// languages, and a translated string may punctuate the way its script does.
+func TestBadTypographyLanguageScope(t *testing.T) {
+	cases := []struct {
+		name   string
+		lang   string
+		value  string
+		reject bool
+	}{
+		{"en ascii ellipsis", "en", "wait...", true},
+		{"en short hyphen", "en", "a - b", false},
+		{"en title em dash", "en", "<title>Book — Page 1</title>", false},
+		{"ru ellipsis char", "ru", "ждём…", true},
+		{"uk em dash", "uk", "текст — далі", true},
+		{"zh double dash", "zh", "等待——完成", false},
+		{"zh own ellipsis", "zh", "等待……", false},
+		{"de en dash", "de", "Zeit – Ort", false},
+		{"ar question mark", "ar", "انتظر؟", false},
+		{"hi ascii ellipsis", "hi", "रुकिए...", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			reason := badTypography(c.lang, c.value)
+			if c.reject && reason == "" {
+				t.Errorf("%q in %s: expected a rejection, got none", c.value, c.lang)
+			}
+			if !c.reject && reason != "" {
+				t.Errorf("%q in %s: unexpected rejection: %s", c.value, c.lang, reason)
+			}
+		})
+	}
+}
+
+// TestTypographySplashResources scans the embedded per-language console splash text. These are
+// resources rather than Go literals, so the AST walk above cannot see them. Matching nothing is
+// a pass: the files arrive with the localized CLI.
+func TestTypographySplashResources(t *testing.T) {
+	paths, err := filepath.Glob(filepath.Join("..", "internal", "app", "splash", "*.txt"))
+	if err != nil {
+		t.Fatalf("glob splash resources: %v", err)
+	}
+	for _, path := range paths {
+		raw, rerr := os.ReadFile(path)
+		if rerr != nil {
+			t.Errorf("read %s: %v", path, rerr)
+			continue
+		}
+		code := strings.TrimSuffix(filepath.Base(path), ".txt")
+		if reason := badTypography(code, string(raw)); reason != "" {
+			t.Errorf("%s: %s", filepath.ToSlash(path), reason)
+		}
 	}
 }

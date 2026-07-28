@@ -1,0 +1,412 @@
+{
+  "appName": {
+    "message": "নথি পৃষ্ঠা অনুবাদক - PDF, EPUB ও আরও (বিনামূল্যে ও স্থানীয়)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "DocTranslate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "PDF, EPUB ও অন্যান্য নথিকে এমন পরিচ্ছন্ন HTML হিসেবে দেখায় যা ব্রাউজারের বিনামূল্যের পৃষ্ঠা-অনুবাদ পড়তে পারে - ছবির OCR সহ। ১০০% স্থানীয়।",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "PDF/EPUB পুনঃপ্রবাহ + অনুবাদ",
+    "description": "Tooltip on the toolbar button."
+  },
+  "ocrImageMenu": {
+    "message": "এই ছবির লেখা শনাক্ত করে অনুবাদ করুন",
+    "description": "Right-click context-menu item on images."
+  },
+  "convertDocMenu": {
+    "message": "doc-html-translate দিয়ে রূপান্তর করুন",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
+  "ocrProgress": {
+    "message": "লেখা শনাক্ত হচ্ছে..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "ছবিতে কোনো লেখা পাওয়া যায়নি।",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "লেখা শনাক্তকরণ লোড করা যায়নি।",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "লেখা শনাক্ত হয়েছে - এখন পৃষ্ঠাটি অনুবাদ করা যাবে।",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "ছবির জন্য OCR ব্যবহার করুন",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "ডাউনলোড",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "ডাউনলোড হচ্ছে",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "ইনস্টল করা",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "শনাক্তকরণের ভাষা (ইংরেজি অন্তর্ভুক্ত)।",
+    "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "ছবির লেখা শনাক্ত করতে চালু করুন - তারপর একটি ভাষা বেছে নিন বা ডাউনলোড করুন (ইংরেজি অন্তর্ভুক্ত)।",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "পুনঃপ্রবাহ দৃশ্য",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "লোড হচ্ছে..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "সূচিপত্র",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "লেখার আকার",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "সেরিফ",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "সান্স-সেরিফ",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "মনোস্পেস",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "উজ্জ্বল",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "সেপিয়া",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "গাঢ়",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "রাত",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "পৃষ্ঠায় যান",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "পৃষ্ঠা",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "ফাইল খুলুন",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "ফাইল নির্বাচক দিয়ে স্থানীয় নথি খুলুন",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "মূল PDF",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "অবিকৃত PDF নিজস্ব ভিউয়ারে খুলুন",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "মূল নথির ফাইল ডাউনলোড করুন",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "বর্তমান দৃশ্য স্বতন্ত্র HTML ফাইল হিসেবে সংরক্ষণ করুন (পৃষ্ঠা অনুবাদ করে থাকলে অনুবাদও থাকবে)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "মতামত",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "পণ্যের সাইট",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "সূচিপত্র",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "একটি নথি খুলুন..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "ছবির জন্য OCR ব্যবহার করুন",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "শনাক্তকরণের ভাষা",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "PDF ও EPUB পুনঃপ্রবাহ",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "এই সাইটে",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "বিকল্প",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "পড়ার থিম",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "উৎস ভাষা",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "স্বয়ংক্রিয় শনাক্তকরণ",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "যেসব সাইটে পুনঃপ্রবাহ বন্ধ",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "সংরক্ষিত",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "ইন্টারফেসের ভাষা",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "এই এক্সটেনশনের বোতাম ও মেনুর ভাষা। \"ব্রাউজার অনুসরণ করুন\" আপনার ব্রাউজারের ভাষা নেয়। ভিউয়ার এটি পরের বার নথি খোলার সময় প্রয়োগ করে।",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "ব্রাউজার অনুসরণ করুন",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "মতামত",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "OCR: {1}/{2} ছবি"
+  },
+  "vOcrStatusWhere": {
+    "message": "OCR: {1}/{2} ছবি - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} পৃষ্ঠা"
+  },
+  "vExtentPartial": {
+    "message": "পৃষ্ঠা 1-{1} / {2}"
+  },
+  "vSavedComic": {
+    "message": "{2}টির মধ্যে {1}টি পৃষ্ঠা সংরক্ষিত - আরও স্ক্রল করে আবার সংরক্ষণ করলে বাকিগুলিও যুক্ত হবে"
+  },
+  "vSavedPdf": {
+    "message": "পৃষ্ঠা 1-{1} / {2} সংরক্ষিত - আরও স্ক্রল করে আবার সংরক্ষণ করলে বাকিগুলিও যুক্ত হবে"
+  },
+  "vTocSection": {
+    "message": "বিভাগ"
+  },
+  "vPageN": {
+    "message": "পৃষ্ঠা {1}"
+  },
+  "vSectionN": {
+    "message": "বিভাগ {1}"
+  },
+  "vFrameTitle": {
+    "message": "ফ্রেমের ভিতরে চলতে পারে না"
+  },
+  "vFrameBody": {
+    "message": "এই নথিটি একটি সাধারণ ট্যাবে খুলুন।"
+  },
+  "vOpenDocTitle": {
+    "message": "একটি নথি খুলুন"
+  },
+  "vOpenDocBody": {
+    "message": "পড়ার জন্য একটি স্থানীয় নথি বাছুন (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - অথবা লেখা শনাক্ত করতে একটি ছবি (PNG, JPEG, GIF, BMP, WebP)। নথির লিঙ্কও এখানেই খোলে - এক্সটেনশন সেটাই করে।"
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "অসমর্থিত URL"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "কোনও URL থেকে কেবল http(s) ও স্থানীয় ফাইল খোলা যায়।"
+  },
+  "vUncTitle": {
+    "message": "নেটওয়ার্ক পাথ সমর্থিত নয়"
+  },
+  "vUncBody": {
+    "message": "এক্সটেনশন নেটওয়ার্ক পাথ (\\\\server\\share) পড়তে পারে না। শেয়ারটিকে ড্রাইভ অক্ষরে যুক্ত করে ফাইলটি স্থানীয়ভাবে খুলুন, বা নিচে থেকে ফাইল বাছুন।"
+  },
+  "vBtnBuiltinViewer": {
+    "message": "অন্তর্নির্মিত রিডারে খুলুন"
+  },
+  "vStatusDownloading": {
+    "message": "নথি ডাউনলোড হচ্ছে.."
+  },
+  "vLoadFailTitle": {
+    "message": "এই নথিটি লোড করা যায়নি"
+  },
+  "vLoadFailBody": {
+    "message": "এক্সটেনশন ফাইলটি ডাউনলোড করতে পারেনি।"
+  },
+  "vLoadFailFile": {
+    "message": "স্থানীয় ফাইলের জন্য নিচের «ফাইল খুলুন» ব্যবহার করুন, বা chrome://extensions-এ এই এক্সটেনশনের «ফাইল URL-এ প্রবেশাধিকার দিন» চালু করুন।"
+  },
+  "vReason": {
+    "message": "কারণ: {1}"
+  },
+  "vDetails": {
+    "message": "বিবরণ: {1}"
+  },
+  "vStatusReadingText": {
+    "message": "লেখা পড়া হচ্ছে.."
+  },
+  "vStatusReadingRtf": {
+    "message": "RTF পড়া হচ্ছে.."
+  },
+  "vStatusReadingHtml": {
+    "message": "HTML পড়া হচ্ছে.."
+  },
+  "vStatusReadingMd": {
+    "message": "Markdown পড়া হচ্ছে.."
+  },
+  "vStatusReadingFb2": {
+    "message": "FB2 পড়া হচ্ছে.."
+  },
+  "vStatusReadingEbook": {
+    "message": "ই-বই পড়া হচ্ছে.."
+  },
+  "vStatusReadingEpub": {
+    "message": "EPUB পড়া হচ্ছে.."
+  },
+  "vStatusReadingComic": {
+    "message": "কমিক পড়া হচ্ছে.."
+  },
+  "vStatusReadingFile": {
+    "message": "ফাইল পড়া হচ্ছে.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "এই ফাইলটি খোলা যায়নি"
+  },
+  "vCorruptBody": {
+    "message": "ফাইলটি ক্ষতিগ্রস্ত হতে পারে বা সমর্থিত নথি নয়।"
+  },
+  "vImageFailTitle": {
+    "message": "এই ছবিটি পড়া যায়নি"
+  },
+  "vImageFailBody": {
+    "message": "ছবিটি প্রক্রিয়া করা যায়নি।"
+  },
+  "vComicAppTitle": {
+    "message": "এই কমিকের জন্য ডেস্কটপ অ্যাপ প্রয়োজন"
+  },
+  "vComicAppBody": {
+    "message": "বিনামূল্যের অ্যাপ doc-html-translate পাবেন https://serzhyale.github.io/doc-html-translate/ - এটি CBR ও CB7 খোলে (7-Zip ইনস্টল থাকলে)।"
+  },
+  "vComicFailTitle": {
+    "message": "এই কমিকটি খোলা যায়নি"
+  },
+  "vComicFailBody": {
+    "message": "সংরক্ষণাগারটি ক্ষতিগ্রস্ত হতে পারে বা তাতে পৃষ্ঠার ছবি নেই।"
+  },
+  "vComicReady": {
+    "message": "প্রস্তুত - {1}টি পৃষ্ঠা, স্ক্রল করার সময় লেখা শনাক্ত হয়"
+  },
+  "vComicReadyOne": {
+    "message": "প্রস্তুত - ১টি পৃষ্ঠা, স্ক্রল করার সময় লেখা শনাক্ত হয়"
+  },
+  "vReadFileFailTitle": {
+    "message": "ফাইলটি পড়া যায়নি"
+  },
+  "vPwdTitle": {
+    "message": "পাসওয়ার্ড প্রয়োজন"
+  },
+  "vPwdMissing": {
+    "message": "এই PDF পাসওয়ার্ড দিয়ে সুরক্ষিত এবং পাসওয়ার্ড দেওয়া হয়নি।"
+  },
+  "vPdfFailTitle": {
+    "message": "এই PDF খোলা যায়নি"
+  },
+  "vPdfFailBody": {
+    "message": "ফাইলটি ক্ষতিগ্রস্ত, অসম্পূর্ণ বা অসমর্থিত ফরম্যাটে হতে পারে।"
+  },
+  "vPwdPlaceholder": {
+    "message": "PDF পাসওয়ার্ড"
+  },
+  "vBtnUnlock": {
+    "message": "আনলক"
+  },
+  "vPwdIncorrect": {
+    "message": "ভুল পাসওয়ার্ড - আবার চেষ্টা করুন।"
+  },
+  "vPwdPrompt": {
+    "message": "এই PDF সুরক্ষিত। পড়তে পাসওয়ার্ড দিন।"
+  },
+  "vStatusUnlocking": {
+    "message": "আনলক হচ্ছে.."
+  },
+  "vStatusDetecting": {
+    "message": "ভাষা শনাক্ত হচ্ছে.."
+  },
+  "vStatusRendering": {
+    "message": "পৃষ্ঠা {1} / {2} তৈরি হচ্ছে"
+  },
+  "vStatusDonePages": {
+    "message": "সম্পন্ন - {1}টি পৃষ্ঠা"
+  },
+  "vStatusPagesSoFar": {
+    "message": "পৃষ্ঠা 1-{1} / {2} - আরও লোড করতে স্ক্রল করতে থাকুন"
+  },
+  "vEpubFailTitle": {
+    "message": "এই EPUB খোলা যায়নি"
+  },
+  "vEpubFailBody": {
+    "message": "ফাইলটি ক্ষতিগ্রস্ত হতে পারে বা বৈধ EPUB নয়।"
+  },
+  "vLittleTextTitle": {
+    "message": "খুব কম বা কোনও লেখা পাওয়া যায়নি"
+  },
+  "vLittleTextEpub": {
+    "message": "এই EPUB-এ উদ্ধারযোগ্য লেখা নেই (সম্ভবত এটি কেবল ছবি দিয়ে তৈরি)। ব্রাউজারের পৃষ্ঠা-অনুবাদের জন্য সত্যিকারের লেখা দরকার, তার সুন্দর ছবি নয়।"
+  },
+  "vStatusDoneSections": {
+    "message": "সম্পন্ন - {1}টি বিভাগ"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "সম্পন্ন - ১টি বিভাগ"
+  },
+  "vLittleTextPdf": {
+    "message": "এটি স্ক্যান করা বা কেবল ছবি দিয়ে তৈরি PDF বলে মনে হচ্ছে, তাই অনুবাদের মতো লেখা প্রায় নেই - ব্রাউজার শব্দ অনুবাদ করে, পিক্সেল নয়।"
+  },
+  "vLittleTextOcrHint": {
+    "message": "স্ক্যান করা পৃষ্ঠা অনুবাদ করতে প্রথমে সেগুলিতে OCR চালান («ছবির জন্য OCR ব্যবহার করুন» চালু করুন, বা doc-html-translate ডেস্কটপ অ্যাপ ব্যবহার করুন), তারপর ফলাফলটি আবার খুলুন।"
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "মূল PDF খুলুন"
+  }
+}

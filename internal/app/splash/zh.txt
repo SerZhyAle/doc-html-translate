@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  文档转 HTML 工具，带翻译，人人可用
+{{rule}}
+
+  将文档转换为 HTML，并在默认浏览器中
+  打开结果。无需任何繁琐步骤。
+
+  功能：
+    - 将 EPUB、PDF、TXT、Markdown、FB2、RTF、HTML、MOBI、AZW3 以及 CBZ/CBR/CB7/CBT 漫画转换为易读的 HTML
+    - 在页面与章节之间导航
+    - Ctrl+滚轮缩放，设置会被记住
+    - 通过 Google Translate API 翻译文本
+    - 再次运行会直接打开已生成的 HTML
+
+  用法：
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # 需要 Calibre
+    doc-html-translate.exe "comic.cbz"           # 漫画页面，文字通过 OCR 识别
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 需要 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  选项：
+    -notranslate    仅转换，不翻译
+    -google         通过 Google Translate API 翻译（付费）
+    -ollama         通过本地 Ollama 翻译（免费）
+    -ollama-model   Ollama 模型（默认：gemma3:12b）
+    -toc-depth N    index.html 上目录的层级深度（0 = 不限）
+    -force          强制重新生成
+    -src LANG       源语言（默认：en）
+    -dst LANG       目标语言（默认：ru）
+    -ui-lang CODE   界面语言（默认：Windows 的界面语言）
+
+  链接：
+    产品网站：https://serzhyale.github.io/doc-html-translate/
+    反馈邮箱：sza@ukr.net
+
+{{rule}}

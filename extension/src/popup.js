@@ -2,6 +2,7 @@
 // object to storage; background.js rebuilds the DNR rules on the storage change.
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
+import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 
 const globalEl = document.getElementById("global");
@@ -15,9 +16,8 @@ const ocrLangsEl = document.getElementById("ocr-langs");
 const verEl = document.getElementById("ver");
 if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
 
-const msg = (key, fallback) => {
-  try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
-};
+// Routed through i18n.js so the options page's interface-language override reaches these too.
+const msg = (key, fallback) => t(key, fallback);
 
 // Render the nested OCR-language list: installed languages are selectable (radio),
 // others show a Download button that fetches + caches the language, then re-renders.
@@ -105,6 +105,9 @@ async function activeHost() {
 }
 
 async function init() {
+  await initI18n();
+  await loadMessages(uiLang());
+  applyI18n(document);
   const opts = await getOptions();
   const host = await activeHost();
 

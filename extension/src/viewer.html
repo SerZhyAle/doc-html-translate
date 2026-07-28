@@ -3,54 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reflow viewer</title>
+  <title data-i18n="viewerTitle">Reflow viewer</title>
   <link rel="stylesheet" href="viewer.css">
 </head>
 <body>
   <div id="toolbar">
-    <span class="title" id="doc-title">Loading..</span>
+    <span class="title" id="doc-title" data-i18n="loading">Loading..</span>
     <span class="spacer"></span>
-    <div class="group" title="Table of contents">
+    <div class="group" data-i18n-title="ttToc" title="Table of contents">
       <button id="btn-toc" type="button" aria-label="Toggle contents">&#9776; Contents</button>
     </div>
-    <div class="group" title="Font size">
+    <div class="group" data-i18n-title="ttFontSize" title="Font size">
       <button id="btn-font-dec" type="button" aria-label="Smaller text">A&minus;</button>
       <button id="btn-font-inc" type="button" aria-label="Larger text">A+</button>
     </div>
     <div class="group">
       <select id="sel-family" aria-label="Font family">
-        <option value="serif">Serif</option>
-        <option value="sans">Sans</option>
-        <option value="mono">Mono</option>
+        <option value="serif" data-i18n="fontSerif">Serif</option>
+        <option value="sans" data-i18n="fontSans">Sans</option>
+        <option value="mono" data-i18n="fontMono">Mono</option>
       </select>
       <select id="sel-theme" aria-label="Theme">
-        <option value="light">Light</option>
-        <option value="sepia">Sepia</option>
-        <option value="dark">Dark</option>
-        <option value="night">Night</option>
+        <option value="light" data-i18n="themeLight">Light</option>
+        <option value="sepia" data-i18n="themeSepia">Sepia</option>
+        <option value="dark" data-i18n="themeDark">Dark</option>
+        <option value="night" data-i18n="themeNight">Night</option>
       </select>
     </div>
-    <div class="group" title="Go to page">
-      <span>Page</span>
+    <div class="group" data-i18n-title="ttGoToPage" title="Go to page">
+      <span data-i18n="labelPage">Page</span>
       <input id="page-jump" type="number" min="1" value="1" aria-label="Go to page">
       <span id="page-total">/ ?</span>
     </div>
     <div class="group">
-      <button id="btn-open" type="button" title="Open a local document via the file picker">Open file</button>
-      <button id="btn-original" type="button" title="Open the untouched PDF in the native viewer">Original PDF</button>
-      <button id="btn-save-src" type="button" class="hidden" title="Download the original document file">&#8595; File</button>
-      <button id="btn-save-html" type="button" class="hidden" title="Save the current view as a standalone HTML file (keeps the translation if you translated the page)">&#8595; HTML</button>
+      <button id="btn-open" type="button" data-i18n-title="ttOpenFile" title="Open a local document via the file picker" data-i18n="btnOpenFile">Open file</button>
+      <button id="btn-original" type="button" data-i18n-title="ttOriginalPdf" title="Open the untouched PDF in the native viewer" data-i18n="btnOriginalPdf">Original PDF</button>
+      <button id="btn-save-src" type="button" class="hidden" data-i18n-title="ttSaveSource" title="Download the original document file">&#8595; File</button>
+      <button id="btn-save-html" type="button" class="hidden" data-i18n-title="ttSaveHtml" title="Save the current view as a standalone HTML file (keeps the translation if you translated the page)">&#8595; HTML</button>
     </div>
     <a class="proj-link" href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" title="doc-html-translate">doc-html-translate</a>
-    <a class="proj-link" href="mailto:sza@ukr.net" title="Feedback">Feedback</a>
+    <a class="proj-link" href="mailto:sza@ukr.net" data-i18n-title="ttFeedback" title="Feedback" data-i18n="linkFeedback">Feedback</a>
   </div>
   <input id="file-input" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub,.txt,.rtf,.html,.htm,.md,.markdown,.fb2,.mobi,.azw3,image/png,.png,image/jpeg,.jpg,.jpeg,image/gif,.gif,image/bmp,.bmp,image/webp,.webp,.cbz,.cbr,.cb7,.cbt" class="hidden">
 
-  <div id="status"><div id="progress-bar"></div><span id="status-text">Loading..</span></div>
+  <div id="status"><div id="progress-bar"></div><span id="status-text" data-i18n="loading">Loading..</span></div>
 
   <div id="layout">
     <nav id="toc" class="hidden" aria-label="Table of contents">
-      <h2>Contents</h2>
+      <h2 data-i18n="tocHeading">Contents</h2>
       <div id="toc-tree"></div>
     </nav>
     <main id="content"></main>

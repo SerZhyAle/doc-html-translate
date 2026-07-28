@@ -364,7 +364,7 @@ Feature9,708,Text,,Works fully offline; open source under the MIT license,Раб
 Feature10,709,Text,,"Output is plain HTML - opens in any browser, on any device, and stays readable forever","На выходе обычный HTML - открывается в любом браузере, на любом устройстве и остаётся читаемым всегда"
 Feature11,710,Text,,Batch-friendly command line for converting many documents at once,Удобная командная строка для пакетной конвертации множества документов сразу
 Feature12,711,Text,,Single long page or chapter-split output with a table of contents - your choice,Вывод одной длинной страницей или с разбивкой по главам и оглавлением - на ваш выбор
-Feature13,712,Text,,,
+Feature13,712,Text,,"Interface in 13 languages, chosen automatically from your Windows language","Интерфейс на 13 языках, выбирается автоматически по языку Windows"
 Feature14,713,Text,,,
 Feature15,714,Text,,,
 Feature16,715,Text,,,

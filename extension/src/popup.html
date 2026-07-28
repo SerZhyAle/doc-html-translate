@@ -38,33 +38,33 @@
 </head>
 <body>
   <h1>doc-html-translate <span class="ver" id="ver"></span></h1>
-  <button id="open-pdf" class="cta" type="button">Open a document&hellip;</button>
+  <button id="open-pdf" class="cta" type="button"  data-i18n="popupOpenDoc">Open a document&hellip;</button>
   <div class="row">
-    <label for="ocr-images">Use OCR for images</label>
+    <label for="ocr-images" data-i18n="popupUseOcr">Use OCR for images</label>
     <label class="switch"><input type="checkbox" id="ocr-images"><span class="slider"></span></label>
   </div>
   <details id="ocr-langs-details" class="ocr-langs">
-    <summary>Recognition languages</summary>
+    <summary data-i18n="popupOcrLangs">Recognition languages</summary>
     <div id="ocr-langs" class="ocr-langs-content"></div>
   </details>
   <hr>
   <div class="row">
-    <label for="global">Reflow PDFs &amp; EPUBs</label>
+    <label for="global" data-i18n="popupReflow">Reflow PDFs &amp; EPUBs</label>
     <label class="switch"><input type="checkbox" id="global"><span class="slider"></span></label>
   </div>
   <div class="note">Off by default. Or right-click a document link &rarr; &#8220;Convert with doc-html-translate&#8221;.</div>
   <div class="row">
-    <label for="site">On this site<br><span class="host" id="host"></span></label>
+    <label for="site" data-i18n="popupOnThisSite">On this site<br><span class="host" id="host"></span></label>
     <label class="switch"><input type="checkbox" id="site"><span class="slider"></span></label>
   </div>
   <hr>
   <div class="links">
-    <a id="opts" href="#">Options</a>
+    <a id="opts" href="#" data-i18n="popupOptions">Options</a>
     <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener">Guide &amp; help &#8599;</a>
   </div>
   <div class="links">
     <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site &#8599;</a>
-    <a href="mailto:sza@ukr.net">Feedback</a>
+    <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>
   </div>
   <script type="module" src="popup.js"></script>
 </body>

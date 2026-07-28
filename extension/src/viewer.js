@@ -12,6 +12,7 @@ import * as pdfjsLib from "../vendor/pdf.mjs";
 import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag } from "./lang.js";
+import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { loadEpub } from "./epub.js";
 import { parseText } from "./txt.js";
 import { parseRtf } from "./rtf.js";
@@ -208,8 +209,8 @@ function ensureOcrCss() {
 // statement about the book. Empty for formats with no page dimension of their own.
 function docExtent() {
   if (!pdfTotal) return "";
-  if (pdfRendered >= pdfTotal) return `${pdfTotal} pages`;
-  return `pages 1-${pdfRendered} of ${pdfTotal}`;
+  if (pdfRendered >= pdfTotal) return t("vExtentAll", "{1} pages", pdfTotal);
+  return t("vExtentPartial", "pages 1-{1} of {2}", pdfRendered, pdfTotal);
 }
 
 function ocrUpdateStatus() {
@@ -219,7 +220,9 @@ function ocrUpdateStatus() {
   // so it climbs as the reader scrolls. Naming the unit and saying where we are in the
   // book keeps "OCR: 3/5" from looking like a claim that the book holds five of anything.
   const where = docExtent();
-  setStatus(`OCR: ${ocrDone}/${ocrTotal} images${where ? ` - ${where}` : ""}`);
+  setStatus(where
+    ? t("vOcrStatusWhere", "OCR: {1}/{2} images - {3}", ocrDone, ocrTotal, where)
+    : t("vOcrStatus", "OCR: {1}/{2} images", ocrDone, ocrTotal));
   setProgress(ocrDone / ocrTotal);
   if (ocrDone >= ocrTotal) setTimeout(hideStatus, 1000);
 }
@@ -411,7 +414,7 @@ function para(text) {
   return p;
 }
 
-function originalButton(label = "Open original PDF") {
+function originalButton(label = t("vBtnOpenOriginalPdf", "Open original PDF")) {
   const b = el("button");
   b.textContent = label;
   b.addEventListener("click", openOriginal);
@@ -519,13 +522,13 @@ function reportPartialSave() {
   if (comicTotal > 0) {
     if (comicRendered >= comicTotal) return;
     $("status").classList.remove("done");
-    setStatus(`Saved ${comicRendered} of ${comicTotal} pages - scroll further and save again to include more`);
+    setStatus(t("vSavedComic", "Saved {1} of {2} pages - scroll further and save again to include more", comicRendered, comicTotal));
     setTimeout(hideStatus, 5000);
     return;
   }
   if (!pdfDoc || pdfRendered >= pdfTotal) return;
   $("status").classList.remove("done");
-  setStatus(`Saved pages 1-${pdfRendered} of ${pdfTotal} - scroll further and save again to include more`);
+  setStatus(t("vSavedPdf", "Saved pages 1-{1} of {2} - scroll further and save again to include more", pdfRendered, pdfTotal));
   setTimeout(hideStatus, 5000);
 }
 
@@ -651,7 +654,7 @@ function buildTocList(entries) {
     if (e.anchor != null) {
       // EPUB entry: scroll to an element id in the combined document.
       const a = el("a");
-      a.textContent = e.title || "Section";
+      a.textContent = e.title || t("vTocSection", "Section");
       a.href = `#${e.anchor}`;
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
@@ -660,7 +663,7 @@ function buildTocList(entries) {
       li.append(a);
     } else if (e.page != null) {
       const a = el("a");
-      a.textContent = e.title || `Page ${e.page}`;
+      a.textContent = e.title || t("vPageN", "Page {1}", e.page);
       a.href = `#page-${e.page}`;
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
@@ -708,7 +711,23 @@ function renderBlocks(section, blocks) {
 const yieldToUI = () => new Promise((r) => setTimeout(r, 0));
 
 // ---- Main ------------------------------------------------------------------
+// applyViewerChromeI18n translates the toolbar and the table-of-contents panel only. It must not
+// touch <html lang> or the reflowed content: that attribute carries the *document's* language and
+// is what makes Chrome offer "Translate page" - the whole point of this extension.
+function applyViewerChromeI18n() {
+  applyI18n(document.getElementById("toolbar"));
+  applyI18n(document.getElementById("toc"));
+  document.title = t("viewerTitle", document.title);
+}
+
 async function main() {
+  // The chrome speaks the interface language; the document keeps its own <html lang>, which is
+  // what makes the browser offer to translate it. applyI18n only touches the toolbar and the
+  // panels, never the rendered document.
+  await initI18n();
+  await loadMessages(uiLang());
+  applyViewerChromeI18n();
+
   await loadPrefs();
   applyPrefs();
   wireToolbar();
@@ -717,21 +736,21 @@ async function main() {
   // only run as a top-level page. Refuse to run framed to close an SSRF-style
   // vector where a page iframes the viewer pointed at a URL of its choosing.
   if (window.top !== window.self) {
-    showNotice("Cannot run in a frame", [para("Open this document in a top-level tab.")]);
+    showNotice(t("vFrameTitle", "Cannot run in a frame"), [para(t("vFrameBody", "Open this document in a top-level tab."))]);
     return;
   }
 
   if (!fileUrl) {
-    showNotice("Open a document", [
-      para("Pick a local document to read here (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - or an image (PNG, JPEG, GIF, BMP, WebP) to OCR into translatable text. Opening a document link loads it here too - the extension is helpful like that."),
+    showNotice(t("vOpenDocTitle", "Open a document"), [
+      para(t("vOpenDocBody", "Pick a local document to read here (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - or an image (PNG, JPEG, GIF, BMP, WebP) to OCR into translatable text. Opening a document link loads it here too - the extension is helpful like that.")),
       filePickerButton(),
     ]);
     return;
   }
 
   if (!isSafePdfUrl(fileUrl)) {
-    showNotice("Unsupported URL", [
-      para("Only http(s) and local file documents can be opened from a URL."),
+    showNotice(t("vUnsupportedUrlTitle", "Unsupported URL"), [
+      para(t("vUnsupportedUrlBody", "Only http(s) and local file documents can be opened from a URL.")),
       filePickerButton(),
     ]);
     return;
@@ -751,14 +770,14 @@ async function loadUrl(url) {
   // file-scheme match patterns only cover empty-host URLs, so fetch() can never
   // be permitted. Fail fast with a targeted hint instead of a doomed download.
   if (/^file:\/\/[^/]/i.test(url)) {
-    showNotice("Network paths are not supported", [
-      para("Extensions cannot read network file paths (\\\\server\\share). Map the share to a drive letter and open it as a local file, or pick the file below."),
+    showNotice(t("vUncTitle", "Network paths are not supported"), [
+      para(t("vUncBody", "Extensions cannot read network file paths (\\\\server\\share). Map the share to a drive letter and open it as a local file, or pick the file below.")),
       filePickerButton(),
-      originalButton("Open in built-in viewer"),
+      originalButton(t("vBtnBuiltinViewer", "Open in built-in viewer")),
     ]);
     return;
   }
-  setStatus("Downloading document..");
+  setStatus(t("vStatusDownloading", "Downloading document.."));
   let data;
   try {
     const resp = await fetch(url);
@@ -767,11 +786,11 @@ async function loadUrl(url) {
     setOriginalDownload(blob, filenameFromUrl(url)); // keep a downloadable copy (browser-backed)
     data = await blob.arrayBuffer();
   } catch (err) {
-    showNotice("Couldn't load this document", [
-      para("The file could not be downloaded by the extension."),
+    showNotice(t("vLoadFailTitle", "Couldn't load this document"), [
+      para(t("vLoadFailBody", "The file could not be downloaded by the extension.")),
       para(isFileUrl(url)
-        ? 'For local files, use "Open a file" below, or enable "Allow access to file URLs" for this extension in chrome://extensions.'
-        : `Reason: ${err.message}`),
+        ? t("vLoadFailFile", 'For local files, use "Open a file" below, or enable "Allow access to file URLs" for this extension in chrome://extensions.')
+        : t("vReason", "Reason: {1}", err.message)),
       filePickerButton(),
       originalButton(),
     ]);
@@ -789,12 +808,12 @@ async function loadFromData(data, title, name) {
   switch (detectFormat(data, name)) {
     case "epub": await loadEpubData(data, title); return;
     case "pdf": await loadPdfData(data, title); return;
-    case "txt": await loadBook(data, title, parseText, "Reading text.."); return;
-    case "rtf": await loadBook(data, title, parseRtf, "Reading RTF.."); return;
-    case "html": await loadBook(data, title, parseHtml, "Reading HTML.."); return;
-    case "md": await loadBook(data, title, parseMarkdown, "Reading Markdown.."); return;
-    case "fb2": await loadBook(data, title, parseFb2, "Reading FB2.."); return;
-    case "mobi": await loadBook(data, title, parseEbook, "Reading e-book.."); return;
+    case "txt": await loadBook(data, title, parseText, t("vStatusReadingText", "Reading text..")); return;
+    case "rtf": await loadBook(data, title, parseRtf, t("vStatusReadingRtf", "Reading RTF..")); return;
+    case "html": await loadBook(data, title, parseHtml, t("vStatusReadingHtml", "Reading HTML..")); return;
+    case "md": await loadBook(data, title, parseMarkdown, t("vStatusReadingMd", "Reading Markdown..")); return;
+    case "fb2": await loadBook(data, title, parseFb2, t("vStatusReadingFb2", "Reading FB2..")); return;
+    case "mobi": await loadBook(data, title, parseEbook, t("vStatusReadingEbook", "Reading e-book..")); return;
     case "image": await loadImageData(data, title, imageMime(data, name)); return;
     case "comic": await loadComicData(data, title); return;
     default: await loadPdfData(data, title);
@@ -815,9 +834,9 @@ async function loadBook(data, title, parseFn, statusLabel) {
   try {
     book = await parseFn(data);
   } catch (err) {
-    showNotice("Couldn't open this file", [
-      para("The file may be corrupt or not a supported document."),
-      para(err && err.message ? `Details: ${err.message}` : ""),
+    showNotice(t("vOpenFileFailTitle", "Couldn't open this file"), [
+      para(t("vCorruptBody", "The file may be corrupt or not a supported document.")),
+      para(err && err.message ? t("vDetails", "Details: {1}", err.message) : ""),
       filePickerButton(),
     ]);
     return;
@@ -844,7 +863,7 @@ async function loadImageData(data, title, mime) {
   pdfImageUrls.push(url); // revoked on the next teardownCurrent()
 
   const lang = options.ocrLang || "eng";
-  setStatus("Recognizing text..");
+  setStatus(t("ocrProgress", "Recognizing text.."));
   setProgress(0.1);
   try {
     const container = await overlayImage(url, {
@@ -854,14 +873,14 @@ async function loadImageData(data, title, mime) {
     content.append(container);
     applyLang(ocrLangToHtmlLang(lang));
     if (container.classList.contains("ocr-empty")) {
-      container.append(makeBadge("No text found"));
-      setStatus("No text found");
+      container.append(makeBadge(t("ocrNoText", "No text found")));
+      setStatus(t("ocrNoText", "No text found"));
     } else {
-      setStatus('Done - use the browser\'s "Translate page"');
+      setStatus(t("ocrDone", 'Done - use the browser\'s "Translate page"'));
     }
   } catch (err) {
-    showNotice("Couldn't read this image", [
-      para(err && err.message ? `Details: ${err.message}` : "The image could not be processed."),
+    showNotice(t("vImageFailTitle", "Couldn't read this image"), [
+      para(err && err.message ? t("vDetails", "Details: {1}", err.message) : t("vImageFailBody", "The image could not be processed.")),
       filePickerButton(),
     ]);
     return;
@@ -885,7 +904,7 @@ async function loadComicData(data, title) {
   document.title = title;
   $("btn-original").classList.add("hidden"); // no "native viewer" concept for a comic
   $("status").classList.remove("done");
-  setStatus("Reading comic..");
+  setStatus(t("vStatusReadingComic", "Reading comic.."));
   setProgress(0.1);
   ensureOcrCss();
 
@@ -894,14 +913,14 @@ async function loadComicData(data, title) {
     pages = await parseComic(data);
   } catch (err) {
     if (err instanceof DesktopOnlyError) {
-      showNotice("This comic needs the desktop app", [
+      showNotice(t("vComicAppTitle", "This comic needs the desktop app"), [
         para(err.message),
-        para("Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed)."),
+        para(t("vComicAppBody", "Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed).")),
         filePickerButton(),
       ]);
     } else {
-      showNotice("Couldn't open this comic", [
-        para(err && err.message ? `Details: ${err.message}` : "The archive may be corrupt or hold no page images."),
+      showNotice(t("vComicFailTitle", "Couldn't open this comic"), [
+        para(err && err.message ? t("vDetails", "Details: {1}", err.message) : t("vComicFailBody", "The archive may be corrupt or hold no page images.")),
         filePickerButton(),
       ]);
     }
@@ -942,7 +961,9 @@ function renderComic(pages) {
 
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
-  setStatus(`Ready - ${comicTotal} ${comicTotal === 1 ? "page" : "pages"}, text is recognized as you scroll`);
+  setStatus(comicTotal === 1
+    ? t("vComicReadyOne", "Ready - 1 page, text is recognized as you scroll")
+    : t("vComicReady", "Ready - {1} pages, text is recognized as you scroll", comicTotal));
   setTimeout(hideStatus, 1800);
 }
 
@@ -1028,19 +1049,19 @@ function openFilePicker() {
     if (!f) return;
     $("content").replaceChildren();
     $("status").classList.remove("done");
-    setStatus("Reading file..");
+    setStatus(t("vStatusReadingFile", "Reading file.."));
     try {
       const data = await f.arrayBuffer();
       setOriginalDownload(f, f.name); // the picked File is itself a downloadable Blob
       await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, ""), f.name);
     } catch (err) {
-      showNotice("Couldn't read the file", [para(err.message || String(err)), filePickerButton()]);
+      showNotice(t("vReadFileFailTitle", "Couldn't read the file"), [para(err.message || String(err)), filePickerButton()]);
     }
   };
   input.click();
 }
 
-function filePickerButton(label = "Open a document") {
+function filePickerButton(label = t("vOpenDocTitle", "Open a document")) {
   const b = el("button");
   b.textContent = label;
   b.addEventListener("click", openFilePicker);
@@ -1050,15 +1071,15 @@ function filePickerButton(label = "Open a document") {
 function handleLoadError(err) {
   const name = err && err.name;
   if (name === "PasswordException") {
-    showNotice("Password required", [
-      para("This PDF is password-protected and the password was not provided."),
+    showNotice(t("vPwdTitle", "Password required"), [
+      para(t("vPwdMissing", "This PDF is password-protected and the password was not provided.")),
       originalButton(),
     ]);
     return;
   }
-  showNotice("Couldn't open this PDF", [
-    para("The file may be corrupt, truncated, or in an unsupported format."),
-    para(err && err.message ? `Details: ${err.message}` : ""),
+  showNotice(t("vPdfFailTitle", "Couldn't open this PDF"), [
+    para(t("vPdfFailBody", "The file may be corrupt, truncated, or in an unsupported format.")),
+    para(err && err.message ? t("vDetails", "Details: {1}", err.message) : ""),
     originalButton(),
   ]);
 }
@@ -1069,18 +1090,20 @@ function askPassword(updatePassword, reason) {
   const need = reason === pdfjsLib.PasswordResponses?.INCORRECT_PASSWORD;
   const input = el("input");
   input.type = "password";
-  input.placeholder = "PDF password";
+  input.placeholder = t("vPwdPlaceholder", "PDF password");
   const submit = el("button");
-  submit.textContent = "Unlock";
+  submit.textContent = t("vBtnUnlock", "Unlock");
   const row = el("div", "pw-row");
   row.append(input, submit);
   const body = [
-    para(need ? "Incorrect password - try again." : "This PDF is protected. Enter its password to read it."),
+    para(need
+      ? t("vPwdIncorrect", "Incorrect password - try again.")
+      : t("vPwdPrompt", "This PDF is protected. Enter its password to read it.")),
     row,
   ];
-  showNotice("Password required", body);
+  showNotice(t("vPwdTitle", "Password required"), body);
   $("status").classList.remove("done");
-  const go = () => { if (input.value) updatePassword(input.value); setStatus("Unlocking.."); };
+  const go = () => { if (input.value) updatePassword(input.value); setStatus(t("vStatusUnlocking", "Unlocking..")); };
   submit.addEventListener("click", go);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
   input.focus();
@@ -1122,7 +1145,7 @@ async function renderDocument(pdf, title) {
   $("page-jump").max = String(total);
 
   // Sample early pages for language detection before rendering everything.
-  setStatus("Detecting language..");
+  setStatus(t("vStatusDetecting", "Detecting language.."));
   const sampleText = await collectSample(pdf, Math.min(total, 5));
   await setDocumentLang(pdf, sampleText);
 
@@ -1225,7 +1248,7 @@ async function renderPages(from, to) {
     section.dataset.page = String(n);
     if (n > 1) frag.append(el("hr", "page-sep"));
     const label = el("div", "page-label");
-    label.textContent = `Page ${n}`;
+    label.textContent = t("vPageN", "Page {1}", n);
     section.append(label);
     renderBlocks(section, blocks);
 
@@ -1243,7 +1266,7 @@ async function renderPages(from, to) {
     if (pageChars >= 20) pdfPagesWithText++;
 
     setProgress(0.15 + 0.85 * (n / pdfTotal));
-    setStatus(`Rendering page ${n} / ${pdfTotal}`);
+    setStatus(t("vStatusRendering", "Rendering page {1} / {2}", n, pdfTotal));
     if (n % 4 === 0) {
       if (stream) content.append(frag);
       await yieldToUI();
@@ -1286,8 +1309,8 @@ async function ensurePageRendered(n) {
 function reportRenderIdle() {
   setProgress(pdfRendered / pdfTotal);
   setStatus(pdfRendered >= pdfTotal
-    ? `Done - ${pdfTotal} pages`
-    : `Pages 1-${pdfRendered} of ${pdfTotal} - keep scrolling to load more`);
+    ? t("vStatusDonePages", "Done - {1} pages", pdfTotal)
+    : t("vStatusPagesSoFar", "Pages 1-{1} of {2} - keep scrolling to load more", pdfRendered, pdfTotal));
   setTimeout(hideStatus, 1400);
 }
 
@@ -1302,16 +1325,16 @@ async function loadEpubData(data, title) {
   // No "native viewer" exists for EPUB; hide the PDF-only Original button.
   $("btn-original").classList.add("hidden");
   $("status").classList.remove("done");
-  setStatus("Reading EPUB..");
+  setStatus(t("vStatusReadingEpub", "Reading EPUB.."));
   setProgress(0.1);
 
   let book;
   try {
     book = await loadEpub(data);
   } catch (err) {
-    showNotice("Couldn't open this EPUB", [
-      para("The file may be corrupt or not a valid EPUB."),
-      para(err && err.message ? `Details: ${err.message}` : ""),
+    showNotice(t("vEpubFailTitle", "Couldn't open this EPUB"), [
+      para(t("vEpubFailBody", "The file may be corrupt or not a valid EPUB.")),
+      para(err && err.message ? t("vDetails", "Details: {1}", err.message) : ""),
       filePickerButton(),
     ]);
     return;
@@ -1344,7 +1367,7 @@ function renderBook(book, fallbackTitle) {
     section.dataset.page = String(n);
     if (i > 0) content.append(el("hr", "page-sep"));
     const label = el("div", "page-label");
-    label.textContent = s.label || `Section ${n}`;
+    label.textContent = s.label || t("vSectionN", "Section {1}", n);
     section.append(label);
     totalChars += (s.frag.textContent || "").length; // read before append empties it
     section.append(s.frag);
@@ -1359,17 +1382,19 @@ function renderBook(book, fallbackTitle) {
   if (totalChars === 0 && !ocrCovering) {
     const banner = el("div", "notice");
     const h = el("h1");
-    h.textContent = "Little or no text found";
+    h.textContent = t("vLittleTextTitle", "Little or no text found");
     banner.append(
       h,
-      para("This EPUB has no extractable text (it may be image-only). Native page-translate needs actual text, not a pretty picture of it."),
+      para(t("vLittleTextEpub", "This EPUB has no extractable text (it may be image-only). Native page-translate needs actual text, not a pretty picture of it.")),
       filePickerButton(),
     );
     content.prepend(banner);
   }
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
-  setStatus(`Done - ${total} ${total === 1 ? "section" : "sections"}`);
+  setStatus(total === 1
+    ? t("vStatusDoneSectionsOne", "Done - 1 section")
+    : t("vStatusDoneSections", "Done - {1} sections", total));
   setTimeout(hideStatus, 1200);
 }
 
@@ -1391,16 +1416,16 @@ function warnIfNoText() {
     const content = $("content");
     const banner = el("div", "notice");
     const h = el("h1");
-    h.textContent = "Little or no text found";
+    h.textContent = t("vLittleTextTitle", "Little or no text found");
     banner.append(
       h,
-      para("This looks like a scanned or image-only PDF, so there is little text to translate - the browser translates words, not pixels."),
+      para(t("vLittleTextPdf", "This looks like a scanned or image-only PDF, so there is little text to translate - the browser translates words, not pixels.")),
     );
     // OCR is off here (or found no images); when it is on we skip the whole banner above. Still,
     // if the reader has OCR off, suggest turning to a real OCR pass rather than a dead end.
     if (!options.ocrImages) {
       banner.append(
-        para("To translate scanned pages, run them through OCR first (turn on \"Use OCR for images\", or use the doc-html-translate desktop app), then reopen the result."),
+        para(t("vLittleTextOcrHint", "To translate scanned pages, run them through OCR first (turn on \"Use OCR for images\", or use the doc-html-translate desktop app), then reopen the result.")),
       );
     }
     banner.append(originalButton());

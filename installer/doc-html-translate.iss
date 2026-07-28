@@ -52,21 +52,46 @@ SolidCompression=yes
 WizardStyle=modern
 ChangesAssociations=yes
 
+; Eight of the app's thirteen interface languages. Arabic, Hindi, Bengali, Urdu and Chinese are
+; deliberately absent: Inno Setup ships no official .isl for them, and a hand-made translation of the
+; installer's own wizard text is not something this project can keep correct. Those five fall back to
+; English in the installer only - the app they install still speaks their language. Do not "complete"
+; this list without an official .isl.
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "uk"; MessagesFile: "compiler:Languages\Ukrainian.isl"
+Name: "de"; MessagesFile: "compiler:Languages\German.isl"
+Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [CustomMessages]
 en.OpenWithTask=Add to the "Open with" list and the right-click "Convert to HTML" menu
 ru.OpenWithTask=Добавить в список "Открыть с помощью" и пункт "Convert to HTML" в контекстное меню
 uk.OpenWithTask=Додати до списку "Відкрити за допомогою" та пункт "Convert to HTML" у контекстне меню
+de.OpenWithTask=Zur Liste "Öffnen mit" und zum Kontextmenüeintrag "Convert to HTML" hinzufügen
+it.OpenWithTask=Aggiungi all'elenco "Apri con" e alla voce "Convert to HTML" del menu contestuale
+es.OpenWithTask=Añadir a la lista "Abrir con" y a la opción "Convert to HTML" del menú contextual
+fr.OpenWithTask=Ajouter à la liste "Ouvrir avec" et à l'entrée "Convert to HTML" du menu contextuel
+pt.OpenWithTask=Adicionar à lista "Abrir com" e ao item "Convert to HTML" do menu de contexto
 en.ChromeExtTask=Install the Chrome browser extension (Document Page Translator)
 ru.ChromeExtTask=Установить расширение для браузера Chrome (Document Page Translator)
 uk.ChromeExtTask=Встановити розширення для браузера Chrome (Document Page Translator)
+de.ChromeExtTask=Browser-Erweiterung für Chrome installieren (Document Page Translator)
+it.ChromeExtTask=Installa l'estensione per il browser Chrome (Document Page Translator)
+es.ChromeExtTask=Instalar la extensión para el navegador Chrome (Document Page Translator)
+fr.ChromeExtTask=Installer l'extension pour le navigateur Chrome (Document Page Translator)
+pt.ChromeExtTask=Instalar a extensão para o navegador Chrome (Document Page Translator)
 en.EdgeExtTask=Install the Microsoft Edge browser extension (Document Page Translator)
 ru.EdgeExtTask=Установить расширение для браузера Microsoft Edge (Document Page Translator)
 uk.EdgeExtTask=Встановити розширення для браузера Microsoft Edge (Document Page Translator)
+de.EdgeExtTask=Browser-Erweiterung für Microsoft Edge installieren (Document Page Translator)
+it.EdgeExtTask=Installa l'estensione per il browser Microsoft Edge (Document Page Translator)
+es.EdgeExtTask=Instalar la extensión para el navegador Microsoft Edge (Document Page Translator)
+fr.EdgeExtTask=Installer l'extension pour le navigateur Microsoft Edge (Document Page Translator)
+pt.EdgeExtTask=Instalar a extensão para o navegador Microsoft Edge (Document Page Translator)
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked

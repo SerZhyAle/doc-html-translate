@@ -9,12 +9,27 @@
   <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/">
   <meta property="og:title" content="doc-html-translate - document converter to local HTML for Windows">
   <meta property="og:description" content="Convert books, documents, comics, and images to local HTML for reading and browser page translation.">
+  <link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/">
+  <link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?l=ru">
+  <link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?l=uk">
+  <link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/">
+  <link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/">
+  <link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/">
+  <link rel="alternate" hreflang="fr" href="https://serzhyale.github.io/doc-html-translate/fr/">
+  <link rel="alternate" hreflang="pt" href="https://serzhyale.github.io/doc-html-translate/pt/">
+  <link rel="alternate" hreflang="ar" href="https://serzhyale.github.io/doc-html-translate/ar/">
+  <link rel="alternate" hreflang="hi" href="https://serzhyale.github.io/doc-html-translate/hi/">
+  <link rel="alternate" hreflang="bn" href="https://serzhyale.github.io/doc-html-translate/bn/">
+  <link rel="alternate" hreflang="ur" href="https://serzhyale.github.io/doc-html-translate/ur/">
+  <link rel="alternate" hreflang="zh" href="https://serzhyale.github.io/doc-html-translate/zh/">
+  <link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/">
   <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'),l=localStorage.getItem('sza-lang');if(!l){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')===0?'ru':n.indexOf('uk')===0?'ua':'en';}document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-lang',l)}catch(e){}})();</script>
+  <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'),q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1],l=q?(q==='uk'?'ua':q):localStorage.getItem('sza-lang');if(!l){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')===0?'ru':n.indexOf('uk')===0?'ua':'en';}document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-lang',l)}catch(e){}})();</script>
   <link rel="stylesheet" href="assets/sza-kit.css">
-  <style>html[data-lang="ru"] [data-l]:not([data-l="ru"]),html[data-lang="en"] [data-l]:not([data-l="en"]),html[data-lang="ua"] [data-l]:not([data-l="ua"]){display:none}</style>
+  <style>html[data-lang="ru"] [data-l]:not([data-l="ru"]),html[data-lang="en"] [data-l]:not([data-l="en"]),html[data-lang="ua"] [data-l]:not([data-l="ua"]){display:none}
+  .langs{display:flex;flex-wrap:wrap;gap:.35rem;font-size:.8rem;opacity:.85;margin:0 0 1rem}.langs a{text-decoration:none}</style>
   <title>doc-html-translate - document converter to local HTML for Windows</title>
   <meta name="description" content="Convert books, documents, comics, and images to local HTML for reading and browser page translation.">
 </head>
@@ -30,6 +45,7 @@
   </header>
 
   <main class="container" id="top">
+    <nav class="langs" aria-label="Language"><a href="de/" lang="de" hreflang="de">Deutsch</a><a href="it/" lang="it" hreflang="it">Italiano</a><a href="es/" lang="es" hreflang="es">Español</a><a href="fr/" lang="fr" hreflang="fr">Français</a><a href="pt/" lang="pt" hreflang="pt">Português</a><a href="ar/" lang="ar" hreflang="ar">العربية</a><a href="hi/" lang="hi" hreflang="hi">हिन्दी</a><a href="bn/" lang="bn" hreflang="bn">বাংলা</a><a href="ur/" lang="ur" hreflang="ur">اردو</a><a href="zh/" lang="zh" hreflang="zh">中文</a></nav>
     <section class="hero">
       <div class="hero-id">
         <div class="product-icon" aria-hidden="true"><span>DOC</span><span>HTML</span></div>
@@ -40,6 +56,7 @@
         </div>
       </div>
       <p class="lead"><span data-l="ru">Преобразует EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, комиксы и изображения в локальный HTML с оглавлением и навигацией. Результат открывается в браузере; текст можно читать, искать и переводить встроенным переводчиком страницы. Для изображений доступен OCR.</span><span data-l="en">Converts EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, comics, and images into local HTML with a table of contents and navigation. The result opens in a browser, where the text can be read, searched, and translated with built-in page translation. OCR is available for images.</span><span data-l="ua">Перетворює EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, комікси та зображення на локальний HTML зі змістом і навігацією. Результат відкривається у браузері; текст можна читати, шукати й перекладати вбудованим перекладачем сторінки. Для зображень доступний OCR.</span></p>
+      <p class="lead"><b><span data-l="ru">Новое: интерфейс на 13 языках</span><span data-l="en">New: the interface speaks 13 languages</span><span data-l="ua">Нове: інтерфейс 13 мовами</span></b> - <span dir="ltr">en ru uk de it es fr pt ar hi bn ur zh</span>. <span data-l="ru">Приложение, окно и расширение сами берут язык системы; арабский и урду отображаются справа налево. Язык интерфейса не меняет язык документа - Chrome по-прежнему предлагает перевести страницу.</span><span data-l="en">The app, the window and the extension follow your system language; Arabic and Urdu are laid out right to left. The interface language never changes the document's language - Chrome still offers to translate the page.</span><span data-l="ua">Застосунок, вікно й розширення самі беруть мову системи; арабська й урду відображаються справа наліво. Мова інтерфейсу не змінює мову документа - Chrome і далі пропонує перекласти сторінку.</span></p>
       <div class="pills hero-formats"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">MOBI / AZW3</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">TXT / MD / HTML</span><span class="pill">CBZ / CBR / CB7 / CBT</span><span class="pill">PNG / JPG / TIFF</span></div>
       <div class="button-group">
         <a class="btn btn-primary btn-sm" href="#get"><span data-l="ru">Установка</span><span data-l="en">Install</span><span data-l="ua">Встановлення</span></a>

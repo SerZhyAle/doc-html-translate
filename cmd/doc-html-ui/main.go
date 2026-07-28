@@ -21,6 +21,7 @@ import (
 	"unicode/utf16"
 
 	"doc-html-translate/internal/browser"
+	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/syslocale"
@@ -30,6 +31,9 @@ import (
 
 //go:embed ui.html
 var uiHTML string
+
+//go:embed i18n.js
+var uiI18nJS string
 
 //go:embed favicon.ico
 var faviconICO []byte
@@ -60,6 +64,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleUI)
+	mux.HandleFunc("/i18n.js", handleI18nJS)
 	mux.HandleFunc("/favicon.ico", handleFavicon)
 	mux.HandleFunc("/api/version", handleVersion)
 	mux.HandleFunc("/api/initial", handleInitial)
@@ -118,6 +123,13 @@ var activeRuns atomic.Int64
 func handleUI(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = io.WriteString(w, uiHTML)
+}
+
+// handleI18nJS serves the GUI dictionary. It is a separate file rather than an inline block
+// because thirteen languages of ~87 keys each would otherwise bury the markup in ui.html.
+func handleI18nJS(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	_, _ = io.WriteString(w, uiI18nJS)
 }
 
 // handleFavicon serves the project icon so the app window shows our logo instead of the
@@ -351,6 +363,7 @@ type runRequest struct {
 	Verbose        bool   `json:"verbose"`
 	OCR            bool   `json:"ocr"`
 	OCRLang        string `json:"ocrLang"`
+	UILang         string `json:"uiLang"`
 }
 
 // handlePreview returns the exact command line the current settings would run,
@@ -698,13 +711,17 @@ func handleAssocStatus(w http.ResponseWriter, _ *http.Request) {
 //	           (file associations come from the package manifest instead).
 //	cli      → the bundled converter exe is resolvable next to the app or on PATH;
 //	           without it, Convert cannot run.
-//	lang     → the Windows UI language ("ru"/"uk"/"en"); the GUI opens in it by
-//	           default, unless the user has picked a language before.
+//	lang     → the Windows UI language, one of the thirteen the app ships; the GUI opens
+//	           in it by default, unless the user has picked a language before.
+//	font     → the UI font that language's script needs (Nirmala UI, Microsoft YaHei UI),
+//	           empty when the default stack covers it.
 func handleEnv(w http.ResponseWriter, _ *http.Request) {
+	lang := i18n.Resolve("", "", syslocale.Lang())
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"packaged": isPackaged(),
 		"cli":      cliAvailable(),
-		"lang":     syslocale.Lang(),
+		"lang":     lang,
+		"font":     i18n.FontFamily(lang),
 	})
 }
 
@@ -795,6 +812,12 @@ func assembleArgs(req runRequest) []string {
 	}
 	if req.Verbose {
 		a = append(a, "-v")
+	}
+	// The window's own language selector is the control here, so the converted page's
+	// navigation speaks the language the user just read the GUI in. Empty means "whatever
+	// the OS says", which is the CLI's own default.
+	if req.UILang != "" {
+		a = append(a, "-ui-lang", req.UILang)
 	}
 	if req.Output != "" {
 		a = append(a, "-folder", req.Output)

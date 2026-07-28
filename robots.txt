@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://serzhyale.github.io/doc-html-translate/sitemap.xml

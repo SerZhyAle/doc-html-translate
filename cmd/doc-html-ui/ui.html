@@ -83,9 +83,8 @@ h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
 .byline a:hover { text-decoration: underline; }
 .byline .dot { color: var(--muted); margin: 0 3px; }
 /* language switch, pushed to the far right of the header row */
-.langsw { margin-left: auto; display: flex; gap: 4px; align-self: center; }
-.langsw button { padding: 3px 9px; font-size: 11px; font-weight: 600; }
-.langsw button.active { background: var(--accent); color: #11111b; border-color: var(--accent); }
+/* 13 endonyms do not fit a button row, so the switcher is a select */
+.langsw { margin-left: auto; align-self: center; padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; }
 .hint { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 .hint.ok { color: var(--green); }
 .hint.warn { color: var(--red); }
@@ -271,11 +270,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
         <span class="dot">&#183;</span>
         <a href="mailto:sza@ukr.net">Feedback</a>
     </span>
-    <span class="langsw" id="langSwitch">
-        <button type="button" data-lang="en">EN</button>
-        <button type="button" data-lang="ru">RU</button>
-        <button type="button" data-lang="uk">UK</button>
-    </span>
+    <select class="langsw" id="langSwitch" data-i18n-title="titleUiLang" title="Interface language"></select>
 </div>
 <div class="hint warn" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
@@ -413,281 +408,13 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
 </div><!-- /app -->
 
+<script src="/i18n.js"></script>
 <script>
 // ── i18n ────────────────────────────────────────────────
 // The GUI opens in the Windows UI language (reported by /api/env) and can be
 // switched with the EN/RU/UK buttons; the choice is persisted per user. Static
 // text is tagged with data-i18n / data-i18n-html / data-i18n-ph / data-i18n-title;
 // dynamic status lines go through setStatus() so they re-render on a switch.
-const I18N = {
-    en: {
-        cliWarn: "Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.",
-        dropPlaceholder: "Drag a document here, or click to choose one",
-        dropChooseAnother: "click to choose another file",
-        btnConvert: "Convert",
-        dropSupported: "Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.",
-        prevResultFound: "A previous result already exists for this file.",
-        btnOpenPrev: "Open result",
-        btnDeletePrev: "Delete previous result",
-        prevResultIn: "Saved in:",
-        ttOpenFolder: "Open the folder holding the result",
-        openPrevFail: "Could not open the result: {msg}",
-        confirmDeletePrev: "Delete the previous conversion result for this file? This cannot be undone.",
-        confirmParamsChanged: "The existing result was built with different options. Delete it and rebuild with the current settings?",
-        deletePrevFail: "Could not delete the previous result: {msg}",
-        lblOutput: "Output:",
-        phOutput: "Leave empty - lands next to the input",
-        btnBrowse: "Browse..",
-        secTranslation: "Translation",
-        engChrome: "Chrome (free)",
-        engGoogle: "Google Cloud",
-        engOllama: "Ollama (local)",
-        engNone: "Don't translate",
-        hintEngine: "Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.",
-        lblLanguages: "Languages:",
-        titleSwap: "Swap source and target",
-        lblGoogleKey: "Google key:",
-        phGoogleKey: "Paste your Google Cloud Translation API key..",
-        btnSave: "Save",
-        googleKeySearching: "Rummaging for a saved key..",
-        secAdvanced: "Advanced",
-        lblSplitSize: "Split size:",
-        hintSplit: "Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.",
-        lblTocDepth: "TOC depth:",
-        lblMaxCost: "Max cost $:",
-        hintTocCost: "TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).",
-        secOllama: "Ollama settings",
-        lblModel: "Model:",
-        lblParallel: "Parallel:",
-        lblContext: "Context:",
-        secOCR: "Image OCR (translate text in pictures)",
-        chkOCRLabel: "Overlay translatable text on images",
-        hintOCR: "Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.",
-        lblOcrLang: "OCR language:",
-        lblAddLang: "Add language:",
-        btnDownload: "Download",
-        ocrStatusDefault: "English is built-in; download other languages as needed.",
-        chkSingle: "Single page (no table of contents)",
-        chkNoOpen: "Don't open browser",
-        chkForce: "Force re-process",
-        chkVerbose: "Verbose log",
-        secIntegration: "Windows integration",
-        chkDefaultHandler: "Make this app the default handler for EPUB, PDF, ..",
-        registerHint: "Optional and off by default. The \"Convert to HTML\" right-click entry is always added - this only makes double-clicking a document open it with this app (per-user file associations).",
-        assocPromptText: "Make this app the default handler for EPUB, PDF and the other supported files? It is optional and off by default - the \"Convert to HTML\" right-click entry is always available. You can change this anytime under \"Windows integration\".",
-        assocPromptYes: "Yes, make default",
-        assocPromptNo: "No, thanks",
-        secCmdLine: "Command line",
-        cmdPlaceholder: "Pick a file and settings to see the command..",
-        btnCopy: "Copy",
-        cmdCopied: "Copied!",
-        cmdCopyFailed: "Copy failed",
-        titleCopyCmd: "Copy command line to clipboard",
-        secLog: "Log",
-        statusLoading: "Loading {name}..",
-        statusLoadFail: "Could not load file: {msg}",
-        statusLoadedCopy: "Loaded a copy into the app folder; set Output if you want results elsewhere.",
-        googleKeyFound: "A saved key was found. Leave blank to keep it, or paste a new one to replace it.",
-        googleKeyNone: "No key saved yet. Paste it and click Save (kept at {path}) - it never leaves this machine.",
-        googleKeyPathFallback: "per-user folder",
-        googleKeyCheckFail: "Could not check key status: {msg}",
-        googleKeyEnterFirst: "Enter a key before saving. Saving nothing saves nothing.",
-        googleKeySaveFail: "Save failed: {msg}",
-        googleKeySaved: "Key saved. That wasn't so hard.",
-        googleKeySavedUnverified: "Saved, but we could not verify it - Google stayed mysteriously quiet.",
-        registering: "Registering..",
-        registerDone: "Done - this app is now the default handler. Double-clicking a document opens it. (If Windows ignores it: right-click the file -> Open with -> Always.)",
-        registerFail: "Registration failed: {msg}",
-        unregistering: "Removing..",
-        unregisterDone: "Done - this app is no longer the default handler. The \"Convert to HTML\" right-click entry stays available.",
-        alertChooseFirst: "Choose an input file first - the converter can't read your mind (yet).",
-        confirmNoKey: "No Google API key is saved - translation will be quietly skipped. Convert anyway?",
-        ocrDownloading: "Downloading {lang}..",
-        ocrInstalledMsg: "{lang} installed.",
-        ocrDownloadFail: "Download failed: {err}",
-        ocrDownloadFailGeneric: "Download failed.",
-        unknownError: "unknown error",
-        unknown: "unknown",
-    },
-    ru: {
-        cliWarn: "Движок конвертера (doc-html-translate.exe) не найден рядом с приложением или в PATH - конвертация не сработает. Держите оба файла вместе.",
-        dropPlaceholder: "Перетащите документ сюда или щёлкните, чтобы выбрать",
-        dropChooseAnother: "щёлкните, чтобы выбрать другой файл",
-        btnConvert: "Конвертировать",
-        dropSupported: "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комиксы (CBZ/CBR/CB7/CBT) и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для CBR/CB7 нужен 7-Zip; для наложения текста на изображения и комиксы нужен Tesseract.",
-        prevResultFound: "Для этого файла уже есть результат конвертации.",
-        btnOpenPrev: "Открыть результат",
-        btnDeletePrev: "Удалить предыдущий результат",
-        prevResultIn: "Сохранён в:",
-        ttOpenFolder: "Открыть папку с результатом",
-        openPrevFail: "Не удалось открыть результат: {msg}",
-        confirmDeletePrev: "Удалить предыдущий результат конвертации для этого файла? Это необратимо.",
-        confirmParamsChanged: "Существующий результат собран с другими параметрами. Удалить его и пересобрать с текущими настройками?",
-        deletePrevFail: "Не удалось удалить предыдущий результат: {msg}",
-        lblOutput: "Папка вывода:",
-        phOutput: "Оставьте пустым - результат ляжет рядом с исходником",
-        btnBrowse: "Обзор..",
-        secTranslation: "Перевод",
-        engChrome: "Chrome (бесплатно)",
-        engGoogle: "Google Cloud",
-        engOllama: "Ollama (локально)",
-        engNone: "Не переводить",
-        hintEngine: "Chrome (бесплатно): только конвертация, затем перевод в браузере - без API-ключа. Google/Ollama переводят во время конвертации.",
-        lblLanguages: "Языки:",
-        titleSwap: "Поменять исходный и целевой",
-        lblGoogleKey: "Ключ Google:",
-        phGoogleKey: "Вставьте ключ Google Cloud Translation API..",
-        btnSave: "Сохранить",
-        googleKeySearching: "Ищем сохранённый ключ..",
-        secAdvanced: "Дополнительно",
-        lblSplitSize: "Размер блока:",
-        hintSplit: "Символов на блок; <code>0</code> отключает разбиение. Если сомневаетесь - <code>0</code>.",
-        lblTocDepth: "Глубина оглавления:",
-        lblMaxCost: "Макс. стоимость $:",
-        hintTocCost: "Глубина оглавления: <code>0</code> = без ограничений, <code>1</code> = только главы. Макс. стоимость (только платные движки): <code>0</code> = без лимита; напр. <code>2</code> пропустит Google, если оценка превысит $2 (книга всё равно конвертируется, без перевода).",
-        secOllama: "Настройки Ollama",
-        lblModel: "Модель:",
-        lblParallel: "Параллельно:",
-        lblContext: "Контекст:",
-        secOCR: "OCR изображений (перевод текста на картинках)",
-        chkOCRLabel: "Наложить переводимый текст поверх изображений",
-        hintOCR: "Распознаёт текст, впечатанный в изображения (в EPUB/PDF или в отдельном файле-картинке, открытом напрямую), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Отдельная картинка распознаётся автоматически. Нужен установленный Tesseract.",
-        lblOcrLang: "Язык OCR:",
-        lblAddLang: "Добавить язык:",
-        btnDownload: "Скачать",
-        ocrStatusDefault: "Английский встроен; другие языки скачивайте по необходимости.",
-        chkSingle: "Одна страница (без оглавления)",
-        chkNoOpen: "Не открывать браузер",
-        chkForce: "Принудительно переобработать",
-        chkVerbose: "Подробный лог",
-        secIntegration: "Интеграция с Windows",
-        chkDefaultHandler: "Сделать обработчиком по умолчанию для EPUB, PDF, ..",
-        registerHint: "По желанию, по умолчанию выключено. Пункт правого клика «Convert to HTML» добавляется всегда - это лишь делает так, что двойной щелчок по документу открывает его этим приложением (пользовательские ассоциации файлов).",
-        assocPromptText: "Сделать это приложение обработчиком по умолчанию для EPUB, PDF и других поддерживаемых файлов? Это по желанию и по умолчанию выключено - пункт правого клика «Convert to HTML» доступен всегда. Изменить можно в любой момент в разделе «Интеграция с Windows».",
-        assocPromptYes: "Да, сделать по умолчанию",
-        assocPromptNo: "Нет, спасибо",
-        secCmdLine: "Командная строка",
-        cmdPlaceholder: "Выберите файл и настройки, чтобы увидеть команду..",
-        btnCopy: "Копировать",
-        cmdCopied: "Скопировано!",
-        cmdCopyFailed: "Не скопировано",
-        titleCopyCmd: "Скопировать командную строку в буфер обмена",
-        secLog: "Лог",
-        statusLoading: "Загрузка {name}..",
-        statusLoadFail: "Не удалось загрузить файл: {msg}",
-        statusLoadedCopy: "Копия загружена в папку приложения; укажите «Папка вывода», если нужен другой путь.",
-        googleKeyFound: "Найден сохранённый ключ. Оставьте пустым, чтобы сохранить его, или вставьте новый для замены.",
-        googleKeyNone: "Ключ ещё не сохранён. Вставьте его и нажмите «Сохранить» (хранится в {path}) - он никогда не покидает этот компьютер.",
-        googleKeyPathFallback: "пользовательскую папку",
-        googleKeyCheckFail: "Не удалось проверить статус ключа: {msg}",
-        googleKeyEnterFirst: "Введите ключ перед сохранением. Сохранять нечего.",
-        googleKeySaveFail: "Не удалось сохранить: {msg}",
-        googleKeySaved: "Ключ сохранён. Не так уж и сложно.",
-        googleKeySavedUnverified: "Сохранено, но проверить не удалось - Google загадочно промолчал.",
-        registering: "Регистрация..",
-        registerDone: "Готово - теперь это приложение обработчик по умолчанию. Двойной щелчок по документу открывает его. (Если Windows игнорирует: правый клик по файлу -> Открыть с помощью -> Всегда.)",
-        registerFail: "Не удалось зарегистрировать: {msg}",
-        unregistering: "Удаление..",
-        unregisterDone: "Готово - приложение больше не обработчик по умолчанию. Пункт правого клика «Convert to HTML» остаётся доступным.",
-        alertChooseFirst: "Сначала выберите входной файл - конвертер пока не умеет читать мысли.",
-        confirmNoKey: "Ключ Google API не сохранён - перевод будет тихо пропущен. Всё равно конвертировать?",
-        ocrDownloading: "Скачивание {lang}..",
-        ocrInstalledMsg: "{lang} установлен.",
-        ocrDownloadFail: "Не удалось скачать: {err}",
-        ocrDownloadFailGeneric: "Не удалось скачать.",
-        unknownError: "неизвестная ошибка",
-        unknown: "неизвестно",
-    },
-    uk: {
-        cliWarn: "Рушій конвертера (doc-html-translate.exe) не знайдено поряд із застосунком або в PATH - конвертація не спрацює. Тримайте обидва файли разом.",
-        dropPlaceholder: "Перетягніть документ сюди або клацніть, щоб обрати",
-        dropChooseAnother: "клацніть, щоб обрати інший файл",
-        btnConvert: "Конвертувати",
-        dropSupported: "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комікси (CBZ/CBR/CB7/CBT) та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для CBR/CB7 потрібен 7-Zip; для накладання тексту на зображення та комікси потрібен Tesseract.",
-        prevResultFound: "Для цього файлу вже є результат конвертації.",
-        btnOpenPrev: "Відкрити результат",
-        btnDeletePrev: "Видалити попередній результат",
-        prevResultIn: "Збережено в:",
-        ttOpenFolder: "Відкрити теку з результатом",
-        openPrevFail: "Не вдалося відкрити результат: {msg}",
-        confirmDeletePrev: "Видалити попередній результат конвертації для цього файлу? Це незворотно.",
-        confirmParamsChanged: "Наявний результат зібрано з іншими параметрами. Видалити його та перезібрати з поточними налаштуваннями?",
-        deletePrevFail: "Не вдалося видалити попередній результат: {msg}",
-        lblOutput: "Тека виводу:",
-        phOutput: "Залиште порожнім - результат ляже поряд із джерелом",
-        btnBrowse: "Огляд..",
-        secTranslation: "Переклад",
-        engChrome: "Chrome (безкоштовно)",
-        engGoogle: "Google Cloud",
-        engOllama: "Ollama (локально)",
-        engNone: "Не перекладати",
-        hintEngine: "Chrome (безкоштовно): лише конвертація, потім переклад у браузері - без API-ключа. Google/Ollama перекладають під час конвертації.",
-        lblLanguages: "Мови:",
-        titleSwap: "Поміняти джерело та ціль",
-        lblGoogleKey: "Ключ Google:",
-        phGoogleKey: "Вставте ключ Google Cloud Translation API..",
-        btnSave: "Зберегти",
-        googleKeySearching: "Шукаємо збережений ключ..",
-        secAdvanced: "Додатково",
-        lblSplitSize: "Розмір блоку:",
-        hintSplit: "Символів на блок; <code>0</code> вимикає розбиття. Якщо сумніваєтесь - <code>0</code>.",
-        lblTocDepth: "Глибина змісту:",
-        lblMaxCost: "Макс. вартість $:",
-        hintTocCost: "Глибина змісту: <code>0</code> = без обмежень, <code>1</code> = лише розділи. Макс. вартість (лише платні рушії): <code>0</code> = без ліміту; напр. <code>2</code> пропустить Google, якщо оцінка перевищить $2 (книга все одно конвертується, без перекладу).",
-        secOllama: "Налаштування Ollama",
-        lblModel: "Модель:",
-        lblParallel: "Паралельно:",
-        lblContext: "Контекст:",
-        secOCR: "OCR зображень (переклад тексту на картинках)",
-        chkOCRLabel: "Накласти перекладний текст поверх зображень",
-        hintOCR: "Розпізнає текст, вбудований у зображення (у EPUB/PDF або в окремому файлі-зображенні, відкритому напряму), і накладає його зверху як справжній текст, щоб переклад охоплював і картинки. Окреме зображення розпізнається автоматично. Потрібен встановлений Tesseract.",
-        lblOcrLang: "Мова OCR:",
-        lblAddLang: "Додати мову:",
-        btnDownload: "Завантажити",
-        ocrStatusDefault: "Англійська вбудована; інші мови завантажуйте за потреби.",
-        chkSingle: "Одна сторінка (без змісту)",
-        chkNoOpen: "Не відкривати браузер",
-        chkForce: "Примусово переобробити",
-        chkVerbose: "Докладний лог",
-        secIntegration: "Інтеграція з Windows",
-        chkDefaultHandler: "Зробити обробником за замовчуванням для EPUB, PDF, ..",
-        registerHint: "За бажанням, типово вимкнено. Пункт правого кліку «Convert to HTML» додається завжди - це лише робить так, що подвійний клік по документу відкриває його цим застосунком (користувацькі асоціації файлів).",
-        assocPromptText: "Зробити цей застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів? Це за бажанням і типово вимкнено - пункт правого кліку «Convert to HTML» доступний завжди. Змінити можна будь-коли в розділі «Інтеграція з Windows».",
-        assocPromptYes: "Так, зробити типовим",
-        assocPromptNo: "Ні, дякую",
-        secCmdLine: "Командний рядок",
-        cmdPlaceholder: "Оберіть файл і налаштування, щоб побачити команду..",
-        btnCopy: "Копіювати",
-        cmdCopied: "Скопійовано!",
-        cmdCopyFailed: "Не скопійовано",
-        titleCopyCmd: "Скопіювати командний рядок у буфер обміну",
-        secLog: "Лог",
-        statusLoading: "Завантаження {name}..",
-        statusLoadFail: "Не вдалося завантажити файл: {msg}",
-        statusLoadedCopy: "Копію завантажено в теку застосунку; вкажіть «Тека виводу», якщо потрібен інший шлях.",
-        googleKeyFound: "Знайдено збережений ключ. Залиште порожнім, щоб зберегти його, або вставте новий для заміни.",
-        googleKeyNone: "Ключ ще не збережено. Вставте його та натисніть «Зберегти» (зберігається в {path}) - він ніколи не залишає цей комп'ютер.",
-        googleKeyPathFallback: "користувацьку теку",
-        googleKeyCheckFail: "Не вдалося перевірити стан ключа: {msg}",
-        googleKeyEnterFirst: "Введіть ключ перед збереженням. Зберігати нічого.",
-        googleKeySaveFail: "Не вдалося зберегти: {msg}",
-        googleKeySaved: "Ключ збережено. Не так уже й складно.",
-        googleKeySavedUnverified: "Збережено, але перевірити не вдалося - Google загадково промовчав.",
-        registering: "Реєстрація..",
-        registerDone: "Готово - тепер цей застосунок обробник за замовчуванням. Подвійний клік по документу відкриває його. (Якщо Windows ігнорує: правий клік по файлу -> Відкрити за допомогою -> Завжди.)",
-        registerFail: "Не вдалося зареєструвати: {msg}",
-        unregistering: "Видалення..",
-        unregisterDone: "Готово - застосунок більше не обробник за замовчуванням. Пункт правого кліку «Convert to HTML» залишається доступним.",
-        alertChooseFirst: "Спочатку оберіть вхідний файл - конвертер поки що не вміє читати думки.",
-        confirmNoKey: "Ключ Google API не збережено - переклад буде тихо пропущено. Все одно конвертувати?",
-        ocrDownloading: "Завантаження {lang}..",
-        ocrInstalledMsg: "{lang} встановлено.",
-        ocrDownloadFail: "Не вдалося завантажити: {err}",
-        ocrDownloadFailGeneric: "Не вдалося завантажити.",
-        unknownError: "невідома помилка",
-        unknown: "невідомо",
-    },
-};
 
 let currentLang = 'en';   // language currently shown
 let userLang = null;      // explicit user choice (from saved settings / buttons)
@@ -727,21 +454,37 @@ function applyLang(lang) {
     document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
     document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
     for (const id in liveStatus) renderStatus(id);
-    document.querySelectorAll('#langSwitch button').forEach(b => {
-        b.classList.toggle('active', b.dataset.lang === lang);
-    });
+    document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
+    document.body.style.fontFamily = FONT_STACKS[lang] || '';
+    const sw = document.getElementById('langSwitch');
+    if (sw) sw.value = lang;
 }
 
-// System language (from env) is the default; an explicit user choice wins.
-function resolveLang() { applyLang(userLang || systemLang || 'en'); }
+// A ?lang= override outranks everything and is never persisted: it exists so the screenshot
+// tooling can capture all 13 languages without writing over the user's saved choice.
+const urlLang = (location.search.match(/[?&]lang=([a-z]{2})\b/) || [])[1];
 
-document.querySelectorAll('#langSwitch button').forEach(b => {
-    b.addEventListener('click', () => {
-        userLang = b.dataset.lang;
+// System language (from env) is the default; an explicit user choice wins.
+function resolveLang() { applyLang(urlLang || userLang || systemLang || 'en'); }
+
+// The switcher is built from the dictionary itself, so a language exists in the menu exactly
+// when there is something to show in it.
+(function buildLangSwitch() {
+    const sw = document.getElementById('langSwitch');
+    if (!sw) return;
+    for (const code of Object.keys(I18N)) {
+        const o = document.createElement('option');
+        o.value = code;
+        o.textContent = ENDONYMS[code] || code;
+        sw.appendChild(o);
+    }
+    sw.addEventListener('change', () => {
+        userLang = sw.value;
         applyLang(userLang);
         saveSettings();
+        updateCmdPreview();
     });
-});
+})();
 
 // ── languages ───────────────────────────────────────────
 // Codes the converter/translator already recognise (see internal/translator),
@@ -1135,6 +878,9 @@ function collectRunConfig() {
         verbose:        document.getElementById('chkVerbose').checked,
         ocr:            document.getElementById('chkOCR').checked,
         ocrLang:        document.getElementById('ocrLang').value,
+        // The converted page's navigation follows the window it was converted from, so the
+        // reader is not handed a book framed in a language they did not choose.
+        uiLang:         currentLang,
     };
 }
 

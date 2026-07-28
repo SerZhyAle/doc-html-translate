@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  محول المستندات إلى HTML، مع ترجمة لنا جميعا
+{{rule}}
+
+  يحول المستندات إلى HTML ويفتح النتيجة
+  في المتصفح الافتراضي. بلا تعقيد.
+
+  الميزات:
+    - تحويل EPUB و PDF و TXT و Markdown و FB2 و RTF و HTML و MOBI و AZW3 وأقراص القصص المصورة CBZ/CBR/CB7/CBT إلى HTML مقروء
+    - تنقل بين الصفحات والفصول
+    - تكبير بـ Ctrl+عجلة الفأرة مع حفظ الإعداد
+    - ترجمة النص عبر واجهة Google Translate
+    - التشغيل مرة أخرى يفتح ملف HTML الجاهز
+
+  الاستخدام:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # يتطلب Calibre
+    doc-html-translate.exe "comic.cbz"           # صفحات مصورة، يتعرف على النص عبر OCR
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 يتطلبان 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  الخيارات:
+    -notranslate    تحويل فقط، بلا ترجمة
+    -google         الترجمة عبر واجهة Google Translate (مدفوعة)
+    -ollama         الترجمة عبر Ollama محلي (مجانية)
+    -ollama-model   نموذج Ollama (الافتراضي: gemma3:12b)
+    -toc-depth N    عمق الفهرس في index.html (0 = بلا حد)
+    -force          إعادة التوليد إجباريا
+    -src LANG       لغة المصدر (الافتراضية: en)
+    -dst LANG       لغة الهدف (الافتراضية: ru)
+    -ui-lang CODE   لغة الواجهة (الافتراضية: لغة واجهة Windows)
+
+  الروابط:
+    موقع المنتج: https://serzhyale.github.io/doc-html-translate/
+    للتواصل:     sza@ukr.net
+
+{{rule}}

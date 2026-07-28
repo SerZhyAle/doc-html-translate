@@ -78,5 +78,417 @@
   "ocrOffHint": {
     "message": "Turn on to recognize text in images - then pick or download a language (English is built-in).",
     "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "Reflow viewer",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "Loading..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "Table of contents",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "Font size",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "Serif",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "Sans",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "Mono",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "Light",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "Sepia",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "Dark",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "Night",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "Go to page",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "Page",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "Open file",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "Open a local document via the file picker",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "Original PDF",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "Open the untouched PDF in the native viewer",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "Download the original document file",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "Save the current view as a standalone HTML file (keeps the translation if you translated the page)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "Feedback",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "Product site",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "Contents",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "Open a document..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "Use OCR for images",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "Recognition languages",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "Reflow PDFs & EPUBs",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "On this site",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "Options",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "Reading theme",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "Source language",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "Auto-detect",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "Sites where reflow is off",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "Saved",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "Interface language",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "The language of this extension's own buttons and menus. \"Follow the browser\" uses your browser's language. Applies to the viewer the next time you open a document.",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "Follow the browser",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "Feedback",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "OCR: {1}/{2} images",
+    "description": "Viewer runtime string."
+  },
+  "vOcrStatusWhere": {
+    "message": "OCR: {1}/{2} images - {3}",
+    "description": "Viewer runtime string."
+  },
+  "vExtentAll": {
+    "message": "{1} pages",
+    "description": "Viewer runtime string."
+  },
+  "vExtentPartial": {
+    "message": "pages 1-{1} of {2}",
+    "description": "Viewer runtime string."
+  },
+  "vSavedComic": {
+    "message": "Saved {1} of {2} pages - scroll further and save again to include more",
+    "description": "Viewer runtime string."
+  },
+  "vSavedPdf": {
+    "message": "Saved pages 1-{1} of {2} - scroll further and save again to include more",
+    "description": "Viewer runtime string."
+  },
+  "vTocSection": {
+    "message": "Section",
+    "description": "Viewer runtime string."
+  },
+  "vPageN": {
+    "message": "Page {1}",
+    "description": "Viewer runtime string."
+  },
+  "vSectionN": {
+    "message": "Section {1}",
+    "description": "Viewer runtime string."
+  },
+  "vFrameTitle": {
+    "message": "Cannot run in a frame",
+    "description": "Viewer runtime string."
+  },
+  "vFrameBody": {
+    "message": "Open this document in a top-level tab.",
+    "description": "Viewer runtime string."
+  },
+  "vOpenDocTitle": {
+    "message": "Open a document",
+    "description": "Viewer runtime string."
+  },
+  "vOpenDocBody": {
+    "message": "Pick a local document to read here (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - or an image (PNG, JPEG, GIF, BMP, WebP) to OCR into translatable text. Opening a document link loads it here too - the extension is helpful like that.",
+    "description": "Viewer runtime string."
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "Unsupported URL",
+    "description": "Viewer runtime string."
+  },
+  "vUnsupportedUrlBody": {
+    "message": "Only http(s) and local file documents can be opened from a URL.",
+    "description": "Viewer runtime string."
+  },
+  "vUncTitle": {
+    "message": "Network paths are not supported",
+    "description": "Viewer runtime string."
+  },
+  "vUncBody": {
+    "message": "Extensions cannot read network file paths (\\\\server\\share). Map the share to a drive letter and open it as a local file, or pick the file below.",
+    "description": "Viewer runtime string."
+  },
+  "vBtnBuiltinViewer": {
+    "message": "Open in built-in viewer",
+    "description": "Viewer runtime string."
+  },
+  "vStatusDownloading": {
+    "message": "Downloading document..",
+    "description": "Viewer runtime string."
+  },
+  "vLoadFailTitle": {
+    "message": "Couldn't load this document",
+    "description": "Viewer runtime string."
+  },
+  "vLoadFailBody": {
+    "message": "The file could not be downloaded by the extension.",
+    "description": "Viewer runtime string."
+  },
+  "vLoadFailFile": {
+    "message": "For local files, use \"Open a file\" below, or enable \"Allow access to file URLs\" for this extension in chrome://extensions.",
+    "description": "Viewer runtime string."
+  },
+  "vReason": {
+    "message": "Reason: {1}",
+    "description": "Viewer runtime string."
+  },
+  "vDetails": {
+    "message": "Details: {1}",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingText": {
+    "message": "Reading text..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingRtf": {
+    "message": "Reading RTF..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingHtml": {
+    "message": "Reading HTML..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingMd": {
+    "message": "Reading Markdown..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingFb2": {
+    "message": "Reading FB2..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingEbook": {
+    "message": "Reading e-book..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingEpub": {
+    "message": "Reading EPUB..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingComic": {
+    "message": "Reading comic..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusReadingFile": {
+    "message": "Reading file..",
+    "description": "Viewer runtime string."
+  },
+  "vOpenFileFailTitle": {
+    "message": "Couldn't open this file",
+    "description": "Viewer runtime string."
+  },
+  "vCorruptBody": {
+    "message": "The file may be corrupt or not a supported document.",
+    "description": "Viewer runtime string."
+  },
+  "vImageFailTitle": {
+    "message": "Couldn't read this image",
+    "description": "Viewer runtime string."
+  },
+  "vImageFailBody": {
+    "message": "The image could not be processed.",
+    "description": "Viewer runtime string."
+  },
+  "vComicAppTitle": {
+    "message": "This comic needs the desktop app",
+    "description": "Viewer runtime string."
+  },
+  "vComicAppBody": {
+    "message": "Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed).",
+    "description": "Viewer runtime string."
+  },
+  "vComicFailTitle": {
+    "message": "Couldn't open this comic",
+    "description": "Viewer runtime string."
+  },
+  "vComicFailBody": {
+    "message": "The archive may be corrupt or hold no page images.",
+    "description": "Viewer runtime string."
+  },
+  "vComicReady": {
+    "message": "Ready - {1} pages, text is recognized as you scroll",
+    "description": "Viewer runtime string."
+  },
+  "vComicReadyOne": {
+    "message": "Ready - 1 page, text is recognized as you scroll",
+    "description": "Viewer runtime string."
+  },
+  "vReadFileFailTitle": {
+    "message": "Couldn't read the file",
+    "description": "Viewer runtime string."
+  },
+  "vPwdTitle": {
+    "message": "Password required",
+    "description": "Viewer runtime string."
+  },
+  "vPwdMissing": {
+    "message": "This PDF is password-protected and the password was not provided.",
+    "description": "Viewer runtime string."
+  },
+  "vPdfFailTitle": {
+    "message": "Couldn't open this PDF",
+    "description": "Viewer runtime string."
+  },
+  "vPdfFailBody": {
+    "message": "The file may be corrupt, truncated, or in an unsupported format.",
+    "description": "Viewer runtime string."
+  },
+  "vPwdPlaceholder": {
+    "message": "PDF password",
+    "description": "Viewer runtime string."
+  },
+  "vBtnUnlock": {
+    "message": "Unlock",
+    "description": "Viewer runtime string."
+  },
+  "vPwdIncorrect": {
+    "message": "Incorrect password - try again.",
+    "description": "Viewer runtime string."
+  },
+  "vPwdPrompt": {
+    "message": "This PDF is protected. Enter its password to read it.",
+    "description": "Viewer runtime string."
+  },
+  "vStatusUnlocking": {
+    "message": "Unlocking..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusDetecting": {
+    "message": "Detecting language..",
+    "description": "Viewer runtime string."
+  },
+  "vStatusRendering": {
+    "message": "Rendering page {1} / {2}",
+    "description": "Viewer runtime string."
+  },
+  "vStatusDonePages": {
+    "message": "Done - {1} pages",
+    "description": "Viewer runtime string."
+  },
+  "vStatusPagesSoFar": {
+    "message": "Pages 1-{1} of {2} - keep scrolling to load more",
+    "description": "Viewer runtime string."
+  },
+  "vEpubFailTitle": {
+    "message": "Couldn't open this EPUB",
+    "description": "Viewer runtime string."
+  },
+  "vEpubFailBody": {
+    "message": "The file may be corrupt or not a valid EPUB.",
+    "description": "Viewer runtime string."
+  },
+  "vLittleTextTitle": {
+    "message": "Little or no text found",
+    "description": "Viewer runtime string."
+  },
+  "vLittleTextEpub": {
+    "message": "This EPUB has no extractable text (it may be image-only). Native page-translate needs actual text, not a pretty picture of it.",
+    "description": "Viewer runtime string."
+  },
+  "vStatusDoneSections": {
+    "message": "Done - {1} sections",
+    "description": "Viewer runtime string."
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "Done - 1 section",
+    "description": "Viewer runtime string."
+  },
+  "vLittleTextPdf": {
+    "message": "This looks like a scanned or image-only PDF, so there is little text to translate - the browser translates words, not pixels.",
+    "description": "Viewer runtime string."
+  },
+  "vLittleTextOcrHint": {
+    "message": "To translate scanned pages, run them through OCR first (turn on \"Use OCR for images\", or use the doc-html-translate desktop app), then reopen the result.",
+    "description": "Viewer runtime string."
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "Open original PDF",
+    "description": "Viewer runtime string."
   }
 }

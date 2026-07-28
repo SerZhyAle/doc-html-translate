@@ -1,0 +1,98 @@
+# Store listing source for de (Partner Center locale: de).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+Wandelt EPUB, PDF, MOBI, Comics und mehr in sauberes lokales HTML um - mit echtem Inhaltsverzeichnis, Texterkennung und Übersetzung.
+
+@@Description
+Machen Sie aus Ihren E-Books und Dokumenten saubere, lesbare Webseiten - direkt auf Ihrem PC, ohne Konto.
+
+doc-html-translate wandelt EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, Comic-Archive
+(CBZ, CBR, CB7, CBT) und Bilder in sauberes lokales HTML um, mit erzeugter Navigation und einem echten
+mehrstufigen Inhaltsverzeichnis. Öffnen Sie das Ergebnis in einem beliebigen Browser und lesen Sie -
+oder übergeben Sie es direkt der Seitenübersetzung des Browsers, für eine kostenlose Übersetzung in jede
+Sprache, ganz ohne Schlüssel.
+
+Der eingebaute Reader bringt Light-, Sepia-, Dark- und Night-Themes, Schriftgröße und Schriftart mit und
+merkt sich, wo Sie aufgehört haben. Wahlweise eine lange Einzelseite oder Kapitel mit
+Inhaltsverzeichnis; ein bereits konvertiertes Buch öffnet sich sofort wieder.
+
+Die optionale Texterkennung liest Text in Bildern und gescannten Seiten (Englisch ist enthalten, weitere
+Sprachen auf Wunsch) und kann alles übersetzen - über die Google Cloud Translation API oder ein
+vollständig lokales Ollama-Modell, sodass nichts Ihren Rechner verlassen muss.
+
+Die Oberfläche spricht 13 Sprachen: Englisch, Russisch, Ukrainisch, Deutsch, Italienisch, Spanisch,
+Französisch, Portugiesisch, Arabisch, Hindi, Bengalisch, Urdu und Chinesisch.
+
+Große PDFs bleiben schnell, gescannte Seiten werden verarbeitet, und viele Textkodierungen
+funktionieren einfach. Das Paket enthält ein Kommandozeilenwerkzeug (doc-html-translate) und eine kleine
+Oberfläche (doc-html-ui). pdftotext steckt in der Binärdatei; MOBI und AZW3 brauchen ein installiertes
+Calibre (nur Dateien ohne DRM).
+
+Kein Konto, keine Werbung, keine Telemetrie. Open Source: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+Wandelt EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, Comic-Archive (CBZ/CBR/CB7/CBT) und Bilder in sauberes lokales HTML um
+
+@@Feature2
+Echtes mehrstufiges Inhaltsverzeichnis mit erzeugter Navigation
+
+@@Feature3
+Eingebauter Reader: Light-/Sepia-/Dark-/Night-Themes, Schrift und Schriftgröße, merkt sich die Leseposition
+
+@@Feature4
+Texterkennung in Bildern und gescannten Seiten (Englisch enthalten, weitere Sprachen auf Wunsch)
+
+@@Feature5
+Optionale Übersetzung über die Google Cloud Translation API oder ein lokales Ollama-Modell - oder einfach die kostenlose Seitenübersetzung des Browsers
+
+@@Feature6
+Schnell bei großen PDFs; bereits konvertierte Bücher öffnen sofort
+
+@@Feature7
+Enthält eine CLI (doc-html-translate) und eine Oberfläche (doc-html-ui); kein Konto, keine Werbung, keine Telemetrie
+
+@@Feature8
+Kostenlose Übersetzung mit einem Klick über die Seitenübersetzung des Browsers - kein API-Schlüssel nötig
+
+@@Feature9
+Funktioniert vollständig offline; Open Source unter der MIT-Lizenz
+
+@@Feature10
+Das Ergebnis ist einfaches HTML - öffnet sich in jedem Browser, auf jedem Gerät, und bleibt lesbar
+
+@@Feature11
+Kommandozeile für die Stapelverarbeitung vieler Dokumente
+
+@@Feature12
+Eine lange Seite oder in Kapitel geteilt mit Inhaltsverzeichnis - Sie entscheiden
+
+@@Feature13
+Oberfläche in 13 Sprachen, automatisch nach Ihrer Windows-Sprache gewählt
+
+@@SearchTerm1
+epub zu html
+
+@@SearchTerm2
+pdf zu html
+
+@@SearchTerm3
+ebook konverter
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+texterkennung dokument
+
+@@SearchTerm6
+comic cbz cbr
+
+@@SearchTerm7
+offline übersetzung

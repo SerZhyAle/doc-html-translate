@@ -1,0 +1,49 @@
+{{rule}}
+  DOC-HTML-TRANSLATE
+  Conversor de documentos para HTML, com tradução para o resto de nós
+{{rule}}
+
+  Converte documentos para HTML e abre o resultado
+  no navegador padrão. Sem cerimônia.
+
+  Recursos:
+    - Converte EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 e quadrinhos CBZ/CBR/CB7/CBT em HTML legível
+    - Navegação entre páginas e capítulos
+    - Zoom com Ctrl+roda do mouse, preservado entre sessões
+    - Tradução do texto pela API do Google Translate
+    - Executar de novo abre o HTML já gerado
+
+  Uso:
+    doc-html-translate.exe "book.epub"
+    doc-html-translate.exe "report.pdf"
+    doc-html-translate.exe "notes.txt"
+    doc-html-translate.exe "readme.md"
+    doc-html-translate.exe "book.fb2"
+    doc-html-translate.exe "document.rtf"
+    doc-html-translate.exe "page.html"
+    doc-html-translate.exe "book.mobi"           # requer o Calibre
+    doc-html-translate.exe "comic.cbz"           # páginas de quadrinhos, texto reconhecido por OCR
+    doc-html-translate.exe "comic.cbr"           # CBR/CB7 requerem o 7-Zip
+    doc-html-translate.exe "book.epub"        # default: convert + open, no translation engine
+    doc-html-translate.exe -notranslate "book.epub"  # explicit equivalent
+    doc-html-translate.exe -google "book.epub"
+    doc-html-translate.exe -ollama "book.epub"
+    doc-html-translate.exe -src en -dst de "book.epub"
+    doc-html-translate.exe -force "book.epub"
+
+  Opções:
+    -notranslate    Apenas converter, sem traduzir
+    -google         Traduzir pela API do Google Translate (pago)
+    -ollama         Traduzir pelo Ollama local (gratuito)
+    -ollama-model   Modelo do Ollama (padrão: gemma3:12b)
+    -toc-depth N    Profundidade do sumário no index.html (0 = sem limite)
+    -force          Forçar a regeneração
+    -src LANG       Idioma de origem (padrão: en)
+    -dst LANG       Idioma de destino (padrão: ru)
+    -ui-lang CODE   Idioma da interface (padrão: o do Windows)
+
+  Links:
+    Site do produto: https://serzhyale.github.io/doc-html-translate/
+    Contato:         sza@ukr.net
+
+{{rule}}

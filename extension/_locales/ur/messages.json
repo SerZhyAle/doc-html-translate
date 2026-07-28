@@ -1,0 +1,412 @@
+{
+  "appName": {
+    "message": "دستاویزی صفحہ مترجم - PDF، EPUB اور مزید (مفت اور مقامی)",
+    "description": "Extension name shown in Chrome and on the store listing."
+  },
+  "appShortName": {
+    "message": "DocTranslate",
+    "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
+  },
+  "appDesc": {
+    "message": "PDF، EPUB اور دیگر دستاویزات کو ایسے صاف HTML میں دکھاتا ہے جسے براؤزر کا مفت صفحہ ترجمہ پڑھ سکے - تصاویر کے OCR سمیت۔ 100% مقامی۔",
+    "description": "Manifest description and store short description (max 132 chars)."
+  },
+  "actionTitle": {
+    "message": "PDF/EPUB بہاؤ + ترجمہ",
+    "description": "Tooltip on the toolbar button."
+  },
+  "ocrImageMenu": {
+    "message": "اس تصویر کا متن پہچانیں اور ترجمہ کریں",
+    "description": "Right-click context-menu item on images."
+  },
+  "convertDocMenu": {
+    "message": "doc-html-translate سے تبدیل کریں",
+    "description": "Right-click context-menu item on links/pages to supported documents (PDF/EPUB/..)."
+  },
+  "ocrProgress": {
+    "message": "متن پہچانا جا رہا ہے..",
+    "description": "Status shown while OCR runs."
+  },
+  "ocrNoText": {
+    "message": "تصویر میں کوئی متن نہیں ملا۔",
+    "description": "Shown when OCR finds no text in the image."
+  },
+  "ocrLoadError": {
+    "message": "متن کی پہچان لوڈ نہ ہو سکی۔",
+    "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrDone": {
+    "message": "متن پہچان لیا گیا - اب صفحے کا ترجمہ ہو سکتا ہے۔",
+    "description": "Status when the OCR overlay is ready to translate."
+  },
+  "ocrUseImages": {
+    "message": "تصاویر کے لیے OCR استعمال کریں",
+    "description": "Label for the image-OCR toggle in the popup and options."
+  },
+  "ocrDownload": {
+    "message": "ڈاؤن لوڈ",
+    "description": "Button to download an OCR language pack."
+  },
+  "ocrDownloading": {
+    "message": "ڈاؤن لوڈ ہو رہا ہے",
+    "description": "Button label while a language pack downloads."
+  },
+  "ocrInstalled": {
+    "message": "نصب شدہ",
+    "description": "Marks an OCR language as already installed."
+  },
+  "ocrLangsHint": {
+    "message": "پہچان کی زبان (انگریزی شامل ہے)۔",
+    "description": "Hint above the OCR language list."
+  },
+  "ocrOffHint": {
+    "message": "تصاویر میں متن پہچاننے کے لیے چالو کریں - پھر کوئی زبان منتخب یا ڈاؤن لوڈ کریں (انگریزی شامل ہے)۔",
+    "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "بہاؤ نما",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "لوڈ ہو رہا ہے..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "فہرست",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "متن کا حجم",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "سیرف",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "بغیر سیرف",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "یکساں چوڑائی",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "روشن",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "سیپیا",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "گہرا",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "رات",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "صفحے پر جائیں",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "صفحہ",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "فائل کھولیں",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "فائل منتخب کنندہ سے مقامی دستاویز کھولیں",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "اصل PDF",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "اصل PDF کو مقامی ویوئر میں کھولیں",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "اصل دستاویز فائل ڈاؤن لوڈ کریں",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "موجودہ منظر کو الگ HTML فائل کے طور پر محفوظ کریں (اگر صفحہ ترجمہ کیا ہے تو ترجمہ بھی رہے گا)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "رابطہ",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "مصنوع کی سائٹ",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "فہرست",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "دستاویز کھولیں..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "تصاویر کے لیے OCR استعمال کریں",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "پہچان کی زبانیں",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "PDF اور EPUB کا بہاؤ",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "اس سائٹ پر",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "اختیارات",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "مطالعے کی تھیم",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "ماخذ زبان",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "خودکار پہچان",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "وہ سائٹیں جہاں بہاؤ بند ہے",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "محفوظ ہو گیا",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "انٹرفیس کی زبان",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "اس ایکسٹینشن کے بٹنوں اور مینو کی زبان۔ «براؤزر کی پیروی کریں» آپ کے براؤزر کی زبان لیتا ہے۔ ویوئر اسے اگلی بار دستاویز کھولنے پر لاگو کرتا ہے۔",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "براؤزر کی پیروی کریں",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "رابطہ",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "او سی آر: {1}/{2} تصاویر"
+  },
+  "vOcrStatusWhere": {
+    "message": "او سی آر: {1}/{2} تصاویر - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} صفحات"
+  },
+  "vExtentPartial": {
+    "message": "صفحات 1-{1} از {2}"
+  },
+  "vSavedComic": {
+    "message": "{2} میں سے {1} صفحات محفوظ - مزید سکرول کر کے دوبارہ محفوظ کریں تاکہ باقی بھی شامل ہوں"
+  },
+  "vSavedPdf": {
+    "message": "صفحات 1-{1} از {2} محفوظ - مزید سکرول کر کے دوبارہ محفوظ کریں تاکہ باقی بھی شامل ہوں"
+  },
+  "vTocSection": {
+    "message": "حصہ"
+  },
+  "vPageN": {
+    "message": "صفحہ {1}"
+  },
+  "vSectionN": {
+    "message": "حصہ {1}"
+  },
+  "vFrameTitle": {
+    "message": "فریم میں نہیں چل سکتا"
+  },
+  "vFrameBody": {
+    "message": "اس دستاویز کو الگ ٹیب میں کھولیں۔"
+  },
+  "vOpenDocTitle": {
+    "message": "دستاویز کھولیں"
+  },
+  "vOpenDocBody": {
+    "message": "پڑھنے کے لیے مقامی دستاویز منتخب کریں (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - یا متن پہچاننے کے لیے کوئی تصویر (PNG, JPEG, GIF, BMP, WebP)۔ دستاویز کا لنک بھی یہیں کھلتا ہے - ایکسٹینشن یہی کرتی ہے۔"
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "غیر معاون یو آر ایل"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "کسی یو آر ایل سے صرف http(s) اور مقامی فائلیں کھولی جا سکتی ہیں۔"
+  },
+  "vUncTitle": {
+    "message": "نیٹ ورک راستے معاون نہیں"
+  },
+  "vUncBody": {
+    "message": "ایکسٹینشنز نیٹ ورک راستے (\\\\server\\share) نہیں پڑھ سکتیں۔ شیئر کو ڈرائیو لیٹر سے منسلک کر کے فائل مقامی طور پر کھولیں، یا نیچے سے فائل منتخب کریں۔"
+  },
+  "vBtnBuiltinViewer": {
+    "message": "بلٹ اِن ریڈر میں کھولیں"
+  },
+  "vStatusDownloading": {
+    "message": "دستاویز ڈاؤن لوڈ ہو رہی ہے.."
+  },
+  "vLoadFailTitle": {
+    "message": "یہ دستاویز لوڈ نہیں ہو سکی"
+  },
+  "vLoadFailBody": {
+    "message": "ایکسٹینشن فائل ڈاؤن لوڈ نہ کر سکی۔"
+  },
+  "vLoadFailFile": {
+    "message": "مقامی فائلوں کے لیے نیچے «فائل کھولیں» استعمال کریں، یا chrome://extensions میں اس ایکسٹینشن کے لیے «فائل یو آر ایل تک رسائی کی اجازت» فعال کریں۔"
+  },
+  "vReason": {
+    "message": "وجہ: {1}"
+  },
+  "vDetails": {
+    "message": "تفصیل: {1}"
+  },
+  "vStatusReadingText": {
+    "message": "متن پڑھا جا رہا ہے.."
+  },
+  "vStatusReadingRtf": {
+    "message": "RTF پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingHtml": {
+    "message": "HTML پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingMd": {
+    "message": "Markdown پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingFb2": {
+    "message": "FB2 پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingEbook": {
+    "message": "ای بک پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingEpub": {
+    "message": "EPUB پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingComic": {
+    "message": "کامک پڑھی جا رہی ہے.."
+  },
+  "vStatusReadingFile": {
+    "message": "فائل پڑھی جا رہی ہے.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "یہ فائل نہیں کھل سکی"
+  },
+  "vCorruptBody": {
+    "message": "فائل خراب ہو سکتی ہے یا معاون دستاویز نہیں ہے۔"
+  },
+  "vImageFailTitle": {
+    "message": "یہ تصویر نہیں پڑھی جا سکی"
+  },
+  "vImageFailBody": {
+    "message": "تصویر پر کارروائی نہ ہو سکی۔"
+  },
+  "vComicAppTitle": {
+    "message": "اس کامک کے لیے ڈیسک ٹاپ ایپ درکار ہے"
+  },
+  "vComicAppBody": {
+    "message": "مفت ایپ doc-html-translate یہاں سے لیں: https://serzhyale.github.io/doc-html-translate/ - یہ CBR اور CB7 کھولتی ہے (7-Zip نصب ہو تو)۔"
+  },
+  "vComicFailTitle": {
+    "message": "یہ کامک نہیں کھل سکی"
+  },
+  "vComicFailBody": {
+    "message": "آرکائیو خراب ہو سکتا ہے یا اس میں صفحات کی تصاویر نہیں۔"
+  },
+  "vComicReady": {
+    "message": "تیار - {1} صفحات، سکرول کرتے ہوئے متن پہچانا جاتا ہے"
+  },
+  "vComicReadyOne": {
+    "message": "تیار - 1 صفحہ، سکرول کرتے ہوئے متن پہچانا جاتا ہے"
+  },
+  "vReadFileFailTitle": {
+    "message": "فائل نہیں پڑھی جا سکی"
+  },
+  "vPwdTitle": {
+    "message": "پاس ورڈ درکار"
+  },
+  "vPwdMissing": {
+    "message": "یہ PDF پاس ورڈ سے محفوظ ہے اور پاس ورڈ نہیں دیا گیا۔"
+  },
+  "vPdfFailTitle": {
+    "message": "یہ PDF نہیں کھل سکی"
+  },
+  "vPdfFailBody": {
+    "message": "فائل خراب، ادھوری یا غیر معاون فارمیٹ میں ہو سکتی ہے۔"
+  },
+  "vPwdPlaceholder": {
+    "message": "PDF پاس ورڈ"
+  },
+  "vBtnUnlock": {
+    "message": "انلاک"
+  },
+  "vPwdIncorrect": {
+    "message": "غلط پاس ورڈ - دوبارہ کوشش کریں۔"
+  },
+  "vPwdPrompt": {
+    "message": "یہ PDF محفوظ ہے۔ پڑھنے کے لیے پاس ورڈ درج کریں۔"
+  },
+  "vStatusUnlocking": {
+    "message": "انلاک ہو رہا ہے.."
+  },
+  "vStatusDetecting": {
+    "message": "زبان پہچانی جا رہی ہے.."
+  },
+  "vStatusRendering": {
+    "message": "صفحہ {1} / {2} تیار ہو رہا ہے"
+  },
+  "vStatusDonePages": {
+    "message": "مکمل - {1} صفحات"
+  },
+  "vStatusPagesSoFar": {
+    "message": "صفحات 1-{1} از {2} - مزید لوڈ کرنے کے لیے سکرول کرتے رہیں"
+  },
+  "vEpubFailTitle": {
+    "message": "یہ EPUB نہیں کھل سکی"
+  },
+  "vEpubFailBody": {
+    "message": "فائل خراب ہو سکتی ہے یا درست EPUB نہیں ہے۔"
+  },
+  "vLittleTextTitle": {
+    "message": "بہت کم یا کوئی متن نہیں ملا"
+  },
+  "vLittleTextEpub": {
+    "message": "اس EPUB میں نکالنے کے قابل متن نہیں (شاید یہ صرف تصاویر پر مشتمل ہے)۔ براؤزر کے صفحہ ترجمے کو اصل متن چاہیے، اس کی خوبصورت تصویر نہیں۔"
+  },
+  "vStatusDoneSections": {
+    "message": "مکمل - {1} حصے"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "مکمل - 1 حصہ"
+  },
+  "vLittleTextPdf": {
+    "message": "یہ اسکین شدہ یا صرف تصاویر پر مشتمل PDF لگتی ہے، اس لیے ترجمے کے لیے متن بہت کم ہے - براؤزر الفاظ کا ترجمہ کرتا ہے، پکسلز کا نہیں۔"
+  },
+  "vLittleTextOcrHint": {
+    "message": "اسکین شدہ صفحات کا ترجمہ کرنے کے لیے پہلے ان پر او سی آر چلائیں («تصاویر کے لیے او سی آر استعمال کریں» فعال کریں، یا doc-html-translate ڈیسک ٹاپ ایپ استعمال کریں)، پھر نتیجہ دوبارہ کھولیں۔"
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "اصل PDF کھولیں"
+  }
+}

@@ -1,0 +1,96 @@
+# Store listing source for ur (Partner Center locale: ur).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+‏EPUB، PDF، MOBI، کامکس اور مزید کو صاف مقامی HTML میں بدلتا ہے - اصل فہرست، او سی آر اور اختیاری ترجمے کے ساتھ۔
+
+@@Description
+اپنی ای بکس اور دستاویزات کو صاف ستھرے، پڑھنے کے قابل ویب صفحات میں بدلیں - اپنے ہی کمپیوٹر پر، بغیر کسی اکاؤنٹ کے۔
+
+‏doc-html-translate ‏EPUB، PDF، MOBI، AZW3، FB2، RTF، TXT، Markdown، HTML، کامک آرکائیوز (CBZ، CBR،
+CB7، CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہے، ساتھ میں تیار شدہ نیویگیشن اور اصل کثیر سطحی فہرست۔
+نتیجہ کسی بھی براؤزر میں کھول کر پڑھیں - یا اسے سیدھا براؤزر کے اپنے صفحہ ترجمے کے حوالے کر دیں اور بغیر
+کسی کلید کے کسی بھی زبان میں مفت ترجمہ حاصل کریں۔
+
+بلٹ اِن ریڈر light / sepia / dark / night تھیمز، متن کے سائز اور فونٹ کا کنٹرول دیتا ہے اور یاد رکھتا ہے
+کہ آپ کہاں رکے تھے۔ ایک لمبا صفحہ چنیں یا فہرست کے ساتھ ابواب؛ پہلے سے تبدیل شدہ کتاب دوبارہ کھولنا فوری
+ہے۔
+
+اختیاری او سی آر تصاویر اور اسکین شدہ صفحات کے اندر کا متن پہچانتا ہے (انگریزی شامل ہے، باقی زبانیں طلب
+پر) اور سب کچھ ترجمہ کر سکتا ہے - Google Cloud Translation API سے یا مکمل طور پر مقامی Ollama ماڈل سے،
+تاکہ کچھ بھی آپ کی مشین سے باہر نہ جائے۔
+
+انٹرفیس 13 زبانیں بولتا ہے: انگریزی، روسی، یوکرینی، جرمن، اطالوی، ہسپانوی، فرانسیسی، پرتگالی، عربی،
+ہندی، بنگالی، اردو اور چینی۔
+
+بڑی PDF فائلیں تیز رہتی ہیں، اسکین شدہ صفحات سنبھال لیے جاتے ہیں، اور متن کی بہت سی انکوڈنگز بس چل جاتی
+ہیں۔ پیکیج میں کمانڈ لائن پروگرام (doc-html-translate) اور ایک چھوٹا GUI (doc-html-ui) دونوں شامل ہیں۔
+‏pdftotext بائنری کے اندر ہی ہے؛ MOBI اور AZW3 کے لیے Calibre نصب ہونا چاہیے (صرف DRM سے پاک فائلیں)۔
+
+نہ اکاؤنٹ، نہ اشتہار، نہ ٹیلی میٹری۔ اوپن سورس: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+‏EPUB، PDF، MOBI، AZW3، FB2، RTF، TXT، Markdown، HTML، کامک آرکائیوز (CBZ/CBR/CB7/CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہے
+
+@@Feature2
+تیار شدہ نیویگیشن کے ساتھ اصل کثیر سطحی فہرست
+
+@@Feature3
+بلٹ اِن ریڈر: light / sepia / dark / night تھیمز، فونٹ اور متن کا سائز، آپ کی جگہ یاد رکھتا ہے
+
+@@Feature4
+تصاویر اور اسکین شدہ صفحات پر او سی آر (انگریزی شامل، باقی زبانیں طلب پر)
+
+@@Feature5
+‏Google Cloud Translation API یا مقامی Ollama ماڈل سے اختیاری ترجمہ - یا صرف براؤزر کا مفت صفحہ ترجمہ
+
+@@Feature6
+بڑی PDF پر تیز؛ پہلے سے تبدیل شدہ کتابیں فوری کھلتی ہیں
+
+@@Feature7
+‏CLI (doc-html-translate) اور GUI (doc-html-ui) دونوں شامل؛ نہ اکاؤنٹ، نہ اشتہار، نہ ٹیلی میٹری
+
+@@Feature8
+براؤزر کے بلٹ اِن صفحہ ترجمے سے ایک کلک میں مفت ترجمہ - API کلید کی ضرورت نہیں
+
+@@Feature9
+مکمل طور پر آف لائن چلتا ہے؛ MIT لائسنس کے تحت اوپن سورس
+
+@@Feature10
+نتیجہ سادہ HTML ہے - ہر براؤزر میں، ہر آلے پر کھلتا ہے اور پڑھنے کے قابل رہتا ہے
+
+@@Feature11
+بیک وقت بہت سی دستاویزات بدلنے کے لیے سہولت والی کمانڈ لائن
+
+@@Feature12
+ایک لمبا صفحہ یا فہرست کے ساتھ ابواب میں تقسیم - آپ کی مرضی
+
+@@Feature13
+13 زبانوں میں انٹرفیس، آپ کی Windows زبان کے مطابق خود بخود منتخب
+
+@@SearchTerm1
+epub سے html
+
+@@SearchTerm2
+pdf سے html
+
+@@SearchTerm3
+ای بک کنورٹر
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+دستاویز ترجمہ
+
+@@SearchTerm6
+کامک cbz cbr
+
+@@SearchTerm7
+آف لائن ترجمہ

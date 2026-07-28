@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/i18n"
 
 	gohtml "golang.org/x/net/html"
 )
@@ -159,8 +160,9 @@ func buildSinglePageHeader(sourceName, title string) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
-	return fmt.Sprintf(`<div class="dht-navbar">%s%s<div class="nav-actions">%s%s</div><div id="dht-progress" class="dht-progress"></div></div>`,
-		fileEl, titleEl, readerControlsHTML(), versionLink)
+	// lang/dir on the bar itself, never on <html> - see buildNavBarHTML for why.
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s</div><div id="dht-progress" class="dht-progress"></div></div>`,
+		i18n.Language(), chromeDirAttr(), fileEl, titleEl, readerControlsHTML(), versionLink)
 }
 
 // htmlLang returns the lang attribute of the document's <html> element, or "".

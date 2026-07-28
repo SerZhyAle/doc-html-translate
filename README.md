@@ -1,5 +1,7 @@
 # doc-html-translate
 
+**README languages:** **English** · [Русский](README_RU.md) · [Українська](README_UK.md)
+
 Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML and CBZ/CBR/CB7/CBT comics into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model. No cloud account required, no ceremony, and yes, it still runs on plain old Windows in 2026.
 
 Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb2` `ebook` `html-converter` `translation` `ollama`
@@ -39,6 +41,7 @@ The desktop app and the extension are independent and complementary: the app con
 - Reader experience baked into the output HTML (no server, works on `file://`):
   - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
   - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
+- Interface in 13 languages: `en ru uk de it es fr pt ar hi bn ur zh` - the `-ui-lang <code>` flag in the CLI, a language selector in the GUI and in the extension. The default follows the system language (the browser's language in the extension). The interface language never changes the document's language: the generated page keeps the book's own `<html lang>`, because otherwise Chrome would stop offering to translate the page
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
 - File-type association is **optional and off by default**: the app always adds a **"Convert to HTML" right-click entry** (and an "Open with" entry) for all supported types, and becoming the default handler is a separate opt-in (`-register` / the GUI toggle / a one-time first-run prompt; `-unregister` reverses it)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
@@ -162,6 +165,7 @@ Why this workflow is popular (besides the obvious):
 | `-multipage` | `false` | Produce multiple HTML pages with a table of contents instead of the default single page |
 | `-folder` | empty | Output parent folder |
 | `-force` | `false` | Re-extract and re-translate even if output exists |
+| `-ui-lang` | empty | Interface language: `en ru uk de it es fr pt ar hi bn ur zh` (empty = follow the system language) |
 | `-v` | `false` | Verbose output |
 | `-src` | `en` | Source language |
 | `-dst` | `ru` | Target language |
@@ -259,4 +263,10 @@ This project is also listed in the Universal Agent Kit collection:
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for details.
+
+---
+
+**About the interface translations.** The interface is available in 13 languages. English, Russian and
+Ukrainian are author-proofread; the other ten are machine-translated and unproofread - corrections are
+welcome at sza@ukr.net.
 

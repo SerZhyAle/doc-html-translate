@@ -78,5 +78,351 @@
   "ocrOffHint": {
     "message": "Включите, чтобы распознавать текст на изображениях - затем выберите или скачайте язык (английский встроен).",
     "description": "Call-to-action shown in the popup and options when image OCR is off, so the disabled state doesn't look broken."
+  },
+  "viewerTitle": {
+    "message": "Просмотр с переформатированием",
+    "description": "Viewer page title."
+  },
+  "loading": {
+    "message": "Загрузка..",
+    "description": "Status while a document is being read."
+  },
+  "ttToc": {
+    "message": "Оглавление",
+    "description": "Toolbar group tooltip."
+  },
+  "ttFontSize": {
+    "message": "Размер текста",
+    "description": "Toolbar group tooltip."
+  },
+  "fontSerif": {
+    "message": "С засечками",
+    "description": "Font family option."
+  },
+  "fontSans": {
+    "message": "Без засечек",
+    "description": "Font family option."
+  },
+  "fontMono": {
+    "message": "Моноширинный",
+    "description": "Font family option."
+  },
+  "themeLight": {
+    "message": "Светлая",
+    "description": "Reading theme option."
+  },
+  "themeSepia": {
+    "message": "Сепия",
+    "description": "Reading theme option."
+  },
+  "themeDark": {
+    "message": "Тёмная",
+    "description": "Reading theme option."
+  },
+  "themeNight": {
+    "message": "Ночь",
+    "description": "Reading theme option."
+  },
+  "ttGoToPage": {
+    "message": "Перейти к странице",
+    "description": "Toolbar group tooltip."
+  },
+  "labelPage": {
+    "message": "Страница",
+    "description": "Page-number field label."
+  },
+  "btnOpenFile": {
+    "message": "Открыть файл",
+    "description": "Toolbar button."
+  },
+  "ttOpenFile": {
+    "message": "Открыть локальный документ через выбор файла",
+    "description": "Toolbar button tooltip."
+  },
+  "btnOriginalPdf": {
+    "message": "Исходный PDF",
+    "description": "Toolbar button."
+  },
+  "ttOriginalPdf": {
+    "message": "Открыть исходный PDF во встроенном просмотрщике",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveSource": {
+    "message": "Скачать исходный файл документа",
+    "description": "Toolbar button tooltip."
+  },
+  "ttSaveHtml": {
+    "message": "Сохранить текущий вид как отдельный HTML-файл (перевод сохранится, если вы переводили страницу)",
+    "description": "Toolbar button tooltip."
+  },
+  "linkFeedback": {
+    "message": "Обратная связь",
+    "description": "Link to the author."
+  },
+  "linkProductSite": {
+    "message": "Сайт продукта",
+    "description": "Link to the product page."
+  },
+  "tocHeading": {
+    "message": "Оглавление",
+    "description": "Heading of the table-of-contents panel."
+  },
+  "popupOpenDoc": {
+    "message": "Открыть документ..",
+    "description": "Popup button."
+  },
+  "popupUseOcr": {
+    "message": "Использовать OCR для изображений",
+    "description": "Popup switch."
+  },
+  "popupOcrLangs": {
+    "message": "Языки распознавания",
+    "description": "Popup section label."
+  },
+  "popupReflow": {
+    "message": "Переформатировать PDF и EPUB",
+    "description": "Popup switch."
+  },
+  "popupOnThisSite": {
+    "message": "На этом сайте",
+    "description": "Popup per-site switch."
+  },
+  "popupOptions": {
+    "message": "Настройки",
+    "description": "Popup link to the options page."
+  },
+  "optTheme": {
+    "message": "Тема чтения",
+    "description": "Options field label."
+  },
+  "optSourceLang": {
+    "message": "Исходный язык",
+    "description": "Options field label."
+  },
+  "optAutoDetect": {
+    "message": "Определять автоматически",
+    "description": "Source-language option."
+  },
+  "optDisabledSites": {
+    "message": "Сайты, где переформатирование выключено",
+    "description": "Options section label."
+  },
+  "optSaved": {
+    "message": "Сохранено",
+    "description": "Confirmation shown after a setting is stored."
+  },
+  "optUiLang": {
+    "message": "Язык интерфейса",
+    "description": "Options field label for the extension UI language."
+  },
+  "optUiLangHint": {
+    "message": "Язык кнопок и меню самого расширения. «Как в браузере» берёт язык вашего браузера. Просмотрщик применит его при следующем открытии документа.",
+    "description": "Hint under the interface-language selector."
+  },
+  "optFollowBrowser": {
+    "message": "Как в браузере",
+    "description": "First entry of the interface-language selector."
+  },
+  "ttFeedback": {
+    "message": "Обратная связь",
+    "description": "Tooltip on the feedback link."
+  },
+  "vOcrStatus": {
+    "message": "OCR: {1}/{2} изображений"
+  },
+  "vOcrStatusWhere": {
+    "message": "OCR: {1}/{2} изображений - {3}"
+  },
+  "vExtentAll": {
+    "message": "{1} страниц"
+  },
+  "vExtentPartial": {
+    "message": "страницы 1-{1} из {2}"
+  },
+  "vSavedComic": {
+    "message": "Сохранено {1} из {2} страниц - прокрутите дальше и сохраните снова, чтобы добавить остальные"
+  },
+  "vSavedPdf": {
+    "message": "Сохранены страницы 1-{1} из {2} - прокрутите дальше и сохраните снова, чтобы добавить остальные"
+  },
+  "vTocSection": {
+    "message": "Раздел"
+  },
+  "vPageN": {
+    "message": "Страница {1}"
+  },
+  "vSectionN": {
+    "message": "Раздел {1}"
+  },
+  "vFrameTitle": {
+    "message": "Нельзя работать во фрейме"
+  },
+  "vFrameBody": {
+    "message": "Откройте документ в обычной вкладке."
+  },
+  "vOpenDocTitle": {
+    "message": "Откройте документ"
+  },
+  "vOpenDocBody": {
+    "message": "Выберите локальный документ для чтения (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) - или изображение (PNG, JPEG, GIF, BMP, WebP), чтобы распознать в нём текст. Ссылка на документ тоже откроется здесь - расширение об этом позаботится."
+  },
+  "vUnsupportedUrlTitle": {
+    "message": "Неподдерживаемый адрес"
+  },
+  "vUnsupportedUrlBody": {
+    "message": "По адресу можно открыть только http(s) и локальные файлы."
+  },
+  "vUncTitle": {
+    "message": "Сетевые пути не поддерживаются"
+  },
+  "vUncBody": {
+    "message": "Расширения не читают сетевые пути (\\\\сервер\\ресурс). Подключите ресурс как диск и откройте файл локально или выберите его ниже."
+  },
+  "vBtnBuiltinViewer": {
+    "message": "Открыть во встроенной читалке"
+  },
+  "vStatusDownloading": {
+    "message": "Загрузка документа.."
+  },
+  "vLoadFailTitle": {
+    "message": "Не удалось загрузить документ"
+  },
+  "vLoadFailBody": {
+    "message": "Расширению не удалось скачать файл."
+  },
+  "vLoadFailFile": {
+    "message": "Для локальных файлов используйте «Открыть файл» ниже или включите «Разрешить доступ к URL файлов» для этого расширения в chrome://extensions."
+  },
+  "vReason": {
+    "message": "Причина: {1}"
+  },
+  "vDetails": {
+    "message": "Подробности: {1}"
+  },
+  "vStatusReadingText": {
+    "message": "Чтение текста.."
+  },
+  "vStatusReadingRtf": {
+    "message": "Чтение RTF.."
+  },
+  "vStatusReadingHtml": {
+    "message": "Чтение HTML.."
+  },
+  "vStatusReadingMd": {
+    "message": "Чтение Markdown.."
+  },
+  "vStatusReadingFb2": {
+    "message": "Чтение FB2.."
+  },
+  "vStatusReadingEbook": {
+    "message": "Чтение книги.."
+  },
+  "vStatusReadingEpub": {
+    "message": "Чтение EPUB.."
+  },
+  "vStatusReadingComic": {
+    "message": "Чтение комикса.."
+  },
+  "vStatusReadingFile": {
+    "message": "Чтение файла.."
+  },
+  "vOpenFileFailTitle": {
+    "message": "Не удалось открыть файл"
+  },
+  "vCorruptBody": {
+    "message": "Файл может быть повреждён или не является поддерживаемым документом."
+  },
+  "vImageFailTitle": {
+    "message": "Не удалось прочитать изображение"
+  },
+  "vImageFailBody": {
+    "message": "Не удалось обработать изображение."
+  },
+  "vComicAppTitle": {
+    "message": "Этому комиксу нужна настольная программа"
+  },
+  "vComicAppBody": {
+    "message": "Бесплатное приложение doc-html-translate: https://serzhyale.github.io/doc-html-translate/ - оно открывает CBR и CB7 (при установленном 7-Zip)."
+  },
+  "vComicFailTitle": {
+    "message": "Не удалось открыть комикс"
+  },
+  "vComicFailBody": {
+    "message": "Архив может быть повреждён или не содержать страниц-изображений."
+  },
+  "vComicReady": {
+    "message": "Готово - {1} страниц, текст распознаётся по мере прокрутки"
+  },
+  "vComicReadyOne": {
+    "message": "Готово - 1 страница, текст распознаётся по мере прокрутки"
+  },
+  "vReadFileFailTitle": {
+    "message": "Не удалось прочитать файл"
+  },
+  "vPwdTitle": {
+    "message": "Нужен пароль"
+  },
+  "vPwdMissing": {
+    "message": "Этот PDF защищён паролем, а пароль не был указан."
+  },
+  "vPdfFailTitle": {
+    "message": "Не удалось открыть PDF"
+  },
+  "vPdfFailBody": {
+    "message": "Файл может быть повреждён, обрезан или в неподдерживаемом формате."
+  },
+  "vPwdPlaceholder": {
+    "message": "Пароль PDF"
+  },
+  "vBtnUnlock": {
+    "message": "Открыть"
+  },
+  "vPwdIncorrect": {
+    "message": "Неверный пароль - попробуйте ещё раз."
+  },
+  "vPwdPrompt": {
+    "message": "PDF защищён. Введите пароль, чтобы прочитать его."
+  },
+  "vStatusUnlocking": {
+    "message": "Открытие.."
+  },
+  "vStatusDetecting": {
+    "message": "Определение языка.."
+  },
+  "vStatusRendering": {
+    "message": "Отрисовка страницы {1} / {2}"
+  },
+  "vStatusDonePages": {
+    "message": "Готово - {1} страниц"
+  },
+  "vStatusPagesSoFar": {
+    "message": "Страницы 1-{1} из {2} - прокручивайте дальше, чтобы загрузить остальные"
+  },
+  "vEpubFailTitle": {
+    "message": "Не удалось открыть EPUB"
+  },
+  "vEpubFailBody": {
+    "message": "Файл может быть повреждён или не является корректным EPUB."
+  },
+  "vLittleTextTitle": {
+    "message": "Текста мало или нет"
+  },
+  "vLittleTextEpub": {
+    "message": "В этом EPUB нет извлекаемого текста (возможно, он состоит из картинок). Встроенному переводу страницы нужен настоящий текст, а не красивая картинка с ним."
+  },
+  "vStatusDoneSections": {
+    "message": "Готово - {1} разделов"
+  },
+  "vStatusDoneSectionsOne": {
+    "message": "Готово - 1 раздел"
+  },
+  "vLittleTextPdf": {
+    "message": "Похоже, это отсканированный PDF из картинок, поэтому переводить почти нечего - браузер переводит слова, а не пиксели."
+  },
+  "vLittleTextOcrHint": {
+    "message": "Чтобы перевести отсканированные страницы, сначала распознайте их (включите «Распознавать текст на изображениях» или воспользуйтесь программой doc-html-translate), а затем откройте результат заново."
+  },
+  "vBtnOpenOriginalPdf": {
+    "message": "Открыть исходный PDF"
   }
 }

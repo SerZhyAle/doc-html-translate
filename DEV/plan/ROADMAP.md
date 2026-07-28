@@ -202,6 +202,14 @@ returns `"epub"` for any ZIP before the filename is consulted - so it hands a co
 fails with a misleading "not an EPUB". On comics the extension is wrong too, and P12 has to disambiguate on
 both sides without regressing the EPUB hot path.
 
+## Feature work after the sweep
+
+The sweep queue above is defects only. Feature tickets take their position in the same numbering.
+
+| P | Ticket | What it delivers |
+|---|---|---|
+| 30 | [thirteen-ui-languages](2026-07-28_thirteen-ui-languages.md) ([plan](2026-07-28_thirteen-ui-languages/INDEX.md)) | `Partial` (7 of 9 phases done, 2026-07-28) - the interface, the per-language landing pages, the store listings and the release screenshots in the same 13 languages CyrFlip ships. Shipped: CLI, converted page, GUI, extension, 10 landing pages, RU/UK READMEs, installer (8 langs), MSIX, winget, listing sources, 39 store screenshots. Open: the extension screenshot generator (07.5, needs a CDP harness) and the extension's long store description (08.7, kept en/ru/uk on purpose - Chrome review risk). |
+
 ## Not in the queue
 
 | Ticket | Status | Why it is not queued |

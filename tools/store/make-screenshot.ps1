@@ -17,13 +17,22 @@
 #>
 param(
     # Path to doc-html-translate.exe. Default: msix/staging then build/.
-    [string]$Cli
+    [string]$Cli,
+    # Interface languages to capture. Default: all 13 the app ships.
+    [string[]]$Language = @("en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh")
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $OutDir   = $PSScriptRoot
 $WorkDir  = Join-Path $RepoRoot "temp\store-screenshot"
+
+# Partner Center wants its own locale codes, not the app's language codes.
+$StoreLocale = @{
+    en = "en-us"; ru = "ru"; uk = "uk"; de = "de"; it = "it"; es = "es"; fr = "fr"
+    pt = "pt-br"; ar = "ar"; hi = "hi"; bn = "bn"; ur = "ur"; zh = "zh-hans"
+}
+$RtlLanguages = @("ar", "ur")
 
 # ── locate the CLI ───────────────────────────────────────────
 if (-not $Cli) {
@@ -83,36 +92,71 @@ The first question of course was, how to get dry again: they had a consultation 
 
 Remove-Item $WorkDir -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
-$srcMd = Join-Path $WorkDir "Alice in Wonderland.md"
-Set-Content -LiteralPath $srcMd -Value $sample -Encoding utf8
 
-Write-Host "Converting sample..." -ForegroundColor Cyan
-& $Cli -notranslate -noopen -force "$srcMd"
-if ($LASTEXITCODE -ne 0) { throw "conversion failed" }
-
-$bookDir = Join-Path $WorkDir "Alice in Wonderland"
 function ConvertTo-FileUrl([string]$p) { "file:///" + ($p -replace '\\','/' -replace ' ','%20') }
 
-# page_002 is Chapter I (text-rich reading view); index.html is the TOC.
-$shots = @(
-    @{ page = "page_002.html"; out = "reading-view.png" },
-    @{ page = "index.html";    out = "table-of-contents.png" }
-)
+# Assert-ChromeDirection guards the invariant the whole 13-language feature rests on: the page
+# chrome carries the interface language and mirrors for RTL, while the document itself keeps its
+# own language and direction. A mirrored document body would silently break Chrome's page
+# translation offer - the product's entire free workflow - so a wrong frame must fail the run
+# rather than reach a store listing.
+# Returns $true when the page carried chrome to check; split content pages have none.
+function Assert-ChromeDirection([string]$htmlPath, [string]$lang, [bool]$expectRtl) {
+    $html = Get-Content -LiteralPath $htmlPath -Raw
+    if ($html -match '<html[^>]*\sdir="rtl"') {
+        throw "SCREENSHOT-RTL: the document root is mirrored in $htmlPath - only the chrome may mirror"
+    }
+    $navbar = [regex]::Match($html, '<div class="dht-navbar"[^>]*>')
+    if (-not $navbar.Success) { return $false }
+    if ($navbar.Value -notmatch ('lang="' + [regex]::Escape($lang) + '"')) {
+        throw "SCREENSHOT-RTL: chrome in $htmlPath does not carry lang=""$lang"" ($($navbar.Value))"
+    }
+    $chromeRtl = $navbar.Value -match 'dir="rtl"'
+    if ($chromeRtl -ne $expectRtl) {
+        throw "SCREENSHOT-RTL: chrome dir=rtl is $chromeRtl but $lang expects $expectRtl in $htmlPath"
+    }
+    return $true
+}
+
 Add-Type -AssemblyName System.Drawing
 # A throwaway --user-data-dir forces a fresh, isolated browser process so the
 # headless screenshot is never handed off to an already-running Edge instance.
 $EdgeProfile = Join-Path $WorkDir "edge-profile"
-foreach ($s in $shots) {
-    $outPath = Join-Path $OutDir $s.out
-    Remove-Item $outPath -ErrorAction SilentlyContinue
-    $url = ConvertTo-FileUrl (Join-Path $bookDir $s.page)
-    & $Edge --headless=new --disable-gpu --no-first-run --hide-scrollbars `
-        --user-data-dir="$EdgeProfile" --force-device-scale-factor=1 `
-        --window-size=1366,768 "--screenshot=$outPath" $url 2>$null | Out-Null
-    for ($i = 0; $i -lt 50 -and -not (Test-Path $outPath); $i++) { Start-Sleep -Milliseconds 100 }
-    if (-not (Test-Path $outPath)) { throw "Edge did not produce $($s.out)" }
-    $img = [System.Drawing.Image]::FromFile($outPath)
-    Write-Host ("  {0,-22} {1}x{2}" -f $s.out, $img.Width, $img.Height) -ForegroundColor Green
-    $img.Dispose()
+
+foreach ($lang in $Language) {
+    $locale = $StoreLocale[$lang]
+    if (-not $locale) { throw "unknown language '$lang' - expected one of $($StoreLocale.Keys -join ' ')" }
+    $langDir = Join-Path $WorkDir $lang
+    New-Item -ItemType Directory -Force -Path $langDir | Out-Null
+    $srcMd = Join-Path $langDir "Alice in Wonderland.md"
+    Set-Content -LiteralPath $srcMd -Value $sample -Encoding utf8
+
+    Write-Host "Converting sample ($lang)..." -ForegroundColor Cyan
+    & $Cli -notranslate -noopen -force -ui-lang $lang "$srcMd"
+    if ($LASTEXITCODE -ne 0) { throw "conversion failed for $lang" }
+
+    $bookDir = Join-Path $langDir "Alice in Wonderland"
+    # page_002 is Chapter I (text-rich reading view); index.html is the TOC.
+    $shots = @(
+        @{ page = "page_002.html"; out = "reading-view-$locale.png" },
+        @{ page = "index.html";    out = "table-of-contents-$locale.png" }
+    )
+    $expectRtl = $RtlLanguages -contains $lang
+    $checked = 0
+    foreach ($s in $shots) {
+        $pagePath = Join-Path $bookDir $s.page
+        if (Assert-ChromeDirection $pagePath $lang $expectRtl) { $checked++ }
+        $outPath = Join-Path $OutDir $s.out
+        Remove-Item $outPath -ErrorAction SilentlyContinue
+        & $Edge --headless=new --disable-gpu --no-first-run --hide-scrollbars `
+            --user-data-dir="$EdgeProfile" --force-device-scale-factor=1 `
+            --window-size=1366,768 "--screenshot=$outPath" (ConvertTo-FileUrl $pagePath) 2>$null | Out-Null
+        for ($i = 0; $i -lt 50 -and -not (Test-Path $outPath); $i++) { Start-Sleep -Milliseconds 100 }
+        if (-not (Test-Path $outPath)) { throw "Edge did not produce $($s.out)" }
+        $img = [System.Drawing.Image]::FromFile($outPath)
+        Write-Host ("  {0,-34} {1}x{2}" -f $s.out, $img.Width, $img.Height) -ForegroundColor Green
+        $img.Dispose()
+    }
+    if ($checked -eq 0) { throw "SCREENSHOT-RTL: no captured page carried chrome for $lang - nothing was verified" }
 }
 Write-Host "Screenshots written to $OutDir" -ForegroundColor Cyan

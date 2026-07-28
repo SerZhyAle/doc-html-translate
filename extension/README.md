@@ -37,6 +37,12 @@ download host / language catalog / CSS classes, defaults) and the intentional di
 **[../docs/PARITY.md](../docs/PARITY.md)**. Read it before changing ported logic; the per-file "ported
 from" notes below are a pointer, not the source of truth.
 
+**Interface languages.** Both editions ship the same 13: `en ru uk de it es fr pt ar hi bn ur zh`
+(`_locales/zh_CN` for Chinese, per Chrome's naming). The default follows the browser; the options page
+has an explicit override. `ar` and `ur` mirror the **chrome only** - the rendered document keeps its own
+`lang` and direction, because carrying the interface language on the document would stop Chrome offering
+"Translate page", which is the whole point of the extension. `test/i18n.test.mjs` guards the key sets.
+
 ## Layout
 
 ```text
@@ -52,6 +58,7 @@ src/
   comic.js             CBZ (zip) + CBT (tar) comics: natural page order, entry filter, lazy inflate; CBR/CB7 declined
   sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
   lang.js              source-language detection -> <html lang>
+  i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
   options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
   ocr-lang.js          OCR languages: bundled English, on-demand download + IndexedDB cache
@@ -60,7 +67,8 @@ src/
   pdf-images.js        pull raster images out of a PDF page (embedded XObjects + scanned-page raster)
 vendor/                pdfjs-dist + tesseract/ + marked + foliate/ (mobi.js) + fflate - generated, git-ignored
 icons/                 16/32/48/128
-test/                  node:test unit tests for the pure modules (reflow/toc/lang + epub unzip/path)
+test/                  node:test unit tests for the pure modules (reflow/toc/lang + epub unzip/path + i18n)
+_locales/<code>/       interface strings for 13 languages (Chrome names the Chinese directory zh_CN)
 build.mjs              `stamp` (date-time version), `vendor` (sync pdfjs) and `zip` (store package)
 ```
 

@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
+	"strings"
+
+	"doc-html-translate/internal/i18n"
 )
 
 // ErrHelp is returned when -h/-help was requested. Usage has already been written to stdout
@@ -37,6 +41,7 @@ type Config struct {
 	OCRLang          string // -ocr-lang: tesseract language(s) for OCR (default: -src or eng)
 	OCRList          bool   // -ocr-langs: list installed/available OCR languages and exit
 	OCRDownload      string // -ocr-download <lang>: download an OCR language pack and exit
+	UILang           string // -ui-lang: interface language of the console output and the page chrome ("" = from the OS)
 	InputFile        string
 }
 
@@ -67,6 +72,8 @@ func ParseArgs(args []string) (Config, error) {
 	ocrLang := fs.String("ocr-lang", "", "OCR language(s) for -ocr, e.g. eng or eng+rus (default: -src, else eng)")
 	ocrLangs := fs.Bool("ocr-langs", false, "list installed and available OCR languages, then exit")
 	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the app's tessdata, then exit")
+	uiLang := fs.String("ui-lang", "", "interface language for the console output and the converted page's navigation "+
+		"(default: the Windows UI language); one of: "+strings.Join(i18n.Codes, " "))
 	version := fs.Bool("version", false, "print version and exit")
 
 	// flag writes both the usage block and any parse error to a single writer, but the two
@@ -87,6 +94,13 @@ func ParseArgs(args []string) (Config, error) {
 
 	if *version {
 		return Config{}, errors.New("version")
+	}
+
+	// An unknown -ui-lang is refused rather than silently ignored: the screenshot tooling and the
+	// GUI both drive this flag, and a typo that quietly fell back to English would produce a set of
+	// identical "translated" captures. The accepted list is i18n.Codes, so it cannot drift.
+	if *uiLang != "" && i18n.Resolve(*uiLang, "", "") != *uiLang {
+		return Config{}, fmt.Errorf("unknown -ui-lang %q: use one of %s", *uiLang, strings.Join(i18n.Codes, " "))
 	}
 
 	cfg := Config{
@@ -113,6 +127,7 @@ func ParseArgs(args []string) (Config, error) {
 		OCRLang:          *ocrLang,
 		OCRList:          *ocrLangs,
 		OCRDownload:      *ocrDownload,
+		UILang:           *uiLang,
 	}
 
 	// First-click UX: running without any args enters the first-run flow - a

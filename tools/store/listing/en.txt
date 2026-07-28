@@ -1,0 +1,102 @@
+# Store listing source for en (Partner Center locale: en-us).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+Convert EPUB, PDF, MOBI, comics and more to clean local HTML with a real table of contents, OCR and optional translation.
+
+@@Description
+Turn your e-books and documents into clean, readable web pages - right on your PC, no account needed.
+
+doc-html-translate converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives
+(CBZ, CBR, CB7, CBT) and images into clean local HTML with generated navigation and a real multi-level
+table of contents. Open the result in any browser and read - or hand it straight to your browser's own
+page translation for a free, no-key translation into any language.
+
+A built-in reader adds light / sepia / dark / night themes, text-size and font controls, and remembers
+where you stopped. Convert to one long single page or keep chapters with a table of contents; re-opening
+an already-converted book is instant.
+
+Optional on-image OCR recognizes text inside pictures and scanned pages (English bundled, more languages
+on demand) and can translate everything - either through the Google Cloud Translation API or a fully
+local Ollama model, so nothing has to leave your machine.
+
+The interface speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French,
+Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
+
+Big PDFs stay fast, scanned pages are handled, and a wide range of text encodings just work. The package
+ships both a command-line tool (doc-html-translate) and a small GUI launcher (doc-html-ui). pdftotext is
+bundled inside the binary; MOBI and AZW3 need Calibre installed (non-DRM files only).
+
+No account, no ads, no telemetry. Open source: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+Converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives (CBZ/CBR/CB7/CBT) and images to clean local HTML
+
+@@Feature2
+Real multi-level table of contents with generated navigation
+
+@@Feature3
+Built-in reader: light / sepia / dark / night themes, font and text-size controls, remembers your place
+
+@@Feature4
+On-image and scanned-page OCR (English bundled, more languages on demand)
+
+@@Feature5
+Optional translation via Google Cloud Translation API or a local Ollama model - or just use your browser's free page translation
+
+@@Feature6
+Fast on large PDFs; instant re-open of already-converted books
+
+@@Feature7
+Ships a CLI (doc-html-translate) and a GUI launcher (doc-html-ui); no account, no ads, no telemetry
+
+@@Feature8
+One-click free translation using your browser's built-in page translate - no API key required
+
+@@Feature9
+Works fully offline; open source under the MIT license
+
+@@Feature10
+Output is plain HTML - opens in any browser, on any device, and stays readable forever
+
+@@Feature11
+Batch-friendly command line for converting many documents at once
+
+@@Feature12
+Single long page or chapter-split output with a table of contents - your choice
+
+@@Feature13
+Interface in 13 languages, chosen automatically from your Windows language
+
+@@SearchTerm1
+epub to html
+
+@@SearchTerm2
+pdf to html
+
+@@SearchTerm3
+ebook converter
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+ocr translate document
+
+@@SearchTerm6
+comic cbz cbr
+
+@@SearchTerm7
+offline translation
+
+@@ReleaseNotes
+- New: comic-book archives open directly - CBZ, CBR, CB7 and CBT convert into a clean HTML gallery you can page through and translate.
+- Scanned PDFs are handled: pages that are pictures of text go through OCR so you get real, selectable, translatable text.
+- Large PDFs convert noticeably faster and use less memory.
+- More TXT files "just open": a wider range of text encodings is detected automatically, so non-English plain text no longer arrives as garbled characters.
+- Images can be dropped in on their own and converted like any other document.
+- The interface now speaks 13 languages and follows your Windows language automatically.
+- Updated OCR and translation components under the hood, plus the usual round of fixes and polish.

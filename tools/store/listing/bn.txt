@@ -1,0 +1,96 @@
+# Store listing source for bn (Partner Center locale: bn).
+# Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
+# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
+# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
+# release notes is worse than none - do not "complete" this file with one.
+
+@@Title
+doc-html-translate
+
+@@ShortDescription
+EPUB, PDF, MOBI, কমিক ও আরও অনেক কিছু পরিচ্ছন্ন স্থানীয় HTML-এ বদলায় - সত্যিকারের সূচিপত্র, OCR ও ঐচ্ছিক অনুবাদসহ।
+
+@@Description
+আপনার ই-বই আর নথিগুলিকে পরিচ্ছন্ন, পড়ার উপযোগী ওয়েব পৃষ্ঠায় বদলে নিন - নিজের কম্পিউটারেই, কোনও অ্যাকাউন্ট ছাড়াই।
+
+doc-html-translate EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, কমিক সংরক্ষণাগার (CBZ, CBR,
+CB7, CBT) ও ছবিকে পরিচ্ছন্ন স্থানীয় HTML-এ রূপান্তর করে, সঙ্গে তৈরি নেভিগেশন ও সত্যিকারের বহুস্তরের
+সূচিপত্র। ফলাফল যেকোনও ব্রাউজারে খুলে পড়ুন - অথবা সরাসরি ব্রাউজারের নিজস্ব পৃষ্ঠা-অনুবাদে দিন এবং কোনও
+কী ছাড়াই যেকোনও ভাষায় বিনামূল্যে অনুবাদ পান।
+
+অন্তর্নির্মিত রিডার light / sepia / dark / night থিম, লেখার আকার ও ফন্ট নিয়ন্ত্রণ যোগ করে এবং মনে রাখে
+আপনি কোথায় থেমেছিলেন। একটিমাত্র লম্বা পৃষ্ঠা বাছুন, বা সূচিপত্রসহ অধ্যায়; আগে রূপান্তরিত বই আবার খোলা
+তাৎক্ষণিক।
+
+ঐচ্ছিক OCR ছবি ও স্ক্যান করা পৃষ্ঠার ভিতরের লেখা শনাক্ত করে (ইংরেজি সঙ্গে দেওয়া, বাকি ভাষা চাহিদামতো)
+এবং সব কিছু অনুবাদ করতে পারে - Google Cloud Translation API দিয়ে, বা সম্পূর্ণ স্থানীয় Ollama মডেল
+দিয়ে, যাতে কিছুই আপনার যন্ত্র থেকে বেরোতে না হয়।
+
+ইন্টারফেস ১৩টি ভাষায় কথা বলে: ইংরেজি, রুশ, ইউক্রেনীয়, জার্মান, ইতালীয়, স্পেনীয়, ফরাসি, পর্তুগিজ,
+আরবি, হিন্দি, বাংলা, উর্দু ও চীনা।
+
+বড় PDF দ্রুতই থাকে, স্ক্যান করা পৃষ্ঠা সামলানো হয়, আর নানা রকম টেক্সট এনকোডিং এমনিতেই কাজ করে।
+প্যাকেজে একটি কমান্ড-লাইন সরঞ্জাম (doc-html-translate) ও একটি ছোট GUI (doc-html-ui) দুটোই আছে।
+pdftotext বাইনারির ভিতরেই আছে; MOBI ও AZW3-এর জন্য Calibre ইনস্টল থাকা দরকার (কেবল DRM-মুক্ত ফাইল)।
+
+অ্যাকাউন্ট নেই, বিজ্ঞাপন নেই, টেলিমেট্রি নেই। মুক্ত সোর্স: https://github.com/SerZhyAle/doc-html-translate
+
+@@Feature1
+EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, কমিক সংরক্ষণাগার (CBZ/CBR/CB7/CBT) ও ছবিকে পরিচ্ছন্ন স্থানীয় HTML-এ রূপান্তর করে
+
+@@Feature2
+তৈরি নেভিগেশনসহ সত্যিকারের বহুস্তরের সূচিপত্র
+
+@@Feature3
+অন্তর্নির্মিত রিডার: light / sepia / dark / night থিম, ফন্ট ও লেখার আকার, আপনার জায়গা মনে রাখে
+
+@@Feature4
+ছবি ও স্ক্যান করা পৃষ্ঠায় OCR (ইংরেজি সঙ্গে দেওয়া, বাকি ভাষা চাহিদামতো)
+
+@@Feature5
+Google Cloud Translation API বা স্থানীয় Ollama মডেল দিয়ে ঐচ্ছিক অনুবাদ - অথবা কেবল ব্রাউজারের বিনামূল্যের পৃষ্ঠা-অনুবাদ
+
+@@Feature6
+বড় PDF-এ দ্রুত; আগে রূপান্তরিত বই তাৎক্ষণিক খোলে
+
+@@Feature7
+CLI (doc-html-translate) ও GUI (doc-html-ui) দুটোই দেয়; অ্যাকাউন্ট, বিজ্ঞাপন বা টেলিমেট্রি নেই
+
+@@Feature8
+ব্রাউজারের অন্তর্নির্মিত পৃষ্ঠা-অনুবাদে এক ক্লিকে বিনামূল্যে অনুবাদ - API কী লাগে না
+
+@@Feature9
+সম্পূর্ণ অফলাইনে চলে; MIT লাইসেন্সে মুক্ত সোর্স
+
+@@Feature10
+ফলাফল সাধারণ HTML - যেকোনও ব্রাউজারে, যেকোনও যন্ত্রে খোলে এবং পড়ার উপযোগী থাকে
+
+@@Feature11
+একসঙ্গে বহু নথি রূপান্তরের জন্য সুবিধাজনক কমান্ড লাইন
+
+@@Feature12
+একটিমাত্র লম্বা পৃষ্ঠা, বা সূচিপত্রসহ অধ্যায়ে ভাগ - আপনার পছন্দ
+
+@@Feature13
+১৩টি ভাষায় ইন্টারফেস, আপনার Windows ভাষা অনুযায়ী নিজে থেকেই বেছে নেওয়া হয়
+
+@@SearchTerm1
+epub থেকে html
+
+@@SearchTerm2
+pdf থেকে html
+
+@@SearchTerm3
+ইবুক রূপান্তরকারী
+
+@@SearchTerm4
+mobi azw3 fb2
+
+@@SearchTerm5
+ocr নথি অনুবাদ
+
+@@SearchTerm6
+কমিক cbz cbr
+
+@@SearchTerm7
+অফলাইন অনুবাদ

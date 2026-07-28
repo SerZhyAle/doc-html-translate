@@ -19,7 +19,8 @@ Description: |-
   multi-level table of contents. A built-in reader adds light/sepia/dark/night themes, text
   size and font controls, and remembers your reading position. It can recognize text inside
   images (OCR - English bundled, more languages on demand) and optionally translate everything
-  via the Google Cloud Translation API or a local Ollama model. Convert to one long single page
+  via the Google Cloud Translation API or a local Ollama model. The interface is available in 13
+  languages. Convert to one long single page
   or keep chapters with a table of contents. Re-opening an already-converted book is instant.
   The package ships both the CLI (doc-html-translate) and a small GUI launcher (doc-html-ui).
   pdftotext is bundled inside the binary; MOBI and AZW3 conversion additionally requires
