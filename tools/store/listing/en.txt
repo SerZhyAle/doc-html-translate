@@ -93,10 +93,9 @@ comic cbz cbr
 offline translation
 
 @@ReleaseNotes
-- New: comic-book archives open directly - CBZ, CBR, CB7 and CBT convert into a clean HTML gallery you can page through and translate.
-- Scanned PDFs are handled: pages that are pictures of text go through OCR so you get real, selectable, translatable text.
-- Large PDFs convert noticeably faster and use less memory.
-- More TXT files "just open": a wider range of text encodings is detected automatically, so non-English plain text no longer arrives as garbled characters.
-- Images can be dropped in on their own and converted like any other document.
-- The interface now speaks 13 languages and follows your Windows language automatically.
-- Updated OCR and translation components under the hood, plus the usual round of fixes and polish.
+- The interface now speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French, Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
+- It follows your Windows language on its own. Override it with -ui-lang on the command line, or with the language selector in the app window and in the browser extension.
+- Arabic and Urdu lay the interface out right to left.
+- The interface language never changes the language of the document you convert: a converted page keeps the book's own language, so the browser still offers to translate it.
+- The installer speaks 8 languages; the site now has a full page in each of the 13, and the readme is available in Russian and Ukrainian too.
+- Ten of the thirteen translations are machine-made and not proofread - corrections are welcome at sza@ukr.net.

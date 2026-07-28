@@ -877,3 +877,31 @@ Changed files:
 - winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml
 - zh/index.html
 
+| 2026-07-29 01:40:40 | main | f87bf18 | docs(release): what's new for 26.0729.0134 + winget manifests stamped |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/RELEASE_STATE.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- tools/store/build-store-listing-csv.ps1
+- tools/store/listing/en.txt
+- tools/store/listing/ru.txt
+- tools/store/listing/uk.txt
+- tools/store/listingData.csv
+- winget/SerZhyAle.DocHtmlTranslate.installer.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.ar-SA.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.bn-BD.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.de-DE.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.es-ES.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.fr-FR.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.hi-IN.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.it-IT.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.pt-BR.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.ru-RU.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.uk-UA.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.ur-PK.yaml
+- winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml
+- winget/SerZhyAle.DocHtmlTranslate.yaml
+

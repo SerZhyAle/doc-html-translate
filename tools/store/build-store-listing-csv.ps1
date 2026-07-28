@@ -28,6 +28,11 @@
 .PARAMETER SkipFields
   Field names to leave alone even when empty (e.g. ReleaseNotes during a copy-only edit).
 
+.PARAMETER Refresh
+  Field names to overwrite even when the cell already has a value. `ReleaseNotes` is the one field
+  that is rewritten every release, so it needs this; everything else is fill-only on purpose. Never
+  pass a screenshot or logo field - those cells hold Partner Center's own asset URLs.
+
 .PARAMETER FillNothing
   Parse and rewrite without filling anything. A byte-identical result proves the reader and writer
   round-trip this export, which is what makes the patching runs trustworthy.
@@ -42,6 +47,7 @@ param(
     [string]$Out,
     [string]$ImportFolder,
     [string[]]$SkipFields = @(),
+    [string[]]$Refresh = @(),
     [switch]$FillNothing
 )
 
@@ -144,7 +150,15 @@ foreach ($tag in $Locale.Values) {
     if ($header -contains $tag) { $present += $tag } else { $missing += $tag }
 }
 
+# Asset rows must never be refreshed: their cells hold the URLs of images already uploaded to the
+# dashboard, and rewriting one detaches the asset.
+$assetFields = $rows | ForEach-Object { $_[$fieldCol] } | Where-Object { $_ -match 'Screenshot|Logo' }
+foreach ($f in $Refresh) {
+    if ($assetFields -contains $f) { throw "-Refresh $f would overwrite a listing-asset URL; refuse" }
+}
+
 $filled = 0
+$refreshed = 0
 if (-not $FillNothing) {
     for ($r = 1; $r -lt $rows.Count; $r++) {
         $row = $rows[$r]
@@ -153,11 +167,13 @@ if (-not $FillNothing) {
         foreach ($tag in $present) {
             $c = [array]::IndexOf($header, $tag)
             if ($c -lt 0 -or $c -ge $row.Count) { continue }
-            if ($row[$c] -ne "") { continue }          # never overwrite - asset URLs live in these cells
+            $isRefresh = $Refresh -contains $field
+            if ($row[$c] -ne "" -and -not $isRefresh) { continue }  # asset URLs live in these cells
             $value = $source[$tag][$field]
             if (-not $value) { continue }
+            if ($row[$c] -eq $value) { continue }
+            if ($row[$c] -ne "") { $refreshed++ } else { $filled++ }
             $row[$c] = $value
-            $filled++
         }
         $rows[$r] = $row
     }
@@ -172,7 +188,7 @@ if ($FillNothing) {
         -ForegroundColor $(if ($same) { "Green" } else { "Red" })
     if (-not $same) { exit 1 }
 } else {
-    Write-Host "filled $filled empty cells across $($present.Count) locales -> $Out" -ForegroundColor Green
+    Write-Host "filled $filled empty cells, refreshed $refreshed, across $($present.Count) locales -> $Out" -ForegroundColor Green
 }
 
 if ($missing.Count) {

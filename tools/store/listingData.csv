@@ -39,17 +39,17 @@ doc-html-translate конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT
 pdftotext встроен в бинарник; для MOBI и AZW3 нужен установленный Calibre (только файлы без DRM).
 
 Без аккаунта, без рекламы, без телеметрии. Открытый исходный код: https://github.com/SerZhyAle/doc-html-translate"
-ReleaseNotes,3,Text,,"- New: comic-book archives open directly - CBZ, CBR, CB7 and CBT convert into a clean HTML gallery you can page through and translate.
-- Scanned PDFs are handled: pages that are pictures of text go through OCR so you get real, selectable, translatable text.
-- Large PDFs convert noticeably faster and use less memory.
-- More TXT files ""just open"": a wider range of text encodings is detected automatically, so non-English plain text no longer arrives as garbled characters.
-- Images can be dropped in on their own and converted like any other document.
-- Updated OCR and translation components under the hood, plus the usual round of fixes and polish.","- Новое: архивы комиксов открываются напрямую - CBZ, CBR, CB7 и CBT конвертируются в чистую HTML-галерею, которую можно листать и переводить.
-- Обрабатываются отсканированные PDF: страницы, которые являются картинками текста, проходят через OCR, и вы получаете настоящий выделяемый и переводимый текст.
-- Большие PDF конвертируются заметно быстрее и потребляют меньше памяти.
-- Больше TXT-файлов «просто открываются»: шире набор автоматически определяемых кодировок, поэтому не-английский текст больше не приходит «кракозябрами».
-- Изображения можно перетащить по отдельности и сконвертировать как любой другой документ.
-- Обновлены компоненты OCR и перевода, плюс обычный набор исправлений и доработок."
+ReleaseNotes,3,Text,,"- The interface now speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French, Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
+- It follows your Windows language on its own. Override it with -ui-lang on the command line, or with the language selector in the app window and in the browser extension.
+- Arabic and Urdu lay the interface out right to left.
+- The interface language never changes the language of the document you convert: a converted page keeps the book's own language, so the browser still offers to translate it.
+- The installer speaks 8 languages; the site now has a full page in each of the 13, and the readme is available in Russian and Ukrainian too.
+- Ten of the thirteen translations are machine-made and not proofread - corrections are welcome at sza@ukr.net.","- Интерфейс теперь говорит на 13 языках: английский, русский, украинский, немецкий, итальянский, испанский, французский, португальский, арабский, хинди, бенгальский, урду и китайский.
+- Язык берётся из настроек Windows сам. Переопределить можно флагом -ui-lang в командной строке или переключателем в окне приложения и в расширении для браузера.
+- Для арабского и урду интерфейс разворачивается справа налево.
+- Язык интерфейса не меняет язык документа, который вы конвертируете: у готовой страницы остаётся язык книги, поэтому браузер по-прежнему предлагает её перевести.
+- Установщик говорит на 8 языках; на сайте появилась полноценная страница на каждом из 13 языков, а readme теперь есть и на русском, и на украинском.
+- Десять переводов из тринадцати сделаны машинно и не вычитаны - исправления присылайте на sza@ukr.net."
 Title,4,Text,,doc-html-translate,doc-html-translate
 ShortTitle,5,Text,,,
 SortTitle,6,Text,,,
