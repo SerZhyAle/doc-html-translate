@@ -111,7 +111,7 @@ func Extract(comicPath, outputDir string) (*epub.Book, error) {
 		}
 		href := fmt.Sprintf("page_%03d.html", pageNum)
 		id := fmt.Sprintf("page_%03d", pageNum)
-		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, imgName)), 0o644); werr != nil {
+		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, imgName, pageNum, len(pages))), 0o644); werr != nil {
 			return nil, fmt.Errorf("write page %d html: %w", pageNum, werr)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{ID: id, Href: href, MediaType: "text/html"})
@@ -152,20 +152,28 @@ func isPageEntry(name string) bool {
 // buildPageHTML wraps a page image in a minimal centred page, mirroring
 // internal/img so the OCR overlay step (which finds each <img>, OCRs it, and
 // appends translatable text plates) behaves identically for comics and images.
-func buildPageHTML(title, imgName string) string {
+//
+// The page is a <section id="page_NNN">, not a <main>: these wrappers are merged
+// verbatim into the single-page index.html, where a <main> per page would nest
+// dozens of them inside the merged document's own <main> - invalid HTML that
+// breaks reader mode and screen-reader landmark navigation. The id survives the
+// merge, so every page in the merged book is linkable and reachable by anchor.
+func buildPageHTML(title, imgName string, pageNum, totalPages int) string {
+	alt := fmt.Sprintf("%s - page %d of %d", title, pageNum, totalPages)
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s</title>\n", html.EscapeString(title)))
 	sb.WriteString("  <style>\n")
-	sb.WriteString("    body { margin: 0; background: #f0f0f0; }\n")
-	sb.WriteString("    main { width: 95%; max-width: 1400px; margin: 1em auto; }\n")
-	sb.WriteString("    main img { display: block; width: 100%; height: auto; }\n")
+	sb.WriteString("    body { margin: 0; }\n")
+	sb.WriteString("    section.dht-page { width: 95%; max-width: 1400px; margin: 1em auto; }\n")
+	sb.WriteString("    section.dht-page img { display: block; width: 100%; height: auto; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
-	sb.WriteString("  <main>\n")
-	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), html.EscapeString(title)))
-	sb.WriteString("  </main>\n</body>\n</html>\n")
+	sb.WriteString(fmt.Sprintf("  <section class=\"dht-page\" id=\"page_%03d\" aria-label=\"%s\">\n",
+		pageNum, html.EscapeString(alt)))
+	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), html.EscapeString(alt)))
+	sb.WriteString("  </section>\n</body>\n</html>\n")
 	return sb.String()
 }
 

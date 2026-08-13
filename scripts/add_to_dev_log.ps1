@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
-  Append one row to DEV/CHANGELOG.md. Timestamp and the changed-file list are
-  filled in automatically; you supply only the human parts (Target + Description).
+  Add one row to DEV/CHANGELOG.md, newest first. Timestamp and the changed-file
+  list are filled in automatically; you supply only the human parts
+  (Target + Description).
 
 .DESCRIPTION
   The changelog format is a fixed 4-column table:
@@ -17,7 +18,8 @@
 
   This is the script behind the `/changelog` skill and the `a log` alias. It used
   to require -Path by hand and wrote to the wrong (lowercase) path, so it went
-  unused; it now derives Path from git and appends to the real DEV/CHANGELOG.md.
+  unused; it now derives Path from git and writes to the real DEV/CHANGELOG.md,
+  splicing the row under the table rule because the table is newest-first.
 
 .PARAMETER Target
   The commit subject (e.g. "PDF: stop showing a page thumbnail as the page").
@@ -75,8 +77,22 @@ function Format-Cell([string]$s) {
 $ts   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $row  = "| $ts | $(Format-Cell $Path) | $(Format-Cell $Target) | $(Format-Cell $Description) |"
 
-$row | Add-Content -Path $logFile -Encoding utf8
+# ── newest first: insert under the header rule, never at the end ─────
+# The table is read top-down and its first body row is the latest change, so an
+# appended row lands at the *oldest* end and reads as history. Splice it in right
+# after the "|---|---|---|---|" rule instead.
+$lines = @(Get-Content -Path $logFile -Encoding utf8)
+$rule  = ($lines | Select-String -SimpleMatch -Pattern "|---|---|---|---|" | Select-Object -First 1)
+if ($null -eq $rule) {
+    throw "$logFile has no '|---|---|---|---|' table rule - refusing to guess where the row goes."
+}
+$at = $rule.LineNumber   # 1-based, so this is already the index after the rule
+$out = @()
+if ($at -gt 0) { $out += $lines[0..($at - 1)] }
+$out += $row
+if ($at -lt $lines.Count) { $out += $lines[$at..($lines.Count - 1)] }
+$out | Set-Content -Path $logFile -Encoding utf8
 
-Write-Host "Appended changelog row ($ts)" -ForegroundColor Green
+Write-Host "Inserted changelog row ($ts)" -ForegroundColor Green
 Write-Host "  Target: $Target" -ForegroundColor DarkGray
 Write-Host "  Path  : $Path" -ForegroundColor DarkGray

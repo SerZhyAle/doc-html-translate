@@ -111,6 +111,10 @@
     "message": "रात",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "पहचानी गई पाठ परत दिखाएँ या छिपाएँ",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "पृष्ठ पर जाएँ",
     "description": "Toolbar group tooltip."

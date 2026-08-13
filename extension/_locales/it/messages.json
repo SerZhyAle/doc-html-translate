@@ -111,6 +111,10 @@
     "message": "Notte",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "Mostra o nascondi il livello di testo riconosciuto",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "Vai alla pagina",
     "description": "Toolbar group tooltip."

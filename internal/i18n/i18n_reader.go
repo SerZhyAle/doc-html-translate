@@ -30,6 +30,25 @@ func init() {
 		"Texte plus grand", "Texto maior",
 		"نص أكبر", "बड़ा पाठ", "বড় লেখা", "بڑا متن", "放大文字")
 
+	Add("Show or hide the recognized text layer",
+		"Показать или скрыть слой распознанного текста",
+		"Показати або сховати шар розпізнаного тексту",
+		"Erkannte Textebene ein- oder ausblenden",
+		"Mostra o nascondi il livello di testo riconosciuto",
+		"Mostrar u ocultar la capa de texto reconocido",
+		"Afficher ou masquer le calque de texte reconnu",
+		"Mostrar ou ocultar a camada de texto reconhecido",
+		"إظهار أو إخفاء طبقة النص المتعرف عليه",
+		"पहचानी गई पाठ परत दिखाएँ या छिपाएँ",
+		"শনাক্ত করা লেখার স্তর দেখান বা লুকান",
+		"شناخت شدہ متن کی تہہ دکھائیں یا چھپائیں",
+		"显示或隐藏识别的文字层")
+
+	Add("Go to page",
+		"Перейти к странице", "Перейти до сторінки", "Zu Seite springen",
+		"Vai alla pagina", "Ir a la página", "Aller à la page", "Ir para a página",
+		"الانتقال إلى الصفحة", "पृष्ठ पर जाएँ", "পৃষ্ঠায় যান", "صفحہ پر جائیں", "跳转到页面")
+
 	Add("Font",
 		"Шрифт", "Шрифт", "Schrift", "Carattere", "Fuente", "Police", "Fonte",
 		"الخط", "फ़ॉन्ट", "ফন্ট", "فونٹ", "字体")

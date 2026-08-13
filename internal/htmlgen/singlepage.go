@@ -22,6 +22,9 @@ const singlePageCSS = `
   main.dht-single { width: 95%; max-width: 46em; margin: 1.5em auto 6em; padding: 0 1.2em; }
   main.dht-single img { max-width: 100%; height: auto; }
   hr.dht-chapter-sep { border: 0; border-top: 1px dashed var(--dht-border); margin: 2.5em 0; }
+  /* An image-page book (comic, scan) is merged page by page, so the separator marks a
+     page break rather than a chapter: no rule, just breathing room between the plates. */
+  hr.dht-page-sep { border: 0; margin: 1.5em 0; }
 </style>
 `
 
@@ -42,6 +45,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	// Merge chapter bodies in spine order; take the source language from the first page.
 	var body strings.Builder
 	lang := "en"
+	var inners []string
 	for i, href := range spineHrefs {
 		pagePath := bookPath(outputDir, book.BasePath, href)
 		data, err := os.ReadFile(pagePath)
@@ -56,12 +60,25 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 			if l := htmlLang(doc); l != "" {
 				lang = l
 			}
-		} else {
-			body.WriteString("\n  <hr class=\"dht-chapter-sep\">\n")
 		}
 		inner, err := bodyInnerHTML(doc)
 		if err != nil {
 			return "", fmt.Errorf("extract body %s: %w", href, err)
+		}
+		inners = append(inners, inner)
+	}
+
+	// A book whose spine entries are image pages (comic, scanned image, multi-frame TIFF)
+	// gets the page separator; a text book keeps the chapter rule. The wrapper the
+	// extractors emit is the signal, so no extra field has to be threaded through the
+	// pipeline just to say "these are pages, not chapters".
+	sep := "\n  <hr class=\"dht-chapter-sep\">\n"
+	if isPagedBook(inners) {
+		sep = "\n  <hr class=\"dht-page-sep\">\n"
+	}
+	for i, inner := range inners {
+		if i > 0 {
+			body.WriteString(sep)
 		}
 		body.WriteString(inner)
 	}
@@ -98,7 +115,11 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString(readerCSS)
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
-	sb.WriteString(buildSinglePageHeader(sourceName, title))
+	pageCount := 0
+	if isPagedBook(inners) {
+		pageCount = len(inners)
+	}
+	sb.WriteString(buildSinglePageHeader(sourceName, title, pageCount))
 	sb.WriteString("\n<main class=\"dht-single\">\n")
 	sb.WriteString(body.String())
 	sb.WriteString("\n</main>\n")
@@ -115,6 +136,19 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	}
 	if err := os.WriteFile(mergedPath, []byte(sb.String()), 0o644); err != nil {
 		return "", fmt.Errorf("write single page: %w", err)
+	}
+
+	// The merged file has absorbed every spine page, so the originals are dead weight: they
+	// are unreachable (nothing links to them), they carry no navbar, no theme and no OCR
+	// plates - the overlay step runs on the merged file only - so anyone who does reach one
+	// by guessing a filename gets a worse page than the book they asked for. Removal is
+	// best-effort and happens only after the merge is safely on disk; a file we cannot
+	// delete is left alone rather than failing a conversion that already succeeded.
+	for _, href := range spineHrefs {
+		if href == "index.html" {
+			continue // never the merged file itself
+		}
+		_ = os.Remove(bookPath(outputDir, book.BasePath, href))
 	}
 
 	entry := filepath.Join(outputDir, "index.html")
@@ -144,9 +178,13 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 }
 
 // buildSinglePageHeader renders the unified reader header without the per-chapter
-// navigation (no prev/next, no TOC link, no page counter) - only the reader controls and
-// the version link, matching the shared chrome used elsewhere.
-func buildSinglePageHeader(sourceName, title string) string {
+// navigation (no prev/next, no TOC link) - only the reader controls and the version link,
+// matching the shared chrome used elsewhere.
+//
+// pageCount > 0 adds a page jump box for an image-page book (comic, scan). The merged
+// document is one long scroll of dozens of pages, so without it a reader cannot reach page
+// 30 except by dragging the scrollbar, and cannot link to it at all.
+func buildSinglePageHeader(sourceName, title string, pageCount int) string {
 	var fileEl, titleEl string
 	if strings.TrimSpace(sourceName) != "" {
 		fileEl = fmt.Sprintf(`<span class="nav-file" title="%s">%s</span>`,
@@ -160,9 +198,37 @@ func buildSinglePageHeader(sourceName, title string) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
+	var pageSel string
+	if pageCount > 1 {
+		var opts strings.Builder
+		for i := 1; i <= pageCount; i++ {
+			opts.WriteString(fmt.Sprintf(`<option value="#page_%03d">%s</option>`,
+				i, html.EscapeString(fmt.Sprintf("%d / %d", i, pageCount))))
+		}
+		pageSel = fmt.Sprintf(`<select id="dht-page-sel" title="%s">%s</select>`,
+			html.EscapeString(i18n.S("Go to page")), opts.String())
+	}
+
 	// lang/dir on the bar itself, never on <html> - see buildNavBarHTML for why.
-	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s</div><div id="dht-progress" class="dht-progress"></div></div>`,
-		i18n.Language(), chromeDirAttr(), fileEl, titleEl, readerControlsHTML(), versionLink)
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>`,
+		i18n.Language(), chromeDirAttr(), fileEl, titleEl, pageSel, readerControlsHTML(), versionLink)
+}
+
+// isPagedBook reports whether the merged bodies are image pages rather than text
+// chapters, by looking for the section.dht-page wrapper that internal/comic and
+// internal/img emit around a page image. Every entry must carry it: one text chapter
+// in the spine makes the book a text book, and the chapter rule is then the honest
+// separator.
+func isPagedBook(inners []string) bool {
+	if len(inners) == 0 {
+		return false
+	}
+	for _, inner := range inners {
+		if !strings.Contains(inner, `class="dht-page"`) {
+			return false
+		}
+	}
+	return true
 }
 
 // htmlLang returns the lang attribute of the document's <html> element, or "".

@@ -127,6 +127,10 @@
     "message": "Ночь",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "Показать или скрыть слой распознанного текста",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "Перейти к странице",
     "description": "Toolbar group tooltip."

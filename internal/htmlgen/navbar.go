@@ -170,9 +170,20 @@ const navBarScript = `
 		}
 	}
 
+	// An image carrying an OCR overlay is off limits: its plates are positioned in percent of
+	// the .ocr-fig container, so the image must fill that container exactly (.ocr-fig>img is
+	// width:100%, and the container's aspect-ratio already preserves the proportion this guard
+	// exists to protect). Writing an inline width here beats that rule - the picture falls back
+	// to its natural width while the container keeps the column's, and every plate lands off the
+	// text by the difference. Measured on a 640 px scene in a 1216 px column: the plate moved
+	// from x=48 to x=91 and grew from 405 px wide to 770.
+	function hasOCROverlay(img) {
+		return !!(img && img.closest && img.closest(".ocr-fig"));
+	}
+
 	// Keep image proportions when any script/style changes image height.
 	function preserveImageProportion(img) {
-		if (!img) return;
+		if (!img || hasOCROverlay(img)) return;
 
 		function apply() {
 			var nw = img.naturalWidth || 0;
@@ -215,6 +226,7 @@ const navBarScript = `
 	function installImageAspectGuards() {
 		var images = document.querySelectorAll("img");
 		images.forEach(function (img) {
+			if (hasOCROverlay(img)) return;
 			preserveImageProportion(img);
 			var observer = new MutationObserver(function () {
 				preserveImageProportion(img);
@@ -464,6 +476,58 @@ func readerScript(bookKey, self string, idx, total int) string {
 	var fsel = document.getElementById("dht-family-sel");
 	if (fsel) fsel.addEventListener("change", function(){ setFam(fsel.value); });
 
+	// OCR layer (toggle button). On a comic or a scan the plates cover the original
+	// lettering, which is the point when translating but in the way when reading the art -
+	// so the layer can be hidden without losing it. The control is only revealed on a page
+	// that actually has plates. The choice is global (localStorage), like the theme: a
+	// reader who wants the artwork wants it for the whole book.
+	var OCR_KEY = "dht_ocr";
+	var ocrBtn = document.getElementById("dht-ocr-toggle");
+	if (ocrBtn && document.querySelector(".ocr-fig")) {
+		ocrBtn.hidden = false;
+		var getOCR = function(){ try { return localStorage.getItem(OCR_KEY) !== "off"; } catch(e){ return true; } };
+		var applyOCR = function(on){
+			document.documentElement.classList.toggle("dht-ocr-off", !on);
+			ocrBtn.setAttribute("aria-pressed", on ? "true" : "false");
+		};
+		applyOCR(getOCR());
+		ocrBtn.addEventListener("click", function(){
+			var on = !getOCR();
+			try { localStorage.setItem(OCR_KEY, on ? "on" : "off"); } catch(e){}
+			applyOCR(on);
+		});
+	}
+
+	// Page jump (image-page books only; the select is absent otherwise). Jumping is a plain
+	// anchor scroll, and the box tracks the scroll so it always names the page on screen.
+	var psel = document.getElementById("dht-page-sel");
+	if (psel) {
+		psel.addEventListener("change", function(){
+			var el = document.querySelector(psel.value);
+			if (el) el.scrollIntoView();
+		});
+		var pages = document.querySelectorAll(".dht-page");
+		if (pages.length) {
+			var syncing = false;
+			var syncSel = function(){
+				syncing = false;
+				// The page whose top is nearest above the viewport's is the one being read.
+				var best = 0;
+				for (var i = 0; i < pages.length; i++) {
+					if (pages[i].getBoundingClientRect().top <= 80) best = i; else break;
+				}
+				var want = "#" + pages[best].id;
+				if (pages[best].id && psel.value !== want) psel.value = want;
+			};
+			window.addEventListener("scroll", function(){
+				if (syncing) return;
+				syncing = true;
+				window.requestAnimationFrame(syncSel);
+			}, {passive: true});
+			syncSel();
+		}
+	}
+
 	var POS_KEY = "dht_pos:" + BOOK;
 	function readPos(){ try { return JSON.parse(localStorage.getItem(POS_KEY) || "null"); } catch(e){ return null; } }
 	function writePos(p){ try { localStorage.setItem(POS_KEY, JSON.stringify(p)); } catch(e){} }
@@ -589,12 +653,17 @@ func readerControlsHTML() string {
 	tLight, tSepia := i18n.S("Light"), i18n.S("Sepia")
 	tDark, tNight := i18n.S("Dark"), i18n.S("Night")
 	fSerif, fSans, fMono := i18n.S("Serif"), i18n.S("Sans"), i18n.S("Mono")
+	// The OCR toggle is rendered on every page but hides itself when the page carries no
+	// plates (see the reader script), so the chrome stays identical across editions and a
+	// text book never shows a control that would do nothing.
+	titleOCR := i18n.S("Show or hide the recognized text layer")
 	return fmt.Sprintf(
 		`<button id="dht-font-dec" class="dht-btn" type="button" title="%s">A&minus;</button>`+
 			`<button id="dht-font-inc" class="dht-btn" type="button" title="%s">A+</button>`+
+			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%s">&#9636;</button>`+
 			`<select id="dht-family-sel" title="%s"><option value="serif">%s</option><option value="sans">%s</option><option value="mono">%s</option></select>`+
 			`<select id="dht-theme-sel" title="%s"><option value="light">&#9728; %s</option><option value="sepia">&#9681; %s</option><option value="dark">&#9790; %s</option><option value="night">&#9679; %s</option></select>`,
-		titleSmaller, titleLarger, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight)
+		titleSmaller, titleLarger, titleOCR, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight)
 }
 
 // versionLabel formats the running app version for display in the navbar.

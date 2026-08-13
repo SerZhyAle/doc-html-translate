@@ -111,6 +111,10 @@
     "message": "Nacht",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "Erkannte Textebene ein- oder ausblenden",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "Zu Seite springen",
     "description": "Toolbar group tooltip."

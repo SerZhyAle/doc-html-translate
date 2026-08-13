@@ -111,6 +111,10 @@
     "message": "Nuit",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "Afficher ou masquer le calque de texte reconnu",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "Aller à la page",
     "description": "Toolbar group tooltip."

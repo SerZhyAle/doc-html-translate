@@ -111,6 +111,10 @@
     "message": "ليلي",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "إظهار أو إخفاء طبقة النص المتعرف عليه",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "الانتقال إلى صفحة",
     "description": "Toolbar group tooltip."

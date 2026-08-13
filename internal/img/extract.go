@@ -68,7 +68,7 @@ func Extract(imgPath, outputDir string) (*epub.Book, error) {
 		return nil, fmt.Errorf("copy image: %w", err)
 	}
 
-	pageHTML := buildPageHTML(title, imgName)
+	pageHTML := buildPageHTML(title, imgName, 1, 1)
 	if err := os.WriteFile(filepath.Join(outputDir, "page_001.html"), []byte(pageHTML), 0o644); err != nil {
 		return nil, fmt.Errorf("write page: %w", err)
 	}
@@ -117,7 +117,10 @@ func extractTIFF(imgPath, outputDir, title string) (*epub.Book, error) {
 		}
 		href := fmt.Sprintf("page_%03d.html", pageNum)
 		id := fmt.Sprintf("page_%03d", pageNum)
-		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName)), 0o644); werr != nil {
+		// len(offsets) is the frame count before any undecodable frame is dropped, so it
+		// can overstate the total by the number skipped. That only affects the alt text,
+		// and an over-count reads better than renumbering pages after the fact.
+		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName, pageNum, len(offsets))), 0o644); werr != nil {
 			return nil, fmt.Errorf("write tiff page %d: %w", pageNum, werr)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{ID: id, Href: href, MediaType: "text/html"})
@@ -229,19 +232,29 @@ func copyFile(src, dst string) error {
 // buildPageHTML wraps the copied image in a minimal centred page. The OCR overlay
 // step rewrites the <img> into a positioned container with text plates; if OCR is
 // unavailable the page still shows the image unchanged.
-func buildPageHTML(title, imgName string) string {
+//
+// The wrapper is a <section id="page_NNN">, not a <main>, and the reason is the
+// merge: a multi-frame TIFF's pages are concatenated into one index.html, where a
+// <main> per page would nest inside the merged document's own <main>. Invalid HTML,
+// and it breaks reader mode and landmark navigation. Kept identical to
+// internal/comic's wrapper so both inputs overlay the same way.
+func buildPageHTML(title, imgName string, pageNum, totalPages int) string {
+	alt := html.EscapeString(title)
+	if totalPages > 1 {
+		alt = html.EscapeString(fmt.Sprintf("%s - page %d of %d", title, pageNum, totalPages))
+	}
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s</title>\n", html.EscapeString(title)))
 	sb.WriteString("  <style>\n")
-	sb.WriteString("    body { margin: 0; background: #f0f0f0; }\n")
-	sb.WriteString("    main { width: 95%; max-width: 1400px; margin: 1em auto; }\n")
-	sb.WriteString("    main img { display: block; width: 100%; height: auto; }\n")
+	sb.WriteString("    body { margin: 0; }\n")
+	sb.WriteString("    section.dht-page { width: 95%; max-width: 1400px; margin: 1em auto; }\n")
+	sb.WriteString("    section.dht-page img { display: block; width: 100%; height: auto; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
-	sb.WriteString("  <main>\n")
-	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), html.EscapeString(title)))
-	sb.WriteString("  </main>\n</body>\n</html>\n")
+	sb.WriteString(fmt.Sprintf("  <section class=\"dht-page\" id=\"page_%03d\" aria-label=\"%s\">\n", pageNum, alt))
+	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), alt))
+	sb.WriteString("  </section>\n</body>\n</html>\n")
 	return sb.String()
 }

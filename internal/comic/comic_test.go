@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -166,6 +167,27 @@ func assertExtracted(t *testing.T, comicPath string) {
 		}
 		if !bytes.Contains(h, []byte(`src="`+img+`"`)) {
 			t.Errorf("page %d html does not reference %s", i+1, img)
+		}
+		// A <main> per page would nest inside the merged document's own <main> once the
+		// single-page step concatenates these wrappers - invalid HTML that breaks reader
+		// mode and landmark navigation. The wrapper must stay a sectioning element with a
+		// stable id, which is also what makes every page linkable after the merge.
+		if bytes.Contains(h, []byte("<main")) {
+			t.Errorf("page %d wrapper uses <main>; it is merged into a document that already has one", i+1)
+		}
+		wantID := fmt.Sprintf(`id="page_%03d"`, i+1)
+		if !bytes.Contains(h, []byte(wantID)) {
+			t.Errorf("page %d wrapper has no %s anchor", i+1, wantID)
+		}
+		// The alt text has to identify the page. Repeating the book title on every page
+		// makes a 37-page comic read as 37 identical objects to a screen reader.
+		wantAlt := fmt.Sprintf("page %d of 3", i+1)
+		if !bytes.Contains(h, []byte(wantAlt)) {
+			t.Errorf("page %d alt text does not say %q", i+1, wantAlt)
+		}
+		// A hard-coded page background ignores the reader's theme.
+		if bytes.Contains(h, []byte("background: #f0f0f0")) {
+			t.Errorf("page %d hard-codes a light background, overriding the reader theme", i+1)
 		}
 	}
 }

@@ -79,6 +79,23 @@ func TestBuildNavBarHTML_FirstPage(t *testing.T) {
 	}
 }
 
+// The navbar's aspect guard writes an inline width on every image it watches, and an inline width
+// beats the overlay's own .ocr-fig>img{width:100%}. When that happened the picture fell back to
+// its natural width while the plate container kept the column's, so every plate sat off the text
+// by the ratio between them - measured on a 640 px scene in a 1216 px column, a plate moved from
+// x=48 to x=91 and grew from 405 px wide to 770. The guard must therefore leave overlaid images
+// alone, at both entry points: the per-image call and the MutationObserver it installs.
+func TestImageAspectGuardSkipsOCROverlay(t *testing.T) {
+	if !strings.Contains(navBarScript, `img.closest(".ocr-fig")`) {
+		t.Error("the aspect guard has no .ocr-fig exemption - overlay plates will drift off their text")
+	}
+	guardCalls := strings.Count(navBarScript, "hasOCROverlay(img)")
+	if guardCalls < 3 {
+		t.Errorf("hasOCROverlay is consulted %d time(s); expected the definition plus both entry points "+
+			"(preserveImageProportion and installImageAspectGuards)", guardCalls)
+	}
+}
+
 func TestInjectNavBars(t *testing.T) {
 	tmpDir := t.TempDir()
 

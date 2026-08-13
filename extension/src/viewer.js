@@ -153,7 +153,11 @@ function teardownCurrent() {
 // size must match viewer.css's --reader-size fallback, which styles the document before
 // this runs. A+/A- move it and persist; nothing is stored until the reader asks for a
 // change, so this default reaches everyone who never expressed a preference.
-const DEFAULT_PREFS = { size: 28, family: "serif", theme: null };
+// ocrLayer: whether the recognized-text plates are shown over the artwork. On by default -
+// the plates are what makes a comic or a scan translatable - but a reader looking at the art
+// wants them out of the way, so the choice persists like the theme does. Mirrors the app's
+// dht_ocr toggle (docs/PARITY.md).
+const DEFAULT_PREFS = { size: 28, family: "serif", theme: null, ocrLayer: true };
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 
@@ -180,6 +184,16 @@ function applyPrefs() {
   document.documentElement.setAttribute("data-theme", theme);
   $("sel-family").value = prefs.family;
   $("sel-theme").value = theme;
+  const ocrOn = prefs.ocrLayer !== false;
+  document.documentElement.classList.toggle("ocr-layer-off", !ocrOn);
+  $("btn-ocr").setAttribute("aria-pressed", ocrOn ? "true" : "false");
+}
+
+// revealOcrToggle shows the OCR layer control once the document actually has plates on it.
+// Called after an overlay lands, because plates arrive lazily as images scroll into view -
+// checking once at load would hide the control on every book.
+function revealOcrToggle() {
+  if (document.querySelector(".ocr-overlay")) $("grp-ocr").hidden = false;
 }
 
 // ---- Status / progress -----------------------------------------------------
@@ -272,6 +286,7 @@ async function ocrProcessImage(img) {
     });
     wrapper.replaceWith(container);
     if (!container.classList.contains("ocr-empty")) ocrWithText += 1;
+    revealOcrToggle();
   } catch (err) {
     console.warn("OCR failed for image", err);
     wrapper.replaceWith(img); // restore the plain image
@@ -1532,6 +1547,9 @@ function wireToolbar() {
   });
   $("sel-theme").addEventListener("change", (e) => {
     prefs.theme = e.target.value; applyPrefs(); savePrefs();
+  });
+  $("btn-ocr").addEventListener("click", () => {
+    prefs.ocrLayer = prefs.ocrLayer === false; applyPrefs(); savePrefs();
   });
   $("page-jump").addEventListener("change", (e) => {
     const n = parseInt(e.target.value, 10);

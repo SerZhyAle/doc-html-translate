@@ -111,6 +111,10 @@
     "message": "রাত",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "শনাক্ত করা লেখার স্তর দেখান বা লুকান",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "পৃষ্ঠায় যান",
     "description": "Toolbar group tooltip."

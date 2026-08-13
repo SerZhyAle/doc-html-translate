@@ -30,6 +30,11 @@
         <option value="night" data-i18n="themeNight">Night</option>
       </select>
     </div>
+    <!-- Revealed by viewer.js only on a document that carries OCR plates; mirrors the app's
+         #dht-ocr-toggle (docs/PARITY.md). -->
+    <div class="group" id="grp-ocr" hidden data-i18n-title="ttOcrLayer" title="Show or hide the recognized text layer">
+      <button id="btn-ocr" type="button" aria-pressed="true" aria-label="Toggle recognized text layer">&#9636;</button>
+    </div>
     <div class="group" data-i18n-title="ttGoToPage" title="Go to page">
       <span data-i18n="labelPage">Page</span>
       <input id="page-jump" type="number" min="1" value="1" aria-label="Go to page">

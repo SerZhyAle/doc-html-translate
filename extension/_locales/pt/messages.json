@@ -111,6 +111,10 @@
     "message": "Noite",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "Mostrar ou ocultar a camada de texto reconhecido",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "Ir para a página",
     "description": "Toolbar group tooltip."

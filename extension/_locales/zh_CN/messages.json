@@ -111,6 +111,10 @@
     "message": "夜间",
     "description": "Reading theme option."
   },
+  "ttOcrLayer": {
+    "message": "显示或隐藏识别的文字层",
+    "description": "Toolbar group tooltip for the OCR layer toggle."
+  },
   "ttGoToPage": {
     "message": "跳转到页面",
     "description": "Toolbar group tooltip."
