@@ -54,4 +54,10 @@ extend-exclude = [
   "winget/SerZhyAle.DocHtmlTranslate.locale.es-ES.yaml",
   "winget/SerZhyAle.DocHtmlTranslate.locale.fr-FR.yaml",
   "winget/SerZhyAle.DocHtmlTranslate.locale.pt-BR.yaml",
+
+  # The Partner Center listing export: one column per Store locale, so every row carries German,
+  # French, Italian, Portuguese and Spanish prose beside the English. It is a render target patched
+  # from tools/store/listing/*.txt - the sources are what get spell-checked, and the five
+  # Latin-script ones are already excluded above for the same reason.
+  "tools/store/listingData.csv",
 ]

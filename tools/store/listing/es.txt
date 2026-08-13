@@ -1,8 +1,9 @@
 # Store listing source for es (Partner Center locale: es).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -95,3 +96,13 @@ cómics cbz cbr
 
 @@SearchTerm7
 traducción sin conexión
+
+@@ReleaseNotes
+- El texto reconocido en una imagen ahora cubre las letras que sustituye. Hasta ahora el reemplazo se dibujaba sobre una base con la forma de las propias palabras, de modo que el original quedaba visible alrededor y ambas capas se leían a la vez.
+- Una captura de pantalla, un formulario o una lista ya no quedan bajo una única base enorme. Una placa que ocupa casi toda la imagen se descompone en las líneas con las que se formó: la página conserva su maquetación y no se pierde nada de lo reconocido.
+- Si no eliges un idioma de OCR, la aplicación lee ahora el sistema de escritura de la página. Si tiene los datos, reconoce en ese idioma; si no, no añade texto alguno y nombra el paquete que hay que instalar - en vez de cubrir una captura rusa con disparates transliterados.
+- Las letras sobre gráficos saturados, sobre una trama de impresión o en tipografía grande de titular se reconocen donde las versiones anteriores no encontraban nada.
+- Cómics y escaneos: cada página tiene su propio ancla y un campo de salto, así puedes enlazar a la página 30 en lugar de arrastrar la barra de desplazamiento.
+- Un botón nuevo oculta la capa de texto reconocido, para ver el dibujo que hay debajo y recuperar el texto.
+- Un PDF sin capa de texto y sin imagen de página extraíble ahora lo dice tal cual, en vez de afirmar que el OCR estaba desactivado.
+- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.

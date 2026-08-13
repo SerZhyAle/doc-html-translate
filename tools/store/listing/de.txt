@@ -1,8 +1,9 @@
 # Store listing source for de (Partner Center locale: de).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -96,3 +97,13 @@ comic cbz cbr
 
 @@SearchTerm7
 offline übersetzung
+
+@@ReleaseNotes
+- Der auf einem Bild erkannte Text verdeckt jetzt die Schrift, die er ersetzt. Bisher wurde der Ersatz auf eine Fläche in Form der Wörter selbst gezeichnet, sodass das Original ringsum sichtbar blieb und beide Ebenen zugleich lesbar waren.
+- Ein Screenshot, ein Formular oder eine Liste verschwindet nicht mehr unter einer einzigen riesigen Fläche. Eine Platte, die fast das ganze Bild einnimmt, wird wieder in die Zeilen zerlegt, aus denen sie entstand - das Layout der Seite bleibt erhalten, und nichts Erkanntes geht verloren.
+- Ohne gewählte OCR-Sprache liest die App jetzt das Schriftsystem der Seite. Sind die Daten vorhanden, wird in dieser Sprache erkannt; fehlen sie, wird gar kein Text eingefügt und das nötige Sprachpaket genannt - statt einen russischen Screenshot mit transliteriertem Unsinn zu überdecken.
+- Schrift auf kräftig gefärbter Grafik, auf einem Druckraster oder als große Displayschrift wird dort erkannt, wo frühere Versionen nichts fanden.
+- Comics und Scans: Jede Seite hat einen eigenen Anker und ein Sprungfeld, sodass man auf Seite 30 verlinken kann, statt die Bildlaufleiste zu ziehen.
+- Eine neue Schaltfläche blendet die Ebene mit dem erkannten Text aus, damit man die Zeichnung darunter sehen und den Text zurückholen kann.
+- Ein PDF ohne Textebene und ohne extrahierbares Seitenbild sagt das jetzt genau so, statt zu behaupten, OCR sei ausgeschaltet.
+- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.

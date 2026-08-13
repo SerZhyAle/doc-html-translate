@@ -1,8 +1,9 @@
 # Store listing source for fr (Partner Center locale: fr).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -96,3 +97,13 @@ bd cbz cbr
 
 @@SearchTerm7
 traduction hors ligne
+
+@@ReleaseNotes
+- Le texte reconnu sur une image recouvre désormais les lettres qu'il remplace. Jusqu'ici le remplacement était peint sur un fond épousant la forme des mots, si bien que l'original restait visible autour et que les deux couches se lisaient en même temps.
+- Une capture d'écran, un formulaire ou une liste ne disparaissent plus sous un seul immense fond. Une plaque qui couvre presque toute l'image est redécoupée en les lignes dont elle était faite : la mise en page est conservée et rien de ce qui a été reconnu n'est perdu.
+- Si vous ne choisissez pas de langue OCR, l'application lit maintenant l'écriture de la page. Si elle possède les données, elle reconnaît dans cette langue ; sinon elle n'ajoute aucun texte et nomme le pack à installer - au lieu de recouvrir une capture russe de charabia translittéré.
+- Les lettrages sur un graphisme saturé, sur une trame d'impression ou en grands caractères d'affiche sont reconnus là où les versions précédentes ne trouvaient rien.
+- Bandes dessinées et numérisations : chaque page a son ancre et un champ de saut, vous pouvez donc pointer vers la page 30 au lieu de tirer la barre de défilement.
+- Un nouveau bouton masque la couche de texte reconnu, pour regarder le dessin en dessous et faire revenir le texte.
+- Un PDF sans couche de texte ni image de page extractible le dit maintenant tel quel, au lieu d'affirmer que l'OCR était désactivé.
+- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.

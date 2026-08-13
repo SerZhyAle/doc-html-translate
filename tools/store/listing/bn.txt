@@ -1,8 +1,9 @@
 # Store listing source for bn (Partner Center locale: bn).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -94,3 +95,13 @@ ocr নথি অনুবাদ
 
 @@SearchTerm7
 অফলাইন অনুবাদ
+
+@@ReleaseNotes
+- ছবিতে শনাক্ত করা লেখা এখন সেই অক্ষরগুলোকেই ঢেকে দেয় যাদের জায়গা সে নেয়। এতদিন প্রতিস্থাপনটি শব্দের আকারের একটি পটভূমিতে আঁকা হতো, ফলে মূল লেখা চারপাশে দেখা যেত এবং দুটি স্তর একসঙ্গে পড়া যেত।
+- স্ক্রিনশট, ফর্ম বা তালিকা আর একটিমাত্র বিশাল পটভূমির নিচে চাপা পড়ে না। যে ফলকটি প্রায় পুরো ছবি জুড়ে থাকে, সেটিকে আবার তার নিজের লাইনগুলোতে ভাগ করা হয় - পৃষ্ঠার বিন্যাস অটুট থাকে এবং শনাক্ত হওয়া কিছুই হারায় না।
+- আপনি OCR ভাষা না বাছলে অ্যাপ এখন পৃষ্ঠার লিপি পড়ে। উপাত্ত থাকলে সেই ভাষাতেই শনাক্ত করে; না থাকলে কোনো লেখাই যোগ করে না এবং কোন ভাষা প্যাকেজ লাগবে তা জানায় - রুশ স্ক্রিনশটকে প্রতিবর্ণীকৃত অর্থহীন লেখায় ঢেকে দেওয়ার বদলে।
+- গাঢ় রঙের চিত্রকর্মে, ছাপার স্ক্রিনে বা বড় ডিসপ্লে হরফে লেখা এখন সেখানেও পড়া যায় যেখানে আগের সংস্করণ কিছুই পেত না।
+- কমিকস ও স্ক্যান: প্রতিটি পৃষ্ঠার নিজস্ব অ্যাঙ্কর ও পৃষ্ঠা-লাফ ঘর আছে, তাই স্ক্রলবার টানার বদলে ৩০ নম্বর পৃষ্ঠার লিঙ্ক দেওয়া যায়।
+- নতুন একটি বোতাম শনাক্ত লেখার স্তর লুকিয়ে দেয়, যাতে নিচের ছবিটি দেখা যায় এবং পরে লেখা ফিরিয়ে আনা যায়।
+- যে PDF-এ পাঠ্যস্তরও নেই, বের করার মতো পৃষ্ঠাছবিও নেই, সেটি এখন ঠিক তাই বলে - OCR বন্ধ ছিল বলে দাবি করার বদলে।
+- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।

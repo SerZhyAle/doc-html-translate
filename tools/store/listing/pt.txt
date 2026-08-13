@@ -1,8 +1,9 @@
 # Store listing source for pt (Partner Center locale: pt-br).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -95,3 +96,13 @@ banda desenhada cbz cbr
 
 @@SearchTerm7
 tradução offline
+
+@@ReleaseNotes
+- O texto reconhecido numa imagem agora cobre as letras que substitui. Até agora a substituição era desenhada sobre uma base com a forma das próprias palavras, de modo que o original continuava visível à volta e as duas camadas liam-se ao mesmo tempo.
+- Uma captura de ecrã, um formulário ou uma lista deixam de ficar sob uma única base enorme. Uma placa que ocupa quase toda a imagem é devolvida às linhas que a formaram: a página mantém a sua disposição e nada do que foi reconhecido se perde.
+- Se não escolher um idioma de OCR, a aplicação passa a ler o sistema de escrita da página. Tendo os dados, reconhece nesse idioma; não os tendo, não acrescenta texto algum e indica o pacote a instalar - em vez de cobrir uma captura russa com disparates transliterados.
+- Letras sobre arte saturada, sobre retícula de impressão ou em tipo grande de destaque são reconhecidas onde versões anteriores não encontravam nada.
+- Banda desenhada e digitalizações: cada página tem a sua âncora e um campo de salto, por isso pode ligar à página 30 em vez de arrastar a barra de deslocamento.
+- Um novo botão esconde a camada de texto reconhecido, para ver o desenho por baixo e trazer o texto de volta.
+- Um PDF sem camada de texto e sem imagem de página extraível passa a dizer exatamente isso, em vez de afirmar que o OCR estava desligado.
+- Esta tradução é automática e não revista - correções para sza@ukr.net.

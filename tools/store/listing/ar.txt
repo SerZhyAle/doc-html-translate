@@ -1,8 +1,9 @@
 # Store listing source for ar (Partner Center locale: ar).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -94,3 +95,13 @@ mobi azw3 fb2
 
 @@SearchTerm7
 ترجمة دون اتصال
+
+@@ReleaseNotes
+- النص المتعرَّف عليه في الصورة يغطي الآن الحروف التي يحل محلها. حتى الآن كان البديل يُرسم على خلفية بشكل الكلمات نفسها، فيبقى الأصل ظاهرًا حولها وتُقرأ الطبقتان معًا.
+- لقطة الشاشة أو النموذج أو القائمة لم تعد تختفي تحت خلفية واحدة ضخمة. اللوحة التي تشغل معظم الصورة تُعاد إلى السطور التي تكوّنت منها، فتحتفظ الصفحة بتنسيقها ولا يضيع شيء مما تم التعرف عليه.
+- إذا لم تختر لغة للتعرف الضوئي، يقرأ التطبيق الآن نظام الكتابة في الصفحة. فإن توفرت البيانات تعرَّف بها؛ وإن لم تتوفر لا يضيف نصًا إطلاقًا ويذكر حزمة اللغة المطلوبة - بدلًا من تغطية لقطة روسية بحروف منقولة بلا معنى.
+- الكتابة فوق رسوم مشبعة الألوان أو فوق شبكة طباعة أو بخط عرض كبير صارت تُقرأ حيث لم تجد الإصدارات السابقة شيئًا.
+- القصص المصورة والمسوحات: لكل صفحة رابط خاص وحقل انتقال، فيمكنك الإشارة إلى الصفحة 30 بدل سحب شريط التمرير.
+- زر جديد يخفي طبقة النص المتعرَّف عليه لترى الرسم تحتها ثم تعيد النص.
+- ملف PDF بلا طبقة نصية وبلا صورة صفحة قابلة للاستخراج يقول ذلك الآن بوضوح، بدل الادعاء بأن التعرف الضوئي معطَّل.
+- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.

@@ -1,8 +1,9 @@
 # Store listing source for ur (Partner Center locale: ur).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -94,3 +95,13 @@ mobi azw3 fb2
 
 @@SearchTerm7
 آف لائن ترجمہ
+
+@@ReleaseNotes
+- تصویر پر پہچانا گیا متن اب انہی حروف کو ڈھانپ دیتا ہے جن کی جگہ لیتا ہے۔ اب تک متبادل الفاظ کی شکل کی پٹی پر بنتا تھا، اس لیے اصل متن اس کے گرد نظر آتا رہتا اور دونوں تہیں ایک ساتھ پڑھی جاتی تھیں۔
+- اسکرین شاٹ، فارم یا فہرست اب ایک بڑی پٹی کے نیچے نہیں دبتے۔ جو تختی تقریباً پوری تصویر گھیر لیتی ہے، اسے دوبارہ انہی سطروں میں تقسیم کر دیا جاتا ہے جن سے وہ بنی تھی - صفحے کی ترتیب برقرار رہتی ہے اور پہچانا گیا کچھ ضائع نہیں ہوتا۔
+- اگر آپ OCR کی زبان منتخب نہ کریں تو ایپ اب صفحے کا رسم الخط پڑھتی ہے۔ ڈیٹا موجود ہو تو اسی زبان میں پہچانتی ہے؛ نہ ہو تو کوئی متن شامل نہیں کرتی اور ضروری زبان پیکج کا نام بتاتی ہے - روسی اسکرین شاٹ کو بے معنی نقل حرفی سے ڈھانپنے کے بجائے۔
+- گہرے رنگ کی تصویر کشی پر، طباعتی جالی پر یا بڑے ڈسپلے حروف میں لکھا متن اب وہاں بھی پڑھا جاتا ہے جہاں پرانے ورژن کو کچھ نہیں ملتا تھا۔
+- کامکس اور اسکین: ہر صفحے کا اپنا اینکر اور صفحہ بدلنے کا خانہ ہے، اس لیے اسکرول بار کھینچنے کے بجائے صفحہ 30 کا لنک دیا جا سکتا ہے۔
+- ایک نیا بٹن پہچانے گئے متن کی تہہ چھپا دیتا ہے، تاکہ نیچے کی تصویر دیکھی جا سکے اور پھر متن واپس لایا جا سکے۔
+- جس PDF میں نہ متن کی تہہ ہو اور نہ نکالی جا سکنے والی صفحہ تصویر، وہ اب یہی کہتی ہے، بجائے اس کے کہ OCR بند تھا۔
+- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔

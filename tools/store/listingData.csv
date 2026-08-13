@@ -303,7 +303,77 @@ ReleaseNotes,3,Text,,"- Text recognized on a picture now covers the lettering it
 - Написи на насиченій графіці, на друкарському растрі та великий дисплейний шрифт розпізнаються там, де попередні версії не знаходили нічого.
 - Комікси та скани: кожна сторінка тепер має власний якір і поле переходу за сторінками, тож на сторінку 30 можна дати посилання, а не тягнути смугу прокручування.
 - Нова кнопка ховає шар розпізнаного тексту, щоб подивитися малюнок під ним і повернути текст назад.
-- PDF, у якого немає ні текстового шару, ні видобувного зображення сторінки, тепер так і пише, а не заявляє, що OCR вимкнено.",,,,,,,,,,
+- PDF, у якого немає ні текстового шару, ні видобувного зображення сторінки, тепер так і пише, а не заявляє, що OCR вимкнено.","- Der auf einem Bild erkannte Text verdeckt jetzt die Schrift, die er ersetzt. Bisher wurde der Ersatz auf eine Fläche in Form der Wörter selbst gezeichnet, sodass das Original ringsum sichtbar blieb und beide Ebenen zugleich lesbar waren.
+- Ein Screenshot, ein Formular oder eine Liste verschwindet nicht mehr unter einer einzigen riesigen Fläche. Eine Platte, die fast das ganze Bild einnimmt, wird wieder in die Zeilen zerlegt, aus denen sie entstand - das Layout der Seite bleibt erhalten, und nichts Erkanntes geht verloren.
+- Ohne gewählte OCR-Sprache liest die App jetzt das Schriftsystem der Seite. Sind die Daten vorhanden, wird in dieser Sprache erkannt; fehlen sie, wird gar kein Text eingefügt und das nötige Sprachpaket genannt - statt einen russischen Screenshot mit transliteriertem Unsinn zu überdecken.
+- Schrift auf kräftig gefärbter Grafik, auf einem Druckraster oder als große Displayschrift wird dort erkannt, wo frühere Versionen nichts fanden.
+- Comics und Scans: Jede Seite hat einen eigenen Anker und ein Sprungfeld, sodass man auf Seite 30 verlinken kann, statt die Bildlaufleiste zu ziehen.
+- Eine neue Schaltfläche blendet die Ebene mit dem erkannten Text aus, damit man die Zeichnung darunter sehen und den Text zurückholen kann.
+- Ein PDF ohne Textebene und ohne extrahierbares Seitenbild sagt das jetzt genau so, statt zu behaupten, OCR sei ausgeschaltet.
+- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.","- Il testo riconosciuto su un'immagine ora copre le lettere che sostituisce. Finora la sostituzione veniva disegnata su una base a forma delle parole stesse, così l'originale restava visibile intorno e i due livelli si leggevano insieme.
+- Uno screenshot, un modulo o un elenco non finiscono più sotto un'unica enorme base. Una targa che occupa quasi tutta l'immagine viene riportata alle righe da cui era stata composta: l'impaginazione della pagina resta, e nulla di riconosciuto va perduto.
+- Se non scegli una lingua OCR, l'app ora legge il sistema di scrittura della pagina. Se ha i dati, riconosce in quella lingua; se non li ha, non aggiunge alcun testo e indica il pacchetto da installare - invece di coprire uno screenshot russo con sciocchezze traslitterate.
+- Le scritte su grafica satura, su un retino di stampa o in grande carattere da display vengono riconosciute dove le versioni precedenti non trovavano nulla.
+- Fumetti e scansioni: ogni pagina ha la propria ancora e un campo di salto, così puoi collegarti alla pagina 30 invece di trascinare la barra di scorrimento.
+- Un nuovo pulsante nasconde il livello del testo riconosciuto, per guardare il disegno sottostante e riportare indietro il testo.
+- Un PDF senza livello di testo e senza immagine di pagina estraibile ora lo dice esattamente, invece di sostenere che l'OCR fosse disattivato.
+- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.","- El texto reconocido en una imagen ahora cubre las letras que sustituye. Hasta ahora el reemplazo se dibujaba sobre una base con la forma de las propias palabras, de modo que el original quedaba visible alrededor y ambas capas se leían a la vez.
+- Una captura de pantalla, un formulario o una lista ya no quedan bajo una única base enorme. Una placa que ocupa casi toda la imagen se descompone en las líneas con las que se formó: la página conserva su maquetación y no se pierde nada de lo reconocido.
+- Si no eliges un idioma de OCR, la aplicación lee ahora el sistema de escritura de la página. Si tiene los datos, reconoce en ese idioma; si no, no añade texto alguno y nombra el paquete que hay que instalar - en vez de cubrir una captura rusa con disparates transliterados.
+- Las letras sobre gráficos saturados, sobre una trama de impresión o en tipografía grande de titular se reconocen donde las versiones anteriores no encontraban nada.
+- Cómics y escaneos: cada página tiene su propio ancla y un campo de salto, así puedes enlazar a la página 30 en lugar de arrastrar la barra de desplazamiento.
+- Un botón nuevo oculta la capa de texto reconocido, para ver el dibujo que hay debajo y recuperar el texto.
+- Un PDF sin capa de texto y sin imagen de página extraíble ahora lo dice tal cual, en vez de afirmar que el OCR estaba desactivado.
+- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.","- Le texte reconnu sur une image recouvre désormais les lettres qu'il remplace. Jusqu'ici le remplacement était peint sur un fond épousant la forme des mots, si bien que l'original restait visible autour et que les deux couches se lisaient en même temps.
+- Une capture d'écran, un formulaire ou une liste ne disparaissent plus sous un seul immense fond. Une plaque qui couvre presque toute l'image est redécoupée en les lignes dont elle était faite : la mise en page est conservée et rien de ce qui a été reconnu n'est perdu.
+- Si vous ne choisissez pas de langue OCR, l'application lit maintenant l'écriture de la page. Si elle possède les données, elle reconnaît dans cette langue ; sinon elle n'ajoute aucun texte et nomme le pack à installer - au lieu de recouvrir une capture russe de charabia translittéré.
+- Les lettrages sur un graphisme saturé, sur une trame d'impression ou en grands caractères d'affiche sont reconnus là où les versions précédentes ne trouvaient rien.
+- Bandes dessinées et numérisations : chaque page a son ancre et un champ de saut, vous pouvez donc pointer vers la page 30 au lieu de tirer la barre de défilement.
+- Un nouveau bouton masque la couche de texte reconnu, pour regarder le dessin en dessous et faire revenir le texte.
+- Un PDF sans couche de texte ni image de page extractible le dit maintenant tel quel, au lieu d'affirmer que l'OCR était désactivé.
+- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.","- O texto reconhecido numa imagem agora cobre as letras que substitui. Até agora a substituição era desenhada sobre uma base com a forma das próprias palavras, de modo que o original continuava visível à volta e as duas camadas liam-se ao mesmo tempo.
+- Uma captura de ecrã, um formulário ou uma lista deixam de ficar sob uma única base enorme. Uma placa que ocupa quase toda a imagem é devolvida às linhas que a formaram: a página mantém a sua disposição e nada do que foi reconhecido se perde.
+- Se não escolher um idioma de OCR, a aplicação passa a ler o sistema de escrita da página. Tendo os dados, reconhece nesse idioma; não os tendo, não acrescenta texto algum e indica o pacote a instalar - em vez de cobrir uma captura russa com disparates transliterados.
+- Letras sobre arte saturada, sobre retícula de impressão ou em tipo grande de destaque são reconhecidas onde versões anteriores não encontravam nada.
+- Banda desenhada e digitalizações: cada página tem a sua âncora e um campo de salto, por isso pode ligar à página 30 em vez de arrastar a barra de deslocamento.
+- Um novo botão esconde a camada de texto reconhecido, para ver o desenho por baixo e trazer o texto de volta.
+- Um PDF sem camada de texto e sem imagem de página extraível passa a dizer exatamente isso, em vez de afirmar que o OCR estava desligado.
+- Esta tradução é automática e não revista - correções para sza@ukr.net.","- النص المتعرَّف عليه في الصورة يغطي الآن الحروف التي يحل محلها. حتى الآن كان البديل يُرسم على خلفية بشكل الكلمات نفسها، فيبقى الأصل ظاهرًا حولها وتُقرأ الطبقتان معًا.
+- لقطة الشاشة أو النموذج أو القائمة لم تعد تختفي تحت خلفية واحدة ضخمة. اللوحة التي تشغل معظم الصورة تُعاد إلى السطور التي تكوّنت منها، فتحتفظ الصفحة بتنسيقها ولا يضيع شيء مما تم التعرف عليه.
+- إذا لم تختر لغة للتعرف الضوئي، يقرأ التطبيق الآن نظام الكتابة في الصفحة. فإن توفرت البيانات تعرَّف بها؛ وإن لم تتوفر لا يضيف نصًا إطلاقًا ويذكر حزمة اللغة المطلوبة - بدلًا من تغطية لقطة روسية بحروف منقولة بلا معنى.
+- الكتابة فوق رسوم مشبعة الألوان أو فوق شبكة طباعة أو بخط عرض كبير صارت تُقرأ حيث لم تجد الإصدارات السابقة شيئًا.
+- القصص المصورة والمسوحات: لكل صفحة رابط خاص وحقل انتقال، فيمكنك الإشارة إلى الصفحة 30 بدل سحب شريط التمرير.
+- زر جديد يخفي طبقة النص المتعرَّف عليه لترى الرسم تحتها ثم تعيد النص.
+- ملف PDF بلا طبقة نصية وبلا صورة صفحة قابلة للاستخراج يقول ذلك الآن بوضوح، بدل الادعاء بأن التعرف الضوئي معطَّل.
+- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.","- चित्र पर पहचाना गया पाठ अब उन्हीं अक्षरों को ढक देता है जिनकी जगह वह लेता है। अब तक प्रतिस्थापन शब्दों के आकार की पट्टी पर बनता था, इसलिए मूल पाठ उसके चारों ओर दिखता रहता था और दोनों परतें एक साथ पढ़ी जाती थीं।
+- स्क्रीनशॉट, फ़ॉर्म या सूची अब एक विशाल पट्टी के नीचे नहीं दबते। जो पट्टिका लगभग पूरे चित्र को घेर लेती है, उसे फिर उन्हीं पंक्तियों में बाँट दिया जाता है जिनसे वह बनी थी - पृष्ठ का अपना विन्यास बना रहता है और पहचाना गया कुछ भी नहीं खोता।
+- यदि आप OCR भाषा नहीं चुनते, तो ऐप अब पृष्ठ की लिपि पढ़ता है। डेटा उपलब्ध हो तो उसी भाषा में पहचान करता है; न हो तो कोई पाठ नहीं जोड़ता और स्थापित करने योग्य भाषा पैकेज का नाम बताता है - रूसी स्क्रीनशॉट को लिप्यंतरित बकवास से ढकने के बजाय।
+- गहरे रंगीन चित्रांकन पर, मुद्रण जालक पर या बड़े प्रदर्शन अक्षरों में लिखा पाठ अब वहाँ पहचाना जाता है जहाँ पुराने संस्करणों को कुछ नहीं मिलता था।
+- कॉमिक्स और स्कैन: हर पृष्ठ का अपना ऐंकर और पृष्ठ-कूद बॉक्स है, इसलिए स्क्रॉलबार खींचने के बजाय आप पृष्ठ 30 का लिंक दे सकते हैं।
+- एक नया बटन पहचाने गए पाठ की परत छिपाता है, ताकि आप नीचे का चित्र देख सकें और फिर पाठ लौटा सकें।
+- जिस PDF में न पाठ परत है और न निकाली जा सकने वाली पृष्ठ छवि, वह अब यही कहता है, यह दावा करने के बजाय कि OCR बंद था।
+- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।","- ছবিতে শনাক্ত করা লেখা এখন সেই অক্ষরগুলোকেই ঢেকে দেয় যাদের জায়গা সে নেয়। এতদিন প্রতিস্থাপনটি শব্দের আকারের একটি পটভূমিতে আঁকা হতো, ফলে মূল লেখা চারপাশে দেখা যেত এবং দুটি স্তর একসঙ্গে পড়া যেত।
+- স্ক্রিনশট, ফর্ম বা তালিকা আর একটিমাত্র বিশাল পটভূমির নিচে চাপা পড়ে না। যে ফলকটি প্রায় পুরো ছবি জুড়ে থাকে, সেটিকে আবার তার নিজের লাইনগুলোতে ভাগ করা হয় - পৃষ্ঠার বিন্যাস অটুট থাকে এবং শনাক্ত হওয়া কিছুই হারায় না।
+- আপনি OCR ভাষা না বাছলে অ্যাপ এখন পৃষ্ঠার লিপি পড়ে। উপাত্ত থাকলে সেই ভাষাতেই শনাক্ত করে; না থাকলে কোনো লেখাই যোগ করে না এবং কোন ভাষা প্যাকেজ লাগবে তা জানায় - রুশ স্ক্রিনশটকে প্রতিবর্ণীকৃত অর্থহীন লেখায় ঢেকে দেওয়ার বদলে।
+- গাঢ় রঙের চিত্রকর্মে, ছাপার স্ক্রিনে বা বড় ডিসপ্লে হরফে লেখা এখন সেখানেও পড়া যায় যেখানে আগের সংস্করণ কিছুই পেত না।
+- কমিকস ও স্ক্যান: প্রতিটি পৃষ্ঠার নিজস্ব অ্যাঙ্কর ও পৃষ্ঠা-লাফ ঘর আছে, তাই স্ক্রলবার টানার বদলে ৩০ নম্বর পৃষ্ঠার লিঙ্ক দেওয়া যায়।
+- নতুন একটি বোতাম শনাক্ত লেখার স্তর লুকিয়ে দেয়, যাতে নিচের ছবিটি দেখা যায় এবং পরে লেখা ফিরিয়ে আনা যায়।
+- যে PDF-এ পাঠ্যস্তরও নেই, বের করার মতো পৃষ্ঠাছবিও নেই, সেটি এখন ঠিক তাই বলে - OCR বন্ধ ছিল বলে দাবি করার বদলে।
+- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।","- تصویر پر پہچانا گیا متن اب انہی حروف کو ڈھانپ دیتا ہے جن کی جگہ لیتا ہے۔ اب تک متبادل الفاظ کی شکل کی پٹی پر بنتا تھا، اس لیے اصل متن اس کے گرد نظر آتا رہتا اور دونوں تہیں ایک ساتھ پڑھی جاتی تھیں۔
+- اسکرین شاٹ، فارم یا فہرست اب ایک بڑی پٹی کے نیچے نہیں دبتے۔ جو تختی تقریباً پوری تصویر گھیر لیتی ہے، اسے دوبارہ انہی سطروں میں تقسیم کر دیا جاتا ہے جن سے وہ بنی تھی - صفحے کی ترتیب برقرار رہتی ہے اور پہچانا گیا کچھ ضائع نہیں ہوتا۔
+- اگر آپ OCR کی زبان منتخب نہ کریں تو ایپ اب صفحے کا رسم الخط پڑھتی ہے۔ ڈیٹا موجود ہو تو اسی زبان میں پہچانتی ہے؛ نہ ہو تو کوئی متن شامل نہیں کرتی اور ضروری زبان پیکج کا نام بتاتی ہے - روسی اسکرین شاٹ کو بے معنی نقل حرفی سے ڈھانپنے کے بجائے۔
+- گہرے رنگ کی تصویر کشی پر، طباعتی جالی پر یا بڑے ڈسپلے حروف میں لکھا متن اب وہاں بھی پڑھا جاتا ہے جہاں پرانے ورژن کو کچھ نہیں ملتا تھا۔
+- کامکس اور اسکین: ہر صفحے کا اپنا اینکر اور صفحہ بدلنے کا خانہ ہے، اس لیے اسکرول بار کھینچنے کے بجائے صفحہ 30 کا لنک دیا جا سکتا ہے۔
+- ایک نیا بٹن پہچانے گئے متن کی تہہ چھپا دیتا ہے، تاکہ نیچے کی تصویر دیکھی جا سکے اور پھر متن واپس لایا جا سکے۔
+- جس PDF میں نہ متن کی تہہ ہو اور نہ نکالی جا سکنے والی صفحہ تصویر، وہ اب یہی کہتی ہے، بجائے اس کے کہ OCR بند تھا۔
+- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔","- 图片上识别出的文字现在会遮住它所替换的字迹。此前替换文字画在与词形相同的底色上，原文仍在四周可见，两层同时可读。
+- 截图、表单或列表不再被一整块巨大的底色盖住。占据画面大部分的板块会重新拆回构成它的各行，页面保留自身版式，已识别的内容不会丢失。
+- 若未选择 OCR 语言，应用现在会读取页面的文字系统。有对应数据就用该语言识别；没有则完全不添加文字，并指出需要安装的语言包 - 而不是用音译乱码盖住俄文截图。
+- 饱和插画上、印刷网点上以及大号标题字体的文字，现在能在旧版本一无所获的地方被识别出来。
+- 漫画与扫描件：每一页都有自己的锚点和跳页框，可以直接链接到第 30 页，而不必拖动滚动条。
+- 新增按钮可隐藏识别文字层，以便查看下方画面，随后再把文字调回来。
+- 既无文本层、也无法提取页面图像的 PDF，现在会如实说明，而不是声称 OCR 已关闭。
+- 本翻译为机器翻译且未经校对 - 更正请发送至 sza@ukr.net。"
 Title,4,Text,,doc-html-translate,Doc-HTML-Translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate
 ShortTitle,5,Text,,,,,,,,,,,,,,
 SortTitle,6,Text,,,,,,,,,,,,,,

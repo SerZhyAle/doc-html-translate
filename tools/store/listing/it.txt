@@ -1,8 +1,9 @@
 # Store listing source for it (Partner Center locale: it).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -95,3 +96,13 @@ fumetti cbz cbr
 
 @@SearchTerm7
 traduzione offline
+
+@@ReleaseNotes
+- Il testo riconosciuto su un'immagine ora copre le lettere che sostituisce. Finora la sostituzione veniva disegnata su una base a forma delle parole stesse, così l'originale restava visibile intorno e i due livelli si leggevano insieme.
+- Uno screenshot, un modulo o un elenco non finiscono più sotto un'unica enorme base. Una targa che occupa quasi tutta l'immagine viene riportata alle righe da cui era stata composta: l'impaginazione della pagina resta, e nulla di riconosciuto va perduto.
+- Se non scegli una lingua OCR, l'app ora legge il sistema di scrittura della pagina. Se ha i dati, riconosce in quella lingua; se non li ha, non aggiunge alcun testo e indica il pacchetto da installare - invece di coprire uno screenshot russo con sciocchezze traslitterate.
+- Le scritte su grafica satura, su un retino di stampa o in grande carattere da display vengono riconosciute dove le versioni precedenti non trovavano nulla.
+- Fumetti e scansioni: ogni pagina ha la propria ancora e un campo di salto, così puoi collegarti alla pagina 30 invece di trascinare la barra di scorrimento.
+- Un nuovo pulsante nasconde il livello del testo riconosciuto, per guardare il disegno sottostante e riportare indietro il testo.
+- Un PDF senza livello di testo e senza immagine di pagina estraibile ora lo dice esattamente, invece di sostenere che l'OCR fosse disattivato.
+- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.

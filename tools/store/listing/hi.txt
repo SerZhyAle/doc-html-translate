@@ -1,8 +1,9 @@
 # Store listing source for hi (Partner Center locale: hi).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -94,3 +95,13 @@ ocr दस्तावेज़ अनुवाद
 
 @@SearchTerm7
 ऑफ़लाइन अनुवाद
+
+@@ReleaseNotes
+- चित्र पर पहचाना गया पाठ अब उन्हीं अक्षरों को ढक देता है जिनकी जगह वह लेता है। अब तक प्रतिस्थापन शब्दों के आकार की पट्टी पर बनता था, इसलिए मूल पाठ उसके चारों ओर दिखता रहता था और दोनों परतें एक साथ पढ़ी जाती थीं।
+- स्क्रीनशॉट, फ़ॉर्म या सूची अब एक विशाल पट्टी के नीचे नहीं दबते। जो पट्टिका लगभग पूरे चित्र को घेर लेती है, उसे फिर उन्हीं पंक्तियों में बाँट दिया जाता है जिनसे वह बनी थी - पृष्ठ का अपना विन्यास बना रहता है और पहचाना गया कुछ भी नहीं खोता।
+- यदि आप OCR भाषा नहीं चुनते, तो ऐप अब पृष्ठ की लिपि पढ़ता है। डेटा उपलब्ध हो तो उसी भाषा में पहचान करता है; न हो तो कोई पाठ नहीं जोड़ता और स्थापित करने योग्य भाषा पैकेज का नाम बताता है - रूसी स्क्रीनशॉट को लिप्यंतरित बकवास से ढकने के बजाय।
+- गहरे रंगीन चित्रांकन पर, मुद्रण जालक पर या बड़े प्रदर्शन अक्षरों में लिखा पाठ अब वहाँ पहचाना जाता है जहाँ पुराने संस्करणों को कुछ नहीं मिलता था।
+- कॉमिक्स और स्कैन: हर पृष्ठ का अपना ऐंकर और पृष्ठ-कूद बॉक्स है, इसलिए स्क्रॉलबार खींचने के बजाय आप पृष्ठ 30 का लिंक दे सकते हैं।
+- एक नया बटन पहचाने गए पाठ की परत छिपाता है, ताकि आप नीचे का चित्र देख सकें और फिर पाठ लौटा सकें।
+- जिस PDF में न पाठ परत है और न निकाली जा सकने वाली पृष्ठ छवि, वह अब यही कहता है, यह दावा करने के बजाय कि OCR बंद था।
+- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।

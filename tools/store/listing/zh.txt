@@ -1,8 +1,9 @@
 # Store listing source for zh (Partner Center locale: zh-hans).
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
-# No @@ReleaseNotes here on purpose: "what's new" is rewritten every release and stays in
-# English, Russian and Ukrainian only (strategic decision D3). A stale machine translation of
-# release notes is worse than none - do not "complete" this file with one.
+# @@ReleaseNotes is carried in all 13 languages (owner's decision, 2026-08-13, superseding the
+# 3-language rule of strategic D3): a Store listing that reads as complete in a language and then
+# shows no "what's new" reads as neglect. The ten machine-translated files each end their notes
+# with the same disclosure the description carries.
 
 @@Title
 doc-html-translate
@@ -91,3 +92,13 @@ mobi azw3 fb2
 
 @@SearchTerm7
 离线翻译
+
+@@ReleaseNotes
+- 图片上识别出的文字现在会遮住它所替换的字迹。此前替换文字画在与词形相同的底色上，原文仍在四周可见，两层同时可读。
+- 截图、表单或列表不再被一整块巨大的底色盖住。占据画面大部分的板块会重新拆回构成它的各行，页面保留自身版式，已识别的内容不会丢失。
+- 若未选择 OCR 语言，应用现在会读取页面的文字系统。有对应数据就用该语言识别；没有则完全不添加文字，并指出需要安装的语言包 - 而不是用音译乱码盖住俄文截图。
+- 饱和插画上、印刷网点上以及大号标题字体的文字，现在能在旧版本一无所获的地方被识别出来。
+- 漫画与扫描件：每一页都有自己的锚点和跳页框，可以直接链接到第 30 页，而不必拖动滚动条。
+- 新增按钮可隐藏识别文字层，以便查看下方画面，随后再把文字调回来。
+- 既无文本层、也无法提取页面图像的 PDF，现在会如实说明，而不是声称 OCR 已关闭。
+- 本翻译为机器翻译且未经校对 - 更正请发送至 sza@ukr.net。
