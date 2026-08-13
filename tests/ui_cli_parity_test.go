@@ -25,6 +25,7 @@ func TestParityGUIExposesEveryCLIFlag(t *testing.T) {
 		"ocr-langs":         `/api/ocr-langs`,
 		"ocr-download":      `/api/ocr-download`,
 		"free":              `alias of -ollama`,
+		"report":            `About section "Send logs to the author" button + /api/report`,
 	}
 
 	re := regexp.MustCompile(`fs\.(?:Bool|String|Int|Float64)\("([a-z0-9-]+)"`)

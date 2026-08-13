@@ -24,6 +24,7 @@ import (
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
+	"doc-html-translate/internal/report"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/translator"
 	"doc-html-translate/internal/windowsreg"
@@ -85,6 +86,10 @@ func main() {
 	mux.HandleFunc("/api/env", handleEnv)
 	mux.HandleFunc("/api/ocr-langs", handleOCRLangs)
 	mux.HandleFunc("/api/ocr-download", handleOCRDownload)
+	mux.HandleFunc("/api/report", handleReport)
+	mux.HandleFunc("/api/report-reveal", handleReportReveal)
+	mux.HandleFunc("/api/report-open", handleReportOpen)
+	mux.HandleFunc("/api/logs-clear", handleLogsClear)
 
 	srv := &http.Server{Handler: mux}
 
@@ -715,14 +720,44 @@ func handleAssocStatus(w http.ResponseWriter, _ *http.Request) {
 //	           in it by default, unless the user has picked a language before.
 //	font     → the UI font that language's script needs (Nirmala UI, Microsoft YaHei UI),
 //	           empty when the default stack covers it.
+//	logs     → how many run logs are held and how many bytes they take, for the About section.
+//	author   → the address a report is mailed to. It is served rather than written into the
+//	           page a second time, so the product has one place that defines it.
 func handleEnv(w http.ResponseWriter, _ *http.Request) {
 	lang := i18n.Resolve("", "", syslocale.Lang())
+	logCount, logBytes := logStoreSize()
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"packaged": isPackaged(),
 		"cli":      cliAvailable(),
 		"lang":     lang,
 		"font":     i18n.FontFamily(lang),
+		"logs":     map[string]any{"count": logCount, "bytes": logBytes},
+		"author":   authorEmail,
 	})
+}
+
+// authorEmail is where a report goes. Same address as the page's feedback link.
+const authorEmail = "sza@ukr.net"
+
+// logStoreSize measures the run-log store. A store that is not there yet is empty, not an
+// error - the About section says "0 logs" and the next conversion creates it.
+func logStoreSize() (count int, bytes int64) {
+	entries, err := os.ReadDir(report.LogsDir())
+	if err != nil {
+		return 0, 0
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		count++
+		bytes += info.Size()
+	}
+	return count, bytes
 }
 
 // handleOCRLangs reports the OCR language catalog with an installed flag, so the GUI can
@@ -735,11 +770,12 @@ func handleOCRLangs(w http.ResponseWriter, _ *http.Request) {
 	type row struct {
 		Code      string `json:"code"`
 		Name      string `json:"name"`
+		ISO       string `json:"iso"` // ISO-639-1 code of -src that selects this data, "" if none
 		Installed bool   `json:"installed"`
 	}
 	out := make([]row, 0, len(ocr.Available))
 	for _, l := range ocr.Available {
-		out = append(out, row{Code: l.Code, Name: l.Name, Installed: installed[l.Code]})
+		out = append(out, row{Code: l.Code, Name: l.Name, ISO: ocr.ISOFor(l.Code), Installed: installed[l.Code]})
 	}
 	_ = json.NewEncoder(w).Encode(out)
 }

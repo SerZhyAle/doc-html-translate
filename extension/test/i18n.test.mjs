@@ -75,3 +75,18 @@ test("every t() key used in the sources is defined", () => {
     }
   }
 });
+
+// The standalone image-OCR page resolves its own messages through a local msg() helper rather
+// than i18n.js, so the scan above never saw it and a key added only there would ship missing
+// from all thirteen files.
+test("every msg() key used in the standalone OCR page is defined", () => {
+  const en = readLocale("en");
+  const call = /\bmsg\(\s*"([A-Za-z0-9_]+)"/g;
+  const js = fs.readFileSync(path.join(srcDir, "ocr.js"), "utf8");
+  let seen = 0;
+  for (const m of js.matchAll(call)) {
+    seen++;
+    assert.ok(m[1] in en, `ocr.js: msg("${m[1]}") has no English message`);
+  }
+  assert.ok(seen > 3, `only ${seen} msg() calls found - the scan is wrong`);
+});

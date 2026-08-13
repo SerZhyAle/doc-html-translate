@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-rtl-layout",
+  "origin": "human",
+  "imageWidth": 600,
+  "imageHeight": 240,
+  "groups": [
+    {
+      "id": "rtl-block",
+      "type": "paragraph",
+      "transcript": "right aligned line one right aligned line two",
+      "language": "en",
+      "direction": "rtl",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "rtl-1",
+          "kind": "box",
+          "points": [
+            [
+              352,
+              70
+            ],
+            [
+              540,
+              94
+            ]
+          ]
+        },
+        {
+          "id": "rtl-2",
+          "kind": "box",
+          "points": [
+            [
+              354,
+              110
+            ],
+            [
+              540,
+              134
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "rtl-block-bounds",
+        "kind": "box",
+        "points": [
+          [
+            352,
+            70
+          ],
+          [
+            540,
+            134
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "rtl-block-replace",
+        "kind": "box",
+        "points": [
+          [
+            352,
+            70
+          ],
+          [
+            540,
+            134
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "reviewerNote": "Layout-only RTL proxy. Arabic and Urdu shaping are not simulated; those scenes must come from the licensed corpus.",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

@@ -104,6 +104,18 @@ func TessLang(code string) string {
 	return code
 }
 
+// ISOFor is the reverse of TessLang: the ISO-639-1 code that selects a Tesseract
+// language, or "" when none maps to it. The GUI uses it to keep the OCR language
+// following the -src language instead of duplicating the mapping in JavaScript.
+func ISOFor(tess string) string {
+	for iso, t := range iso2tess {
+		if t == tess {
+			return iso
+		}
+	}
+	return ""
+}
+
 // LangName returns the display name for a code, or the code itself if unknown.
 func LangName(code string) string {
 	for _, l := range Available {
@@ -112,6 +124,28 @@ func LangName(code string) string {
 		}
 	}
 	return code
+}
+
+// LangLabel renders a "+"-joined language string for a reader: each code keeps its
+// traineddata name and gains the catalog's display name where there is one, so a line about
+// "rus" also says Russian. The code stays first because it is what the user has to type back.
+func LangLabel(lang string) string {
+	codes := strings.Split(lang, "+")
+	parts := make([]string, 0, len(codes))
+	for _, c := range codes {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		if name := LangName(c); name != c {
+			c += " (" + name + ")"
+		}
+		parts = append(parts, c)
+	}
+	if len(parts) == 0 {
+		return lang
+	}
+	return strings.Join(parts, " + ")
 }
 
 // Download fetches a language's traineddata into the tessdata directory. It writes to a

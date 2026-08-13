@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "le-petit-journal-1908-map-labels",
+  "origin": "human",
+  "imageWidth": 1750,
+  "imageHeight": 1350,
+  "groups": [
+    {
+      "id": "herzegovine",
+      "type": "label",
+      "transcript": "HERZEGOVINE",
+      "language": "fr",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        { "id": "h-1", "kind": "box", "points": [[510, 60], [1145, 465]] }
+      ],
+      "bounds": { "id": "herzegovine-bounds", "kind": "box", "points": [[510, 60], [1145, 465]] },
+      "replaceArea": { "id": "herzegovine-replace", "kind": "box", "points": [[510, 60], [1145, 465]] }
+    },
+    {
+      "id": "bulgarie",
+      "type": "label",
+      "transcript": "BULGARIE",
+      "language": "fr",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        { "id": "b-1", "kind": "box", "points": [[1315, 80], [1720, 405]] }
+      ],
+      "bounds": { "id": "bulgarie-bounds", "kind": "box", "points": [[1315, 80], [1720, 405]] },
+      "replaceArea": { "id": "bulgarie-replace", "kind": "box", "points": [[1315, 80], [1720, 405]] }
+    },
+    {
+      "id": "bosnie",
+      "type": "label",
+      "transcript": "BOSNIE",
+      "language": "fr",
+      "direction": "ltr",
+      "readingOrder": 3,
+      "lines": [
+        { "id": "o-1", "kind": "box", "points": [[248, 450], [640, 620]] }
+      ],
+      "bounds": { "id": "bosnie-bounds", "kind": "box", "points": [[248, 450], [640, 620]] },
+      "replaceArea": { "id": "bosnie-replace", "kind": "box", "points": [[248, 450], [640, 620]] }
+    },
+    {
+      "id": "montenegro",
+      "type": "label",
+      "transcript": "MONTENEGRO",
+      "language": "fr",
+      "direction": "ltr",
+      "readingOrder": 4,
+      "lines": [
+        { "id": "m-1", "kind": "box", "points": [[140, 868], [492, 958]] }
+      ],
+      "bounds": { "id": "montenegro-bounds", "kind": "box", "points": [[140, 868], [492, 958]] },
+      "replaceArea": { "id": "montenegro-replace", "kind": "box", "points": [[140, 868], [492, 958]] },
+      "ambiguity": "partly-illegible"
+    },
+    {
+      "id": "turquie",
+      "type": "label",
+      "transcript": "TURQUIE",
+      "language": "fr",
+      "direction": "ltr",
+      "readingOrder": 5,
+      "lines": [
+        { "id": "t-1", "kind": "box", "points": [[540, 985], [1620, 1185]] }
+      ],
+      "bounds": { "id": "turquie-bounds", "kind": "box", "points": [[540, 985], [1620, 1185]] },
+      "replaceArea": { "id": "turquie-replace", "kind": "box", "points": [[540, 985], [1620, 1185]] }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "reviewerNote": "Real halftone scene from a 1908 chromolithograph: every place name is lettered directly on the printed screen (pitch 6 px at this scan's 451 DPI, unchanged by the app because the image is far above the upscale floor). The letterforms are outline-drawn and follow the drapery and the map's perspective, so these are region-level boxes over rotated lettering - the proxy the strategic spec allows - not glyph-tight masks. MONTENEGRO is marked partly-illegible: it is small, faint and set into a fold. Geometry placed by eye against a 100 px coordinate grid (temp/ocrscreen/view grid); no OCR was involved.",
+  "review": {
+    "annotatedBy": "agent claude-opus-5 (grid-placed geometry, transcript read from the image)",
+    "annotatedOn": "2026-08-12",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

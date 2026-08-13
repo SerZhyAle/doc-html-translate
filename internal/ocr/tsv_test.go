@@ -12,7 +12,7 @@ func TestParseTSV(t *testing.T) {
 		"4\t1\t1\t1\t1\t0\t10\t20\t120\t18\t-1\t\n" +
 		"5\t1\t1\t1\t1\t1\t10\t20\t50\t18\t90\tHello\n" +
 		"5\t1\t1\t1\t1\t2\t65\t20\t60\t18\t88\tworld\n"
-	res, err := parseTSV([]byte(tsv))
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ func TestParseTSVSkipsBlankLine(t *testing.T) {
 		"1\t1\t0\t0\t0\t0\t0\t0\t100\t100\t-1\t\n" +
 		"4\t1\t1\t1\t1\t0\t0\t0\t50\t50\t-1\t\n" +
 		"5\t1\t1\t1\t1\t1\t0\t0\t50\t50\t0\t \n"
-	res, err := parseTSV([]byte(tsv))
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestParseTSVDropsLowConfNoise(t *testing.T) {
 		"4\t1\t3\t1\t1\t0\t10\t240\t180\t20\t-1\t\n" +
 		"5\t1\t3\t1\t1\t1\t10\t240\t90\t20\t90\tHello\n" +
 		"5\t1\t3\t1\t1\t2\t105\t240\t80\t20\t90\tthere\n"
-	res, err := parseTSV([]byte(tsv))
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestParseTSVMergesContiguousLines(t *testing.T) {
 		"5\t1\t1\t2\t1\t2\t95\t34\t90\t20\t95\tdelta\n" +
 		"4\t1\t1\t2\t2\t0\t10\t58\t180\t20\t-1\t\n" +
 		"5\t1\t1\t2\t2\t1\t10\t58\t150\t20\t95\tepsilon\n"
-	res, err := parseTSV([]byte(tsv))
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestParseTSVSplitsOnGap(t *testing.T) {
 		"4\t1\t1\t2\t1\t0\t10\t200\t180\t20\t-1\t\n" +
 		"5\t1\t1\t2\t1\t1\t10\t200\t60\t20\t88\tThis\n" +
 		"5\t1\t1\t2\t1\t2\t80\t200\t50\t20\t88\tbody\n"
-	res, err := parseTSV([]byte(tsv))
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
 	if err != nil {
 		t.Fatal(err)
 	}

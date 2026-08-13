@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-caption-on-gradient",
+  "origin": "human",
+  "imageWidth": 640,
+  "imageHeight": 360,
+  "groups": [
+    {
+      "id": "caption",
+      "type": "caption",
+      "transcript": "Evening fell over the harbour and the lamps came on one by one.",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "cap-1",
+          "kind": "box",
+          "points": [
+            [
+              60,
+              240
+            ],
+            [
+              338,
+              265
+            ]
+          ]
+        },
+        {
+          "id": "cap-2",
+          "kind": "box",
+          "points": [
+            [
+              60,
+              276
+            ],
+            [
+              406,
+              301
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "caption-bounds",
+        "kind": "box",
+        "points": [
+          [
+            60,
+            240
+          ],
+          [
+            406,
+            301
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "caption-replace",
+        "kind": "box",
+        "points": [
+          [
+            60,
+            240
+          ],
+          [
+            406,
+            301
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

@@ -94,6 +94,44 @@ func TestGUIMarkupKeysExist(t *testing.T) {
 	}
 }
 
+// TestGUIAboutKeysPresent pins the About section's own strings. The general key-set check would
+// catch a language left behind, but not a section shipped in English because nobody added its
+// keys anywhere - and the attach hint is the one string that decides whether a report arrives
+// with its evidence.
+func TestGUIAboutKeysPresent(t *testing.T) {
+	langs := guiLangObjects(t)
+	for _, code := range i18n.Codes {
+		keys := langs[code]
+		for _, k := range []string{"secAbout", "btnSendLogs", "sendLogsAttachHint", "mailBody"} {
+			if !keys[k] {
+				t.Errorf("%s: missing About key %q", code, k)
+			}
+		}
+	}
+
+	// The hint must say something in every language: an empty one leaves the user with an
+	// archive they were never told to attach.
+	// The working tree is CRLF, so the line-end anchor has to tolerate the carriage return.
+	hint := regexp.MustCompile(`(?m)^ {8}sendLogsAttachHint: "(.*)",\r?$`)
+	found := hint.FindAllStringSubmatch(uiI18nJS, -1)
+	if len(found) != len(i18n.Codes) {
+		t.Fatalf("sendLogsAttachHint declared %d times, want %d", len(found), len(i18n.Codes))
+	}
+	for _, m := range found {
+		if strings.TrimSpace(m[1]) == "" {
+			t.Error("sendLogsAttachHint is empty in one of the dictionaries")
+		}
+	}
+}
+
+// TestGUIMailAddressComesFromEnv keeps the author's address defined in one place. The About
+// section fills its mail link from /api/env; a second literal in the page is how the two drift.
+func TestGUIMailAddressComesFromEnv(t *testing.T) {
+	if n := strings.Count(uiHTML, "sza@ukr.net"); n != 1 {
+		t.Errorf("ui.html names sza@ukr.net %d times, want 1 (the byline link) - the report flow reads it from /api/env", n)
+	}
+}
+
 // TestGUIDictionaryValuesAreNotEmpty guards the failure mode a key-set check cannot see: the key
 // is there, the string is not.
 func TestGUIDictionaryValuesAreNotEmpty(t *testing.T) {

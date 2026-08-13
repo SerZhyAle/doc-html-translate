@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-display-lettering",
+  "origin": "human",
+  "imageWidth": 600,
+  "imageHeight": 400,
+  "groups": [
+    {
+      "id": "headline",
+      "type": "title",
+      "transcript": "READ EVERY DAY",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "d-1",
+          "kind": "box",
+          "points": [
+            [
+              70,
+              70
+            ],
+            [
+              200,
+              124
+            ]
+          ]
+        },
+        {
+          "id": "d-2",
+          "kind": "box",
+          "points": [
+            [
+              70,
+              140
+            ],
+            [
+              337,
+              194
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "headline-bounds",
+        "kind": "box",
+        "points": [
+          [
+            70,
+            70
+          ],
+          [
+            337,
+            194
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "headline-replace",
+        "kind": "box",
+        "points": [
+          [
+            70,
+            70
+          ],
+          [
+            337,
+            194
+          ]
+        ]
+      }
+    },
+    {
+      "id": "footnote",
+      "type": "label",
+      "transcript": "A public service message",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "d-3",
+          "kind": "box",
+          "points": [
+            [
+              70,
+              320
+            ],
+            [
+              275,
+              341
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "footnote-bounds",
+        "kind": "box",
+        "points": [
+          [
+            70,
+            320
+          ],
+          [
+            275,
+            341
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "footnote-replace",
+        "kind": "box",
+        "points": [
+          [
+            70,
+            320
+          ],
+          [
+            275,
+            341
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

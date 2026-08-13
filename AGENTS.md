@@ -69,6 +69,7 @@ Run from repository root in PowerShell.
 - Lint: ./scripts/lint.ps1
 - Full local checks: ./scripts/check.ps1
 - Release checklist (prints only, runs nothing): ./scripts/release.ps1
+- OCR visual-fidelity lab: go run ./tools/ocrlab verify | run | score | report (see tools/ocrlab/README.md)
 
 Tool bootstrap (when missing):
 
@@ -103,6 +104,13 @@ Notes:
     `i18n.S()` works process-wide instead of threading a language through htmlgen's signatures.
   - internal/app/splash/*.txt: the console splash, one embedded file per language.
   - cmd/doc-html-ui/i18n.js (GUI dictionary), extension/_locales/<code>/messages.json (extension).
+- Developer tooling, not shipped:
+  - tools/ocrlab: the OCR visual-fidelity lab - a licence-gated corpus manifest, engine-independent
+    ground truth, the eight quality measures from the spec's table, and a runner that converts each
+    scene through the real pipeline and records what headless Chrome actually laid out. Not built by
+    scripts/build.ps1 and in no package. Its one hook into shipped code is the opt-in `DOCHT_OCR_DIAG`
+    sidecar in internal/ocr (off unless set; an output-identity test proves it changes nothing).
+    See tools/ocrlab/README.md and DEV/plan/2026-08-11_ocr-visual-fidelity-lab/.
 
 ## Cross-Edition Parity (READ BEFORE ADDING FEATURES)
 

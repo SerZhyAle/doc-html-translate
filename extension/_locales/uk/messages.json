@@ -47,6 +47,10 @@
     "message": "Текст не знайдено",
     "description": "Shown when OCR finds no text in the image."
   },
+  "ocrNoTextLang": {
+    "message": "Текст не знайдено з мовою {1} - якщо сторінка іншою мовою, виберіть її у вікні розширення.",
+    "description": "Shown when OCR finds no text: names the recognition language that was used. {1} is that language."
+  },
   "ocrLoadError": {
     "message": "Не вдалося обробити зображення.",
     "description": "Shown when the image cannot be loaded or OCR fails."
@@ -154,6 +158,14 @@
   "ttSaveHtml": {
     "message": "Зберегти поточний вигляд як окремий HTML-файл (переклад залишиться, якщо ви перекладали сторінку)",
     "description": "Toolbar button tooltip."
+  },
+  "btnSaveFile": {
+    "message": "↓ Файл",
+    "description": "Toolbar button label - downloads the original file."
+  },
+  "btnSaveHtml": {
+    "message": "↓ HTML",
+    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "Зворотний зв'язок",
@@ -424,5 +436,21 @@
   },
   "vBtnOpenOriginalPdf": {
     "message": "Відкрити вихідний PDF"
+  },
+  "optAbout": {
+    "message": "Про розширення",
+    "description": "Options page: About block."
+  },
+  "btnCopyDiag": {
+    "message": "Скопіювати діагностику",
+    "description": "Options page: About block."
+  },
+  "optCopied": {
+    "message": "Скопійовано",
+    "description": "Options page: About block."
+  },
+  "diagHint": {
+    "message": "Копіює коротку технічну зведення - без тексту документа - щоб ви вставили її в лист авторові.",
+    "description": "Options page: About block."
   }
 }

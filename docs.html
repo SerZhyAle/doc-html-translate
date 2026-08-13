@@ -338,9 +338,46 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-register</td><td>false</td><td>Opt in to becoming the default handler for EPUB, PDF and other supported files (off by default; also the default-handler toggle in the doc-html-ui app). The first run only adds the right-click entry and offers this.</td></tr>
           <tr><td>-unregister</td><td>false</td><td>Release the default-handler association (keeps the "Convert to HTML" right-click entry and "Open with").</td></tr>
           <tr><td>-register-openwith</td><td>false</td><td>Add the app to the Windows "Open with" list and the "Convert to HTML" right-click menu, without making it the default handler. The doc-html-ui app does this automatically on launch, so the app is always reachable even if you never set it as default.</td></tr>
+          <tr><td>-report</td><td>false</td><td>Pack the recent run logs plus an environment summary into an archive for the author, print where it landed, and exit</td></tr>
         </tbody>
       </table>
       <p class="small" style="margin-top:10px;">Every option above is also available in the <strong>doc-html-ui</strong> graphical app - file picker, drag &amp; drop, TOC depth, spending guard and a default-handler toggle (opt-in, off by default; the app always adds the "Convert to HTML" right-click entry). On the Microsoft Store build the GUI is the launchable entry point, while double-clicking a file still runs the command-line converter.</p>
+    </section>
+
+    <section class="card" style="margin-top: 10px;">
+      <h2>Sending logs to the author</h2>
+      <p>When a conversion goes wrong, a description from memory is rarely enough to reproduce it. The app keeps its
+        recent run logs on disk - up to 20 runs or 20 MB, oldest trimmed first - so a failure can still be reported an
+        hour later, or after a crash.</p>
+      <p>Open <strong>About the program</strong> at the bottom of the settings in the <strong>doc-html-ui</strong> app.
+        It states the version, the edition (portable or Microsoft Store) and whether the converter engine was found, and
+        it carries one button: <strong>Send logs to the author</strong>. One press builds a single archive, opens its
+        folder with the file selected, copies its path to the clipboard, and opens a pre-addressed message in your own
+        mail program. On the command line, <code>-report</code> builds the same archive and prints where it landed.</p>
+      <p>The archive is written to <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> and contains exactly three
+        things:</p>
+      <ul>
+        <li><strong>environment.txt</strong> - version, edition, platform, interface language, whether Tesseract was
+          found and which OCR languages are installed, and the default Ollama model. Always English, so the author reads
+          one format.</li>
+        <li><strong>settings.json</strong> - the settings that shaped the last run.</li>
+        <li><strong>logs/</strong> - the recent run logs, newest first.</li>
+      </ul>
+      <p>Everything in it is redacted first: anything shaped like a key, token, password or Google API key becomes
+        <code>&lt;redacted&gt;</code>, and your own folders collapse to <code>%USERPROFILE%</code> and
+        <code>%LOCALAPPDATA%</code>. <strong>Document file names are kept on purpose</strong> - a log that cannot be
+        matched to a document usually cannot be acted on. Your Google API key is never in the archive; an automated test
+        fails the build if it could be. The archive is capped at 15 MB, dropping the oldest logs first and telling you
+        how many were left out.</p>
+      <p><strong>Nothing is ever sent automatically.</strong> The app opens no network connection for this; it hands you
+        a file and an unsent message, you attach the archive and press Send. Use <strong>Open the archive</strong> in the
+        same section to look inside first, and <strong>Clear stored logs</strong> if you would rather keep no run history
+        on disk at all.</p>
+      <p>The <strong>browser extension</strong> has no log store to archive, so it offers the equivalent it can honestly
+        give: a <strong>Copy diagnostics</strong> button in the About block of its options page. It copies a short
+        English summary - extension version, browser, interface language, your option set, and the format, page count and
+        last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document
+        text and no list of your sites.</p>
     </section>
 
     <section class="card" style="margin-top: 10px;">

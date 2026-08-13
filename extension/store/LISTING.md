@@ -132,26 +132,37 @@ Limitations: Scanned/image-only PDFs have no text to translate (the extension de
 - Remote code? No. All code (including PDF.js) is bundled in the package; nothing is loaded from a
   remote server and there is no eval of remote code.
 
-## Screenshots (capture on Windows - manual)
-Shoot all three in **Chrome on Windows 11** so the Windows window chrome (title bar + Chrome's translate
-banner) is visible - that's the "у кого Windows" framing the listing should show. Export **1280x800 PNG**
-(or 640x400). Show real application screens, not text-only marketing banners. Capture an EN and a RU/UK pass
-so each localized listing gets matching shots. The captions below come verbatim from the `_locales`
-`shot*Caption` keys - overlay them (or paste as the screenshot description) per language.
+## Screenshots
 
-- **Screenshot 1 - Core value (PDF before -> after):** an English PDF reflowed into clean text with Chrome's
-  "Translate this page" banner visible at the top of the Windows window. For the RU/UK pass, show it
-  translated to that language.
+**Screenshots 1 and 2 are generated - do not shoot them by hand.** Run `npm run screenshots` in
+`extension/`: it loads the working tree as an unpacked extension in headless Chrome, sets the
+interface-language override, opens a generated PDF and a generated EPUB, and writes
+`store/screenshots/shot1-<code>.png` and `shot2-<code>.png` at **1280x800** for all 13 languages -
+26 files, one matching pair per localized listing. The run refuses to write a frame whose chrome
+carries the wrong language or mirrors when it should not, so a wrong frame cannot reach a listing.
+Screenshot 3 below is still a manual capture.
+
+Frames are the page viewport only. The four hand-made en/ru files this replaced were window
+captures that included Chrome's tab strip and address bar; both stores accept either, and one
+reproducible size beats a hand-framed window.
+
+The captions below come verbatim from the `_locales` `shot*Caption` keys - overlay them (or paste as
+the screenshot description) per language.
+
+- **Screenshot 1 - Core value (PDF reflowed):** `shot1-<code>.png`, generated. A PDF reflowed into
+  clean text, the toolbar in the listing's language.
   - EN: Open a PDF - the extension reflows it into clean text Chrome can translate in one click.
   - RU: Откройте PDF - расширение перевёрстывает его в чистый текст, который Chrome переводит в один клик.
   - UK: Відкрийте PDF - розширення переверстує його в чистий текст, який Chrome перекладає в один клік.
-- **Screenshot 2 - EPUB reader + collapsible TOC:** an EPUB opened in dark or sepia theme, the collapsible
-  table-of-contents sidebar on the left, a formatted translated chapter on the right.
+- **Screenshot 2 - EPUB reader + collapsible TOC:** `shot2-<code>.png`, generated. An EPUB in the dark
+  theme with the contents sidebar open and a formatted chapter beside it.
   - EN: EPUB books open with a collapsible table of contents and comfortable reading themes.
   - RU: Книги EPUB открываются со сворачиваемым оглавлением и удобными темами чтения.
   - UK: Книжки EPUB відкриваються зі згортуваним змістом і зручними темами читання.
-- **Screenshot 3 - Right-click flow + toolbar popup:** the right-click menu "Translate to [language]" over the
-  reflowed document, with the extension's toolbar popup (toggles) in the corner.
+- **Screenshot 3 - Right-click flow + toolbar popup (manual):** shoot this one in **Chrome on Windows 11**
+  so the window chrome is visible - the right-click menu "Translate to [language]" over the reflowed
+  document, with the extension's toolbar popup (toggles) in the corner. A native context menu is drawn by
+  the OS and does not appear in a headless capture, which is why this frame is not generated.
   - EN: Right-click, "Translate to ..", done - 100% local, nothing leaves your device.
   - RU: Правый клик, «Перевести на ..», готово - 100% локально, ничего не покидает ваше устройство.
   - UK: Правий клік, «Перекласти на ..», готово - 100% локально, нічого не залишає ваш пристрій.

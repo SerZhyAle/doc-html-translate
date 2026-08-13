@@ -1,8 +1,8 @@
 {
   "canon": {
-    "version": "2026.07.27",
-    "coreDigest": "sha256:dae220bfd389416d775986ac24913efdf8b0a8b9e881608157c41e5371d23663",
-    "adoptedOn": "2026-07-27",
+    "version": "2026.08.05",
+    "coreDigest": "sha256:8d33fdab20f1ddde9bd6d759854ff921458faf77e352c6eedf55c34603f97e91",
+    "adoptedOn": "2026-08-02",
     "model": "reference",
     "contribRecord": "contrib/epub_2_html.md"
   },

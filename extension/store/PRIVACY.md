@@ -1,6 +1,6 @@
 # Privacy Policy - Documents to translatable HTML
 
-_Last updated: 2026-07-01_
+_Last updated: 2026-08-11_
 
 _Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html - rendered from this text as `extension-privacy.html` in the repo root._
 
@@ -33,6 +33,14 @@ None. We have no servers and receive no data from the extension.
 The extension uses the browser's local extension storage only to remember your settings: whether reflow
 is enabled (globally and per-site), and your reading preferences (font size, font family, theme). This
 data never leaves your device and is removed if you uninstall the extension.
+
+## Diagnostics you copy yourself
+The options page carries a "Copy diagnostics" button. Pressing it writes a short English summary to your
+clipboard: the extension version, your browser and platform, the interface language, your current
+settings, and the format, page count and last error of the most recent document. It records no document
+text, no file name and no URL, and your per-site exceptions are reported as a count rather than as host
+names. The button adds no permission and sends nothing anywhere - it writes to the clipboard only, and
+you decide whether to paste it into a mail to the author.
 
 ## Network access
 The extension itself makes no network requests to any server we control. It fetches the document you

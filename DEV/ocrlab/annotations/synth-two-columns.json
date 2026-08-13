@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-two-columns",
+  "origin": "human",
+  "imageWidth": 720,
+  "imageHeight": 360,
+  "groups": [
+    {
+      "id": "left-column",
+      "type": "paragraph",
+      "transcript": "Column one begins here and carries a second line and then a third.",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "l-1",
+          "kind": "box",
+          "points": [
+            [
+              48,
+              56
+            ],
+            [
+              230,
+              77
+            ]
+          ]
+        },
+        {
+          "id": "l-2",
+          "kind": "box",
+          "points": [
+            [
+              48,
+              90
+            ],
+            [
+              237,
+              111
+            ]
+          ]
+        },
+        {
+          "id": "l-3",
+          "kind": "box",
+          "points": [
+            [
+              48,
+              124
+            ],
+            [
+              169,
+              145
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "left-column-bounds",
+        "kind": "box",
+        "points": [
+          [
+            48,
+            56
+          ],
+          [
+            237,
+            145
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "left-column-replace",
+        "kind": "box",
+        "points": [
+          [
+            48,
+            56
+          ],
+          [
+            237,
+            145
+          ]
+        ]
+      }
+    },
+    {
+      "id": "right-column",
+      "type": "paragraph",
+      "transcript": "Column two is separate and must never share a plate with column one.",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "r-1",
+          "kind": "box",
+          "points": [
+            [
+              396,
+              56
+            ],
+            [
+              573,
+              77
+            ]
+          ]
+        },
+        {
+          "id": "r-2",
+          "kind": "box",
+          "points": [
+            [
+              396,
+              90
+            ],
+            [
+              559,
+              111
+            ]
+          ]
+        },
+        {
+          "id": "r-3",
+          "kind": "box",
+          "points": [
+            [
+              396,
+              124
+            ],
+            [
+              579,
+              145
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "right-column-bounds",
+        "kind": "box",
+        "points": [
+          [
+            396,
+            56
+          ],
+          [
+            579,
+            145
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "right-column-replace",
+        "kind": "box",
+        "points": [
+          [
+            396,
+            56
+          ],
+          [
+            579,
+            145
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

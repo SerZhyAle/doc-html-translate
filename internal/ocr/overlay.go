@@ -173,7 +173,10 @@ func applyOverlays(doc *gohtml.Node, baseDir string, results map[string]recognit
 		case !r.ok:
 			stats.NoText++
 		default:
-			wrapImage(job.node, r.res, decodeImage(job.file))
+			srcImg := decodeImage(job.file)
+			wrapImage(job.node, r.res, srcImg)
+			// Off unless DOCHT_OCR_DIAG is set; see diag.go. Never touches the DOM.
+			recordDiagnostics(job.file, r.res, srcImg)
 			stats.Overlaid++
 		}
 	}

@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-adjacent-balloons",
+  "origin": "human",
+  "imageWidth": 620,
+  "imageHeight": 300,
+  "groups": [
+    {
+      "id": "balloon-a",
+      "type": "balloon",
+      "transcript": "ARE YOU SURE ABOUT THIS?",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "a-1",
+          "kind": "box",
+          "points": [
+            [
+              58,
+              58
+            ],
+            [
+              195,
+              79
+            ]
+          ]
+        },
+        {
+          "id": "a-2",
+          "kind": "box",
+          "points": [
+            [
+              58,
+              84
+            ],
+            [
+              182,
+              105
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "balloon-a-bounds",
+        "kind": "box",
+        "points": [
+          [
+            58,
+            58
+          ],
+          [
+            195,
+            105
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "a-replace",
+        "kind": "box",
+        "points": [
+          [
+            45,
+            55
+          ],
+          [
+            285,
+            109
+          ]
+        ]
+      }
+    },
+    {
+      "id": "balloon-b",
+      "type": "balloon",
+      "transcript": "NOT EVEN SLIGHTLY.",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "b-1",
+          "kind": "box",
+          "points": [
+            [
+              58,
+              126
+            ],
+            [
+              150,
+              147
+            ]
+          ]
+        },
+        {
+          "id": "b-2",
+          "kind": "box",
+          "points": [
+            [
+              58,
+              152
+            ],
+            [
+              155,
+              173
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "balloon-b-bounds",
+        "kind": "box",
+        "points": [
+          [
+            58,
+            126
+          ],
+          [
+            155,
+            173
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "b-replace",
+        "kind": "box",
+        "points": [
+          [
+            45,
+            123
+          ],
+          [
+            285,
+            177
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": [
+    {
+      "id": "left-outline",
+      "kind": "polygon",
+      "points": [
+        [
+          40,
+          50
+        ],
+        [
+          290,
+          50
+        ],
+        [
+          290,
+          114
+        ],
+        [
+          40,
+          114
+        ],
+        [
+          40,
+          50
+        ],
+        [
+          44,
+          54
+        ],
+        [
+          44,
+          110
+        ],
+        [
+          286,
+          110
+        ],
+        [
+          286,
+          54
+        ],
+        [
+          44,
+          54
+        ]
+      ]
+    },
+    {
+      "id": "right-outline",
+      "kind": "polygon",
+      "points": [
+        [
+          40,
+          118
+        ],
+        [
+          290,
+          118
+        ],
+        [
+          290,
+          182
+        ],
+        [
+          40,
+          182
+        ],
+        [
+          40,
+          118
+        ],
+        [
+          44,
+          122
+        ],
+        [
+          44,
+          178
+        ],
+        [
+          286,
+          178
+        ],
+        [
+          286,
+          122
+        ],
+        [
+          44,
+          122
+        ]
+      ]
+    }
+  ],
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

@@ -67,6 +67,19 @@ one?* And making the index a generated artifact turns "I think it's over there" 
 with an answer. The goal is that every claim in a change is one the agent could point at, not one
 it hoped was true.
 
+## Research artifacts in this repo
+
+Findings already written down, so the next session reads them instead of re-deriving them. Each
+answers one question and unblocks one piece of work.
+
+| Date | Artifact | Question it answers | What it unblocks |
+|---|---|---|---|
+| 2026-08-12 | [`ocrlab/2026-08-11__baseline.md`](ocrlab/2026-08-11__baseline.md) | What is the first measured state of OCR visual fidelity, in both editions, across all eight of the strategic table's dimensions - and what may honestly be turned into an acceptance bound? | Ticket [`2026-08-11_ocr-visual-fidelity-lab`](../plan/2026-08-11_ocr-visual-fidelity-lab.md) **Phase 06** (it *is* steps 06.1-06.2, and `DEV/ocrlab/thresholds.json` is derived from it) and **Phase 07**, which must cite one of its tables for every change it makes. |
+| 2026-08-12 | [`ocr_halftone_2026-08-12.md`](ocr_halftone_2026-08-12.md) | Lettering printed over a halftone screen produces no plates at all and the grey rescue ladder does not recover it. What does? | Ticket [`2026-08-11_ocr-halftone-defeats-recognition`](../plan/done/2026-08-11_ocr-halftone-defeats-recognition.md), now done. |
+| 2026-08-11 | [`ocr_grey_rescue_2026-08-11.md`](ocr_grey_rescue_2026-08-11.md) | 14 of 40 scenes produced no plates at all. Why, and what is the smallest correction that recovers them without regressing anything? | The `ocrRescueLineConf` ladder in `internal/ocr/tesseract.go`. **Its number is to be re-derived, not inherited** - it rests on 8 annotated dev scenes, not on the corpus. |
+
+Add a row when you write an artifact. An artifact nobody can find is one that will be written twice.
+
 ## Adapting it
 
 - Replace the named docs with whatever your repo actually has as its map.

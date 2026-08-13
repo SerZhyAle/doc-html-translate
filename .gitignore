@@ -16,7 +16,13 @@ test_txt/
 # Local sample documents used by the integration tests (tests/testdoc_test.go).
 # The files are private and must never be committed; the tests skip when absent.
 test_doc/
+# The OCR visual-fidelity corpus lives under test_doc/ and is therefore already ignored - this
+# line is here so the rule is findable from the lab's own docs. Only the metadata is committed
+# (DEV/ocrlab/corpus.json + annotations); the media is third-party work and ships in nothing.
+test_doc/ocrlab/
 DEV/private/
+# Spec/plan tickets are working notes, not part of the shipped repo - they stay local.
+DEV/plan/
 # Secrets and signing material - pre-empt the leak, never catch it afterwards.
 *.pfx
 *.snk

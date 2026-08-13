@@ -21,6 +21,8 @@
     .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.15rem 0.6rem; border: 1px solid #2563eb;
       color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #copy-diag { font: inherit; font-size: 0.85rem; padding: 0.25rem 0.7rem; border: 1px solid #2563eb;
+      color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -86,6 +88,12 @@
 
   <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
     <span id="ver" style="float: right;"></span>
+    <div class="field">
+      <label data-i18n="optAbout">About</label>
+      <button id="copy-diag" data-i18n="btnCopyDiag">Copy diagnostics</button>
+      <span class="saved" id="saved-diag" data-i18n="optCopied">Copied</span>
+      <div class="hint" data-i18n="diagHint">Copies a short technical summary - no document text - so you can paste it into a mail to the author.</div>
+    </div>
     <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="linkProductSite">Product site</a>
     &#183;
     <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>

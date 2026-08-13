@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "a-propaganda-poster-from-the-soviet-union-in-the-1920s-391853265017-jpg",
+  "origin": "human",
+  "imageWidth": 984,
+  "imageHeight": 646,
+  "groups": [
+    {
+      "id": "slogan",
+      "type": "title",
+      "transcript": "ЕДИНСТВО ТРУДОВОГО НАРОДА И КОММУНИСТИЧЕСКОЙ ПАРТИИ-НЕРУШИМО!",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        { "id": "s-1", "kind": "box", "points": [[22, 599], [960, 625]] }
+      ],
+      "bounds": { "id": "slogan-bounds", "kind": "box", "points": [[22, 599], [960, 625]] },
+      "replaceArea": { "id": "slogan-replace", "kind": "box", "points": [[16, 593], [966, 631]] }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "partly-illegible",
+  "reviewerNote": "Second scene of the class the reporter hit: display lettering over flat saturated colour, opened as a standalone image. One line of red Cyrillic display type over a pale blue-grey ground, and the app produces no plate at all on it today (converted 2026-08-12 with -ocr -ocr-lang rus: the page carries the picture and nothing else), which is the same failure as poster-display-type-on-flat-colour and is why it is annotated. Line geometry measured from the pixels by luminance threshold (lum < 150) and projection; the same band at lum < 120 moves by at most one pixel, so the box does not depend on the cut-off. Transcript read from the image by eye. Scene ambiguity is partly-illegible, not clear, for one reason recorded rather than hidden: two printer credits sit at the foot of the poster and are visible as marks but not resolvable as glyphs at this scan resolution - at lum < 170 they do not separate from the ground at all and at lum < 190 the ground itself becomes ink, so no honest box can be measured for them. They are therefore not annotated, and a plate landing on them will count as an unmatched plate on this scene.",
+  "review": {
+    "annotatedBy": "agent claude-opus-5 (ink-projection geometry, transcript read from the image)",
+    "annotatedOn": "2026-08-12",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

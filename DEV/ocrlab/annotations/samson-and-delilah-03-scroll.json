@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "samson-and-delilah-03-scroll",
+  "origin": "human",
+  "imageWidth": 520,
+  "imageHeight": 720,
+  "groups": [
+    {
+      "id": "scroll-caption",
+      "type": "caption",
+      "transcript": "LONG AGO IN ISRAEL THE SMALL TOWN OF ASHKELON WAS RULED BY A PHILISTINE KING, WHO WAS CRUEL AND HEARTLESS. ALL THE DANITES HATED HIM. HIS TAXES WERE HEAVY, HIS PUNISHMENTS SEVERE! SAMSON, JUDGE OF THE DANITES, WAS CHOSEN TO PROTECT HIS DOWNTRODDEN PEOPLE. IN ISRAEL WAS DELILAH, IN ISRAEL WAS THEIR GREAT LOVE, IN ISRAEL WAS THE DEATH OF---- SAMSON AND DELILAH!",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        { "id": "s-1", "kind": "box", "points": [[103, 40], [469, 74]] },
+        { "id": "s-2", "kind": "box", "points": [[130, 74], [441, 102]] },
+        { "id": "s-3", "kind": "box", "points": [[130, 109], [469, 134]] },
+        { "id": "s-4", "kind": "box", "points": [[130, 142], [469, 165]] },
+        { "id": "s-5", "kind": "box", "points": [[132, 172], [469, 196]] },
+        { "id": "s-6", "kind": "box", "points": [[135, 203], [469, 227]] },
+        { "id": "s-7", "kind": "box", "points": [[132, 235], [469, 258]] },
+        { "id": "s-8", "kind": "box", "points": [[130, 265], [469, 289]] },
+        { "id": "s-9", "kind": "box", "points": [[130, 297], [469, 320]] },
+        { "id": "s-10", "kind": "box", "points": [[130, 328], [469, 353]] },
+        { "id": "s-11", "kind": "box", "points": [[130, 362], [463, 385]] },
+        { "id": "s-12", "kind": "box", "points": [[130, 392], [469, 415]] },
+        { "id": "s-13", "kind": "box", "points": [[130, 423], [469, 446]] },
+        { "id": "s-14", "kind": "box", "points": [[130, 453], [469, 477]] },
+        { "id": "s-15", "kind": "box", "points": [[130, 484], [447, 510]] },
+        { "id": "s-16", "kind": "box", "points": [[130, 516], [381, 540]] },
+        { "id": "s-17", "kind": "box", "points": [[134, 547], [381, 570]] },
+        { "id": "s-18", "kind": "box", "points": [[130, 574], [457, 607]] },
+        { "id": "s-19", "kind": "box", "points": [[164, 613], [402, 645]] }
+      ],
+      "bounds": { "id": "scroll-bounds", "kind": "box", "points": [[100, 38], [473, 649]] },
+      "replaceArea": { "id": "scroll-replace", "kind": "box", "points": [[98, 36], [478, 651]] }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "reviewerNote": "Real halftone scene: the lettering is printed directly on a pink dot screen (pitch 6 px in this crop, 12 px after the app's 2x upscale). Line geometry was measured from the picture, not from OCR - a luminance threshold at 80 and a horizontal projection of the dark pixels between the scroll's two outlines (tooling: temp/ocrscreen/lines). Where a measured right edge coincides with the measurement window's own edge it is kept as measured; the lettering is close to justified there and the error is a few pixels. The transcript was read from the image by eye.",
+  "review": {
+    "annotatedBy": "agent claude-opus-5 (ink-projection geometry, transcript read from the image)",
+    "annotatedOn": "2026-08-12",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

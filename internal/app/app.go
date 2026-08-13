@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/pipeline"
+	"doc-html-translate/internal/report"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/windowsreg"
 )
@@ -92,6 +94,26 @@ func (a App) Run() (int, error) {
 		printOCRLangs()
 		return 0, nil
 	}
+	// Pack the recent run logs for the author and exit. The CLI prints where the archive is and
+	// stops there - opening a mail program is the GUI's job, not a console tool's.
+	if a.cfg.Report {
+		path, dropped, err := report.Build(report.BuildOptions{
+			AppVersion: logging.AppVersion,
+			Packaged:   false,
+			At:         time.Now(),
+		})
+		if err != nil {
+			return 1, err
+		}
+		fmt.Println(i18n.S("Report written to:"))
+		// The path itself is printed raw so it can be copied out of the console verbatim.
+		fmt.Println(path)
+		if dropped > 0 {
+			fmt.Println(i18n.S("%d older logs did not fit and were left out.", dropped))
+		}
+		return 0, nil
+	}
+
 	if a.cfg.OCRDownload != "" {
 		fmt.Printf("Downloading OCR language %q (%s)..\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
 		if err := ocr.Download(a.cfg.OCRDownload); err != nil {

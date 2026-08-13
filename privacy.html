@@ -104,7 +104,7 @@
   <div class="wrap">
     <main class="card">
       <h1>Privacy Policy</h1>
-      <div class="updated">Doc-HTML-Translate &middot; last updated 2026-06-21</div>
+      <div class="updated">Doc-HTML-Translate &middot; last updated 2026-08-11</div>
 
       <p class="lead"><strong>Doc-HTML-Translate does not collect, store, log, or transmit any
       personal data.</strong> It runs entirely on your device, has no servers of its own, and
@@ -123,6 +123,20 @@
       <h2>Local files it writes</h2>
       <p>The converted HTML output (next to the source file, or in a folder you choose), and an
       optional API key file you place yourself. These never leave your device.</p>
+
+      <h2>Sending logs to the author</h2>
+      <p>The app keeps its recent run logs on your own disk and, <strong>only when you ask for it</strong>
+      (the <em>Send logs to the author</em> button in the About section, or <code>-report</code> on the
+      command line), packs them with a short environment summary - version, edition, platform, interface
+      language, whether OCR is available - and the last run's settings into one archive under
+      <code>%LOCALAPPDATA%\doc-html-translate\reports\</code>. Anything that looks like a key, a token, a
+      password or a Google API key becomes <code>&lt;redacted&gt;</code> before it reaches the archive, and
+      your folder paths are reduced to <code>%USERPROFILE%</code> and <code>%LOCALAPPDATA%</code>. The
+      Google Cloud Translation API key is never in it.</p>
+      <p>The archive stays on your disk. <strong>The app never uploads it and opens no network connection
+      for it.</strong> It opens the archive's folder, puts the path on your clipboard, and composes an
+      unsent message in your own mail program addressed to the author - you attach the archive and press
+      Send yourself, and you can open the archive first or clear the stored logs at any time.</p>
 
       <h2>Data sharing</h2>
       <p>None. <strong>Children:</strong> no data collected. The app is open source - you can audit

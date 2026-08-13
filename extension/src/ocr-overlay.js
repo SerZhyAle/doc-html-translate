@@ -7,7 +7,8 @@
 
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
-import { isTranslatable } from "./ocr-text.js";
+import { clusterLines, medianOf, OCR_MIN_LINE_CONF } from "./ocr-cluster.js";
+import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
 
 const { createWorker } = Tesseract;
 
@@ -92,16 +93,8 @@ async function toBitmap(src) {
 }
 
 // ---- Recognition -----------------------------------------------------------
-// Overlay grouping constants, shared verbatim with the desktop app (see docs/PARITY.md and
-// internal/ocr/tesseract.go ocrMinLineConf / ocrClusterGapFactor). OCR_MIN_LINE_CONF drops a
-// line whose mean word confidence is below it: real text scores ~80-97, while the "text"
-// Tesseract hallucinates out of a drawing scores ~0-50, so the gate removes noise that would
-// otherwise become an opaque plate covering the figure (and whose oversized boxes inflate the
-// font). OCR_CLUSTER_GAP_FACTOR then grows one plate while the vertical gap to the next line
-// stays within this many median line heights; a bigger gap - a figure, a section break, a new
-// column - starts a new plate.
-const OCR_MIN_LINE_CONF = 50;
-const OCR_CLUSTER_GAP_FACTOR = 1.2;
+// The line-to-plate grouping and its shared constants live in ocr-cluster.js, so they can be
+// unit-tested without this module's Tesseract worker bundle (see docs/PARITY.md).
 
 // OCR resolution constants, shared with the desktop app's tesseract.go (docs/PARITY.md). We do not
 // gate on raw pixel count - a page scan is over 1000 px tall even at a poor ~100 DPI, so a pixel
@@ -139,7 +132,6 @@ function clampDeclaredDpi(d) {
 // guarantees contrast. Best-effort: any failure leaves the CSS defaults. Mirrors the
 // desktop app's overlay.go blockColors (see docs/PARITY.md - keep the two in sync).
 const luma = (r, g, b) => (299 * r + 587 * g + 114 * b) / 1000;
-const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.length >> 1] : 0);
 
 function pixelsIn(ctx, x0, y0, w, h) {
   const data = ctx.getImageData(x0, y0, w, h).data;
@@ -220,53 +212,6 @@ function collectLines(data, scale = 1) {
   return out;
 }
 
-// Drop low-confidence noise lines, then group the survivors (in reading order) into one plate
-// per run of vertically-adjacent, horizontally-overlapping lines. A plate's box is the union of
-// its line boxes and its font tracks the median line height, so a plate covers a coherent text
-// column without spanning imagery or the gaps between columns/sections. Mirrors the desktop
-// app's tesseract.go clusterLines - keep the two in sync (docs/PARITY.md).
-function clusterLines(lines) {
-  const kept = lines.filter((l) => l.text && l.conf >= OCR_MIN_LINE_CONF);
-  if (!kept.length) return [];
-  const medianH = medianOf(kept.map((l) => l.bbox.y1 - l.bbox.y0)) || 1;
-  const gapMax = medianH * OCR_CLUSTER_GAP_FACTOR;
-
-  const blocks = [];
-  let cur = null;
-  const flush = () => {
-    if (!cur) return;
-    const text = cur.texts.join(" ").trim();
-    if (isTranslatable(text)) {
-      blocks.push({
-        text,
-        bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
-        lineHeight: medianOf(cur.heights) || (cur.y1 - cur.y0),
-      });
-    }
-    cur = null;
-  };
-  for (const l of kept) {
-    const { x0, y0, x1, y1 } = l.bbox;
-    if (cur) {
-      const gap = y0 - cur.y1;
-      const overlap = Math.min(x1, cur.x1) - Math.max(x0, cur.x0);
-      const narrower = Math.min(x1 - x0, cur.x1 - cur.x0);
-      // same column (share x-extent) and vertically adjacent (small forward gap; a small
-      // negative gap tolerates overlapping boxes, a big one means a new column/section).
-      if (gap <= gapMax && gap >= -medianH && overlap * 10 >= narrower) {
-        cur.x0 = Math.min(cur.x0, x0); cur.y0 = Math.min(cur.y0, y0);
-        cur.x1 = Math.max(cur.x1, x1); cur.y1 = Math.max(cur.y1, y1);
-        cur.texts.push(l.text); cur.heights.push(y1 - y0);
-        continue;
-      }
-      flush();
-    }
-    cur = { x0, y0, x1, y1, texts: [l.text], heights: [y1 - y0] };
-  }
-  flush();
-  return blocks;
-}
-
 // Decide how to feed the image to Tesseract: estimate its DPI, upscale genuinely low-res images
 // (estimated DPI below the floor) by OCR_UPSCALE_FACTOR so recognition is legible, and compute the
 // DPI to declare (0 = none). The caller divides recognized coordinates by the returned scale to
@@ -297,6 +242,71 @@ async function upscaleForOcr(blob, width, height) {
   }
 }
 
+// Tesseract's `thresholding_method`: 0 is its own Otsu (the engine default), 1 is Leptonica's
+// tiled Otsu, which thresholds locally rather than picking one cut-off for the whole picture.
+// Shared invariant - see docs/PARITY.md and tesseract.go thresholdEngineDefault.
+const THRESHOLD_ENGINE_DEFAULT = "0";
+const THRESHOLD_LEPTONICA_OTSU = "1";
+
+// GREY_RESCUE_PASSES are the retries for an image the ordinary pass could not read at all, in the
+// order they are tried. Each hands Tesseract a greyscale copy; they differ in who decides where
+// ink ends and paper begins.
+//
+// Why greyscale rescues a picture whose lettering is perfectly legible to a person: Tesseract's
+// default thresholder runs Otsu on each RGB channel separately and a pixel counts as ink only
+// where every channel agrees. On flat paper the three channels agree and this is harmless, but on
+// saturated artwork - a brick-red comic panel behind a white balloon, a coloured poster - each
+// channel splits the picture somewhere else, the channels disagree over the lettering, and the
+// mask that reaches recognition has no text in it. The second pass then changes who thresholds: a
+// single global cut-off cannot survive a background that varies across the image (on a sky
+// gradient Otsu splits the gradient itself and a white caption comes out the same value as its
+// background), while Leptonica's tiled Otsu decides locally.
+//
+// This is a ladder rather than a replacement because none of the three is best everywhere: the
+// colour pass wins where lettering is separated by hue rather than brightness, and greyscale
+// throws that away. Retrying only after the ordinary pass returned no plates at all keeps every
+// image that works today unchanged. Mirrors tesseract.go greyRescuePasses (docs/PARITY.md).
+const GREY_RESCUE_PASSES = [THRESHOLD_ENGINE_DEFAULT, THRESHOLD_LEPTONICA_OTSU];
+
+// The line-confidence floor for a rescue pass, higher than OCR_MIN_LINE_CONF because a rescue is a
+// second guess: the ordinary pass already looked at this image and found nothing, so the prior that
+// there is text here at all is weaker, and a plate of invented words painted over artwork is worse
+// for the reader than no overlay. Anchored on the same scale - OCR_MIN_LINE_CONF sits at the top of
+// the band Tesseract hallucinates in, this sits at the bottom of the band real text occupies
+// (~80-97). Measured over the scenes the ladder newly reads: genuine rescued lettering scored
+// 93.1-97.0, Cyrillic posters read with English data (where the correct answer is no text) scored
+// 50.8. Shared invariant - see docs/PARITY.md and tesseract.go ocrRescueLineConf.
+const OCR_RESCUE_LINE_CONF = 80;
+
+// Draw the image through a greyscale filter and return the result as a blob. The canvas stays
+// RGBA, so unlike the desktop app's 8-bit PNG the three channels merely hold equal values - which
+// reaches the same place, because per-channel Otsu on three identical channels is one decision.
+// An extra CSS filter (the screen rung's blur) is appended when one is given. Best-effort: null on
+// any failure, and the caller then keeps the empty colour result.
+async function greyRendition(blob, extraFilter = "") {
+  try {
+    const { canvas, bmp } = await greyCanvas(blob, extraFilter);
+    if (bmp.close) bmp.close();
+    return canvas.convertToBlob ? await canvas.convertToBlob() : await new Promise((r) => canvas.toBlob(r));
+  } catch {
+    return null;
+  }
+}
+
+// greyCanvas is the one place the greyscale draw happens, shared by the rendition the grey rungs
+// hand to Tesseract and the pixel read the screen rung measures.
+async function greyCanvas(blob, extraFilter = "") {
+  const bmp = await createImageBitmap(blob);
+  const { width: w, height: h } = bmp;
+  const canvas = typeof OffscreenCanvas !== "undefined"
+    ? new OffscreenCanvas(w, h)
+    : Object.assign(document.createElement("canvas"), { width: w, height: h });
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.filter = extraFilter ? `grayscale(1) ${extraFilter}` : "grayscale(1)";
+  ctx.drawImage(bmp, 0, 0);
+  return { canvas, ctx, bmp, width: w, height: h };
+}
+
 // Returns block-level results with bounding boxes (pixel coords) plus the image's
 // natural dimensions, so callers can position plates in percent.
 export async function recognize(imageSource, { lang = "eng", onProgress } = {}) {
@@ -310,13 +320,110 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
       // (adjacent balloons read as one plate). Best-effort: keep going if the param won't set.
       if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
-      const blocks = clusterLines(collectLines(data, scale));
+      let blocks = clusterLines(collectLines(data, scale));
+      if (!blocks.length) blocks = await greyRescue(worker, image, scale);
+      else blocks = await screenSweep(worker, image, scale, blocks);
       await sampleColors(bitmap.source, blocks);
       return { blocks, width: bitmap.width, height: bitmap.height };
     } finally {
       currentProgress = null;
     }
   });
+}
+
+// Walk GREY_RESCUE_PASSES over a greyscale copy and return the first pass that finds any plates,
+// then try the halftone-screen rung for a picture no thresholder can see through. The thresholder
+// is restored to the engine default afterwards so the shared worker is left as the ordinary pass
+// expects to find it. Returns [] when nothing reads, which is the honest answer.
+async function greyRescue(worker, image, scale) {
+  const grey = await greyRendition(image);
+  if (!grey) return [];
+  try {
+    for (const method of GREY_RESCUE_PASSES) {
+      try {
+        await worker.setParameters({ thresholding_method: method });
+        const { data } = await worker.recognize(grey, {}, { blocks: true });
+        const blocks = clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF);
+        if (blocks.length) return blocks;
+      } catch { /* try the next rung */ }
+    }
+  } finally {
+    try { await worker.setParameters({ thresholding_method: THRESHOLD_ENGINE_DEFAULT }); } catch { /* next recognize resets it */ }
+  }
+  return screenRescue(worker, image, scale);
+}
+
+// The ladder's last rung: measure the halftone screen the picture is printed with and, if there is
+// one, hand Tesseract a copy low-passed just wide enough to dissolve it.
+//
+// Why this is a rung and not a filter applied to every image: the same blur that recovers text
+// printed on a screen merges neighbouring words on clean lettering, and on real screened material
+// the ordinary passes usually read the text unaided. Firing only after every other rung returned
+// nothing keeps that cost where there is nothing left to lose. The sigma comes from the screen's
+// own measured period rather than a fixed number, because a screen's pitch depends on the press and
+// on the scan resolution. Mirrors tesseract.go screenRescue (docs/PARITY.md); CSS `blur(Npx)` is a
+// Gaussian whose standard deviation is N, which is the same kernel the desktop app builds.
+async function screenRescue(worker, image, scale) {
+  const pitch = await measureScreenPitch(image);
+  if (!pitch) return [];
+  const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
+  if (!blurred) return [];
+  try {
+    const { data } = await worker.recognize(blurred, {}, { blocks: true });
+    return clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF);
+  } catch {
+    return [];
+  }
+}
+
+// The screen pass for a page that already read. The ladder above cannot reach it: the ladder fires
+// only for an image that produced no plates at all, and on a real comic page the dialogue on clean
+// white balloons reads fine while the caption printed as a tint does not - so the page is never
+// "unread", the rung never runs, and the caption stays untranslated with no explanation.
+//
+// So the pass is additive rather than a replacement. It has to be: the screen pass wins on screened
+// material and loses badly where there is no screen, so keeping every plate the ordinary pass
+// produced and merging only what does not overlap one is what takes the gain without the loss. The
+// trigger is the detector restricted to the area no plate covers, which is far cheaper than the
+// second recognition it decides against. Every failure returns the input untouched - the page was
+// already good enough to show. Mirrors tesseract.go screenSweep (docs/PARITY.md).
+//
+// The one coordinate difference between the editions: collectLines has already divided these blocks
+// by `scale` while the prepared image the detector reads has not been downscaled, so the covered
+// rectangles are multiplied back up. It follows from where each edition puts its downscale - the Go
+// app does it after the sweep, so there it needs nothing.
+async function screenSweep(worker, image, scale, kept) {
+  const covered = kept.map(({ bbox: b }) => (scale === 1 ? b : {
+    x0: Math.round(b.x0 * scale), y0: Math.round(b.y0 * scale),
+    x1: Math.round(b.x1 * scale), y1: Math.round(b.y1 * scale),
+  }));
+  const pitch = await measureScreenPitch(image, covered);
+  if (!pitch) return kept;
+  const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
+  if (!blurred) return kept;
+  try {
+    const { data } = await worker.recognize(blurred, {}, { blocks: true });
+    return mergeScreenBlocks(kept, clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF));
+  } catch {
+    return kept;
+  }
+}
+
+// Read the prepared image's luminance back off a canvas and measure its screen, optionally only
+// outside the rectangles already plated. The draw already goes through `grayscale(1)`, so the three
+// channels hold the same value and one of them is the luminance the detector wants. Best-effort:
+// 0 (no screen) on any failure, which skips the rung.
+async function measureScreenPitch(blob, covered = []) {
+  try {
+    const { ctx, bmp, width, height } = await greyCanvas(blob);
+    const { data } = ctx.getImageData(0, 0, width, height);
+    if (bmp.close) bmp.close();
+    const grey = new Uint8Array(width * height);
+    for (let i = 0; i < grey.length; i++) grey[i] = data[i * 4];
+    return screenPitch(grey, width, height, covered);
+  } catch {
+    return 0;
+  }
 }
 
 // ---- Overlay rendering -----------------------------------------------------

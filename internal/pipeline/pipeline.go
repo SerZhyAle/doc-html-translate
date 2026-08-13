@@ -513,12 +513,25 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 		logging.Printf("  OCR skipped: %v\n", err)
 		return
 	}
+	// Which language is read is decided here and nowhere else: -ocr-lang when given, else the
+	// translation source language, which itself defaults to English. That default is easy not
+	// to notice, so the line below names it rather than leaving the reader to infer it from a
+	// page that came back empty.
 	lang := r.cfg.OCRLang
 	if lang == "" {
 		lang = ocr.TessLang(r.cfg.SourceLang)
 	}
 	dataDir := ocr.DataDir()
-	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, lang)
+	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, ocr.LangLabel(lang))
+
+	// Without its data file the engine fails on every image with the same sentence, so a book
+	// of scans produced hundreds of identical errors that never named the fix. Ask once instead.
+	if missing := ocr.MissingLangs(bin, lang); len(missing) > 0 {
+		logging.Printf("  OCR skipped: no language data for %s. Install it with -ocr-download %s, "+
+			"or choose another language with -ocr-lang (-ocr-langs lists them)\n",
+			strings.Join(missing, ", "), missing[0])
+		return
+	}
 
 	// Recognition batches across the whole book, not per content file: the Tesseract pool
 	// spans every page's images at once, so it stays at full width even in -multipage mode,
@@ -536,7 +549,7 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 	}
 	tick := logging.NewTicker("OCR overlay", "images")
 	stats := ocr.OverlayBook(bin, filePaths, lang, dataDir, tick.Report)
-	reportOverlay(stats)
+	reportOverlay(stats, lang)
 }
 
 // reportOverlay says what happened to every image, not just how many worked. The count alone
@@ -546,7 +559,7 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 // those two look identical. A failure is named with its file and its reason; images that
 // simply hold no text are counted, because they are ordinary and listing them would bury the
 // failures.
-func reportOverlay(stats ocr.OverlayResult) {
+func reportOverlay(stats ocr.OverlayResult, lang string) {
 	summary := fmt.Sprintf("%d image(s) overlaid", stats.Overlaid)
 	if stats.NoText > 0 {
 		summary += fmt.Sprintf(", %d with no text found", stats.NoText)
@@ -555,6 +568,17 @@ func reportOverlay(stats ocr.OverlayResult) {
 		summary += fmt.Sprintf(", %d failed", len(stats.Failed))
 	}
 	logging.Printf("  OCR overlay: %s\n", summary)
+
+	// "no text found" is a true sentence about the data that was loaded, and it reads as a
+	// sentence about the picture. When not one image on the whole book yielded a line, the
+	// likeliest cause is not the artwork but the language: this app translates into Russian by
+	// default, for readers whose documents are the least likely to be English, while OCR
+	// defaults to English. Say which data was used and how to change it - only in the
+	// all-empty case, so a comic whose art panels legitimately hold no dialogue stays quiet.
+	if stats.Overlaid == 0 && stats.NoText > 0 {
+		logging.Printf("  OCR overlay: nothing matched the %s data. If these pages are in another "+
+			"language, pass -ocr-lang <code> (-ocr-langs lists what is installed)\n", ocr.LangLabel(lang))
+	}
 
 	// Named on stdout beside the count they explain, as WARNING like the other best-effort
 	// problems in this pipeline - a reason that lands on a different stream from its summary

@@ -1,0 +1,1022 @@
+{
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "1862-political-cartoon-lincoln-spins-the-news-jpg",
+      "file": "commons/1862-political-cartoon-lincoln-spins-the-news-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/1862_political_cartoon_%28%22Lincoln_spins_the_news%22%29.JPG",
+      "sourceItem": "File:1862 political cartoon (\"Lincoln spins the news\").JPG",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:1862_political_cartoon_(%22Lincoln_spins_the_news%22).JPG",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "f876e8a225207d7040642470ff9c012908f28ace10d4401154f4889c15522bfd",
+      "bytes": 402589,
+      "width": 1275,
+      "height": 1500,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "18960415-antisemitic-political-cartoon-in-sound-money-jpg",
+      "file": "commons/18960415-antisemitic-political-cartoon-in-sound-money-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8f/18960415_antisemitic_political_cartoon_in_Sound_Money.jpg",
+      "sourceItem": "File:18960415 antisemitic political cartoon in Sound Money.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:18960415_antisemitic_political_cartoon_in_Sound_Money.jpg",
+      "attribution": "Watson Heston",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "41d790bd2850baa93377fe997faf2f4337dc591594ce47243d40b0af90c2b9d0",
+      "bytes": 256292,
+      "width": 900,
+      "height": 658,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "a-propaganda-poster-from-the-soviet-union-in-the-1920s-391853265017-jpg",
+      "file": "commons/a-propaganda-poster-from-the-soviet-union-in-the-1920s-391853265017-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/03/A-propaganda-poster-from-the-Soviet-Union-in-the-1920s-391853265017.jpg",
+      "sourceItem": "File:A-propaganda-poster-from-the-Soviet-Union-in-the-1920s-391853265017.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:A-propaganda-poster-from-the-Soviet-Union-in-the-1920s-391853265017.jpg",
+      "attribution": "M. Lukyanov [2]",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "3d6e4df1c0be78de44a528f1cc97e2bef97675f5ebb1f8698cf72d0977dbe167",
+      "bytes": 284355,
+      "width": 984,
+      "height": 646,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "atomicwar0201-jpg",
+      "file": "commons/atomicwar0201-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/AtomicWar0201.jpg",
+      "sourceItem": "File:AtomicWar0201.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:AtomicWar0201.jpg",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "372e7185f49b3b1448866370cccd475173ff0cb8cbe356c0fb9d6f4b9b3f6ee4",
+      "bytes": 1558104,
+      "width": 939,
+      "height": 1350,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "atomicwar0301-jpg",
+      "file": "commons/atomicwar0301-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/8/80/AtomicWar0301.jpg",
+      "sourceItem": "File:AtomicWar0301.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:AtomicWar0301.jpg",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "44df8451d35eaefbf0cc8e25da0b75953277be7aa8d5feb3344cd485da8845b7",
+      "bytes": 1815648,
+      "width": 941,
+      "height": 1350,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "atomicwar0401-jpg",
+      "file": "commons/atomicwar0401-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/AtomicWar0401.jpg",
+      "sourceItem": "File:AtomicWar0401.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:AtomicWar0401.jpg",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "1be5be1b886fe1e9bbb64ce75331406c1a7c38aee5f41c7623125c1b9df5b13e",
+      "bytes": 1422359,
+      "width": 929,
+      "height": 1350,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "caricature-gillray-plumpudding-jpg",
+      "file": "commons/caricature-gillray-plumpudding-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/97/Caricature_gillray_plumpudding.jpg",
+      "sourceItem": "File:Caricature gillray plumpudding.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Caricature_gillray_plumpudding.jpg",
+      "attribution": "James Gillray",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "07a16659d0dad97070a0a1a5e6861ea82d7ff72cfbef3d4a89e08162c0b8296a",
+      "bytes": 2767703,
+      "width": 3970,
+      "height": 2842,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "chicken-little-1961-political-cartoon-jpg",
+      "file": "commons/chicken-little-1961-political-cartoon-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Chicken_Little_%281961_political_cartoon%29.jpg",
+      "sourceItem": "File:Chicken Little (1961 political cartoon).jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Chicken_Little_(1961_political_cartoon).jpg",
+      "attribution": "Bill Mauldin",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ce30734a9233a6a0a1fa0c36cb47fdb00ee7b85b5e6d33cec48a77952c3270a7",
+      "bytes": 564511,
+      "width": 2441,
+      "height": 3366,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "commons-blue-speech-bubble",
+      "file": "seed/commons-blue-speech-bubble.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Blue-Speech-Bubble.png",
+      "sourceItem": "commons:File:Blue-Speech-Bubble.png",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Blue-Speech-Bubble.png",
+      "licenceVerifiedBy": "",
+      "licenceVerifiedOn": "",
+      "sha256": "6ee6dbd9bad13ddf07f0107fcce172e2bc443f9c56606926a0f973edbc277704",
+      "bytes": 5187,
+      "width": 297,
+      "height": 242,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "Licence read from the Commons file page's own metadata (LicenseShortName: Public domain) via the API, not by a person. Open the licenceUrl and fill licenceVerifiedBy before this scene may be scored."
+    },
+    {
+      "id": "commons-right-to-read-poster-1970",
+      "file": "seed/commons-right-to-read-poster-1970.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d6/The_Right_to_Read_poster%2C_1970.jpg",
+      "sourceItem": "commons:File:The Right to Read poster, 1970.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:The_Right_to_Read_poster,_1970.jpg",
+      "attribution": "United States Department of Health, Education, and Welfare",
+      "licenceVerifiedBy": "",
+      "licenceVerifiedOn": "",
+      "sha256": "6a643d1a2c07ed1174d72c92e2037e16c15c46efbf868e5e7b98c7cb2a091f2b",
+      "bytes": 264722,
+      "width": 800,
+      "height": 1158,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "Licence read from the Commons file page's own metadata (LicenseShortName: Public domain) via the API, not by a person. Open the licenceUrl and fill licenceVerifiedBy before this scene may be scored."
+    },
+    {
+      "id": "cover-of-archie-and-me-no-1-jpg",
+      "file": "commons/cover-of-archie-and-me-no-1-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Cover_of_Archie_and_Me_no._1.jpg",
+      "sourceItem": "File:Cover of Archie and Me no. 1.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Cover_of_Archie_and_Me_no._1.jpg",
+      "attribution": "Cover artist: Samm Schwartz (1920 - 1997)",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "27f028d4f8f394e36b89e4510b68b639a8473eeee68bceaa380717e5141adb5a",
+      "bytes": 563419,
+      "width": 1040,
+      "height": 1536,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "cover-of-archie-s-pals-n-gals-no-25-jpg",
+      "file": "commons/cover-of-archie-s-pals-n-gals-no-25-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Cover_of_Archie%27s_Pals_%27n%27_Gals_no._25.jpg",
+      "sourceItem": "File:Cover of Archie's Pals 'n' Gals no. 25.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Cover_of_Archie%27s_Pals_%27n%27_Gals_no._25.jpg",
+      "attribution": "Cover artist: Samm Schwartz (1920 - 1997)",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ca669179f611d1b84d9dbf661856c5f1ffeac954852069fd729318a6376864ca",
+      "bytes": 1559215,
+      "width": 2300,
+      "height": 3400,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "cover-of-reggie-no-18-jpg",
+      "file": "commons/cover-of-reggie-no-18-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Cover_of_Reggie_no._18.jpg",
+      "sourceItem": "File:Cover of Reggie no. 18.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Cover_of_Reggie_no._18.jpg",
+      "attribution": "Script:\t\n?\nPencils:\t\nBob White ?\nInks:\t\n?\nColors:\t\n?\n\nLetters:\t? [1]",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "a2696f07786b9cf7eff6355ba7e5aed09057e7594744bc468fdedc33e205b6d3",
+      "bytes": 799241,
+      "width": 1280,
+      "height": 1856,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "cover-of-timmy-the-timid-ghost-1967-no-2-jpg",
+      "file": "commons/cover-of-timmy-the-timid-ghost-1967-no-2-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Cover_of_Timmy_the_Timid_Ghost_%281967%29_no._2.jpg",
+      "sourceItem": "File:Cover of Timmy the Timid Ghost (1967) no. 2.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Cover_of_Timmy_the_Timid_Ghost_(1967)_no._2.jpg",
+      "attribution": "Jon D'Agostino",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "8cc25f154ce6ed6f132648574c7cf82d3bfee1d9d369ac50a9cae11902249451",
+      "bytes": 261130,
+      "width": 975,
+      "height": 1500,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "crowdstrike-outage-at-asb-in-palmerston-north-jpg",
+      "file": "commons/crowdstrike-outage-at-asb-in-palmerston-north-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e1/CrowdStrike_outage_at_ASB_in_Palmerston_North.jpg",
+      "sourceItem": "File:CrowdStrike outage at ASB in Palmerston North.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "CC0",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:CrowdStrike_outage_at_ASB_in_Palmerston_North.jpg",
+      "attribution": "Kiwi128",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "56f974c13acb02797d5ce9a27a503437c77b49ce4c005d9845cd07893ec7785b",
+      "bytes": 1571330,
+      "width": 2184,
+      "height": 2912,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "crowdstrike-outage-at-whitcoulls-in-palmerston-north-jpg",
+      "file": "commons/crowdstrike-outage-at-whitcoulls-in-palmerston-north-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0f/CrowdStrike_outage_at_Whitcoulls_in_Palmerston_North.jpg",
+      "sourceItem": "File:CrowdStrike outage at Whitcoulls in Palmerston North.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "CC0",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:CrowdStrike_outage_at_Whitcoulls_in_Palmerston_North.jpg",
+      "attribution": "Kiwi128",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "4be2b82948f8da2b73fb0fd6a6fcd46e3fbd32135f19cfa12cd0b20114530549",
+      "bytes": 2051478,
+      "width": 2080,
+      "height": 2773,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "daffy-tunes-issue-12-august-1947-superfox-versus-needle-noggin-page-4-panel-4-jpg",
+      "file": "commons/daffy-tunes-issue-12-august-1947-superfox-versus-needle-noggin-page-4-panel-4-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/7/74/Daffy_Tunes_-_Issue_12_%28August_1947%29_-_Superfox_Versus_Needle-Noggin_-_Page_4%2C_Panel_4.jpg",
+      "sourceItem": "File:Daffy Tunes - Issue 12 (August 1947) - Superfox Versus Needle-Noggin - Page 4, Panel 4.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Daffy_Tunes_-_Issue_12_(August_1947)_-_Superfox_Versus_Needle-Noggin_-_Page_4,_Panel_4.jpg",
+      "attribution": "Four-Star Publications",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "26b6dbabdef7a8f775da0b86ce5579dd4e477b1b0829ca780397275510613ad6",
+      "bytes": 218584,
+      "width": 605,
+      "height": 570,
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "diaz-political-cartoon-png",
+      "file": "commons/diaz-political-cartoon-png.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Diaz_Political_Cartoon.png",
+      "sourceItem": "File:Diaz Political Cartoon.png",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Diaz_Political_Cartoon.png",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "37bc82b521b13307d9042824a6386ac20921188713796e1bdfbd11bc0fc53303",
+      "bytes": 886216,
+      "width": 850,
+      "height": 1226,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "handwritten-notices-regarding-the-baltimorelink-public-transport-service-change-jpg",
+      "file": "commons/handwritten-notices-regarding-the-baltimorelink-public-transport-service-change-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Handwritten_notices_regarding_the_BaltimoreLink_public_transport_service_change.jpg",
+      "sourceItem": "File:Handwritten notices regarding the BaltimoreLink public transport service change.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "CC0",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Handwritten_notices_regarding_the_BaltimoreLink_public_transport_service_change.jpg",
+      "attribution": "Middle river exports",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ea6b717216a10f5a2767b2054ca5b29858cc8ed54bc843ff47cc8d5b59ad5cfd",
+      "bytes": 3750547,
+      "width": 4032,
+      "height": 3024,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "handwritten-sticker-art-in-new-york-city-reading-stop-uyghur-genocide-jpg",
+      "file": "commons/handwritten-sticker-art-in-new-york-city-reading-stop-uyghur-genocide-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/60/Handwritten_sticker_art_in_New_York_City_reading_%22STOP%21%21_UYGHUR_GENOCIDE%22.jpg",
+      "sourceItem": "File:Handwritten sticker art in New York City reading \"STOP!! UYGHUR GENOCIDE\".jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Handwritten_sticker_art_in_New_York_City_reading_%22STOP!!_UYGHUR_GENOCIDE%22.jpg",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "4f02f3fa079c5bccdafb0082a1aebecf4a19eaaf2e446ecb6f3ffad944ee61c8",
+      "bytes": 2261815,
+      "width": 3024,
+      "height": 4032,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "himalaya-mountain-kashmir-3531494596-cropped-jpg",
+      "file": "commons/himalaya-mountain-kashmir-3531494596-cropped-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Himalaya_mountain_-_Kashmir_%283531494596%29_%28cropped%29.jpg",
+      "sourceItem": "File:Himalaya mountain - Kashmir (3531494596) (cropped).jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Himalaya_mountain_-_Kashmir_(3531494596)_(cropped).jpg",
+      "attribution": "G. Tait",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "a1b87c4356df0deaeb0359c0a6ec178a0ba251e9c7b40df98ef016fbe6e61dea",
+      "bytes": 134703,
+      "width": 535,
+      "height": 713,
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "john-bull-vs-grover-cleveland-in-hawaii-political-cartoon-1887-jpg",
+      "file": "commons/john-bull-vs-grover-cleveland-in-hawaii-political-cartoon-1887-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dc/John_Bull_vs_Grover_Cleveland_in_Hawaii_political_cartoon_1887.jpg",
+      "sourceItem": "File:John Bull vs Grover Cleveland in Hawaii political cartoon 1887.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:John_Bull_vs_Grover_Cleveland_in_Hawaii_political_cartoon_1887.jpg",
+      "attribution": "Schidmt Label \u0026amp; Lith. Co, San Francisco, California",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "026d6722fdcfd4eb8c20e17a519f97b1445a467406c8e82cf68c4f32b996507d",
+      "bytes": 2706529,
+      "width": 2222,
+      "height": 3209,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "join-the-ranks-of-the-red-army-russian-propaganda-poster-1920-jpg",
+      "file": "commons/join-the-ranks-of-the-red-army-russian-propaganda-poster-1920-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Join_the_ranks_of_the_Red_Army%2C_Russian_propaganda_poster_1920.jpg",
+      "sourceItem": "File:Join the ranks of the Red Army, Russian propaganda poster 1920.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Join_the_ranks_of_the_Red_Army,_Russian_propaganda_poster_1920.jpg",
+      "attribution": "Boris Vasilevich Silkin",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "cdf1607e536df98ac75298e3432331621eefb5b2857755d0be30cfb40d2d0840",
+      "bytes": 657898,
+      "width": 1440,
+      "height": 1915,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "kashmir-3531494596-jpg",
+      "file": "commons/kashmir-3531494596-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/64/Kashmir_%283531494596%29.jpg",
+      "sourceItem": "File:Kashmir (3531494596).jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Kashmir_(3531494596).jpg",
+      "attribution": "G. Tait",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "6dc6be6b25501c94bc61c6c9669340e2d64b90c1655ea4680f5220896c1b1184",
+      "bytes": 261253,
+      "width": 641,
+      "height": 1024,
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "le-petit-journal-1908-map-labels",
+      "file": "derived/le-petit-journal-1908-map-labels.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Le_Petit_Journal_Balkan_crisis_1908.jpg",
+      "retrievedOn": "2026-08-12",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Le_Petit_Journal_Balkan_crisis_1908.jpg",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "a069a7ebe957ccb863f9d079d633e5bb9d7ecb1b4a706b601101de0195c4a955",
+      "bytes": 5696265,
+      "width": 1750,
+      "height": 1350,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "derivedFrom": "le-petit-journal-balkan-crisis-1908-jpg",
+      "note": "crop of the lettered map; place names sit on the chromolithograph screen"
+    },
+    {
+      "id": "le-petit-journal-balkan-crisis-1908-jpg",
+      "file": "commons/le-petit-journal-balkan-crisis-1908-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/1/16/Le_Petit_Journal_Balkan_Crisis_%281908%29.jpg",
+      "sourceItem": "File:Le Petit Journal Balkan Crisis (1908).jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Le_Petit_Journal_Balkan_Crisis_(1908).jpg",
+      "attribution": "Unknown authorUnknown author",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "c2e5b834fba536a902bafc9e10430aac3627a90aa228da3404061c54bf330bf1",
+      "bytes": 5941871,
+      "width": 3420,
+      "height": 4965,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "louis-brandeis-nomination-political-cartoon-the-new-york-sun-political-cartoon-january-31-1916-png",
+      "file": "commons/louis-brandeis-nomination-political-cartoon-the-new-york-sun-political-cartoon-january-31-1916-png.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Louis_Brandeis_nomination_political_cartoon_The_New_York_Sun_political_cartoon_January_31%2C_1916.png",
+      "sourceItem": "File:Louis Brandeis nomination political cartoon The New York Sun political cartoon January 31, 1916.png",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Louis_Brandeis_nomination_political_cartoon_The_New_York_Sun_political_cartoon_January_31,_1916.png",
+      "attribution": "The New York Sun",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "705a212eb03d298689d1b15c138566ba5598acd5bc3767f32417f8e50f0362ae",
+      "bytes": 637004,
+      "width": 900,
+      "height": 1411,
+      "categories": [
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "ludwig-hohlwein-tyskland-1936-iv-vinter-olympiade-garmisch-partenkirchen-jpg",
+      "file": "commons/ludwig-hohlwein-tyskland-1936-iv-vinter-olympiade-garmisch-partenkirchen-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Ludwig_Hohlwein_-_Tyskland_1936._IV._Vinter_Olympiade_Garmisch-Partenkirchen.jpg",
+      "sourceItem": "File:Ludwig Hohlwein - Tyskland 1936. IV. Vinter Olympiade Garmisch-Partenkirchen.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Ludwig_Hohlwein_-_Tyskland_1936._IV._Vinter_Olympiade_Garmisch-Partenkirchen.jpg",
+      "attribution": "Ludwig Hohlwein",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "08477f8c8a9725134728505926ad49f4fca00be111e08a8a6cb33bf931b4387b",
+      "bytes": 950478,
+      "width": 2968,
+      "height": 4736,
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "ms-of-bless-d-by-florence-earle-coates-original-signed-handwritten-poem-jpg",
+      "file": "commons/ms-of-bless-d-by-florence-earle-coates-original-signed-handwritten-poem-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/61/Ms._of_%22Bless%C3%A8d%22_by_Florence_Earle_Coates%2C_original_signed_handwritten_poem.jpg",
+      "sourceItem": "File:Ms. of \"Blessèd\" by Florence Earle Coates, original signed handwritten poem.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Ms._of_%22Bless%C3%A8d%22_by_Florence_Earle_Coates,_original_signed_handwritten_poem.jpg",
+      "attribution": "Florence Earle Coates",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "58a9a125a4c0f21cfb4c333edf9f73d6e654b00a9d1bb92cf7d3647078e35fb6",
+      "bytes": 6513466,
+      "width": 3539,
+      "height": 2654,
+      "categories": [
+        "poster",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "polish-soviet-propaganda-poster-14y-jpg",
+      "file": "commons/polish-soviet-propaganda-poster-14y-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Polish-soviet_propaganda_poster_14Y.jpg",
+      "sourceItem": "File:Polish-soviet propaganda poster 14Y.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Polish-soviet_propaganda_poster_14Y.jpg",
+      "attribution": "Viktor Deni",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "78b66a912800cf90f6b0c6eb5db24ba548ccad0cff4e5b64582d3a3ce7e25495",
+      "bytes": 844996,
+      "width": 1440,
+      "height": 2118,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "polish-soviet-propaganda-poster-18y-jpg",
+      "file": "commons/polish-soviet-propaganda-poster-18y-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/Polish-soviet_propaganda_poster_18Y.jpg",
+      "sourceItem": "File:Polish-soviet propaganda poster 18Y.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Polish-soviet_propaganda_poster_18Y.jpg",
+      "attribution": "Viktor Deni",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ae9306ff1b0ba2a59db4fd13d6a9310afecb52e98df070cd30e692d780be0fd5",
+      "bytes": 994865,
+      "width": 1438,
+      "height": 2157,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "polish-soviet-propaganda-poster-1920-jpg",
+      "file": "commons/polish-soviet-propaganda-poster-1920-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Polish-soviet_propaganda_poster_1920.jpg",
+      "sourceItem": "File:Polish-soviet propaganda poster 1920.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Polish-soviet_propaganda_poster_1920.jpg",
+      "attribution": "Stepan Mukharsky",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "819157df542afe29be662d4f322b18ba6613453f0ea4e87bfef65ab93549e0e8",
+      "bytes": 6110096,
+      "width": 3952,
+      "height": 2960,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "polish-soviet-propaganda-poster-19y-jpg",
+      "file": "commons/polish-soviet-propaganda-poster-19y-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Polish-soviet_propaganda_poster_19Y.jpg",
+      "sourceItem": "File:Polish-soviet propaganda poster 19Y.jpg",
+      "retrievedOn": "2026-08-11",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Polish-soviet_propaganda_poster_19Y.jpg",
+      "attribution": "Viktor Deni",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "5f246403f3d870eb3dc161acc9f81e67f4b2733f60344fdb563dc48ee24f4a14",
+      "bytes": 450069,
+      "width": 1440,
+      "height": 1126,
+      "categories": [
+        "poster",
+        "script"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "poster-display-type-on-flat-colour",
+      "file": "local/poster-display-type-on-flat-colour.jpg",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-12",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material)",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "63f978bb48dbdf73af1dd0fac182cf18872e5d96352ea11282e65ba3e641b6c7",
+      "bytes": 225245,
+      "width": 960,
+      "height": 1280,
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "supplied by the app's owner from their own files (a shared image poster); kept in the gitignored corpus root and redistributed nowhere"
+    },
+    {
+      "id": "samson-and-delilah-03-jpg",
+      "file": "commons/samson-and-delilah-03-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/39/Samson_and_Delilah_03.jpg",
+      "retrievedOn": "2026-08-12",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Samson_and_Delilah_03.jpg",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "cb3248c6e1ca0db2716889319cf10c8cc84aecadd7708dc7e06df7419f2a4033",
+      "bytes": 1003330,
+      "width": 1680,
+      "height": 2412,
+      "categories": [
+        "comic",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "samson-and-delilah-03-scroll",
+      "file": "derived/samson-and-delilah-03-scroll.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/39/Samson_and_Delilah_03.jpg",
+      "retrievedOn": "2026-08-12",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Samson_and_Delilah_03.jpg",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "ae820e5c682779da772ceb5104efdf4ba3f593df5fafcd621afeaa20e305ff67",
+      "bytes": 825204,
+      "width": 520,
+      "height": 720,
+      "categories": [
+        "comic",
+        "texture"
+      ],
+      "split": "dev",
+      "derivedFrom": "samson-and-delilah-03-jpg",
+      "note": "crop of the screened scroll caption; lettering sits directly on a halftone tint"
+    },
+    {
+      "id": "samson-and-delilah-15-court-caption",
+      "file": "derived/samson-and-delilah-15-court-caption.png",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Samson_and_Delilah_15.jpg",
+      "retrievedOn": "2026-08-12",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Samson_and_Delilah_15.jpg",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "43cfc9a18f9361f6de584ccbcea026e498ed68fa54e63394fc512573cce0c7c3",
+      "bytes": 162668,
+      "width": 760,
+      "height": 105,
+      "categories": [
+        "comic",
+        "texture"
+      ],
+      "split": "dev",
+      "derivedFrom": "samson-and-delilah-15-jpg",
+      "note": "crop of the caption band; lettering sits on a saturated red halftone"
+    },
+    {
+      "id": "samson-and-delilah-15-jpg",
+      "file": "commons/samson-and-delilah-15-jpg.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Samson_and_Delilah_15.jpg",
+      "retrievedOn": "2026-08-12",
+      "licence": "PD",
+      "licenceUrl": "https://commons.wikimedia.org/wiki/File:Samson_and_Delilah_15.jpg",
+      "licenceVerifiedBy": "commons-api",
+      "licenceVerifiedOn": "2026-08-12",
+      "sha256": "aa6fe874af82b1e4fbc3d8b422b8e8485e3093ff5b48b223ade89348f4aa38fc",
+      "bytes": 980257,
+      "width": 1680,
+      "height": 2394,
+      "categories": [
+        "comic",
+        "texture"
+      ],
+      "split": "dev",
+      "note": "licence read from the Commons file page metadata by API, not by a person"
+    },
+    {
+      "id": "synth-adjacent-balloons",
+      "file": "synthetic/synth-adjacent-balloons.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "e75590e387221c3977d60548efe54ce04851351a1dcee749af68ad4058716bb1",
+      "bytes": 8502,
+      "width": 620,
+      "height": 300,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "two balloons close enough to tempt a merge"
+    },
+    {
+      "id": "synth-balloon-on-panel",
+      "file": "synthetic/synth-balloon-on-panel.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "c4860027527b8d09b3480e389ef20a32a726b4d306e34ea35e8b20445a3706e9",
+      "bytes": 8168,
+      "width": 560,
+      "height": 420,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "white balloon with an outline over a coloured panel - the outline is protected"
+    },
+    {
+      "id": "synth-caption-on-gradient",
+      "file": "synthetic/synth-caption-on-gradient.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ce515c772b274613c1ea92b219e94ede36c5cc647fede12eaf4540d1d54acc64",
+      "bytes": 8704,
+      "width": 640,
+      "height": 360,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "texture"
+      ],
+      "split": "dev",
+      "note": "caption over a smooth gradient - the ModeReconstruct case"
+    },
+    {
+      "id": "synth-display-lettering",
+      "file": "synthetic/synth-display-lettering.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "09eb2788f9c8decf4283fb45d214a98d092ad07a0eb0187148b2f5ce36859337",
+      "bytes": 10890,
+      "width": 600,
+      "height": 400,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "poster"
+      ],
+      "split": "dev",
+      "note": "large display type on a coloured fill"
+    },
+    {
+      "id": "synth-rtl-layout",
+      "file": "synthetic/synth-rtl-layout.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "ef2e11f695d1a35567c182d692a48116a07002dac153e9e0a7d30ba43249b10c",
+      "bytes": 6235,
+      "width": 600,
+      "height": 240,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "script"
+      ],
+      "split": "dev",
+      "note": "right-to-left layout proxy: direction and alignment only, not Arabic shaping - real RTL scenes are corpus work"
+    },
+    {
+      "id": "synth-text-on-halftone",
+      "file": "synthetic/synth-text-on-halftone.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "4f242028be3bb78030e839487787b182411ba5e9b1dca72123bcb16db7e5096e",
+      "bytes": 6674,
+      "width": 600,
+      "height": 300,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "texture",
+        "cartoon"
+      ],
+      "split": "dev",
+      "note": "text over a halftone screen - a block fill is visibly wrong here"
+    },
+    {
+      "id": "synth-two-columns",
+      "file": "synthetic/synth-two-columns.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "9b1e5f2bd7db2791d648460321c28fe8839ef5c590379028b18a227a8d00c083",
+      "bytes": 11193,
+      "width": 720,
+      "height": 360,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "document"
+      ],
+      "split": "dev",
+      "note": "two text columns - a plate spanning both is a merge defect"
+    },
+    {
+      "id": "synth-uniform-paper",
+      "file": "synthetic/synth-uniform-paper.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "d4f43e69933a9f023479fb57a02b8ddb286e662e9f93533806a8791a06be4789",
+      "bytes": 18517,
+      "width": 640,
+      "height": 320,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "document"
+      ],
+      "split": "dev",
+      "note": "three document lines on flat paper - the ModeFill case"
+    }
+  ]
+}

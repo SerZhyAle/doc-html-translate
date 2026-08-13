@@ -31,6 +31,10 @@
     "message": "Nessun testo trovato nell'immagine.",
     "description": "Shown when OCR finds no text in the image."
   },
+  "ocrNoTextLang": {
+    "message": "Nessun testo trovato con {1} - se questa pagina è in un'altra lingua, selezionala nella finestra dell'estensione.",
+    "description": "Shown when OCR finds no text: names the recognition language that was used. {1} is that language."
+  },
   "ocrLoadError": {
     "message": "Impossibile caricare il riconoscimento del testo.",
     "description": "Shown when the image cannot be loaded or OCR fails."
@@ -138,6 +142,14 @@
   "ttSaveHtml": {
     "message": "Salva la vista attuale come file HTML autonomo (mantiene la traduzione, se hai tradotto la pagina)",
     "description": "Toolbar button tooltip."
+  },
+  "btnSaveFile": {
+    "message": "↓ File",
+    "description": "Toolbar button label - downloads the original file."
+  },
+  "btnSaveHtml": {
+    "message": "↓ HTML",
+    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "Contatti",
@@ -408,5 +420,21 @@
   },
   "vBtnOpenOriginalPdf": {
     "message": "Apri il PDF originale"
+  },
+  "optAbout": {
+    "message": "Informazioni",
+    "description": "Options page: About block."
+  },
+  "btnCopyDiag": {
+    "message": "Copia la diagnostica",
+    "description": "Options page: About block."
+  },
+  "optCopied": {
+    "message": "Copiato",
+    "description": "Options page: About block."
+  },
+  "diagHint": {
+    "message": "Copia un breve riepilogo tecnico – senza testo del documento – da incollare in una mail all'autore.",
+    "description": "Options page: About block."
   }
 }

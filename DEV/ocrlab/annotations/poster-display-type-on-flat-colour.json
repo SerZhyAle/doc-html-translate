@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "poster-display-type-on-flat-colour",
+  "origin": "human",
+  "imageWidth": 960,
+  "imageHeight": 1280,
+  "groups": [
+    {
+      "id": "headline",
+      "type": "title",
+      "transcript": "ЗАЧЕМ ТРАХАТЬСЯ:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        { "id": "h-1", "kind": "box", "points": [[38, 40], [390, 183]] },
+        { "id": "h-2", "kind": "box", "points": [[37, 207], [664, 348]] }
+      ],
+      "bounds": { "id": "headline-bounds", "kind": "box", "points": [[37, 40], [664, 348]] },
+      "replaceArea": { "id": "headline-replace", "kind": "box", "points": [[31, 34], [670, 354]] }
+    },
+    {
+      "id": "body",
+      "type": "label",
+      "transcript": "МЫ ЖЕ ВЗРОСЛЫЕ ЛЮДИ, МОЖЕМ ПРОСТО ОБ ЭТОМ ПОГОВОРИТЬ",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        { "id": "b-1", "kind": "box", "points": [[39, 375], [261, 453]] },
+        { "id": "b-2", "kind": "box", "points": [[40, 471], [344, 548]] },
+        { "id": "b-3", "kind": "box", "points": [[38, 565], [228, 651]] },
+        { "id": "b-4", "kind": "box", "points": [[39, 659], [269, 736]] },
+        { "id": "b-5", "kind": "box", "points": [[40, 754], [238, 829]] },
+        { "id": "b-6", "kind": "box", "points": [[39, 847], [249, 918]] },
+        { "id": "b-7", "kind": "box", "points": [[40, 936], [328, 1005]] }
+      ],
+      "bounds": { "id": "body-bounds", "kind": "box", "points": [[38, 375], [344, 1005]] },
+      "replaceArea": { "id": "body-replace", "kind": "box", "points": [[32, 369], [350, 1011]] }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "reviewerNote": "Display type on flat saturated colour, opened as a standalone image - the class the reporter hit. Nine lines of Cyrillic display lettering, eleven words, red and black on cream, with a solid red field behind the headline's right end. Line geometry measured from the pixels by luminance threshold (lum < 150) and horizontal projection, then per-line column projection; never from an OCR result. Two lines needed a hand decision because the artwork touches them: ВЗРОСЛЫЕ ends at x=344 with a clean 24 px gap before the woman's hair, and ПОГОВОРИТЬ ends at x=328 where a 40 px column of solid ink (the arm, full band height) begins with no gap - the letter strokes before it are 11-40 px partial columns. Grouped in two rather than in three: the headline is a different size and sits 167 px from the next line where the body's own pitch is 94, but the black lines and the red lines below them share one size, one pitch and one sentence with no punctuation break, so a reader takes them as one unit and a split there would be a defect of the annotation rather than of the recognizer. No protected regions are recorded - the lettering does not sit inside an outline that a plate must respect.",
+  "review": {
+    "annotatedBy": "agent claude-opus-5 (ink-projection geometry, transcript read from the image)",
+    "annotatedOn": "2026-08-12",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

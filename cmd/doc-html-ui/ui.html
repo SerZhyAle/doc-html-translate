@@ -256,6 +256,13 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 }
 .hint .path-btn code { color: var(--accent); text-decoration: underline; cursor: pointer; }
 .hint .path-btn:hover code { color: var(--accent-hover); }
+
+/* About section: label/value lines and the report controls. */
+.about-row { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+.about-row code { color: var(--fg); }
+.about-row a { color: var(--accent); text-decoration: none; }
+.about-row a:hover { text-decoration: underline; }
+.about-row .inline-btn { padding: 2px 9px; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -394,6 +401,30 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     </div>
 </details>
 
+<!-- About: what is installed, and the one button that turns a broken run into a report the
+     author can act on. The mail address is not written here - it comes from /api/env, so the
+     product defines it in one place. -->
+<details id="aboutSection">
+    <summary data-i18n="secAbout">About the program</summary>
+    <div class="body">
+        <div class="about-row"><span data-i18n="aboutVersion">Version:</span> <code id="aboutVer"></code></div>
+        <div class="about-row"><span data-i18n="aboutEdition">Edition:</span> <span id="aboutEd"></span></div>
+        <div class="about-row"><span data-i18n="aboutEngine">Converter engine:</span> <span id="aboutEng"></span></div>
+        <div class="about-row"><span id="aboutLogs"></span></div>
+        <div class="about-row">
+            <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="aboutSite">Product site</a>
+            <span class="dot">&#183;</span>
+            <a id="aboutMail" href="#" data-i18n="aboutFeedback">Feedback</a>
+        </div>
+        <div class="about-row">
+            <button type="button" class="inline-btn" id="btnSendLogs" data-i18n="btnSendLogs">Send logs to the author</button>
+            <button type="button" class="inline-btn" id="btnOpenArchive" style="display:none" data-i18n="btnOpenArchive">Open the archive</button>
+            <button type="button" class="inline-btn" id="btnClearLogs" data-i18n="btnClearLogs">Clear stored logs</button>
+        </div>
+        <div class="hint" id="sendLogsMsg" role="status"></div>
+    </div>
+</details>
+
 </div><!-- /col-main -->
 
 <div class="col-log">
@@ -454,6 +485,7 @@ function applyLang(lang) {
     document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
     document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
     for (const id in liveStatus) renderStatus(id);
+    renderAbout();
     document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
     document.body.style.fontFamily = FONT_STACKS[lang] || '';
     const sw = document.getElementById('langSwitch');
@@ -512,9 +544,11 @@ fillLangs(document.getElementById('dstLang'), 'ru');
 document.getElementById('btnSwap').addEventListener('click', () => {
     const s = document.getElementById('srcLang'), d = document.getElementById('dstLang');
     const t = s.value; s.value = d.value; d.value = t;
+    syncOcrLangToSource();
     saveSettings();
     updateCmdPreview();
 });
+document.getElementById('srcLang').addEventListener('change', syncOcrLangToSource);
 
 // ── heartbeat ───────────────────────────────────────────
 setInterval(() => fetch('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
@@ -589,9 +623,36 @@ window.addEventListener('dragover', () => dropZone.classList.add('dragover'));
 window.addEventListener('dragleave', ev => { if (ev.relatedTarget === null) dropZone.classList.remove('dragover'); });
 window.addEventListener('drop', ev => { dropZone.classList.remove('dragover'); handleDrop(ev); });
 
+// ── about section ───────────────────────────────────────
+// The facts come from the server, the wording does not: keep the raw values and re-render them
+// on a language switch, rather than writing a sentence once in whatever language was current.
+let authorAddress = '';
+let appVersion = '';
+const aboutFacts = { packaged: false, cli: false, logs: null };
+
+function formatBytes(n) {
+    if (!n) return '0 KB';
+    if (n < 1024 * 1024) return Math.max(1, Math.round(n / 1024)) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderAbout() {
+    const ed = document.getElementById('aboutEd');
+    if (ed) ed.textContent = t(aboutFacts.packaged ? 'aboutEditionPackaged' : 'aboutEditionPortable');
+    const eng = document.getElementById('aboutEng');
+    if (eng) eng.textContent = t(aboutFacts.cli ? 'aboutEngineFound' : 'aboutEngineMissing');
+    const logs = document.getElementById('aboutLogs');
+    if (logs && aboutFacts.logs) {
+        logs.textContent = t('aboutLogsHeld', {1: aboutFacts.logs.count, 2: formatBytes(aboutFacts.logs.bytes)});
+    }
+    renderReportMsg();
+}
+
 // ── version / initial file / environment ────────────────
 fetch('/api/version').then(r=>r.json()).then(d=>{
     document.getElementById('ver').textContent = 'v' + d.version;
+    appVersion = d.version;
+    document.getElementById('aboutVer').textContent = d.version;
 }).catch(()=>{});
 
 fetch('/api/initial').then(r=>r.json()).then(d=>{
@@ -602,6 +663,14 @@ fetch('/api/env').then(r=>r.json()).then(d=>{
     integrationHidden = !!d.packaged;
     if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
+    aboutFacts.packaged = !!d.packaged;
+    aboutFacts.cli = !!d.cli;
+    aboutFacts.logs = d.logs || {count: 0, bytes: 0};
+    // The address is served, never written into the page a second time.
+    authorAddress = d.author || '';
+    const mail = document.getElementById('aboutMail');
+    if (mail && authorAddress) mail.href = 'mailto:' + authorAddress;
+    renderAbout();
     if (d.lang) { systemLang = d.lang; resolveLang(); }
     envReady = true;
     if (!integrationHidden) loadAssocStatus();
@@ -789,6 +858,7 @@ function saveSettings() {
 fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).finally(() => {
     settingsLoaded = true;
     resolveLang();
+    syncOcrLangToSource();
     fitWindow();
     updateCmdPreview();
     maybeShowAssocPrompt();
@@ -796,9 +866,11 @@ fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).final
 document.addEventListener('change', saveSettings);
 
 // ── OCR languages ───────────────────────────────────────
+let ocrCatalog = [];
 async function loadOcrLangs() {
     try {
         const langs = await (await fetch('/api/ocr-langs')).json();
+        ocrCatalog = langs;
         const sel = el('ocrLang'), dl = el('ocrDownloadSel');
         const want = sel.dataset.want || sel.value || 'eng';
         sel.innerHTML = ''; dl.innerHTML = '';
@@ -813,8 +885,27 @@ async function loadOcrLangs() {
             sel.appendChild(o);
         }
         if ([...sel.options].some(o => o.value === want)) sel.value = want;
+        syncOcrLangToSource();
         updateCmdPreview();
     } catch (e) { /* leave selects as-is */ }
+}
+
+// The GUI always sends an explicit -ocr-lang, which overrides the CLI default of
+// "OCR in the -src language". Without this, swapping the languages to Russian left
+// the OCR reading a Cyrillic page with English data and finding nothing.
+function syncOcrLangToSource() {
+    if (!ocrCatalog.length) return;
+    const row = ocrCatalog.find(l => l.iso && l.iso === el('srcLang').value);
+    if (!row) return; // no OCR data exists for this language - keep the current pick
+    if (row.installed) {
+        const sel = el('ocrLang');
+        sel.value = row.code;
+        sel.dataset.want = row.code;
+        setStatus('ocrStatus', 'ocrStatusDefault');
+    } else {
+        el('ocrDownloadSel').value = row.code;
+        setStatus('ocrStatus', 'ocrLangMissing', {lang: row.name});
+    }
 }
 el('btnOcrDownload').addEventListener('click', async () => {
     const sel = el('ocrDownloadSel'), btn = el('btnOcrDownload');
@@ -979,14 +1070,12 @@ el('btnDeletePrev').addEventListener('click', async () => {
     }
 });
 
-el('btnCopyCmd').addEventListener('click', async () => {
-    const btn = el('btnCopyCmd');
-    const text = el('cmdLine').textContent.trim();
-    if (!text) return;
-    let ok = false;
+// copyToClipboard reports whether the text really landed on the clipboard, so a caller can
+// tell the user the truth either way.
+async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
-        ok = true;
+        return true;
     } catch (e) {
         // Clipboard API can be blocked; fall back to a hidden textarea + execCommand.
         try {
@@ -996,13 +1085,86 @@ el('btnCopyCmd').addEventListener('click', async () => {
             ta.style.opacity = '0';
             document.body.appendChild(ta);
             ta.select();
-            ok = document.execCommand('copy');
+            const ok = document.execCommand('copy');
             document.body.removeChild(ta);
-        } catch (e2) { ok = false; }
+            return ok;
+        } catch (e2) { return false; }
     }
+}
+
+el('btnCopyCmd').addEventListener('click', async () => {
+    const btn = el('btnCopyCmd');
+    const text = el('cmdLine').textContent.trim();
+    if (!text) return;
+    const ok = await copyToClipboard(text);
     btn.textContent = ok ? t('cmdCopied') : t('cmdCopyFailed');
     btn.classList.toggle('done', ok);
     setTimeout(() => { btn.textContent = t('btnCopy'); btn.classList.remove('done'); }, 1400);
+});
+
+// ── send logs to the author ─────────────────────────────
+// One press does four things: build the archive, put its path on the clipboard, open its folder
+// with the file selected, and open the user's own mail program with a prefilled message. The app
+// attaches nothing and sends nothing - the message sits unsent until the user presses Send.
+let reportPath = '';
+let lastReport = null;   // {dropped} once an archive has been built this session
+
+function renderReportMsg() {
+    if (!lastReport) return;
+    let msg = t('sendLogsReady') + ' ' + t('sendLogsAttachHint');
+    if (lastReport.dropped > 0) msg += ' ' + t('sendLogsDropped', {1: lastReport.dropped});
+    el('sendLogsMsg').textContent = msg;
+}
+
+el('btnSendLogs').addEventListener('click', async () => {
+    const btn = el('btnSendLogs');
+    btn.disabled = true;
+    lastReport = null;
+    setStatus('sendLogsMsg', 'sendLogsBuilding');
+    try {
+        const r = await (await fetch('/api/report', {method:'POST'})).json();
+        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
+        reportPath = r.path;
+        await copyToClipboard(reportPath);
+        await fetch('/api/report-reveal', {method:'POST', body: JSON.stringify({path: reportPath})});
+        const subject = 'doc-html-translate ' + appVersion + ' - log report';
+        location.href = 'mailto:' + encodeURIComponent(authorAddress)
+            + '?subject=' + encodeURIComponent(subject)
+            + '&body=' + encodeURIComponent(t('mailBody'));
+        // The result is a composed line, so it is remembered as facts and re-rendered on a
+        // language switch instead of being frozen in the language that was current.
+        delete liveStatus['sendLogsMsg'];
+        lastReport = {dropped: r.dropped || 0};
+        renderReportMsg();
+        el('btnOpenArchive').style.display = '';
+    } catch (e) {
+        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+el('btnOpenArchive').addEventListener('click', async () => {
+    if (!reportPath) return;
+    try {
+        const r = await (await fetch('/api/report-open', {method:'POST', body: JSON.stringify({path: reportPath})})).json();
+        if (!r.ok) setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')});
+    } catch (e) {
+        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+    }
+});
+
+el('btnClearLogs').addEventListener('click', async () => {
+    try {
+        const r = await (await fetch('/api/logs-clear', {method:'POST'})).json();
+        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
+        lastReport = null;
+        aboutFacts.logs = {count: 0, bytes: 0};
+        renderAbout();
+        setStatus('sendLogsMsg', 'logsCleared');
+    } catch (e) {
+        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+    }
 });
 
 // ── run ─────────────────────────────────────────────────

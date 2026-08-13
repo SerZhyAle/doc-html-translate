@@ -22,8 +22,10 @@ import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
 import { parseComic, DesktopOnlyError } from "./comic.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang } from "./ocr-overlay.js";
+import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
+import { recordRun } from "./diagnostics.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -142,6 +144,7 @@ function teardownCurrent() {
   pdfRendered = 0;
   ocrTotal = 0;
   ocrDone = 0;
+  ocrWithText = 0;
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
   pdfImageUrls = [];
 }
@@ -192,6 +195,7 @@ function hideStatus() { $("status").classList.add("done"); }
 let ocrObserver = null;
 let ocrTotal = 0;
 let ocrDone = 0;
+let ocrWithText = 0; // recognized images that actually carried a plate - see ocrUpdateStatus
 const ocrQueued = new WeakSet();
 let pdfImageUrls = []; // object URLs for PDF-extracted images, revoked on teardown
 
@@ -213,6 +217,14 @@ function docExtent() {
   return t("vExtentPartial", "pages 1-{1} of {2}", pdfRendered, pdfTotal);
 }
 
+// A page or two with nothing on them is ordinary - art panels carry no dialogue. A run of
+// them with not one recognized word is the signature of the wrong recognition language, which
+// is easy to hit here: OCR reads English by default while this viewer's readers mostly do not.
+// The queue grows as the reader scrolls, so there is no end-of-document moment to report at
+// (the desktop app has one, and says it there); this many empties in a row is the closest
+// honest substitute, and it is low enough to reach on the first screen of a comic.
+const OCR_EMPTY_RUN_HINT = 3;
+
 function ocrUpdateStatus() {
   if (ocrTotal === 0) return;
   $("status").classList.remove("done");
@@ -224,7 +236,14 @@ function ocrUpdateStatus() {
     ? t("vOcrStatusWhere", "OCR: {1}/{2} images - {3}", ocrDone, ocrTotal, where)
     : t("vOcrStatus", "OCR: {1}/{2} images", ocrDone, ocrTotal));
   setProgress(ocrDone / ocrTotal);
-  if (ocrDone >= ocrTotal) setTimeout(hideStatus, 1000);
+  if (ocrDone < ocrTotal) return;
+  if (ocrWithText === 0 && ocrDone >= OCR_EMPTY_RUN_HINT) {
+    const lang = options.ocrLang || "eng";
+    setStatus(t("ocrNoTextLang", "No text found using {1} - if this page is in another language, pick it in the extension popup.", langLabel(lang)));
+    setTimeout(hideStatus, 6000); // a sentence to read and act on, not a progress tick
+    return;
+  }
+  setTimeout(hideStatus, 1000);
 }
 
 function getOcrObserver() {
@@ -252,6 +271,7 @@ async function ocrProcessImage(img) {
       },
     });
     wrapper.replaceWith(container);
+    if (!container.classList.contains("ocr-empty")) ocrWithText += 1;
   } catch (err) {
     console.warn("OCR failed for image", err);
     wrapper.replaceWith(img); // restore the plain image
@@ -394,7 +414,10 @@ async function appendPdfImages(page, section, pageChars) {
 }
 
 // ---- Notices / fallbacks ---------------------------------------------------
+// Every failure the viewer shows the user comes through here, so this is the one place the
+// last error has to be recorded for a diagnostics report.
 function showNotice(titleText, bodyNodes) {
+  recordRun({ error: titleText });
   $("btn-save-html").classList.add("hidden"); // nothing valid to save as HTML
   const content = $("content");
   content.replaceChildren();
@@ -803,9 +826,19 @@ async function loadUrl(url) {
 // the right reader via detectFormat (byte signature first, then the source name's
 // extension). Unknown types fall through to the PDF path, whose error handling
 // reports an unreadable file clearly.
+// setPageTotal is the one place the page count reaches the chrome, so a reader added later
+// cannot quietly leave the diagnostics record without one.
+function setPageTotal(total) {
+  $("page-total").textContent = `/ ${total}`;
+  recordRun({ pages: total });
+}
+
 async function loadFromData(data, title, name) {
   teardownCurrent();
-  switch (detectFormat(data, name)) {
+  const format = detectFormat(data, name);
+  // The format id only - never the document's name, bytes or URL. See diagnostics.js.
+  recordRun({ format });
+  switch (format) {
     case "epub": await loadEpubData(data, title); return;
     case "pdf": await loadPdfData(data, title); return;
     case "txt": await loadBook(data, title, parseText, t("vStatusReadingText", "Reading text..")); return;
@@ -854,7 +887,7 @@ async function loadImageData(data, title, mime) {
   document.title = title;
   $("btn-original").classList.add("hidden"); // no "native viewer" concept for a picture
   $("status").classList.remove("done");
-  $("page-total").textContent = "/ 1";
+  setPageTotal(1);
   ensureOcrCss();
 
   const content = $("content");
@@ -873,8 +906,12 @@ async function loadImageData(data, title, mime) {
     content.append(container);
     applyLang(ocrLangToHtmlLang(lang));
     if (container.classList.contains("ocr-empty")) {
+      // The badge stays short because it sits on the picture; the status line carries the
+      // part that matters - which language was read. "No text found" is true about the data
+      // that was loaded and reads as a verdict on the image, which is the wrong lesson when
+      // the real answer is that an English recognizer was pointed at a Russian page.
       container.append(makeBadge(t("ocrNoText", "No text found")));
-      setStatus(t("ocrNoText", "No text found"));
+      setStatus(t("ocrNoTextLang", "No text found using {1} - if this page is in another language, pick it in the extension popup.", langLabel(lang)));
     } else {
       setStatus(t("ocrDone", 'Done - use the browser\'s "Translate page"'));
     }
@@ -936,7 +973,7 @@ function renderComic(pages) {
   applyLang(ocrLangToHtmlLang(options.ocrLang || "eng"));
   comicTotal = pages.length;
   comicRendered = 0;
-  $("page-total").textContent = `/ ${comicTotal}`;
+  setPageTotal(comicTotal);
   $("page-jump").max = String(comicTotal);
   renderToc(null); // comics carry no authored table of contents
 
@@ -1141,7 +1178,7 @@ let docGen = 0;           // bumped per loaded document; strands chunks from the
 
 async function renderDocument(pdf, title) {
   const total = pdf.numPages;
-  $("page-total").textContent = `/ ${total}`;
+  setPageTotal(total);
   $("page-jump").max = String(total);
 
   // Sample early pages for language detection before rendering everything.
@@ -1351,7 +1388,7 @@ function renderBook(book, fallbackTitle) {
   applyLang(book.lang || detectLang(book.sampleText));
 
   const total = book.sections.length;
-  $("page-total").textContent = `/ ${total}`;
+  setPageTotal(total);
   $("page-jump").max = String(total);
 
   renderToc(book.toc);

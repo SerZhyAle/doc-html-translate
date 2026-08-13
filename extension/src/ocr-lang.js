@@ -29,6 +29,22 @@ export const LANGS = [
   { code: "kor", name: "Korean" },
 ];
 
+// langLabel renders a "+"-joined language string for a reader: each code keeps its traineddata
+// name and gains the catalog's display name where there is one, so a line about "rus" also says
+// Russian. The code stays first because it is what the user picks from the list. Twin of the
+// desktop app's ocr.LangLabel (internal/ocr/tessdata.go) - see ../../docs/PARITY.md.
+export function langLabel(lang) {
+  const parts = String(lang || "")
+    .split("+")
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .map((c) => {
+      const known = LANGS.find((l) => l.code === c);
+      return known ? `${c} (${known.name})` : c;
+    });
+  return parts.length ? parts.join(" + ") : String(lang || "");
+}
+
 // Languages that ship inside the extension package (fully offline, no network).
 export const BUNDLED = ["eng"];
 

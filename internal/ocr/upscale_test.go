@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func writeTempPNG(t *testing.T, w, h int) string {
+func tempImageFile(t *testing.T, w, h int) string {
 	t.Helper()
 	f, err := os.CreateTemp(t.TempDir(), "img-*.png")
 	if err != nil {
@@ -22,7 +22,7 @@ func writeTempPNG(t *testing.T, w, h int) string {
 }
 
 func TestUpscaleForOCR(t *testing.T) {
-	p, cleanup, ok := upscaleForOCR(writeTempPNG(t, 40, 30))
+	p, cleanup, ok := upscaleForOCR(tempImageFile(t, 40, 30))
 	if !ok {
 		t.Fatal("image should upscale")
 	}
@@ -57,7 +57,7 @@ func TestEstimateDPI(t *testing.T) {
 // declared. The gate keys on estimated DPI, not raw pixel count.
 func TestPrepareForOCRGate(t *testing.T) {
 	// long side 660 -> estDPI 60 (< floor 120) -> upscale
-	path, scale, dpi, cleanup := prepareForOCR(writeTempPNG(t, 660, 400))
+	path, scale, dpi, cleanup := prepareForOCR(tempImageFile(t, 660, 400))
 	defer cleanup()
 	if scale != ocrUpscaleFactor {
 		t.Errorf("low-DPI image: scale = %d, want %d", scale, ocrUpscaleFactor)
@@ -70,7 +70,7 @@ func TestPrepareForOCRGate(t *testing.T) {
 	}
 
 	// long side 2200 -> estDPI 200 (>= floor 120) -> no upscale, DPI declared as-is
-	src := writeTempPNG(t, 2200, 1600)
+	src := tempImageFile(t, 2200, 1600)
 	path2, scale2, dpi2, cleanup2 := prepareForOCR(src)
 	defer cleanup2()
 	if scale2 != 1 {
@@ -100,7 +100,7 @@ func TestClampDeclaredDPI(t *testing.T) {
 // bytes (a book under a Cyrillic name) is copied to an ASCII temp file, because tesseract/leptonica
 // mangle non-ANSI-codepage bytes and would fail recognition silently.
 func TestStageASCIIPath(t *testing.T) {
-	ascii := writeTempPNG(t, 10, 10)
+	ascii := tempImageFile(t, 10, 10)
 	if got, cleanup := stageASCIIPath(ascii); got != ascii {
 		cleanup()
 		t.Errorf("ASCII path changed: got %q, want %q", got, ascii)

@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"doc-html-translate/internal/app"
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/report"
 )
 
 // Version is set at build time via -ldflags.
@@ -31,6 +33,21 @@ func main() {
 	}
 
 	logging.AppVersion = Version
+
+	// Keep this run's log on disk so a failure can still be reported an hour later. Every
+	// error here is swallowed on purpose: a store that cannot be written must leave the run
+	// exactly as it was, with nothing said about it.
+	_, _ = report.Trim()
+	if err := os.MkdirAll(report.LogsDir(), 0o755); err == nil {
+		if f, err := os.OpenFile(report.RunLogPath(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
+			logging.StartRunLog(f)
+			defer func() {
+				logging.StopRunLog()
+				_ = f.Close()
+			}()
+		}
+	}
+
 	logging.Printf("doc-html-translate %s\n", Version)
 	application := app.New(cfg)
 	exitCode, err := application.Run()

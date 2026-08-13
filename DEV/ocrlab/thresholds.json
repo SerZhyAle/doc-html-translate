@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "derivedFrom": "base06-desktop",
+  "derivedOn": "2026-08-12",
+  "caveat": "Derived from DEV/research/ocrlab/2026-08-11__baseline.md over 11 annotated dev scenes, 8 of them synthetic, with NO holdout in the corpus. Three consequences, all deliberate. (1) No dimension carries a regressionTolerance: it compares holdout against holdout and there is none, so a tolerance here would be a field that can never fire - add one the day the split exists, not before. (2) No per-category bound is written for a category with one or two scored scenes - poster, cartoon, script and document all sit there, and a bound from a single scene is that scene's result with a decimal point. Only comic and texture carry a category bound, at 4 and 5 scenes, and even those are thin. (3) The overall bounds are set AT the measured baseline, not above it: this run is the reference, so a change that makes any of them worse must argue for itself rather than slip through a margin nobody measured. The four hard gates are the exception to all of the above - the strategic spec fixes them at zero regardless of any measurement, and Thresholds.Validate refuses any other value. The extension edition is NOT the reference: 17 of its 45 scenes crashed the renderer, so its aggregates are over the scenes small enough to survive and are systematically easier. Re-derive from a holdout before treating any number here as settled.",
+
+  "hard": {
+    "protectedDamagePx": 0,
+    "merges": 0,
+    "clippedPlates": 0,
+    "crossGroupOverlaps": 0
+  },
+
+  "dimensions": {
+    "recognition": {
+      "overall": {
+        "min": 0.72,
+        "baseline": 0.7272727272727273,
+        "note": "mean detection recall, desktop, 11 scenes. Rounded down to the nearest 0.01 so the gate does not fail on a float that only moved in its last digit. The extension measured 0.80 over 10 scenes and is not the reference - see the caveat."
+      },
+      "byCategory": {
+        "comic": {
+          "min": 0.75,
+          "baseline": 0.75,
+          "note": "4 scenes."
+        },
+        "texture": {
+          "min": 0.6,
+          "baseline": 0.6,
+          "note": "5 scenes - the largest scored category, and still five."
+        }
+      }
+    },
+
+    "grouping": {
+      "overall": {
+        "max": 1,
+        "baseline": 1,
+        "note": "merges + splits, desktop: 1 merge (synth-two-columns), 0 splits. The hard gate already fixes merges at 0, so this bound exists to catch splits appearing while merges are being fixed. It is the one bound that is meant to be tightened to 0 by Phase 07 rather than held."
+      }
+    },
+
+    "position": {
+      "overall": {
+        "max": 0,
+        "baseline": 0,
+        "note": "worst drift in px across the three pinned viewports. Measured 0.000 in both editions, which is a real result rather than a missing measurement: the overlay is expressed in natural image coordinates and holds them under responsive scaling. Any non-zero value is a regression, so the bound is the measurement."
+      }
+    },
+
+    "concealment": {
+      "overall": {
+        "max": 0.28,
+        "baseline": 0.2706527780636927,
+        "note": "worst residual ink under a plate, desktop, over the annotated scenes. Rounded up to the next 0.01. NOT a quality statement - 27% of the original lettering still showing is a failure, and the number is here to stop it getting worse while Phase 07 works on it. The self-diagnosis over all 45 scenes is worse still (mean 17%, worst 56% on cover-of-archie-s-pals-n-gals-no-25-jpg) and is not gated, because it has no ground truth behind it."
+      },
+      "byCategory": {
+        "comic": {
+          "max": 0.28,
+          "baseline": 0.2706527780636927,
+          "note": "4 scenes; the corpus worst-case sits in this category."
+        },
+        "texture": {
+          "max": 0.28,
+          "baseline": 0.2706527780636927,
+          "note": "5 scenes."
+        }
+      }
+    },
+
+    "damage": {
+      "overall": {
+        "max": 0,
+        "baseline": 0,
+        "note": "protected-area damage in px. The zero is NOT evidence that nothing is damaged: almost no scene declares a protected polygon, so there is nothing to hit. It duplicates the hard gate on purpose - when protected annotations arrive the number will move, and it must be visible in this file when it does. Strategic 9.2 cannot be settled until then."
+      }
+    },
+
+    "replacement": {
+      "overall": {
+        "max": 6,
+        "baseline": 6,
+        "note": "clipped + cross-group over all six stress cases, desktop: 0 clipped, 6 cross-group, all six from synth-two-columns crossing its neighbour once per stress case. The hard gate fixes both at 0; this bound is the interim ceiling that keeps a second scene from joining it while the first is being fixed. The extension measured 9 (2 clipped + 7 cross-group) and is not the reference."
+      }
+    },
+
+    "review": {
+      "overall": {
+        "max": 2,
+        "baseline": 2,
+        "note": "scenes carrying at least one named hard failure, desktop: le-petit-journal-1908-map-labels (no plates over 4 annotated groups) and synth-two-columns. A third scene joining them fails the gate."
+      }
+    },
+
+    "cost": {
+      "overall": {
+        "max": 18500,
+        "baseline": 12380,
+        "note": "total OCR wall-clock in ms over the scored scenes, desktop. This is the one bound deliberately set ABOVE its baseline, at about 1.5x: it is a machine-speed measurement, not a quality one, and a gate that fails because the run shared a CPU with something else would teach a reader to ignore the gate. It is here to catch a change that makes recognition several times more expensive, which is the trade strategic 3.2 names."
+      }
+    }
+  }
+}

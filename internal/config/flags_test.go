@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +26,21 @@ func TestParseArgsBadFlagIsAnError(t *testing.T) {
 	}
 	if errors.Is(err, ErrHelp) {
 		t.Fatalf("an undefined flag must not be reported as a help request: %v", err)
+	}
+}
+
+// -report packs the logs that already exist; asking for a document as well would make the flag
+// unusable exactly when it is needed - after a run that failed.
+func TestParseArgsReportNeedsNoInputFile(t *testing.T) {
+	cfg, err := ParseArgs([]string{"-report"})
+	if err != nil {
+		t.Fatalf("ParseArgs(-report): %v", err)
+	}
+	if !cfg.Report {
+		t.Error("expected Report=true")
+	}
+	if cfg.InputFile != "" {
+		t.Errorf("InputFile = %q, want empty", cfg.InputFile)
 	}
 }
 
@@ -78,6 +94,89 @@ func TestParseArgsWithInputFile(t *testing.T) {
 	}
 	if cfg.InputFile != "book.epub" {
 		t.Fatalf("unexpected input file: %s", cfg.InputFile)
+	}
+}
+
+// Flags written after the document used to be dropped without a word: output landed beside the
+// source instead of the named folder, switches did nothing, and an explicit -max-cost - the one
+// guard a user types on purpose - disappeared. Both orders must now mean the same thing.
+func TestParseArgsFlagsAfterInputFile(t *testing.T) {
+	cfg, err := ParseArgs([]string{"book.epub", "-folder", "out", "-ocr", "-notranslate", "-force", "-max-cost", "5"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.InputFile != "book.epub" {
+		t.Errorf("InputFile = %q, want book.epub", cfg.InputFile)
+	}
+	if cfg.OutputFolder != "out" {
+		t.Errorf("OutputFolder = %q, want out - the flag was dropped", cfg.OutputFolder)
+	}
+	if cfg.MaxCost != 5 {
+		t.Errorf("MaxCost = %v, want 5 - a spend cap must never be silently ignored", cfg.MaxCost)
+	}
+	if !cfg.OCR || !cfg.NoTranslate || !cfg.Force {
+		t.Errorf("switches after the path were dropped: ocr=%v notranslate=%v force=%v", cfg.OCR, cfg.NoTranslate, cfg.Force)
+	}
+}
+
+// A value-taking flag must not swallow the document, and a boolean must not swallow its
+// neighbour. Both are decided from the FlagSet's own arity, so this pins that wiring.
+func TestParseArgsPermutationRespectsFlagArity(t *testing.T) {
+	cases := [][]string{
+		{"-split", "1234", "book.epub"},
+		{"book.epub", "-split", "1234"},
+		{"-ocr", "book.epub", "-split", "1234"},
+		{"-split=1234", "book.epub", "-ocr"},
+	}
+	for _, args := range cases {
+		cfg, err := ParseArgs(args)
+		if err != nil {
+			t.Fatalf("ParseArgs(%v): %v", args, err)
+		}
+		if cfg.InputFile != "book.epub" {
+			t.Errorf("ParseArgs(%v): InputFile = %q, want book.epub", args, cfg.InputFile)
+		}
+		if cfg.SplitSize != 1234 {
+			t.Errorf("ParseArgs(%v): SplitSize = %d, want 1234", args, cfg.SplitSize)
+		}
+	}
+}
+
+// "--" ends flag parsing, which is how a document whose name starts with a dash is passed.
+func TestParseArgsDoubleDashEndsFlags(t *testing.T) {
+	cfg, err := ParseArgs([]string{"-ocr", "--", "-weird-name.epub"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.InputFile != "-weird-name.epub" {
+		t.Errorf("InputFile = %q, want -weird-name.epub", cfg.InputFile)
+	}
+	if !cfg.OCR {
+		t.Error("expected OCR=true")
+	}
+}
+
+// Permuting must not hide a typo: an undefined flag after the document is still an error,
+// not a silently ignored operand.
+func TestParseArgsBadFlagAfterInputFileIsAnError(t *testing.T) {
+	_, err := ParseArgs([]string{"book.epub", "-nosuchflag"})
+	if err == nil {
+		t.Fatal("expected an error for an undefined flag written after the input file")
+	}
+	if errors.Is(err, ErrHelp) {
+		t.Fatalf("an undefined flag must not be reported as a help request: %v", err)
+	}
+}
+
+// One document per run. The second operand is nearly always an unquoted path with a space in
+// it, and dropping it silently made a quoting mistake look like a missing file.
+func TestParseArgsExtraOperandIsRefused(t *testing.T) {
+	_, err := ParseArgs([]string{`C:\My`, `Book.epub`})
+	if err == nil {
+		t.Fatal("expected an error for a second operand")
+	}
+	if !strings.Contains(err.Error(), "Book.epub") {
+		t.Errorf("the error must name the argument it refused, got: %v", err)
 	}
 }
 

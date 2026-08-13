@@ -42,6 +42,7 @@ The desktop app and the extension are independent and complementary: the app con
   - Reading themes - Light / Sepia / Dark / Night toggle, remembered across sessions
   - Reading position - scroll is saved per book; `index.html` shows a "Continue reading" link, and the navbar carries a thin progress bar
 - Interface in 13 languages: `en ru uk de it es fr pt ar hi bn ur zh` - the `-ui-lang <code>` flag in the CLI, a language selector in the GUI and in the extension. The default follows the system language (the browser's language in the extension). The interface language never changes the document's language: the generated page keeps the book's own `<html lang>`, because otherwise Chrome would stop offering to translate the page
+- Send logs to the author when something breaks: the app keeps its recent run logs on disk, and the GUI's **About the program** section (or `-report` on the command line) packs them with an environment summary and the last run's settings into one archive, opens the archive's folder with the file selected and puts its path on the clipboard, and opens a pre-addressed message in your own mail program. **Nothing is ever sent automatically** - you attach the archive and press Send yourself, and you can open the archive first to see exactly what it holds. The Google API key is never in it. The browser extension, which has no log store, offers the same intent as a **Copy diagnostics** button on its options page
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
 - File-type association is **optional and off by default**: the app always adds a **"Convert to HTML" right-click entry** (and an "Open with" entry) for all supported types, and becoming the default handler is a separate opt-in (`-register` / the GUI toggle / a one-time first-run prompt; `-unregister` reverses it)
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
@@ -169,6 +170,7 @@ Why this workflow is popular (besides the obvious):
 | `-v` | `false` | Verbose output |
 | `-src` | `en` | Source language |
 | `-dst` | `ru` | Target language |
+| `-report` | `false` | Pack the recent run logs plus an environment summary into an archive for the author, then exit |
 | `-version` | `false` | Print version and exit |
 
 ## Google API Key

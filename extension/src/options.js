@@ -3,6 +3,7 @@
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
+import { reportText } from "./diagnostics.js";
 import { t, initI18n, applyI18n, loadMessages, setUiLang, uiLang } from "./i18n.js";
 
 // UI languages the extension ships, by endonym - the only label that helps a reader who cannot
@@ -170,7 +171,37 @@ async function init() {
     if (area === "local" && changes.options) renderHosts((changes.options.newValue || {}).disabledHosts || []);
   });
 
+  initDiagnostics();
   await initUiLanguage();
+}
+
+// initDiagnostics wires the About block's one action: put a short English summary on the
+// clipboard so a bug report can carry facts instead of a memory. Nothing is uploaded and no
+// permission is needed - a clipboard write from the user's own click requires none.
+function initDiagnostics() {
+  const btn = document.getElementById("copy-diag");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const text = await reportText(chrome.runtime.getManifest().version, await getOptions());
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch (e) {
+      // The clipboard API can be refused; fall back to a hidden textarea + execCommand.
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e2) { ok = false; }
+    }
+    if (ok) flash("saved-diag");
+  });
 }
 
 // initUiLanguage fills the interface-language selector and applies the stored choice. The first

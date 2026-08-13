@@ -31,6 +31,10 @@
     "message": "تصویر میں کوئی متن نہیں ملا۔",
     "description": "Shown when OCR finds no text in the image."
   },
+  "ocrNoTextLang": {
+    "message": "{1} کے ساتھ کوئی متن نہیں ملا - اگر یہ صفحہ کسی اور زبان میں ہے تو اسے ایکسٹینشن ونڈو میں منتخب کریں۔",
+    "description": "Shown when OCR finds no text: names the recognition language that was used. {1} is that language."
+  },
   "ocrLoadError": {
     "message": "متن کی پہچان لوڈ نہ ہو سکی۔",
     "description": "Shown when the image cannot be loaded or OCR fails."
@@ -138,6 +142,14 @@
   "ttSaveHtml": {
     "message": "موجودہ منظر کو الگ HTML فائل کے طور پر محفوظ کریں (اگر صفحہ ترجمہ کیا ہے تو ترجمہ بھی رہے گا)",
     "description": "Toolbar button tooltip."
+  },
+  "btnSaveFile": {
+    "message": "↓ فائل",
+    "description": "Toolbar button label - downloads the original file."
+  },
+  "btnSaveHtml": {
+    "message": "↓ HTML",
+    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "رابطہ",
@@ -408,5 +420,21 @@
   },
   "vBtnOpenOriginalPdf": {
     "message": "اصل PDF کھولیں"
+  },
+  "optAbout": {
+    "message": "ایکسٹینشن کے بارے میں",
+    "description": "Options page: About block."
+  },
+  "btnCopyDiag": {
+    "message": "تشخیصی معلومات کاپی کریں",
+    "description": "Options page: About block."
+  },
+  "optCopied": {
+    "message": "کاپی ہو گیا",
+    "description": "Options page: About block."
+  },
+  "diagHint": {
+    "message": "ایک مختصر تکنیکی خلاصہ کاپی کرتا ہے - دستاویز کا متن نہیں - تاکہ آپ اسے مصنف کو بھیجے میل میں چسپاں کر سکیں۔",
+    "description": "Options page: About block."
   }
 }

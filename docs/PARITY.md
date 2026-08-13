@@ -231,13 +231,14 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 |---|---|---|---|
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/build.ps1` -> `<exe>/tessdata/eng.traineddata` | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
-| Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the vertical gap to the next line stays within `OCR_CLUSTER_GAP_FACTOR (1.2) x` the median line height and the lines share an x-extent; a bigger gap - a figure, a section break, a new column - starts a new plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `clusterLines` |
+| Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` |
 | Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) |
 | Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. Degrades safely (CSS `overflow:hidden`) if the script does not run | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `fitPlate` / `scheduleFit` |
 | Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = mean of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `0.015`/`6`-px min-ink threshold | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
-| Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
+| Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
 | Pre-OCR resolution handling | Gate on **estimated DPI**, not raw pixel count (a page scan clears 1000 px even at ~100 DPI, so a pixel gate upscales clean renders for nothing or misses the scans that need it). Estimate DPI from the long side over an assumed `OCR_ASSUMED_PAGE_INCHES (11)`-tall page; below `OCR_UPSCALE_DPI_FLOOR (120)` enlarge `OCR_UPSCALE_FACTOR (2 x)` (high-quality) before recognition and divide recognized coordinates back; **always declare the resolution** to Tesseract (`user_defined_dpi`, clamped `>= OCR_MIN_DECLARED_DPI (70)`, doubled when upscaled) so layout analysis separates regions - adjacent balloons - it otherwise merges. Measured: a ~90-DPI newsprint scan gains hugely from the upscale, a ~150-DPI scan only needs the DPI declared (upscaling over-segments it) | [`tesseract.go`](../internal/ocr/tesseract.go) `prepareForOCR` / `estimateDPI` / `scaleDown` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `upscaleForOcr` / `estimateDpi` |
 | Page-segmentation mode | Tesseract runs in **PSM 3 (AUTO)** on both editions so layout analysis isolates real text regions on an illustrated/scanned page (a speech bubble, a caption) instead of reading the whole frame as one block. The desktop CLI's default is already PSM 3 (made explicit via `--psm`); the extension must set it because tesseract.js defaults to PSM 6 (SINGLE_BLOCK), which folds scene edges into the recognized text (stray punctuation, digits) and mis-merges separate regions into one plate | [`tesseract.go`](../internal/ocr/tesseract.go) `ocrPageSegMode` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `OCR_PSM` |
+| Grey rescue ladder | An image whose ordinary colour pass returns **no plates at all** is retried on a greyscale copy, first with the engine's own thresholder (`thresholding_method 0`) and then with Leptonica's tiled one (`1`); the first rung that finds plates wins, and an image that reads normally never enters the ladder. Tesseract's default thresholder runs Otsu **per RGB channel** and takes ink only where every channel agrees - harmless on flat paper, but on saturated artwork (a brick-red comic panel behind a white balloon, a coloured poster) the channels disagree over the lettering and the mask that reaches recognition holds no text. The second rung then changes *who* thresholds: one global cut-off cannot survive a background that varies across the image (on a sky gradient Otsu splits the gradient itself and a white caption comes out the same value as its ground), while a tiled thresholder decides locally. It is a **ladder, not a replacement** - the colour pass wins where lettering is separated by hue rather than brightness, so retrying only after an empty result leaves every image that works today unchanged | [`tesseract.go`](../internal/ocr/tesseract.go) `greyRescuePasses` / `greyRescue` / `greyRendition` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `GREY_RESCUE_PASSES` / `greyRescue` / `greyRendition` |
 
 **OCR download version and catalog are aligned** (2026-07-01 parity pass) and guarded by
 `tests/parity_test.go`:
@@ -249,8 +250,13 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   identical upstream bytes -> matching recognition.
 - **Language catalog = 13** on both sides (`eng rus ukr jpn jpn_vert deu fra spa ita por pol chi_sim
   kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`.
-- **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50` and `OCR_CLUSTER_GAP_FACTOR = 1.2`
-  (`tesseract.go` `ocrMinLineConf` / `ocrClusterGapFactor` == `ocr-overlay.js`).
+- **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50`, `OCR_CLUSTER_PITCH_FACTOR = 1.2`
+  and `OCR_MAX_LEADING_RATIO = 3` (`tesseract.go` `ocrMinLineConf` / `ocrClusterPitchFactor` /
+  `ocrMaxLeadingRatio` == [`ocr-cluster.js`](../extension/src/ocr-cluster.js)). The **quantity** the
+  pitch factor multiplies is part of the invariant, not only its value: equal numbers over different
+  quantities still group all-caps lettering differently, so `TestParityOCRClustering` also pins the
+  expression that computes the bound (`pitchMax` from the reference pitch) and the one that measures
+  a pitch (`y0` to `y0`) on both sides.
 - **Overlay resolution constants** identical: `OCR_UPSCALE_DPI_FLOOR = 120`, `OCR_ASSUMED_PAGE_INCHES = 11`,
   `OCR_MIN_DECLARED_DPI = 70` and `OCR_UPSCALE_FACTOR = 2` (`tesseract.go` `ocrUpscaleDPIFloor` /
   `ocrAssumedPageInches` / `ocrMinDeclaredDPI` / `ocrUpscaleFactor` == `ocr-overlay.js`). Guarded by
@@ -259,9 +265,68 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   CLI as `--psm 3`) == `ocr-overlay.js` `OCR_PSM` (applied via `setParameters({tessedit_pageseg_mode})`).
   The extension must set it explicitly because tesseract.js defaults to PSM 6 (SINGLE_BLOCK); the
   desktop CLI's own default is already 3.
+- **Grey rescue ladder** identical: the retry order for an image the colour pass could not read is
+  `[engine-default thresholder (0), Leptonica tiled Otsu (1)]` over a greyscale copy - `tesseract.go`
+  `greyRescuePasses` == `ocr-overlay.js` `GREY_RESCUE_PASSES`, and `thresholdEngineDefault` /
+  `thresholdLeptonicaOtsu` == `THRESHOLD_ENGINE_DEFAULT` / `THRESHOLD_LEPTONICA_OTSU` (guarded by
+  `TestParityOCRGreyRescue`). **Intentional implementation difference:** the desktop app writes an
+  8-bit grey PNG, the extension draws through a canvas `grayscale(1)` filter and stays RGBA. Both
+  reach the same place - per-channel Otsu over three identical channels is one decision - and the
+  browser has no cheap way to emit 8-bit grey.
+- **Halftone screen rung** identical: the ladder's **last** rung, tried only after both grey rungs
+  returned nothing. It measures the period of the dot screen the picture is printed with and hands
+  Tesseract a copy low-passed with a Gaussian of `sigma = pitch / 4`, at the rescue confidence floor
+  and the engine-default thresholder. `screen.go` `ocrScreenSigmaDivisor` / `ocrScreenTile` /
+  `ocrScreenMinPitch` / `ocrScreenMaxPitch` / `ocrScreenMaxTiles` / `ocrScreenMinEnergy` /
+  `ocrScreenPeakFloor` / `ocrScreenTileFrac` == `ocr-screen.js` `OCR_SCREEN_*` (guarded by
+  `TestParityOCRScreenRung`, which also pins the rung's **position** after the grey ladder and the
+  fact that the sigma is derived from the measured pitch on both sides). The kernel is derived
+  rather than fixed because a screen's pitch depends on the press and on the scan resolution; the
+  measurements behind the divisor are in
+  [`DEV/research/ocr_halftone_2026-08-12.md`](../DEV/research/ocr_halftone_2026-08-12.md).
+  **Intentional implementation difference:** the desktop app convolves the 8-bit grey copy itself,
+  the extension applies CSS `blur(<sigma>px)` in the same canvas draw as `grayscale(1)`. CSS blur is
+  a Gaussian whose length *is* the standard deviation, so both build the same kernel.
+- **Additive screen sweep** identical: the same low-pass, spent on a page the ordinary pass *did*
+  read. The rescue ladder cannot reach that page - it fires only for an image with no plates at all,
+  and on a real comic the dialogue on clean balloons reads fine while the caption printed as a tint
+  does not - so `tesseract.go` `screenSweep` == `ocr-overlay.js` `screenSweep` runs on the opposite
+  branch. Three parts, all shared and all guarded by `TestParityOCRScreenRung`:
+  - **Trigger:** the detector restricted to the area no plate covers (`screenPitchOutside` ==
+    `screenPitch(.., covered)`), so the second recognition is spent only where there is screened area
+    the reader is not served on. A tile more than `ocrScreenTileCoverMax` == `OCR_SCREEN_TILE_COVER_MAX`
+    = `0.5` covered by an existing plate is dropped from the vote.
+  - **Merge:** every plate the ordinary pass produced survives untouched; a sweep plate joins it only
+    when the plates already accepted cover at most `ocrScreenMergeMaxOverlap` ==
+    `OCR_SCREEN_MERGE_MAX_OVERLAP` = `0.2` of *its own* area, measured as the **union** of the
+    overlaps. The union is what makes a candidate straddling two existing plates a duplicate; a
+    per-plate rule would see two halves under the bound and let it through.
+  - **Confidence:** the rescue floor, unchanged. Inherited rather than re-derived, and recorded as a
+    lower bound: the local prior is the rescue prior (nothing was found *in this region*) while a
+    wrong plate costs more here, landing on a page the reader is otherwise happy with.
+
+  The pass is additive because it is not better as a replacement - measured, it gains on screened
+  material (+47% and +18% confident words) and loses badly where there is no screen (16 confident
+  words to 0 on one cover), see
+  [`DEV/research/ocr_halftone_2026-08-12.md`](../DEV/research/ocr_halftone_2026-08-12.md) §5.
+  **Intentional implementation difference:** the extension multiplies its covered rectangles back up
+  by the upscale factor before the detector sees them, because `collectLines` has already divided its
+  blocks by it while the prepared image has not been downscaled. The Go app downscales after the
+  sweep, so there every rectangle is already in prepared-image coordinates.
 - **Plate font-fit factor** identical: `0.92` - `overlay.go` `fontFitFactor` == `ocr-overlay.js`
   `FONT_FIT` (guarded by `TestParityOCRFontFit`). Plate font-size = median line height x this factor;
   below `1.0` so translated text (often longer) has room before it overflows the block.
+
+- **Empty-result language report** identical in substance: when a pass recognized nothing at all,
+  both editions name the language data that was used - code plus catalog name, `tessdata.go`
+  `LangLabel` == `ocr-lang.js` `langLabel` - and say where to change it (`-ocr-lang` / the extension
+  popup). "No text found" is a true sentence about the data that was loaded and reads as a verdict on
+  the picture, which is the wrong lesson when an English recognizer was pointed at a Russian page.
+  Guarded by `TestParityOCRLangReport`. **Intentional difference in the trigger, not the message:**
+  the desktop reports once per book, at the end of a pass it knows is finished; the extension's queue
+  grows as the reader scrolls and never ends, so it speaks once `OCR_EMPTY_RUN_HINT (3)` images have
+  come back with nothing and none has yet carried text. There is no shared constant here - the
+  desktop's boundary is "the run finished".
 
 **Still divergent (tracked in the parity ticket):**
 
@@ -300,6 +365,57 @@ constants - changing either is a cross-edition change; update all rows together.
 |---|---|---|
 | Product site | `https://serzhyale.github.io/doc-html-translate/` | CLI splash [`app.go`](../internal/app/app.go) (`internal/app/splash/*.txt`), navbar [`projectURL`](../internal/htmlgen/navbar.go#L17), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
 | Feedback | `mailto:sza@ukr.net` | CLI splash [`app.go`](../internal/app/app.go), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
+
+### Report field labels
+
+Both editions hand the author a `key: value` block, one field per line, and both write it **in English
+whatever the interface language is** - the author reads one format, and a summary they cannot read is
+worse than none. The two blocks are produced independently, so the labels they share are pinned here:
+
+| Element | Go app | Extension |
+|---|---|---|
+| Producer | [`report.Environment`](../internal/report/environment.go) -> `environment.txt` in the archive | [`reportText`](../extension/src/diagnostics.js) -> the clipboard |
+| Shared labels | `edition`, `version`, `platform`, `interface language`, `ocr` | same five, same spelling |
+| Rest of the block | `ocr languages`, `ocr data dir`, `ollama model` | `user agent`, `auto reflow`, `theme`, `source language`, `ocr language`, `disabled hosts`, `last format`, `last pages`, `last error`, `last run at` |
+
+Renaming a shared label on one side only makes two reports that cannot be read the same way. Guarded by
+`TestParityReportFields`.
+
+### OCR lab evidence schema
+
+Not a shipped surface - a **developer** contract. The OCR visual-fidelity lab
+([`tools/ocrlab`](../tools/ocrlab/README.md)) grades both editions with one metrics package against one
+set of annotations, so both runners must describe a run in the same terms. Only the *shape* is pinned:
+strategic §6 accepts that the Tesseract CLI and tesseract.js recognize different text, and each edition
+is compared with the annotations rather than with the other's output.
+
+| Element | Go app | Extension |
+|---|---|---|
+| Schema | [`evidence.SchemaVersion`](../tools/ocrlab/evidence/evidence.go) | `SCHEMA_VERSION` in [`_ocrlab-evidence.mjs`](../extension/scripts/_ocrlab-evidence.mjs) |
+| Plate fields | `Plate` JSON tags, in declaration order | `makePlate()` keys, same order |
+| Stress cases | `StressCases` in [`stress.go`](../tools/ocrlab/runner/stress.go) | `STRESS_CASES` in [`ocrlab.mjs`](../extension/scripts/ocrlab.mjs) - same six names, texts, factors, directions |
+| Viewports | `Viewports` in [`browser.go`](../tools/ocrlab/runner/browser.go) | `VIEWPORTS` in `ocrlab.mjs` - 1280x800@1, 768x1024@1, 390x844@2 |
+| Geometry space | natural image pixels | natural image pixels |
+| Screenshot space | natural image pixels, resampled locally by `CropToImage` in [`browser.go`](../tools/ocrlab/runner/browser.go) | natural image pixels, resampled locally by `assembleToNatural` in [`_ocrlab-image.mjs`](../extension/scripts/_ocrlab-image.mjs) |
+| Clip slack | `evidence.ClipSlackPx` = 4 | `CLIP_SLACK_PX` = 4 |
+
+Both runners capture at the viewport's own resolution and do the mapping into image space themselves.
+Neither may ask the browser to render the clip at the natural size: measured on 2026-08-12, a
+`Page.captureScreenshot` reply past about four megabytes of base64 is dropped and takes the DevTools
+connection with it, which is why 17 of 45 scenes were recorded as extension crashes that were never
+crashes at all. The extension additionally captures in bands (`CaptureBandPx`) because its clip is the
+image rather than the viewport and can be arbitrarily tall; the Go runner captures the viewport and
+needs no equivalent. That is an **intentional difference**, not a gap to close.
+
+The clip slack decides what counts as a translation the reader cannot finish, which is one of the
+strategic spec's hard gates, so it has to mean the same thing in both editions. It is 4 px rather than
+the re-fit script's 1 px because `scrollHeight` and `clientHeight` are each rounded to an integer from a
+fractional layout: measured over the whole corpus on 2026-08-12, every plate a one-pixel rule called
+clipped overshot by 2 or 3 px with nothing actually hidden.
+
+Bump the schema version on **both** sides or neither. Guarded by `TestParityOCRLabEvidenceSchema` and by
+[`test/ocrlab-evidence.test.mjs`](../extension/test/ocrlab-evidence.test.mjs), which validates a run the
+Go runner actually emitted.
 
 ### Interface language set, and what the interface language must never touch
 
@@ -371,6 +487,14 @@ These are by design. Do not "sync" them without a decision - document changes he
   job with no translator racing it, so it has no reason to chunk and no counterpart. The scanned /
   image-only banner heuristic therefore judges the **first chunk** in JS but the **whole document** in Go -
   same 30%-of-pages-with-text rule, different sample.
+- **Sending logs to the author differs in shape, by decision.** The desktop editions keep a bounded
+  run-log store on disk ([`internal/report`](../internal/report/store.go)), pack it with the environment
+  summary and the last run's settings into one archive, and hand off to the user's mail program - the GUI
+  About button and the CLI `-report` flag. The extension only **copies a text summary** to the clipboard
+  ([`diagnostics.js`](../extension/src/diagnostics.js), the options page's "Copy diagnostics"), because the
+  browser sandbox hosts no run-log store worth archiving and no way to reveal a file or attach one
+  (ticket ADR-4). Neither edition uploads anything. The field labels the two do share are pinned in
+  [Report field labels](#report-field-labels).
 - **Progress bar** looks identical (3px accent bar) but means **reading progress** in Go vs
   **load/OCR progress** in the extension.
 - **OCR execution:** Go OCRs eagerly at conversion time, across a pool of `tesseract` processes

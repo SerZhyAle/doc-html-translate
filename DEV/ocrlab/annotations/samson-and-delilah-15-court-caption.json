@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "samson-and-delilah-15-court-caption",
+  "origin": "human",
+  "imageWidth": 760,
+  "imageHeight": 105,
+  "groups": [
+    {
+      "id": "band-caption",
+      "type": "caption",
+      "transcript": "IN THE COURT OF KING TARENT...",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        { "id": "c-1", "kind": "box", "points": [[59, 51], [654, 77]] }
+      ],
+      "bounds": { "id": "band-bounds", "kind": "box", "points": [[55, 47], [658, 81]] },
+      "replaceArea": { "id": "band-replace", "kind": "box", "points": [[30, 42], [730, 92]] }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "reviewerNote": "Real halftone scene, and a darker one than the scroll: the lettering sits on a saturated red dot screen whose tone falls between the ink and the paper, which is the case a global thresholder handles worst. Pitch 6 px in this crop, 12 px after the app's 2x upscale. Line geometry measured from the picture by luminance threshold and horizontal projection (temp/ocrscreen/lines), never from OCR; transcript read from the image by eye.",
+  "review": {
+    "annotatedBy": "agent claude-opus-5 (ink-projection geometry, transcript read from the image)",
+    "annotatedOn": "2026-08-12",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

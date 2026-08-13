@@ -132,6 +132,35 @@ func init() {
 		"  بند کرنے کے لیے Enter دبائیں.. (ہم دونوں جانتے ہیں کہ آپ ونڈو خود ہی بند کریں گے)",
 		"  按 Enter 关闭..（反正你也会直接关掉窗口）")
 
+	// -report: where the archive landed, and what did not fit into it.
+	Add("Report written to:",
+		"Отчёт записан в:",
+		"Звіт записано до:",
+		"Bericht geschrieben nach:",
+		"Rapporto scritto in:",
+		"Informe escrito en:",
+		"Rapport écrit dans :",
+		"Relatório escrito em:",
+		"تمت كتابة التقرير في:",
+		"रिपोर्ट यहाँ लिखी गई:",
+		"প্রতিবেদন এখানে লেখা হয়েছে:",
+		"رپورٹ یہاں لکھی گئی:",
+		"报告已写入：")
+
+	Add("%d older logs did not fit and were left out.",
+		"Старых журналов не поместилось: %d.",
+		"Старих журналів не вмістилося: %d.",
+		"%d ältere Protokolle passten nicht mehr hinein.",
+		"%d registri più vecchi sono rimasti fuori.",
+		"%d registros antiguos no cupieron.",
+		"%d journaux plus anciens n'ont pas pu être inclus.",
+		"%d registos antigos não couberam.",
+		"‏%d من السجلات القديمة لم تتسع.",
+		"%d पुराने लॉग नहीं समा सके।",
+		"%d পুরোনো লগ জায়গা পায়নি।",
+		"%d پرانے لاگ نہ سما سکے۔",
+		"有 %d 个较旧的日志未能放入。")
+
 	// The affirmative answer in each language, so a user typing their own "yes" is understood.
 	// "y"/"yes" are always accepted on top of these - the prompt shows [y/N] in most languages.
 	Add("y", "д", "т", "j", "s", "s", "o", "s", "ن", "ह", "হ", "ج", "是")

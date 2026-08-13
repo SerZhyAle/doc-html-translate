@@ -3,7 +3,10 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -12,34 +15,75 @@ var AppVersion = "dev"
 
 var stdoutIsTerminal = detectStdoutTerminal()
 
+// The run log is a side channel: the console output is unchanged whether or not one is
+// installed, and a failing sink is ignored rather than reported, because a log that cannot be
+// written must never be able to fail the conversion it was only observing.
+var (
+	runLogMu sync.Mutex
+	runLog   io.Writer
+)
+
+// StartRunLog tees every subsequent log line into w until StopRunLog.
+func StartRunLog(w io.Writer) {
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	runLog = w
+}
+
+// StopRunLog detaches the run log sink.
+func StopRunLog() {
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	runLog = nil
+}
+
+// emit prints console to dst and appends logLine to the run log when one is installed. The
+// two texts differ only where the console uses in-place redrawing, which a file must not
+// inherit. The write is done under the lock so concurrent loops cannot interleave a line.
+func emit(dst io.Writer, console, logLine string) {
+	fmt.Fprint(dst, console)
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	if runLog != nil {
+		_, _ = io.WriteString(runLog, logLine)
+	}
+}
+
 func ts() string {
 	return time.Now().Format("[15:04:05] ")
 }
 
 // Printf prints a timestamped message to stdout.
 func Printf(format string, args ...any) {
-	fmt.Printf(ts()+format, args...)
+	line := ts() + fmt.Sprintf(format, args...)
+	emit(os.Stdout, line, line)
 }
 
 // Println prints a timestamped line to stdout.
 func Println(s string) {
-	fmt.Printf(ts()+"%s\n", s)
+	line := ts() + s + "\n"
+	emit(os.Stdout, line, line)
 }
 
 // Errorf prints a timestamped message to stderr.
 func Errorf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, ts()+format, args...)
+	line := ts() + fmt.Sprintf(format, args...)
+	emit(os.Stderr, line, line)
 }
 
 // Progress prints an in-place progress update line (uses \r to overwrite, no trailing newline).
 func Progress(format string, args ...any) {
+	line := ts() + fmt.Sprintf(format, args...)
+	// The run log always gets a whole line: the padding an in-place update uses to erase the
+	// previous, longer text is noise once the text is in a file.
+	logLine := strings.TrimRight(line, " \n") + "\n"
 	if stdoutIsTerminal {
-		fmt.Printf("\r"+ts()+format, args...)
+		emit(os.Stdout, "\r"+line, logLine)
 		return
 	}
 	// In non-interactive outputs (pipes/UI log capture), carriage return creates
 	// broken lines. Emit normal timestamped lines instead.
-	fmt.Printf(ts()+format+"\n", args...)
+	emit(os.Stdout, line+"\n", logLine)
 }
 
 // StdoutIsTerminal reports whether stdout is an interactive console rather than a pipe, a

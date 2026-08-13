@@ -4,14 +4,20 @@
 // offers "Translate page".
 
 import { overlayImage, ocrLangToHtmlLang, makeBadge } from "./ocr-overlay.js";
+import { langLabel } from "./ocr-lang.js";
 
 const statusEl = document.getElementById("status");
 const barEl = document.getElementById("progress-bar");
 const textEl = document.getElementById("status-text");
 const mount = document.getElementById("ocr-mount");
 
-const msg = (key, fallback) => {
-  try { return chrome.i18n.getMessage(key) || fallback; } catch { return fallback; }
+// Trailing arguments fill {1}, {2}, .. the same way i18n.js's t() does, so a message file
+// written for one surface reads correctly on the other.
+const msg = (key, fallback, ...args) => {
+  let text = fallback;
+  try { text = chrome.i18n.getMessage(key) || fallback; } catch { text = fallback; }
+  if (args.length === 0) return text;
+  return text.replace(/\{(\d)\}/g, (m, i) => (args[i - 1] === undefined ? m : String(args[i - 1])));
 };
 
 function parseSrc() {
@@ -58,8 +64,10 @@ async function main() {
     document.documentElement.lang = ocrLangToHtmlLang(lang);
     setProgress(1);
     if (container.classList.contains("ocr-empty")) {
+      // Short on the picture, the reason on the status line: what looks like a verdict on the
+      // image is usually a verdict on the recognition language, which defaults to English.
       container.append(makeBadge(msg("ocrNoText", "No text found")));
-      setStatus(msg("ocrNoText", "No text found"));
+      setStatus(msg("ocrNoTextLang", "No text found using {1} - if this page is in another language, pick it in the extension popup.", langLabel(lang)));
     } else {
       setStatus(msg("ocrDone", "Done - use the browser's \"Translate page\""));
     }

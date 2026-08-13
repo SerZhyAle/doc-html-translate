@@ -47,6 +47,10 @@
     "message": "No text found",
     "description": "Shown when OCR finds no text in the image."
   },
+  "ocrNoTextLang": {
+    "message": "No text found using {1} - if this page is in another language, pick it in the extension popup.",
+    "description": "Shown when OCR finds no text: names the recognition language that was used. {1} is that language."
+  },
   "ocrLoadError": {
     "message": "Could not process this image.",
     "description": "Shown when the image cannot be loaded or OCR fails."
@@ -154,6 +158,14 @@
   "ttSaveHtml": {
     "message": "Save the current view as a standalone HTML file (keeps the translation if you translated the page)",
     "description": "Toolbar button tooltip."
+  },
+  "btnSaveFile": {
+    "message": "↓ File",
+    "description": "Toolbar button label - downloads the original file."
+  },
+  "btnSaveHtml": {
+    "message": "↓ HTML",
+    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "Feedback",
@@ -490,5 +502,21 @@
   "vBtnOpenOriginalPdf": {
     "message": "Open original PDF",
     "description": "Viewer runtime string."
+  },
+  "optAbout": {
+    "message": "About",
+    "description": "Options page: About block."
+  },
+  "btnCopyDiag": {
+    "message": "Copy diagnostics",
+    "description": "Options page: About block."
+  },
+  "optCopied": {
+    "message": "Copied",
+    "description": "Options page: About block."
+  },
+  "diagHint": {
+    "message": "Copies a short technical summary - no document text - so you can paste it into a mail to the author.",
+    "description": "Options page: About block."
   }
 }

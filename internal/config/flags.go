@@ -42,6 +42,7 @@ type Config struct {
 	OCRList          bool   // -ocr-langs: list installed/available OCR languages and exit
 	OCRDownload      string // -ocr-download <lang>: download an OCR language pack and exit
 	UILang           string // -ui-lang: interface language of the console output and the page chrome ("" = from the OS)
+	Report           bool   // -report: pack the recent run logs into an archive and exit
 	InputFile        string
 }
 
@@ -74,6 +75,7 @@ func ParseArgs(args []string) (Config, error) {
 	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the app's tessdata, then exit")
 	uiLang := fs.String("ui-lang", "", "interface language for the console output and the converted page's navigation "+
 		"(default: the Windows UI language); one of: "+strings.Join(i18n.Codes, " "))
+	report := fs.Bool("report", false, "pack the recent run logs plus an environment summary into an archive for the author, then exit")
 	version := fs.Bool("version", false, "print version and exit")
 
 	// flag writes both the usage block and any parse error to a single writer, but the two
@@ -82,8 +84,14 @@ func ParseArgs(args []string) (Config, error) {
 	// two happened, rather than second-guessing it by scanning args for "-h" ourselves.
 	var out bytes.Buffer
 	fs.SetOutput(&out)
+	fs.Usage = func() {
+		fmt.Fprint(fs.Output(), "Usage: doc-html-translate [flags] <file>\n\n"+
+			"Flags may be written before or after the file; both orders mean the same thing.\n"+
+			"A path that contains spaces needs quotes.\n\n")
+		fs.PrintDefaults()
+	}
 
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(permuteArgs(fs, args)); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			_, _ = os.Stdout.Write(out.Bytes())
 			return Config{}, ErrHelp
@@ -128,6 +136,7 @@ func ParseArgs(args []string) (Config, error) {
 		OCRList:          *ocrLangs,
 		OCRDownload:      *ocrDownload,
 		UILang:           *uiLang,
+		Report:           *report,
 	}
 
 	// First-click UX: running without any args enters the first-run flow - a
@@ -138,14 +147,76 @@ func ParseArgs(args []string) (Config, error) {
 		cfg.FirstRun = true
 	}
 
-	// Registration and OCR-management commands need no input file.
-	if !cfg.Register && !cfg.RegisterOpenWith && !cfg.Unregister && !cfg.FirstRun && !cfg.OCRList && cfg.OCRDownload == "" {
+	// Registration, OCR-management and report commands need no input file.
+	if !cfg.Register && !cfg.RegisterOpenWith && !cfg.Unregister && !cfg.FirstRun && !cfg.OCRList && !cfg.Report && cfg.OCRDownload == "" {
 		rest := fs.Args()
 		if len(rest) == 0 {
 			return Config{}, errors.New("input file is required unless -register is used")
+		}
+		// Everything past the first document used to be dropped without a word, which made the
+		// commonest Windows mistake - an unquoted path with a space in it - look like a missing
+		// file rather than a quoting error. One document per run is the real contract, so say so.
+		if len(rest) > 1 {
+			// Quoted with %s rather than %q: every path here is a Windows path, and %q doubles
+			// the backslashes, so the message would show the user something they never typed.
+			return Config{}, fmt.Errorf(`unexpected extra argument "%s" after "%s": this converts one document per run, `+
+				`and a path containing spaces needs quotes ("C:\My Book.epub")`, rest[1], rest[0])
 		}
 		cfg.InputFile = rest[0]
 	}
 
 	return cfg, nil
+}
+
+// permuteArgs moves operands behind the flags so that `doc-html-translate book.epub -ocr
+// -folder out` means what it says. Go's flag package stops at the first non-flag argument, so
+// in that order every flag after the path was collected as a trailing operand and silently
+// dropped: output landed beside the source, -force did nothing, and an explicit -max-cost
+// vanished. Flags-first invocations are unaffected - they permute to themselves.
+//
+// Arity is read from the FlagSet rather than guessed, so `-split 5000 book.epub` keeps its
+// value while `-ocr book.epub` does not swallow the path. An undefined flag consumes nothing
+// and is passed through to Parse, whose error message for it is the one worth showing. A
+// literal "--" ends flag parsing here exactly as it does in flag itself, which is how a file
+// whose name begins with a dash is passed.
+func permuteArgs(fs *flag.FlagSet, args []string) []string {
+	flags := make([]string, 0, len(args))
+	operands := make([]string, 0, 2)
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--" {
+			operands = append(operands, args[i+1:]...)
+			break
+		}
+		// A lone "-" and anything not starting with one is a document, not a switch - the
+		// same test flag's own parser applies before it stops.
+		if len(arg) < 2 || arg[0] != '-' {
+			operands = append(operands, arg)
+			continue
+		}
+		flags = append(flags, arg)
+		if strings.Contains(arg, "=") {
+			continue // -name=value carries its own value
+		}
+		f := fs.Lookup(strings.TrimLeft(arg, "-"))
+		if f == nil {
+			continue
+		}
+		if b, ok := f.Value.(interface{ IsBoolFlag() bool }); ok && b.IsBoolFlag() {
+			continue // -ocr, -force, .. never take a following token
+		}
+		if i+1 < len(args) {
+			i++
+			flags = append(flags, args[i])
+		}
+	}
+	if len(operands) == 0 {
+		return flags
+	}
+	// The operands are fenced off with "--" so a document named like a flag survives the
+	// second pass through Parse.
+	out := make([]string, 0, len(flags)+len(operands)+1)
+	out = append(out, flags...)
+	out = append(out, "--")
+	return append(out, operands...)
 }
