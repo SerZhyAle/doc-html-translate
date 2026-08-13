@@ -49,11 +49,10 @@ param(
     [string]$Csv,
     [string]$Out,
     [string]$ImportFolder = "msix/out/store-import",
-    # Fill empty DesktopScreenshotN cells with the per-locale image file names from -ImportFolder,
-    # so a locale that has no assets yet gets them attached by the import. Cells that already hold a
-    # value are never touched: Partner Center puts its own asset URLs there, and rewriting one
-    # detaches an image already uploaded to the dashboard. Off by default - a listing pass that only
-    # edits copy has no business near the asset rows.
+    # Accepted and ignored. It filled the DesktopScreenshotN cells with image file names, which
+    # Partner Center rejects ("The value you provided is not valid") - only its own asset URLs are
+    # valid there. Kept as a parameter so an old command line does not fail, and as a record of what
+    # was tried, since the folder full of correctly named images makes it look like it should work.
     [switch]$Screenshots,
     [string[]]$SkipFields = @(),
     [string[]]$Refresh = @(),
@@ -197,32 +196,13 @@ if (-not $FillNothing) {
     }
 }
 
-# Screenshots are attached by file name, and only where the locale has none. Partner Center's import
-# resolves a bare name against the images sitting beside the CSV in the folder it is given, which is
-# how a locale that was added with the package gets its first assets; a cell that already holds a
-# value holds the dashboard's own URL for an image already uploaded, and overwriting it detaches the
-# image. Order is the order of $shotKinds - the same three views in every language.
-$shotKinds = @("reading-view", "table-of-contents", "gui")
+# Screenshot cells are never written, and the reason is now measured rather than assumed. A pass that
+# put the image file names there - the names of the very files sitting beside the CSV in the import
+# folder - was rejected by Partner Center for all eleven new locales: "The value you provided is not
+# valid (reading-view-de.png)". The dashboard accepts only its own asset URLs in these cells, which
+# exist only after an image has been uploaded through the dashboard for that language. So a new
+# locale gets its screenshots in the UI, and they reach this file by the next export.
 $shots = 0
-if ($Screenshots -and -not $FillNothing) {
-    $dir = if ($ImportFolder -and (Test-Path $ImportFolder)) { $ImportFolder } else { (Join-Path (Get-Location) "tools/store") }
-    for ($r = 1; $r -lt $rows.Count; $r++) {
-        $row = $rows[$r]
-        if ($row[$fieldCol] -notmatch '^DesktopScreenshot(\d+)$') { continue }
-        $n = [int]$Matches[1]
-        if ($n -lt 1 -or $n -gt $shotKinds.Count) { continue }
-        foreach ($tag in $present) {
-            $c = [array]::IndexOf($header, $tag)
-            if ($c -lt 0 -or $c -ge $row.Count -or $row[$c] -ne "") { continue }
-            $name = "{0}-{1}.png" -f $shotKinds[$n - 1], $tag
-            if (-not (Test-Path (Join-Path $dir $name))) { continue }
-            $row[$c] = $name
-            $shots++
-        }
-        $rows[$r] = $row
-    }
-}
-
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Out) | Out-Null
 Write-Csv $rows $Out $newline $trailingNewline
 
