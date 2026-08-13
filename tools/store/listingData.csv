@@ -374,7 +374,7 @@ ReleaseNotes,3,Text,,"- Text recognized on a picture now covers the lettering it
 - 新增按钮可隐藏识别文字层，以便查看下方画面，随后再把文字调回来。
 - 既无文本层、也无法提取页面图像的 PDF，现在会如实说明，而不是声称 OCR 已关闭。
 - 本翻译为机器翻译且未经校对 - 更正请发送至 sza@ukr.net。"
-Title,4,Text,,doc-html-translate,Doc-HTML-Translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate
+Title,4,Text,,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate
 ShortTitle,5,Text,,,,,,,,,,,,,,
 SortTitle,6,Text,,,,,,,,,,,,,,
 VoiceTitle,7,Text,,,,,,,,,,,,,,
@@ -382,9 +382,9 @@ ShortDescription,8,Text,,"Convert EPUB, PDF, MOBI, comics and more to clean loca
 DevStudio,9,Text,,,,,,,,,,,,,,
 CopyrightTrademarkInformation,12,Text,,,,,,,,,,,,,,
 AdditionalLicenseTerms,13,Text,,,,,,,,,,,,,,
-DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3066937578673902250,,,,,,,,,,,
-DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3058795499902094003,,,,,,,,,,,
-DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3066937578673902250,reading-view-uk.png,reading-view-de.png,reading-view-it.png,reading-view-es.png,reading-view-fr.png,reading-view-pt-br.png,reading-view-ar.png,reading-view-hi.png,reading-view-bn.png,reading-view-ur.png,reading-view-zh-hans.png
+DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3058795499902094003,table-of-contents-uk.png,table-of-contents-de.png,table-of-contents-it.png,table-of-contents-es.png,table-of-contents-fr.png,table-of-contents-pt-br.png,table-of-contents-ar.png,table-of-contents-hi.png,table-of-contents-bn.png,table-of-contents-ur.png,table-of-contents-zh-hans.png
+DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,gui-en-us.png,gui-ru.png,gui-uk.png,gui-de.png,gui-it.png,gui-es.png,gui-fr.png,gui-pt-br.png,gui-ar.png,gui-hi.png,gui-bn.png,gui-ur.png,gui-zh-hans.png
 DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
 DesktopScreenshot5,104,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
 DesktopScreenshot6,105,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,

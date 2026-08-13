@@ -49,6 +49,12 @@ param(
     [string]$Csv,
     [string]$Out,
     [string]$ImportFolder = "msix/out/store-import",
+    # Fill empty DesktopScreenshotN cells with the per-locale image file names from -ImportFolder,
+    # so a locale that has no assets yet gets them attached by the import. Cells that already hold a
+    # value are never touched: Partner Center puts its own asset URLs there, and rewriting one
+    # detaches an image already uploaded to the dashboard. Off by default - a listing pass that only
+    # edits copy has no business near the asset rows.
+    [switch]$Screenshots,
     [string[]]$SkipFields = @(),
     [string[]]$Refresh = @(),
     [switch]$FillNothing
@@ -180,9 +186,38 @@ if (-not $FillNothing) {
             if ($row[$c] -ne "" -and -not $isRefresh) { continue }  # asset URLs live in these cells
             $value = $source[$tag][$field]
             if (-not $value) { continue }
-            if ($row[$c] -eq $value) { continue }
+            # -ceq, not -eq: PowerShell compares strings case-insensitively, so a correction that
+            # differs only in case - "doc-html-translate" to the reserved "Doc-HTML-Translate" - was
+            # silently treated as "already up to date" and never written.
+            if ($row[$c] -ceq $value) { continue }
             if ($row[$c] -ne "") { $refreshed++ } else { $filled++ }
             $row[$c] = $value
+        }
+        $rows[$r] = $row
+    }
+}
+
+# Screenshots are attached by file name, and only where the locale has none. Partner Center's import
+# resolves a bare name against the images sitting beside the CSV in the folder it is given, which is
+# how a locale that was added with the package gets its first assets; a cell that already holds a
+# value holds the dashboard's own URL for an image already uploaded, and overwriting it detaches the
+# image. Order is the order of $shotKinds - the same three views in every language.
+$shotKinds = @("reading-view", "table-of-contents", "gui")
+$shots = 0
+if ($Screenshots -and -not $FillNothing) {
+    $dir = if ($ImportFolder -and (Test-Path $ImportFolder)) { $ImportFolder } else { (Join-Path (Get-Location) "tools/store") }
+    for ($r = 1; $r -lt $rows.Count; $r++) {
+        $row = $rows[$r]
+        if ($row[$fieldCol] -notmatch '^DesktopScreenshot(\d+)$') { continue }
+        $n = [int]$Matches[1]
+        if ($n -lt 1 -or $n -gt $shotKinds.Count) { continue }
+        foreach ($tag in $present) {
+            $c = [array]::IndexOf($header, $tag)
+            if ($c -lt 0 -or $c -ge $row.Count -or $row[$c] -ne "") { continue }
+            $name = "{0}-{1}.png" -f $shotKinds[$n - 1], $tag
+            if (-not (Test-Path (Join-Path $dir $name))) { continue }
+            $row[$c] = $name
+            $shots++
         }
         $rows[$r] = $row
     }
@@ -197,7 +232,7 @@ if ($FillNothing) {
         -ForegroundColor $(if ($same) { "Green" } else { "Red" })
     if (-not $same) { exit 1 }
 } else {
-    Write-Host "filled $filled empty cells, refreshed $refreshed, across $($present.Count) locales -> $Out" -ForegroundColor Green
+    Write-Host "filled $filled empty cells, refreshed $refreshed, attached $shots screenshots, across $($present.Count) locales -> $Out" -ForegroundColor Green
 }
 
 if ($missing.Count) {
