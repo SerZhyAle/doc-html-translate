@@ -1,4 +1,4 @@
-﻿Field,ID,Type (Type),default,en-us,ru
+﻿Field,ID,Type (Type),default,en-us,ru,uk,de,it,es,fr,pt-br,ar,hi,bn,ur,zh-hans
 Description,2,Text,,"Turn your e-books and documents into clean, readable web pages - right on your PC, no account needed.
 
 doc-html-translate converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives
@@ -38,7 +38,253 @@ doc-html-translate конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT
 В комплекте и консольная программа (doc-html-translate), и небольшой графический запуск (doc-html-ui).
 pdftotext встроен в бинарник; для MOBI и AZW3 нужен установленный Calibre (только файлы без DRM).
 
-Без аккаунта, без рекламы, без телеметрии. Открытый исходный код: https://github.com/SerZhyAle/doc-html-translate"
+Без аккаунта, без рекламы, без телеметрии. Открытый исходный код: https://github.com/SerZhyAle/doc-html-translate","Перетворіть свої книжки й документи на чисті, читабельні вебсторінки - просто на своєму комп'ютері, без облікового запису.
+
+doc-html-translate перетворює EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архіви коміксів
+(CBZ, CBR, CB7, CBT) і зображення на чистий локальний HTML зі створеною навігацією та справжнім
+багаторівневим змістом. Відкрийте результат у будь-якому браузері й читайте - або одразу віддайте його
+вбудованому перекладу сторінки для безкоштовного перекладу будь-якою мовою, без ключа API.
+
+Вбудована читалка додає теми light / sepia / dark / night, керування розміром і гарнітурою шрифту та
+запам'ятовує, де ви зупинилися. Можна отримати одну довгу сторінку або розділи зі змістом; повторне
+відкриття вже сконвертованої книжки миттєве.
+
+Необов'язкове розпізнавання тексту на зображеннях працює з картинками та відсканованими сторінками
+(англійська в комплекті, інші мови на вимогу) і може перекласти все - через Google Cloud Translation API
+або цілком локальну модель Ollama, щоб ніщо не залишало ваш комп'ютер.
+
+Інтерфейс говорить 13 мовами: англійська, російська, українська, німецька, італійська, іспанська,
+французька, португальська, арабська, гінді, бенгальська, урду та китайська.
+
+Великі PDF лишаються швидкими, відскановані сторінки обробляються, а безліч текстових кодувань просто
+працює. У пакеті є і консольна програма (doc-html-translate), і невеликий GUI (doc-html-ui). pdftotext
+вбудований у бінарник; для MOBI та AZW3 потрібен встановлений Calibre (лише файли без DRM).
+
+Без облікового запису, без реклами, без телеметрії. Відкритий код: https://github.com/SerZhyAle/doc-html-translate","Machen Sie aus Ihren E-Books und Dokumenten saubere, lesbare Webseiten - direkt auf Ihrem PC, ohne Konto.
+
+doc-html-translate wandelt EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, Comic-Archive
+(CBZ, CBR, CB7, CBT) und Bilder in sauberes lokales HTML um, mit erzeugter Navigation und einem echten
+mehrstufigen Inhaltsverzeichnis. Öffnen Sie das Ergebnis in einem beliebigen Browser und lesen Sie -
+oder übergeben Sie es direkt der Seitenübersetzung des Browsers, für eine kostenlose Übersetzung in jede
+Sprache, ganz ohne Schlüssel.
+
+Der eingebaute Reader bringt Light-, Sepia-, Dark- und Night-Themes, Schriftgröße und Schriftart mit und
+merkt sich, wo Sie aufgehört haben. Wahlweise eine lange Einzelseite oder Kapitel mit
+Inhaltsverzeichnis; ein bereits konvertiertes Buch öffnet sich sofort wieder.
+
+Die optionale Texterkennung liest Text in Bildern und gescannten Seiten (Englisch ist enthalten, weitere
+Sprachen auf Wunsch) und kann alles übersetzen - über die Google Cloud Translation API oder ein
+vollständig lokales Ollama-Modell, sodass nichts Ihren Rechner verlassen muss.
+
+Die Oberfläche spricht 13 Sprachen: Englisch, Russisch, Ukrainisch, Deutsch, Italienisch, Spanisch,
+Französisch, Portugiesisch, Arabisch, Hindi, Bengalisch, Urdu und Chinesisch.
+
+Große PDFs bleiben schnell, gescannte Seiten werden verarbeitet, und viele Textkodierungen
+funktionieren einfach. Das Paket enthält ein Kommandozeilenwerkzeug (doc-html-translate) und eine kleine
+Oberfläche (doc-html-ui). pdftotext steckt in der Binärdatei; MOBI und AZW3 brauchen ein installiertes
+Calibre (nur Dateien ohne DRM).
+
+Kein Konto, keine Werbung, keine Telemetrie. Open Source: https://github.com/SerZhyAle/doc-html-translate","Trasforma i tuoi e-book e documenti in pagine web pulite e leggibili - direttamente sul tuo PC, senza account.
+
+doc-html-translate converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivi di fumetti
+(CBZ, CBR, CB7, CBT) e immagini in HTML locale pulito, con navigazione generata e un vero indice a più
+livelli. Apri il risultato in qualsiasi browser e leggi - oppure passalo direttamente alla traduzione di
+pagina del browser, per una traduzione gratuita in qualunque lingua, senza chiavi.
+
+Il lettore integrato aggiunge i temi light / sepia / dark / night, il controllo di dimensione e famiglia
+del carattere e ricorda dove ti sei fermato. Scegli un'unica pagina lunga oppure i capitoli con l'indice;
+riaprire un libro già convertito è immediato.
+
+L'OCR opzionale riconosce il testo dentro le immagini e le pagine scansionate (inglese incluso, altre
+lingue su richiesta) e può tradurre tutto - tramite la Google Cloud Translation API o un modello Ollama
+completamente locale, così nulla deve lasciare il tuo computer.
+
+L'interfaccia parla 13 lingue: inglese, russo, ucraino, tedesco, italiano, spagnolo, francese,
+portoghese, arabo, hindi, bengalese, urdu e cinese.
+
+I PDF grandi restano veloci, le pagine scansionate sono gestite e moltissime codifiche di testo
+funzionano senza pensarci. Il pacchetto contiene uno strumento a riga di comando (doc-html-translate) e
+una piccola interfaccia (doc-html-ui). pdftotext è incluso nel binario; MOBI e AZW3 richiedono Calibre
+installato (solo file senza DRM).
+
+Nessun account, nessuna pubblicità, nessuna telemetria. Open source: https://github.com/SerZhyAle/doc-html-translate","Convierte tus libros electrónicos y documentos en páginas web limpias y legibles - en tu propio PC, sin cuenta.
+
+doc-html-translate convierte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivos de cómic
+(CBZ, CBR, CB7, CBT) e imágenes en HTML local limpio, con navegación generada y un índice real de varios
+niveles. Abre el resultado en cualquier navegador y lee - o entrégaselo directamente a la traducción de
+página del navegador, para una traducción gratuita a cualquier idioma y sin claves.
+
+El lector integrado añade los temas light / sepia / dark / night, control del tamaño y la familia de
+letra, y recuerda dónde lo dejaste. Elige una sola página larga o capítulos con índice; volver a abrir un
+libro ya convertido es instantáneo.
+
+El OCR opcional reconoce el texto de las imágenes y las páginas escaneadas (inglés incluido, más idiomas
+a petición) y puede traducirlo todo - mediante la API de Google Cloud Translation o un modelo Ollama
+totalmente local, para que nada tenga que salir de tu equipo.
+
+La interfaz habla 13 idiomas: inglés, ruso, ucraniano, alemán, italiano, español, francés, portugués,
+árabe, hindi, bengalí, urdu y chino.
+
+Los PDF grandes siguen siendo rápidos, las páginas escaneadas se manejan y un montón de codificaciones de
+texto simplemente funcionan. El paquete incluye una herramienta de línea de comandos (doc-html-translate)
+y una pequeña interfaz (doc-html-ui). pdftotext va dentro del binario; MOBI y AZW3 necesitan Calibre
+instalado (solo archivos sin DRM).
+
+Sin cuenta, sin anuncios, sin telemetría. Código abierto: https://github.com/SerZhyAle/doc-html-translate","Transformez vos livres numériques et vos documents en pages web propres et lisibles - sur votre PC, sans compte.
+
+doc-html-translate convertit EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archives de bandes
+dessinées (CBZ, CBR, CB7, CBT) et images en HTML local propre, avec une navigation générée et une
+véritable table des matières à plusieurs niveaux. Ouvrez le résultat dans n'importe quel navigateur et
+lisez - ou confiez-le directement à la traduction de page du navigateur, pour une traduction gratuite
+dans n'importe quelle langue, sans clé.
+
+Le lecteur intégré ajoute les thèmes light / sepia / dark / night, le réglage de la taille et de la
+police, et retient où vous vous êtes arrêté. Choisissez une seule longue page ou des chapitres avec table
+des matières ; rouvrir un livre déjà converti est instantané.
+
+L'OCR facultatif reconnaît le texte dans les images et les pages scannées (l'anglais est fourni, les
+autres langues à la demande) et peut tout traduire - via l'API Google Cloud Translation ou un modèle
+Ollama entièrement local, pour que rien ne quitte votre machine.
+
+L'interface parle 13 langues : anglais, russe, ukrainien, allemand, italien, espagnol, français,
+portugais, arabe, hindi, bengali, ourdou et chinois.
+
+Les gros PDF restent rapides, les pages scannées sont prises en charge et une large gamme d'encodages de
+texte fonctionne sans réglage. Le paquet contient un outil en ligne de commande (doc-html-translate) et
+une petite interface (doc-html-ui). pdftotext est inclus dans le binaire ; MOBI et AZW3 nécessitent
+Calibre installé (fichiers sans DRM uniquement).
+
+Pas de compte, pas de publicité, pas de télémétrie. Open source : https://github.com/SerZhyAle/doc-html-translate","Transforme os seus livros digitais e documentos em páginas web limpas e legíveis - no seu próprio PC, sem conta.
+
+O doc-html-translate converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, arquivos de banda
+desenhada (CBZ, CBR, CB7, CBT) e imagens em HTML local limpo, com navegação gerada e um sumário real de
+vários níveis. Abra o resultado em qualquer navegador e leia - ou entregue-o diretamente à tradução de
+página do navegador, para uma tradução gratuita em qualquer idioma e sem chaves.
+
+O leitor integrado acrescenta os temas light / sepia / dark / night, o controlo do tamanho e da família
+da letra, e lembra-se de onde parou. Escolha uma única página longa ou capítulos com sumário; reabrir um
+livro já convertido é instantâneo.
+
+O OCR opcional reconhece o texto dentro de imagens e páginas digitalizadas (inglês incluído, outros
+idiomas a pedido) e pode traduzir tudo - através da API do Google Cloud Translation ou de um modelo
+Ollama totalmente local, para que nada precise de sair do seu computador.
+
+A interface fala 13 idiomas: inglês, russo, ucraniano, alemão, italiano, espanhol, francês, português,
+árabe, hindi, bengali, urdu e chinês.
+
+PDFs grandes continuam rápidos, páginas digitalizadas são tratadas e uma vasta gama de codificações de
+texto simplesmente funciona. O pacote traz uma ferramenta de linha de comandos (doc-html-translate) e uma
+pequena interface (doc-html-ui). O pdftotext está dentro do binário; MOBI e AZW3 precisam do Calibre
+instalado (apenas ficheiros sem DRM).
+
+Sem conta, sem anúncios, sem telemetria. Código aberto: https://github.com/SerZhyAle/doc-html-translate","حوّل كتبك ومستنداتك إلى صفحات ويب نظيفة وسهلة القراءة - على جهازك نفسه، دون حساب.
+
+يحوّل doc-html-translate ملفات EPUB وPDF وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML وأرشيفات القصص
+المصورة (CBZ وCBR وCB7 وCBT) والصور إلى HTML محلي نظيف، مع تنقّل مُولَّد وفهرس حقيقي متعدد المستويات.
+افتح النتيجة في أي متصفح واقرأ - أو سلّمها مباشرة إلى ترجمة الصفحة في متصفحك للحصول على ترجمة مجانية إلى
+أي لغة، دون مفتاح.
+
+يضيف القارئ المدمج سمات light وsepia وdark وnight، والتحكم في حجم الخط ونوعه، ويتذكر أين توقفت. اختر
+صفحة واحدة طويلة أو فصولًا مع فهرس؛ وإعادة فتح كتاب سبق تحويله فورية.
+
+يتعرّف التعرف الضوئي الاختياري على النص داخل الصور والصفحات الممسوحة ضوئيًا (الإنجليزية مضمّنة وبقية
+اللغات عند الطلب)، ويمكنه ترجمة كل شيء - عبر Google Cloud Translation API أو نموذج Ollama محلي بالكامل،
+فلا يضطر أي شيء إلى مغادرة جهازك.
+
+تتحدث الواجهة ثلاث عشرة لغة: الإنجليزية والروسية والأوكرانية والألمانية والإيطالية والإسبانية والفرنسية
+والبرتغالية والعربية والهندية والبنغالية والأردية والصينية.
+
+تبقى ملفات PDF الكبيرة سريعة، وتُعالَج الصفحات الممسوحة ضوئيًا، وتعمل مجموعة واسعة من ترميزات النصوص من
+تلقاء نفسها. تضم الحزمة أداة سطر أوامر (doc-html-translate) وواجهة رسومية صغيرة (doc-html-ui). أداة
+pdftotext مضمّنة داخل الملف التنفيذي؛ أما MOBI وAZW3 فتحتاج إلى تثبيت Calibre (الملفات الخالية من
+الحماية الرقمية فقط).
+
+لا حساب ولا إعلانات ولا تتبّع. مفتوح المصدر: https://github.com/SerZhyAle/doc-html-translate","अपनी ई-पुस्तकों और दस्तावेज़ों को साफ़, पढ़ने योग्य वेब पृष्ठों में बदलें - अपने ही कंप्यूटर पर, बिना किसी खाते के।
+
+doc-html-translate EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, कॉमिक संग्रह (CBZ, CBR, CB7,
+CBT) और छवियों को साफ़ स्थानीय HTML में बदलता है, जिसमें बनी हुई नेविगेशन और असली बहुस्तरीय विषय-सूची
+होती है। परिणाम किसी भी ब्राउज़र में खोलकर पढ़ें - या उसे सीधे ब्राउज़र के अपने पृष्ठ अनुवाद को सौंप दें
+और बिना किसी कुंजी के किसी भी भाषा में मुफ़्त अनुवाद पाएँ।
+
+अंतर्निहित रीडर light / sepia / dark / night थीम, पाठ का आकार और फ़ॉन्ट नियंत्रण जोड़ता है और याद रखता
+है कि आप कहाँ रुके थे। एक लंबा पृष्ठ चुनें या विषय-सूची सहित अध्याय; पहले से बदली गई पुस्तक दोबारा खोलना
+तुरंत होता है।
+
+वैकल्पिक OCR चित्रों और स्कैन किए गए पृष्ठों के भीतर का पाठ पहचानता है (अंग्रेज़ी साथ में, बाकी भाषाएँ
+माँग पर) और सब कुछ अनुवाद कर सकता है - Google Cloud Translation API से या पूरी तरह स्थानीय Ollama मॉडल
+से, ताकि कुछ भी आपके कंप्यूटर से बाहर न जाए।
+
+इंटरफ़ेस 13 भाषाएँ बोलता है: अंग्रेज़ी, रूसी, यूक्रेनी, जर्मन, इतालवी, स्पेनी, फ़्रेंच, पुर्तगाली,
+अरबी, हिन्दी, बांग्ला, उर्दू और चीनी।
+
+बड़े PDF तेज़ बने रहते हैं, स्कैन किए गए पृष्ठ संभाले जाते हैं, और तमाम पाठ एन्कोडिंग यूँ ही काम करती
+हैं। पैकेज में एक कमांड-लाइन उपकरण (doc-html-translate) और एक छोटा GUI (doc-html-ui), दोनों हैं।
+pdftotext बाइनरी के भीतर ही है; MOBI और AZW3 के लिए Calibre स्थापित होना चाहिए (केवल DRM-रहित फ़ाइलें)।
+
+कोई खाता नहीं, कोई विज्ञापन नहीं, कोई टेलीमेट्री नहीं। मुक्त स्रोत: https://github.com/SerZhyAle/doc-html-translate","আপনার ই-বই আর নথিগুলিকে পরিচ্ছন্ন, পড়ার উপযোগী ওয়েব পৃষ্ঠায় বদলে নিন - নিজের কম্পিউটারেই, কোনও অ্যাকাউন্ট ছাড়াই।
+
+doc-html-translate EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, কমিক সংরক্ষণাগার (CBZ, CBR,
+CB7, CBT) ও ছবিকে পরিচ্ছন্ন স্থানীয় HTML-এ রূপান্তর করে, সঙ্গে তৈরি নেভিগেশন ও সত্যিকারের বহুস্তরের
+সূচিপত্র। ফলাফল যেকোনও ব্রাউজারে খুলে পড়ুন - অথবা সরাসরি ব্রাউজারের নিজস্ব পৃষ্ঠা-অনুবাদে দিন এবং কোনও
+কী ছাড়াই যেকোনও ভাষায় বিনামূল্যে অনুবাদ পান।
+
+অন্তর্নির্মিত রিডার light / sepia / dark / night থিম, লেখার আকার ও ফন্ট নিয়ন্ত্রণ যোগ করে এবং মনে রাখে
+আপনি কোথায় থেমেছিলেন। একটিমাত্র লম্বা পৃষ্ঠা বাছুন, বা সূচিপত্রসহ অধ্যায়; আগে রূপান্তরিত বই আবার খোলা
+তাৎক্ষণিক।
+
+ঐচ্ছিক OCR ছবি ও স্ক্যান করা পৃষ্ঠার ভিতরের লেখা শনাক্ত করে (ইংরেজি সঙ্গে দেওয়া, বাকি ভাষা চাহিদামতো)
+এবং সব কিছু অনুবাদ করতে পারে - Google Cloud Translation API দিয়ে, বা সম্পূর্ণ স্থানীয় Ollama মডেল
+দিয়ে, যাতে কিছুই আপনার যন্ত্র থেকে বেরোতে না হয়।
+
+ইন্টারফেস ১৩টি ভাষায় কথা বলে: ইংরেজি, রুশ, ইউক্রেনীয়, জার্মান, ইতালীয়, স্পেনীয়, ফরাসি, পর্তুগিজ,
+আরবি, হিন্দি, বাংলা, উর্দু ও চীনা।
+
+বড় PDF দ্রুতই থাকে, স্ক্যান করা পৃষ্ঠা সামলানো হয়, আর নানা রকম টেক্সট এনকোডিং এমনিতেই কাজ করে।
+প্যাকেজে একটি কমান্ড-লাইন সরঞ্জাম (doc-html-translate) ও একটি ছোট GUI (doc-html-ui) দুটোই আছে।
+pdftotext বাইনারির ভিতরেই আছে; MOBI ও AZW3-এর জন্য Calibre ইনস্টল থাকা দরকার (কেবল DRM-মুক্ত ফাইল)।
+
+অ্যাকাউন্ট নেই, বিজ্ঞাপন নেই, টেলিমেট্রি নেই। মুক্ত সোর্স: https://github.com/SerZhyAle/doc-html-translate","اپنی ای بکس اور دستاویزات کو صاف ستھرے، پڑھنے کے قابل ویب صفحات میں بدلیں - اپنے ہی کمپیوٹر پر، بغیر کسی اکاؤنٹ کے۔
+
+‏doc-html-translate ‏EPUB، PDF، MOBI، AZW3، FB2، RTF، TXT، Markdown، HTML، کامک آرکائیوز (CBZ، CBR،
+CB7، CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہے، ساتھ میں تیار شدہ نیویگیشن اور اصل کثیر سطحی فہرست۔
+نتیجہ کسی بھی براؤزر میں کھول کر پڑھیں - یا اسے سیدھا براؤزر کے اپنے صفحہ ترجمے کے حوالے کر دیں اور بغیر
+کسی کلید کے کسی بھی زبان میں مفت ترجمہ حاصل کریں۔
+
+بلٹ اِن ریڈر light / sepia / dark / night تھیمز، متن کے سائز اور فونٹ کا کنٹرول دیتا ہے اور یاد رکھتا ہے
+کہ آپ کہاں رکے تھے۔ ایک لمبا صفحہ چنیں یا فہرست کے ساتھ ابواب؛ پہلے سے تبدیل شدہ کتاب دوبارہ کھولنا فوری
+ہے۔
+
+اختیاری او سی آر تصاویر اور اسکین شدہ صفحات کے اندر کا متن پہچانتا ہے (انگریزی شامل ہے، باقی زبانیں طلب
+پر) اور سب کچھ ترجمہ کر سکتا ہے - Google Cloud Translation API سے یا مکمل طور پر مقامی Ollama ماڈل سے،
+تاکہ کچھ بھی آپ کی مشین سے باہر نہ جائے۔
+
+انٹرفیس 13 زبانیں بولتا ہے: انگریزی، روسی، یوکرینی، جرمن، اطالوی، ہسپانوی، فرانسیسی، پرتگالی، عربی،
+ہندی، بنگالی، اردو اور چینی۔
+
+بڑی PDF فائلیں تیز رہتی ہیں، اسکین شدہ صفحات سنبھال لیے جاتے ہیں، اور متن کی بہت سی انکوڈنگز بس چل جاتی
+ہیں۔ پیکیج میں کمانڈ لائن پروگرام (doc-html-translate) اور ایک چھوٹا GUI (doc-html-ui) دونوں شامل ہیں۔
+‏pdftotext بائنری کے اندر ہی ہے؛ MOBI اور AZW3 کے لیے Calibre نصب ہونا چاہیے (صرف DRM سے پاک فائلیں)۔
+
+نہ اکاؤنٹ، نہ اشتہار، نہ ٹیلی میٹری۔ اوپن سورس: https://github.com/SerZhyAle/doc-html-translate","把你的电子书和文档变成干净、易读的网页 - 就在自己的电脑上，无需账号。
+
+doc-html-translate 可把 EPUB、PDF、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML、漫画压缩包
+（CBZ、CBR、CB7、CBT）和图片转换为干净的本地 HTML，并生成导航和真正的多级目录。用任意浏览器打开结果即可
+阅读 - 或者直接交给浏览器自带的页面翻译，免费译成任何语言，不需要密钥。
+
+内置阅读器提供 light / sepia / dark / night 主题、字号与字体控制，并记住你读到哪里。可以选择一个长长的
+单页，也可以保留带目录的章节；重新打开已转换过的书籍是瞬间完成的。
+
+可选的图片文字识别能读出图片和扫描页中的文字（内置英语，其他语言按需下载），并可翻译全部内容 - 通过
+Google Cloud Translation API，或者完全本地的 Ollama 模型，这样任何内容都不必离开你的电脑。
+
+界面提供 13 种语言：英语、俄语、乌克兰语、德语、意大利语、西班牙语、法语、葡萄牙语、阿拉伯语、印地语、
+孟加拉语、乌尔都语和中文。
+
+大体积 PDF 依然流畅，扫描页得到妥善处理，各种文本编码都能直接工作。软件包同时包含命令行程序
+（doc-html-translate）和一个小巧的图形界面（doc-html-ui）。pdftotext 已内置于可执行文件中；MOBI 和
+AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
+
+没有账号，没有广告，没有遥测。开源地址：https://github.com/SerZhyAle/doc-html-translate"
 ReleaseNotes,3,Text,,"- Text recognized on a picture now covers the lettering it replaces. Until now the replacement was painted on a patch shaped like the words themselves, so the original stayed visible around it and both layers were readable at once.
 - A screenshot, a form or a list is no longer buried under one giant patch. A plate that spans most of the picture is split back into the lines it was built from, so the page keeps its own layout and nothing that was read is lost.
 - If you do not choose an OCR language, the app now reads the writing system on the page. Where it has the data it recognizes the page in that language; where it does not it adds no text at all and names the language pack to install - instead of covering a Russian screenshot in transliterated nonsense.
@@ -51,455 +297,461 @@ ReleaseNotes,3,Text,,"- Text recognized on a picture now covers the lettering it
 - Надписи на насыщенной графике, на печатном растре и крупная дисплейная капитель распознаются там, где прежние версии не находили ничего.
 - Комиксы и сканы: у каждой страницы теперь свой якорь и поле перехода по страницам, так что на страницу 30 можно дать ссылку, а не тянуть полосу прокрутки.
 - Новая кнопка прячет слой распознанного текста, чтобы посмотреть рисунок под ним и вернуть текст обратно.
-- PDF, у которого нет ни текстового слоя, ни извлекаемой картинки страницы, теперь так и пишет, а не заявляет, что OCR отключён."
-Title,4,Text,,doc-html-translate,Doc-HTML-Translate
-ShortTitle,5,Text,,,
-SortTitle,6,Text,,,
-VoiceTitle,7,Text,,,
-ShortDescription,8,Text,,"Convert EPUB, PDF, MOBI, comics and more to clean local HTML with a real table of contents, OCR and optional translation.","Конвертирует EPUB, PDF, MOBI, комиксы и другое в чистый локальный HTML с настоящим оглавлением, OCR и переводом."
-DevStudio,9,Text,,,
-CopyrightTrademarkInformation,12,Text,,,
-AdditionalLicenseTerms,13,Text,,,
-DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3066937578673902250
-DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3058795499902094003
-DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot5,104,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot6,105,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot7,106,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot8,107,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot9,108,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot10,109,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot11,110,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot12,111,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot13,112,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot14,113,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot15,114,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot16,115,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot17,116,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot18,117,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot19,118,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot20,119,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot21,120,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot22,121,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot23,122,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot24,123,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot25,124,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot26,125,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot27,126,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot28,127,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot29,128,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshot30,129,Relative path (or URL to file in Partner Center),,,
-DesktopScreenshotCaption1,150,Text,,,
-DesktopScreenshotCaption2,151,Text,,,
-DesktopScreenshotCaption3,152,Text,,,
-DesktopScreenshotCaption4,153,Text,,,
-DesktopScreenshotCaption5,154,Text,,,
-DesktopScreenshotCaption6,155,Text,,,
-DesktopScreenshotCaption7,156,Text,,,
-DesktopScreenshotCaption8,157,Text,,,
-DesktopScreenshotCaption9,158,Text,,,
-DesktopScreenshotCaption10,159,Text,,,
-DesktopScreenshotCaption11,160,Text,,,
-DesktopScreenshotCaption12,161,Text,,,
-DesktopScreenshotCaption13,162,Text,,,
-DesktopScreenshotCaption14,163,Text,,,
-DesktopScreenshotCaption15,164,Text,,,
-DesktopScreenshotCaption16,165,Text,,,
-DesktopScreenshotCaption17,166,Text,,,
-DesktopScreenshotCaption18,167,Text,,,
-DesktopScreenshotCaption19,168,Text,,,
-DesktopScreenshotCaption20,169,Text,,,
-DesktopScreenshotCaption21,170,Text,,,
-DesktopScreenshotCaption22,171,Text,,,
-DesktopScreenshotCaption23,172,Text,,,
-DesktopScreenshotCaption24,173,Text,,,
-DesktopScreenshotCaption25,174,Text,,,
-DesktopScreenshotCaption26,175,Text,,,
-DesktopScreenshotCaption27,176,Text,,,
-DesktopScreenshotCaption28,177,Text,,,
-DesktopScreenshotCaption29,178,Text,,,
-DesktopScreenshotCaption30,179,Text,,,
-MobileScreenshot1,200,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot2,201,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot3,202,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot4,203,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot5,204,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot6,205,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot7,206,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot8,207,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot9,208,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot10,209,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot11,210,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot12,211,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot13,212,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot14,213,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot15,214,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot16,215,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot17,216,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot18,217,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot19,218,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot20,219,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot21,220,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot22,221,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot23,222,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot24,223,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot25,224,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot26,225,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot27,226,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot28,227,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot29,228,Relative path (or URL to file in Partner Center),,,
-MobileScreenshot30,229,Relative path (or URL to file in Partner Center),,,
-MobileScreenshotCaption1,250,Text,,,
-MobileScreenshotCaption2,251,Text,,,
-MobileScreenshotCaption3,252,Text,,,
-MobileScreenshotCaption4,253,Text,,,
-MobileScreenshotCaption5,254,Text,,,
-MobileScreenshotCaption6,255,Text,,,
-MobileScreenshotCaption7,256,Text,,,
-MobileScreenshotCaption8,257,Text,,,
-MobileScreenshotCaption9,258,Text,,,
-MobileScreenshotCaption10,259,Text,,,
-MobileScreenshotCaption11,260,Text,,,
-MobileScreenshotCaption12,261,Text,,,
-MobileScreenshotCaption13,262,Text,,,
-MobileScreenshotCaption14,263,Text,,,
-MobileScreenshotCaption15,264,Text,,,
-MobileScreenshotCaption16,265,Text,,,
-MobileScreenshotCaption17,266,Text,,,
-MobileScreenshotCaption18,267,Text,,,
-MobileScreenshotCaption19,268,Text,,,
-MobileScreenshotCaption20,269,Text,,,
-MobileScreenshotCaption21,270,Text,,,
-MobileScreenshotCaption22,271,Text,,,
-MobileScreenshotCaption23,272,Text,,,
-MobileScreenshotCaption24,273,Text,,,
-MobileScreenshotCaption25,274,Text,,,
-MobileScreenshotCaption26,275,Text,,,
-MobileScreenshotCaption27,276,Text,,,
-MobileScreenshotCaption28,277,Text,,,
-MobileScreenshotCaption29,278,Text,,,
-MobileScreenshotCaption30,279,Text,,,
-XboxScreenshot1,300,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot2,301,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot3,302,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot4,303,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot5,304,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot6,305,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot7,306,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot8,307,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot9,308,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot10,309,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot11,310,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot12,311,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot13,312,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot14,313,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot15,314,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot16,315,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot17,316,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot18,317,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot19,318,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot20,319,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot21,320,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot22,321,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot23,322,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot24,323,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot25,324,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot26,325,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot27,326,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot28,327,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot29,328,Relative path (or URL to file in Partner Center),,,
-XboxScreenshot30,329,Relative path (or URL to file in Partner Center),,,
-XboxScreenshotCaption1,350,Text,,,
-XboxScreenshotCaption2,351,Text,,,
-XboxScreenshotCaption3,352,Text,,,
-XboxScreenshotCaption4,353,Text,,,
-XboxScreenshotCaption5,354,Text,,,
-XboxScreenshotCaption6,355,Text,,,
-XboxScreenshotCaption7,356,Text,,,
-XboxScreenshotCaption8,357,Text,,,
-XboxScreenshotCaption9,358,Text,,,
-XboxScreenshotCaption10,359,Text,,,
-XboxScreenshotCaption11,360,Text,,,
-XboxScreenshotCaption12,361,Text,,,
-XboxScreenshotCaption13,362,Text,,,
-XboxScreenshotCaption14,363,Text,,,
-XboxScreenshotCaption15,364,Text,,,
-XboxScreenshotCaption16,365,Text,,,
-XboxScreenshotCaption17,366,Text,,,
-XboxScreenshotCaption18,367,Text,,,
-XboxScreenshotCaption19,368,Text,,,
-XboxScreenshotCaption20,369,Text,,,
-XboxScreenshotCaption21,370,Text,,,
-XboxScreenshotCaption22,371,Text,,,
-XboxScreenshotCaption23,372,Text,,,
-XboxScreenshotCaption24,373,Text,,,
-XboxScreenshotCaption25,374,Text,,,
-XboxScreenshotCaption26,375,Text,,,
-XboxScreenshotCaption27,376,Text,,,
-XboxScreenshotCaption28,377,Text,,,
-XboxScreenshotCaption29,378,Text,,,
-XboxScreenshotCaption30,379,Text,,,
-HolographicScreenshot1,400,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot2,401,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot3,402,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot4,403,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot5,404,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot6,405,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot7,406,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot8,407,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot9,408,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot10,409,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot11,410,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot12,411,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot13,412,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot14,413,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot15,414,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot16,415,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot17,416,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot18,417,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot19,418,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot20,419,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot21,420,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot22,421,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot23,422,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot24,423,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot25,424,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot26,425,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot27,426,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot28,427,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot29,428,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshot30,429,Relative path (or URL to file in Partner Center),,,
-HolographicScreenshotCaption1,450,Text,,,
-HolographicScreenshotCaption2,451,Text,,,
-HolographicScreenshotCaption3,452,Text,,,
-HolographicScreenshotCaption4,453,Text,,,
-HolographicScreenshotCaption5,454,Text,,,
-HolographicScreenshotCaption6,455,Text,,,
-HolographicScreenshotCaption7,456,Text,,,
-HolographicScreenshotCaption8,457,Text,,,
-HolographicScreenshotCaption9,458,Text,,,
-HolographicScreenshotCaption10,459,Text,,,
-HolographicScreenshotCaption11,460,Text,,,
-HolographicScreenshotCaption12,461,Text,,,
-HolographicScreenshotCaption13,462,Text,,,
-HolographicScreenshotCaption14,463,Text,,,
-HolographicScreenshotCaption15,464,Text,,,
-HolographicScreenshotCaption16,465,Text,,,
-HolographicScreenshotCaption17,466,Text,,,
-HolographicScreenshotCaption18,467,Text,,,
-HolographicScreenshotCaption19,468,Text,,,
-HolographicScreenshotCaption20,469,Text,,,
-HolographicScreenshotCaption21,470,Text,,,
-HolographicScreenshotCaption22,471,Text,,,
-HolographicScreenshotCaption23,472,Text,,,
-HolographicScreenshotCaption24,473,Text,,,
-HolographicScreenshotCaption25,474,Text,,,
-HolographicScreenshotCaption26,475,Text,,,
-HolographicScreenshotCaption27,476,Text,,,
-HolographicScreenshotCaption28,477,Text,,,
-HolographicScreenshotCaption29,478,Text,,,
-HolographicScreenshotCaption30,479,Text,,,
-SurfaceHubScreenshot11,510,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot12,511,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot13,512,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot14,513,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot15,514,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot16,515,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot17,516,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot18,517,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot19,518,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot20,519,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot21,520,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot22,521,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot23,522,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot24,523,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot25,524,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot26,525,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot27,526,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot28,527,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot29,528,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshot30,529,Relative path (or URL to file in Partner Center),,,
-SurfaceHubScreenshotCaption11,560,Text,,,
-SurfaceHubScreenshotCaption12,561,Text,,,
-SurfaceHubScreenshotCaption13,562,Text,,,
-SurfaceHubScreenshotCaption14,563,Text,,,
-SurfaceHubScreenshotCaption15,564,Text,,,
-SurfaceHubScreenshotCaption16,565,Text,,,
-SurfaceHubScreenshotCaption17,566,Text,,,
-SurfaceHubScreenshotCaption18,567,Text,,,
-SurfaceHubScreenshotCaption19,568,Text,,,
-SurfaceHubScreenshotCaption20,569,Text,,,
-SurfaceHubScreenshotCaption21,570,Text,,,
-SurfaceHubScreenshotCaption22,571,Text,,,
-SurfaceHubScreenshotCaption23,572,Text,,,
-SurfaceHubScreenshotCaption24,573,Text,,,
-SurfaceHubScreenshotCaption25,574,Text,,,
-SurfaceHubScreenshotCaption26,575,Text,,,
-SurfaceHubScreenshotCaption27,576,Text,,,
-SurfaceHubScreenshotCaption28,577,Text,,,
-SurfaceHubScreenshotCaption29,578,Text,,,
-SurfaceHubScreenshotCaption30,579,Text,,,
-StoreLogo720x1080,600,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3057770888377858836,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3002212663530121188
-StoreLogo1080x1080,601,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3061362421505370146,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3021279210314249966
-StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3064595178665177783,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3028215082225853161
-OverrideLogosForWin10,603,True/False,,False,False
-StoreLogoOverride150x150,604,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3014842493040424186,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3001489529537013642
-StoreLogoOverride71x71,605,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3041950401809206416,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3038377366472090543
-PromoImage1920x1080,606,Relative path (or URL to file in Partner Center),,,
-PromoImage2400x1200,607,Relative path (or URL to file in Partner Center),,,
-XboxBrandedKeyArt584x800,608,Relative path (or URL to file in Partner Center),,,
-XboxTitledHero1920x1080,609,Relative path (or URL to file in Partner Center),,,
-XboxFeaturedPromo1080x1080,610,Relative path (or URL to file in Partner Center),,,
-OptionalPromo358x358,611,Relative path (or URL to file in Partner Center),,,
-OptionalPromo1000x800,612,Relative path (or URL to file in Partner Center),,,
-OptionalPromo414x180,613,Relative path (or URL to file in Partner Center),,,
-Feature1,700,Text,,"Converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives (CBZ/CBR/CB7/CBT) and images to clean local HTML","Конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архивы комиксов (CBZ/CBR/CB7/CBT) и изображения в чистый локальный HTML"
-Feature2,701,Text,,Real multi-level table of contents with generated navigation,Настоящее многоуровневое оглавление со сгенерированной навигацией
-Feature3,702,Text,,"Built-in reader: light / sepia / dark / night themes, font and text-size controls, remembers your place","Встроенная читалка: темы светлая / сепия / тёмная / ночная, настройка шрифта и размера текста, запоминает место чтения"
-Feature4,703,Text,,"On-image and scanned-page OCR (English bundled, more languages on demand)","Распознавание текста на картинках и отсканированных страницах (английский в комплекте, другие языки по запросу)"
-Feature5,704,Text,,Optional translation via Google Cloud Translation API or a local Ollama model - or just use your browser's free page translation,Необязательный перевод через Google Cloud Translation API или локальную модель Ollama - или просто бесплатный перевод страниц вашего браузера
-Feature6,705,Text,,Fast on large PDFs; instant re-open of already-converted books,Быстрая работа с большими PDF; мгновенное повторное открытие уже сконвертированных книг
-Feature7,706,Text,,"Ships a CLI (doc-html-translate) and a GUI launcher (doc-html-ui); no account, no ads, no telemetry","В комплекте консольная программа (doc-html-translate) и графический запуск (doc-html-ui); без аккаунта, рекламы и телеметрии"
-Feature8,707,Text,,One-click free translation using your browser's built-in page translate - no API key required,Бесплатный перевод одним кликом встроенным переводом страниц браузера - без ключа API
-Feature9,708,Text,,Works fully offline; open source under the MIT license,Работает полностью офлайн; открытый исходный код под лицензией MIT
-Feature10,709,Text,,"Output is plain HTML - opens in any browser, on any device, and stays readable forever","На выходе обычный HTML - открывается в любом браузере, на любом устройстве и остаётся читаемым всегда"
-Feature11,710,Text,,Batch-friendly command line for converting many documents at once,Удобная командная строка для пакетной конвертации множества документов сразу
-Feature12,711,Text,,Single long page or chapter-split output with a table of contents - your choice,Вывод одной длинной страницей или с разбивкой по главам и оглавлением - на ваш выбор
-Feature13,712,Text,,"Interface in 13 languages, chosen automatically from your Windows language","Интерфейс на 13 языках, выбирается автоматически по языку Windows"
-Feature14,713,Text,,,
-Feature15,714,Text,,,
-Feature16,715,Text,,,
-Feature17,716,Text,,,
-Feature18,717,Text,,,
-Feature19,718,Text,,,
-Feature20,719,Text,,,
-MinimumHardwareReq1,800,Text,,,
-MinimumHardwareReq2,801,Text,,,
-MinimumHardwareReq3,802,Text,,,
-MinimumHardwareReq4,803,Text,,,
-MinimumHardwareReq5,804,Text,,,
-MinimumHardwareReq6,805,Text,,,
-MinimumHardwareReq7,806,Text,,,
-MinimumHardwareReq8,807,Text,,,
-MinimumHardwareReq9,808,Text,,,
-MinimumHardwareReq10,809,Text,,,
-MinimumHardwareReq11,810,Text,,,
-RecommendedHardwareReq1,850,Text,,,
-RecommendedHardwareReq2,851,Text,,,
-RecommendedHardwareReq3,852,Text,,,
-RecommendedHardwareReq4,853,Text,,,
-RecommendedHardwareReq5,854,Text,,,
-RecommendedHardwareReq6,855,Text,,,
-RecommendedHardwareReq7,856,Text,,,
-RecommendedHardwareReq8,857,Text,,,
-RecommendedHardwareReq9,858,Text,,,
-RecommendedHardwareReq10,859,Text,,,
-RecommendedHardwareReq11,860,Text,,,
-SearchTerm1,900,Text,,epub to html,конвертер epub
-SearchTerm2,901,Text,,pdf to html,pdf в html
-SearchTerm3,902,Text,,ebook converter,читалка книг
-SearchTerm4,903,Text,,mobi azw3 fb2,перевод книг epub
-SearchTerm5,904,Text,,ocr translate document,распознавание текста ocr
-SearchTerm6,905,Text,,comic cbz cbr,конвертер mobi fb2
-SearchTerm7,906,Text,,offline translation,офлайн перевод книг
-TrailerToPlayAtTopOfListing,999,Relative path (or URL to file in Partner Center),,,
-Trailer1,1000,Relative path (or URL to file in Partner Center),,,
-Trailer2,1001,Relative path (or URL to file in Partner Center),,,
-Trailer3,1002,Relative path (or URL to file in Partner Center),,,
-Trailer4,1003,Relative path (or URL to file in Partner Center),,,
-Trailer5,1004,Relative path (or URL to file in Partner Center),,,
-Trailer6,1005,Relative path (or URL to file in Partner Center),,,
-Trailer7,1006,Relative path (or URL to file in Partner Center),,,
-Trailer8,1007,Relative path (or URL to file in Partner Center),,,
-Trailer9,1008,Relative path (or URL to file in Partner Center),,,
-Trailer10,1009,Relative path (or URL to file in Partner Center),,,
-Trailer11,1010,Relative path (or URL to file in Partner Center),,,
-Trailer12,1011,Relative path (or URL to file in Partner Center),,,
-Trailer13,1012,Relative path (or URL to file in Partner Center),,,
-Trailer14,1013,Relative path (or URL to file in Partner Center),,,
-Trailer15,1014,Relative path (or URL to file in Partner Center),,,
-TrailerTitle1,1020,Text,,,
-TrailerTitle2,1021,Text,,,
-TrailerTitle3,1022,Text,,,
-TrailerTitle4,1023,Text,,,
-TrailerTitle5,1024,Text,,,
-TrailerTitle6,1025,Text,,,
-TrailerTitle7,1026,Text,,,
-TrailerTitle8,1027,Text,,,
-TrailerTitle9,1028,Text,,,
-TrailerTitle10,1029,Text,,,
-TrailerTitle11,1030,Text,,,
-TrailerTitle12,1031,Text,,,
-TrailerTitle13,1032,Text,,,
-TrailerTitle14,1033,Text,,,
-TrailerTitle15,1034,Text,,,
-TrailerThumbnail1,1040,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail2,1041,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail3,1042,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail4,1043,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail5,1044,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail6,1045,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail7,1046,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail8,1047,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail9,1048,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail10,1049,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail11,1050,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail12,1051,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail13,1052,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail14,1053,Relative path (or URL to file in Partner Center),,,
-TrailerThumbnail15,1054,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption1,1055,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption2,1056,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption3,1057,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption4,1058,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption5,1059,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption6,1060,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption7,1061,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption8,1062,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption9,1063,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption10,1064,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption11,1065,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption12,1066,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption13,1067,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption14,1068,Relative path (or URL to file in Partner Center),,,
-TrailerClosedCaption15,1069,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription1,1070,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription2,1071,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription3,1072,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription4,1073,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription5,1074,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription6,1075,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription7,1076,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription8,1077,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription9,1078,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription10,1079,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription11,1080,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription12,1081,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription13,1082,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription14,1083,Relative path (or URL to file in Partner Center),,,
-TrailerAudioDescription15,1084,Relative path (or URL to file in Partner Center),,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
-,,,,,
+- PDF, у которого нет ни текстового слоя, ни извлекаемой картинки страницы, теперь так и пишет, а не заявляет, что OCR отключён.","- Текст, розпізнаний на зображенні, тепер закриває літери, які замінює. Досі заміна малювалася на підкладці за формою самих слів, тож оригінал лишався видимим навколо неї і читалися обидва шари водночас.
+- Знімок екрана, форма чи список більше не опиняються під однією величезною підкладкою. Плашка, що зайняла майже все зображення, розпускається назад на рядки, з яких її склали: сторінка зберігає власну верстку, і нічого розпізнаного не втрачається.
+- Якщо мову OCR не вибрано, застосунок сам дивиться, якою писемністю написана сторінка. Є дані - читає цією мовою; немає - не додає тексту взагалі й називає мовний пакет, який треба встановити, замість того щоб залити російський знімок екрана транслітерованою нісенітницею.
+- Написи на насиченій графіці, на друкарському растрі та великий дисплейний шрифт розпізнаються там, де попередні версії не знаходили нічого.
+- Комікси та скани: кожна сторінка тепер має власний якір і поле переходу за сторінками, тож на сторінку 30 можна дати посилання, а не тягнути смугу прокручування.
+- Нова кнопка ховає шар розпізнаного тексту, щоб подивитися малюнок під ним і повернути текст назад.
+- PDF, у якого немає ні текстового шару, ні видобувного зображення сторінки, тепер так і пише, а не заявляє, що OCR вимкнено.",,,,,,,,,,
+Title,4,Text,,doc-html-translate,Doc-HTML-Translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate,doc-html-translate
+ShortTitle,5,Text,,,,,,,,,,,,,,
+SortTitle,6,Text,,,,,,,,,,,,,,
+VoiceTitle,7,Text,,,,,,,,,,,,,,
+ShortDescription,8,Text,,"Convert EPUB, PDF, MOBI, comics and more to clean local HTML with a real table of contents, OCR and optional translation.","Конвертирует EPUB, PDF, MOBI, комиксы и другое в чистый локальный HTML с настоящим оглавлением, OCR и переводом.","Перетворює EPUB, PDF, MOBI, комікси й інше на чистий локальний HTML зі справжнім змістом, OCR і перекладом.","Wandelt EPUB, PDF, MOBI, Comics und mehr in sauberes lokales HTML um - mit echtem Inhaltsverzeichnis, Texterkennung und Übersetzung.","Converte EPUB, PDF, MOBI, fumetti e altro in HTML locale pulito, con un vero indice, OCR e traduzione opzionale.","Convierte EPUB, PDF, MOBI, cómics y más en HTML local limpio, con un índice de verdad, OCR y traducción opcional.","Convertit EPUB, PDF, MOBI, BD et plus en HTML local propre, avec une vraie table des matières, l'OCR et une traduction facultative.","Converte EPUB, PDF, MOBI, banda desenhada e mais em HTML local limpo, com um sumário de verdade, OCR e tradução opcional.",يحوّل EPUB وPDF وMOBI والقصص المصورة وغيرها إلى HTML محلي نظيف، بفهرس حقيقي واستخراج للنص وترجمة اختيارية.,"EPUB, PDF, MOBI, कॉमिक्स और अन्य को साफ़ स्थानीय HTML में बदलता है - असली विषय-सूची, OCR और वैकल्पिक अनुवाद के साथ।","EPUB, PDF, MOBI, কমিক ও আরও অনেক কিছু পরিচ্ছন্ন স্থানীয় HTML-এ বদলায় - সত্যিকারের সূচিপত্র, OCR ও ঐচ্ছিক অনুবাদসহ।",‏EPUB، PDF، MOBI، کامکس اور مزید کو صاف مقامی HTML میں بدلتا ہے - اصل فہرست، او سی آر اور اختیاری ترجمے کے ساتھ۔,把 EPUB、PDF、MOBI、漫画等转换为干净的本地 HTML，带真正的目录、文字识别和可选翻译。
+DevStudio,9,Text,,,,,,,,,,,,,,
+CopyrightTrademarkInformation,12,Text,,,,,,,,,,,,,,
+AdditionalLicenseTerms,13,Text,,,,,,,,,,,,,,
+DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3066937578673902250,,,,,,,,,,,
+DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3058795499902094003,,,,,,,,,,,
+DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot5,104,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot6,105,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot7,106,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot8,107,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot9,108,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot10,109,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot11,110,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot12,111,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot13,112,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot14,113,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot15,114,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot16,115,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot17,116,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot18,117,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot19,118,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot20,119,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot21,120,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot22,121,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot23,122,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot24,123,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot25,124,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot26,125,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot27,126,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot28,127,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot29,128,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshot30,129,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+DesktopScreenshotCaption1,150,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption2,151,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption3,152,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption4,153,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption5,154,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption6,155,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption7,156,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption8,157,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption9,158,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption10,159,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption11,160,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption12,161,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption13,162,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption14,163,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption15,164,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption16,165,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption17,166,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption18,167,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption19,168,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption20,169,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption21,170,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption22,171,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption23,172,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption24,173,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption25,174,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption26,175,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption27,176,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption28,177,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption29,178,Text,,,,,,,,,,,,,,
+DesktopScreenshotCaption30,179,Text,,,,,,,,,,,,,,
+MobileScreenshot1,200,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot2,201,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot3,202,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot4,203,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot5,204,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot6,205,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot7,206,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot8,207,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot9,208,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot10,209,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot11,210,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot12,211,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot13,212,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot14,213,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot15,214,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot16,215,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot17,216,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot18,217,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot19,218,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot20,219,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot21,220,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot22,221,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot23,222,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot24,223,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot25,224,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot26,225,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot27,226,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot28,227,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot29,228,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshot30,229,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+MobileScreenshotCaption1,250,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption2,251,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption3,252,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption4,253,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption5,254,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption6,255,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption7,256,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption8,257,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption9,258,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption10,259,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption11,260,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption12,261,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption13,262,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption14,263,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption15,264,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption16,265,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption17,266,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption18,267,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption19,268,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption20,269,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption21,270,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption22,271,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption23,272,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption24,273,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption25,274,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption26,275,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption27,276,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption28,277,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption29,278,Text,,,,,,,,,,,,,,
+MobileScreenshotCaption30,279,Text,,,,,,,,,,,,,,
+XboxScreenshot1,300,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot2,301,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot3,302,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot4,303,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot5,304,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot6,305,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot7,306,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot8,307,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot9,308,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot10,309,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot11,310,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot12,311,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot13,312,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot14,313,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot15,314,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot16,315,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot17,316,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot18,317,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot19,318,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot20,319,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot21,320,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot22,321,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot23,322,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot24,323,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot25,324,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot26,325,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot27,326,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot28,327,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot29,328,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshot30,329,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxScreenshotCaption1,350,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption2,351,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption3,352,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption4,353,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption5,354,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption6,355,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption7,356,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption8,357,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption9,358,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption10,359,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption11,360,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption12,361,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption13,362,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption14,363,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption15,364,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption16,365,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption17,366,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption18,367,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption19,368,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption20,369,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption21,370,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption22,371,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption23,372,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption24,373,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption25,374,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption26,375,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption27,376,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption28,377,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption29,378,Text,,,,,,,,,,,,,,
+XboxScreenshotCaption30,379,Text,,,,,,,,,,,,,,
+HolographicScreenshot1,400,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot2,401,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot3,402,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot4,403,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot5,404,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot6,405,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot7,406,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot8,407,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot9,408,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot10,409,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot11,410,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot12,411,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot13,412,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot14,413,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot15,414,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot16,415,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot17,416,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot18,417,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot19,418,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot20,419,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot21,420,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot22,421,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot23,422,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot24,423,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot25,424,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot26,425,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot27,426,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot28,427,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot29,428,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshot30,429,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+HolographicScreenshotCaption1,450,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption2,451,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption3,452,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption4,453,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption5,454,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption6,455,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption7,456,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption8,457,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption9,458,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption10,459,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption11,460,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption12,461,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption13,462,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption14,463,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption15,464,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption16,465,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption17,466,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption18,467,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption19,468,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption20,469,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption21,470,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption22,471,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption23,472,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption24,473,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption25,474,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption26,475,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption27,476,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption28,477,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption29,478,Text,,,,,,,,,,,,,,
+HolographicScreenshotCaption30,479,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshot11,510,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot12,511,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot13,512,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot14,513,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot15,514,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot16,515,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot17,516,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot18,517,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot19,518,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot20,519,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot21,520,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot22,521,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot23,522,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot24,523,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot25,524,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot26,525,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot27,526,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot28,527,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot29,528,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshot30,529,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption11,560,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption12,561,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption13,562,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption14,563,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption15,564,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption16,565,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption17,566,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption18,567,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption19,568,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption20,569,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption21,570,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption22,571,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption23,572,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption24,573,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption25,574,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption26,575,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption27,576,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption28,577,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption29,578,Text,,,,,,,,,,,,,,
+SurfaceHubScreenshotCaption30,579,Text,,,,,,,,,,,,,,
+StoreLogo720x1080,600,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3057770888377858836,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3002212663530121188,,,,,,,,,,,
+StoreLogo1080x1080,601,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3061362421505370146,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3021279210314249966,,,,,,,,,,,
+StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3064595178665177783,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3028215082225853161,,,,,,,,,,,
+OverrideLogosForWin10,603,True/False,,False,False,False,False,False,False,False,False,False,False,False,False,False
+StoreLogoOverride150x150,604,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3014842493040424186,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3001489529537013642,,,,,,,,,,,
+StoreLogoOverride71x71,605,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3041950401809206416,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3038377366472090543,,,,,,,,,,,
+PromoImage1920x1080,606,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+PromoImage2400x1200,607,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxBrandedKeyArt584x800,608,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxTitledHero1920x1080,609,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+XboxFeaturedPromo1080x1080,610,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+OptionalPromo358x358,611,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+OptionalPromo1000x800,612,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+OptionalPromo414x180,613,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Feature1,700,Text,,"Converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, comic archives (CBZ/CBR/CB7/CBT) and images to clean local HTML","Конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архивы комиксов (CBZ/CBR/CB7/CBT) и изображения в чистый локальный HTML","Перетворює EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архіви коміксів (CBZ/CBR/CB7/CBT) і зображення на чистий локальний HTML","Wandelt EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, Comic-Archive (CBZ/CBR/CB7/CBT) und Bilder in sauberes lokales HTML um","Converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivi di fumetti (CBZ/CBR/CB7/CBT) e immagini in HTML locale pulito","Convierte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivos de cómic (CBZ/CBR/CB7/CBT) e imágenes en HTML local limpio","Convertit EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archives de BD (CBZ/CBR/CB7/CBT) et images en HTML local propre","Converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, arquivos de banda desenhada (CBZ/CBR/CB7/CBT) e imagens em HTML local limpo",يحوّل EPUB وPDF وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML وأرشيفات القصص المصورة (CBZ/CBR/CB7/CBT) والصور إلى HTML محلي نظيف,"EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, कॉमिक संग्रह (CBZ/CBR/CB7/CBT) और छवियों को साफ़ स्थानीय HTML में बदलता है","EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, কমিক সংরক্ষণাগার (CBZ/CBR/CB7/CBT) ও ছবিকে পরিচ্ছন্ন স্থানীয় HTML-এ রূপান্তর করে",‏EPUB، PDF، MOBI، AZW3، FB2، RTF، TXT، Markdown، HTML، کامک آرکائیوز (CBZ/CBR/CB7/CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہے,把 EPUB、PDF、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML、漫画压缩包（CBZ/CBR/CB7/CBT）和图片转换为干净的本地 HTML
+Feature2,701,Text,,Real multi-level table of contents with generated navigation,Настоящее многоуровневое оглавление со сгенерированной навигацией,Справжній багаторівневий зміст зі створеною навігацією,Echtes mehrstufiges Inhaltsverzeichnis mit erzeugter Navigation,Vero indice a più livelli con navigazione generata,Índice real de varios niveles con navegación generada,Véritable table des matières à plusieurs niveaux avec navigation générée,Sumário real de vários níveis com navegação gerada,فهرس حقيقي متعدد المستويات مع تنقّل مُولَّد,बनी हुई नेविगेशन के साथ असली बहुस्तरीय विषय-सूची,তৈরি নেভিগেশনসহ সত্যিকারের বহুস্তরের সূচিপত্র,تیار شدہ نیویگیشن کے ساتھ اصل کثیر سطحی فہرست,带生成导航的真正多级目录
+Feature3,702,Text,,"Built-in reader: light / sepia / dark / night themes, font and text-size controls, remembers your place","Встроенная читалка: темы светлая / сепия / тёмная / ночная, настройка шрифта и размера текста, запоминает место чтения","Вбудована читалка: теми light / sepia / dark / night, шрифт і розмір тексту, запам'ятовує місце читання","Eingebauter Reader: Light-/Sepia-/Dark-/Night-Themes, Schrift und Schriftgröße, merkt sich die Leseposition","Lettore integrato: temi light / sepia / dark / night, carattere e dimensione del testo, ricorda il punto di lettura","Lector integrado: temas light / sepia / dark / night, letra y tamaño de texto, recuerda tu posición","Lecteur intégré : thèmes light / sepia / dark / night, police et taille du texte, retient votre position","Leitor integrado: temas light / sepia / dark / night, letra e tamanho do texto, lembra a sua posição",قارئ مدمج: سمات light وsepia وdark وnight، والخط وحجم النص، ويتذكر موضع القراءة,"अंतर्निहित रीडर: light / sepia / dark / night थीम, फ़ॉन्ट और पाठ का आकार, आपकी जगह याद रखता है","অন্তর্নির্মিত রিডার: light / sepia / dark / night থিম, ফন্ট ও লেখার আকার, আপনার জায়গা মনে রাখে",بلٹ اِن ریڈر: light / sepia / dark / night تھیمز، فونٹ اور متن کا سائز، آپ کی جگہ یاد رکھتا ہے,内置阅读器：light / sepia / dark / night 主题、字体与字号控制，记住阅读位置
+Feature4,703,Text,,"On-image and scanned-page OCR (English bundled, more languages on demand)","Распознавание текста на картинках и отсканированных страницах (английский в комплекте, другие языки по запросу)","Розпізнавання тексту на зображеннях і відсканованих сторінках (англійська в комплекті, інші на вимогу)","Texterkennung in Bildern und gescannten Seiten (Englisch enthalten, weitere Sprachen auf Wunsch)","OCR su immagini e pagine scansionate (inglese incluso, altre lingue su richiesta)","OCR en imágenes y páginas escaneadas (inglés incluido, más idiomas a petición)","OCR sur les images et les pages scannées (anglais fourni, autres langues à la demande)","OCR em imagens e páginas digitalizadas (inglês incluído, outros idiomas a pedido)",تعرف ضوئي على النص في الصور والصفحات الممسوحة (الإنجليزية مضمّنة وغيرها عند الطلب),"छवियों और स्कैन किए गए पृष्ठों पर OCR (अंग्रेज़ी साथ में, बाकी भाषाएँ माँग पर)","ছবি ও স্ক্যান করা পৃষ্ঠায় OCR (ইংরেজি সঙ্গে দেওয়া, বাকি ভাষা চাহিদামতো)",تصاویر اور اسکین شدہ صفحات پر او سی آر (انگریزی شامل، باقی زبانیں طلب پر),图片与扫描页文字识别（内置英语，其他语言按需下载）
+Feature5,704,Text,,Optional translation via Google Cloud Translation API or a local Ollama model - or just use your browser's free page translation,Необязательный перевод через Google Cloud Translation API или локальную модель Ollama - или просто бесплатный перевод страниц вашего браузера,Необов'язковий переклад через Google Cloud Translation API або локальну модель Ollama - або просто безкоштовний переклад сторінки у браузері,Optionale Übersetzung über die Google Cloud Translation API oder ein lokales Ollama-Modell - oder einfach die kostenlose Seitenübersetzung des Browsers,Traduzione opzionale tramite Google Cloud Translation API o un modello Ollama locale - oppure la traduzione di pagina gratuita del browser,Traducción opcional mediante Google Cloud Translation API o un modelo Ollama local - o la traducción de página gratuita del navegador,Traduction facultative via l'API Google Cloud Translation ou un modèle Ollama local - ou simplement la traduction de page gratuite du navigateur,Tradução opcional pela API do Google Cloud Translation ou por um modelo Ollama local - ou a tradução de página gratuita do navegador,ترجمة اختيارية عبر Google Cloud Translation API أو نموذج Ollama محلي - أو ببساطة ترجمة الصفحة المجانية في متصفحك,Google Cloud Translation API या स्थानीय Ollama मॉडल से वैकल्पिक अनुवाद - या बस ब्राउज़र का मुफ़्त पृष्ठ अनुवाद,Google Cloud Translation API বা স্থানীয় Ollama মডেল দিয়ে ঐচ্ছিক অনুবাদ - অথবা কেবল ব্রাউজারের বিনামূল্যের পৃষ্ঠা-অনুবাদ,‏Google Cloud Translation API یا مقامی Ollama ماڈل سے اختیاری ترجمہ - یا صرف براؤزر کا مفت صفحہ ترجمہ,可选翻译：Google Cloud Translation API 或本地 Ollama 模型 - 也可以直接用浏览器免费的页面翻译
+Feature6,705,Text,,Fast on large PDFs; instant re-open of already-converted books,Быстрая работа с большими PDF; мгновенное повторное открытие уже сконвертированных книг,Швидко працює з великими PDF; миттєво відкриває вже сконвертовані книжки,Schnell bei großen PDFs; bereits konvertierte Bücher öffnen sofort,Veloce sui PDF grandi; riapertura immediata dei libri già convertiti,Rápido con PDF grandes; reapertura instantánea de libros ya convertidos,Rapide sur les gros PDF ; réouverture instantanée des livres déjà convertis,Rápido em PDFs grandes; reabertura instantânea de livros já convertidos,سريع مع ملفات PDF الكبيرة؛ وفتح فوري للكتب المحوّلة سابقًا,बड़े PDF पर तेज़; पहले से बदली गई पुस्तकें तुरंत खुलती हैं,বড় PDF-এ দ্রুত; আগে রূপান্তরিত বই তাৎক্ষণিক খোলে,بڑی PDF پر تیز؛ پہلے سے تبدیل شدہ کتابیں فوری کھلتی ہیں,处理大体积 PDF 依然快速；已转换的书籍瞬间重新打开
+Feature7,706,Text,,"Ships a CLI (doc-html-translate) and a GUI launcher (doc-html-ui); no account, no ads, no telemetry","В комплекте консольная программа (doc-html-translate) и графический запуск (doc-html-ui); без аккаунта, рекламы и телеметрии","У пакеті CLI (doc-html-translate) і GUI (doc-html-ui); без облікового запису, реклами й телеметрії","Enthält eine CLI (doc-html-translate) und eine Oberfläche (doc-html-ui); kein Konto, keine Werbung, keine Telemetrie","Include una CLI (doc-html-translate) e un'interfaccia (doc-html-ui); nessun account, nessuna pubblicità, nessuna telemetria","Incluye una CLI (doc-html-translate) y una interfaz (doc-html-ui); sin cuenta, sin anuncios, sin telemetría","Fournit une CLI (doc-html-translate) et une interface (doc-html-ui) ; pas de compte, pas de publicité, pas de télémétrie","Traz uma CLI (doc-html-translate) e uma interface (doc-html-ui); sem conta, sem anúncios, sem telemetria",يضم واجهة سطر أوامر (doc-html-translate) وواجهة رسومية (doc-html-ui)؛ دون حساب أو إعلانات أو تتبّع,"CLI (doc-html-translate) और GUI (doc-html-ui) दोनों शामिल; कोई खाता, विज्ञापन या टेलीमेट्री नहीं","CLI (doc-html-translate) ও GUI (doc-html-ui) দুটোই দেয়; অ্যাকাউন্ট, বিজ্ঞাপন বা টেলিমেট্রি নেই",‏CLI (doc-html-translate) اور GUI (doc-html-ui) دونوں شامل؛ نہ اکاؤنٹ، نہ اشتہار، نہ ٹیلی میٹری,同时提供命令行（doc-html-translate）和图形界面（doc-html-ui）；无账号、无广告、无遥测
+Feature8,707,Text,,One-click free translation using your browser's built-in page translate - no API key required,Бесплатный перевод одним кликом встроенным переводом страниц браузера - без ключа API,Безкоштовний переклад в один клік вбудованим перекладачем сторінок - ключ API не потрібен,Kostenlose Übersetzung mit einem Klick über die Seitenübersetzung des Browsers - kein API-Schlüssel nötig,Traduzione gratuita con un clic usando la traduzione di pagina del browser - nessuna chiave API,Traducción gratuita con un clic usando la traducción de página del navegador - sin clave de API,Traduction gratuite en un clic grâce à la traduction de page du navigateur - aucune clé API,Tradução gratuita num clique com a tradução de página do navegador - sem chave de API,ترجمة مجانية بنقرة واحدة بترجمة الصفحة المدمجة في المتصفح - دون مفتاح API,ब्राउज़र के अंतर्निहित पृष्ठ अनुवाद से एक क्लिक में मुफ़्त अनुवाद - API कुंजी की ज़रूरत नहीं,ব্রাউজারের অন্তর্নির্মিত পৃষ্ঠা-অনুবাদে এক ক্লিকে বিনামূল্যে অনুবাদ - API কী লাগে না,براؤزر کے بلٹ اِن صفحہ ترجمے سے ایک کلک میں مفت ترجمہ - API کلید کی ضرورت نہیں,用浏览器内置的页面翻译一键免费翻译 - 无需 API 密钥
+Feature9,708,Text,,Works fully offline; open source under the MIT license,Работает полностью офлайн; открытый исходный код под лицензией MIT,Працює цілком офлайн; відкритий код за ліцензією MIT,Funktioniert vollständig offline; Open Source unter der MIT-Lizenz,Funziona completamente offline; open source con licenza MIT,Funciona totalmente sin conexión; código abierto con licencia MIT,Fonctionne entièrement hors ligne ; open source sous licence MIT,Funciona totalmente offline; código aberto sob a licença MIT,يعمل دون اتصال بالكامل؛ مفتوح المصدر برخصة MIT,पूरी तरह ऑफ़लाइन काम करता है; MIT लाइसेंस के तहत मुक्त स्रोत,সম্পূর্ণ অফলাইনে চলে; MIT লাইসেন্সে মুক্ত সোর্স,مکمل طور پر آف لائن چلتا ہے؛ MIT لائسنس کے تحت اوپن سورس,完全离线可用；基于 MIT 许可证开源
+Feature10,709,Text,,"Output is plain HTML - opens in any browser, on any device, and stays readable forever","На выходе обычный HTML - открывается в любом браузере, на любом устройстве и остаётся читаемым всегда","На виході звичайний HTML - відкриється в будь-якому браузері, на будь-якому пристрої, і лишиться читабельним","Das Ergebnis ist einfaches HTML - öffnet sich in jedem Browser, auf jedem Gerät, und bleibt lesbar","Il risultato è semplice HTML - si apre in ogni browser, su ogni dispositivo, e resta leggibile","La salida es HTML sencillo - se abre en cualquier navegador, en cualquier dispositivo, y sigue siendo legible","La sortie est du HTML simple - elle s'ouvre dans tout navigateur, sur tout appareil, et reste lisible","O resultado é HTML simples - abre em qualquer navegador, em qualquer dispositivo, e continua legível",الناتج HTML عادي - يُفتح في أي متصفح وعلى أي جهاز ويبقى مقروءًا,"परिणाम सादा HTML है - किसी भी ब्राउज़र में, किसी भी उपकरण पर खुलता है और पढ़ने योग्य बना रहता है","ফলাফল সাধারণ HTML - যেকোনও ব্রাউজারে, যেকোনও যন্ত্রে খোলে এবং পড়ার উপযোগী থাকে",نتیجہ سادہ HTML ہے - ہر براؤزر میں، ہر آلے پر کھلتا ہے اور پڑھنے کے قابل رہتا ہے,输出是普通 HTML - 任何浏览器、任何设备都能打开，并且长久可读
+Feature11,710,Text,,Batch-friendly command line for converting many documents at once,Удобная командная строка для пакетной конвертации множества документов сразу,Командний рядок зручний для пакетної обробки багатьох документів,Kommandozeile für die Stapelverarbeitung vieler Dokumente,Riga di comando comoda per convertire molti documenti in blocco,Línea de comandos cómoda para convertir muchos documentos de una vez,Ligne de commande pratique pour convertir de nombreux documents d'un coup,Linha de comandos prática para converter muitos documentos de uma vez,سطر أوامر مناسب لتحويل عدد كبير من المستندات دفعة واحدة,कई दस्तावेज़ एक साथ बदलने के लिए सुविधाजनक कमांड लाइन,একসঙ্গে বহু নথি রূপান্তরের জন্য সুবিধাজনক কমান্ড লাইন,بیک وقت بہت سی دستاویزات بدلنے کے لیے سہولت والی کمانڈ لائن,命令行适合一次批量转换大量文档
+Feature12,711,Text,,Single long page or chapter-split output with a table of contents - your choice,Вывод одной длинной страницей или с разбивкой по главам и оглавлением - на ваш выбор,Одна довга сторінка або розділи зі змістом - на ваш вибір,Eine lange Seite oder in Kapitel geteilt mit Inhaltsverzeichnis - Sie entscheiden,Pagina unica lunga o divisa in capitoli con indice - scegli tu,Una página larga o dividida en capítulos con índice - tú eliges,Une longue page unique ou des chapitres avec table des matières - à vous de choisir,Uma página longa ou dividida em capítulos com sumário - você escolhe,صفحة واحدة طويلة أو فصول مع فهرس - القرار لك,एक लंबा पृष्ठ या विषय-सूची सहित अध्यायों में विभाजित - आपकी पसंद,"একটিমাত্র লম্বা পৃষ্ঠা, বা সূচিপত্রসহ অধ্যায়ে ভাগ - আপনার পছন্দ",ایک لمبا صفحہ یا فہرست کے ساتھ ابواب میں تقسیم - آپ کی مرضی,单个长页面，或按章节拆分并附目录 - 由你决定
+Feature13,712,Text,,"Interface in 13 languages, chosen automatically from your Windows language","Интерфейс на 13 языках, выбирается автоматически по языку Windows","Інтерфейс 13 мовами, обирається автоматично за мовою Windows","Oberfläche in 13 Sprachen, automatisch nach Ihrer Windows-Sprache gewählt","Interfaccia in 13 lingue, scelta automaticamente dalla lingua di Windows","Interfaz en 13 idiomas, elegida automáticamente según el idioma de Windows","Interface en 13 langues, choisie automatiquement d'après la langue de Windows","Interface em 13 idiomas, escolhida automaticamente pelo idioma do Windows",واجهة بثلاث عشرة لغة، تُختار تلقائيًا حسب لغة Windows,"13 भाषाओं में इंटरफ़ेस, आपकी Windows भाषा के अनुसार अपने आप चुना जाता है","১৩টি ভাষায় ইন্টারফেস, আপনার Windows ভাষা অনুযায়ী নিজে থেকেই বেছে নেওয়া হয়",13 زبانوں میں انٹرفیس، آپ کی Windows زبان کے مطابق خود بخود منتخب,13 种语言的界面，按你的 Windows 语言自动选择
+Feature14,713,Text,,,,,,,,,,,,,,
+Feature15,714,Text,,,,,,,,,,,,,,
+Feature16,715,Text,,,,,,,,,,,,,,
+Feature17,716,Text,,,,,,,,,,,,,,
+Feature18,717,Text,,,,,,,,,,,,,,
+Feature19,718,Text,,,,,,,,,,,,,,
+Feature20,719,Text,,,,,,,,,,,,,,
+MinimumHardwareReq1,800,Text,,,,,,,,,,,,,,
+MinimumHardwareReq2,801,Text,,,,,,,,,,,,,,
+MinimumHardwareReq3,802,Text,,,,,,,,,,,,,,
+MinimumHardwareReq4,803,Text,,,,,,,,,,,,,,
+MinimumHardwareReq5,804,Text,,,,,,,,,,,,,,
+MinimumHardwareReq6,805,Text,,,,,,,,,,,,,,
+MinimumHardwareReq7,806,Text,,,,,,,,,,,,,,
+MinimumHardwareReq8,807,Text,,,,,,,,,,,,,,
+MinimumHardwareReq9,808,Text,,,,,,,,,,,,,,
+MinimumHardwareReq10,809,Text,,,,,,,,,,,,,,
+MinimumHardwareReq11,810,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq1,850,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq2,851,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq3,852,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq4,853,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq5,854,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq6,855,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq7,856,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq8,857,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq9,858,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq10,859,Text,,,,,,,,,,,,,,
+RecommendedHardwareReq11,860,Text,,,,,,,,,,,,,,
+SearchTerm1,900,Text,,epub to html,конвертер epub,epub у html,epub zu html,epub in html,epub a html,epub en html,epub para html,epub إلى html,epub से html,epub থেকে html,epub سے html,epub 转 html
+SearchTerm2,901,Text,,pdf to html,pdf в html,pdf у html,pdf zu html,pdf in html,pdf a html,pdf en html,pdf para html,pdf إلى html,pdf से html,pdf থেকে html,pdf سے html,pdf 转 html
+SearchTerm3,902,Text,,ebook converter,читалка книг,конвертер книжок,ebook konverter,convertitore ebook,conversor de ebooks,convertisseur ebook,conversor de ebooks,محول كتب,ईबुक कनवर्टर,ইবুক রূপান্তরকারী,ای بک کنورٹر,电子书转换器
+SearchTerm4,903,Text,,mobi azw3 fb2,перевод книг epub,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2,mobi azw3 fb2
+SearchTerm5,904,Text,,ocr translate document,распознавание текста ocr,розпізнавання тексту,texterkennung dokument,ocr traduzione documenti,ocr traducir documento,ocr traduire document,ocr traduzir documento,استخراج النص وترجمته,ocr दस्तावेज़ अनुवाद,ocr নথি অনুবাদ,دستاویز ترجمہ,文字识别 文档翻译
+SearchTerm6,905,Text,,comic cbz cbr,конвертер mobi fb2,комікси cbz cbr,comic cbz cbr,fumetti cbz cbr,cómics cbz cbr,bd cbz cbr,banda desenhada cbz cbr,قصص مصورة cbz,कॉमिक cbz cbr,কমিক cbz cbr,کامک cbz cbr,漫画 cbz cbr
+SearchTerm7,906,Text,,offline translation,офлайн перевод книг,офлайн переклад,offline übersetzung,traduzione offline,traducción sin conexión,traduction hors ligne,tradução offline,ترجمة دون اتصال,ऑफ़लाइन अनुवाद,অফলাইন অনুবাদ,آف لائن ترجمہ,离线翻译
+TrailerToPlayAtTopOfListing,999,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer1,1000,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer2,1001,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer3,1002,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer4,1003,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer5,1004,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer6,1005,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer7,1006,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer8,1007,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer9,1008,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer10,1009,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer11,1010,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer12,1011,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer13,1012,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer14,1013,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+Trailer15,1014,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerTitle1,1020,Text,,,,,,,,,,,,,,
+TrailerTitle2,1021,Text,,,,,,,,,,,,,,
+TrailerTitle3,1022,Text,,,,,,,,,,,,,,
+TrailerTitle4,1023,Text,,,,,,,,,,,,,,
+TrailerTitle5,1024,Text,,,,,,,,,,,,,,
+TrailerTitle6,1025,Text,,,,,,,,,,,,,,
+TrailerTitle7,1026,Text,,,,,,,,,,,,,,
+TrailerTitle8,1027,Text,,,,,,,,,,,,,,
+TrailerTitle9,1028,Text,,,,,,,,,,,,,,
+TrailerTitle10,1029,Text,,,,,,,,,,,,,,
+TrailerTitle11,1030,Text,,,,,,,,,,,,,,
+TrailerTitle12,1031,Text,,,,,,,,,,,,,,
+TrailerTitle13,1032,Text,,,,,,,,,,,,,,
+TrailerTitle14,1033,Text,,,,,,,,,,,,,,
+TrailerTitle15,1034,Text,,,,,,,,,,,,,,
+TrailerThumbnail1,1040,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail2,1041,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail3,1042,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail4,1043,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail5,1044,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail6,1045,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail7,1046,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail8,1047,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail9,1048,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail10,1049,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail11,1050,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail12,1051,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail13,1052,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail14,1053,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerThumbnail15,1054,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption1,1055,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption2,1056,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption3,1057,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption4,1058,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption5,1059,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption6,1060,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption7,1061,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption8,1062,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption9,1063,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption10,1064,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption11,1065,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption12,1066,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption13,1067,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption14,1068,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerClosedCaption15,1069,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription1,1070,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription2,1071,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription3,1072,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription4,1073,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription5,1074,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription6,1075,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription7,1076,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription8,1077,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription9,1078,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription10,1079,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription11,1080,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription12,1081,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription13,1082,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription14,1083,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+TrailerAudioDescription15,1084,Relative path (or URL to file in Partner Center),,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
