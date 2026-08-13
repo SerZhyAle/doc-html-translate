@@ -6,7 +6,7 @@
 # with the same disclosure the description carries.
 
 @@Title
-doc-html-translate
+Doc-HTML-Translate
 
 @@ShortDescription
 Converte EPUB, PDF, MOBI, fumetti e altro in HTML locale pulito, con un vero indice, OCR e traduzione opzionale.

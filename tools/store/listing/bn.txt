@@ -6,7 +6,7 @@
 # with the same disclosure the description carries.
 
 @@Title
-doc-html-translate
+Doc-HTML-Translate
 
 @@ShortDescription
 EPUB, PDF, MOBI, কমিক ও আরও অনেক কিছু পরিচ্ছন্ন স্থানীয় HTML-এ বদলায় - সত্যিকারের সূচিপত্র, OCR ও ঐচ্ছিক অনুবাদসহ।

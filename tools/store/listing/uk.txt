@@ -2,7 +2,7 @@
 # Read by build-store-listing-csv.ps1, which fills only empty cells of a fresh export.
 
 @@Title
-doc-html-translate
+Doc-HTML-Translate
 
 @@ShortDescription
 Перетворює EPUB, PDF, MOBI, комікси й інше на чистий локальний HTML зі справжнім змістом, OCR і перекладом.

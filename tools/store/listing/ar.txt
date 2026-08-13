@@ -6,7 +6,7 @@
 # with the same disclosure the description carries.
 
 @@Title
-doc-html-translate
+Doc-HTML-Translate
 
 @@ShortDescription
 يحوّل EPUB وPDF وMOBI والقصص المصورة وغيرها إلى HTML محلي نظيف، بفهرس حقيقي واستخراج للنص وترجمة اختيارية.

@@ -6,7 +6,7 @@
 # with the same disclosure the description carries.
 
 @@Title
-doc-html-translate
+Doc-HTML-Translate
 
 @@ShortDescription
 把 EPUB、PDF、MOBI、漫画等转换为干净的本地 HTML，带真正的目录、文字识别和可选翻译。
