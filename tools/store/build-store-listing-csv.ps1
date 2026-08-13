@@ -24,6 +24,9 @@
 
 .PARAMETER ImportFolder
   Copy the result next to the per-locale screenshots, as the folder you hand to the dashboard.
+  Defaults to `msix/out/store-import`, which puts it beside the MSIX the same upload session needs -
+  the two halves of a Partner Center submission live in one place instead of two, and neither is in
+  the repository (`msix/out/` is gitignored, like the `temp/` it used to sit in).
 
 .PARAMETER SkipFields
   Field names to leave alone even when empty (e.g. ReleaseNotes during a copy-only edit).
@@ -40,12 +43,12 @@
 .EXAMPLE
   .\tools\store\build-store-listing-csv.ps1 -FillNothing -Out temp\roundtrip.csv
 .EXAMPLE
-  .\tools\store\build-store-listing-csv.ps1 -ImportFolder temp\store-import
+  .\tools\store\build-store-listing-csv.ps1 -ImportFolder msix\out\store-import
 #>
 param(
     [string]$Csv,
     [string]$Out,
-    [string]$ImportFolder,
+    [string]$ImportFolder = "msix/out/store-import",
     [string[]]$SkipFields = @(),
     [string[]]$Refresh = @(),
     [switch]$FillNothing
