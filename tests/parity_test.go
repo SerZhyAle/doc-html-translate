@@ -24,7 +24,11 @@ func readRepoFile(t *testing.T, parts ...string) string {
 	if err != nil {
 		t.Fatalf("read %s: %v", p, err)
 	}
-	return string(b)
+	// Line endings are normalized because these tests match multi-line markers with "\n" in them,
+	// and the same file is LF in the repository and CRLF in a Windows working copy. Without this a
+	// parity check passes in CI and fails on a developer's machine - or, as happened here, starts
+	// failing the moment a rebase re-checks-out the file, reporting a schema drift that is not one.
+	return strings.ReplaceAll(string(b), "\r\n", "\n")
 }
 
 func between(s, start, end string) string {
