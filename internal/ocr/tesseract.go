@@ -32,10 +32,23 @@ import (
 
 // Block is a recognized text block with its bounding box in image pixels. LineH is the
 // representative (median) line height in the block, used to size the overlay font.
+//
+// Lines carries the block's own line boxes, in reading order. The overlay needs them because a
+// block's bounding box is not the shape of the text it covers: centred copy narrows on its last
+// line, and a plate drawn as the bounding rectangle paints the picture on both sides of it.
+// Measured on a phone screenshot whose caption is 984 px wide on its first two lines and 759 on
+// its third: the single rectangle covered 941 px throughout and put 91 px of paper over the
+// photograph on either side of the last line.
 type Block struct {
 	Text           string
 	X0, Y0, X1, Y1 int
 	LineH          int
+	Lines          []LineBox
+}
+
+// LineBox is one recognized line's rectangle in image pixels.
+type LineBox struct {
+	X0, Y0, X1, Y1 int
 }
 
 // Result is the OCR output for a single image.
@@ -136,6 +149,18 @@ func MissingLangs(bin, lang string) []string {
 // analysis and isolates real text regions. Mirrored by ocr-overlay.js OCR_PSM (see docs/PARITY.md).
 const ocrPageSegMode = 3
 
+// ocrSparsePageSegMode is Tesseract's PSM 11, "sparse text": find as much text as possible in no
+// particular order, with no layout analysis behind it. It is a rescue rung rather than a default,
+// because on a page it is worse than PSM 3 - it has no columns, no reading order and no notion of a
+// paragraph, and wave 4 of the halftone work measured PSM 3 as the right mode for pages and comic
+// balloons. What it is right for is the input that is not a page: a poster is a few large words
+// placed for effect, and the layout analysis PSM 3 runs finds no page in it and drops them.
+// Measured on poster-display-type-on-flat-colour with rus data and the app's own staging: the grey
+// rungs at PSM 3 return one line above the rescue floor ("| МОЖЕМ", mean 85.5) while the same
+// rendition at PSM 11 returns six (ТРАХАТЬСЯ: 80.7, МЫ ЖЕ 96.1, ЛЮДИ, 92.6, МОЖЕМ 95.9, ПРОСТО
+// 87.2, ПОГОВОРИТЬ 95.0) with no debris. Mirrored by ocr-overlay.js (see docs/PARITY.md).
+const ocrSparsePageSegMode = 11
+
 // Recognize runs tesseract on imgPath for the given language and returns the recognized
 // blocks plus the image's pixel dimensions. dataDir is passed as --tessdata-dir only when
 // it actually contains the requested language, so a system tesseract still works when the
@@ -158,7 +183,7 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	ocrPath, scale, dpi, cleanup := prepareForOCR(imgPath)
 	defer cleanup()
 
-	res, err := recognizePass(bin, ocrPath, lang, dataDir, dpi, thresholdEngineDefault, ocrMinLineConf)
+	res, err := recognizePass(bin, ocrPath, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf)
 	if err != nil {
 		return Result{}, err
 	}
@@ -185,8 +210,8 @@ const (
 // recognizePass runs one recognition attempt: a prepared image, a language, a declared DPI and a
 // thresholding method. Splitting it out is what lets Recognize retry a picture that came back
 // empty without re-deciding how the image was staged.
-func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding int, minConf float64) (Result, error) {
-	cmd := exec.Command(bin, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding)...)
+func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64) (Result, error) {
+	cmd := exec.Command(bin, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm)...)
 	var out, errb bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &errb
@@ -197,7 +222,7 @@ func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding int, mi
 }
 
 // tesseractArgs builds one pass's command line.
-func tesseractArgs(ocrPath, lang, dataDir string, dpi, thresholding int) []string {
+func tesseractArgs(ocrPath, lang, dataDir string, dpi, thresholding, psm int) []string {
 	args := []string{ocrPath, "stdout"}
 	if dataDir != "" && hasLangFile(dataDir, lang) {
 		args = append(args, "--tessdata-dir", dataDir)
@@ -207,7 +232,7 @@ func tesseractArgs(ocrPath, lang, dataDir string, dpi, thresholding int) []strin
 	// redirects config lookup there - so `tsv` is not found ("read_params_file: Can't open tsv")
 	// and tesseract falls back to plain text, which parseTSV can't read (zero blocks -> no overlay).
 	// Setting the renderer flag directly is independent of any configs/ directory.
-	args = append(args, "--psm", strconv.Itoa(ocrPageSegMode), "-l", lang, "-c", "tessedit_create_tsv=1")
+	args = append(args, "--psm", strconv.Itoa(psm), "-l", lang, "-c", "tessedit_create_tsv=1")
 	// Declaring the resolution lets layout analysis separate regions Tesseract otherwise merges
 	// (adjacent balloons read as one plate): its own estimate on a bare page scan runs far below
 	// reality (~70 DPI for a ~180 DPI page). dpi==0 means we could not estimate one - leave it to guess.
@@ -240,18 +265,42 @@ func tesseractArgs(ocrPath, lang, dataDir string, dpi, thresholding int) []strin
 // - drawn in white over the bright half - comes out the same value as its background and vanishes.
 // Leptonica's tiled Otsu decides locally and reads it.
 //
-// This is a ladder rather than a replacement because none of the three is best everywhere: the
-// colour pass wins on scenes where the lettering is separated by hue rather than brightness (a
-// poster whose text and ground share a luminance), and greyscale throws that away. Retrying only
-// after the ordinary pass returned no plates at all keeps every scene that works today
-// byte-identical, and spends the extra pass only where the first one produced nothing to lose.
-var greyRescuePasses = []int{thresholdEngineDefault, thresholdLeptonicaOtsu}
+// The third rung changes neither the pixels nor the thresholder but what Tesseract is told to
+// look for: sparse text instead of a page (see ocrSparsePageSegMode). It comes last of the three
+// because it is the one that gives up layout analysis, which is what holds a real page's columns
+// and reading order together.
+//
+// This is a ladder rather than a replacement because none of them is best everywhere: the colour
+// pass wins on scenes where the lettering is separated by hue rather than brightness (a poster
+// whose text and ground share a luminance), and greyscale throws that away. Retrying only after
+// the ordinary pass returned no plates at all keeps every scene that works today byte-identical,
+// and spends the extra passes only where the first one produced nothing to lose.
+var greyRescuePasses = []rescueRung{
+	{thresholding: thresholdEngineDefault, psm: ocrPageSegMode},
+	{thresholding: thresholdLeptonicaOtsu, psm: ocrPageSegMode},
+	{thresholding: thresholdEngineDefault, psm: ocrSparsePageSegMode},
+}
+
+// rescueRung is one retry: who decides where ink ends and paper begins, and what Tesseract is
+// asked to find. Kept as a pair rather than as two parallel lists so a rung cannot half-exist.
+type rescueRung struct {
+	thresholding int
+	psm          int
+}
 
 // greyRescue walks greyRescuePasses over a greyscale copy of the prepared image, then - for a
 // picture whose lettering is printed on a halftone screen, which no thresholder can see through -
-// tries the screen pass. It returns the first result that found any plates. ok=false when the copy
+// tries the screen pass. It returns the strongest result any rung produced. ok=false when the copy
 // cannot be built or nothing reads anything, and the caller then keeps the empty colour result,
 // which is the honest answer.
+//
+// Strongest, not first-non-empty, and that distinction is the whole of the reported defect. The
+// ladder used to stop at the first rung that returned any plate at all, so a rung that recovered
+// one word ended the search before a later rung could recover six. Measured on
+// poster-display-type-on-flat-colour: rung 1 returns "| МОЖЕМ" and used to win outright, while the
+// sparse rung behind it returns six lines of the poster's lettering. The cost is that every rung
+// now runs - up to two more shell-outs on an image the ordinary pass could not read at all, and
+// none at all on an image that read.
 //
 // The screen pass is last because it is the only rung that changes the picture rather than the
 // reading of it: a low-pass costs a little accuracy on lettering the earlier rungs can already
@@ -266,11 +315,15 @@ func greyRescue(bin, ocrPath, lang, dataDir string, dpi int) (Result, bool) {
 		return Result{}, false
 	}
 	defer cleanup()
-	for _, thresholding := range greyRescuePasses {
-		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, thresholding, ocrRescueLineConf)
-		if err == nil && len(res.Blocks) > 0 {
-			return res, true
+	var best Result
+	for _, rung := range greyRescuePasses {
+		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf)
+		if err == nil && strictlyBetter(res, best) {
+			best = res
 		}
+	}
+	if len(best.Blocks) > 0 {
+		return best, true
 	}
 	return screenRescue(bin, grey, lang, dataDir, dpi)
 }
@@ -295,7 +348,7 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 		return Result{}, false
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrRescueLineConf)
+	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
 	if err != nil || len(res.Blocks) == 0 {
 		return Result{}, false
 	}
@@ -343,7 +396,7 @@ func screenSweep(bin, ocrPath, lang, dataDir string, dpi int, kept []Block) []Bl
 		return kept
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrRescueLineConf)
+	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
 	if err != nil {
 		return kept
 	}
@@ -422,9 +475,18 @@ func clampDeclaredDPI(d int) int {
 // name would otherwise fail recognition silently. Best-effort: any failure recognizes the original.
 func prepareForOCR(imgPath string) (path string, scale, dpi int, cleanup func()) {
 	dpi = estimateDPI(imageLongSide(imgPath))
-	if dpi > 0 && dpi < ocrUpscaleDPIFloor {
-		if up, cl, ok := upscaleForOCR(imgPath); ok {
-			return up, ocrUpscaleFactor, clampDeclaredDPI(dpi * ocrUpscaleFactor), cl
+	upscale := dpi > 0 && dpi < ocrUpscaleDPIFloor
+	// A photo carries its rotation in a tag rather than in its pixels, and recognition must be
+	// given the picture the reader sees: a page shot in portrait stores its lettering on its side,
+	// where PSM 3 (no OSD) reads none of it. Applying it here also means every coordinate comes
+	// back in the space the plates are positioned in, so nothing downstream has to know (exif.go).
+	orientation := exifOrientation(imgPath)
+	if upscale || orientation != orientNormal {
+		if p, cl, ok := stageForOCR(imgPath, orientation, upscale); ok {
+			if upscale {
+				return p, ocrUpscaleFactor, clampDeclaredDPI(dpi * ocrUpscaleFactor), cl
+			}
+			return p, 1, clampDeclaredDPI(dpi), cl
 		}
 	}
 	staged, cl := stageASCIIPath(imgPath)
@@ -447,21 +509,29 @@ func imageLongSide(path string) int {
 	return max(cfg.Width, cfg.Height)
 }
 
-// upscaleForOCR writes an ocrUpscaleFactor-enlarged copy of the image to a temp PNG (ASCII path) so
-// Tesseract reads it better, returning the temp path and a cleanup func. Best-effort: any
-// decode/scale/encode failure returns ok=false (recognize the original).
-func upscaleForOCR(imgPath string) (path string, cleanup func(), ok bool) {
+// stageForOCR writes the copy tesseract actually reads to a temp PNG (ASCII path), returning it
+// with a cleanup func: the picture turned the way a reader sees it, and - for a genuinely low-res
+// scan - enlarged ocrUpscaleFactor-fold so the lettering is legible to the engine.
+//
+// One decode for both, and the rotation first: enlarging is the expensive half, and doing it to
+// pixels that are about to be moved wastes the work either way round. Best-effort - any
+// decode/scale/encode failure returns ok=false and the caller recognizes the original.
+func stageForOCR(imgPath string, orientation int, upscale bool) (path string, cleanup func(), ok bool) {
 	src := decodeImage(imgPath)
 	if src == nil {
 		return "", nil, false
 	}
-	b := src.Bounds()
-	if b.Dx() <= 0 || b.Dy() <= 0 {
-		return "", nil, false
+	img := orientImage(src, orientation)
+	if upscale {
+		b := img.Bounds()
+		if b.Dx() <= 0 || b.Dy() <= 0 {
+			return "", nil, false
+		}
+		dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*ocrUpscaleFactor, b.Dy()*ocrUpscaleFactor))
+		xdraw.CatmullRom.Scale(dst, dst.Bounds(), img, b, xdraw.Over, nil)
+		img = dst
 	}
-	dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*ocrUpscaleFactor, b.Dy()*ocrUpscaleFactor))
-	xdraw.CatmullRom.Scale(dst, dst.Bounds(), src, b, xdraw.Over, nil)
-	return writeTempPNG(dst)
+	return writeTempPNG(img)
 }
 
 // writeTempPNG encodes an image to a temp PNG on an ASCII path and returns it with a cleanup
@@ -534,6 +604,10 @@ func scaleDown(res *Result, s int) {
 		bl := &res.Blocks[i]
 		bl.X0, bl.Y0, bl.X1, bl.Y1 = div(bl.X0), div(bl.Y0), div(bl.X1), div(bl.Y1)
 		bl.LineH = div(bl.LineH)
+		for j := range bl.Lines {
+			ln := &bl.Lines[j]
+			ln.X0, ln.Y0, ln.X1, ln.Y1 = div(ln.X0), div(ln.Y0), div(ln.X1), div(ln.Y1)
+		}
 	}
 }
 
@@ -575,10 +649,63 @@ func hasLangFile(dir, lang string) bool {
 // scale - all-caps ink runs about 0.7 em and loose leading about 2 em, so real leading tops out
 // near 2.9 ink heights - and the bound is what stops one big jump on a two-line page (a heading and
 // a body paragraph far below it) from becoming the page's "typical" pitch and merging them.
+//
+// ocrTypeSizeRatio is the second half of that question, and it is the half pitch cannot answer. A
+// page with separated regions - a poster, a form, a comic cover - hands the page-wide pitch estimate
+// steps that belong to no single text, and a headline can then sit closer to the body than the body's
+// own missing lines do. Measured on poster-display-type-on-flat-colour: the headline stands 168 px
+// from the next recognized line while two body lines that a reader takes as one text stand 190 px
+// apart, so no pitch bound separates them in the right place. Their *type sizes* do - the headline's
+// ink is 281 px against the body's 155 px median (1.81x) - which is the distinction a reader uses.
+//
+// The value has to clear the spread a single text shows on its own and stay under the step between
+// two texts. Both are measured on the corpus's hand-drawn line boxes, never on a recognizer's output:
+// the widest within-group spread is samson-and-delilah-03-scroll, 19 lines of one caption whose ink
+// runs 23-34 px, worst line 1.42x its own group's median; the narrowest across-group step is this
+// poster's 1.86x (and synth-display-lettering's headline-to-footnote is 2.57x). 1.6 is the geometric
+// middle of 1.42 and 1.81 - about 13% of margin on each side - rather than a round number chosen next
+// to one of them.
+//
+// ocrMaxPlateCoverage and ocrMinPlateLineFill are the last pair, and together they answer a
+// question none of the others can. Pitch and type size compare a line with its neighbours, so a
+// page whose separated regions carry one type at one pitch - a form, a list, an application window
+// - offers nothing in its typography to cut on, and the whole page arrives as a single plate. What
+// separates that plate from a real one is that it is at once **too big and too loose**: it covers
+// more of the picture than a text block plausibly can, and its own line boxes account for too
+// little of the height it spans, because most of that height is the gaps between regions.
+//
+// Both conditions are required, and each is there because the other is not enough on its own. Size
+// alone would release samson-and-delilah-03-scroll, a crop whose one hand-annotated caption covers
+// 0.6087 of it. Looseness alone would release synth-uniform-paper, three lines of ordinary body
+// text whose 0.6667 line fill is just the leading a paragraph has.
+//
+// The response is to release the cluster into its own line boxes rather than to drop it: a plate
+// per line still carries every word (nothing recognized is lost, and no scene loses a plate), while
+// what each one covers is the line it read instead of the rectangle spanning them all.
+//
+// Each bound is bracketed from opposite directions, measured over the 46 lab scenes and the 13
+// hand-drawn annotations (DEV/research/ocr_plate_coverage_2026-08-13.md):
+//
+//   - coverage 0.52 - the largest legitimate plate the recognizer produces is that scroll caption
+//     at 0.4004 of its image; the defect is accounts.jpg's window at 0.6829, six list rows and
+//     their icons in one plate. 0.52 is the geometric middle, ~30% of margin each way.
+//   - line fill 0.72 - the same scroll caption is the only annotated reading group whose own bounds
+//     pass the coverage bound, and its hand-drawn lines fill 0.7921 of its height (0.9936 as the
+//     recognizer boxes it); accounts.jpg's merged plate fills 0.6608. 0.72 is the geometric middle,
+//     ~9% each way.
+//
+// The measure this was expected to be - how much of a plate's box *area* its lines fill - was
+// measured on the same run and does not separate anything: accounts.jpg's merged plate fills 0.5891
+// of its box while a legitimate balloon fills 0.4582 and a legitimate cartoon caption 0.3621. Area
+// fill is a property of ragged right edges as much as of merging, so the rule is stated on the
+// vertical axis, which is the axis separated regions are separated on.
 const (
 	ocrMinLineConf        = 50
 	ocrClusterPitchFactor = 1.2
 	ocrMaxLeadingRatio    = 3
+	ocrTypeSizeRatio      = 1.6
+	ocrMaxPlateCoverage   = 0.52
+	ocrMinPlateLineFill   = 0.72
 )
 
 // ocrLine is one recognized text line: its bounding box, the concatenated word text, and the
@@ -656,7 +783,7 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		return Result{}, err
 	}
 
-	res.Blocks = clusterLines(lines, minConf)
+	res.Blocks = clusterLines(lines, minConf, res.Width, res.Height)
 	return res, nil
 }
 
@@ -669,7 +796,12 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 // Vertical adjacency is judged on the line pitch (see ocrClusterPitchFactor). A page whose lines
 // yield no measurable pitch at all - one line, or nothing but lines that share no column - has no
 // reference to compare against, and falls back to the ink-box gap this test used before.
-func clusterLines(lines []*ocrLine, minConf float64) []Block {
+//
+// imgW/imgH are the page's own dimensions, used only by the coverage rule (see
+// ocrMaxPlateCoverage): a finished cluster that covers more of the picture than a text block
+// plausibly can is released into its own lines. Zero on either means the page size is unknown and
+// the rule does not run.
+func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 	var kept []*ocrLine
 	var heights []int
 	for _, l := range lines {
@@ -692,7 +824,9 @@ func clusterLines(lines []*ocrLine, minConf float64) []Block {
 		cx0, cy0, cx1, cy1 int
 		clastY0            int // top of the cluster's last line - the pitch is measured from it
 		ctext              strings.Builder
+		ctexts             []string // the same text, still split by line, for the coverage release
 		cheights           []int
+		clines             []LineBox
 		open               bool
 	)
 	flush := func() {
@@ -700,13 +834,20 @@ func clusterLines(lines []*ocrLine, minConf float64) []Block {
 			return
 		}
 		if txt := strings.TrimSpace(ctext.String()); isTranslatable(txt) {
-			blocks = append(blocks, Block{
-				Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
-				LineH: median(cheights, cy1-cy0),
-			})
+			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, imgW, imgH); over != nil {
+				blocks = append(blocks, over...)
+			} else {
+				blocks = append(blocks, Block{
+					Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
+					LineH: median(cheights, cy1-cy0),
+					Lines: append([]LineBox(nil), clines...),
+				})
+			}
 		}
 		ctext.Reset()
+		ctexts = ctexts[:0]
 		cheights = cheights[:0]
+		clines = clines[:0]
 		open = false
 	}
 	for _, l := range kept {
@@ -719,16 +860,19 @@ func clusterLines(lines []*ocrLine, minConf float64) []Block {
 			if havePitch {
 				adjacent = pitch <= pitchMax
 			}
-			// same column (share x-extent), and vertically adjacent (the line keeps the page's
-			// pitch; a small negative gap tolerates overlapping boxes, a big one means a new
-			// column).
-			if adjacent && gap >= -float64(medianH) && overlap*10 >= narrower {
+			// same column (share x-extent), same type size, and vertically adjacent (the line
+			// keeps the page's pitch; a small negative gap tolerates overlapping boxes, a big one
+			// means a new column).
+			sameSize := sameTypeSize(l.y1-l.y0, median(cheights, 0))
+			if adjacent && sameSize && gap >= -float64(medianH) && overlap*10 >= narrower {
 				cx0, cy0 = min(cx0, l.x0), min(cy0, l.y0)
 				cx1, cy1 = max(cx1, l.x1), max(cy1, l.y1)
 				clastY0 = l.y0
 				ctext.WriteByte(' ')
 				ctext.WriteString(strings.TrimSpace(l.text.String()))
+				ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
 				cheights = append(cheights, l.y1-l.y0)
+				clines = append(clines, LineBox{X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1})
 				continue
 			}
 			flush()
@@ -736,11 +880,73 @@ func clusterLines(lines []*ocrLine, minConf float64) []Block {
 		cx0, cy0, cx1, cy1 = l.x0, l.y0, l.x1, l.y1
 		clastY0 = l.y0
 		ctext.WriteString(strings.TrimSpace(l.text.String()))
+		ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
 		cheights = append(cheights, l.y1-l.y0)
+		clines = append(clines, LineBox{X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1})
 		open = true
 	}
 	flush()
 	return blocks
+}
+
+// releaseOversized turns a cluster that is both too big and too loose (see ocrMaxPlateCoverage and
+// ocrMinPlateLineFill) into one block per line, and returns nil when the cluster passes either
+// test - the ordinary case, and the case on every scene of the lab corpus.
+//
+// Releasing rather than refusing is the whole point: every recognized word still reaches a plate,
+// so no scene loses text, while the area the overlay paints drops from the rectangle spanning the
+// regions to the lines themselves. The released blocks skip isTranslatable deliberately - the
+// cluster's assembled text has already passed it, and re-testing each line separately would drop
+// the short ones and turn a composition fix into a recall regression.
+//
+// A single-line cluster is never released: its box is its line, so there is nothing to release it
+// into and the coverage is a fact about the picture rather than about the grouping.
+func releaseOversized(x0, y0, x1, y1 int, texts []string, lines []LineBox, imgW, imgH int) []Block {
+	if imgW <= 0 || imgH <= 0 || len(lines) < 2 || len(texts) != len(lines) {
+		return nil
+	}
+	boxH := y1 - y0
+	box := float64(x1-x0) * float64(boxH)
+	if box <= 0 || boxH <= 0 || box <= float64(imgW)*float64(imgH)*ocrMaxPlateCoverage {
+		return nil
+	}
+	ink := 0
+	for _, ln := range lines {
+		ink += ln.Y1 - ln.Y0
+	}
+	if float64(ink) >= float64(boxH)*ocrMinPlateLineFill {
+		return nil
+	}
+	out := make([]Block, 0, len(lines))
+	for i, ln := range lines {
+		txt := strings.TrimSpace(texts[i])
+		if txt == "" {
+			continue
+		}
+		out = append(out, Block{
+			Text: txt, X0: ln.X0, Y0: ln.Y0, X1: ln.X1, Y1: ln.Y1,
+			LineH: ln.Y1 - ln.Y0,
+			Lines: []LineBox{ln},
+		})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+// sameTypeSize reports whether a line's ink height is close enough to a cluster's own to be part of
+// the same text (see ocrTypeSizeRatio). The comparison is against the cluster's median rather than
+// its previous line, so one odd box - a line of caps with no descenders, a line that is a single
+// short word - cannot end a plate by itself.
+//
+// A missing height is not evidence of a break: a zero on either side keeps the line, because the
+// clustering must never become stricter through an unmeasured quantity.
+func sameTypeSize(h, clusterH int) bool {
+	if h <= 0 || clusterH <= 0 {
+		return true
+	}
+	return float64(max(h, clusterH)) <= float64(min(h, clusterH))*ocrTypeSizeRatio
 }
 
 // medianLinePitch estimates the page's line pitch from the tops of successive kept lines.

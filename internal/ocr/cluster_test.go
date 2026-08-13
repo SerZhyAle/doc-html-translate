@@ -1,6 +1,9 @@
 package ocr
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // The line boxes below are not invented: they are what tesseract returned for the lab's two
 // grouping scenes on 2026-08-11, in the upscaled space clusterLines works in (the scenes are
@@ -47,10 +50,128 @@ var adjacentBalloons = []fixtureLine{
 	{117, 311, 308, 339, 95.9, "SLIGHTLY."},
 }
 
+// displayHeadlineOverBody: poster-display-type-on-flat-colour as the app actually reads it - the
+// grey rendition at PSM 11 with rus data, in the 2x staged space, rows in the order tesseract
+// returned them (PSM 11 is "sparse text, in no particular order", and it did return one line out of
+// reading order). ЗАЧЕМ and ОБ ЗЛОМ sit under the rescue floor and are dropped by it, which is why
+// three of the poster's nine lines never reach a plate.
+//
+// The step from the headline to the next recognized line is 335 px; the step between two body lines
+// a reader takes as one sentence is 381 px. No pitch bound cuts in the right place here. The type
+// sizes do: 281 px of ink against a 155 px median.
+var displayHeadlineOverBody = []fixtureLine{
+	{76, 79, 780, 366, 69.2, "ЗАЧЕМ"},
+	{74, 415, 1328, 696, 80.7, "ТРАХАТЬСЯ:"},
+	{79, 750, 521, 905, 96.1, "МЫ ЖЕ"},
+	{76, 1131, 456, 1302, 92.6, "ЛЮДИ,"},
+	{79, 1319, 538, 1472, 95.9, "МОЖЕМ"},
+	{79, 1694, 498, 1836, 73.9, "ОБ ЗЛОМ"},
+	{80, 1509, 477, 1658, 87.2, "ПРОСТО"},
+	{80, 1872, 644, 2009, 95.0, "ПОГОВОРИТЬ"},
+}
+
+// scrollCaption: the 19 hand-drawn line boxes of samson-and-delilah-03-scroll, the corpus's widest
+// within-group spread (ink 23-34 px, worst line 1.42x the group's own median). One caption, one
+// sentence, one plate - and the scene that decides how far ocrTypeSizeRatio may be tightened.
+var scrollCaption = []fixtureLine{
+	{103, 40, 469, 74, 95, "LONG AGO IN ISRAEL"},
+	{130, 74, 441, 102, 95, "THE SMALL TOWN OF"},
+	{130, 109, 469, 134, 95, "ASHKELON WAS RULED"},
+	{130, 142, 469, 165, 95, "BY A PHILISTINE KING,"},
+	{132, 172, 469, 196, 95, "WHO WAS CRUEL AND"},
+	{135, 203, 469, 227, 95, "HEARTLESS. ALL THE"},
+	{132, 235, 469, 258, 95, "DANITES HATED HIM."},
+	{130, 265, 469, 289, 95, "HIS TAXES WERE HEAVY,"},
+	{130, 297, 469, 320, 95, "HIS PUNISHMENTS SEVERE!"},
+	{130, 328, 469, 353, 95, "SAMSON, JUDGE OF THE"},
+	{130, 362, 463, 385, 95, "DANITES, WAS CHOSEN"},
+	{130, 392, 469, 415, 95, "TO PROTECT HIS"},
+	{130, 423, 469, 446, 95, "DOWNTRODDEN PEOPLE."},
+	{130, 453, 469, 477, 95, "IN ISRAEL WAS DELILAH,"},
+	{130, 484, 447, 510, 95, "IN ISRAEL WAS THEIR"},
+	{130, 516, 381, 540, 95, "GREAT LOVE, IN ISRAEL"},
+	{134, 547, 381, 570, 95, "WAS THE DEATH OF----"},
+	{130, 574, 457, 607, 95, "SAMSON AND"},
+	{164, 613, 402, 645, 95, "DELILAH!"},
+}
+
+// accountsWindow: the eight rows of test_doc/accounts.jpg as the app reads them (640x563, the image
+// is under the upscale floor so these are its own pixels). One type size, one column, an even
+// pitch - nothing in the typography separates a row from the next - so before the coverage rule the
+// six list rows landed in one plate spanning [13,99,555,553]: 0.6829 of the picture, with its own
+// line boxes accounting for only 0.6608 of the height it spanned. That plate is what the sweep
+// photographed as a wall of words with the screenshot no longer visible behind it.
+//
+// The **boxes are the recognizer's, unaltered** - they are what the rule is measured on. The row
+// *texts* are not: the screenshot is a private account list, and its rows name real people who did
+// not put their names in this repository. Each one keeps its shape (a leading glyph the recognizer
+// made of the row's avatar, a name, a role) so the "nothing is lost" assertion still means what it
+// says, and the geometry is untouched.
+var accountsWindow = []fixtureLine{
+	{15, 17, 290, 38, 90, "Your family group members"},
+	{15, 51, 339, 66, 90, "View and manage your family group. Learn more ©"},
+	{13, 99, 527, 151, 90, "Se) Given Family Family manager"},
+	{22, 182, 467, 231, 90, "i) Second Family Parent"},
+	{15, 262, 479, 310, 90, "6 Third Family Member"},
+	{13, 341, 479, 393, 90, "wi Fourth Family Member"},
+	{13, 423, 555, 474, 90, "te Fifth Family Supervised member"},
+	{15, 505, 479, 553, 90, "© Sixth Family Member"},
+}
+
+// TestClusterLinesReleasesAPlateThatCoversItsPage: a cluster that is both too big and too loose is
+// released into its own lines, so the reader gets the rows rather than a slab over the window. The
+// assertion is on what a reader loses, not on a plate count: every recognized word still reaches a
+// plate, and no plate covers more than a row.
+func TestClusterLinesReleasesAPlateThatCoversItsPage(t *testing.T) {
+	blocks := clusterLines(fixtureLines(accountsWindow), ocrMinLineConf, 640, 563)
+	if len(blocks) < 6 {
+		t.Fatalf("blocks = %d, want the six rows released (plus the header)", len(blocks))
+	}
+	img := float64(640 * 563)
+	for _, b := range blocks {
+		if cover := float64((b.X1 - b.X0) * (b.Y1 - b.Y0)); cover/img > ocrMaxPlateCoverage {
+			t.Errorf("plate %q covers %.4f of the image, want <= %.2f", b.Text, cover/img, ocrMaxPlateCoverage)
+		}
+	}
+	// Nothing recognized may be lost on the way: the released lines carry their own text, and the
+	// rows are short enough that re-filtering them individually would have dropped some.
+	var joined string
+	for _, b := range blocks {
+		joined += b.Text + " "
+	}
+	for _, want := range []string{"Given Family", "Second Family", "Sixth Family", "Supervised member"} {
+		if !strings.Contains(joined, want) {
+			t.Errorf("released plates lost %q", want)
+		}
+	}
+}
+
+// TestReleaseOversizedNeedsBothConditions is the price side: each half of the rule alone would
+// release a scene the corpus says is one plate. The numbers are the measured ones - see
+// ocrMaxPlateCoverage / ocrMinPlateLineFill.
+func TestReleaseOversizedNeedsBothConditions(t *testing.T) {
+	// Too big but tightly packed: samson-and-delilah-03-scroll's caption covers 0.6087 of its crop
+	// in the hand-drawn annotation and its lines fill 0.7921 of that height.
+	tight := []LineBox{{0, 0, 100, 79}, {0, 80, 100, 158}}
+	if got := releaseOversized(0, 0, 100, 200, []string{"a", "b"}, tight, 120, 170); got != nil {
+		t.Errorf("a tightly packed caption was released into %d lines", len(got))
+	}
+	// Loose but small: synth-uniform-paper's three body lines fill 0.6667 of their box and cover
+	// 0.2141 of the page.
+	loose := []LineBox{{0, 0, 100, 20}, {0, 40, 100, 60}, {0, 80, 100, 100}}
+	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, 500, 500); got != nil {
+		t.Errorf("an ordinary paragraph was released into %d lines", len(got))
+	}
+	// Both, which is the defect.
+	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, 120, 120); len(got) != 3 {
+		t.Errorf("released %d plates, want 3", len(got))
+	}
+}
+
 // TestClusterLinesKeepsOneBalloonWhole is the splitting half of the pair: all-caps lettering must
 // not be split by measuring its leading against the height of its own ink.
 func TestClusterLinesKeepsOneBalloonWhole(t *testing.T) {
-	blocks := clusterLines(fixtureLines(balloonOnPanel), ocrRescueLineConf)
+	blocks := clusterLines(fixtureLines(balloonOnPanel), ocrRescueLineConf, 1120, 840)
 	if len(blocks) != 1 {
 		t.Fatalf("blocks = %d, want 1 (one balloon is one plate)", len(blocks))
 	}
@@ -62,7 +183,7 @@ func TestClusterLinesKeepsOneBalloonWhole(t *testing.T) {
 // TestClusterLinesKeepsAdjacentBalloonsApart is the merging half: the fix for the split above must
 // not be paid for by a plate that spans two balloons.
 func TestClusterLinesKeepsAdjacentBalloonsApart(t *testing.T) {
-	blocks := clusterLines(fixtureLines(adjacentBalloons), ocrRescueLineConf)
+	blocks := clusterLines(fixtureLines(adjacentBalloons), ocrRescueLineConf, 1240, 600)
 	if len(blocks) != 2 {
 		t.Fatalf("blocks = %d, want 2 (one plate per balloon)", len(blocks))
 	}
@@ -70,6 +191,65 @@ func TestClusterLinesKeepsAdjacentBalloonsApart(t *testing.T) {
 		if blocks[i].Text != want {
 			t.Errorf("block %d = %q, want %q", i, blocks[i].Text, want)
 		}
+	}
+}
+
+// TestClusterLinesSeparatesDisplayTypeFromBody: a headline and the body under it are two texts even
+// when they sit within a page's own line pitch of each other. Pitch cannot see it - on this poster
+// the headline's step is smaller than one inside the body - so the type size has to.
+func TestClusterLinesSeparatesDisplayTypeFromBody(t *testing.T) {
+	blocks := clusterLines(fixtureLines(displayHeadlineOverBody), ocrRescueLineConf, 1920, 2560)
+	if len(blocks) != 2 {
+		t.Fatalf("blocks = %d, want 2 (headline and body are two plates)", len(blocks))
+	}
+	if want := "ТРАХАТЬСЯ:"; blocks[0].Text != want {
+		t.Errorf("headline = %q, want %q", blocks[0].Text, want)
+	}
+	if want := "МЫ ЖЕ ЛЮДИ, МОЖЕМ ПРОСТО ПОГОВОРИТЬ"; blocks[1].Text != want {
+		t.Errorf("body = %q, want %q", blocks[1].Text, want)
+	}
+	// The body's box is what the lab scores against the annotation's body group, [38,375,344,1005]
+	// once scaled back down. Pinned in the staged space this fixture is measured in.
+	if b := blocks[1]; b.X0 != 76 || b.Y0 != 750 || b.X1 != 644 || b.Y1 != 2009 {
+		t.Errorf("body box = [%d,%d,%d,%d], want [76,750,644,2009]", b.X0, b.Y0, b.X1, b.Y1)
+	}
+}
+
+// TestClusterLinesKeepsACaptionWhoseLinesVary is the price side of the rule above: a real caption's
+// own lines are not all one height, and the corpus's widest spread must survive it untouched.
+func TestClusterLinesKeepsACaptionWhoseLinesVary(t *testing.T) {
+	blocks := clusterLines(fixtureLines(scrollCaption), ocrRescueLineConf, 520, 720)
+	if len(blocks) == 0 {
+		t.Fatal("no plates")
+	}
+	// The assertion is about the size rule, so it is stated as "no break inside the caption's
+	// varying lines" rather than as a plate count: the caption's last line stands 39 px from the one
+	// above it against a 31 px page pitch, and the pitch bound separates it here with or without the
+	// size rule. That break is this fixture's, not the rule's - it is human line geometry standing in
+	// for a recognizer's, and the scene's own lab result is what governs.
+	first := blocks[0]
+	if first.Y0 != 40 || first.Y1 != 607 {
+		t.Errorf("first plate spans y %d-%d, want 40-607 (lines 1-18 in one plate)", first.Y0, first.Y1)
+	}
+	if !strings.HasPrefix(first.Text, "LONG AGO IN ISRAEL") || !strings.HasSuffix(first.Text, "SAMSON AND") {
+		t.Errorf("first plate = %q, want the caption from its 34 px first line to its 33 px last but one", first.Text)
+	}
+}
+
+// TestSameTypeSizeBracketsTheMeasuredBands: the ratio has to admit the widest spread one text shows
+// on its own and reject the narrowest step between two texts. Both numbers come from the corpus's
+// hand-drawn line boxes - see ocrTypeSizeRatio for where each was measured.
+func TestSameTypeSizeBracketsTheMeasuredBands(t *testing.T) {
+	// samson-and-delilah-03-scroll: a 34 px line inside a caption whose median is 24 px.
+	if !sameTypeSize(34, 24) {
+		t.Error("the corpus's widest within-caption spread (1.42x) counts as a different type size")
+	}
+	// poster-display-type-on-flat-colour, as recognized: 281 px of display ink over a 155 px body.
+	if sameTypeSize(281, 155) {
+		t.Error("display type over body text (1.81x) counts as the same type size")
+	}
+	if !sameTypeSize(0, 155) || !sameTypeSize(155, 0) {
+		t.Error("an unmeasured height ended a plate")
 	}
 }
 

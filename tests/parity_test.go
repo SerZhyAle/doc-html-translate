@@ -157,6 +157,9 @@ func TestParityOCRClustering(t *testing.T) {
 		{"min line confidence", `ocrMinLineConf\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MIN_LINE_CONF\s*=\s*([\d.]+)`},
 		{"cluster pitch factor", `ocrClusterPitchFactor\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_CLUSTER_PITCH_FACTOR\s*=\s*([\d.]+)`},
 		{"max leading ratio", `ocrMaxLeadingRatio\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_LEADING_RATIO\s*=\s*([\d.]+)`},
+		{"type size ratio", `ocrTypeSizeRatio\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_TYPE_SIZE_RATIO\s*=\s*([\d.]+)`},
+		{"max plate coverage", `ocrMaxPlateCoverage\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_PLATE_COVERAGE\s*=\s*([\d.]+)`},
+		{"min plate line fill", `ocrMinPlateLineFill\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MIN_PLATE_LINE_FILL\s*=\s*([\d.]+)`},
 		{"upscale dpi floor", `ocrUpscaleDPIFloor\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_UPSCALE_DPI_FLOOR\s*=\s*([\d.]+)`},
 		{"assumed page inches", `ocrAssumedPageInches\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_ASSUMED_PAGE_INCHES\s*=\s*([\d.]+)`},
 		{"min declared dpi", `ocrMinDeclaredDPI\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_MIN_DECLARED_DPI\s*=\s*([\d.]+)`},
@@ -185,6 +188,26 @@ func TestParityOCRClustering(t *testing.T) {
 		{"pitch bound", "ocr-cluster.js", clusterSrc, `pitchMax\s*=\s*refPitch\s*\*\s*OCR_CLUSTER_PITCH_FACTOR`},
 		{"pitch is measured top to top", "tesseract.go", goSrc, `dy\s*:=\s*l\.y0\s*-\s*prev\.y0`},
 		{"pitch is measured top to top", "ocr-cluster.js", clusterSrc, `dy\s*=\s*cur\.y0\s*-\s*prev\.y0`},
+		// The type-size break is the same kind of contract and was given the same treatment after the
+		// colour fix drifted in exactly this way (2026-08-13): equal constants said nothing about what
+		// the constant was applied to. Two things have to hold on both sides - the candidate line is
+		// weighed against its own *cluster's* median height (weighing it against the page's would make
+		// every plate on a two-size page break), and the ratio multiplies the smaller of the two, so
+		// the test is symmetric and a small line under a big cluster breaks like a big one under a
+		// small cluster.
+		{"size break asks the cluster, not the page", "tesseract.go", goSrc, `sameTypeSize\(l\.y1-l\.y0,\s*median\(cheights,\s*0\)\)`},
+		{"size break asks the cluster, not the page", "ocr-cluster.js", clusterSrc, `sameTypeSize\(y1 - y0,\s*medianOf\(cur\.heights\)\)`},
+		{"size break is symmetric", "tesseract.go", goSrc, `float64\(max\(h, clusterH\)\)\s*<=\s*float64\(min\(h, clusterH\)\)\s*\*\s*ocrTypeSizeRatio`},
+		{"size break is symmetric", "ocr-cluster.js", clusterSrc, `Math\.max\(h, clusterH\)\s*<=\s*Math\.min\(h, clusterH\)\s*\*\s*OCR_TYPE_SIZE_RATIO`},
+		// The coverage rule needs both of its conditions on both sides, and needs to release rather
+		// than drop. Either half alone releases a scene the corpus says is one plate (size alone
+		// takes samson-and-delilah-03-scroll, looseness alone takes synth-uniform-paper), and a side
+		// that dropped the cluster instead of releasing its lines would lose text that reads today
+		// while passing every constant check above.
+		{"coverage is measured against the page", "tesseract.go", goSrc, `box <= float64\(imgW\)\*float64\(imgH\)\*ocrMaxPlateCoverage`},
+		{"coverage is measured against the page", "ocr-cluster.js", clusterSrc, `box <= imgW \* imgH \* OCR_MAX_PLATE_COVERAGE`},
+		{"looseness is the second condition", "tesseract.go", goSrc, `float64\(ink\) >= float64\(boxH\)\*ocrMinPlateLineFill`},
+		{"looseness is the second condition", "ocr-cluster.js", clusterSrc, `ink >= boxH \* OCR_MIN_PLATE_LINE_FILL`},
 	}
 	for _, m := range meaning {
 		if !regexp.MustCompile(m.re).MatchString(m.src) {
@@ -201,8 +224,8 @@ func TestParityOCRGreyRescue(t *testing.T) {
 	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
 	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
 
-	goLadder := between(goSrc, "var greyRescuePasses = []int{", "}")
-	jsLadder := between(jsSrc, "const GREY_RESCUE_PASSES = [", "]")
+	goLadder := between(goSrc, "var greyRescuePasses = []rescueRung{", "\n}")
+	jsLadder := between(jsSrc, "const GREY_RESCUE_PASSES = [", "\n]")
 	rungs := regexp.MustCompile(`(?i)(EngineDefault|LeptonicaOtsu|ENGINE_DEFAULT|LEPTONICA_OTSU)`)
 	goRungs := strings.ToUpper(strings.Join(flatten(rungs.FindAllStringSubmatch(goLadder, -1)), ","))
 	jsRungs := strings.ToUpper(strings.Join(flatten(rungs.FindAllStringSubmatch(jsLadder, -1)), ","))
@@ -219,12 +242,79 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		{"engine-default thresholder", `thresholdEngineDefault\s*=\s*(\d+)`, `THRESHOLD_ENGINE_DEFAULT\s*=\s*"?(\d+)"?`},
 		{"leptonica tiled thresholder", `thresholdLeptonicaOtsu\s*=\s*(\d+)`, `THRESHOLD_LEPTONICA_OTSU\s*=\s*"?(\d+)"?`},
 		{"rescue line confidence", `ocrRescueLineConf\s*=\s*([\d.]+)`, `OCR_RESCUE_LINE_CONF\s*=\s*([\d.]+)`},
+		// The sparse rung's mode. It is the rung that recovers display lettering a poster's layout
+		// analysis throws away, and a drift here means one edition reads the poster and the other
+		// shows the reader a picture with nothing on it.
+		{"sparse segmentation mode", `ocrSparsePageSegMode\s*=\s*(\d+)`, `OCR_SPARSE_PSM\s*=\s*"?(\d+)"?`},
 	}
 	for _, p := range pairs {
 		gv := num(t, p.name+" (tesseract.go)", p.goRe, goSrc)
 		jv := num(t, p.name+" (ocr-overlay.js)", p.jsRe, jsSrc)
 		if gv != jv {
 			t.Errorf("%s drift: tesseract.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", p.name, gv, jv)
+		}
+	}
+}
+
+// TestParityOCRRungComparator: a rescue rung may replace what is already in hand only when it found
+// strictly more, and a tie keeps the incumbent. Both editions have to apply the same rule or the
+// same poster comes back with one word in one edition and six lines in the other. See docs/PARITY.md
+// "OCR" (grey rescue ladder).
+func TestParityOCRRungComparator(t *testing.T) {
+	checks := []struct{ name, file, src, re string }{
+		{"the ladder keeps the strongest rung", "tesseract.go",
+			readRepoFile(t, "internal", "ocr", "tesseract.go"),
+			`(?s)for _, rung := range greyRescuePasses.*?strictlyBetter\(res, best\)`},
+		{"the ladder keeps the strongest rung", "ocr-overlay.js",
+			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
+			`(?s)for \(const rung of GREY_RESCUE_PASSES.*?strictlyBetter\(blocks, best\)`},
+		{"a tie keeps the incumbent", "strength.go",
+			readRepoFile(t, "internal", "ocr", "strength.go"),
+			`return resultStrength\(candidate\) > resultStrength\(current\)`},
+		{"a tie keeps the incumbent", "ocr-cluster.js",
+			readRepoFile(t, "extension", "src", "ocr-cluster.js"),
+			`return resultStrength\(candidate\) > resultStrength\(current\)`},
+	}
+	for _, c := range checks {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR (grey rescue ladder)", c.file, c.name, c.re)
+		}
+	}
+}
+
+// TestParityOCRPlateColourOrientation: a plate must never come back as the negative of what it
+// covers. Both editions decide which of the two sampled colours is the paper from the band around
+// the block rather than from which colour fills more of it - heavy display capitals fill more of
+// their own tight box than the paper between them does. See docs/PARITY.md "OCR" (plate colours).
+func TestParityOCRPlateColourOrientation(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "overlay.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+
+	if gv, jv := num(t, "ring sample floor (overlay.go)", `ringMinSamples\s*=\s*(\d+)`, goSrc),
+		num(t, "ring sample floor (ocr-overlay.js)", `RING_MIN_SAMPLES\s*=\s*(\d+)`, jsSrc); gv != jv {
+		t.Errorf("ring sample floor drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gv, jv)
+	}
+	// The band's own width, which the call shape below cannot see. It drifted once: the JS side
+	// folded the line height and the 1.3-line ink strip into one variable and handed the strip to
+	// the ring, so the extension sampled a band 30 % wider than the desktop app on the same block.
+	// Both sides derive the pad from the raw line height, and this is what says so.
+	if gv, jv := num(t, "ring band divisor (overlay.go)", `pad := lh / (\d+)`, goSrc),
+		num(t, "ring band divisor (ocr-overlay.js)", `const pad = Math\.max\(2, Math\.round\(lh / (\d+)\)\)`, jsSrc); gv != jv {
+		t.Errorf("ring band drift: overlay.go=lh/%v ocr-overlay.js=lh/%v (must match - see docs/PARITY.md OCR)", gv, jv)
+	}
+	for _, c := range []struct{ name, file, src, re string }{
+		{"the ring decides which colour is paper", "overlay.go", goSrc, `if ringNearerInk\(img, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, inkG, inkB\)`},
+		{"the ring decides which colour is paper", "ocr-overlay.js", jsSrc, `ringNearerInk\(ctx, x0, y0, w, h, lh, bg, ink\)`},
+		// The ring is derived from the line, the ink from the 1.3-line strip; one variable for both
+		// is the drift above, so each edition has to keep them apart by name.
+		{"the ink strip is not the ring's line height", "overlay.go", goSrc, `yFirst := y0 \+ int\(float64\(lh\)\*1\.3\)`},
+		{"the ink strip is not the ring's line height", "ocr-overlay.js", jsSrc, `const firstBand = .*Math\.round\(lh \* 1\.3\)`},
+		// Ink is a median on both sides. A mean lands between the ink and the paper by construction.
+		{"ink is a median", "overlay.go", goSrc, `inkR, inkG, inkB = medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)`},
+		{"ink is a median", "ocr-overlay.js", jsSrc, `\[medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)\]`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR (plate colours)", c.file, c.name, c.re)
 		}
 	}
 }
@@ -271,10 +361,10 @@ func TestParityOCRScreenRung(t *testing.T) {
 	position := []struct{ name, file, src, re string }{
 		{"screen rung follows the grey ladder", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
-			`(?s)for _, thresholding := range greyRescuePasses.*?return screenRescue\(`},
+			`(?s)for _, rung := range greyRescuePasses.*?return screenRescue\(`},
 		{"screen rung follows the grey ladder", "ocr-overlay.js",
 			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
-			`(?s)for \(const method of GREY_RESCUE_PASSES.*?return screenRescue\(`},
+			`(?s)for \(const rung of GREY_RESCUE_PASSES.*?return screenRescue\(`},
 		{"sigma is the measured pitch over the divisor", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
 			`float64\(pitch\)\s*/\s*ocrScreenSigmaDivisor`},
@@ -333,10 +423,81 @@ func flatten(matches [][]string) []string {
 // match across editions - overlay.go fontFitFactor vs ocr-overlay.js FONT_FIT. See docs/PARITY.md
 // "OCR" (plate geometry).
 func TestParityOCRFontFit(t *testing.T) {
-	gv := num(t, "fontFitFactor (overlay.go)", `fontFitFactor\s*=\s*([\d.]+)`, readRepoFile(t, "internal", "ocr", "overlay.go"))
-	jv := num(t, "FONT_FIT (ocr-overlay.js)", `FONT_FIT\s*=\s*([\d.]+)`, readRepoFile(t, "extension", "src", "ocr-overlay.js"))
+	goSrc := readRepoFile(t, "internal", "ocr", "overlay.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+
+	gv := num(t, "fontFitFactor (overlay.go)", `fontFitFactor\s*=\s*([\d.]+)`, goSrc)
+	jv := num(t, "FONT_FIT (ocr-overlay.js)", `FONT_FIT\s*=\s*([\d.]+)`, jsSrc)
 	if gv != jv {
 		t.Errorf("font fit factor drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gv, jv)
+	}
+
+	// The runtime fit runs in both directions, and the ceiling on the grow half is the number that
+	// keeps a plate from printing larger than the lettering it covers: a block's box includes the
+	// leading between its lines, so "grow until the box is full" is not "match the source". A
+	// one-sided change here is a one-sided change to how big translated text renders.
+	gc := num(t, "grow cap (overlay.go)", `cap=base\*([\d.]+)`, goSrc)
+	jc := num(t, "FONT_GROW_CAP (ocr-overlay.js)", `FONT_GROW_CAP\s*=\s*([\d.]+)`, jsSrc)
+	if gc != jc {
+		t.Errorf("font grow cap drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gc, jc)
+	}
+
+	// The plate's ink colour must be sampled the same way on both sides. It is a median rather than
+	// a mean because the deviation test that selects ink pixels also admits a glyph's antialiased
+	// edge, and averaging that ramp lands between the ink and the paper - measured rgb(61,61,61)
+	// for source lettering of rgb(17,17,17). One side reverting to a mean is a visible drift in
+	// plate text colour that no constant check would catch.
+	if !regexp.MustCompile(`inkR, inkG, inkB = medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)`).MatchString(goSrc) {
+		t.Error("overlay.go: the plate ink is no longer a median of the selected pixels - see docs/PARITY.md OCR")
+	}
+	if !regexp.MustCompile(`ink = measured \? \[medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)\]`).MatchString(jsSrc) {
+		t.Error("ocr-overlay.js: the plate ink is no longer a median of the selected pixels - see docs/PARITY.md OCR")
+	}
+
+	// The opaque paper is carried by the plate box on both sides, because the box is what covers the
+	// source region. Carrying it on an inline span around the string instead gives the paper the
+	// shape of the rendered words and leaves the source lettering showing wherever the string is
+	// shorter than the region - measured over 46 lab scenes at a mean 93% residual against 17% for
+	// the box. A side that moved the background back onto the string would still pass every constant
+	// check here, so the carrier is pinned by name on both sides.
+	for _, c := range []struct{ what, src, re string }{
+		{"overlay.go plate box carries the paper", goSrc, `\.ocr-box\{[^}]*background:#fff`},
+		{"overlay.go writes the sampled paper onto the box", goSrc, `style \+= ";background:" \+ paper`},
+		{"ocr-overlay.js writes the sampled paper onto the plate", jsSrc, `plate\.style\.background = b\.colors\.bg`},
+		{"ocr-overlay.css plate box carries the paper", readRepoFile(t, "extension", "src", "ocr-overlay.css"), `(?s)\.ocr-plate \{[^}]*background: #fff`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (plate shape)", c.what, c.re)
+		}
+	}
+	// And the string carrier is gone from both, not merely unused: a leftover .ocr-ink rule would
+	// still paint a second, tighter background inside every plate.
+	for _, c := range []struct{ what, src string }{
+		{"overlay.go still carries a paper span", goSrc},
+		{"ocr-overlay.js still carries a paper span", jsSrc},
+		{"ocr-overlay.css still carries a paper span", readRepoFile(t, "extension", "src", "ocr-overlay.css")},
+	} {
+		if strings.Contains(c.src, "ocr-ink") {
+			t.Errorf("%s: the paper belongs on the plate box - see docs/PARITY.md OCR (plate shape)", c.what)
+		}
+	}
+
+	// Plate padding is relative to the plate's own type on both sides, and it is a measured value
+	// rather than a taste: it decides how large the runtime fit grows the plate's lettering, and the
+	// lab's residual-ink metric counts that lettering wherever it lands on a source-ink pixel. One
+	// edition drifting here moves a gated number on the other.
+	gp := num(t, "plate padding (overlay.go)", `padding:([\d.]+)em [\d.]+em`, goSrc)
+	jp := num(t, "plate padding (ocr-overlay.css)", `padding:\s*([\d.]+)em\s+[\d.]+em`, readRepoFile(t, "extension", "src", "ocr-overlay.css"))
+	if gp != jp {
+		t.Errorf("plate padding drift: overlay.go=%vem ocr-overlay.css=%vem (must match - see docs/PARITY.md OCR)", gp, jp)
+	}
+
+	// Corner radius is relative to the plate's own type on both sides, so a caption plate and a
+	// full-page plate round in proportion instead of one of them reading as a sharp patch.
+	gr := num(t, "plate radius (overlay.go)", `border-radius:([\d.]+)em`, goSrc)
+	jr := num(t, "plate radius (ocr-overlay.css)", `border-radius:\s*([\d.]+)em`, readRepoFile(t, "extension", "src", "ocr-overlay.css"))
+	if gr != jr {
+		t.Errorf("plate corner radius drift: overlay.go=%vem ocr-overlay.css=%vem (must match - see docs/PARITY.md OCR)", gr, jr)
 	}
 }
 

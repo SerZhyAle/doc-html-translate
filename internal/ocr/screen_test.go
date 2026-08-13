@@ -129,10 +129,10 @@ func TestMergeScreenBlocksDropsWhatIsAlreadyPlated(t *testing.T) {
 
 	got := mergeScreenBlocks(kept, []Block{clear, duplicate, straddling})
 
-	if len(got) < len(kept) || got[0] != kept[0] || got[1] != kept[1] {
+	if len(got) < len(kept) || !sameBlock(got[0], kept[0]) || !sameBlock(got[1], kept[1]) {
 		t.Fatalf("the ordinary pass's plates must come through unchanged and in order, got %+v", got)
 	}
-	if len(got) != len(kept)+1 || got[2] != clear {
+	if len(got) != len(kept)+1 || !sameBlock(got[2], clear) {
 		t.Errorf("merged %d plates (%+v), want the two kept ones plus %q only", len(got), got, clear.Text)
 	}
 
@@ -260,8 +260,16 @@ func TestScreenRungSkipsAnImageWithoutAScreen(t *testing.T) {
 // screen pass is the only one that changes the picture rather than the reading of it, and it costs
 // accuracy on lettering the cheaper rungs can already read, so it has to come last.
 func TestScreenRungIsAfterTheGreyLadder(t *testing.T) {
-	if len(greyRescuePasses) != 2 {
-		t.Fatalf("greyRescuePasses = %v: the screen rung is defined as the one after these", greyRescuePasses)
+	// The grey rungs read the picture as it is; the screen rung is the one that alters it, and it
+	// is reached only when every rung here came back empty. Counting them would break each time a
+	// rung is added, so what is pinned is that they all read the unaltered grey rendition.
+	if len(greyRescuePasses) == 0 {
+		t.Fatalf("greyRescuePasses is empty: the screen rung is defined as the one after these")
+	}
+	for _, rung := range greyRescuePasses {
+		if rung.psm != ocrPageSegMode && rung.psm != ocrSparsePageSegMode {
+			t.Errorf("rung %v asks for a segmentation mode this ladder does not define", rung)
+		}
 	}
 	if ocrScreenSigmaDivisor <= 0 {
 		t.Errorf("ocrScreenSigmaDivisor = %v, want a positive divisor of the measured pitch", ocrScreenSigmaDivisor)

@@ -63,7 +63,7 @@ func TestGreyRenditionRejectsNonImage(t *testing.T) {
 // unnamed, so a scene that works today produces the identical command line - which is what makes
 // the ladder a pure addition rather than a re-tune.
 func TestOrdinaryPassCommandLineUnchanged(t *testing.T) {
-	args := tesseractArgs("img.png", "eng", "", 150, thresholdEngineDefault)
+	args := tesseractArgs("img.png", "eng", "", 150, thresholdEngineDefault, ocrPageSegMode)
 	if slices.Contains(args, "thresholding_method=0") {
 		t.Errorf("ordinary pass names the default thresholder: %v", args)
 	}
@@ -77,7 +77,7 @@ func TestOrdinaryPassCommandLineUnchanged(t *testing.T) {
 // TestRescuePassNamesItsThresholder: the second rung differs from the first only in who decides
 // where ink ends, so the flag has to reach tesseract.
 func TestRescuePassNamesItsThresholder(t *testing.T) {
-	args := tesseractArgs("img.png", "eng", "", 0, thresholdLeptonicaOtsu)
+	args := tesseractArgs("img.png", "eng", "", 0, thresholdLeptonicaOtsu, ocrPageSegMode)
 	if !slices.Contains(args, "thresholding_method=1") {
 		t.Errorf("rescue pass did not request Leptonica's tiled Otsu: %v", args)
 	}
@@ -89,10 +89,61 @@ func TestRescuePassNamesItsThresholder(t *testing.T) {
 // TestGreyRescueLadderOrder: the ordinary thresholder is tried first on the grey copy, because on
 // the diagnostic balloon scenes greyscale alone is enough; the tiled thresholder is the deeper
 // rung that a varying background (a gradient) needs. Trying them the other way round would spend
-// the more expensive pass on scenes the cheap one already reads.
+// the more expensive pass on scenes the cheap one already reads. The rung that gives up layout
+// analysis comes after both, because layout analysis is what holds a real page together and only
+// input that is not a page benefits from losing it.
+//
+// Asserted as the sequence of rungs rather than as a list of integers: a test that pinned the
+// numbers would pass with the modes swapped between rungs.
 func TestGreyRescueLadderOrder(t *testing.T) {
-	if want := []int{thresholdEngineDefault, thresholdLeptonicaOtsu}; !slices.Equal(greyRescuePasses, want) {
-		t.Errorf("greyRescuePasses = %v, want %v", greyRescuePasses, want)
+	want := []rescueRung{
+		{thresholding: thresholdEngineDefault, psm: ocrPageSegMode},
+		{thresholding: thresholdLeptonicaOtsu, psm: ocrPageSegMode},
+		{thresholding: thresholdEngineDefault, psm: ocrSparsePageSegMode},
+	}
+	if !slices.Equal(greyRescuePasses, want) {
+		t.Fatalf("greyRescuePasses = %v, want %v", greyRescuePasses, want)
+	}
+	last := greyRescuePasses[len(greyRescuePasses)-1]
+	for _, rung := range greyRescuePasses[:len(greyRescuePasses)-1] {
+		if rung.psm != ocrPageSegMode {
+			t.Errorf("rung %v gives up layout analysis before the last rung does", rung)
+		}
+	}
+	if last.psm != ocrSparsePageSegMode {
+		t.Errorf("the last rung asks for %d, want the sparse mode %d", last.psm, ocrSparsePageSegMode)
+	}
+}
+
+// TestSparseRungAsksForSparseSegmentation: the rung differs from the first only in what tesseract
+// is told to look for, so the mode has to reach the command line - and the ordinary pass must keep
+// asking for the page mode.
+func TestSparseRungAsksForSparseSegmentation(t *testing.T) {
+	ordinary := tesseractArgs("img.png", "rus", "", 232, thresholdEngineDefault, ocrPageSegMode)
+	sparse := tesseractArgs("img.png", "rus", "", 232, thresholdEngineDefault, ocrSparsePageSegMode)
+	if i := slices.Index(ordinary, "--psm"); i < 0 || ordinary[i+1] != "3" {
+		t.Errorf("ordinary pass no longer asks for the page mode: %v", ordinary)
+	}
+	if i := slices.Index(sparse, "--psm"); i < 0 || sparse[i+1] != "11" {
+		t.Errorf("sparse rung did not ask for sparse text: %v", sparse)
+	}
+}
+
+// TestGreyRescueKeepsTheStrongestRung: the ladder used to stop at the first rung that produced any
+// plate at all, which is how one recovered word ("| МОЖЕМ" on the reported poster) ended the search
+// before the sparse rung could recover six lines. The comparator is what makes the later rung
+// reachable, and it must never let a poorer rung displace a richer one.
+func TestGreyRescueKeepsTheStrongestRung(t *testing.T) {
+	oneWord := Result{Blocks: []Block{{Text: "| МОЖЕМ"}}}
+	sixLines := Result{Blocks: []Block{{Text: "ТРАХАТЬСЯ: МЫ ЖЕ ЛЮДИ, МОЖЕМ ПРОСТО ПОГОВОРИТЬ"}}}
+	if !strictlyBetter(sixLines, oneWord) {
+		t.Error("the sparse rung's result cannot displace the first rung's one word")
+	}
+	if strictlyBetter(oneWord, sixLines) {
+		t.Error("a later, poorer rung displaced a richer earlier one")
+	}
+	if strictlyBetter(Result{}, oneWord) {
+		t.Error("a rung that found nothing displaced a rung that found something")
 	}
 }
 
@@ -123,16 +174,16 @@ func TestClusterLinesHonoursItsFloor(t *testing.T) {
 		return l
 	}
 	lines := []*ocrLine{line(60, 10), line(95, 40)}
-	if got := len(clusterLines(lines, ocrMinLineConf)); got != 1 {
+	if got := len(clusterLines(lines, ocrMinLineConf, 400, 400)); got != 1 {
 		t.Errorf("ordinary floor kept %d plates, want 1 (both lines clustered)", got)
 	}
-	if got := len(clusterLines(lines, ocrRescueLineConf)); got != 1 {
+	if got := len(clusterLines(lines, ocrRescueLineConf, 400, 400)); got != 1 {
 		t.Errorf("rescue floor kept %d plates, want 1 (only the confident line)", got)
 	}
-	if got := clusterLines(lines, ocrRescueLineConf); len(got) == 1 && got[0].Y0 != 40 {
+	if got := clusterLines(lines, ocrRescueLineConf, 400, 400); len(got) == 1 && got[0].Y0 != 40 {
 		t.Errorf("rescue floor kept the line at y=%d, want the confident one at y=40", got[0].Y0)
 	}
-	if got := len(clusterLines(lines, 99)); got != 0 {
+	if got := len(clusterLines(lines, 99, 400, 400)); got != 0 {
 		t.Errorf("a floor above every line kept %d plates, want 0", got)
 	}
 }

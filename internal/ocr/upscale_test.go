@@ -22,7 +22,7 @@ func tempImageFile(t *testing.T, w, h int) string {
 }
 
 func TestUpscaleForOCR(t *testing.T) {
-	p, cleanup, ok := upscaleForOCR(tempImageFile(t, 40, 30))
+	p, cleanup, ok := stageForOCR(tempImageFile(t, 40, 30), orientNormal, true)
 	if !ok {
 		t.Fatal("image should upscale")
 	}

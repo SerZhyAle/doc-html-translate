@@ -231,14 +231,14 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 |---|---|---|---|
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/build.ps1` -> `<exe>/tessdata/eng.traineddata` | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
-| Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` |
+| Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates. Proximity is not the whole test: a line also has to be the **same type size** as the cluster it would join - its ink height within `OCR_TYPE_SIZE_RATIO (1.6)` of the cluster's own median, either way round - because a page with separated regions gives the page-wide pitch estimate steps that belong to no single text, and a headline can then sit closer to the body than the body's own missing lines do. A fourth rule then looks at the page instead of at the neighbours: a finished cluster that covers more than `OCR_MAX_PLATE_COVERAGE (0.52)` of the image **and** whose own line boxes fill less than `OCR_MIN_PLATE_LINE_FILL (0.72)` of its height is **released into one plate per line** - a form, a list or an application window carries one type at one pitch, so nothing in its typography separates its regions, and the whole page arrives as one plate. Released, not refused: every recognized word still reaches a plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` / `sameTypeSize` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` / `sameTypeSize` |
 | Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) |
 | Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. Degrades safely (CSS `overflow:hidden`) if the script does not run | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `fitPlate` / `scheduleFit` |
-| Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = mean of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `0.015`/`6`-px min-ink threshold | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
+| Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = **median** of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `0.015`/`6`-px min-ink threshold. Median and not mean on both counts: a glyph's edge is a ramp of antialiased pixels running from the ink to the paper and the deviation test admits most of that ramp, so averaging lands between the two by construction - measured on a caption of rgb(17,17,17) on rgb(253,253,253), mean rgb(61,61,61) against median rgb(7,7,7). **Which of the two is the paper is then decided by the band just outside the block** (`1/3` of a **line height** - not of the 1.3-line ink strip - on each side, floor 2 px, deciding only on `>= RING_MIN_SAMPLES (40)` sampled pixels), and the pair is swapped when that band sits nearer the ink: the median assumes the text is the minority of its own box, which holds for body text in a balloon and fails for heavy display capitals, whose strokes fill more of a tight box than the paper between them - measured, a poster's word came out as cream lettering on a near-black ground, the exact inverse of the poster | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
 | Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
 | Pre-OCR resolution handling | Gate on **estimated DPI**, not raw pixel count (a page scan clears 1000 px even at ~100 DPI, so a pixel gate upscales clean renders for nothing or misses the scans that need it). Estimate DPI from the long side over an assumed `OCR_ASSUMED_PAGE_INCHES (11)`-tall page; below `OCR_UPSCALE_DPI_FLOOR (120)` enlarge `OCR_UPSCALE_FACTOR (2 x)` (high-quality) before recognition and divide recognized coordinates back; **always declare the resolution** to Tesseract (`user_defined_dpi`, clamped `>= OCR_MIN_DECLARED_DPI (70)`, doubled when upscaled) so layout analysis separates regions - adjacent balloons - it otherwise merges. Measured: a ~90-DPI newsprint scan gains hugely from the upscale, a ~150-DPI scan only needs the DPI declared (upscaling over-segments it) | [`tesseract.go`](../internal/ocr/tesseract.go) `prepareForOCR` / `estimateDPI` / `scaleDown` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `upscaleForOcr` / `estimateDpi` |
 | Page-segmentation mode | Tesseract runs in **PSM 3 (AUTO)** on both editions so layout analysis isolates real text regions on an illustrated/scanned page (a speech bubble, a caption) instead of reading the whole frame as one block. The desktop CLI's default is already PSM 3 (made explicit via `--psm`); the extension must set it because tesseract.js defaults to PSM 6 (SINGLE_BLOCK), which folds scene edges into the recognized text (stray punctuation, digits) and mis-merges separate regions into one plate | [`tesseract.go`](../internal/ocr/tesseract.go) `ocrPageSegMode` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `OCR_PSM` |
-| Grey rescue ladder | An image whose ordinary colour pass returns **no plates at all** is retried on a greyscale copy, first with the engine's own thresholder (`thresholding_method 0`) and then with Leptonica's tiled one (`1`); the first rung that finds plates wins, and an image that reads normally never enters the ladder. Tesseract's default thresholder runs Otsu **per RGB channel** and takes ink only where every channel agrees - harmless on flat paper, but on saturated artwork (a brick-red comic panel behind a white balloon, a coloured poster) the channels disagree over the lettering and the mask that reaches recognition holds no text. The second rung then changes *who* thresholds: one global cut-off cannot survive a background that varies across the image (on a sky gradient Otsu splits the gradient itself and a white caption comes out the same value as its ground), while a tiled thresholder decides locally. It is a **ladder, not a replacement** - the colour pass wins where lettering is separated by hue rather than brightness, so retrying only after an empty result leaves every image that works today unchanged | [`tesseract.go`](../internal/ocr/tesseract.go) `greyRescuePasses` / `greyRescue` / `greyRendition` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `GREY_RESCUE_PASSES` / `greyRescue` / `greyRendition` |
+| Grey rescue ladder | An image whose ordinary colour pass returns **no plates at all** is retried on a greyscale copy, first with the engine's own thresholder (`thresholding_method 0`), then with Leptonica's tiled one (`1`), then with the engine's own again but asking for **sparse text (PSM 11)** instead of a page; **every rung runs and the strongest result wins** - more confident words, with a tie keeping the earlier rung - and an image that reads normally never enters the ladder. Tesseract's default thresholder runs Otsu **per RGB channel** and takes ink only where every channel agrees - harmless on flat paper, but on saturated artwork (a brick-red comic panel behind a white balloon, a coloured poster) the channels disagree over the lettering and the mask that reaches recognition holds no text. The second rung then changes *who* thresholds: one global cut-off cannot survive a background that varies across the image (on a sky gradient Otsu splits the gradient itself and a white caption comes out the same value as its ground), while a tiled thresholder decides locally. The third rung changes neither the pixels nor the thresholder but what Tesseract is told to find: a poster is a few large words placed for effect, and the layout analysis PSM 3 runs finds no page in it and drops them. It is a **ladder, not a replacement** - the colour pass wins where lettering is separated by hue rather than brightness, so retrying only after an empty result leaves every image that works today unchanged | [`tesseract.go`](../internal/ocr/tesseract.go) `greyRescuePasses` / `greyRescue` / `greyRendition` / `strictlyBetter` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `GREY_RESCUE_PASSES` / `greyRescue` / `greyRendition` / `strictlyBetter` |
 
 **OCR download version and catalog are aligned** (2026-07-01 parity pass) and guarded by
 `tests/parity_test.go`:
@@ -250,13 +250,35 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   identical upstream bytes -> matching recognition.
 - **Language catalog = 13** on both sides (`eng rus ukr jpn jpn_vert deu fra spa ita por pol chi_sim
   kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`.
-- **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50`, `OCR_CLUSTER_PITCH_FACTOR = 1.2`
-  and `OCR_MAX_LEADING_RATIO = 3` (`tesseract.go` `ocrMinLineConf` / `ocrClusterPitchFactor` /
-  `ocrMaxLeadingRatio` == [`ocr-cluster.js`](../extension/src/ocr-cluster.js)). The **quantity** the
-  pitch factor multiplies is part of the invariant, not only its value: equal numbers over different
-  quantities still group all-caps lettering differently, so `TestParityOCRClustering` also pins the
-  expression that computes the bound (`pitchMax` from the reference pitch) and the one that measures
-  a pitch (`y0` to `y0`) on both sides.
+- **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50`, `OCR_CLUSTER_PITCH_FACTOR = 1.2`,
+  `OCR_MAX_LEADING_RATIO = 3`, `OCR_TYPE_SIZE_RATIO = 1.6`, `OCR_MAX_PLATE_COVERAGE = 0.52` and
+  `OCR_MIN_PLATE_LINE_FILL = 0.72` (`tesseract.go` `ocrMinLineConf` /
+  `ocrClusterPitchFactor` / `ocrMaxLeadingRatio` / `ocrTypeSizeRatio` / `ocrMaxPlateCoverage` /
+  `ocrMinPlateLineFill` ==
+  [`ocr-cluster.js`](../extension/src/ocr-cluster.js)). The **quantity** each factor multiplies is part
+  of the invariant, not only its value: equal numbers over different quantities still group all-caps
+  lettering differently, so `TestParityOCRClustering` also pins the expression that computes the bound
+  (`pitchMax` from the reference pitch), the one that measures a pitch (`y0` to `y0`), that the size
+  break is weighed against the **cluster's** median height rather than the page's, and that it is
+  symmetric (the ratio multiplies the smaller of the two heights) - on both sides. The type-size ratio
+  is bracketed by two measurements on the corpus's hand-drawn line boxes: the widest spread a single
+  text shows on its own is 1.42x (`samson-and-delilah-03-scroll`, 19 lines of one caption) and the
+  narrowest step between two texts a reader separates is 1.86x (`poster-display-type-on-flat-colour`,
+  headline over body). Moving it needs a new measurement of both, not a scene that would like it moved.
+- **The plate-coverage release** is the fourth grouping rule and the only one that looks at the page
+  rather than at a line's neighbours. Pitch and type size cannot separate a form, a list or an
+  application window - one type, one column, an even pitch - so the whole page arrives as one plate.
+  A finished cluster is **released into one plate per line** when it is *both* too big and too loose:
+  its box covers more than `OCR_MAX_PLATE_COVERAGE (0.52)` of the image **and** its own line boxes
+  account for less than `OCR_MIN_PLATE_LINE_FILL (0.72)` of the box's height. `tesseract.go`
+  `releaseOversized` == `ocr-cluster.js` `releaseOversized`, and `TestParityOCRClustering` pins both
+  conditions on both sides, because either alone releases a scene the corpus says is one plate.
+  Releasing and not refusing is part of the invariant: every recognized word still reaches a plate,
+  and the released lines skip `isTranslatable` (the assembled text already passed it). Both bounds are
+  bracketed from opposite directions in
+  [`DEV/research/ocr_plate_coverage_2026-08-13.md`](../DEV/research/ocr_plate_coverage_2026-08-13.md);
+  the *area* version of the fill was measured on the same run and separates nothing, which is why the
+  rule is stated on the vertical axis.
 - **Overlay resolution constants** identical: `OCR_UPSCALE_DPI_FLOOR = 120`, `OCR_ASSUMED_PAGE_INCHES = 11`,
   `OCR_MIN_DECLARED_DPI = 70` and `OCR_UPSCALE_FACTOR = 2` (`tesseract.go` `ocrUpscaleDPIFloor` /
   `ocrAssumedPageInches` / `ocrMinDeclaredDPI` / `ocrUpscaleFactor` == `ocr-overlay.js`). Guarded by
@@ -266,10 +288,20 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   The extension must set it explicitly because tesseract.js defaults to PSM 6 (SINGLE_BLOCK); the
   desktop CLI's own default is already 3.
 - **Grey rescue ladder** identical: the retry order for an image the colour pass could not read is
-  `[engine-default thresholder (0), Leptonica tiled Otsu (1)]` over a greyscale copy - `tesseract.go`
-  `greyRescuePasses` == `ocr-overlay.js` `GREY_RESCUE_PASSES`, and `thresholdEngineDefault` /
-  `thresholdLeptonicaOtsu` == `THRESHOLD_ENGINE_DEFAULT` / `THRESHOLD_LEPTONICA_OTSU` (guarded by
-  `TestParityOCRGreyRescue`). **Intentional implementation difference:** the desktop app writes an
+  `[engine-default thresholder (0) at PSM 3, Leptonica tiled Otsu (1) at PSM 3, engine-default at
+  PSM 11]` over a greyscale copy - `tesseract.go` `greyRescuePasses` == `ocr-overlay.js`
+  `GREY_RESCUE_PASSES`, and `thresholdEngineDefault` / `thresholdLeptonicaOtsu` /
+  `ocrSparsePageSegMode` == `THRESHOLD_ENGINE_DEFAULT` / `THRESHOLD_LEPTONICA_OTSU` /
+  `OCR_SPARSE_PSM` (guarded by `TestParityOCRGreyRescue`).
+- **Which rung wins** identical: every rung runs and the strongest result is kept, where strength is
+  the number of words the rung placed and a tie keeps the earlier rung - `tesseract.go`
+  `resultStrength` / `strictlyBetter` == `ocr-cluster.js` `resultStrength` / `strictlyBetter`
+  (guarded by `TestParityOCRRungComparator`). It replaces a first-non-empty-wins rule that let a rung
+  recovering one word end the search before a later rung could recover six.
+- **Plate colour orientation** identical: the band just outside a block decides which sampled colour
+  is the paper, over `RING_MIN_SAMPLES (40)` pixels - `overlay.go` `ringNearerInk` / `ringMinSamples`
+  == `ocr-overlay.js` `ringNearerInk` / `RING_MIN_SAMPLES` (guarded by
+  `TestParityOCRPlateColourOrientation`). **Intentional implementation difference:** the desktop app writes an
   8-bit grey PNG, the extension draws through a canvas `grayscale(1)` filter and stays RGBA. Both
   reach the same place - per-channel Otsu over three identical channels is one decision - and the
   browser has no cheap way to emit 8-bit grey.
@@ -313,9 +345,60 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   by the upscale factor before the detector sees them, because `collectLines` has already divided its
   blocks by it while the prepared image has not been downscaled. The Go app downscales after the
   sweep, so there every rectangle is already in prepared-image coordinates.
+- **The opaque paper is on the plate box** - identical on both sides, and this is a decision taken
+  against the corpus rather than a default. The box carries the sampled paper
+  (`.ocr-box{background:#fff}` == `.ocr-plate{background:#fff}`, overridden per plate by the sampled
+  colour in the inline style) and the text sits directly in it; there is no inner span, and
+  `TestParityOCRFontFit` fails if the string `ocr-ink` reappears in either edition. The box is what
+  covers the source region, so the box is what has to be opaque.
+  **Both carriers were shipped and both were measured.** Carrying the paper on an inline span around
+  the string (`box-decoration-break:clone`, painted once per *rendered* line) gives it the shape of
+  the words, which is why it was tried: a block box is wider than centred copy on its last line, and
+  the rectangle put 91 px of paper over the photograph on either side of a 984 px caption's 759 px
+  last line. But over the 46 lab scenes the string carrier left a mean **93%** of the source
+  lettering still showing under a plate against **17%** for the box - a plate that conceals almost
+  nothing it covers, and a regression against the lab's recorded 0.28 bound - so it lasted one day
+  (2026-08-13) and the box carrier is back. Sizing paper from the **source** line boxes remains
+  rejected for its own measured reason: the rendered string wraps where the source did not, and the
+  page translator changes its length again, so paper cut to the source lines comes apart from the
+  words on it. The box's over-cover is bounded from the other side now, by the plate-coverage rule
+  and the type-size rule in the grouping row above. Evidence:
+  [`DEV/research/ocr_plate_coverage_2026-08-13.md`](../DEV/research/ocr_plate_coverage_2026-08-13.md).
+- **Plate ink is a median**, not a mean, of the pixels that stand out from the sampled paper - the
+  deviation test admits a glyph's antialiased edge, and averaging that ramp lands between the ink
+  and the paper (measured rgb(61,61,61) for source lettering of rgb(17,17,17)). Same guard.
+- **Runtime fit runs both ways**: the cqw font shrinks to a floor of 50% and grows to a ceiling of
+  `1.15x` the compile-time size (`overlay.go` `ocrScript` `cap=base*1.15` == `ocr-overlay.js`
+  `FONT_GROW_CAP`), stopping one step before the content overflows. The ceiling is the guard against
+  "fill the box": a block box includes the leading between its lines, so filling it would print the
+  translation larger than the words it covers.
 - **Plate font-fit factor** identical: `0.92` - `overlay.go` `fontFitFactor` == `ocr-overlay.js`
   `FONT_FIT` (guarded by `TestParityOCRFontFit`). Plate font-size = median line height x this factor;
   below `1.0` so translated text (often longer) has room before it overflows the block.
+
+- **Display space is the only coordinate space** - the shared invariant behind every percentage
+  above. Boxes are in the pixels of the picture *as a reader sees it*, which is the file's stored
+  pixels turned by its EXIF orientation, and the image must fill its overlay container exactly, or
+  percentages of the container stop being percentages of the image. Each edition reaches it by its
+  own route and neither has a constant to share:
+  - the desktop app applies the orientation itself, to the copy tesseract reads
+    ([`internal/ocr/exif.go`](../internal/ocr/exif.go), used by `stageForOCR`), and turns the
+    decoded image it samples plate colours from with it. Without this, a portrait phone shot is
+    recognized on its side - no OSD runs in either PSM this app uses - and whatever does read lands
+    in a space the plates are not in;
+  - the extension inherits it: `createImageBitmap` decodes what it is given and the plates go over
+    the same `<img>`, so both sides of the comparison are already display space. It does not name
+    `imageOrientation` explicitly, so the agreement holds by browser default rather than by
+    contract - tracked as item 6 of
+    [`DEV/plan/2026-08-12_ocr-exchange-followups.md`](../DEV/plan/2026-08-12_ocr-exchange-followups.md).
+
+  The container half of the invariant is a desktop-only hazard, because only the desktop page ships
+  other scripts: the navbar's image-aspect guard used to write an inline `width` on every image,
+  which beats `.ocr-fig>img{width:100%}` and left the picture at its natural width inside a
+  column-width container. Measured on a 640 px scene in a 1216 px column, every plate rendered at
+  1.9x its size and off its text - while drifting 0 px between viewports, because it was equally
+  wrong at all of them. The guard now skips images inside `.ocr-fig`
+  (`internal/htmlgen/navbar.go`, guarded by `TestImageAspectGuardSkipsOCROverlay`).
 
 - **Empty-result language report** identical in substance: when a pass recognized nothing at all,
   both editions name the language data that was used - code plus catalog name, `tessdata.go`
@@ -328,12 +411,34 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   come back with nothing and none has yet carried text. There is no shared constant here - the
   desktop's boundary is "the run finished".
 
+- **OCR layer toggle** present in both, with the same three rules: the control is **revealed only on a
+  document that carries plates** (a text book must not show a control that would do nothing); the
+  choice is **global and persisted**, like the theme, because a reader who wants to see the artwork
+  wants it for the whole book; and hiding is **`display:none`, never `visibility`/`opacity`** - a
+  hidden plate must not keep taking pointer events, must not be read out by a screen reader, and must
+  not offer the page translator text to swap inside a layer the reader turned off. The plates cover
+  the source lettering, which is the point when translating and in the way when reading the art.
+  Per-edition wiring (the class names differ, see below, and so does the storage):
+  `internal/htmlgen/navbar.go` `#dht-ocr-toggle` -> `html.dht-ocr-off` + localStorage `dht_ocr`;
+  `extension/src/viewer.js` `#btn-ocr` -> `html.ocr-layer-off` + `viewerPrefs.ocrLayer`.
+
 **Still divergent (tracked in the parity ticket):**
 
 - **CSS class names** differ: Go `.ocr-fig` / `.ocr-box`; JS `.ocr-overlay` / `.ocr-plate` /
-  `.ocr-overlay-img` / `.ocr-badge`. Cosmetic; deferred.
+  `.ocr-overlay-img` / `.ocr-badge`. Cosmetic; deferred. The toggle's off-state class is part of this
+  split (`dht-ocr-off` / `ocr-layer-off`) and moves with it if the names are ever unified.
 - **Default OCR language rule**: Go derives from `-src` (`TessLang`, else `eng`); the extension uses a
   fixed persisted `eng` (it has no translation source language). Intentional for now.
+- **The script check that corrects an unchosen language is desktop-only.** When `-ocr-lang` is empty
+  the Go app puts the book's first image through Tesseract's `--psm 0` script pass and lets the answer
+  correct the default - adding a language for the detected script where its data is installed
+  (`rus+eng`), and otherwise producing **no plates** plus a line naming the script and the download
+  ([`internal/ocr/script.go`](../internal/ocr/script.go)). The extension has no port, for two reasons
+  that are about the edition rather than about the rule: its OCR language is an explicit, persisted
+  choice in the popup rather than a value inferred from a translation flag, and the pass needs
+  `osd.traineddata`, ~10 MB the extension neither vendors nor downloads today. The consequence is real
+  and is not pretended away - a reader who never opens the popup gets the same transliterated debris on
+  a Cyrillic page that the desktop no longer produces. Tracked in the parity ticket.
 
 ### Settings defaults
 

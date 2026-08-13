@@ -573,3 +573,22 @@ func TestClassifyBlock(t *testing.T) {
 		})
 	}
 }
+
+// TestFallbackPDFPageStatesWhatHappened: the page is written only when a PDF yields neither a text
+// layer nor a single extractable page image, so there is nothing for OCR to read whichever way the
+// flag is set. It used to claim "OCR is disabled" as a literal, which a run with -ocr also printed -
+// telling the reader the feature they had just switched on was off.
+func TestFallbackPDFPageStatesWhatHappened(t *testing.T) {
+	page := buildFallbackPDFHTML("A Sky Chart", "original.pdf")
+	if strings.Contains(page, "OCR is disabled") {
+		t.Error("the fallback page still claims the OCR setting it was never given")
+	}
+	for _, want := range []string{"no text layer", "no page images could be extracted", "nothing for OCR to read"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the fallback page does not say %q", want)
+		}
+	}
+	if !strings.Contains(page, `src="original.pdf"`) {
+		t.Error("the fallback page no longer embeds the original")
+	}
+}

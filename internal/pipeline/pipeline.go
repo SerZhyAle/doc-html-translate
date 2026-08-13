@@ -548,7 +548,7 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 		filePaths = append(filePaths, filepath.Join(outputDir, filepath.FromSlash(href)))
 	}
 	tick := logging.NewTicker("OCR overlay", "images")
-	stats := ocr.OverlayBook(bin, filePaths, lang, dataDir, tick.Report)
+	stats := ocr.OverlayBook(bin, filePaths, lang, dataDir, r.cfg.OCRLang != "", tick.Report)
 	reportOverlay(stats, lang)
 }
 
@@ -560,6 +560,15 @@ func (r Runner) overlayImages(book *epub.Book, outputDir string) {
 // simply hold no text are counted, because they are ordinary and listing them would bury the
 // failures.
 func reportOverlay(stats ocr.OverlayResult, lang string) {
+	// The document's own script may have corrected a language the reader never chose, and may have
+	// stopped the pass outright when nothing installed can read it. Either way it is the first thing
+	// to say - the counts below are about a language the log has not yet named.
+	if stats.ScriptNote != "" {
+		logging.Printf("  OCR overlay: %s\n", stats.ScriptNote)
+		if stats.Lang != "" {
+			lang = stats.Lang
+		}
+	}
 	summary := fmt.Sprintf("%d image(s) overlaid", stats.Overlaid)
 	if stats.NoText > 0 {
 		summary += fmt.Sprintf(", %d with no text found", stats.NoText)

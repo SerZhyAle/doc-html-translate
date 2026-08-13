@@ -620,7 +620,8 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	}
 
 	if generated == 0 {
-		logging.Printf("  WARNING: No text layer detected in PDF. Creating a fallback HTML page without OCR.\n")
+		logging.Printf("  WARNING: No text layer and no extractable page images in this PDF - there is nothing " +
+			"for OCR to read. Creating a fallback page that embeds the original.\n")
 
 		pdfCopyName := "original.pdf"
 		pdfCopyPath := filepath.Join(outputDir, pdfCopyName)
@@ -1320,7 +1321,15 @@ func buildFallbackPDFHTML(title, pdfFileName string) string {
 	sb.WriteString("  </style>\n")
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
-	sb.WriteString("  <div class=\"note\">No extractable text layer was found in this PDF. OCR is disabled, so the original PDF is shown as-is.</div>\n")
+	// The sentence says what this page knows and nothing else. It used to read "OCR is disabled, so
+	// the original PDF is shown as-is", which is a literal rather than a reading of the flag: a run
+	// with -ocr printed it too, telling the reader the feature they had just switched on was off
+	// (DEV/research/ocr_sweep_2026-08-13.md defect 4). The fact that actually decides the outcome is
+	// on this page's own branch - it is reached only when neither a text layer nor a single page
+	// image could be extracted - and it holds whichever way the flag is set, so the page states that
+	// instead of guessing at a setting it was never given.
+	sb.WriteString("  <div class=\"note\">This PDF has no text layer, and no page images could be extracted from it - " +
+		"so there is nothing to convert, and nothing for OCR to read. The original PDF is shown below as-is.</div>\n")
 	sb.WriteString(fmt.Sprintf("  <embed class=\"viewer\" src=\"%s\" type=\"application/pdf\">\n", html.EscapeString(pdfFileName)))
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")

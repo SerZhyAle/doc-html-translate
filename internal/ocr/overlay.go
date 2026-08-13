@@ -33,17 +33,58 @@ import (
 // below; the runtime re-fit (ocrScript) then shrinks the font so longer text - a reflow, or the
 // page translator swapping in a longer string - fits instead of clipping. Mirrors the extension's
 // .ocr-overlay (see docs/PARITY.md and ocr-overlay.css).
+//
+// The opaque paper is on the plate box. It was on an inline span hugging the string between
+// 2026-08-13 and this change, so that the paper took the shape of the rendered words rather than
+// of the block rectangle, and the corpus was asked which of the two a reader is better served by:
+// over 46 scenes the box carrier left a mean 17% of the source lettering still showing under a
+// plate and the string carrier left 93% - a plate that concealed almost nothing it covered, and a
+// regression against the lab's recorded 0.28 bound. The cost of coming back is real and is the
+// reason the string carrier was tried: a block box is wider than centred copy on its last line, so
+// the plate paints paper beside that line - measured at 91 px either side of a 984 px caption.
+// That is a patch beside one line against the whole document showing through every plate, and it
+// is bounded by the coverage rule in tesseract.go, which stops a plate from being a page.
+//
+// The padding is `0.08em 0.28em` because that is what the paper had when the lab's concealment
+// bound was measured, and it is load-bearing rather than cosmetic. The lab reads residual ink by
+// asking whether the *rendered* page still has ink where the source had it, so a plate's own
+// lettering counts against it wherever the two coincide - and the padding is what decides how large
+// the runtime fit grows that lettering. Measured on samson-and-delilah-03-scroll, whose plate rects
+// are byte-identical either way: `0.05em 0.15em` grew one plate's font from 56.4 px to 60.0 px and
+// took the scene from 0.2705 to 0.2841, over the recorded 0.28 bound. Changing it needs a lab run,
+// not an opinion.
 const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:100%;margin:0 auto;container-type:inline-size;line-height:1.1}
 .ocr-fig>img{display:block;width:100%;height:auto;margin:0;max-height:none}
-.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;color:#111;padding:0.05em 0.15em;border-radius:2px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif}`
+.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;border-radius:0.35em;padding:0.08em 0.28em;color:#111;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif}
+/* The navbar's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,
+   not visibility/opacity: a hidden plate must not keep taking pointer events or be read out,
+   and the page translator must not find text to swap in a layer the reader turned off. */
+html.dht-ocr-off .ocr-box{display:none}`
 
 // ocrScript fits each plate's text to its box after layout, and again whenever the page
 // translator swaps the text for a longer string - the case a compile-time font size cannot handle,
 // because the plate box and font are computed from the *source* geometry while the text poured in
 // (reflowed, then translated) is a different length. It shrinks the cqw font down to a floor, and
-// if the text still overflows there it lets the box grow so nothing is ever clipped. Injected once
-// per overlaid page; a no-op degrade to the CSS (overflow:hidden) if the script does not run.
-// Mirrors the extension's fitPlate + observer (see docs/PARITY.md and ocr-overlay.js).
+// if the text still overflows there it lets the box grow so nothing is ever clipped.
+//
+// The fit runs in both directions. Growing exists because the compile-time size is deliberately
+// conservative - the font is the median *ink* height times ocrFontFitFactor, and an ink box is
+// shorter than the type that drew it - so a plate whose text is no longer than the source's ends up
+// with the string floating in white space, which reads as an oversized patch rather than as the
+// original lettering. Measured on a screenshot caption: source capitals 28 px against the plate's
+// 24 px, with the slack showing as margin on all four sides.
+//
+// Growth stops one step before the content overflows *and* at 1.15x the base, and the second bound
+// is the important one. A block's box is the union of its lines, so it includes the leading between
+// them; filling that box is not the same as matching the source's type, and on a loosely leaded
+// block "fill the box" would print the translation larger than the words it covers. 1.15 is a
+// little over 1/ocrFontFitFactor, so the plate may reach the measured ink height of the source's
+// own lines and no further. The step is 4% against the shrink's 8%, because overshooting here is
+// visible while undershooting is not. A translated string is normally longer than its source, so on
+// a translated page this branch does not fire at all.
+//
+// Injected once per overlaid page; a no-op degrade to the CSS (overflow:hidden) if the script does
+// not run. Mirrors the extension's fitPlate + observer (see docs/PARITY.md and ocr-overlay.js).
 const ocrScript = `(function(){
 function fit(b){
   if(!b.dataset.ocrCqw){var m=/([0-9.]+)cqw/.exec(b.style.fontSize||"");b.dataset.ocrCqw=m?m[1]:"0";}
@@ -52,7 +93,10 @@ function fit(b){
   var target=parseFloat(getComputedStyle(b).minHeight)||0;
   if(target>0)b.style.height=target+"px";
   if(base>0){var s=base,floor=base*0.5,g=0;b.style.fontSize=s+"cqw";
-    while(b.scrollHeight>b.clientHeight+1&&s>floor&&g<40){s-=Math.max(0.3,s*0.08);g++;b.style.fontSize=s+"cqw";}}
+    while(b.scrollHeight>b.clientHeight+1&&s>floor&&g<40){s-=Math.max(0.3,s*0.08);g++;b.style.fontSize=s+"cqw";}
+    if(b.scrollHeight<=b.clientHeight+1){var cap=base*1.15,p=s,n=s,gg=0;
+      while(n<cap&&gg<20){n=Math.min(cap,n+Math.max(0.3,n*0.04));b.style.fontSize=n+"cqw";gg++;
+        if(b.scrollHeight>b.clientHeight+1){b.style.fontSize=p+"cqw";break;}p=n;}}}
   if(b.scrollHeight>b.clientHeight+1)b.style.height="auto";
 }
 function fitAll(){var l=document.querySelectorAll(".ocr-box");for(var i=0;i<l.length;i++)fit(l[i]);}
@@ -90,14 +134,30 @@ if(document.body)watch();else document.addEventListener("DOMContentLoaded",watch
 // onProgress, when non-nil, is called as images finish with the number done and the total to
 // do across the book; the counter is per-image (not per-file), so single-page mode - where the
 // whole book is one file - still shows real motion instead of sitting at 0/1.
-func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, onProgress func(done, total int)) OverlayResult {
+func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed bool, onProgress func(done, total int)) OverlayResult {
 	var stats OverlayResult
+	stats.Lang = lang
 
 	// Phase 1: every recognizable image across the book, deduped by absolute path.
 	order := collectBookImages(htmlPaths)
 	if len(order) == 0 {
 		return stats
 	}
+
+	// Phase 1b: let the document's own script correct a language nobody chose (see script.go).
+	// Detection runs once, on the book's first image, not once per page: a book is one document in
+	// one language, and the pass costs a whole extra Tesseract process - half a second here against
+	// four minutes on a 480-page comic.
+	script, conf, detected := "", 0.0, false
+	if !langFixed {
+		script, conf, detected = DetectScript(bin, order[0], dataDir)
+	}
+	use, note, stop := resolveScript(lang, langFixed, script, conf, detected, installedForScript(dataDir, script))
+	stats.Lang, stats.ScriptNote = use, note
+	if stop {
+		return stats
+	}
+	lang = use
 
 	// Phase 2: recognize every image once, across one pool spanning the whole book.
 	results := recognizePaths(bin, lang, dataDir, order, onProgress)
@@ -127,7 +187,7 @@ func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, onProgres
 // single-file callers and tests; the pool it runs is that file's images only, so prefer
 // OverlayBook when a whole book's worth of pages is available.
 func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, total int)) (OverlayResult, error) {
-	return OverlayBook(bin, []string{htmlPath}, lang, dataDir, onProgress), nil
+	return OverlayBook(bin, []string{htmlPath}, lang, dataDir, true, onProgress), nil
 }
 
 // parseHTMLFile opens and parses one content file, returning its DOM and the directory its
@@ -173,7 +233,10 @@ func applyOverlays(doc *gohtml.Node, baseDir string, results map[string]recognit
 		case !r.ok:
 			stats.NoText++
 		default:
-			srcImg := decodeImage(job.file)
+			// The boxes already arrived in display space (stageForOCR turned the picture before
+			// recognition), so the colours have to be sampled from the same view - otherwise a
+			// rotated photo takes each plate's paper and ink from somewhere else in the image.
+			srcImg := orientImage(decodeImage(job.file), exifOrientation(job.file))
 			wrapImage(job.node, r.res, srcImg)
 			// Off unless DOCHT_OCR_DIAG is set; see diag.go. Never touches the DOM.
 			recordDiagnostics(job.file, r.res, srcImg)
@@ -207,6 +270,11 @@ type OverlayResult struct {
 	Overlaid int              // images that got text plates
 	NoText   int              // read fine, no text inside - expected, not a problem
 	Failed   []OverlayFailure // recognition errored - always worth naming
+	// Lang is the language the book was actually recognized with, which is not always the one the
+	// caller asked for: an unchosen default can be corrected by the document's own script
+	// (script.go). ScriptNote is the sentence explaining that, empty when nothing happened.
+	Lang       string
+	ScriptNote string
 }
 
 // OverlayFailure is one image that could not be recognized, and why.
@@ -412,8 +480,11 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 	for _, b := range res.Blocks {
 		style := percentStyle(b, res.Width, res.Height)
 		if srcImg != nil {
-			if bg, ink, ok := blockColors(srcImg, b); ok {
-				style += ";background:" + bg + ";color:" + ink
+			if paper, ink, ok := blockColors(srcImg, b); ok {
+				// Paper and ink both land on the plate box: the box is what covers the source
+				// region, so it is what has to be opaque (see ocrCSS for the measurement that
+				// decided this against carrying the paper on the string).
+				style += ";background:" + paper + ";color:" + ink
 			}
 		}
 		box := &gohtml.Node{
@@ -505,22 +576,40 @@ func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 		yFirst = y1
 	}
 	fr, fg, fb := samplePixels(img, x0, y0, x1, yFirst)
-	var sr, sg, sb, c int
+	var ir, ig, ib []int
 	for i := range fr {
 		if absInt(fr[i]-bgR)+absInt(fg[i]-bgG)+absInt(fb[i]-bgB) > 90 {
-			sr += fr[i]
-			sg += fg[i]
-			sb += fb[i]
-			c++
+			ir = append(ir, fr[i])
+			ig = append(ig, fg[i])
+			ib = append(ib, fb[i])
 		}
 	}
+	c := len(ir)
 	minInk := len(fr) * 15 / 1000
 	if minInk < 6 {
 		minInk = 6
 	}
 	var inkR, inkG, inkB int
 	if c >= minInk {
-		inkR, inkG, inkB = sr/c, sg/c, sb/c
+		// Median, not mean, and for the same reason the background is a median: a glyph's edge is
+		// a ramp of antialiased pixels running from the ink to the paper, and the deviation test
+		// admits most of that ramp. Averaging it drags the answer toward the paper - measured on a
+		// screenshot caption whose lettering is rgb(17,17,17) on rgb(253,253,253), the mean
+		// returned rgb(61,61,61) while the median of the same pixels returns rgb(7,7,7). The
+		// difference is visible: the plate's text reads as grey next to black source lettering.
+		inkR, inkG, inkB = medianOf(ir), medianOf(ig), medianOf(ib)
+		// Which of the two colours is the paper is decided by what surrounds the block, not by
+		// which of them covers more of it. The median above assumes the text is the minority of
+		// its own box - true of body text in a balloon, false of heavy display capitals, whose
+		// strokes cover more of a tight box than the paper between them does. Measured on the
+		// reported poster (DEV/research/ocr_display_lettering_2026-08-12.md): the plate over
+		// МОЖЕМ came out as cream lettering on a near-black ground, the exact inverse of the
+		// poster. What is outside a text box is paper in both cases - a balloon's interior
+		// around its lines, a poster's ground around its word - so the ring just outside the
+		// block is what says which way round the pair goes.
+		if ringNearerInk(img, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, inkG, inkB) {
+			bgR, bgG, bgB, inkR, inkG, inkB = inkR, inkG, inkB, bgR, bgG, bgB
+		}
 	} else {
 		inkR, inkG, inkB = fallbackInk(bgR, bgG, bgB)
 	}
@@ -530,6 +619,57 @@ func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 	return fmt.Sprintf("rgb(%d,%d,%d)", bgR, bgG, bgB),
 		fmt.Sprintf("rgb(%d,%d,%d)", inkR, inkG, inkB), true
 }
+
+// ringNearerInk reports whether the band just outside the block sits nearer the ink colour than
+// the paper colour - which means the two were assigned the wrong way round.
+//
+// The band is a third of a line on each side, so it is the text's own surroundings rather than the
+// next thing on the page, and it is read outside the box rather than inside it: a box drawn tightly
+// around display capitals has their strokes on its own edges, so an inside ring would answer with
+// the ink it is supposed to be judging. `lh` is the raw line height, not the 1.3-line strip the ink
+// is sampled in. A band that falls entirely off the image (a block against the edge) leaves too few
+// samples to decide and the caller keeps what it had.
+func ringNearerInk(img image.Image, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, inkG, inkB int) bool {
+	pad := lh / 3
+	if pad < 2 {
+		pad = 2
+	}
+	bnds := img.Bounds()
+	ox0 := clampInt(x0-pad, bnds.Min.X, bnds.Max.X)
+	oy0 := clampInt(y0-pad, bnds.Min.Y, bnds.Max.Y)
+	ox1 := clampInt(x1+pad, bnds.Min.X, bnds.Max.X)
+	oy1 := clampInt(y1+pad, bnds.Min.Y, bnds.Max.Y)
+
+	nearInk, nearBg := 0, 0
+	count := func(sx0, sy0, sx1, sy1 int) {
+		if sx1-sx0 < 1 || sy1-sy0 < 1 {
+			return
+		}
+		rs, gs, bs := samplePixels(img, sx0, sy0, sx1, sy1)
+		for i := range rs {
+			dBg := absInt(rs[i]-bgR) + absInt(gs[i]-bgG) + absInt(bs[i]-bgB)
+			dInk := absInt(rs[i]-inkR) + absInt(gs[i]-inkG) + absInt(bs[i]-inkB)
+			if dInk < dBg {
+				nearInk++
+			} else if dBg < dInk {
+				nearBg++
+			}
+		}
+	}
+	count(ox0, oy0, ox1, y0) // above
+	count(ox0, y1, ox1, oy1) // below
+	count(ox0, y0, x0, y1)   // left
+	count(x1, y0, ox1, y1)   // right
+	if nearInk+nearBg < ringMinSamples {
+		return false
+	}
+	return nearInk > nearBg
+}
+
+// ringMinSamples is how many pixels the surrounding band must contribute before it is allowed to
+// swap the pair. Small enough that a block against one edge of the image still decides on the
+// three bands it has, large enough that a sliver is not a vote.
+const ringMinSamples = 40
 
 func fallbackInk(r, g, b int) (int, int, int) {
 	if luma(r, g, b) > 140 {

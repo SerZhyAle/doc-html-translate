@@ -7,7 +7,7 @@
 
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
-import { clusterLines, medianOf, OCR_MIN_LINE_CONF } from "./ocr-cluster.js";
+import { clusterLines, medianOf, strictlyBetter, OCR_MIN_LINE_CONF } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
 
 const { createWorker } = Tesseract;
@@ -28,6 +28,14 @@ let currentProgress = null;
 // analysis isolates real text regions, matching the desktop app's tesseract CLI (whose own default is
 // PSM 3). Shared invariant - see docs/PARITY.md and tesseract.go ocrPageSegMode.
 const OCR_PSM = "3";
+
+// PSM 11 (SPARSE_TEXT): find as much text as possible in no particular order, with no layout
+// analysis behind it. A rescue rung rather than a default - on a page it is worse than PSM 3, which
+// has the columns, the reading order and the notion of a paragraph. What it is right for is input
+// that is not a page: a poster is a few large words placed for effect, and the layout analysis PSM 3
+// runs finds no page in it and drops them. Shared invariant - see docs/PARITY.md and tesseract.go
+// ocrSparsePageSegMode.
+const OCR_SPARSE_PSM = "11";
 
 async function getWorker(lang) {
   if (workerPromise && workerLang === lang) return workerPromise;
@@ -126,7 +134,7 @@ function clampDeclaredDpi(d) {
 // Sample the source image so each plate borrows the block's background ("paper") and text
 // ("ink") colours - the overlay then blends into the document instead of showing a white
 // patch. bg is the median colour over the whole block (text is the minority, so the median
-// lands on paper). ink is the mean of the pixels that stand out from bg within the FIRST
+// lands on paper). ink is the median of the pixels that stand out from bg within the FIRST
 // line only (real text lives there, not figures lower in a merged block - this is "the
 // colour of the original's first letter"), with a near-black/near-white fallback that
 // guarantees contrast. Best-effort: any failure leaves the CSS defaults. Mirrors the
@@ -145,6 +153,39 @@ function pixelsIn(ctx, x0, y0, w, h) {
   return { rs, gs, bs };
 }
 
+// How many pixels the surrounding band must contribute before it may swap the pair. Shared
+// invariant - see docs/PARITY.md and overlay.go ringMinSamples.
+const RING_MIN_SAMPLES = 40;
+
+// ringNearerInk reports whether the band just outside the block sits nearer the ink colour than the
+// paper colour - which means the two were assigned the wrong way round. The band is a third of a
+// line on each side, so it is the text's own surroundings rather than the next thing on the page,
+// and it is read outside the box rather than inside it: a box drawn tightly around display capitals
+// has their strokes on its own edges. `lh` is the raw line height, not the first-line sampling band
+// - see blockColors. Mirrors overlay.go ringNearerInk (docs/PARITY.md).
+function ringNearerInk(ctx, x0, y0, w, h, lh, bg, ink) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const pad = Math.max(2, Math.round(lh / 3));
+  const ox0 = Math.max(0, x0 - pad), oy0 = Math.max(0, y0 - pad);
+  const ox1 = Math.min(W, x0 + w + pad), oy1 = Math.min(H, y0 + h + pad);
+  let nearInk = 0, nearBg = 0;
+  const count = (sx0, sy0, sx1, sy1) => {
+    if (sx1 - sx0 < 1 || sy1 - sy0 < 1) return;
+    const { rs, gs, bs } = pixelsIn(ctx, sx0, sy0, sx1 - sx0, sy1 - sy0);
+    for (let i = 0; i < rs.length; i++) {
+      const dBg = Math.abs(rs[i] - bg[0]) + Math.abs(gs[i] - bg[1]) + Math.abs(bs[i] - bg[2]);
+      const dInk = Math.abs(rs[i] - ink[0]) + Math.abs(gs[i] - ink[1]) + Math.abs(bs[i] - ink[2]);
+      if (dInk < dBg) nearInk++; else if (dBg < dInk) nearBg++;
+    }
+  };
+  count(ox0, oy0, ox1, y0);           // above
+  count(ox0, y0 + h, ox1, oy1);       // below
+  count(ox0, y0, x0, y0 + h);         // left
+  count(x0 + w, y0, ox1, y0 + h);     // right
+  if (nearInk + nearBg < RING_MIN_SAMPLES) return false;
+  return nearInk > nearBg;
+}
+
 function blockColors(ctx, bbox, lineHeight) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
   const x0 = Math.max(0, Math.floor(bbox.x0)), y0 = Math.max(0, Math.floor(bbox.y0));
@@ -154,16 +195,32 @@ function blockColors(ctx, bbox, lineHeight) {
   const all = pixelsIn(ctx, x0, y0, w, h);
   if (!all.rs.length) return null;
   const bg = [medianOf(all.rs), medianOf(all.gs), medianOf(all.bs)];
-  const lh = Math.max(1, Math.min(h, Math.round((lineHeight || h) * 1.3)));
-  const first = pixelsIn(ctx, x0, y0, w, lh);
-  let ir = 0, ig = 0, ib = 0, c = 0;
+  // Two different heights, and they were one variable until the ring came out 30 % wider here than
+  // on the desktop side: `lh` is the line itself (what the ring is derived from), `firstBand` is the
+  // 1.3-line strip the ink is sampled in. Mirrors overlay.go blockColors (docs/PARITY.md).
+  const lh = Math.max(1, Math.min(h, Math.round(lineHeight || h)));
+  const firstBand = Math.max(1, Math.min(h, Math.round(lh * 1.3)));
+  const first = pixelsIn(ctx, x0, y0, w, firstBand);
+  const ir = [], ig = [], ib = [];
   for (let i = 0; i < first.rs.length; i++) {
     if (Math.abs(first.rs[i] - bg[0]) + Math.abs(first.gs[i] - bg[1]) + Math.abs(first.bs[i] - bg[2]) > 90) {
-      ir += first.rs[i]; ig += first.gs[i]; ib += first.bs[i]; c++;
+      ir.push(first.rs[i]); ig.push(first.gs[i]); ib.push(first.bs[i]);
     }
   }
+  const c = ir.length;
   const fallback = () => (luma(...bg) > 140 ? [17, 17, 17] : [240, 240, 240]);
-  let ink = c >= Math.max(6, first.rs.length * 0.015) ? [Math.round(ir / c), Math.round(ig / c), Math.round(ib / c)] : fallback();
+  const measured = c >= Math.max(6, first.rs.length * 0.015);
+  // Median, not mean, for the same reason bg is a median: a glyph edge is a ramp of antialiased
+  // pixels between ink and paper and the deviation test admits most of it, so averaging drags the
+  // answer toward the paper. Measured on a screenshot caption of rgb(17,17,17) on rgb(253,253,253):
+  // mean rgb(61,61,61), median rgb(7,7,7). Mirrors overlay.go blockColors (docs/PARITY.md).
+  let ink = measured ? [medianOf(ir), medianOf(ig), medianOf(ib)] : fallback();
+  // Which of the two is the paper is decided by what surrounds the block, not by which covers more
+  // of it: the median assumes the text is the minority of its own box, which is true of body text in
+  // a balloon and false of heavy display capitals. Mirrors overlay.go ringNearerInk (docs/PARITY.md).
+  if (measured && ringNearerInk(ctx, x0, y0, w, h, lh, bg, ink)) {
+    const swap = bg.slice(); bg[0] = ink[0]; bg[1] = ink[1]; bg[2] = ink[2]; ink = swap;
+  }
   if (Math.abs(luma(...ink) - luma(...bg)) < 55) ink = fallback();
   return { bg: `rgb(${bg[0]},${bg[1]},${bg[2]})`, ink: `rgb(${ink[0]},${ink[1]},${ink[2]})` };
 }
@@ -266,7 +323,16 @@ const THRESHOLD_LEPTONICA_OTSU = "1";
 // colour pass wins where lettering is separated by hue rather than brightness, and greyscale
 // throws that away. Retrying only after the ordinary pass returned no plates at all keeps every
 // image that works today unchanged. Mirrors tesseract.go greyRescuePasses (docs/PARITY.md).
-const GREY_RESCUE_PASSES = [THRESHOLD_ENGINE_DEFAULT, THRESHOLD_LEPTONICA_OTSU];
+// The third rung changes neither the pixels nor the thresholder but what Tesseract is told to look
+// for: sparse text instead of a page (see OCR_SPARSE_PSM). It comes last of the three because it is
+// the one that gives up layout analysis, which is what holds a real page's columns and reading
+// order together.
+const GREY_RESCUE_PASSES = [
+  { method: THRESHOLD_ENGINE_DEFAULT, psm: OCR_PSM },
+  { method: THRESHOLD_LEPTONICA_OTSU, psm: OCR_PSM },
+  { method: THRESHOLD_ENGINE_DEFAULT, psm: OCR_SPARSE_PSM },
+];
+
 
 // The line-confidence floor for a rescue pass, higher than OCR_MIN_LINE_CONF because a rescue is a
 // second guess: the ordinary pass already looked at this image and found nothing, so the prior that
@@ -320,9 +386,9 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
       // (adjacent balloons read as one plate). Best-effort: keep going if the param won't set.
       if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
-      let blocks = clusterLines(collectLines(data, scale));
-      if (!blocks.length) blocks = await greyRescue(worker, image, scale);
-      else blocks = await screenSweep(worker, image, scale, blocks);
+      let blocks = clusterLines(collectLines(data, scale), OCR_MIN_LINE_CONF, bitmap.width, bitmap.height);
+      if (!blocks.length) blocks = await greyRescue(worker, image, scale, bitmap.width, bitmap.height);
+      else blocks = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
       await sampleColors(bitmap.source, blocks);
       return { blocks, width: bitmap.width, height: bitmap.height };
     } finally {
@@ -331,26 +397,35 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
   });
 }
 
-// Walk GREY_RESCUE_PASSES over a greyscale copy and return the first pass that finds any plates,
-// then try the halftone-screen rung for a picture no thresholder can see through. The thresholder
-// is restored to the engine default afterwards so the shared worker is left as the ordinary pass
-// expects to find it. Returns [] when nothing reads, which is the honest answer.
-async function greyRescue(worker, image, scale) {
+// Walk GREY_RESCUE_PASSES over a greyscale copy and return the strongest result any rung produced,
+// then - if none produced anything - try the halftone-screen rung for a picture no thresholder can
+// see through. The thresholder and the segmentation mode are restored afterwards so the shared
+// worker is left as the ordinary pass expects to find it. Returns [] when nothing reads, which is
+// the honest answer.
+//
+// Strongest, not first-non-empty: the ladder used to stop at the first rung that returned any plate
+// at all, so a rung that recovered one word ended the search before a later rung could recover six.
+// Mirrors tesseract.go greyRescue (docs/PARITY.md).
+async function greyRescue(worker, image, scale, imgW, imgH) {
   const grey = await greyRendition(image);
   if (!grey) return [];
+  let best = [];
   try {
-    for (const method of GREY_RESCUE_PASSES) {
+    for (const rung of GREY_RESCUE_PASSES) {
       try {
-        await worker.setParameters({ thresholding_method: method });
+        await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
-        const blocks = clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF);
-        if (blocks.length) return blocks;
+        const blocks = clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH);
+        if (strictlyBetter(blocks, best)) best = blocks;
       } catch { /* try the next rung */ }
     }
   } finally {
-    try { await worker.setParameters({ thresholding_method: THRESHOLD_ENGINE_DEFAULT }); } catch { /* next recognize resets it */ }
+    try {
+      await worker.setParameters({ thresholding_method: THRESHOLD_ENGINE_DEFAULT, tessedit_pageseg_mode: OCR_PSM });
+    } catch { /* next recognize resets it */ }
   }
-  return screenRescue(worker, image, scale);
+  if (best.length) return best;
+  return screenRescue(worker, image, scale, imgW, imgH);
 }
 
 // The ladder's last rung: measure the halftone screen the picture is printed with and, if there is
@@ -363,14 +438,14 @@ async function greyRescue(worker, image, scale) {
 // own measured period rather than a fixed number, because a screen's pitch depends on the press and
 // on the scan resolution. Mirrors tesseract.go screenRescue (docs/PARITY.md); CSS `blur(Npx)` is a
 // Gaussian whose standard deviation is N, which is the same kernel the desktop app builds.
-async function screenRescue(worker, image, scale) {
+async function screenRescue(worker, image, scale, imgW, imgH) {
   const pitch = await measureScreenPitch(image);
   if (!pitch) return [];
   const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
   if (!blurred) return [];
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    return clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF);
+    return clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH);
   } catch {
     return [];
   }
@@ -392,7 +467,7 @@ async function screenRescue(worker, image, scale) {
 // by `scale` while the prepared image the detector reads has not been downscaled, so the covered
 // rectangles are multiplied back up. It follows from where each edition puts its downscale - the Go
 // app does it after the sweep, so there it needs nothing.
-async function screenSweep(worker, image, scale, kept) {
+async function screenSweep(worker, image, scale, kept, imgW, imgH) {
   const covered = kept.map(({ bbox: b }) => (scale === 1 ? b : {
     x0: Math.round(b.x0 * scale), y0: Math.round(b.y0 * scale),
     x1: Math.round(b.x1 * scale), y1: Math.round(b.y1 * scale),
@@ -403,7 +478,7 @@ async function screenSweep(worker, image, scale, kept) {
   if (!blurred) return kept;
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    return mergeScreenBlocks(kept, clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF));
+    return mergeScreenBlocks(kept, clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH));
   } catch {
     return kept;
   }
@@ -435,6 +510,14 @@ async function measureScreenPitch(blob, covered = []) {
 // the source size while leaving headroom for longer translations and word-wrap slack.
 const FONT_FIT = 0.92;
 
+// Ceiling for the runtime grow branch, as a multiple of the compile-time size. Shared with the
+// desktop app's ocrScript (see docs/PARITY.md). A block's box is the union of its lines and so
+// includes the leading between them: filling it is not the same as matching the source's type, and
+// on a loosely leaded block "fill the box" would print the translation larger than the words it
+// covers. 1.15 is a little over 1/FONT_FIT, so a plate may reach the measured ink height of the
+// source's own lines and no further.
+const FONT_GROW_CAP = 1.15;
+
 // A container the size of the image (via aspect-ratio) with the image as a base layer
 // and one opaque plate per recognized block, positioned/sized in percent so it survives
 // responsive scaling. Font-size is expressed in container-width units (cqw) derived from
@@ -460,11 +543,12 @@ export function buildOverlay({ imageSrc, imageEl, blocks, width, height }) {
     plate.style.width = `${((x1 - x0) / width) * 100}%`;
     plate.style.minHeight = `${((y1 - y0) / height) * 100}%`;
     plate.style.fontSize = `${((b.lineHeight / width) * 100 * FONT_FIT).toFixed(2)}cqw`;
-    if (b.colors) {
-      plate.style.background = b.colors.bg;
-      plate.style.color = b.colors.ink;
-      plate.style.boxShadow = "none"; // colour matches the image; drop the delineating border
-    }
+    // Paper and ink both land on the plate box: the box is what covers the source region, so it is
+    // what has to be opaque. The paper sat on an inline span hugging the string for one day, which
+    // gave it the shape of the rendered words but left a mean 93% of the source lettering showing
+    // around short strings against 17% for the box - see ocr-overlay.css and docs/PARITY.md for the
+    // measurement, and overlay.go for the desktop mirror.
+    if (b.colors) { plate.style.color = b.colors.ink; plate.style.background = b.colors.bg; }
     plate.textContent = b.text;
     container.append(plate);
   }
@@ -474,8 +558,15 @@ export function buildOverlay({ imageSrc, imageEl, blocks, width, height }) {
 
 // fitPlate fits one plate's text to its box: it shrinks the cqw font down to a floor, and if the
 // text still overflows there it lets the box grow so nothing is ever clipped. The source region
-// height (the inline min-height) is the target the font is fitted to. Mirrors the desktop app's
-// ocrScript fit() (see docs/PARITY.md and overlay.go).
+// height (the inline min-height) is the target the font is fitted to.
+//
+// It also grows, because the compile-time size is deliberately conservative - the font is the
+// median *ink* height times FONT_FIT, and an ink box is shorter than the type that drew it - so a
+// plate whose text is no longer than the source's leaves the string floating in white space, which
+// reads as an oversized patch rather than as the original lettering. Growth is capped at
+// FONT_GROW_CAP x the base and stops one step before the content overflows, so a plate never prints
+// larger than the region it covers. Mirrors the desktop app's ocrScript fit() (see docs/PARITY.md
+// and overlay.go).
 function fitPlate(b) {
   if (!b.dataset.ocrCqw) {
     const m = /([0-9.]+)cqw/.exec(b.style.fontSize || "");
@@ -491,6 +582,16 @@ function fitPlate(b) {
     while (b.scrollHeight > b.clientHeight + 1 && s > floor && g < 40) {
       s -= Math.max(0.3, s * 0.08); g++;
       b.style.fontSize = s + "cqw";
+    }
+    if (b.scrollHeight <= b.clientHeight + 1) {
+      const cap = base * FONT_GROW_CAP;
+      let prev = s, n = s, gg = 0;
+      while (n < cap && gg < 20) {
+        n = Math.min(cap, n + Math.max(0.3, n * 0.04)); gg++;
+        b.style.fontSize = n + "cqw";
+        if (b.scrollHeight > b.clientHeight + 1) { b.style.fontSize = prev + "cqw"; break; }
+        prev = n;
+      }
     }
   }
   if (b.scrollHeight > b.clientHeight + 1) b.style.height = "auto";

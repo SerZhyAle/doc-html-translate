@@ -20,7 +20,15 @@
 /* Opaque plate covering the source text, carrying the recognized text. Text is centred in its
    source region; the runtime re-fit (fitPlate in ocr-overlay.js) shrinks the font so a longer
    string - a translation - fits, and only lets the box grow if it still won't fit at the font
-   floor, so nothing clips. overflow:hidden gives the fit a bounded box to measure against. */
+   floor, so nothing clips. overflow:hidden gives the fit a bounded box to measure against.
+
+   The opaque paper is on the plate box, because the box is what covers the source region. It sat
+   on an inline span hugging the string for one day - which gave the paper the shape of the
+   rendered words - and the corpus was asked which serves a reader better: over 46 scenes the box
+   carrier left a mean 17% of the source lettering still showing under a plate and the string
+   carrier left 93%. The cost of the box is real and was why the span was tried: a block box is
+   wider than centred copy on its last line, so paper lands beside that line (measured at 91 px
+   either side of a 984 px caption). Mirrors overlay.go ocrCSS (docs/PARITY.md). */
 .ocr-plate {
   position: absolute;
   box-sizing: border-box;
@@ -28,8 +36,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.05em 0.15em;
-  border-radius: 2px;
+  /* Load-bearing, not cosmetic: the padding decides how large the runtime fit grows the plate's
+     own lettering, and the lab's residual-ink metric counts that lettering wherever it lands on a
+     source-ink pixel. Measured on samson-and-delilah-03-scroll with byte-identical plate rects,
+     0.05em 0.15em took the scene from 0.2705 to 0.2841, past the recorded 0.28 bound. Shared with
+     overlay.go ocrCSS (docs/PARITY.md). */
+  padding: 0.08em 0.28em;
+  /* Relative to the plate's own type, not a fixed 2px: a caption plate and a full-page plate are
+     drawn at wildly different scales, and a corner that reads as a rounded label on one reads as a
+     sharp-cornered patch on the other. Shared with overlay.go ocrCSS (docs/PARITY.md). */
+  border-radius: 0.35em;
   background: #fff;
   color: #111;
   text-align: center;
@@ -38,6 +54,14 @@
   word-break: break-word;
   font-family: "Segoe UI", system-ui, Arial, sans-serif;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* The viewer's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,
+   not visibility/opacity: a hidden plate must not keep taking pointer events or be read out by a
+   screen reader, and the page translator must not find text to swap in a layer the reader turned
+   off. Mirrors overlay.go's html.dht-ocr-off rule (docs/PARITY.md). */
+html.ocr-layer-off .ocr-plate {
+  display: none;
 }
 
 /* Per-image progress badge overlaid while an image is queued / being recognized. */
