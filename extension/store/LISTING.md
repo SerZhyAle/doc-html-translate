@@ -99,7 +99,7 @@ When you open a supported document, this extension converts its text into a clea
 - 📚 **More formats**: Also opens many other e-book and document formats - each converted to clean, translatable text, with no Calibre or any other app required.
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
-- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. English works offline; more languages download on demand.
+- 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. The plates cover the lettering they replace, and a plate that would span most of a picture is split back into its own lines, so a screenshot or a form keeps its layout. English works offline; more languages download on demand.
 - 🔒 **100% Local & Private**: Everything runs entirely on your device. Your documents are never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 

@@ -93,9 +93,10 @@ comic cbz cbr
 offline translation
 
 @@ReleaseNotes
-- The interface now speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French, Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
-- It follows your Windows language on its own. Override it with -ui-lang on the command line, or with the language selector in the app window and in the browser extension.
-- Arabic and Urdu lay the interface out right to left.
-- The interface language never changes the language of the document you convert: a converted page keeps the book's own language, so the browser still offers to translate it.
-- The installer speaks 8 languages; the site now has a full page in each of the 13, and the readme is available in Russian and Ukrainian too.
-- Ten of the thirteen translations are machine-made and not proofread - corrections are welcome at sza@ukr.net.
+- Text recognized on a picture now covers the lettering it replaces. Until now the replacement was painted on a patch shaped like the words themselves, so the original stayed visible around it and both layers were readable at once.
+- A screenshot, a form or a list is no longer buried under one giant patch. A plate that spans most of the picture is split back into the lines it was built from, so the page keeps its own layout and nothing that was read is lost.
+- If you do not choose an OCR language, the app now reads the writing system on the page. Where it has the data it recognizes the page in that language; where it does not it adds no text at all and names the language pack to install - instead of covering a Russian screenshot in transliterated nonsense.
+- Lettering on saturated artwork, on a halftone screen, or set as large display type is recognized where earlier versions found nothing at all.
+- Comics and scans: every page has its own anchor and a page jump box, so you can link to page 30 instead of dragging the scrollbar.
+- A new button hides the recognized-text layer, so you can look at the artwork underneath and bring the text back.
+- A PDF with neither a text layer nor an extractable page image now says exactly that, instead of claiming OCR was switched off.

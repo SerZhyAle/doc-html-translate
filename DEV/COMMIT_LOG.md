@@ -905,3 +905,20 @@ Changed files:
 - winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml
 - winget/SerZhyAle.DocHtmlTranslate.yaml
 
+| 2026-08-13 18:58:11 | main | 3a8699f | docs: what's new for the OCR-composition release, across the surfaces it touches |
+
+Changed files:
+- README.md
+- README_RU.md
+- README_UK.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- docs.html
+- docs.ru.html
+- docs.uk.html
+- extension/store/LISTING.md
+- index.html
+- tools/store/listing/en.txt
+- tools/store/listing/ru.txt
+- tools/store/listing/uk.txt
+

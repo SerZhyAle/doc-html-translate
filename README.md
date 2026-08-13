@@ -158,7 +158,7 @@ Why this workflow is popular (besides the obvious):
 | `-ollama-ctx` | `8192` | Ollama context size |
 | `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N (`0` = no limit) |
 | `-ocr` | `false` | OCR text inside document images and overlay it as translatable HTML (needs Tesseract) |
-| `-ocr-lang` | (`-src`) | OCR language(s), e.g. `eng` or `eng+rus` (defaults from `-src`, else `eng`) |
+| `-ocr-lang` | (`-src`) | OCR language(s), e.g. `eng` or `eng+rus`. Left empty it defaults from `-src` (else `eng`) and the app checks the page's writing system: it adds a language rather than replacing one (`rus+eng`) where the data is installed, and leaves the page without text plates - naming the pack to install - where it is not. Passing the flag turns that check off |
 | `-ocr-langs` | `false` | List installed/available OCR languages and exit |
 | `-ocr-download` | empty | Download an OCR language pack (e.g. `-ocr-download rus`) and exit |
 | `-split` | `5000` | Split pages at N chars (`0` disables split) |

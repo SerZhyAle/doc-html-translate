@@ -137,7 +137,7 @@ doc-html-translate.exe -ollama "book.epub"</div>
           <tr><td>-google</td><td>false</td><td>Перевод через Google Cloud Translation API</td></tr>
           <tr><td>-ollama</td><td>false</td><td>Локальный перевод Ollama</td></tr>
           <tr><td>-ocr</td><td>false</td><td>Распознать текст на изображениях документа (OCR) и наложить его сверху настоящим переводимым HTML (нужен Tesseract)</td></tr>
-          <tr><td>-ocr-lang</td><td>(-src)</td><td>Язык(и) OCR, напр. eng или eng+rus (по умолчанию из -src, иначе eng)</td></tr>
+          <tr><td>-ocr-lang</td><td>(-src)</td><td>Язык(и) OCR, напр. eng или eng+rus. Если не задан - берётся из -src (иначе eng), и приложение проверяет письменность страницы: есть данные для неё - язык добавляется, а не заменяется (rus+eng); нет - страница остаётся без плашек, а в лог идёт строка с нужным пакетом. Заданный флаг эту проверку отключает</td></tr>
           <tr><td>-ocr-langs</td><td>false</td><td>Показать установленные/доступные языки OCR и выйти</td></tr>
           <tr><td>-ocr-download</td><td>empty</td><td>Скачать языковой пакет OCR (напр. -ocr-download rus) и выйти</td></tr>
           <tr><td>-max-cost</td><td>0</td><td>Прервать платный перевод до отправки, если оценка стоимости в USD превышает N. Если сомневаетесь, 0 (без лимита) - вполне достойный выбор</td></tr>
