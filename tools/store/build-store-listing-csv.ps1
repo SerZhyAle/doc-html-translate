@@ -101,11 +101,16 @@ function Format-Cell([string]$v) {
     return $v
 }
 
-function Write-Csv($rows, [string]$path, [string]$newline) {
+# $trailing says whether the file ends with a newline after its last row. It is taken from the
+# export rather than assumed, because the -FillNothing round-trip guard compares bytes: Partner
+# Center exports without a final newline, and appending one made an otherwise byte-identical
+# rewrite report "round trip DIFFERS", which is the one signal that makes a patching run
+# trustworthy. A guard that cries wolf over two bytes teaches a reader to ignore it.
+function Write-Csv($rows, [string]$path, [string]$newline, [bool]$trailing = $true) {
     $sb = New-Object System.Text.StringBuilder
-    foreach ($r in $rows) {
-        [void]$sb.Append((($r | ForEach-Object { Format-Cell $_ }) -join ','))
-        [void]$sb.Append($newline)
+    for ($i = 0; $i -lt $rows.Count; $i++) {
+        [void]$sb.Append((($rows[$i] | ForEach-Object { Format-Cell $_ }) -join ','))
+        if ($i -lt $rows.Count - 1 -or $trailing) { [void]$sb.Append($newline) }
     }
     # UTF-8 *with* BOM - Partner Center's own export encoding; see the note in .DESCRIPTION.
     [System.IO.File]::WriteAllText($path, $sb.ToString(), [System.Text.UTF8Encoding]::new($true))
@@ -137,6 +142,7 @@ foreach ($code in $Locale.Keys) {
 # ── patch ────────────────────────────────────────────────────────────────────
 $raw = [System.IO.File]::ReadAllText($Csv, [System.Text.UTF8Encoding]::new($false))
 $newline = if ($raw -match "`r`n") { "`r`n" } else { "`n" }
+$trailingNewline = $raw.EndsWith("`n")
 $rows = Read-Csv $Csv
 if ($rows.Count -lt 2) { throw "export has no data rows: $Csv" }
 
@@ -180,7 +186,7 @@ if (-not $FillNothing) {
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Out) | Out-Null
-Write-Csv $rows $Out $newline
+Write-Csv $rows $Out $newline $trailingNewline
 
 if ($FillNothing) {
     $same = ([System.IO.File]::ReadAllBytes($Csv) -join ',') -eq ([System.IO.File]::ReadAllBytes($Out) -join ',')

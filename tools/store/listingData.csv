@@ -39,18 +39,20 @@ doc-html-translate конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT
 pdftotext встроен в бинарник; для MOBI и AZW3 нужен установленный Calibre (только файлы без DRM).
 
 Без аккаунта, без рекламы, без телеметрии. Открытый исходный код: https://github.com/SerZhyAle/doc-html-translate"
-ReleaseNotes,3,Text,,"- The interface now speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French, Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
-- It follows your Windows language on its own. Override it with -ui-lang on the command line, or with the language selector in the app window and in the browser extension.
-- Arabic and Urdu lay the interface out right to left.
-- The interface language never changes the language of the document you convert: a converted page keeps the book's own language, so the browser still offers to translate it.
-- The installer speaks 8 languages; the site now has a full page in each of the 13, and the readme is available in Russian and Ukrainian too.
-- Ten of the thirteen translations are machine-made and not proofread - corrections are welcome at sza@ukr.net.","- Интерфейс теперь говорит на 13 языках: английский, русский, украинский, немецкий, итальянский, испанский, французский, португальский, арабский, хинди, бенгальский, урду и китайский.
-- Язык берётся из настроек Windows сам. Переопределить можно флагом -ui-lang в командной строке или переключателем в окне приложения и в расширении для браузера.
-- Для арабского и урду интерфейс разворачивается справа налево.
-- Язык интерфейса не меняет язык документа, который вы конвертируете: у готовой страницы остаётся язык книги, поэтому браузер по-прежнему предлагает её перевести.
-- Установщик говорит на 8 языках; на сайте появилась полноценная страница на каждом из 13 языков, а readme теперь есть и на русском, и на украинском.
-- Десять переводов из тринадцати сделаны машинно и не вычитаны - исправления присылайте на sza@ukr.net."
-Title,4,Text,,doc-html-translate,doc-html-translate
+ReleaseNotes,3,Text,,"- Text recognized on a picture now covers the lettering it replaces. Until now the replacement was painted on a patch shaped like the words themselves, so the original stayed visible around it and both layers were readable at once.
+- A screenshot, a form or a list is no longer buried under one giant patch. A plate that spans most of the picture is split back into the lines it was built from, so the page keeps its own layout and nothing that was read is lost.
+- If you do not choose an OCR language, the app now reads the writing system on the page. Where it has the data it recognizes the page in that language; where it does not it adds no text at all and names the language pack to install - instead of covering a Russian screenshot in transliterated nonsense.
+- Lettering on saturated artwork, on a halftone screen, or set as large display type is recognized where earlier versions found nothing at all.
+- Comics and scans: every page has its own anchor and a page jump box, so you can link to page 30 instead of dragging the scrollbar.
+- A new button hides the recognized-text layer, so you can look at the artwork underneath and bring the text back.
+- A PDF with neither a text layer nor an extractable page image now says exactly that, instead of claiming OCR was switched off.","- Текст, распознанный на картинке, теперь закрывает буквы, которые заменяет. До сих пор замена рисовалась на подложке по форме самих слов, поэтому исходник оставался виден вокруг неё и читались оба слоя сразу.
+- Скриншот, форма или список больше не оказываются под одной огромной подложкой. Плашка, занявшая почти всю картинку, распускается обратно на строки, из которых была собрана: страница сохраняет свою вёрстку, и ничего распознанного не теряется.
+- Если язык OCR не выбран, приложение само смотрит, какой письменностью написана страница. Есть данные - читает на этом языке; нет - не добавляет текста вовсе и называет языковой пакет, который надо поставить, вместо того чтобы залить русский скриншот транслитерированной чепухой.
+- Надписи на насыщенной графике, на печатном растре и крупная дисплейная капитель распознаются там, где прежние версии не находили ничего.
+- Комиксы и сканы: у каждой страницы теперь свой якорь и поле перехода по страницам, так что на страницу 30 можно дать ссылку, а не тянуть полосу прокрутки.
+- Новая кнопка прячет слой распознанного текста, чтобы посмотреть рисунок под ним и вернуть текст обратно.
+- PDF, у которого нет ни текстового слоя, ни извлекаемой картинки страницы, теперь так и пишет, а не заявляет, что OCR отключён."
+Title,4,Text,,doc-html-translate,Doc-HTML-Translate
 ShortTitle,5,Text,,,
 SortTitle,6,Text,,,
 VoiceTitle,7,Text,,,
@@ -58,8 +60,8 @@ ShortDescription,8,Text,,"Convert EPUB, PDF, MOBI, comics and more to clean loca
 DevStudio,9,Text,,,
 CopyrightTrademarkInformation,12,Text,,,
 AdditionalLicenseTerms,13,Text,,,
-DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3066937578673902250
-DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3058795499902094003
+DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3053942535418488042,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3066937578673902250
+DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3020328266253159191,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3058795499902094003
 DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,,
 DesktopScreenshot4,103,Relative path (or URL to file in Partner Center),,,
 DesktopScreenshot5,104,Relative path (or URL to file in Partner Center),,,
@@ -338,12 +340,12 @@ SurfaceHubScreenshotCaption27,576,Text,,,
 SurfaceHubScreenshotCaption28,577,Text,,,
 SurfaceHubScreenshotCaption29,578,Text,,,
 SurfaceHubScreenshotCaption30,579,Text,,,
-StoreLogo720x1080,600,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3057770888377858836,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3002212663530121188
-StoreLogo1080x1080,601,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3061362421505370146,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3021279210314249966
-StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3064595178665177783,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3028215082225853161
+StoreLogo720x1080,600,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3057770888377858836,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3002212663530121188
+StoreLogo1080x1080,601,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3061362421505370146,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3021279210314249966
+StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3064595178665177783,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3028215082225853161
 OverrideLogosForWin10,603,True/False,,False,False
-StoreLogoOverride150x150,604,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3014842493040424186,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3001489529537013642
-StoreLogoOverride71x71,605,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025831954/listingassets/3041950401809206416,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701477702/listings/1152922700025832805/listingassets/3038377366472090543
+StoreLogoOverride150x150,604,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3014842493040424186,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3001489529537013642
+StoreLogoOverride71x71,605,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025831954/listingassets/3041950401809206416,https://developer.microsoft.com/en-us/dashboard/apps/9PMHSWQPR6V1/submissions/1152921505701654712/listings/1152922700025832805/listingassets/3038377366472090543
 PromoImage1920x1080,606,Relative path (or URL to file in Partner Center),,,
 PromoImage2400x1200,607,Relative path (or URL to file in Partner Center),,,
 XboxBrandedKeyArt584x800,608,Relative path (or URL to file in Partner Center),,,
