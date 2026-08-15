@@ -20,6 +20,11 @@ test_doc/
 # line is here so the rule is findable from the lab's own docs. Only the metadata is committed
 # (DEV/ocrlab/corpus.json + annotations); the media is third-party work and ships in nothing.
 test_doc/ocrlab/
+# tesseract.js caches language data next to the process that asked for it, so running the
+# extension's lab (npm run ocrlab) drops a 4 MB eng.traineddata in extension/. The bundled copy is
+# the one under extension/vendor, written by build.mjs; this stray sibling is a run artefact and
+# must never reach a commit or the packaged extension.
+extension/*.traineddata
 DEV/private/
 # Spec/plan tickets are working notes, not part of the shipped repo - they stay local.
 DEV/plan/

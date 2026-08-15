@@ -1,6 +1,6 @@
 # A poster the app reads as one word - reproduction sweep, 2026-08-12
 
-**Ticket:** [`2026-08-12_ocr-misses-display-lettering-on-saturated-art`](../plan/2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
+**Ticket:** [`2026-08-12_ocr-misses-display-lettering-on-saturated-art`](../plan/done/2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Question:** a user-reported standalone poster produces a single plate holding one word. Which part
 of the shipped path loses the other ten, and does anything the code already contains recover them?
 **Scope:** one image. This is a **reproduction**, not a corpus measurement - nothing here chooses a

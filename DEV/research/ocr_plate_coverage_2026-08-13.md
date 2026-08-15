@@ -296,4 +296,8 @@ is recorded here rather than left as an unexplained jump.
   out of the versioned corpus.
 - The **extension edition** was not run (`npm run ocrlab`). Its share of this work is the grouping
   rule and the carrier, both pinned by parity tests against the Go source; its own evidence is a
-  separate run.
+  separate run. **Run 2026-08-15**, `temp/ocrlab/ext-0815` against this run:
+  [`ocrlab/2026-08-15__extension-parity-run.md`](ocrlab/2026-08-15__extension-parity-run.md).
+  Concealment in the extension is equal or better on every scene that plates; it carries two defects
+  this edition does not; and the comparison surfaced a scorer defect that flatters the desktop
+  numbers here on the three scenes where recognition found nothing.
