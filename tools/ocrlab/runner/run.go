@@ -235,12 +235,14 @@ func captureShots(browser *Browser, page string, s *corpus.Scene, rect *probeRec
 	sc.Screenshots.Source = relTo(opt.OutDir, srcOut)
 	sc.Screenshots.Stress = map[string]string{}
 
-	// No image rect means the page carries no overlay at all - the recognizer found nothing in
-	// this scene. That is a measurement, not a malfunction: the scene stays in the run, the
-	// metrics report zero recall against its annotation, and the page is still captured so a
-	// reviewer can look at what the engine was given. What cannot be done is mapping the
-	// screenshot into image space, so the pixel-level dimensions get no sample rather than a
-	// wrong one.
+	// No image rect now means the page carries no image the probe could find at all, which is a
+	// malfunction rather than a result. A page whose recognizer found nothing still has its
+	// picture, and the probe falls back to it (see sceneImage), because that page is exactly the
+	// one whose concealment must be measured: nothing is concealed on it. Before that fallback
+	// existed, such a scene stored no mapped render, the scorer had nothing to compare, and it
+	// reported residual 0 - indistinguishable from perfect concealment. Measured 2026-08-15
+	// against the extension edition, which mapped the same scenes and scored them near 1.0:
+	// DEV/research/ocrlab/2026-08-15__extension-parity-run.md.
 	mapped := rect != nil
 
 	for _, c := range StressCases {

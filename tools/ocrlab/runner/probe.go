@@ -113,13 +113,33 @@ const probeTemplate = `<script id="ocrlab-probe">
     return out;
   }
 
-  function imageRect(){
+  // The scene's image, whether or not an overlay was drawn over it.
+  //
+  // figures() finds it through .ocr-fig, which only exists once the overlay has plates to hold.
+  // A page where the recognizer found nothing has no .ocr-fig - and that is precisely the page
+  // whose concealment measurement matters most, because nothing is concealed on it. Without a
+  // rect the runner cannot map its screenshot into image space, stores no rendered shot, and the
+  // scorer then reports residual 0 - "concealed perfectly" - for a page showing every original
+  // word. So fall back to the largest image on the page, which on a lab scene is the scene.
+  function sceneImage(){
     var f = figures()[0];
-    if (!f) return null;
-    var r = f.img.getBoundingClientRect();
+    if (f) return f.img;
+    var imgs = document.querySelectorAll("img"), best = null, bestArea = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      var r = imgs[i].getBoundingClientRect(), area = r.width * r.height;
+      if (area > bestArea) { best = imgs[i]; bestArea = area; }
+    }
+    return best;
+  }
+
+  function imageRect(){
+    var img = sceneImage();
+    if (!img) return null;
+    var r = img.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
     return {
       left: r.left, top: r.top, width: r.width, height: r.height,
-      naturalWidth: f.img.naturalWidth, naturalHeight: f.img.naturalHeight
+      naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight
     };
   }
 

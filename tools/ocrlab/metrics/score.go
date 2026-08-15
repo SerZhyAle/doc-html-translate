@@ -123,6 +123,7 @@ func Score(
 	out.Covered = mean(coveredVals)
 
 	if source != nil && rendered != nil {
+		out.Residual.Measured = true
 		for _, g := range groups {
 			r := ResidualInk(source, rendered, g, w, h)
 			out.Residual.InkPx += r.InkPx
@@ -204,24 +205,28 @@ func primaryViewport(run *evidence.Run, sc *evidence.Scene) string {
 
 // Bucket is an aggregate over a set of scenes.
 type Bucket struct {
-	Scenes         int     `json:"scenes"`
-	MeanRecall     float64 `json:"meanRecall"`
-	MeanPrecision  float64 `json:"meanPrecision"`
-	MeanCER        float64 `json:"meanCer"`
-	MeanIoU        float64 `json:"meanIou"`
-	WorstIoU       float64 `json:"worstIou"`
-	MeanCovered    float64 `json:"meanCovered"`
-	WorstResidual  float64 `json:"worstResidual"`
-	WorstHalo      float64 `json:"worstHalo"`
-	MinContrast    float64 `json:"minContrast"`
-	Merges         int     `json:"merges"`
-	Splits         int     `json:"splits"`
-	ProtectedHitPx int     `json:"protectedHitPx"`
-	Clipped        int     `json:"clipped"`
-	CrossGroup     int     `json:"crossGroup"`
-	WorstDrift     float64 `json:"worstDrift"`
-	TotalOcrMs     int64   `json:"totalOcrMs"`
-	FailingScenes  int     `json:"failingScenes"`
+	Scenes        int     `json:"scenes"`
+	MeanRecall    float64 `json:"meanRecall"`
+	MeanPrecision float64 `json:"meanPrecision"`
+	MeanCER       float64 `json:"meanCer"`
+	MeanIoU       float64 `json:"meanIou"`
+	WorstIoU      float64 `json:"worstIou"`
+	MeanCovered   float64 `json:"meanCovered"`
+	WorstResidual float64 `json:"worstResidual"`
+	WorstHalo     float64 `json:"worstHalo"`
+	// Scenes whose concealment could not be measured, so WorstResidual and WorstHalo are silent
+	// about them. A non-zero value here means the two worst-ofs above cover fewer scenes than
+	// Scenes says, and must be reported rather than averaged away.
+	UnmeasuredConcealment int     `json:"unmeasuredConcealment"`
+	MinContrast           float64 `json:"minContrast"`
+	Merges                int     `json:"merges"`
+	Splits                int     `json:"splits"`
+	ProtectedHitPx        int     `json:"protectedHitPx"`
+	Clipped               int     `json:"clipped"`
+	CrossGroup            int     `json:"crossGroup"`
+	WorstDrift            float64 `json:"worstDrift"`
+	TotalOcrMs            int64   `json:"totalOcrMs"`
+	FailingScenes         int     `json:"failingScenes"`
 }
 
 // Summary is the whole run's result, sliced the ways a decision is actually made.
@@ -304,11 +309,18 @@ func (a *accum) add(s *SceneScore, b *Bucket) {
 		b.Clipped += r.Clipped
 		b.CrossGroup += r.CrossGroupOverlap
 	}
-	if s.Residual.Residual > b.WorstResidual {
-		b.WorstResidual = s.Residual.Residual
-	}
-	if s.Residual.Halo > b.WorstHalo {
-		b.WorstHalo = s.Residual.Halo
+	// Only a measured scene may move the worst-of. An unmeasured one carries a zero that reads as
+	// flawless concealment, which is how a run with no stored render scored better than one that
+	// had them - see DEV/research/ocrlab/2026-08-15__extension-parity-run.md.
+	if s.Residual.Measured {
+		if s.Residual.Residual > b.WorstResidual {
+			b.WorstResidual = s.Residual.Residual
+		}
+		if s.Residual.Halo > b.WorstHalo {
+			b.WorstHalo = s.Residual.Halo
+		}
+	} else {
+		b.UnmeasuredConcealment++
 	}
 	if s.Contrast.Plates > 0 && (b.MinContrast == 0 || s.Contrast.MinLuma < b.MinContrast) {
 		b.MinContrast = s.Contrast.MinLuma

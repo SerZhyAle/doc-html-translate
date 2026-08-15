@@ -332,6 +332,52 @@ func TestResidualInkAndCoverage(t *testing.T) {
 	}
 }
 
+// An unmeasured scene must not read as a concealed one. Before Measured existed, a run that
+// stored no render scored residual 0 - the same value a perfectly concealed plate gets - and the
+// worst-of aggregates took it, so the edition with fewer renders looked like the better one.
+// Measured 2026-08-15 against the extension edition, which stored the renders and scored ~1.0 on
+// the same scenes: DEV/research/ocrlab/2026-08-15__extension-parity-run.md.
+func TestResidualUnmeasuredIsNotConcealed(t *testing.T) {
+	anns, scs, root := scenes(t)
+	a := anns["synth-uniform-paper"]
+	src := loadPNG(t, filepath.Join(root, filepath.FromSlash(scs["synth-uniform-paper"].File)))
+	g := a.Groups[0]
+
+	for _, c := range []struct {
+		name             string
+		source, rendered image.Image
+	}{
+		{"no render", src, nil},
+		{"no source", nil, src},
+		{"neither", nil, nil},
+	} {
+		got := ResidualInk(c.source, c.rendered, g, a.ImageWidth, a.ImageHeight)
+		if got.Measured {
+			t.Errorf("%s: Measured = true, want false", c.name)
+		}
+	}
+
+	// And a measured one says so, whatever it measured.
+	if got := ResidualInk(src, src, g, a.ImageWidth, a.ImageHeight); !got.Measured {
+		t.Error("a scene with both images: Measured = false, want true")
+	}
+
+	// The aggregate must not let an unmeasured scene set the worst-of.
+	var b Bucket
+	acc := &accum{}
+	acc.add(&SceneScore{Residual: ResidualScore{Residual: 0.9, Halo: 0.9, Measured: false}}, &b)
+	if b.WorstResidual != 0 || b.WorstHalo != 0 {
+		t.Errorf("unmeasured scene moved the worst-of: residual %v halo %v", b.WorstResidual, b.WorstHalo)
+	}
+	if b.UnmeasuredConcealment != 1 {
+		t.Errorf("UnmeasuredConcealment = %d, want 1", b.UnmeasuredConcealment)
+	}
+	acc.add(&SceneScore{Residual: ResidualScore{Residual: 0.4, Halo: 0.3, Measured: true}}, &b)
+	if b.WorstResidual != 0.4 || b.WorstHalo != 0.3 {
+		t.Errorf("measured scene did not set the worst-of: residual %v halo %v", b.WorstResidual, b.WorstHalo)
+	}
+}
+
 // A plate whose text and background end up the same colour is unreadable however well it
 // conceals, so the contrast check has to read the rendered pixels rather than trust the
 // sampled values in the evidence.

@@ -22,10 +22,16 @@ const (
 )
 
 // ResidualScore is how much of the original lettering a reader can still see.
+//
+// Measured separates "the reader can still see nothing" from "this was never measured". They are
+// the same zero in JSON and the aggregates used to take both, so a run that stored no render
+// scored as the best possible concealment - see the 2026-08-15 parity run. Anything reading
+// Residual or Halo for a gate, a worst-of or a mean must check Measured first.
 type ResidualScore struct {
 	Residual float64 `json:"residual"` // fraction of the source ink mask still showing ink
 	Halo     float64 `json:"halo"`     // the same, measured only in the band inside the plate edge
 	InkPx    int     `json:"inkPx"`    // size of the source ink mask, so a tiny sample is visible
+	Measured bool    `json:"measured"` // false when there was no render to compare against
 }
 
 // luma is the same weighting internal/ocr uses for its contrast floor, so the lab and the app
@@ -104,6 +110,10 @@ func ResidualInk(source, rendered image.Image, g truth.Group, w, h int) Residual
 		regions = []truth.Region{g.Bounds}
 	}
 	var s ResidualScore
+	if source == nil || rendered == nil {
+		return s // not measured; Measured stays false and the caller must not read the zeros
+	}
+	s.Measured = true
 	srcInk := truth.NewMask(w, h)
 	for _, r := range regions {
 		srcInk.Or(inkMask(source, r, w, h))
