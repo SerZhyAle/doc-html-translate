@@ -86,6 +86,48 @@ func TestSelectPageImages(t *testing.T) {
 		}
 	})
 
+	// The same file's real defect: the 4363x6193 raster is a mixed-raster-content
+	// *foreground* layer painted through a stencil /Mask, undefined wherever the mask does
+	// not select it. Kept for its size it reaches the reader as a pink-and-brown smear
+	// with the lettering trailed into vertical streaks; the 1455x2065 background layer
+	// beside it is the readable page. Inside a duplicate group the mask beats the size.
+	t.Run("a masked MRC foreground layer loses to the unmasked page", func(t *testing.T) {
+		foreground := model.Image{ObjNr: 2, Width: 4363, Height: 6193, HasImgMask: true}
+		kept, _, dups := selectPageImages(map[int]model.Image{1: small, 2: foreground})
+		if dups != 1 {
+			t.Fatalf("dups=%d, want 1", dups)
+		}
+		if len(kept) != 1 || kept[0].ObjNr != 1 {
+			t.Fatalf("kept=%v, want the unmasked background layer (objNr 1)", kept)
+		}
+	})
+
+	// Order must not decide it: the same two rasters with the masked one seen first.
+	t.Run("the mask beats the size whichever is seen first", func(t *testing.T) {
+		foreground := model.Image{ObjNr: 1, Width: 4363, Height: 6193, HasImgMask: true}
+		background := model.Image{ObjNr: 2, Width: 1455, Height: 2065}
+		kept, _, _ := selectPageImages(map[int]model.Image{1: foreground, 2: background})
+		if len(kept) != 1 || kept[0].ObjNr != 2 {
+			t.Fatalf("kept=%v, want the unmasked background layer (objNr 2)", kept)
+		}
+	})
+
+	// A soft mask is ordinary transparency and leaves the base image a whole picture, so
+	// it must not demote anything; and a lone masked illustration has no unmasked twin to
+	// fall back to, so it is still the page.
+	t.Run("a soft mask does not demote, and a lone masked image is still kept", func(t *testing.T) {
+		softBig := model.Image{ObjNr: 2, Width: 4363, Height: 6193, HasSMask: true}
+		kept, _, _ := selectPageImages(map[int]model.Image{1: small, 2: softBig})
+		if len(kept) != 1 || kept[0].ObjNr != 2 {
+			t.Fatalf("kept=%v, want the largest raster (objNr 2) - an SMask is not an MRC layer", kept)
+		}
+		lone := model.Image{ObjNr: 5, Width: 800, Height: 600, HasImgMask: true}
+		kept, _, dups := selectPageImages(map[int]model.Image{5: lone})
+		if dups != 0 || len(kept) != 1 || kept[0].ObjNr != 5 {
+			t.Fatalf("kept=%v dups=%d, want the lone masked image kept", kept, dups)
+		}
+	})
+
 	t.Run("unknown dimensions are never treated as duplicates", func(t *testing.T) {
 		// The real (non-stub) extraction can leave Width/Height at zero; such images
 		// must pass through rather than collapse into each other.

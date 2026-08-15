@@ -932,14 +932,18 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 		if err != nil {
 			continue // expected for pages with no (or unreadable) images
 		}
-		// The real (non-stub) extraction leaves Width/Height zero; a stub pass fills
-		// them from the image dict without decoding any pixels. selectPageImages needs
-		// the dimensions to spot a page embedded twice at two resolutions.
+		// The real (non-stub) extraction leaves Width/Height zero and never looks at the
+		// dictionary's mask entries; a stub pass fills both from the image dict without
+		// decoding any pixels. selectPageImages needs the dimensions to spot a page
+		// embedded twice at two resolutions, and the /Mask flag to tell an MRC scan's
+		// foreground layer from the page it is painted over.
 		if stubs, serr := pdfcpulib.ExtractPageImages(ctx, pageNum, true); serr == nil {
 			for objNr, img := range imgs {
 				if s, ok := stubs[objNr]; ok {
 					img.Width = s.Width
 					img.Height = s.Height
+					img.HasImgMask = s.HasImgMask
+					img.HasSMask = s.HasSMask
 					imgs[objNr] = img
 				}
 			}
@@ -979,11 +983,29 @@ func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
 //     taken as content it renders a ~128px postage stamp where the page should be.
 //   - Proportional-scale duplicates. A scanned page is often embedded twice - the
 //     same picture at two resolutions (e.g. 1455x2065 and 4363x6193) - and emitting
-//     both shows the page twice. Only the largest of a same-shape group is kept.
+//     both shows the page twice. Only the largest of a same-shape group is kept,
+//     unless the largest is painted through a stencil /Mask (see below).
 //
 // Images of different shapes are left alone: a composed page (an illustration beside
 // a figure) keeps all of them, because there guessing "the page" would be wrong as
 // often as right. The returned slice is ordered by object number so output is stable.
+//
+// Size decides a duplicate group only among rasters that are whole pictures. A mixed
+// raster content (MRC) scan - what library and archive scanners produce - embeds a page
+// as a low-resolution *background* layer plus a high-resolution *foreground* layer that
+// is painted through a stencil /Mask, and the foreground layer is undefined wherever the
+// mask does not select it. Extracted whole it is not a lower-quality page, it is not a
+// page at all: measured on pdf-1page-blackletter_Plague-Proclamation-1625, the 4363x6193
+// foreground layer comes out as a pink-and-brown smear with the lettering trailed into
+// vertical streaks, while the 1455x2065 background layer beside it is the readable page.
+// Both are JPXDecode and the decoder reports no error, so nothing downstream can tell
+// them apart - the /Mask on the dictionary is the only signal, and it is decisive here
+// exactly because the two rasters are already known to be the same page.
+//
+// Only /Mask counts, not /SMask: soft-masked transparency leaves the base image a
+// complete picture, and it is the ordinary shape of a PNG-with-alpha illustration. And
+// the preference applies only *inside* a duplicate group, so a lone masked illustration -
+// which has no unmasked twin to fall back to - is still kept and still reaches the reader.
 func selectPageImages(imgs map[int]model.Image) (kept []model.Image, thumbs, dups int) {
 	list := make([]model.Image, 0, len(imgs))
 	for _, img := range imgs {
@@ -1000,7 +1022,7 @@ func selectPageImages(imgs map[int]model.Image) (kept []model.Image, thumbs, dup
 		for k := range kept {
 			if sameShapeRaster(kept[k], img) {
 				dups++
-				if imagePixels(img) > imagePixels(kept[k]) {
+				if betterPageRaster(img, kept[k]) {
 					kept[k] = img
 				}
 				merged = true
@@ -1016,6 +1038,17 @@ func selectPageImages(imgs map[int]model.Image) (kept []model.Image, thumbs, dup
 
 func imagePixels(img model.Image) int64 {
 	return int64(img.Width) * int64(img.Height)
+}
+
+// betterPageRaster reports whether candidate should replace current as the one raster kept
+// for a page shape. A raster painted through a stencil /Mask loses to one without a mask
+// however big it is - that is the MRC foreground layer, undefined outside its mask - and
+// otherwise the larger picture wins, as it always did.
+func betterPageRaster(candidate, current model.Image) bool {
+	if candidate.HasImgMask != current.HasImgMask {
+		return !candidate.HasImgMask
+	}
+	return imagePixels(candidate) > imagePixels(current)
 }
 
 // aspectRatioTolerance is how close two rasters' aspect ratios must be to count as
