@@ -18,6 +18,12 @@
   Exit code is non-zero if any assertion fails (broken>0, expected marker missing, blank render),
   so it can gate a build.
 
+  A redirecting index.html is followed before anything is checked. The single-page merge writes
+  one at the output root whenever the book's content lives in a subdirectory - an EPUB's OEBPS/ -
+  and headless Chrome follows it, so --dump-dom returned the target's DOM while every relative
+  src was still resolved against the root. That printed broken=55 on a book whose images are all
+  present: a false FAIL on the product's primary input format.
+
 .PARAMETER Path
   A converted-book output folder (its index.html + page_*.html are checked) or a single .html file.
 
@@ -51,7 +57,52 @@ if (-not $browser) { throw "No headless browser found (Edge or Chrome)." }
 
 if (-not (Test-Path $Path)) { throw "Path not found: $Path" }
 
+# ── follow a redirecting entry page ──────────────────────────
+# internal/htmlgen/singlepage.go writes a 142-byte index.html at the output root when the book's
+# base path is nested (an EPUB's OEBPS/): its whole body is `location.replace("OEBPS/index.html")`.
+# The browser follows it, so the DOM that comes back belongs to the target while the directory the
+# relative src values belong to is the target's, not the root's. Resolve the stub here so the page
+# and its directory stay the same file. Chains are followed a few times and then given up on, so a
+# cycle cannot hang the check.
+function Get-RedirectTarget([string]$file) {
+    $raw = Get-Content -LiteralPath $file -Raw
+    # A real page is never this small; the guard keeps the regex off every converted chapter.
+    if (-not $raw -or $raw.Length -gt 2048) { return $null }
+    $target = $null
+    $js = [regex]::Match($raw, 'location\.replace\(\s*(["''])(.*?)\1')
+    if ($js.Success) {
+        $target = $js.Groups[2].Value
+    } else {
+        $meta = [regex]::Match($raw, '(?i)<meta[^>]*http-equiv\s*=\s*["'']?refresh["'']?[^>]*url\s*=\s*["'']?([^"''>\s]+)')
+        if ($meta.Success) { $target = $meta.Groups[1].Value }
+    }
+    if (-not $target -or $target -match '^(https?:|data:)') { return $null }
+    $target = [uri]::UnescapeDataString(($target -split '[?#]', 2)[0])
+    $abs = Join-Path (Split-Path -Parent $file) $target
+    if (Test-Path -LiteralPath $abs -PathType Leaf) { return (Resolve-Path -LiteralPath $abs).Path }
+    return $null
+}
+
+function Resolve-EntryPage([string]$file) {
+    for ($i = 0; $i -lt 4; $i++) {
+        $next = Get-RedirectTarget $file
+        if (-not $next -or $next -eq $file) { break }
+        Write-Host ("  ..   " + (Split-Path -Leaf $file) + " redirects to " + $next.Substring((Split-Path -Parent $file).Length + 1)) -ForegroundColor DarkGray
+        $file = $next
+    }
+    return $file
+}
+
 # ── resolve the page list ────────────────────────────────────
+# A folder whose index.html is only a redirect is not where the book is: enumerate the directory it
+# points into instead, so page_*.html of a multi-page EPUB is checked too.
+$rootIndex = Join-Path $Path "index.html"
+if ((Test-Path -LiteralPath $Path -PathType Container) -and (Test-Path -LiteralPath $rootIndex -PathType Leaf)) {
+    $entry = Resolve-EntryPage ((Resolve-Path -LiteralPath $rootIndex).Path)
+    $entryDir = Split-Path -Parent $entry
+    if ($entryDir -ne (Resolve-Path -LiteralPath $Path).Path) { $Path = $entryDir }
+}
+
 $item = Get-Item -LiteralPath $Path
 if ($item.PSIsContainer) {
     # Filter in PowerShell (-like), NOT the provider -Filter, so wildcard classes
@@ -64,7 +115,8 @@ if ($item.PSIsContainer) {
         if (-not $files) { $files = @($all | Sort-Object Name) }
     }
 } else {
-    $files = @($item)
+    # A single file gets the same treatment: -Path <book>/index.html on an EPUB is the redirect.
+    $files = @(Get-Item -LiteralPath (Resolve-EntryPage $item.FullName))
 }
 if (-not $files) { throw "No .html files to check under $Path." }
 
