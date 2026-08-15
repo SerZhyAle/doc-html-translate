@@ -180,6 +180,100 @@ func TestClusterLinesKeepsOneBalloonWhole(t *testing.T) {
 	}
 }
 
+// TestClusterLinesSurvivesAnOutlineArtefact: a balloon outline recognized as a tall "|" inside a
+// line must not end that balloon. The line box is the union of its words, so the artefact sets it
+// for the whole line - 74 px beside two 26 px words - and ocrTypeSizeRatio then reads two type
+// sizes where a reader sees one. Found in the extension edition, whose engine produces the
+// artefact this one does not (DEV/research/ocrlab/2026-08-15__extension-parity-run.md); the rule
+// is shared, so both sides carry the fixture.
+func TestClusterLinesSurvivesAnOutlineArtefact(t *testing.T) {
+	build := func(withWords bool) []*ocrLine {
+		type row struct {
+			fixtureLine
+			wordH []int
+		}
+		rows := []row{
+			{fixtureLine{116, 123, 390, 151, 96.4, "ARE YOU SURE"}, []int{28, 28, 28}},
+			{fixtureLine{116, 175, 362, 203, 95.7, "ABOUT THIS?"}, []int{28, 28}},
+			{fixtureLine{78, 259, 298, 333, 90.1, "| NOT EVEN"}, []int{74, 26, 26}},
+			{fixtureLine{117, 311, 308, 337, 95.9, "SLIGHTLY."}, []int{26}},
+		}
+		out := make([]*ocrLine, 0, len(rows))
+		for _, r := range rows {
+			o := &ocrLine{x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1, confSum: r.conf, confN: 1}
+			o.text.WriteString(r.text)
+			if withWords {
+				o.wordH = r.wordH
+			}
+			out = append(out, o)
+		}
+		return out
+	}
+	blocks := clusterLines(build(true), ocrRescueLineConf, 1240, 600)
+	if len(blocks) != 2 {
+		t.Fatalf("blocks = %d, want 2 (one plate per balloon)", len(blocks))
+	}
+	if got := blocks[1].Text; got != "| NOT EVEN SLIGHTLY." {
+		t.Errorf("second plate = %q, want the whole balloon", got)
+	}
+
+	// With no word heights the line box is all there is, so the old, stricter behaviour stands -
+	// the fix must not loosen a case it has no evidence about.
+	if blocks := clusterLines(build(false), ocrRescueLineConf, 1240, 600); len(blocks) != 3 {
+		t.Errorf("without word heights: blocks = %d, want 3 (the line box splits it)", len(blocks))
+	}
+}
+
+// TestTrimOutlierWords: grouping the balloon back together is not enough - the artefact still pulls
+// the line box, and so the plate, out over the protected outline. Measured on the extension edition
+// of synth-adjacent-balloons: 148 px of damage before the type-size fix, 160 px after it.
+func TestTrimOutlierWords(t *testing.T) {
+	line := func(words ...ocrWord) *ocrLine {
+		l := &ocrLine{x0: words[0].x0, y0: words[0].y0, x1: words[0].x1, y1: words[0].y1}
+		for _, w := range words[1:] {
+			l.x0, l.y0 = min(l.x0, w.x0), min(l.y0, w.y0)
+			l.x1, l.y1 = max(l.x1, w.x1), max(l.y1, w.y1)
+		}
+		for _, w := range words {
+			l.words = append(l.words, w)
+			l.wordH = append(l.wordH, w.y1-w.y0)
+		}
+		return l
+	}
+
+	l := line(
+		ocrWord{78, 259, 88, 333, "|"},
+		ocrWord{116, 265, 210, 291, "NOT"},
+		ocrWord{220, 265, 298, 291, "EVEN"},
+	)
+	l.trimOutlierWords()
+	if l.inkX0 != 116 || l.inkY0 != 265 || l.inkX1 != 298 || l.inkY1 != 291 {
+		t.Errorf("drawn box = [%d,%d %d,%d], want the lettering's own [116,265 298,291]", l.inkX0, l.inkY0, l.inkX1, l.inkY1)
+	}
+	// The line's own box is untouched: every clustering decision still reads it, so trimming can
+	// never change what reaches the page.
+	if l.x0 != 78 || l.y1 != 333 {
+		t.Errorf("the untrimmed box moved: [%d,%d %d,%d]", l.x0, l.y0, l.x1, l.y1)
+	}
+
+	// Ordinary punctuation is short, so it is not an artefact and the box is untouched.
+	c := line(
+		ocrWord{116, 265, 210, 291, "NOT"},
+		ocrWord{212, 281, 220, 293, ","},
+	)
+	c.trimOutlierWords()
+	if c.inkX1 != 220 || c.inkY1 != 293 {
+		t.Errorf("punctuation was trimmed: box = [%d,%d %d,%d]", c.inkX0, c.inkY0, c.inkX1, c.inkY1)
+	}
+
+	// A line that is nothing but the artefact keeps its box - no lettering to shrink towards.
+	r := line(ocrWord{78, 259, 88, 333, "|"})
+	r.trimOutlierWords()
+	if r.inkX0 != 78 || r.inkY1 != 333 {
+		t.Errorf("a rule-only line lost its box: [%d,%d %d,%d]", r.inkX0, r.inkY0, r.inkX1, r.inkY1)
+	}
+}
+
 // TestClusterLinesKeepsAdjacentBalloonsApart is the merging half: the fix for the split above must
 // not be paid for by a plate that spans two balloons.
 func TestClusterLinesKeepsAdjacentBalloonsApart(t *testing.T) {
@@ -197,6 +291,13 @@ func TestClusterLinesKeepsAdjacentBalloonsApart(t *testing.T) {
 // TestClusterLinesSeparatesDisplayTypeFromBody: a headline and the body under it are two texts even
 // when they sit within a page's own line pitch of each other. Pitch cannot see it - on this poster
 // the headline's step is smaller than one inside the body - so the type size has to.
+// TestClusterLinesSeparatesDisplayTypeFromBody: a headline and the body under it are two texts even
+// when they sit within a page's own line pitch of each other. Pitch cannot see it - on this poster
+// the headline's step is smaller than one inside the body - so the type size has to.
+//
+// ЗАЧЕМ is under the rescue floor and stays there: the 2026-08-15 re-measurement of that floor
+// (DEV/research/ocr_rescue_floor_2026-08-15.md) found no value and no length rule that recovers it
+// without putting a plate of transliterated debris on a Cyrillic poster read with English data.
 func TestClusterLinesSeparatesDisplayTypeFromBody(t *testing.T) {
 	blocks := clusterLines(fixtureLines(displayHeadlineOverBody), ocrRescueLineConf, 1920, 2560)
 	if len(blocks) != 2 {
@@ -285,5 +386,49 @@ func TestMedianLinePitchNeedsASharedColumn(t *testing.T) {
 	})
 	if _, ok := medianLinePitch(columns, 20); ok {
 		t.Error("lines that share no column contributed a pitch")
+	}
+}
+
+// TestDroppedLinesRecordTheFloor: the confidence floor is the one place the overlay silently
+// decides a reader does not get words the engine read, and it has to be visible. Mirrors the
+// extension's ocr-cluster.test.mjs case; the numbers are the measured staging of
+// poster-display-type-on-flat-colour with rus data on the sparse rung.
+func TestDroppedLinesRecordTheFloor(t *testing.T) {
+	lines := fixtureLines([]fixtureLine{
+		{38, 40, 390, 183, 69.2, "ЗАЧЕМ"},
+		{37, 207, 664, 348, 80.7, "ТРАХАТЬСЯ:"},
+		{39, 375, 261, 453, 73.9, "ОБ ЗЛОМ"},
+		{0, 0, 10, 10, 12.0, ""}, // no text: not a loss, and not a record
+	})
+
+	var dropped []DroppedLine
+	for _, l := range lines {
+		if l.text.Len() > 0 && !keepLine(l, ocrRescueLineConf) {
+			dropped = append(dropped, DroppedLine{
+				Text: strings.TrimSpace(l.text.String()), Conf: l.meanConf(),
+				X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1,
+			})
+		}
+	}
+	if len(dropped) != 2 || dropped[0].Text != "ЗАЧЕМ" || dropped[1].Text != "ОБ ЗЛОМ" {
+		t.Fatalf("dropped = %+v, want the two lines under the floor", dropped)
+	}
+	if dropped[0].Conf != 69.2 || dropped[0].X1 != 390 {
+		t.Errorf("the record must carry the confidence and the box: %+v", dropped[0])
+	}
+
+	// Every line is kept, dropped or textless - never both and never neither, because both sides
+	// ask keepLine. A record derived from a second copy of the predicate could drift silently.
+	kept, empty := 0, 0
+	for _, l := range lines {
+		switch {
+		case l.text.Len() == 0:
+			empty++
+		case keepLine(l, ocrRescueLineConf):
+			kept++
+		}
+	}
+	if kept != 1 || empty != 1 || kept+empty+len(dropped) != len(lines) {
+		t.Errorf("kept=%d empty=%d dropped=%d over %d lines", kept, empty, len(dropped), len(lines))
 	}
 }

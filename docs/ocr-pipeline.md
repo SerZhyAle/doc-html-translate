@@ -125,6 +125,17 @@ over the artwork, and its oversized boxes also inflate the plate font. Rescue pa
 run against a stricter floor of **80** - a rescue is a second guess, so the prior that there is text
 at all is weaker, and invented words painted over artwork are worse than no overlay.
 
+That floor alone throws away real words, and re-measuring it (2026-08-15, over 46 lab scenes and 13
+annotated ones) showed it cannot be fixed by moving the number: genuine rescued lettering scores
+32.8-69.2 and invented lettering 8.4-73.9, so the two **overlap**. A length rule was tried on top -
+keep a line under the floor when it carries a run of four letters and clears 47, the middle of the
+empty band those lines bracket - and the corpus rejected it: under the default `eng` a Cyrillic
+poster then gets a 782x310 px plate of transliterated debris where it previously got none. So the
+floor stays at **80** and the gap stays open. Evidence:
+[`DEV/research/ocr_rescue_floor_2026-08-15.md`](../DEV/research/ocr_rescue_floor_2026-08-15.md).
+A line the floor rejects is now recorded (`Result.Dropped`, written into the `DOCHT_OCR_DIAG`
+sidecar) rather than silently lost, which is what made the re-measurement possible at all.
+
 ### 2.5 Clustering lines into plates
 
 Surviving lines are merged, in reading order, into one plate per run of vertically adjacent,
@@ -218,6 +229,9 @@ pass wins where lettering is separated by hue rather than brightness. Retrying o
 ordinary pass returned nothing keeps every scene that works today byte-identical and spends the
 extra shell-outs only where there is nothing to lose.
 
+> `tesseract.go`: `keepLine`, `hasWordRun`, `Result.Dropped` - `ocr-cluster.js`: `keepLine`,
+> `hasWordRun`, `droppedLines`
+>
 > `tesseract.go`: `greyRescue`, `greyRescuePasses`; `strength.go`: `resultStrength`,
 > `strictlyBetter` - `ocr-overlay.js`: `greyRescue`, `GREY_RESCUE_PASSES`; `ocr-cluster.js`:
 > `resultStrength`, `strictlyBetter`

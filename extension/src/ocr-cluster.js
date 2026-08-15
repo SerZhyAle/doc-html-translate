@@ -71,6 +71,24 @@ import { isTranslatable } from "./ocr-text.js";
 // The area version of the fill - how much of a plate's box its lines cover - was measured on the
 // same run and separates nothing (0.5891 for the defect against 0.4582 for a legitimate balloon), so
 // the rule is stated on the vertical axis, which is the axis separated regions are separated on.
+// The line-confidence floor for a rescue pass, higher than OCR_MIN_LINE_CONF because a rescue is a
+// second guess: the ordinary pass already looked at this image and found nothing, so the prior that
+// there is text here at all is weaker, and a plate of invented words painted over artwork is worse
+// for the reader than no overlay. Anchored on the same scale - OCR_MIN_LINE_CONF sits at the top of
+// the band Tesseract hallucinates in, this sits at the bottom of the band real text occupies
+// (~80-97). Measured over the scenes the ladder newly reads: genuine rescued lettering scored
+// 93.1-97.0, Cyrillic posters read with English data (where the correct answer is no text) scored
+// 50.8. Shared invariant - see docs/PARITY.md and tesseract.go ocrRescueLineConf.
+//
+// **Re-measured 2026-08-15 and unmoved.** That band is two points from one cycle and its gap is no
+// longer empty: over all 46 lab scenes plus the 13 annotated ones
+// (DEV/research/ocr_rescue_floor_2026-08-15.md) genuine rescued lettering runs 32.8-69.2 and
+// invented lettering 8.4-73.9 - they **overlap**, so no single floor separates them. The rule the
+// distribution did support (a lower gate for a line carrying a run of four letters) was implemented,
+// run over the corpus and **rejected by it**: under the default `eng` a Cyrillic poster then gets a
+// 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80.
+export const OCR_RESCUE_LINE_CONF = 80;
+
 export const OCR_MIN_LINE_CONF = 50;
 export const OCR_CLUSTER_PITCH_FACTOR = 1.2;
 export const OCR_MAX_LEADING_RATIO = 3;
@@ -91,6 +109,55 @@ export const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.len
 export function sameTypeSize(h, clusterH) {
   if (h <= 0 || clusterH <= 0) return true;
   return Math.max(h, clusterH) <= Math.min(h, clusterH) * OCR_TYPE_SIZE_RATIO;
+}
+
+// lineInkHeight is a line's type size: the median of its words' box heights, falling back to the
+// line box when the recognizer gave no words.
+//
+// The line box is the union of its words, so one tall artefact sets it for the whole line - and a
+// balloon outline recognized as "|" beside real lettering is exactly that. Measured on
+// synth-adjacent-balloons in this edition, 2026-08-15: "| NOT EVEN" boxes 37 px against 13 px for
+// "SLIGHTLY." below it, a 2.85x step that OCR_TYPE_SIZE_RATIO reads as two type sizes, so one
+// balloon became two plates and the taller box reached onto the protected outline. The word-height
+// median is 13 px, the size a reader sees. No constant moves - this changes what the ratio is
+// measured on, as OCR_CLUSTER_PITCH_FACTOR changed from a gap to a pitch. Mirrors tesseract.go
+// inkHeight (docs/PARITY.md).
+export function lineInkHeight(l) {
+  const h = medianOf((l.wordH || []).filter((x) => x > 0));
+  return h > 0 ? h : l.bbox.y1 - l.bbox.y0;
+}
+
+// trimOutlierWords shrinks a line box that a non-text artefact stretched.
+//
+// Reading the line's type size correctly (lineInkHeight) keeps the balloon together, but the box is
+// still the union of its words, so the artefact keeps pulling the plate's edge out over artwork:
+// measured on synth-adjacent-balloons (2026-08-15), the plate began at x=78 where its lettering
+// begins at x=116, and the overhang scored first 148 px and then 160 px of protected-area damage -
+// a hard failure by the lab's contract, however well the text now groups.
+//
+// Only a token with no letter or digit may be dropped, and only when it is taller than
+// OCR_TYPE_SIZE_RATIO times the line's own median word height. Without the first condition this
+// would delete short words on a line of display type; without the second, ordinary punctuation. A
+// line that is nothing but such tokens keeps its box - there is then no lettering to shrink towards.
+// Mirrors tesseract.go trimOutlierWords (docs/PARITY.md).
+export function trimOutlierWords(bbox, words, scale = 1) {
+  if (!words || words.length < 2) return bbox;
+  const at = (v) => Math.round(v / scale);
+  const heights = words.filter((w) => w.bbox).map((w) => at(w.bbox.y1) - at(w.bbox.y0));
+  const med = medianOf(heights.filter((h) => h > 0));
+  if (med <= 0) return bbox;
+  const kept = words.filter((w) => {
+    if (!w.bbox) return false;
+    if (/[\p{L}\p{N}]/u.test(w.text || "")) return true;
+    return at(w.bbox.y1) - at(w.bbox.y0) <= med * OCR_TYPE_SIZE_RATIO;
+  });
+  if (!kept.length || kept.length === words.length) return bbox;
+  return {
+    x0: Math.min(...kept.map((w) => at(w.bbox.x0))),
+    y0: Math.min(...kept.map((w) => at(w.bbox.y0))),
+    x1: Math.max(...kept.map((w) => at(w.bbox.x1))),
+    y1: Math.max(...kept.map((w) => at(w.bbox.y1))),
+  };
 }
 
 // medianLinePitch estimates the page's line pitch from the tops of successive kept lines, or
@@ -169,8 +236,29 @@ export function releaseOversized(cur, imgW, imgH) {
 // OCR_MAX_PLATE_COVERAGE): a finished cluster that covers more of the picture than a text block
 // plausibly can, and packs its own lines into too little of the height it spans, is released into
 // those lines. Zero on either means the page size is unknown and the rule does not run.
+// keepLine is the confidence floor, in one place. clusterLines applies it and droppedLines records
+// what it rejected; stated separately, the record would stop describing the decision the first time
+// either moved. Mirrors tesseract.go keepLine (docs/PARITY.md).
+export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
+  return Boolean(l.text) && l.conf >= minConf;
+}
+
+export function droppedLines(lines, minConf = OCR_MIN_LINE_CONF) {
+  return lines
+    .filter((l) => l.text && !keepLine(l, minConf))
+    .map((l) => ({
+      text: String(l.text).trim(),
+      conf: l.conf,
+      // The record names the gate it failed: one image can be read twice at two floors - the
+      // ordinary pass and then the rescue ladder - and a distribution derived from the two mixed
+      // together would be a distribution of nothing. Mirrors DroppedLine.Floor (docs/PARITY.md).
+      floor: minConf,
+      bbox: { x0: l.bbox.x0, y0: l.bbox.y0, x1: l.bbox.x1, y1: l.bbox.y1 },
+    }));
+}
+
 export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH = 0) {
-  const kept = lines.filter((l) => l.text && l.conf >= minConf);
+  const kept = lines.filter((l) => keepLine(l, minConf));
   if (!kept.length) return [];
   const medianH = medianOf(kept.map((l) => l.bbox.y1 - l.bbox.y0)) || 1;
   const refPitch = medianLinePitch(kept, medianH);
@@ -200,27 +288,38 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
   };
   for (const l of kept) {
     const { x0, y0, x1, y1 } = l.bbox;
+    const ib = l.inkBox || l.bbox;
     if (cur) {
-      const gap = y0 - cur.y1;
+      const gap = y0 - cur.sy1;
       const pitch = y0 - cur.lastY0;
-      const overlap = Math.min(x1, cur.x1) - Math.max(x0, cur.x0);
-      const narrower = Math.min(x1 - x0, cur.x1 - cur.x0);
+      const overlap = Math.min(x1, cur.sx1) - Math.max(x0, cur.sx0);
+      const narrower = Math.min(x1 - x0, cur.sx1 - cur.sx0);
       const adjacent = refPitch ? pitch <= pitchMax : gap <= gapMax;
-      const sameSize = sameTypeSize(y1 - y0, medianOf(cur.heights));
+      const sameSize = sameTypeSize(lineInkHeight(l), medianOf(cur.ink));
       // same column (share x-extent), same type size, and vertically adjacent (the line keeps the
       // page's pitch; a small negative gap tolerates overlapping boxes, a big one means a new
       // column/section).
       if (adjacent && sameSize && gap >= -medianH && overlap * 10 >= narrower) {
-        cur.x0 = Math.min(cur.x0, x0); cur.y0 = Math.min(cur.y0, y0);
-        cur.x1 = Math.max(cur.x1, x1); cur.y1 = Math.max(cur.y1, y1);
+        // The drawn box grows by the trimmed line box, never by the artefact's reach; the span
+        // grows by the untrimmed one so the next line is judged as it was before.
+        cur.x0 = Math.min(cur.x0, ib.x0); cur.y0 = Math.min(cur.y0, ib.y0);
+        cur.x1 = Math.max(cur.x1, ib.x1); cur.y1 = Math.max(cur.y1, ib.y1);
+        cur.sx0 = Math.min(cur.sx0, x0); cur.sy0 = Math.min(cur.sy0, y0);
+        cur.sx1 = Math.max(cur.sx1, x1); cur.sy1 = Math.max(cur.sy1, y1);
         cur.lastY0 = y0;
-        cur.texts.push(l.text); cur.heights.push(y1 - y0);
-        cur.lines.push({ x0, y0, x1, y1 });
+        cur.texts.push(l.text); cur.heights.push(y1 - y0); cur.ink.push(lineInkHeight(l));
+        cur.lines.push({ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 });
         continue;
       }
       flush();
     }
-    cur = { x0, y0, x1, y1, lastY0: y0, texts: [l.text], heights: [y1 - y0], lines: [{ x0, y0, x1, y1 }] };
+    cur = {
+      x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1,
+      sx0: x0, sy0: y0, sx1: x1, sy1: y1,
+      lastY0: y0, texts: [l.text],
+      heights: [y1 - y0], ink: [lineInkHeight(l)],
+      lines: [{ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 }],
+    };
   }
   flush();
   return blocks;

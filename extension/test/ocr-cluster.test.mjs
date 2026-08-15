@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, medianLinePitch, releaseOversized, resultStrength, sameTypeSize, strictlyBetter,
+  clusterLines, droppedLines, keepLine, medianLinePitch, releaseOversized, resultStrength, sameTypeSize,
+  strictlyBetter, trimOutlierWords,
   OCR_MAX_PLATE_COVERAGE,
 } from "../src/ocr-cluster.js";
 
@@ -18,6 +19,21 @@ const balloonOnPanel = [
   { bbox: { x0: 645, y0: 256, x1: 890, y1: 285 }, conf: 96.7, text: "ONE WAY TO" },
   { bbox: { x0: 646, y0: 328, x1: 838, y1: 357 }, conf: 93.6, text: "SOLVE IT!" },
   { bbox: { x0: 156, y0: 126, x1: 1034, y1: 826 }, conf: 0.0, text: "" }, // the panel: no text
+];
+
+// What this edition's own engine returns for the same scene, which is not what the desktop engine
+// returns: tesseract.js reads the balloon's left outline as "|" and folds it into the line, so the
+// line box grows to 37 px beside a 13 px neighbour. Every fixture above came from the desktop
+// engine, which is why the split below was invisible to this suite until the lab measured the
+// rendered page on 2026-08-15 (DEV/research/ocrlab/2026-08-15__extension-parity-run.md): one
+// balloon became two plates and the taller plate reached onto the protected outline.
+//
+// wordH is what the fix reads - the words' own heights, whose median is the size a reader sees.
+const outlineArtefact = [
+  { bbox: { x0: 116, y0: 123, x1: 390, y1: 151 }, conf: 96.4, text: "ARE YOU SURE", wordH: [28, 28, 28] },
+  { bbox: { x0: 116, y0: 175, x1: 362, y1: 203 }, conf: 95.7, text: "ABOUT THIS?", wordH: [28, 28] },
+  { bbox: { x0: 78, y0: 259, x1: 298, y1: 333 }, conf: 90.1, text: "| NOT EVEN", wordH: [74, 26, 26] },
+  { bbox: { x0: 117, y0: 311, x1: 308, y1: 337 }, conf: 95.9, text: "SLIGHTLY.", wordH: [26] },
 ];
 
 const adjacentBalloons = [
@@ -44,6 +60,51 @@ test("one balloon is one plate", () => {
     assert.equal(blocks.length, 1);
     assert.equal(blocks[0].text, "WELL, THAT IS ONE WAY TO SOLVE IT!");
   }
+});
+
+// A tall artefact inside a line must not end its balloon. The type-size test reads the median of
+// the words' heights, so "|" at 74 px sits beside two 26 px words and the line still measures 26.
+test("an outline artefact does not split a balloon", () => {
+  const blocks = clusterLines(outlineArtefact, 80, 1240, 600);
+  assert.equal(blocks.length, 2);
+  assert.equal(blocks[1].text, "| NOT EVEN SLIGHTLY.");
+  // And the plate stays off the outline: its box is the union of the two lines, no wider than the
+  // artefact line itself was.
+  assert.equal(blocks[1].bbox.x0, 78);
+});
+
+// The same lines with no word heights - an engine that reports none - must keep the old behaviour
+// rather than silently becoming looser: the line box is then all there is to measure.
+test("without word heights the type-size test falls back to the line box", () => {
+  const stripped = outlineArtefact.map(({ wordH, ...rest }) => rest);
+  const blocks = clusterLines(stripped, 80, 1240, 600);
+  assert.equal(blocks.length, 3);
+});
+
+// Grouping the balloon back together is not enough: the artefact still pulls the line box - and so
+// the plate - out over the protected outline. Measured on the same scene, the damage went 148 px
+// before the type-size fix to 160 px after it, because the plate then spanned both lines.
+test("a tall non-text token does not stretch the line box", () => {
+  const words = [
+    { text: "|", bbox: { x0: 78, y0: 259, x1: 88, y1: 333 } },
+    { text: "NOT", bbox: { x0: 116, y0: 265, x1: 210, y1: 291 } },
+    { text: "EVEN", bbox: { x0: 220, y0: 265, x1: 298, y1: 291 } },
+  ];
+  const box = { x0: 78, y0: 259, x1: 298, y1: 333 };
+  assert.deepEqual(trimOutlierWords(box, words, 1), { x0: 116, y0: 265, x1: 298, y1: 291 });
+
+  // Ordinary punctuation is not an artefact: it is short, so it stays and the box is untouched.
+  const withComma = [
+    { text: "NOT", bbox: { x0: 116, y0: 265, x1: 210, y1: 291 } },
+    { text: ",", bbox: { x0: 212, y0: 281, x1: 220, y1: 293 } },
+  ];
+  const commaBox = { x0: 116, y0: 265, x1: 220, y1: 293 };
+  assert.deepEqual(trimOutlierWords(commaBox, withComma, 1), commaBox);
+
+  // A line that is nothing but the artefact keeps its box - there is no lettering to shrink to.
+  const onlyRule = [{ text: "|", bbox: { x0: 78, y0: 259, x1: 88, y1: 333 } }];
+  const ruleBox = { x0: 78, y0: 259, x1: 88, y1: 333 };
+  assert.deepEqual(trimOutlierWords(ruleBox, onlyRule, 1), ruleBox);
 });
 
 // The merging half: the fix above must not be paid for with a plate that spans two balloons. The
@@ -92,6 +153,11 @@ const scrollCaption = [
 // A headline and the body under it are two texts even when they sit within the page's own line pitch
 // of each other. Pitch cannot see it here - the headline's step is smaller than one inside the body -
 // so the type size has to. Mirrors internal/ocr TestClusterLinesSeparatesDisplayTypeFromBody.
+// A headline and the body under it are two texts even when they sit within the page's own line pitch
+// of each other. Pitch cannot see it here - the headline's step is smaller than one inside the body -
+// so the type size has to. ЗАЧЕМ stays under the rescue floor: the 2026-08-15 re-measurement found
+// no floor and no length rule that recovers it without plating debris on a Cyrillic poster read with
+// English data (DEV/research/ocr_rescue_floor_2026-08-15.md).
 test("display type and the body under it are two plates", () => {
   const blocks = clusterLines(displayHeadlineOverBody, 80, 1920, 2560);
   assert.equal(blocks.length, 2);
@@ -104,10 +170,31 @@ test("display type and the body under it are two plates", () => {
   assert.equal(small[1].text, "МЫ ЖЕ ЛЮДИ, МОЖЕМ ПРОСТО ПОГОВОРИТЬ");
 });
 
-// The price side of the rule above: a real caption's own lines are not all one height. Stated as
-// "no break inside the caption" rather than as a plate count - the caption's last line stands 39 px
-// from the one above it against a 31 px page pitch, and the pitch bound separates it with or without
-// the size rule. Mirrors internal/ocr TestClusterLinesKeepsACaptionWhoseLinesVary.
+test("a section break is not a line pitch", () => {
+  const headingAndDistantBody = [
+    { bbox: { x0: 20, y0: 10, x1: 120, y1: 30 }, conf: 90, text: "Heading" },
+    { bbox: { x0: 10, y0: 200, x1: 190, y1: 220 }, conf: 88, text: "This body" },
+  ];
+  assert.equal(medianLinePitch(headingAndDistantBody, 20), 0);
+  assert.equal(clusterLines(headingAndDistantBody).length, 2);
+
+  const body = [
+    { bbox: { x0: 10, y0: 10, x1: 190, y1: 30 }, conf: 95, text: "Alpha beta" },
+    { bbox: { x0: 10, y0: 34, x1: 190, y1: 54 }, conf: 95, text: "gamma delta" },
+    { bbox: { x0: 10, y0: 58, x1: 160, y1: 78 }, conf: 95, text: "epsilon" },
+  ];
+  assert.equal(medianLinePitch(body, 20), 24);
+  assert.equal(clusterLines(body).length, 1);
+});
+
+test("lines that share no column measure no pitch off each other", () => {
+  const columns = [
+    { bbox: { x0: 10, y0: 10, x1: 100, y1: 30 }, conf: 95, text: "left one" },
+    { bbox: { x0: 300, y0: 20, x1: 390, y1: 40 }, conf: 95, text: "right one" },
+  ];
+  assert.equal(medianLinePitch(columns, 20), 0);
+});
+
 test("a caption whose lines vary in height is not torn by the size rule", () => {
   const blocks = clusterLines(scrollCaption, 80, 520, 720);
   assert.ok(blocks.length >= 1);
@@ -171,30 +258,7 @@ test("the type-size ratio brackets the measured bands", () => {
   assert.equal(sameTypeSize(155, 0), true, "an unmeasured cluster height does not end a plate");
 });
 
-test("a section break is not a line pitch", () => {
-  const headingAndDistantBody = [
-    { bbox: { x0: 20, y0: 10, x1: 120, y1: 30 }, conf: 90, text: "Heading" },
-    { bbox: { x0: 10, y0: 200, x1: 190, y1: 220 }, conf: 88, text: "This body" },
-  ];
-  assert.equal(medianLinePitch(headingAndDistantBody, 20), 0);
-  assert.equal(clusterLines(headingAndDistantBody).length, 2);
 
-  const body = [
-    { bbox: { x0: 10, y0: 10, x1: 190, y1: 30 }, conf: 95, text: "Alpha beta" },
-    { bbox: { x0: 10, y0: 34, x1: 190, y1: 54 }, conf: 95, text: "gamma delta" },
-    { bbox: { x0: 10, y0: 58, x1: 160, y1: 78 }, conf: 95, text: "epsilon" },
-  ];
-  assert.equal(medianLinePitch(body, 20), 24);
-  assert.equal(clusterLines(body).length, 1);
-});
-
-test("lines that share no column measure no pitch off each other", () => {
-  const columns = [
-    { bbox: { x0: 10, y0: 10, x1: 100, y1: 30 }, conf: 95, text: "left one" },
-    { bbox: { x0: 300, y0: 20, x1: 390, y1: 40 }, conf: 95, text: "right one" },
-  ];
-  assert.equal(medianLinePitch(columns, 20), 0);
-});
 
 // The rescue ladder's comparator. Mirrors internal/ocr/strength_test.go case for case: which rung a
 // reader ends up seeing is decided here, and the two editions must decide the same way.
@@ -217,4 +281,35 @@ test("strictlyBetter keeps the incumbent on a tie", () => {
   assert.equal(strictlyBetter([{ text: "ЕЩЁ ДВА" }], poor), false, "an equal count keeps the incumbent");
   assert.equal(strictlyBetter(poor, []), true, "anything replaces nothing");
   assert.equal(strictlyBetter([], []), false, "nothing replaces nothing");
+});
+
+// The floor's discard record. Mirrors internal/ocr/cluster_test.go TestDroppedLinesRecordTheFloor:
+// the two editions must agree on what "the reader lost this" means, because any re-derivation of
+// the floor is measured from these records on one edition and applied to both.
+test("droppedLines records the text the floor rejected, and only that", () => {
+  // The measured staging of poster-display-type-on-flat-colour, rus data, the sparse rung.
+  const lines = [
+    { bbox: { x0: 38, y0: 40, x1: 390, y1: 183 }, conf: 69.2, text: "ЗАЧЕМ" },
+    { bbox: { x0: 37, y0: 207, x1: 664, y1: 348 }, conf: 80.7, text: "ТРАХАТЬСЯ:" },
+    { bbox: { x0: 39, y0: 375, x1: 261, y1: 453 }, conf: 73.9, text: "ОБ ЗЛОМ" },
+    { bbox: { x0: 0, y0: 0, x1: 10, y1: 10 }, conf: 12.0, text: "" }, // no text: not a loss
+  ];
+  const dropped = droppedLines(lines, 80);
+  assert.deepEqual(dropped.map((d) => d.text), ["ЗАЧЕМ", "ОБ ЗЛОМ"]);
+  assert.deepEqual(dropped.map((d) => d.conf), [69.2, 73.9]);
+  assert.deepEqual(dropped[0].bbox, { x0: 38, y0: 40, x1: 390, y1: 183 });
+  // The record names the gate it failed, so drops from the ordinary pass and from the rescue
+  // ladder stay separable in one file.
+  assert.deepEqual(dropped.map((d) => d.floor), [80, 80]);
+  assert.deepEqual(droppedLines(lines, 50).map((d) => d.floor), []);
+
+  // The predicate is the same one clusterLines applies, so the two can never describe different
+  // decisions: every line is either clustered or recorded as dropped, never both and never neither.
+  const kept = lines.filter((l) => keepLine(l, 80)).length;
+  const empty = lines.filter((l) => !l.text).length;
+  assert.equal(kept, 1);
+  assert.equal(dropped.length + kept + empty, lines.length, "every line is kept, dropped or textless");
+
+  // A floor of 0 loses nothing, and the empty line is still not a loss.
+  assert.equal(droppedLines(lines, 0).length, 0);
 });

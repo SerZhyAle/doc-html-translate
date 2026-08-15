@@ -7,7 +7,10 @@
 
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
-import { clusterLines, medianOf, strictlyBetter, OCR_MIN_LINE_CONF } from "./ocr-cluster.js";
+import {
+  clusterLines, droppedLines, medianOf, strictlyBetter, trimOutlierWords,
+  OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
+} from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
 
 const { createWorker } = Tesseract;
@@ -86,9 +89,23 @@ async function fetchToBlob(url) {
   return resp.blob();
 }
 
+// BITMAP_OPTS names the one decode option that decides whether this edition sees the same picture
+// the desktop app does. A browser paints an <img> through the file's EXIF orientation tag (CSS
+// image-orientation defaults to from-image), and the plates are positioned in percent of that
+// displayed picture - so the bitmap the recognizer reads, the one the plate colours are sampled
+// from and the one the grey rungs re-draw all have to be in display space as well. An ordinary
+// portrait phone photo is tagged Orientation=6, and in stored space its lettering lies on its side,
+// which PSM 3 does not detect: recognition returns nothing and the picture reads as one holding no
+// text. createImageBitmap's own default moved from "none" to "from-image" while the spec settled,
+// so leaving it unnamed makes the agreement hold only for as long as the browser default does.
+// The desktop app answers the same question by turning the staged copy itself
+// (internal/ocr/exif.go); this is that decision spelled out. Pinned by TestParityOCRExifOrientation
+// (docs/PARITY.md).
+const BITMAP_OPTS = { imageOrientation: "from-image" };
+
 async function toBitmap(src) {
   if (src instanceof Blob) {
-    const bmp = await createImageBitmap(src);
+    const bmp = await createImageBitmap(src, BITMAP_OPTS);
     return { source: src, width: bmp.width, height: bmp.height };
   }
   if (typeof HTMLImageElement !== "undefined" && src instanceof HTMLImageElement) {
@@ -228,7 +245,7 @@ function blockColors(ctx, bbox, lineHeight) {
 // Draw the (untainted) source blob to a canvas and attach { bg, ink } to each block.
 async function sampleColors(blob, blocks) {
   try {
-    const bmp = await createImageBitmap(blob);
+    const bmp = await createImageBitmap(blob, BITMAP_OPTS);
     const cv = typeof OffscreenCanvas !== "undefined"
       ? new OffscreenCanvas(bmp.width, bmp.height)
       : Object.assign(document.createElement("canvas"), { width: bmp.width, height: bmp.height });
@@ -257,7 +274,15 @@ function collectLines(data, scale = 1) {
       x0: Math.round(b.x0 / scale), y0: Math.round(b.y0 / scale),
       x1: Math.round(b.x1 / scale), y1: Math.round(b.y1 / scale),
     };
-    out.push({ bbox, text, conf });
+    // The words' own heights travel with the line so the type-size test can use a median instead
+    // of the line box, which one tall artefact sets for the whole line - see lineInkHeight in
+    // ocr-cluster.js and tesseract.go inkHeight (docs/PARITY.md).
+    const wordH = words
+      .map((w) => (w.bbox ? Math.round((w.bbox.y1 - w.bbox.y0) / scale) : 0))
+      .filter((h) => h > 0);
+    // inkBox is the box a plate is drawn from; bbox stays what every clustering decision reads, so
+    // trimming can never change what reaches the page - see trimOutlierWords and tesseract.go ix0.
+    out.push({ bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH });
   };
   for (const b of data.blocks || []) {
     const paras = (b.paragraphs && b.paragraphs.length) ? b.paragraphs : [b];
@@ -281,7 +306,7 @@ async function upscaleForOcr(blob, width, height) {
     return { image: blob, scale: 1, dpi };
   }
   try {
-    const bmp = await createImageBitmap(blob);
+    const bmp = await createImageBitmap(blob, BITMAP_OPTS);
     const w = bmp.width * OCR_UPSCALE_FACTOR, h = bmp.height * OCR_UPSCALE_FACTOR;
     const cv = typeof OffscreenCanvas !== "undefined"
       ? new OffscreenCanvas(w, h)
@@ -334,15 +359,8 @@ const GREY_RESCUE_PASSES = [
 ];
 
 
-// The line-confidence floor for a rescue pass, higher than OCR_MIN_LINE_CONF because a rescue is a
-// second guess: the ordinary pass already looked at this image and found nothing, so the prior that
-// there is text here at all is weaker, and a plate of invented words painted over artwork is worse
-// for the reader than no overlay. Anchored on the same scale - OCR_MIN_LINE_CONF sits at the top of
-// the band Tesseract hallucinates in, this sits at the bottom of the band real text occupies
-// (~80-97). Measured over the scenes the ladder newly reads: genuine rescued lettering scored
-// 93.1-97.0, Cyrillic posters read with English data (where the correct answer is no text) scored
-// 50.8. Shared invariant - see docs/PARITY.md and tesseract.go ocrRescueLineConf.
-const OCR_RESCUE_LINE_CONF = 80;
+// OCR_RESCUE_LINE_CONF and the word rule beside it moved to ocr-cluster.js, where keepLine applies
+// them, so the gate and its constants live in one file on this side as they do on the other.
 
 // Draw the image through a greyscale filter and return the result as a blob. The canvas stays
 // RGBA, so unlike the desktop app's 8-bit PNG the three channels merely hold equal values - which
@@ -362,7 +380,7 @@ async function greyRendition(blob, extraFilter = "") {
 // greyCanvas is the one place the greyscale draw happens, shared by the rendition the grey rungs
 // hand to Tesseract and the pixel read the screen rung measures.
 async function greyCanvas(blob, extraFilter = "") {
-  const bmp = await createImageBitmap(blob);
+  const bmp = await createImageBitmap(blob, BITMAP_OPTS);
   const { width: w, height: h } = bmp;
   const canvas = typeof OffscreenCanvas !== "undefined"
     ? new OffscreenCanvas(w, h)
@@ -386,11 +404,16 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
       // (adjacent balloons read as one plate). Best-effort: keep going if the param won't set.
       if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
-      let blocks = clusterLines(collectLines(data, scale), OCR_MIN_LINE_CONF, bitmap.width, bitmap.height);
-      if (!blocks.length) blocks = await greyRescue(worker, image, scale, bitmap.width, bitmap.height);
-      else blocks = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
+      const lines = collectLines(data, scale);
+      let blocks = clusterLines(lines, OCR_MIN_LINE_CONF, bitmap.width, bitmap.height);
+      let dropped = droppedLines(lines, OCR_MIN_LINE_CONF);
+      if (!blocks.length) {
+        ({ blocks, dropped } = await greyRescue(worker, image, scale, bitmap.width, bitmap.height));
+      } else {
+        blocks = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
+      }
       await sampleColors(bitmap.source, blocks);
-      return { blocks, width: bitmap.width, height: bitmap.height };
+      return { blocks, dropped, width: bitmap.width, height: bitmap.height };
     } finally {
       currentProgress = null;
     }
@@ -406,17 +429,30 @@ export async function recognize(imageSource, { lang = "eng", onProgress } = {}) 
 // Strongest, not first-non-empty: the ladder used to stop at the first rung that returned any plate
 // at all, so a rung that recovered one word ended the search before a later rung could recover six.
 // Mirrors tesseract.go greyRescue (docs/PARITY.md).
+// The lines the floor rejected travel with the rung that won, exactly as Result.Dropped does in
+// tesseract.go: they are the reader's loss on the attempt that was actually kept, and a set merged
+// across rungs would describe no single decision.
 async function greyRescue(worker, image, scale, imgW, imgH) {
   const grey = await greyRendition(image);
-  if (!grey) return [];
-  let best = [];
+  if (!grey) return { blocks: [], dropped: [] };
+  let best = [], bestDropped = [];
   try {
     for (const rung of GREY_RESCUE_PASSES) {
       try {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
-        const blocks = clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH);
-        if (strictlyBetter(blocks, best)) best = blocks;
+        const lines = collectLines(data, scale);
+        const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH);
+        const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+        if (strictlyBetter(blocks, best)) {
+          best = blocks;
+          bestDropped = dropped; // blocks and drops together, from the rung that won
+        } else if (!best.length && dropped.length > bestDropped.length) {
+          // No rung has placed anything yet, so there is no winner to attach the record to. The
+          // honest record is then the rung that *read* the most and had it all rejected - the case
+          // this record exists for, and the one that would otherwise be lost.
+          bestDropped = dropped;
+        }
       } catch { /* try the next rung */ }
     }
   } finally {
@@ -424,8 +460,12 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
       await worker.setParameters({ thresholding_method: THRESHOLD_ENGINE_DEFAULT, tessedit_pageseg_mode: OCR_PSM });
     } catch { /* next recognize resets it */ }
   }
-  if (best.length) return best;
-  return screenRescue(worker, image, scale, imgW, imgH);
+  if (best.length) return { blocks: best, dropped: bestDropped };
+  // Nothing read. Hand back whatever the ladder saw and had to throw away, so the caller can tell
+  // "the floor rejected everything" from "there was nothing here".
+  const screened = await screenRescue(worker, image, scale, imgW, imgH);
+  if (screened.blocks.length) return screened;
+  return { blocks: [], dropped: screened.dropped.concat(bestDropped) };
 }
 
 // The ladder's last rung: measure the halftone screen the picture is printed with and, if there is
@@ -440,14 +480,18 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
 // Gaussian whose standard deviation is N, which is the same kernel the desktop app builds.
 async function screenRescue(worker, image, scale, imgW, imgH) {
   const pitch = await measureScreenPitch(image);
-  if (!pitch) return [];
+  if (!pitch) return { blocks: [], dropped: [] };
   const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
-  if (!blurred) return [];
+  if (!blurred) return { blocks: [], dropped: [] };
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    return clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH);
+    const lines = collectLines(data, scale);
+    return {
+      blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH),
+      dropped: droppedLines(lines, OCR_RESCUE_LINE_CONF),
+    };
   } catch {
-    return [];
+    return { blocks: [], dropped: [] };
   }
 }
 

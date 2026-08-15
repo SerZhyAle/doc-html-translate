@@ -260,7 +260,22 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   lettering differently, so `TestParityOCRClustering` also pins the expression that computes the bound
   (`pitchMax` from the reference pitch), the one that measures a pitch (`y0` to `y0`), that the size
   break is weighed against the **cluster's** median height rather than the page's, and that it is
-  symmetric (the ratio multiplies the smaller of the two heights) - on both sides. The type-size ratio
+  symmetric (the ratio multiplies the smaller of the two heights) - on both sides. **What the ratio
+  measures is the median of a line's own word heights, not its line box** (`tesseract.go`
+  `(*ocrLine).inkHeight` == `ocr-cluster.js` `lineInkHeight`, pinned by the same test). The box is the
+  union of the words, so one tall artefact sets it for the whole line: measured in the extension
+  edition on `synth-adjacent-balloons` (2026-08-15), the balloon's left outline is recognized as `|`
+  and the line `| NOT EVEN` boxes 37 px beside 13 px for `SLIGHTLY.`, a 2.85x step the ratio reads as
+  two type sizes - so one balloon became two plates and the taller one reached onto the protected
+  outline. A line whose engine reports no word boxes falls back to the line box on both sides, so the
+  rule never becomes looser through a quantity it does not have. **The same artefact is also kept out
+  of the line's own box** (`trimOutlierWords`, both sides, pinned by the same test): reading the type
+  size correctly regroups the balloon but the box is still the union of its words, so the plate drawn
+  from it kept reaching onto the protected outline - measured at 148 px of damage before the type-size
+  fix and 160 px after it, because the plate then spanned both lines. A word is dropped from the box
+  only when it carries no letter or digit **and** is taller than `OCR_TYPE_SIZE_RATIO` times the
+  line's median word height; either condition alone would delete real words or real punctuation, and a
+  line made of nothing else keeps its box. The type-size ratio
   is bracketed by two measurements on the corpus's hand-drawn line boxes: the widest spread a single
   text shows on its own is 1.42x (`samson-and-delilah-03-scroll`, 19 lines of one caption) and the
   narrowest step between two texts a reader separates is 1.86x (`poster-display-type-on-flat-colour`,
@@ -298,6 +313,44 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   `resultStrength` / `strictlyBetter` == `ocr-cluster.js` `resultStrength` / `strictlyBetter`
   (guarded by `TestParityOCRRungComparator`). It replaces a first-non-empty-wins rule that let a rung
   recovering one word end the search before a later rung could recover six.
+- **The rescue floor was re-measured and did not move** - `ocrRescueLineConf` **80** ==
+  `OCR_RESCUE_LINE_CONF`, guarded by `TestParityOCRGreyRescue`. It is recorded here because the
+  re-measurement is the reason the number is now trustworthy rather than inherited, and because it
+  says what the next attempt must not repeat. Over the 46 lab scenes and the 13 annotated ones
+  (2026-08-15,
+  [`DEV/research/ocr_rescue_floor_2026-08-15.md`](../DEV/research/ocr_rescue_floor_2026-08-15.md)),
+  genuine rescued lettering runs 32.8-69.2 and invented lettering 8.4-73.9 - they **overlap**, so no
+  single floor separates them and moving the number only trades one scene's loss for another's. The
+  rule the distribution did support - a lower gate for a line carrying a run of four letters, at the
+  middle of the empty band those lines bracket (36.1 `allie` / 58.3 `KPECTbAHHH!`) - was
+  implemented in both editions, run over the corpus and **rejected by the corpus**: under the app's
+  default `eng` a Cyrillic poster then gets a 782x310 px plate of transliterated debris
+  (`TPAXATBCR: 4 y`) over its own lettering where it previously got none, which is the regression
+  the floor exists to prevent. Both editions are back at 80 and the gap is left open.
+- **The confidence floor keeps a record of what it rejected** - `tesseract.go` `keepLine` +
+  `Result.Dropped` == `ocr-cluster.js` `keepLine` + `droppedLines`, guarded by
+  `TestParityOCRDroppedLines`. The floor is the one place the overlay decides against words the
+  recognizer *did* read, and until 2026-08-15 it was silent: a scene where the poster's first word
+  came back correctly at 69.2 and was thrown away at a floor of 80 looked, in every output either
+  edition produced, exactly like a scene where nothing was recognized. Three things are part of the
+  invariant, not decoration:
+  - **one predicate.** Both editions ask `keepLine` from `clusterLines` *and* from the record, so
+    the record cannot describe a decision that is no longer taken. Two copies of `conf >= floor`
+    would pass every constant check and drift the first time either moved.
+  - **diagnostics only.** Nothing renders it and `resultStrength` does not weigh it - a rung's
+    strength is still the words it *placed* - so the record cannot change which rung a reader sees.
+  - **it travels with the rung that won**, not merged across rungs, because a merged set describes
+    no single decision.
+
+  The two editions surface it differently on purpose, and neither is a shared value: the desktop
+  writes it into the `DOCHT_OCR_DIAG` sidecar (which the lab already points into its run directory),
+  and it is written **even for a page that produced no plates at all** - the case the record exists
+  for. The extension returns it from `recognize()` beside the blocks. **Named gap:** the extension's
+  lab runner reads plates back out of the DOM and does not persist the record, so the distribution
+  behind the floor is derived from the desktop edition's evidence and applied to both. Closing it
+  needs a field on `evidence.Scene` and therefore a `SchemaVersion` bump on both sides; the floor
+  itself is a shared constant, so the derivation is not edition-specific - what is missing is the
+  ability to *check* it on the browser engine, whose confidences differ.
 - **Plate colour orientation** identical: the band just outside a block decides which sampled colour
   is the paper, over `RING_MIN_SAMPLES (40)` pixels - `overlay.go` `ringNearerInk` / `ringMinSamples`
   == `ocr-overlay.js` `ringNearerInk` / `RING_MIN_SAMPLES` (guarded by
@@ -364,6 +417,23 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   words on it. The box's over-cover is bounded from the other side now, by the plate-coverage rule
   and the type-size rule in the grouping row above. Evidence:
   [`DEV/research/ocr_plate_coverage_2026-08-13.md`](../DEV/research/ocr_plate_coverage_2026-08-13.md).
+- **The plate prints its own colours** - `print-color-adjust:exact` (plus the `-webkit-` prefix
+  Chromium still reads) on `.ocr-box` == `.ocr-plate`, guarded by `TestParityOCRPrintPlate`. Scoped
+  to the plate, so the rest of the document keeps the browser's print economy. **What it recovers
+  was measured rather than assumed, and the measurement corrected the expectation.** Printing an
+  overlaid page with "Background graphics" unchecked - the default - does not leave the plate
+  transparent over legible source lettering, which is what
+  [`DEV/plan/2026-08-12_ocr-exchange-followups.md`](../DEV/plan/2026-08-12_ocr-exchange-followups.md)
+  item 2 predicted: Chromium repaints the plate **white** and darkens its text to keep contrast
+  against it. So the printed page stays readable and stops matching the artwork - every sampled
+  balloon, panel and paper tone becomes a stark white patch. Measured 2026-08-15 on
+  `img-png_Nyoka-comic-page` through `Page.printToPDF(printBackground:false)`, the same code path as
+  the print dialog, by diffing the PDF's colour operators: **20 of 20 plate papers forced to
+  `1 1 1`** and 14 ink colours darkened without the declaration, **0 forced** with it, out of 59
+  colour operators on the page. The extension edition, measured with the same instrument on a
+  harness carrying the shipped `ocr-overlay.css`: 3 of 3 papers forced, 0 with it. Chrome's
+  `--print-to-pdf` command line cannot see this difference at all - it never prints backgrounds and
+  ignores the opt-in - so a check for this has to go through CDP.
 - **Plate ink is a median**, not a mean, of the pixels that stand out from the sampled paper - the
   deviation test admits a glyph's antialiased edge, and averaging that ramp lands between the ink
   and the paper (measured rgb(61,61,61) for source lettering of rgb(17,17,17)). Same guard.
@@ -386,11 +456,14 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
     decoded image it samples plate colours from with it. Without this, a portrait phone shot is
     recognized on its side - no OSD runs in either PSM this app uses - and whatever does read lands
     in a space the plates are not in;
-  - the extension inherits it: `createImageBitmap` decodes what it is given and the plates go over
-    the same `<img>`, so both sides of the comparison are already display space. It does not name
-    `imageOrientation` explicitly, so the agreement holds by browser default rather than by
-    contract - tracked as item 6 of
-    [`DEV/plan/2026-08-12_ocr-exchange-followups.md`](../DEV/plan/2026-08-12_ocr-exchange-followups.md).
+  - the extension reaches it through the decoder: every `createImageBitmap` in `ocr-overlay.js` is
+    passed `BITMAP_OPTS = { imageOrientation: "from-image" }`, and the plates go over the same
+    `<img>`, so both sides of the comparison are in display space. The option is **named rather than
+    inherited**: `createImageBitmap`'s own default moved from `"none"` to `"from-image"` while the
+    spec settled, so an unnamed call makes the agreement hold for as long as the browser default
+    does and no longer. `TestParityOCRExifOrientation` pins the constant *and* that no bare
+    `createImageBitmap` call is left - the recognizer's bitmap, the colour sample and the grey rungs
+    must all be in the same space, and one bare call is enough to break that.
 
   The container half of the invariant is a desktop-only hazard, because only the desktop page ships
   other scripts: the navbar's image-aspect guard used to write an inline `width` on every image,

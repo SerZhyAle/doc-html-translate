@@ -53,9 +53,18 @@ import (
 // are byte-identical either way: `0.05em 0.15em` grew one plate's font from 56.4 px to 60.0 px and
 // took the scene from 0.2705 to 0.2841, over the recorded 0.28 bound. Changing it needs a lab run,
 // not an opinion.
+//
+// `print-color-adjust:exact` on the plate is the one declaration that makes a printed page hold
+// together. A browser omits background colours when it prints, and the plate is nothing but an
+// opaque background carrying text - so without it the translated string prints over the still
+// legible source lettering and the sheet is unreadable. Print is also the one output where the
+// reader cannot toggle the overlay off (html.dht-ocr-off is a live control, not a paper one), so
+// there is no fallback. It is scoped to `.ocr-box` rather than the page, which leaves the rest of
+// the document on the browser's own print economy. The -webkit- prefix is what Chromium still
+// reads. Mirrors the extension's .ocr-plate (docs/PARITY.md).
 const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:100%;margin:0 auto;container-type:inline-size;line-height:1.1}
 .ocr-fig>img{display:block;width:100%;height:auto;margin:0;max-height:none}
-.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;border-radius:0.35em;padding:0.08em 0.28em;color:#111;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif}
+.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;border-radius:0.35em;padding:0.08em 0.28em;color:#111;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 /* The navbar's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,
    not visibility/opacity: a hidden plate must not keep taking pointer events or be read out,
    and the page translator must not find text to swap in a layer the reader turned off. */
@@ -397,8 +406,17 @@ func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(d
 				res, err := Recognize(bin, paths[i], lang, dataDir)
 				ok, reason := classifyRecognition(res, err)
 				r := recognition{ok: ok, err: reason}
-				if ok {
+				switch {
+				case ok:
 					r.res = res
+				case reason == nil:
+					// Read fine, no plates. The result is kept anyway so the diagnostics can say
+					// *why*: a page whose every recognized line was thrown away by the confidence
+					// floor is the case this exists for, and without the record it is
+					// indistinguishable from a page that genuinely holds no text. Nothing else
+					// consumes it - applyOverlays still takes the !ok branch and the DOM is
+					// untouched.
+					r.res = Result{Width: res.Width, Height: res.Height, Dropped: res.Dropped}
 				}
 				out[i] = r
 				mu.Lock()

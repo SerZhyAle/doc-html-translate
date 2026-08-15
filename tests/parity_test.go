@@ -199,8 +199,21 @@ func TestParityOCRClustering(t *testing.T) {
 		// every plate on a two-size page break), and the ratio multiplies the smaller of the two, so
 		// the test is symmetric and a small line under a big cluster breaks like a big one under a
 		// small cluster.
-		{"size break asks the cluster, not the page", "tesseract.go", goSrc, `sameTypeSize\(l\.y1-l\.y0,\s*median\(cheights,\s*0\)\)`},
-		{"size break asks the cluster, not the page", "ocr-cluster.js", clusterSrc, `sameTypeSize\(y1 - y0,\s*medianOf\(cur\.heights\)\)`},
+		{"size break asks the cluster, not the page", "tesseract.go", goSrc, `sameTypeSize\(l\.inkHeight\(\),\s*median\(cink,\s*0\)\)`},
+		{"size break asks the cluster, not the page", "ocr-cluster.js", clusterSrc, `sameTypeSize\(lineInkHeight\(l\),\s*medianOf\(cur\.ink\)\)`},
+		// And the quantity it compares is the median of the line's *words*, not the line box. The box
+		// is their union, so one tall artefact - a balloon outline read as "|" - sets it for the whole
+		// line and the ratio then sees two type sizes where a reader sees one (measured in the
+		// extension edition on synth-adjacent-balloons, 2026-08-15). A side that reverted to the box
+		// would pass every constant check above and split balloons again.
+		{"type size is the words' median, not the line box", "tesseract.go", goSrc, `func \(l \*ocrLine\) inkHeight\(\) int \{[^}]*median\(l\.wordH, 0\)`},
+		{"type size is the words' median, not the line box", "ocr-cluster.js", clusterSrc, `function lineInkHeight\(l\) \{\s*const h = medianOf\(\(l\.wordH \|\| \[\]\)`},
+		// And the artefact is kept out of the line's own box, so the plate drawn from it cannot reach
+		// past the lettering onto protected artwork. Both conditions are part of the invariant: only a
+		// token with no letter or digit may go, and only when it is taller than the ratio allows -
+		// either half alone would delete real words or real punctuation.
+		{"a tall non-text token is trimmed from the line box", "tesseract.go", goSrc, `!hasLetterOrDigit\(w\.text\) && float64\(h\) > float64\(med\)\*ocrTypeSizeRatio`},
+		{"a tall non-text token is trimmed from the line box", "ocr-cluster.js", clusterSrc, `if \(/\[\\p\{L\}\\p\{N\}\]/u\.test\(w\.text \|\| ""\)\) return true;[\s\S]{0,120}?med \* OCR_TYPE_SIZE_RATIO`},
 		{"size break is symmetric", "tesseract.go", goSrc, `float64\(max\(h, clusterH\)\)\s*<=\s*float64\(min\(h, clusterH\)\)\s*\*\s*ocrTypeSizeRatio`},
 		{"size break is symmetric", "ocr-cluster.js", clusterSrc, `Math\.max\(h, clusterH\)\s*<=\s*Math\.min\(h, clusterH\)\s*\*\s*OCR_TYPE_SIZE_RATIO`},
 		// The coverage rule needs both of its conditions on both sides, and needs to release rather
@@ -226,7 +239,10 @@ func TestParityOCRClustering(t *testing.T) {
 // See docs/PARITY.md "OCR" (grey rescue ladder).
 func TestParityOCRGreyRescue(t *testing.T) {
 	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
-	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	// Both extension files, because the ladder is in ocr-overlay.js while the gate it applies at
+	// each rung - keepLine and its three constants - is in ocr-cluster.js beside the other floors.
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js") +
+		"\n" + readRepoFile(t, "extension", "src", "ocr-cluster.js")
 
 	goLadder := between(goSrc, "var greyRescuePasses = []rescueRung{", "\n}")
 	jsLadder := between(jsSrc, "const GREY_RESCUE_PASSES = [", "\n]")
@@ -245,6 +261,8 @@ func TestParityOCRGreyRescue(t *testing.T) {
 	pairs := []struct{ name, goRe, jsRe string }{
 		{"engine-default thresholder", `thresholdEngineDefault\s*=\s*(\d+)`, `THRESHOLD_ENGINE_DEFAULT\s*=\s*"?(\d+)"?`},
 		{"leptonica tiled thresholder", `thresholdLeptonicaOtsu\s*=\s*(\d+)`, `THRESHOLD_LEPTONICA_OTSU\s*=\s*"?(\d+)"?`},
+		// The rescue floor lives in ocr-cluster.js on the JS side, beside keepLine which applies it,
+		// so this pair reads it from the combined extension source above.
 		{"rescue line confidence", `ocrRescueLineConf\s*=\s*([\d.]+)`, `OCR_RESCUE_LINE_CONF\s*=\s*([\d.]+)`},
 		// The sparse rung's mode. It is the rung that recovers display lettering a poster's layout
 		// analysis throws away, and a drift here means one edition reads the poster and the other
@@ -323,6 +341,97 @@ func TestParityOCRPlateColourOrientation(t *testing.T) {
 	}
 }
 
+// TestParityOCRDroppedLines: the confidence floor is the one place the overlay decides against
+// words the recognizer did read, and both editions must record that decision rather than let it
+// look like "nothing was recognized". The record is diagnostics only - it never reaches a page and
+// never weighs a rung - but it is what any re-derivation of the floor is measured from, so an
+// edition that stopped recording it would be measured on the other one's evidence. See
+// docs/PARITY.md "OCR" (the confidence floor and its record).
+func TestParityOCRDroppedLines(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-cluster.js")
+
+	for _, c := range []struct{ file, src, re, what string }{
+		{"tesseract.go", goSrc, `func keepLine\(l \*ocrLine, minConf float64\) bool`,
+			"the floor is one predicate"},
+		{"tesseract.go", goSrc, `res\.Dropped = append\(res\.Dropped, DroppedLine\{`,
+			"the rejected lines are recorded"},
+		{"ocr-cluster.js", jsSrc, `export function keepLine\(l, minConf`,
+			"the floor is one predicate"},
+		{"ocr-cluster.js", jsSrc, `export function droppedLines\(lines, minConf`,
+			"the rejected lines are recorded"},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR", c.file, c.what, c.re)
+		}
+	}
+
+	// One predicate, applied by both the keep and the record. Two copies of `conf >= floor` would
+	// pass every check above and still let the record describe a decision that is no longer taken.
+	if !regexp.MustCompile(`if !keepLine\(l, minConf\) \{`).MatchString(goSrc) {
+		t.Error("tesseract.go: clusterLines no longer asks keepLine - the record can drift from the decision")
+	}
+	if !regexp.MustCompile(`lines\.filter\(\(l\) => keepLine\(l, minConf\)\)`).MatchString(jsSrc) {
+		t.Error("ocr-cluster.js: clusterLines no longer asks keepLine - the record can drift from the decision")
+	}
+}
+
+// TestParityOCRPrintPlate: an overlaid page has to survive being printed. A browser drops
+// background colours from a printed page by default, and a plate is an opaque background carrying
+// text - so without `print-color-adjust:exact` the translation prints on top of the source
+// lettering that is still there, and the sheet is unreadable. Print is the one output where the
+// reader cannot toggle the overlay off, so an edition that loses the declaration loses the page.
+// See docs/PARITY.md "OCR" (plate shape).
+func TestParityOCRPrintPlate(t *testing.T) {
+	for _, c := range []struct{ file, src, re string }{
+		{"overlay.go ocrCSS .ocr-box", readRepoFile(t, "internal", "ocr", "overlay.go"),
+			`\.ocr-box\{[^}]*[^-]print-color-adjust:exact`},
+		{"ocr-overlay.css .ocr-plate", readRepoFile(t, "extension", "src", "ocr-overlay.css"),
+			`(?s)\.ocr-plate \{.*?[^-]print-color-adjust:\s*exact.*?\n\}`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: the plate no longer prints its paper (%q) - see docs/PARITY.md OCR (plate shape)", c.file, c.re)
+		}
+	}
+	// The -webkit- prefix is what Chromium reads, and Chromium is what both editions are printed
+	// from. Dropping it is a silent revert on the only browser that matters here.
+	for _, c := range []struct{ file, src string }{
+		{"overlay.go ocrCSS", readRepoFile(t, "internal", "ocr", "overlay.go")},
+		{"ocr-overlay.css", readRepoFile(t, "extension", "src", "ocr-overlay.css")},
+	} {
+		if !strings.Contains(c.src, "-webkit-print-color-adjust") {
+			t.Errorf("%s: the -webkit- print-color-adjust prefix is gone - Chromium reads that one (docs/PARITY.md OCR)", c.file)
+		}
+	}
+}
+
+// TestParityOCRExifOrientation: the two editions must recognize the same picture a reader sees, on
+// a file whose EXIF says it is rotated. The desktop app turns the staged copy itself
+// (internal/ocr/exif.go); the extension relies on createImageBitmap, whose imageOrientation default
+// moved from "none" to "from-image" while the spec settled - so an unnamed option makes the
+// agreement hold only for as long as the browser default does. Name it, and keep it named. See
+// docs/PARITY.md "OCR" (EXIF orientation).
+func TestParityOCRExifOrientation(t *testing.T) {
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	if !regexp.MustCompile(`BITMAP_OPTS\s*=\s*\{\s*imageOrientation:\s*"from-image"\s*\}`).MatchString(jsSrc) {
+		t.Error(`ocr-overlay.js: BITMAP_OPTS no longer names imageOrientation: "from-image" - see docs/PARITY.md OCR (EXIF orientation)`)
+	}
+	// Every decode, not one of them: the recognizer's bitmap, the colour sample and the grey rungs
+	// all have to be in the same space as the plates, which are positioned in percent of the
+	// displayed picture. A bare call is the drift this test exists for.
+	for _, m := range regexp.MustCompile(`createImageBitmap\([^)]*\)`).FindAllString(jsSrc, -1) {
+		if !strings.Contains(m, "BITMAP_OPTS") {
+			t.Errorf("ocr-overlay.js: %s decodes without BITMAP_OPTS - see docs/PARITY.md OCR (EXIF orientation)", m)
+		}
+	}
+	// The desktop half of the same contract: the staged copy handed to tesseract is turned, so
+	// recognition reports coordinates in the space the plates use.
+	goSrc := readRepoFile(t, "internal", "ocr", "exif.go")
+	if !strings.Contains(goSrc, "func orientImage(") || !strings.Contains(goSrc, "func exifOrientation(") {
+		t.Error("exif.go: the desktop edition no longer turns an EXIF-rotated image into display space - see docs/PARITY.md OCR (EXIF orientation)")
+	}
+}
+
 // TestParityOCRScreenRung: the ladder's last rung measures the halftone screen a picture is
 // printed with and low-passes it away with a kernel derived from that measurement. Both editions
 // must measure the same way and filter with the same kernel, or a screened comic page recognized
@@ -365,10 +474,10 @@ func TestParityOCRScreenRung(t *testing.T) {
 	position := []struct{ name, file, src, re string }{
 		{"screen rung follows the grey ladder", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
-			`(?s)for _, rung := range greyRescuePasses.*?return screenRescue\(`},
+			`(?s)for _, rung := range greyRescuePasses.*?screenRescue\(`},
 		{"screen rung follows the grey ladder", "ocr-overlay.js",
 			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
-			`(?s)for \(const rung of GREY_RESCUE_PASSES.*?return screenRescue\(`},
+			`(?s)for \(const rung of GREY_RESCUE_PASSES.*?screenRescue\(`},
 		{"sigma is the measured pitch over the divisor", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
 			`float64\(pitch\)\s*/\s*ocrScreenSigmaDivisor`},
@@ -386,7 +495,7 @@ func TestParityOCRScreenRung(t *testing.T) {
 			`(?s)if len\(res\.Blocks\) == 0 \{.*?\} else \{\s*res\.Blocks = screenSweep\(`},
 		{"sweep runs on the branch that already read", "ocr-overlay.js",
 			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
-			`if \(!blocks\.length\) blocks = await greyRescue\(.*\n\s*else blocks = await screenSweep\(`},
+			`(?s)if \(!blocks\.length\) \{\s*\(\{ blocks, dropped \} = await greyRescue\(.*?\} else \{\s*blocks = await screenSweep\(`},
 
 		// And its trigger: the sweep must ask the detector the narrower question - is there screened
 		// area no plate covers - or it would spend a whole recognition on a page whose screened part

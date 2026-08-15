@@ -53,7 +53,21 @@
   overflow-wrap: anywhere;
   word-break: break-word;
   font-family: "Segoe UI", system-ui, Arial, sans-serif;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  /* Print the paper. A browser omits background colours from a printed page by default, and the
+     plate is nothing but an opaque background carrying text: without this the translated string
+     prints on top of the still-visible source lettering and the page is unreadable on paper - the
+     one output where the reader cannot toggle the overlay off. The declaration applies to the
+     plate only, so the rest of the document keeps the browser's own print economy. The -webkit-
+     prefix is still what Chromium reads. Shared with overlay.go ocrCSS (docs/PARITY.md). */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  /* No hairline ring around the plate. The overlay shipped with a
+     `box-shadow: 0 0 0 1px rgba(0,0,0,0.06)`, which the desktop app's ocrCSS never had, so it was
+     drift rather than a shared invariant. Its purpose was to keep a white plate visible against a
+     white page, but that is exactly the case where the plate should disappear: when the sampled
+     paper colour matches the source (a speech balloon, a plain scan margin), the ring is the only
+     thing that tells the reader an overlay is there, and it draws a box around text the source drew
+     without one. Where the paper colour is wrong the ring does not rescue the plate anyway. */
 }
 
 /* The viewer's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,

@@ -34,12 +34,27 @@ type diagBlock struct {
 	Ink        string `json:"ink,omitempty"`
 }
 
+// diagDropped is one line the confidence floor rejected: text the engine read that the reader
+// never gets. Recorded because the floor is otherwise an invisible decision - a scene where a
+// correctly read word was discarded looks exactly like a scene where nothing was recognized, and
+// the lab cannot score a decision it cannot see.
+type diagDropped struct {
+	Text  string  `json:"text"`
+	Conf  float64 `json:"conf"`
+	Floor float64 `json:"floor"`
+	X0    int     `json:"x0"`
+	Y0    int     `json:"y0"`
+	X1    int     `json:"x1"`
+	Y1    int     `json:"y1"`
+}
+
 // diagImage is one overlaid image's record, written as a single JSON line.
 type diagImage struct {
-	File   string      `json:"file"`
-	Width  int         `json:"width"`
-	Height int         `json:"height"`
-	Blocks []diagBlock `json:"blocks"`
+	File    string        `json:"file"`
+	Width   int           `json:"width"`
+	Height  int           `json:"height"`
+	Blocks  []diagBlock   `json:"blocks"`
+	Dropped []diagDropped `json:"dropped,omitempty"`
 }
 
 // diagMu serializes appends. Phase 3 of OverlayBook is sequential today, but a diagnostics
@@ -70,6 +85,12 @@ func recordDiagnostics(file string, res Result, srcImg image.Image) {
 			}
 		}
 		rec.Blocks = append(rec.Blocks, db)
+	}
+	// A conversion rather than a field-by-field copy: the two structs are the same record in two
+	// vocabularies, and a field added to DroppedLine and forgotten here becomes a compile error
+	// instead of a value silently missing from the diagnostics.
+	for _, d := range res.Dropped {
+		rec.Dropped = append(rec.Dropped, diagDropped(d))
 	}
 	line, err := json.Marshal(rec)
 	if err != nil {

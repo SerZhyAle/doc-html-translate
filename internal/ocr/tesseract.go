@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 
 	xdraw "golang.org/x/image/draw"
 )
@@ -51,10 +52,33 @@ type LineBox struct {
 	X0, Y0, X1, Y1 int
 }
 
+// DroppedLine is a line the recognizer read and the confidence floor threw away. It never reaches
+// the page - it exists so the decision can be looked at.
+//
+// The floor is the one place in the overlay where the app silently decides a reader does not get
+// words the engine did read, and until this existed nothing said so: a scene where the poster's
+// first word came back correctly at 69.2 and was discarded at a floor of 80 looked, from every
+// output the app or the lab produced, exactly like a scene where the recognizer found nothing.
+// Mirrors ocr-cluster.js `dropped` (docs/PARITY.md).
+type DroppedLine struct {
+	Text string
+	Conf float64
+	// Floor is the confidence gate this line failed. The record is self-describing because one
+	// image can be read twice at two floors - the ordinary pass at ocrMinLineConf and then the
+	// rescue ladder at ocrRescueLineConf - and a distribution derived from the two mixed together
+	// would be a distribution of nothing.
+	Floor          float64
+	X0, Y0, X1, Y1 int
+}
+
 // Result is the OCR output for a single image.
 type Result struct {
 	Width, Height int
 	Blocks        []Block
+	// Dropped carries the lines the confidence floor rejected, for diagnostics only. Nothing in
+	// the rendering path reads it, and strictlyBetter does not weigh it - a rung's strength is
+	// still the words it placed.
+	Dropped []DroppedLine
 }
 
 // ErrNoTesseract is returned by Locate when no tesseract binary can be found.
@@ -188,8 +212,16 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 		return Result{}, err
 	}
 	if len(res.Blocks) == 0 {
-		if alt, ok := greyRescue(bin, ocrPath, lang, dataDir, dpi); ok {
+		alt, ok := greyRescue(bin, ocrPath, lang, dataDir, dpi)
+		switch {
+		case ok:
 			res = alt
+		case len(alt.Dropped) > 0:
+			// The ladder read text and its floor rejected all of it. That is a different outcome
+			// from "the ladder read nothing", and the record is the only thing that can tell the
+			// two apart - so it is carried even though no plate is. The two passes' records sit
+			// side by side and stay distinguishable, because each line names the floor it failed.
+			res.Dropped = append(res.Dropped, alt.Dropped...)
 		}
 	} else {
 		res.Blocks = screenSweep(bin, ocrPath, lang, dataDir, dpi, res.Blocks)
@@ -318,14 +350,30 @@ func greyRescue(bin, ocrPath, lang, dataDir string, dpi int) (Result, bool) {
 	var best Result
 	for _, rung := range greyRescuePasses {
 		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf)
-		if err == nil && strictlyBetter(res, best) {
-			best = res
+		if err != nil {
+			continue
+		}
+		switch {
+		case strictlyBetter(res, best):
+			best = res // the record travels with the rung that won, blocks and drops together
+		case len(best.Blocks) == 0 && len(res.Dropped) > len(best.Dropped):
+			// No rung has placed anything yet, so there is no winner to attach the record to.
+			// The honest record is then the rung that *read* the most and had it all rejected -
+			// which is the case this whole record exists for, and the one that used to be lost.
+			best.Dropped = res.Dropped
 		}
 	}
 	if len(best.Blocks) > 0 {
 		return best, true
 	}
-	return screenRescue(bin, grey, lang, dataDir, dpi)
+	screened, ok := screenRescue(bin, grey, lang, dataDir, dpi)
+	if ok {
+		return screened, true
+	}
+	// Nothing read. Hand back whatever the ladder saw and had to throw away, so the caller can
+	// tell "the floor rejected everything" from "there was nothing here".
+	screened.Dropped = append(screened.Dropped, best.Dropped...)
+	return screened, false
 }
 
 // screenRescue is the ladder's last rung: measure the halftone screen the picture is printed with
@@ -349,8 +397,12 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 	}
 	defer cleanup()
 	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
-	if err != nil || len(res.Blocks) == 0 {
+	if err != nil {
 		return Result{}, false
+	}
+	if len(res.Blocks) == 0 {
+		// No plates, but possibly text the floor rejected: hand the record back, not the plates.
+		return Result{Dropped: res.Dropped}, false
 	}
 	return res, true
 }
@@ -380,6 +432,13 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 // - while a wrong plate costs more here, since it lands on a page the reader is otherwise happy
 // with. Turning it into a measured number needs annotated whole pages, which the corpus does not yet
 // have (see the ticket's human-owned gate).
+//
+// The 2026-08-15 word rule is inherited here for the same reason and with the same caveat, and the
+// caveat is sharper: the rule's band was measured on pages that read *nothing*, while this pass
+// fires on pages that read fine, so its prior is not the one the band came from. It is kept
+// inherited rather than excluded because excluding it would be an unmeasured decision too, and the
+// corpus run over all 46 scenes is what checks it - precision, cross-group and protected-area
+// damage are exactly what a wrong plate on a good page moves.
 func screenSweep(bin, ocrPath, lang, dataDir string, dpi int, kept []Block) []Block {
 	grey := greyRendition(ocrPath)
 	if grey == nil {
@@ -414,6 +473,24 @@ func screenSweep(bin, ocrPath, lang, dataDir string, dpi int, kept []Block) []Bl
 // while the two Cyrillic posters read with English data - where the correct answer is no text -
 // scored 50.8. The floor separates them with margin on both sides rather than splitting a gap.
 const ocrRescueLineConf = 80
+
+// **The floor was re-measured on 2026-08-15 and did not move, and the reason is worth keeping.**
+// The 93.1 / 50.8 band above is two points from one cycle, and the gap it sits in is not empty any
+// more. Measured with the floor's own discard record (Result.Dropped) over all 46 lab scenes plus
+// the 13 annotated ones - DEV/research/ocr_rescue_floor_2026-08-15.md - the two populations
+// **overlap on confidence**: genuine rescued lettering runs 32.8-69.2 and invented lettering runs
+// 8.4-73.9. `ЗАЧЕМ`, the poster's correctly read first word, scores 69.2; `ОБ ЗЛОМ`, a misread,
+// scores 73.9 above it. No value of a single floor separates them.
+//
+// The rule the distribution *did* support - keep a line under the floor when it carries a run of
+// four letters and clears the middle of the empty band those lines bracket (36.1 / 58.3) - was
+// implemented and run over the corpus, and **the corpus rejected it**. It recovers the poster's
+// headline when the language is right, but under the app's default `eng` a Cyrillic poster then
+// gets one plate of transliterated debris (`TPAXATBCR: 4 y`) 782x310 px over its own lettering,
+// where it previously got none. That is the regression this floor exists to prevent, so the floor
+// stays at 80 and the gap stays open. What ships from that cycle is the record above and the
+// measurement; the next attempt needs an axis that is not confidence and not length alone.
+//
 
 // greyRendition returns an 8-bit luminance copy of the image, or nil when it cannot be decoded.
 // What matters is that the channels agree, not the depth: measured, an 8-bit grey PNG and an RGB
@@ -715,6 +792,95 @@ type ocrLine struct {
 	text           strings.Builder
 	confSum        float64
 	confN          int
+	wordH          []int     // each word's own box height, for inkHeight
+	words          []ocrWord // the words themselves, for trimOutlierWords
+	// The line's box with a non-text artefact trimmed off (see trimOutlierWords). It is the box a
+	// plate is *drawn* from; every clustering decision still reads the untrimmed one, so trimming
+	// can never change what reaches the page - only how far the paper spreads. Measured on
+	// poster-display-type-on-flat-colour (2026-08-15): letting the trimmed box into the decisions
+	// put two plates of transliterated debris ("NPOCTO", "0b 3TOM") over a legible Russian poster,
+	// which is what the rescue floor exists to prevent.
+	inkX0, inkY0, inkX1, inkY1 int
+}
+
+// ocrWord is one recognized word's box and text, kept only long enough to decide whether the line
+// box it contributed to is really the line's.
+type ocrWord struct {
+	x0, y0, x1, y1 int
+	text           string
+}
+
+// hasLetterOrDigit reports whether a token carries any actual content. A token that does not is
+// punctuation, and punctuation is what a mis-read rule or outline comes back as.
+func hasLetterOrDigit(s string) bool {
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return true
+		}
+	}
+	return false
+}
+
+// trimOutlierWords shrinks a line box that a non-text artefact stretched.
+//
+// A balloon outline or a panel rule recognized beside real lettering comes back as a tall
+// punctuation token - "|" - and the line box, being the union of its words, grows to hold it. That
+// box is then the plate's box, so the plate reaches past the lettering onto artwork the annotation
+// protects: measured in the extension edition on synth-adjacent-balloons (2026-08-15), the plate
+// started at x=78 where its lettering starts at x=116, and the overhang scored 148 px of
+// protected-area damage.
+//
+// Only a token with no letter or digit may be dropped, and only when it is taller than
+// ocrTypeSizeRatio times the line's own median word height. Both conditions are needed: without the
+// first this would delete short words on a line of display type, and without the second it would
+// delete ordinary punctuation. A line that is nothing but such tokens keeps its box - there is then
+// no lettering to measure against and nothing to shrink towards. Mirrors ocr-overlay.js
+// trimOutlierWords (docs/PARITY.md).
+func (l *ocrLine) trimOutlierWords() {
+	l.inkX0, l.inkY0, l.inkX1, l.inkY1 = l.x0, l.y0, l.x1, l.y1
+	if len(l.words) < 2 {
+		return
+	}
+	med := median(l.wordH, 0)
+	if med <= 0 {
+		return
+	}
+	var kept []ocrWord
+	for _, w := range l.words {
+		h := w.y1 - w.y0
+		if !hasLetterOrDigit(w.text) && float64(h) > float64(med)*ocrTypeSizeRatio {
+			continue
+		}
+		kept = append(kept, w)
+	}
+	if len(kept) == 0 || len(kept) == len(l.words) {
+		return
+	}
+	x0, y0, x1, y1 := kept[0].x0, kept[0].y0, kept[0].x1, kept[0].y1
+	for _, w := range kept[1:] {
+		x0, y0 = min(x0, w.x0), min(y0, w.y0)
+		x1, y1 = max(x1, w.x1), max(y1, w.y1)
+	}
+	l.inkX0, l.inkY0, l.inkX1, l.inkY1 = x0, y0, x1, y1
+}
+
+// inkHeight is the line's type size, measured as the median of its words' box heights rather than
+// as the height of the line box.
+//
+// The line box is the union of its words, so one tall artefact sets it for the whole line - and a
+// balloon outline recognized as "|" beside real lettering is exactly that. Measured on
+// synth-adjacent-balloons in the extension edition, 2026-08-15: the line "| NOT EVEN" boxes 37 px
+// against 13 px for "SLIGHTLY." below it, a 2.85x step that ocrTypeSizeRatio (1.6) reads as two
+// different type sizes, so one balloon became two plates and the taller box reached past the
+// lettering onto the protected outline. The median of the word heights is 13 px, which is the size
+// a reader sees. No constant moves: this changes what the ratio is measured on, the way
+// ocrClusterPitchFactor changed from a gap to a pitch. Mirrors ocr-cluster.js lineInkHeight
+// (docs/PARITY.md).
+func (l *ocrLine) inkHeight() int {
+	if h := median(l.wordH, 0); h > 0 {
+		return h
+	}
+	return l.y1 - l.y0
 }
 
 func (l *ocrLine) meanConf() float64 {
@@ -773,6 +939,10 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 				cur.text.WriteByte(' ')
 			}
 			cur.text.WriteString(cols[11])
+			if h > 0 {
+				cur.wordH = append(cur.wordH, h)
+			}
+			cur.words = append(cur.words, ocrWord{x0: left, y0: top, x1: left + w, y1: top + h, text: cols[11]})
 			if conf, err := strconv.ParseFloat(cols[10], 64); err == nil {
 				cur.confSum += conf
 				cur.confN++
@@ -782,9 +952,32 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 	if err := sc.Err(); err != nil {
 		return Result{}, err
 	}
+	for _, l := range lines {
+		l.trimOutlierWords()
+	}
 
 	res.Blocks = clusterLines(lines, minConf, res.Width, res.Height)
+	// Same predicate clusterLines uses, so the record cannot drift away from the decision: a line
+	// that carried text and did not clear the floor is one the reader lost.
+	for _, l := range lines {
+		if l.text.Len() > 0 && !keepLine(l, minConf) {
+			res.Dropped = append(res.Dropped, DroppedLine{
+				Text: strings.TrimSpace(l.text.String()), Conf: l.meanConf(), Floor: minConf,
+				X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1,
+			})
+		}
+	}
 	return res, nil
+}
+
+// keepLine is the confidence floor, in one place. clusterLines applies it and parseTSV records
+// what it rejected; if the two ever stated it separately, the record would stop describing the
+// decision the first time either moved.
+func keepLine(l *ocrLine, minConf float64) bool {
+	if l.text.Len() == 0 {
+		return false
+	}
+	return l.meanConf() >= minConf
 }
 
 // clusterLines drops low-confidence noise lines, then groups the survivors (in reading order)
@@ -805,8 +998,13 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 	var kept []*ocrLine
 	var heights []int
 	for _, l := range lines {
-		if l.text.Len() == 0 || l.meanConf() < minConf {
+		if !keepLine(l, minConf) {
 			continue
+		}
+		// A line that never went through trimOutlierWords (a rescue path, a test fixture) has no
+		// trimmed box; its own box is then the box a plate is drawn from.
+		if l.inkX1 <= l.inkX0 || l.inkY1 <= l.inkY0 {
+			l.inkX0, l.inkY0, l.inkX1, l.inkY1 = l.x0, l.y0, l.x1, l.y1
 		}
 		kept = append(kept, l)
 		heights = append(heights, l.y1-l.y0)
@@ -821,11 +1019,13 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 
 	var blocks []Block
 	var (
-		cx0, cy0, cx1, cy1 int
+		cx0, cy0, cx1, cy1 int // the cluster's drawn box, built from trimmed line boxes
+		sx0, sy0, sx1, sy1 int // the same lines' untrimmed span, which every decision below reads
 		clastY0            int // top of the cluster's last line - the pitch is measured from it
 		ctext              strings.Builder
 		ctexts             []string // the same text, still split by line, for the coverage release
 		cheights           []int
+		cink               []int // the same lines' ink heights, for the type-size test only
 		clines             []LineBox
 		open               bool
 	)
@@ -847,15 +1047,16 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 		ctext.Reset()
 		ctexts = ctexts[:0]
 		cheights = cheights[:0]
+		cink = cink[:0]
 		clines = clines[:0]
 		open = false
 	}
 	for _, l := range kept {
 		if open {
-			gap := float64(l.y0 - cy1)
+			gap := float64(l.y0 - sy1)
 			pitch := float64(l.y0 - clastY0)
-			overlap := min(l.x1, cx1) - max(l.x0, cx0)
-			narrower := min(l.x1-l.x0, cx1-cx0)
+			overlap := min(l.x1, sx1) - max(l.x0, sx0)
+			narrower := min(l.x1-l.x0, sx1-sx0)
 			adjacent := gap <= gapMax
 			if havePitch {
 				adjacent = pitch <= pitchMax
@@ -863,26 +1064,33 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 			// same column (share x-extent), same type size, and vertically adjacent (the line
 			// keeps the page's pitch; a small negative gap tolerates overlapping boxes, a big one
 			// means a new column).
-			sameSize := sameTypeSize(l.y1-l.y0, median(cheights, 0))
+			sameSize := sameTypeSize(l.inkHeight(), median(cink, 0))
 			if adjacent && sameSize && gap >= -float64(medianH) && overlap*10 >= narrower {
-				cx0, cy0 = min(cx0, l.x0), min(cy0, l.y0)
-				cx1, cy1 = max(cx1, l.x1), max(cy1, l.y1)
+				// The plate's box grows by the trimmed line box, never by the artefact's reach; the
+				// span grows by the untrimmed one so the next line is judged as it was before.
+				cx0, cy0 = min(cx0, l.inkX0), min(cy0, l.inkY0)
+				cx1, cy1 = max(cx1, l.inkX1), max(cy1, l.inkY1)
+				sx0, sy0 = min(sx0, l.x0), min(sy0, l.y0)
+				sx1, sy1 = max(sx1, l.x1), max(sy1, l.y1)
 				clastY0 = l.y0
 				ctext.WriteByte(' ')
 				ctext.WriteString(strings.TrimSpace(l.text.String()))
 				ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
 				cheights = append(cheights, l.y1-l.y0)
-				clines = append(clines, LineBox{X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1})
+				cink = append(cink, l.inkHeight())
+				clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
 				continue
 			}
 			flush()
 		}
-		cx0, cy0, cx1, cy1 = l.x0, l.y0, l.x1, l.y1
+		cx0, cy0, cx1, cy1 = l.inkX0, l.inkY0, l.inkX1, l.inkY1
+		sx0, sy0, sx1, sy1 = l.x0, l.y0, l.x1, l.y1
 		clastY0 = l.y0
 		ctext.WriteString(strings.TrimSpace(l.text.String()))
 		ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
 		cheights = append(cheights, l.y1-l.y0)
-		clines = append(clines, LineBox{X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1})
+		cink = append(cink, l.inkHeight())
+		clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
 		open = true
 	}
 	flush()
