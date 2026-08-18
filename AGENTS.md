@@ -22,6 +22,8 @@ This repo's overlay shape (four overlay facts):
 - **No `publishing/` umbrella** - channels are top-level siblings: `winget/`, `msix/`, `installer/`,
   `tools/store/`, `extension/`. Internal docs live under the **`DEV/`** umbrella, not `docs/`; the
   changelog is the engineering ledger `DEV/CHANGELOG.md`, not a root Keep-a-Changelog.
+  <!-- canon-ok: names this repo's ledger shape (stamp ledgerShape 2) as a delta from the canon default,
+       rather than re-authoring the changelog rule - the rule itself stays in DOCUMENTATION_CONCEPT.md. -->
 - **Version shape `YY.MMDD.HHmm`** (MMDD zero-padded, a per-project frozen choice), stamped via
   `-ldflags "-X main.Version=.."`; the extension edition versions on its own clock.
 - **Release is up to 5 independent one-way ops**, each its own trigger and cost tag - see
@@ -49,7 +51,7 @@ This repo's overlay shape (four overlay facts):
 
 Two distinct flows - see [DEV/RELEASE.md](DEV/RELEASE.md):
 
-- **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "..."` (gate + build
+- **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "<commit message>"` (gate + build
   CLI + build UI + commit). Never touches GitHub/CI. This is the default for any "build"/"сборка" ask.
 - **Release ("релиз")** = published and PAID. `./scripts/release.ps1` prints the full checklist and
   runs nothing; tags (`v*`, `ext-cws-v*`, `ext-edge-v*`) trigger paid CI. Only do this for an explicit "release"/"релиз".
@@ -61,7 +63,7 @@ is explicitly a release.
 
 Run from repository root in PowerShell.
 
-- Local build + commit (the "сборка" flow): ./scripts/build-local.ps1 -Message "..."
+- Local build + commit (the "сборка" flow): ./scripts/build-local.ps1 -Message "<commit message>"
 - Build CLI only: ./scripts/build.ps1
 - Build UI only: ./scripts/build-ui.ps1
 - Build universal installer (setup.exe, x86+x64, per-user, local/free): ./scripts/build-installer.ps1 (needs Inno Setup / ISCC)
@@ -121,11 +123,12 @@ single source of truth** for the port map (which Go file maps to which JS file),
 that must stay identical (theme palette, PDF reflow constants, EPUB TOC rules, OCR download host /
 catalog / class names, settings defaults), and the intentional divergences (do not "fix" them).
 
-Process: a user-facing feature is **one cross-edition ticket** (template
-[DEV/plan/_TEMPLATE_cross-edition.md](DEV/plan/_TEMPLATE_cross-edition.md)) covering every edition -
-each edition is either implemented or explicitly declined with a rationale. Do not open a separate
+Process: a user-facing feature is **one cross-edition ticket** covering every edition - each edition is
+either implemented or explicitly declined with a rationale in that same ticket. Do not open a separate
 ticket per edition. When you touch a shared invariant, update docs/PARITY.md in the same change. Open
-gaps are tracked in [DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-07-01_cross-edition-parity.md).
+gaps ride in [DEV/plan/RELEASE_QUEUE.md](DEV/plan/RELEASE_QUEUE.md) like any other work; there is no
+separate parity backlog and no ticket template file - copy the shape from the newest ticket in
+[DEV/plan/](DEV/plan/).
 
 ## Conventions And Behavior To Preserve
 
@@ -137,7 +140,7 @@ gaps are tracked in [DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-
 - The output HTML carries a client-side reader layer injected by internal/htmlgen (navbar.go readerScript/readerCSS on chapter pages, plus a matching toolbar/script on index.html). Keep two storage scopes distinct: zoom uses sessionStorage; reading themes and reading position use localStorage (must survive sessions). Reading position is namespaced by bookStorageKey, which must be computed identically on chapter pages and index.html.
 - Windows and non-Windows behavior is split via *_windows.go and *_nonwindows.go files in several packages.
 - The interface language dresses the **chrome only**. A converted page keeps the *document's* `<html lang>`; the navbar and reader controls carry their own `lang`/`dir` and mirror for `ar`/`ur`. Putting the UI language on `<html lang>` stops Chrome offering "Translate page" - the product's entire free workflow. Guarded by `TestConvertedChromeLanguage` in tests/smoke_test.go and by the RTL assertions in tools/store/make-screenshot.ps1.
-- House typography (short hyphens, Russian ё, ".." not "...") applies to `en`, `ru` and `uk` only; the other ten follow their own script and are exempt - tests/typography_test.go scopes the check by language.
+- The canon's house text style (DOCUMENTATION_CONCEPT.md §5) is **scoped by language here**: it binds `en`, `ru` and `uk` only. The other ten interface languages follow their own script and are exempt - tests/typography_test.go enforces that scoping, so do not widen the check to all thirteen.
 - Optional OCR overlay (-ocr): internal/ocr shells out to the external Tesseract binary (parses TSV for bboxes) and rewrites document images into positioned, translatable text plates. It runs in internal/pipeline/pipeline.go after nav injection and before translation (so overlay text is translated too), and is strictly best-effort - a missing tesseract or a failed image never aborts the conversion. English data ships in <exe>/tessdata; other languages download on demand (-ocr-download / GUI). Applies to EPUB and PDF (formats whose images exist at HTML stage).
 
 ## Pitfalls
@@ -156,5 +159,8 @@ gaps are tracked in [DEV/plan/2026-07-01_cross-edition-parity.md](DEV/plan/2026-
 
 - README.md
 - DEV/README.md
+- docs/README.md (index of the docs/ tree)
 - docs/PARITY.md (cross-edition invariants + port map - read before adding features)
 - docs/how-i-posted-this-project-to-winget.md
+- DEV/plan/RELEASE_QUEUE.md (what is left before the next release; queue wins on order, ticket wins on status)
+- CLAUDE.md ("Spec / plan tickets") - the ticket store's file names, done-set and package numbering

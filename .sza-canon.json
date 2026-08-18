@@ -1,8 +1,8 @@
 {
   "canon": {
-    "version": "2026.08.05",
-    "coreDigest": "sha256:8d33fdab20f1ddde9bd6d759854ff921458faf77e352c6eedf55c34603f97e91",
-    "adoptedOn": "2026-08-02",
+    "version": "2026.08.18.1",
+    "coreDigest": "sha256:961c9c8a835892b19e6297261fc5ba3e597d3a9ea76401257964d38a9d086958",
+    "adoptedOn": "2026-08-18",
     "model": "reference",
     "contribRecord": "contrib/epub_2_html.md"
   },
@@ -37,5 +37,16 @@
 
   "byteIdenticalPairs": [],
   "vendorAllow": [],
-  "exemptions": []
+  "exemptions": [
+    {
+      "id": "SZA-SEC04",
+      "path": "internal/report/archive_test.go",
+      "reason": "The matched literal is the fixture of the redaction code's own test: AIzaSy followed by a keyboard walk (A1b2C3d4..), alongside hunter2hunter2. A redactor cannot be tested without a credential-shaped string to redact, so this is the one place where the pattern must appear. No real key exists; nothing to rotate."
+    },
+    {
+      "id": "SZA-SEC04",
+      "path": "internal/report/redact_test.go",
+      "reason": "Same fixture, same reason: this is the table of shapes TestRedactRemovesGoogleAPIKeyShapes asserts are stripped. Removing it would delete the test, not the risk."
+    }
+  ]
 }
