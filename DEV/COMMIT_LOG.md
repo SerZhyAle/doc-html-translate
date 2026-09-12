@@ -956,3 +956,9 @@ Changed files:
 - tools/store/listing/zh.txt
 - tools/store/listingData.csv
 
+| 2026-09-12 19:18:15 | main | 7d96999 | chore(build): binaries for the release |
+
+Changed files:
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+
