@@ -962,3 +962,9 @@ Changed files:
 - build/doc-html-translate.exe
 - build/doc-html-ui.exe
 
+| 2026-09-12 20:26:48 | main | 4283319 | chore(build): binaries for the release, restamped 26.0912.2026 |
+
+Changed files:
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+
