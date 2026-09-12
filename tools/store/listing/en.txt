@@ -93,10 +93,4 @@ comic cbz cbr
 offline translation
 
 @@ReleaseNotes
-- Text recognized on a picture now covers the lettering it replaces. Until now the replacement was painted on a patch shaped like the words themselves, so the original stayed visible around it and both layers were readable at once.
-- A screenshot, a form or a list is no longer buried under one giant patch. A plate that spans most of the picture is split back into the lines it was built from, so the page keeps its own layout and nothing that was read is lost.
-- If you do not choose an OCR language, the app now reads the writing system on the page. Where it has the data it recognizes the page in that language; where it does not it adds no text at all and names the language pack to install - instead of covering a Russian screenshot in transliterated nonsense.
-- Lettering on saturated artwork, on a halftone screen, or set as large display type is recognized where earlier versions found nothing at all.
-- Comics and scans: every page has its own anchor and a page jump box, so you can link to page 30 instead of dragging the scrollbar.
-- A new button hides the recognized-text layer, so you can look at the artwork underneath and bring the text back.
-- A PDF with neither a text layer nor an extractable page image now says exactly that, instead of claiming OCR was switched off.
+- Text recognized on a picture is no longer run together across the image. A comic with balloons on both sides of a figure, or a page in two columns, used to come back as a wide band over the artwork carrying two speakers' words as one sentence. Each block now gets its own patch, on its own text and in reading order.

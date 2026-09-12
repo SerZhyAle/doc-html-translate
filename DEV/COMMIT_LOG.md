@@ -938,3 +938,21 @@ Changed files:
 - internal/ocr/tsv_test.go
 - tests/parity_test.go
 
+| 2026-09-12 19:18:14 | main | 2fdd596 | docs: what's new for the stitched-line fix, in all 13 store listings |
+
+Changed files:
+- tools/store/listing/ar.txt
+- tools/store/listing/bn.txt
+- tools/store/listing/de.txt
+- tools/store/listing/en.txt
+- tools/store/listing/es.txt
+- tools/store/listing/fr.txt
+- tools/store/listing/hi.txt
+- tools/store/listing/it.txt
+- tools/store/listing/pt.txt
+- tools/store/listing/ru.txt
+- tools/store/listing/uk.txt
+- tools/store/listing/ur.txt
+- tools/store/listing/zh.txt
+- tools/store/listingData.csv
+

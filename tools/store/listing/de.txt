@@ -99,11 +99,5 @@ comic cbz cbr
 offline übersetzung
 
 @@ReleaseNotes
-- Der auf einem Bild erkannte Text verdeckt jetzt die Schrift, die er ersetzt. Bisher wurde der Ersatz auf eine Fläche in Form der Wörter selbst gezeichnet, sodass das Original ringsum sichtbar blieb und beide Ebenen zugleich lesbar waren.
-- Ein Screenshot, ein Formular oder eine Liste verschwindet nicht mehr unter einer einzigen riesigen Fläche. Eine Platte, die fast das ganze Bild einnimmt, wird wieder in die Zeilen zerlegt, aus denen sie entstand - das Layout der Seite bleibt erhalten, und nichts Erkanntes geht verloren.
-- Ohne gewählte OCR-Sprache liest die App jetzt das Schriftsystem der Seite. Sind die Daten vorhanden, wird in dieser Sprache erkannt; fehlen sie, wird gar kein Text eingefügt und das nötige Sprachpaket genannt - statt einen russischen Screenshot mit transliteriertem Unsinn zu überdecken.
-- Schrift auf kräftig gefärbter Grafik, auf einem Druckraster oder als große Displayschrift wird dort erkannt, wo frühere Versionen nichts fanden.
-- Comics und Scans: Jede Seite hat einen eigenen Anker und ein Sprungfeld, sodass man auf Seite 30 verlinken kann, statt die Bildlaufleiste zu ziehen.
-- Eine neue Schaltfläche blendet die Ebene mit dem erkannten Text aus, damit man die Zeichnung darunter sehen und den Text zurückholen kann.
-- Ein PDF ohne Textebene und ohne extrahierbares Seitenbild sagt das jetzt genau so, statt zu behaupten, OCR sei ausgeschaltet.
+- Auf einem Bild erkannter Text wird nicht mehr quer über das ganze Bild zusammengezogen. Ein Comic mit Sprechblasen zu beiden Seiten einer Figur oder eine zweispaltige Seite ergab bisher ein breites Band über der Zeichnung, in dem die Worte zweier Sprecher zu einem Satz verschmolzen. Jeder Block bekommt jetzt seine eigene Fläche - auf seinem eigenen Text und in Lesereihenfolge.
 - Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.

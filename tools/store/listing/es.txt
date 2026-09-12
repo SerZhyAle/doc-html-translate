@@ -98,11 +98,5 @@ cómics cbz cbr
 traducción sin conexión
 
 @@ReleaseNotes
-- El texto reconocido en una imagen ahora cubre las letras que sustituye. Hasta ahora el reemplazo se dibujaba sobre una base con la forma de las propias palabras, de modo que el original quedaba visible alrededor y ambas capas se leían a la vez.
-- Una captura de pantalla, un formulario o una lista ya no quedan bajo una única base enorme. Una placa que ocupa casi toda la imagen se descompone en las líneas con las que se formó: la página conserva su maquetación y no se pierde nada de lo reconocido.
-- Si no eliges un idioma de OCR, la aplicación lee ahora el sistema de escritura de la página. Si tiene los datos, reconoce en ese idioma; si no, no añade texto alguno y nombra el paquete que hay que instalar - en vez de cubrir una captura rusa con disparates transliterados.
-- Las letras sobre gráficos saturados, sobre una trama de impresión o en tipografía grande de titular se reconocen donde las versiones anteriores no encontraban nada.
-- Cómics y escaneos: cada página tiene su propio ancla y un campo de salto, así puedes enlazar a la página 30 en lugar de arrastrar la barra de desplazamiento.
-- Un botón nuevo oculta la capa de texto reconocido, para ver el dibujo que hay debajo y recuperar el texto.
-- Un PDF sin capa de texto y sin imagen de página extraíble ahora lo dice tal cual, en vez de afirmar que el OCR estaba desactivado.
+- El texto reconocido en una imagen ya no se une de un lado a otro de la figura. Un cómic con bocadillos a ambos lados de una figura, o una página a dos columnas, daba una banda ancha sobre el dibujo en la que las palabras de dos personajes formaban una sola frase. Ahora cada bloque tiene su propia placa, sobre su propio texto y en orden de lectura.
 - Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.
