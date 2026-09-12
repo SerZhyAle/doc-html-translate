@@ -3,6 +3,10 @@ extend-ignore-re = [
   "doc-html-translate",
   "epub2html",
   "\\b[0-9a-f]{7,40}\\b",   # git commit SHAs quoted in DEV/research + plan docs
+  # A verbatim OCR transcript quoted as evidence in DEV/research/ocr_word_gap_2026-09-12.md: the
+  # recognizer's own reading of a Polish poster slogan, diacritics lost. Scoped to the exact string
+  # rather than to the word, so "sie" stays a misspelling of "size" everywhere else.
+  "Proletarjusze wazystkich krajow taczcie sie",
 ]
 
 # Project proper nouns / format acronyms typos misreads as misspellings.

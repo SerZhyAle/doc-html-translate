@@ -140,6 +140,50 @@ func TestParseTSVSplitsOnGap(t *testing.T) {
 	}
 }
 
+// TestParseTSVSplitsALineStitchedAcrossThePicture is the end-to-end shape of the defect
+// test_doc/1.png showed: layout analysis walks across the figure between two speech balloons and
+// returns the two texts as one line box, so the plate that comes out is a bar across the artwork
+// carrying both speakers. The middle line below is that stitch. See ocrMaxWordGapRatio.
+func TestParseTSVSplitsALineStitchedAcrossThePicture(t *testing.T) {
+	tsv := "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n" +
+		"1\t1\t0\t0\t0\t0\t0\t0\t2048\t2048\t-1\t\n" +
+		"4\t1\t1\t1\t1\t0\t200\t100\t200\t18\t-1\t\n" +
+		"5\t1\t1\t1\t1\t1\t200\t100\t90\t18\t95\tLeft\n" +
+		"5\t1\t1\t1\t1\t2\t300\t100\t100\t18\t95\tone\n" +
+		"4\t1\t1\t1\t2\t0\t200\t130\t1600\t18\t-1\t\n" +
+		"5\t1\t1\t1\t2\t1\t200\t130\t90\t18\t95\tLeft\n" +
+		"5\t1\t1\t1\t2\t2\t300\t130\t100\t18\t95\ttwo\n" +
+		"5\t1\t1\t1\t2\t3\t1600\t130\t90\t18\t95\tRight\n" +
+		"5\t1\t1\t1\t2\t4\t1700\t130\t100\t18\t95\tone\n" +
+		"4\t1\t1\t1\t3\t0\t1600\t160\t200\t18\t-1\t\n" +
+		"5\t1\t1\t1\t3\t1\t1600\t160\t90\t18\t95\tRight\n" +
+		"5\t1\t1\t1\t3\t2\t1700\t160\t100\t18\t95\ttwo\n"
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Blocks) != 2 {
+		got := make([]string, 0, len(res.Blocks))
+		for _, b := range res.Blocks {
+			got = append(got, b.Text)
+		}
+		t.Fatalf("blocks = %d %q, want 2 (one per column)", len(res.Blocks), got)
+	}
+	if res.Blocks[0].Text != "Left one Left two" {
+		t.Errorf("left column = %q, want %q", res.Blocks[0].Text, "Left one Left two")
+	}
+	if res.Blocks[1].Text != "Right one Right two" {
+		t.Errorf("right column = %q, want %q", res.Blocks[1].Text, "Right one Right two")
+	}
+	// The point of the fix: neither plate spans the picture between the columns.
+	if res.Blocks[0].X1 > 400 {
+		t.Errorf("left plate reaches x=%d, past its own lettering at 400", res.Blocks[0].X1)
+	}
+	if res.Blocks[1].X0 < 1600 {
+		t.Errorf("right plate starts at x=%d, before its own lettering at 1600", res.Blocks[1].X0)
+	}
+}
+
 func TestPercentStyle(t *testing.T) {
 	// font-size = pct(LineH, w) * fontFitFactor = (20/200*100) * 0.92 = 9.20cqw.
 	got := percentStyle(Block{X0: 10, Y0: 20, X1: 110, Y1: 60, LineH: 20}, 200, 100)

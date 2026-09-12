@@ -922,3 +922,19 @@ Changed files:
 - tools/store/listing/ru.txt
 - tools/store/listing/uk.txt
 
+| 2026-09-12 19:18:02 | main | 1cfe79d | fix(ocr): a line stitched across a picture no longer becomes a bar over the artwork |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/research/RESEARCH_INDEX.md
+- DEV/research/ocr_word_gap_2026-09-12.md
+- configs/.typos.toml
+- docs/PARITY.md
+- extension/src/ocr-cluster.js
+- extension/src/ocr-overlay.js
+- extension/test/ocr-cluster.test.mjs
+- internal/ocr/cluster_test.go
+- internal/ocr/tesseract.go
+- internal/ocr/tsv_test.go
+- tests/parity_test.go
+

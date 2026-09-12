@@ -89,6 +89,42 @@ import { isTranslatable } from "./ocr-text.js";
 // 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80.
 export const OCR_RESCUE_LINE_CONF = 80;
 
+// OCR_MAX_WORD_GAP_RATIO is the one rule that runs before any of the others, because it repairs
+// their input rather than their output: a *line* the recognizer handed us that is not one line.
+//
+// Every constant above compares one line with another, and all of them are powerless against the
+// case where layout analysis walks across a picture and stitches a phrase from the left of the page
+// to a phrase from the right into a single line box. Nothing downstream can recover: the stitched
+// box genuinely spans both columns, so the clustering's own column test (`overlap * 10 >= narrower`)
+// sees a real overlap and joins the columns, and OCR_MAX_PLATE_COVERAGE does not fire either,
+// because the resulting plate is wide but short - measured on test_doc/1.png, a 1593x105 px bar is
+// 4% of a 2048x2048 image against a 0.52 bound. The reader gets a grey band across the artwork
+// carrying two speakers' words in one sentence.
+//
+// So a line is cut between two consecutive words whose boxes stand more than this many times the
+// line's own median word height apart. Word height rather than the line box for the same reason
+// lineInkHeight uses it: the box is the union of its words and one artefact sets it for the line.
+//
+// Bracketed over the 46 lab scenes plus test_doc/1.png, on the 199 multi-word lines that clear
+// OCR_MIN_LINE_CONF - the only lines that can reach a plate (DEV/research/ocr_word_gap_2026-09-12.md):
+//
+//   - The widest gap inside a line that really is one line is **2.57x** (the slogan on
+//     join-the-ranks-of-the-red-army-russian-propaganda-poster-1920, 18 px over a 7 px median),
+//     then 1.88x (the Olympiad poster's committee line) and 1.69x (le-petit-journal's headline).
+//   - The narrowest cross-region stitch above it is **4.80x** (samson-and-delilah-15, two balloons),
+//     and the stitches this rule exists for are an order of magnitude clear of both: 12.4-17.6x on
+//     synth-two-columns - the corpus's one known merge, named in thresholds.json - 19.9x on a
+//     newspaper masthead, 38.6x on a dateline joined to a masthead, and 36-100x on test_doc/1.png.
+//
+// 3.5 is the geometric middle of 2.57 and 4.80, so every legitimate line keeps 36% of margin.
+//
+// The band **1.87-2.57x overlaps and is deliberately left alone**: comic balloons drawn side by side
+// stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
+// geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
+// words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
+// (DEV/plan/2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+export const OCR_MAX_WORD_GAP_RATIO = 3.5;
+
 export const OCR_MIN_LINE_CONF = 50;
 export const OCR_CLUSTER_PITCH_FACTOR = 1.2;
 export const OCR_MAX_LEADING_RATIO = 3;
@@ -97,6 +133,98 @@ export const OCR_MAX_PLATE_COVERAGE = 0.52;
 export const OCR_MIN_PLATE_LINE_FILL = 0.72;
 
 export const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.length >> 1] : 0);
+
+// splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
+// horizontal step wider than OCR_MAX_WORD_GAP_RATIO times the line's own median word height. It
+// returns one array of words per run, and the single original run when there is nothing to cut -
+// which is the answer on every ordinary line, so the common path allocates one array and stops.
+//
+// The step is measured between the two boxes and not from left to right, so a right-to-left line
+// (synth-rtl-layout) is read the same way round as a left-to-right one instead of producing a
+// negative gap on every pair and silently opting out of the rule. Overlapping boxes give a negative
+// step and never cut.
+//
+// A word the recognizer gave no box for cannot be placed, so it stays with the run being built
+// rather than starting one: its text still reaches the reader, at the only position anything is
+// known about. Mirrors tesseract.go splitWideGaps (docs/PARITY.md).
+export function splitWideGaps(words, scale = 1) {
+  const all = words || [];
+  if (all.length < 2) return [all];
+  const at = (v) => Math.round(v / scale);
+  const med = medianOf(all.filter((w) => w.bbox).map((w) => at(w.bbox.y1) - at(w.bbox.y0)).filter((h) => h > 0));
+  if (med <= 0) return [all];
+  const maxGap = med * OCR_MAX_WORD_GAP_RATIO;
+
+  const parts = [];
+  let cur = [];
+  let prev = null;
+  for (const w of all) {
+    if (w.bbox && prev && cur.length) {
+      const gap = Math.max(at(w.bbox.x0) - at(prev.x1), at(prev.x0) - at(w.bbox.x1));
+      if (gap > maxGap) { parts.push(cur); cur = []; }
+    }
+    cur.push(w);
+    if (w.bbox) prev = w.bbox;
+  }
+  if (cur.length) parts.push(cur);
+  return parts.length < 2 ? [all] : parts;
+}
+
+// orderColumns is the other half of splitWideGaps, and without it the split trades one defect for
+// another. clusterLines walks its input once and closes the open plate the moment a line does not
+// belong to it, so it needs a column's lines to arrive together - which is exactly what the engine
+// stops providing once a stitched line is cut in two. The runs then interleave left, right, left,
+// right down the page, and measured on test_doc/1.png the left balloon that used to be one plate
+// (inside one oversized bar) came back as three.
+//
+// So the page's runs are regrouped into columns - runs whose x-ranges overlap, by the same test
+// clusterLines itself uses - and handed over column by column, each in vertical order. This runs
+// only on a page the split actually cut somewhere: a page the engine got right keeps the engine's
+// own order, unchanged, and cannot move at all.
+//
+// The scope is the page and not the paragraph, which is where this was first written. clusterLines
+// deliberately merges across the paragraph boundaries the engine invents, and the engine invents
+// them in the middle of a column: measured on synth-two-columns, the third row of both columns lands
+// in a second paragraph, so regrouping each paragraph on its own still handed the clustering
+// L1 L2 R1 R2 L3 R3 and produced four plates over two columns instead of two.
+//
+// Columns are formed from the runs that can actually reach a plate - the same confidence floor
+// clusterLines applies - and a run that cannot is parked at the end, where nothing reads it but the
+// discard record. A line the floor will drop must not decide where a column is: measured on
+// test_doc/1.png, the desktop engine also returns one empty 1982x1864 px "line" across the whole
+// picture, and letting it into the grouping chains both columns into a single column, which sorts
+// the page straight back into the interleaving this exists to undo.
+//
+// Columns go left to right, which is reading order for every script the corpus stitches. A
+// right-to-left page would want them the other way round, and nothing measured says whether its
+// layout analysis ever produces the stitch this repairs - so it is left as it is rather than
+// guessed at. Mirrors tesseract.go orderColumns (docs/PARITY.md).
+export function orderColumns(runs, minConf = OCR_MIN_LINE_CONF) {
+  if (!runs || runs.length < 2) return runs || [];
+  const parked = runs.filter((r) => !keepLine(r, minConf));
+  const cols = [];
+  for (const r of runs.filter((r) => keepLine(r, minConf)).sort((a, b) => a.bbox.x0 - b.bbox.x0)) {
+    const hit = cols.find((c) => {
+      const overlap = Math.min(r.bbox.x1, c.x1) - Math.max(r.bbox.x0, c.x0);
+      const narrower = Math.min(r.bbox.x1 - r.bbox.x0, c.x1 - c.x0);
+      return overlap * 10 >= narrower;
+    });
+    if (hit) {
+      hit.x0 = Math.min(hit.x0, r.bbox.x0); hit.x1 = Math.max(hit.x1, r.bbox.x1);
+      hit.runs.push(r);
+    } else {
+      cols.push({ x0: r.bbox.x0, x1: r.bbox.x1, runs: [r] });
+    }
+  }
+  cols.sort((a, b) => a.x0 - b.x0);
+  const out = [];
+  for (const c of cols) {
+    c.runs.sort((a, b) => a.bbox.y0 - b.bbox.y0);
+    out.push(...c.runs);
+  }
+  out.push(...parked);
+  return out;
+}
 
 // sameTypeSize reports whether a line's ink height is close enough to a cluster's own to be part of
 // the same text (see OCR_TYPE_SIZE_RATIO). The comparison is against the cluster's median rather than

@@ -164,6 +164,7 @@ func TestParityOCRClustering(t *testing.T) {
 		{"type size ratio", `ocrTypeSizeRatio\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_TYPE_SIZE_RATIO\s*=\s*([\d.]+)`},
 		{"max plate coverage", `ocrMaxPlateCoverage\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_PLATE_COVERAGE\s*=\s*([\d.]+)`},
 		{"min plate line fill", `ocrMinPlateLineFill\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MIN_PLATE_LINE_FILL\s*=\s*([\d.]+)`},
+		{"max word gap ratio", `ocrMaxWordGapRatio\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_WORD_GAP_RATIO\s*=\s*([\d.]+)`},
 		{"upscale dpi floor", `ocrUpscaleDPIFloor\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_UPSCALE_DPI_FLOOR\s*=\s*([\d.]+)`},
 		{"assumed page inches", `ocrAssumedPageInches\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_ASSUMED_PAGE_INCHES\s*=\s*([\d.]+)`},
 		{"min declared dpi", `ocrMinDeclaredDPI\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_MIN_DECLARED_DPI\s*=\s*([\d.]+)`},
@@ -225,6 +226,28 @@ func TestParityOCRClustering(t *testing.T) {
 		{"coverage is measured against the page", "ocr-cluster.js", clusterSrc, `box <= imgW \* imgH \* OCR_MAX_PLATE_COVERAGE`},
 		{"looseness is the second condition", "tesseract.go", goSrc, `float64\(ink\) >= float64\(boxH\)\*ocrMinPlateLineFill`},
 		{"looseness is the second condition", "ocr-cluster.js", clusterSrc, `ink >= boxH \* OCR_MIN_PLATE_LINE_FILL`},
+		// The word-gap split runs before every rule above and repairs their input, so equal constants
+		// are again only half the contract. Three things have to hold on both sides. The gap is
+		// measured between the two word boxes and not left-to-right, or a right-to-left line never
+		// cuts; it is weighed against the median of the line's own *word* heights, not the line box,
+		// for the same reason inkHeight is; and each run is boxed to its own words, because handing
+		// both halves the stitch's box back leaves the clustering exactly where it started.
+		{"the gap is measured between the boxes", "tesseract.go", goSrc, `max\(w\.x0-prev\.x1, prev\.x0-w\.x1\)\) > maxGap`},
+		{"the gap is measured between the boxes", "ocr-cluster.js", clusterSrc, `Math\.max\(at\(w\.bbox\.x0\) - at\(prev\.x1\), at\(prev\.x0\) - at\(w\.bbox\.x1\)\)`},
+		{"the gap is weighed against the words' median", "tesseract.go", goSrc, `maxGap := float64\(med\) \* ocrMaxWordGapRatio`},
+		{"the gap is weighed against the words' median", "ocr-cluster.js", clusterSrc, `const maxGap = med \* OCR_MAX_WORD_GAP_RATIO`},
+		{"a cut run is boxed to its own words", "tesseract.go", goSrc, `func lineFromWords\(words \[\]ocrWord\) \*ocrLine`},
+		{"a cut run is boxed to its own words", "ocr-overlay.js", overlaySrc, `const unionOf = \(words\) =>`},
+		// And the cut runs are put back in reading order, column by column. clusterLines closes a
+		// plate on the first line that does not belong to it, so without this the split trades one
+		// oversized plate for three fragments (measured on test_doc/1.png, 2026-09-12). The columns
+		// are formed from the lines that clear the confidence floor, on both sides: a full-page noise
+		// "line" that never reaches a plate would otherwise chain every column into one, which sorts
+		// the page straight back into the order this exists to undo.
+		{"cut runs are regrouped into columns", "tesseract.go", goSrc, `func orderColumns\(runs \[\]\*ocrLine, minConf float64\) \[\]\*ocrLine`},
+		{"cut runs are regrouped into columns", "ocr-cluster.js", clusterSrc, `export function orderColumns\(runs, minConf = OCR_MIN_LINE_CONF\)`},
+		{"columns are formed from the lines that can reach a plate", "tesseract.go", goSrc, `if keepLine\(r, minConf\) \{\s*byX = append\(byX, r\)`},
+		{"columns are formed from the lines that can reach a plate", "ocr-cluster.js", clusterSrc, `runs\.filter\(\(r\) => keepLine\(r, minConf\)\)\.sort`},
 	}
 	for _, m := range meaning {
 		if !regexp.MustCompile(m.re).MatchString(m.src) {

@@ -242,9 +242,9 @@ func TestTrimOutlierWords(t *testing.T) {
 	}
 
 	l := line(
-		ocrWord{78, 259, 88, 333, "|"},
-		ocrWord{116, 265, 210, 291, "NOT"},
-		ocrWord{220, 265, 298, 291, "EVEN"},
+		ocrWord{x0: 78, y0: 259, x1: 88, y1: 333, text: "|"},
+		ocrWord{x0: 116, y0: 265, x1: 210, y1: 291, text: "NOT"},
+		ocrWord{x0: 220, y0: 265, x1: 298, y1: 291, text: "EVEN"},
 	)
 	l.trimOutlierWords()
 	if l.inkX0 != 116 || l.inkY0 != 265 || l.inkX1 != 298 || l.inkY1 != 291 {
@@ -258,8 +258,8 @@ func TestTrimOutlierWords(t *testing.T) {
 
 	// Ordinary punctuation is short, so it is not an artefact and the box is untouched.
 	c := line(
-		ocrWord{116, 265, 210, 291, "NOT"},
-		ocrWord{212, 281, 220, 293, ","},
+		ocrWord{x0: 116, y0: 265, x1: 210, y1: 291, text: "NOT"},
+		ocrWord{x0: 212, y0: 281, x1: 220, y1: 293, text: ","},
 	)
 	c.trimOutlierWords()
 	if c.inkX1 != 220 || c.inkY1 != 293 {
@@ -267,7 +267,7 @@ func TestTrimOutlierWords(t *testing.T) {
 	}
 
 	// A line that is nothing but the artefact keeps its box - no lettering to shrink towards.
-	r := line(ocrWord{78, 259, 88, 333, "|"})
+	r := line(ocrWord{x0: 78, y0: 259, x1: 88, y1: 333, text: "|"})
 	r.trimOutlierWords()
 	if r.inkX0 != 78 || r.inkY1 != 333 {
 		t.Errorf("a rule-only line lost its box: [%d,%d %d,%d]", r.inkX0, r.inkY0, r.inkX1, r.inkY1)
@@ -340,6 +340,169 @@ func TestClusterLinesKeepsACaptionWhoseLinesVary(t *testing.T) {
 // TestSameTypeSizeBracketsTheMeasuredBands: the ratio has to admit the widest spread one text shows
 // on its own and reject the narrowest step between two texts. Both numbers come from the corpus's
 // hand-drawn line boxes - see ocrTypeSizeRatio for where each was measured.
+// ---- splitting a line the engine stitched across a picture --------------------------------
+
+// stitchedAcrossTheFigure is real output, not a construction: what tesseract returned for
+// test_doc/1.png on 2026-09-12 with PSM 3. Two speech balloons stand 1206 px apart on either side
+// of a photographed figure and the layout analysis returned them as one 1593 px line. Mirrors the
+// extension's ocr-cluster.test.mjs fixture of the same name.
+func stitchedAcrossTheFigure() *ocrLine {
+	return lineFromWords([]ocrWord{
+		{x0: 181, y0: 595, x1: 212, y1: 613, text: "just", conf: 96, hasConf: true},
+		{x0: 219, y0: 597, x1: 246, y1: 609, text: "not", conf: 96, hasConf: true},
+		{x0: 252, y0: 595, x1: 321, y1: 613, text: "working", conf: 96, hasConf: true},
+		{x0: 327, y0: 595, x1: 351, y1: 609, text: "for", conf: 95, hasConf: true},
+		{x0: 357, y0: 599, x1: 387, y1: 609, text: "me.", conf: 95, hasConf: true},
+		{x0: 1593, y0: 601, x1: 1621, y1: 618, text: "Oh,", conf: 95, hasConf: true},
+		{x0: 1628, y0: 605, x1: 1674, y1: 615, text: "come", conf: 96, hasConf: true},
+		{x0: 1681, y0: 605, x1: 1706, y1: 618, text: "on,", conf: 96, hasConf: true},
+		{x0: 1714, y0: 601, x1: 1743, y1: 615, text: "Em.", conf: 91, hasConf: true},
+		{x0: 1751, y0: 601, x1: 1774, y1: 615, text: "It's", conf: 96, hasConf: true},
+	})
+}
+
+func TestSplitWideGaps(t *testing.T) {
+	runs := stitchedAcrossTheFigure().splitWideGaps()
+	if len(runs) != 2 {
+		t.Fatalf("runs = %d, want 2", len(runs))
+	}
+	if got, want := runs[0].text.String(), "just not working for me."; got != want {
+		t.Errorf("first run = %q, want %q", got, want)
+	}
+	if got, want := runs[1].text.String(), "Oh, come on, Em. It's"; got != want {
+		t.Errorf("second run = %q, want %q", got, want)
+	}
+	// Each run's box is its own words', not the stitch's: handing both halves the full width back
+	// would leave the clustering exactly where it started.
+	if runs[0].x0 != 181 || runs[0].x1 != 387 {
+		t.Errorf("first run box = %d..%d, want 181..387", runs[0].x0, runs[0].x1)
+	}
+	if runs[1].x0 != 1593 || runs[1].x1 != 1774 {
+		t.Errorf("second run box = %d..%d, want 1593..1774", runs[1].x0, runs[1].x1)
+	}
+	// The mean confidence is the run's own, so the floor judges each text on what it read.
+	if got := runs[1].meanConf(); got < 94.7 || got > 94.9 {
+		t.Errorf("second run conf = %.2f, want the mean of its own five words (94.8)", got)
+	}
+}
+
+func TestSplitWideGapsLeavesAnOrdinaryLineAlone(t *testing.T) {
+	l := lineFromWords(stitchedAcrossTheFigure().words[:5])
+	runs := l.splitWideGaps()
+	if len(runs) != 1 || runs[0] != l {
+		t.Fatalf("an uncut line was rebuilt: %d run(s)", len(runs))
+	}
+	if got := lineFromWords([]ocrWord{{x0: 0, y0: 0, x1: 10, y1: 10, text: "alone"}}).splitWideGaps(); len(got) != 1 {
+		t.Errorf("a one-word line produced %d runs", len(got))
+	}
+}
+
+// TestWordGapRatioBracketsTheMeasuredBands states the rule rather than the constant: word height
+// is 100 px, so the gap in pixels is the ratio. See ocrMaxWordGapRatio and
+// DEV/research/ocr_word_gap_2026-09-12.md. Mirrors the extension's case of the same name.
+func TestWordGapRatioBracketsTheMeasuredBands(t *testing.T) {
+	pair := func(gap int) *ocrLine {
+		return lineFromWords([]ocrWord{
+			{x0: 0, y0: 0, x1: 100, y1: 100, text: "a"},
+			{x0: 100 + gap, y0: 0, x1: 200 + gap, y1: 100, text: "b"},
+		})
+	}
+	if got := len(pair(257).splitWideGaps()); got != 1 {
+		t.Errorf("the widest gap inside a real line (2.57x) was cut into %d runs", got)
+	}
+	if got := len(pair(480).splitWideGaps()); got != 2 {
+		t.Errorf("the narrowest cross-region stitch (4.80x) stayed %d run(s)", got)
+	}
+	if got := len(pair(1762).splitWideGaps()); got != 2 {
+		t.Errorf("synth-two-columns (17.62x) stayed %d run(s)", got)
+	}
+	if ocrMaxWordGapRatio != 3.5 {
+		t.Errorf("ocrMaxWordGapRatio = %v, want the geometric middle of 2.57 and 4.80", ocrMaxWordGapRatio)
+	}
+}
+
+// TestSplitWideGapsReadsRightToLeft: words descend in x, so a left-to-right subtraction would be
+// negative on every pair and the rule would quietly never fire. synth-rtl-layout is in the corpus.
+func TestSplitWideGapsReadsRightToLeft(t *testing.T) {
+	rtl := func(gap int) *ocrLine {
+		return lineFromWords([]ocrWord{
+			{x0: 900, y0: 0, x1: 1000, y1: 100, text: "الأول"},
+			{x0: 800 - gap, y0: 0, x1: 900 - gap, y1: 100, text: "الثاني"},
+		})
+	}
+	if got := len(rtl(20).splitWideGaps()); got != 1 {
+		t.Errorf("ordinary right-to-left spacing was cut into %d runs", got)
+	}
+	if got := len(rtl(700).splitWideGaps()); got != 2 {
+		t.Errorf("a right-to-left stitch stayed %d run(s)", got)
+	}
+	overlapping := lineFromWords([]ocrWord{
+		{x0: 0, y0: 0, x1: 100, y1: 100, text: "a"},
+		{x0: 60, y0: 0, x1: 160, y1: 100, text: "b"},
+	})
+	if got := len(overlapping.splitWideGaps()); got != 1 {
+		t.Errorf("overlapping word boxes cut a line into %d runs", got)
+	}
+}
+
+// TestOrderColumns: the shape test_doc/1.png produces once its stitched lines are cut - left,
+// right, left, right down the page. clusterLines closes a plate on the first line that does not
+// belong to it, so handed this order it breaks each balloon into fragments. Mirrors the
+// extension's "cut runs are regrouped into columns, in reading order".
+func TestOrderColumns(t *testing.T) {
+	interleaved := fixtureLines([]fixtureLine{
+		{219, 838, 498, 856, 95, "| know you like it, but | don't. It's"},
+		{214, 866, 501, 884, 96, "distracting, and it doesn't go with"},
+		{228, 920, 488, 938, 96, "stylish, and that facial hair just"},
+		{1212, 930, 1215, 948, 87, "4"},
+		{312, 940, 403, 958, 95, "doesn't fit."},
+		{1667, 940, 1944, 958, 96, "But | feel more confident with it."},
+		{1668, 968, 1933, 986, 96, "Plus, I've been trying to grow it"},
+	})
+	want := []string{
+		"| know you like it, but | don't. It's",
+		"distracting, and it doesn't go with",
+		"stylish, and that facial hair just",
+		"doesn't fit.",
+		"4",
+		"But | feel more confident with it.",
+		"Plus, I've been trying to grow it",
+	}
+	for i, l := range orderColumns(interleaved, ocrMinLineConf) {
+		if got := l.text.String(); got != want[i] {
+			t.Errorf("line %d = %q, want %q", i, got, want[i])
+		}
+	}
+
+	// The engine also returns one empty 1982x1864 px "line" over the whole of test_doc/1.png. It
+	// never reaches a plate, but if it is allowed to form a column it chains both columns into one
+	// and the page sorts straight back into the interleaving orderColumns exists to undo.
+	withNoise := fixtureLines([]fixtureLine{
+		{14, 184, 1996, 2048, 95, ""}, // no text: dropped by the floor
+		{219, 838, 498, 856, 95, "left one"},
+		{1667, 840, 1944, 858, 96, "right one"},
+		{214, 866, 501, 884, 96, "left two"},
+		{1668, 868, 1933, 886, 96, "right two"},
+	})
+	wantNoise := []string{"left one", "left two", "right one", "right two", ""}
+	for i, l := range orderColumns(withNoise, ocrMinLineConf) {
+		if got := l.text.String(); got != wantNoise[i] {
+			t.Errorf("with a page-wide noise line, position %d = %q, want %q", i, got, wantNoise[i])
+		}
+	}
+
+	one := fixtureLines([]fixtureLine{
+		{10, 10, 200, 28, 95, "first"},
+		{12, 40, 190, 58, 95, "second"},
+	})
+	if got := orderColumns(one, ocrMinLineConf); got[0].text.String() != "first" || got[1].text.String() != "second" {
+		t.Error("a single column was reordered")
+	}
+	if got := orderColumns(one[:1], ocrMinLineConf); len(got) != 1 {
+		t.Errorf("a single run produced %d", len(got))
+	}
+}
+
 func TestSameTypeSizeBracketsTheMeasuredBands(t *testing.T) {
 	// samson-and-delilah-03-scroll: a 34 px line inside a caption whose median is 24 px.
 	if !sameTypeSize(34, 24) {

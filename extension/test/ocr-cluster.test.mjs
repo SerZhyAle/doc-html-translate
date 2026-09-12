@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, droppedLines, keepLine, medianLinePitch, releaseOversized, resultStrength, sameTypeSize,
-  strictlyBetter, trimOutlierWords,
-  OCR_MAX_PLATE_COVERAGE,
+  clusterLines, droppedLines, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  sameTypeSize, splitWideGaps, strictlyBetter, trimOutlierWords,
+  OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
 } from "../src/ocr-cluster.js";
 
 // The line boxes below are not invented: they are what tesseract returned for the lab's two
@@ -251,6 +251,142 @@ test("releasing a plate needs both conditions", () => {
 
 // The ratio has to admit the widest spread one text shows on its own and reject the narrowest step
 // between two texts. Both numbers come from the corpus's hand-drawn line boxes.
+// ---- splitting a line the engine stitched across a picture --------------------------------
+
+// Real output, not a construction: what tesseract.js returned for test_doc/1.png on 2026-09-12 with
+// PSM 3. Two speech balloons stand 1206 px apart on either side of a photographed figure and the
+// layout analysis returned them as one line, 1593 px wide. Mirrors internal/ocr/cluster_test.go
+// TestSplitWideGaps.
+const stitchedAcrossTheFigure = [
+  { bbox: { x0: 181, y0: 595, x1: 212, y1: 613 }, text: "just", confidence: 96 },
+  { bbox: { x0: 219, y0: 597, x1: 246, y1: 609 }, text: "not", confidence: 96 },
+  { bbox: { x0: 252, y0: 595, x1: 321, y1: 613 }, text: "working", confidence: 96 },
+  { bbox: { x0: 327, y0: 595, x1: 351, y1: 609 }, text: "for", confidence: 95 },
+  { bbox: { x0: 357, y0: 599, x1: 387, y1: 609 }, text: "me.", confidence: 95 },
+  { bbox: { x0: 1593, y0: 601, x1: 1621, y1: 618 }, text: "Oh,", confidence: 95 },
+  { bbox: { x0: 1628, y0: 605, x1: 1674, y1: 615 }, text: "come", confidence: 96 },
+  { bbox: { x0: 1681, y0: 605, x1: 1706, y1: 618 }, text: "on,", confidence: 96 },
+  { bbox: { x0: 1714, y0: 601, x1: 1743, y1: 615 }, text: "Em.", confidence: 91 },
+  { bbox: { x0: 1751, y0: 601, x1: 1774, y1: 615 }, text: "It's", confidence: 96 },
+];
+
+const textsOf = (runs) => runs.map((r) => r.map((w) => w.text).join(" "));
+
+test("a line stitched across a picture is cut into the texts it came from", () => {
+  assert.deepEqual(textsOf(splitWideGaps(stitchedAcrossTheFigure)), [
+    "just not working for me.",
+    "Oh, come on, Em. It's",
+  ]);
+});
+
+test("an ordinary line is handed back whole, as one run", () => {
+  const line = stitchedAcrossTheFigure.slice(0, 5);
+  const runs = splitWideGaps(line);
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0], line, "the common path does not rebuild the line");
+  assert.equal(splitWideGaps([]).length, 1, "an empty line is one run");
+  assert.equal(splitWideGaps([{ text: "alone" }]).length, 1, "a line with no boxes cannot be cut");
+});
+
+// The bracketing measurement, asserted as the rule rather than as the constant: word height 100 px,
+// so the gap in pixels is the ratio. See OCR_MAX_WORD_GAP_RATIO and
+// DEV/research/ocr_word_gap_2026-09-12.md.
+test("the word-gap ratio brackets the measured bands", () => {
+  const pair = (gap) => [
+    { bbox: { x0: 0, y0: 0, x1: 100, y1: 100 }, text: "a" },
+    { bbox: { x0: 100 + gap, y0: 0, x1: 200 + gap, y1: 100 }, text: "b" },
+  ];
+  assert.equal(splitWideGaps(pair(257)).length, 1, "the widest gap inside a real line (2.57x) survives");
+  assert.equal(splitWideGaps(pair(480)).length, 2, "the narrowest cross-region stitch (4.80x) is cut");
+  assert.equal(splitWideGaps(pair(1762)).length, 2, "synth-two-columns (17.62x) is cut");
+  assert.equal(OCR_MAX_WORD_GAP_RATIO, 3.5, "the geometric middle of 2.57 and 4.80");
+});
+
+test("a right-to-left line is measured the same way round", () => {
+  // Words descend in x, so a left-to-right subtraction would be negative on every pair and the rule
+  // would quietly never fire. synth-rtl-layout is in the corpus; this is the shape it has.
+  const rtl = (gap) => [
+    { bbox: { x0: 900, y0: 0, x1: 1000, y1: 100 }, text: "الأول" },
+    { bbox: { x0: 800 - gap, y0: 0, x1: 900 - gap, y1: 100 }, text: "الثاني" },
+  ];
+  assert.equal(splitWideGaps(rtl(20)).length, 1, "ordinary right-to-left spacing is one line");
+  assert.equal(splitWideGaps(rtl(700)).length, 2, "a right-to-left stitch is cut too");
+});
+
+test("overlapping word boxes never cut a line", () => {
+  const overlapping = [
+    { bbox: { x0: 0, y0: 0, x1: 100, y1: 100 }, text: "a" },
+    { bbox: { x0: 60, y0: 0, x1: 160, y1: 100 }, text: "b" },
+  ];
+  assert.equal(splitWideGaps(overlapping).length, 1);
+});
+
+test("the split reads boxes in the source's own pixels", () => {
+  // The extension divides by the upscale factor before clustering, so the same line must split the
+  // same way whichever space it is measured in - the same invariant the grouping tests assert.
+  const upscaled = stitchedAcrossTheFigure.map((w) => ({
+    ...w,
+    bbox: { x0: w.bbox.x0 * 2, y0: w.bbox.y0 * 2, x1: w.bbox.x1 * 2, y1: w.bbox.y1 * 2 },
+  }));
+  assert.deepEqual(textsOf(splitWideGaps(upscaled, 2)), textsOf(splitWideGaps(stitchedAcrossTheFigure)));
+});
+
+// ---- putting the cut runs back in reading order -------------------------------------------
+
+test("cut runs are regrouped into columns, in reading order", () => {
+  // The shape test_doc/1.png produces once its stitched lines are cut: left, right, left, right
+  // down the page. clusterLines closes a plate on the first line that does not belong to it, so
+  // handed this order it would break each balloon into fragments.
+  const run = (x0, y0, x1, text, conf = 95) => ({ bbox: { x0, y0, x1, y1: y0 + 18 }, text, conf });
+  const interleaved = [
+    run(219, 838, 498, "| know you like it, but | don't. It's"),
+    run(214, 866, 501, "distracting, and it doesn't go with"),
+    run(228, 920, 488, "stylish, and that facial hair just"),
+    run(1212, 930, 1215, "4", 87),
+    run(312, 940, 403, "doesn't fit."),
+    run(1667, 940, 1944, "But | feel more confident with it."),
+    run(1668, 968, 1933, "Plus, I've been trying to grow it"),
+  ];
+  assert.deepEqual(orderColumns(interleaved).map((r) => r.text), [
+    "| know you like it, but | don't. It's",
+    "distracting, and it doesn't go with",
+    "stylish, and that facial hair just",
+    "doesn't fit.",
+    "4",
+    "But | feel more confident with it.",
+    "Plus, I've been trying to grow it",
+  ]);
+});
+
+// The desktop engine also returns one empty 1982x1864 px "line" over the whole of test_doc/1.png.
+// It never reaches a plate, but if it is allowed to form a column it chains both columns into one
+// and the page sorts straight back into the interleaving orderColumns exists to undo.
+test("a line the floor will drop cannot decide where a column is", () => {
+  const run = (x0, y0, x1, text, conf = 95) => ({ bbox: { x0, y0, x1, y1: y0 + 18 }, text, conf });
+  const withNoise = [
+    { bbox: { x0: 14, y0: 184, x1: 1996, y1: 2048 }, text: "", conf: 95 }, // no text: dropped
+    run(219, 838, 498, "left one"),
+    run(1667, 840, 1944, "right one"),
+    run(214, 866, 501, "left two"),
+    run(1668, 868, 1933, "right two"),
+  ];
+  assert.deepEqual(
+    orderColumns(withNoise).map((r) => r.text),
+    ["left one", "left two", "right one", "right two", ""],
+    "the page-wide noise line is parked at the end, not used as a column",
+  );
+});
+
+test("orderColumns leaves a single column, or a single run, alone", () => {
+  const one = [
+    { bbox: { x0: 10, y0: 10, x1: 200, y1: 28 }, text: "first", conf: 95 },
+    { bbox: { x0: 12, y0: 40, x1: 190, y1: 58 }, text: "second", conf: 95 },
+  ];
+  assert.deepEqual(orderColumns(one).map((r) => r.text), ["first", "second"]);
+  assert.deepEqual(orderColumns([one[0]]), [one[0]]);
+  assert.deepEqual(orderColumns([]), []);
+});
+
 test("the type-size ratio brackets the measured bands", () => {
   assert.equal(sameTypeSize(34, 24), true, "the widest within-caption spread (1.42x) is one text");
   assert.equal(sameTypeSize(281, 155), false, "display type over body text (1.81x) is two texts");

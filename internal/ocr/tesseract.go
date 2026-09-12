@@ -776,6 +776,43 @@ func hasLangFile(dir, lang string) bool {
 // of its box while a legitimate balloon fills 0.4582 and a legitimate cartoon caption 0.3621. Area
 // fill is a property of ragged right edges as much as of merging, so the rule is stated on the
 // vertical axis, which is the axis separated regions are separated on.
+//
+// ocrMaxWordGapRatio is the one rule that runs before all of the above, because it repairs their
+// *input* rather than their output: a "line" the recognizer handed us that is not one line.
+//
+// Every constant above compares one line with another, and none of them can do anything about the
+// case where layout analysis walks across a picture and stitches a phrase from the left of the page
+// to a phrase from the right into a single line box. Nothing downstream recovers: the stitched box
+// genuinely spans both columns, so clusterLines' own column test (overlap*10 >= narrower) sees a
+// real overlap and joins the columns, and ocrMaxPlateCoverage does not fire either, because the
+// plate that comes out is wide but short - measured on test_doc/1.png, a 1593x105 px bar is 4% of a
+// 2048x2048 image against a 0.52 bound. The reader gets a grey band across the artwork carrying two
+// speakers' words in one sentence.
+//
+// So a line is cut between two consecutive words whose boxes stand more than this many times the
+// line's own median word height apart. Word height rather than the line box, for the same reason
+// inkHeight uses it: the box is the union of its words and one artefact sets it for the whole line.
+//
+// Bracketed over the 46 lab scenes plus test_doc/1.png, on the 199 multi-word lines that clear
+// ocrMinLineConf - the only lines that can reach a plate (DEV/research/ocr_word_gap_2026-09-12.md):
+//
+//   - The widest gap inside a line that really is one line is 2.57x (the slogan on
+//     join-the-ranks-of-the-red-army-russian-propaganda-poster-1920, 18 px over a 7 px median),
+//     then 1.88x (the Olympiad poster's committee line) and 1.69x (le-petit-journal's headline).
+//   - The narrowest cross-region stitch above it is 4.80x (samson-and-delilah-15, two balloons), and
+//     the stitches this rule exists for are an order of magnitude clear of both: 12.4-17.6x on
+//     synth-two-columns - the corpus's one known merge, named in thresholds.json - 19.9x on a
+//     newspaper masthead, 38.6x on a dateline joined to a masthead, and 36-100x on test_doc/1.png.
+//
+// 3.5 is the geometric middle of 2.57 and 4.80, so every legitimate line keeps 36% of margin.
+//
+// The band 1.87-2.57x overlaps and is deliberately left alone: comic balloons drawn side by side
+// stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
+// geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
+// words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
+// (DEV/plan/2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+//
+// Shared invariant - see docs/PARITY.md and ocr-cluster.js OCR_MAX_WORD_GAP_RATIO.
 const (
 	ocrMinLineConf        = 50
 	ocrClusterPitchFactor = 1.2
@@ -783,6 +820,7 @@ const (
 	ocrTypeSizeRatio      = 1.6
 	ocrMaxPlateCoverage   = 0.52
 	ocrMinPlateLineFill   = 0.72
+	ocrMaxWordGapRatio    = 3.5
 )
 
 // ocrLine is one recognized text line: its bounding box, the concatenated word text, and the
@@ -803,11 +841,154 @@ type ocrLine struct {
 	inkX0, inkY0, inkX1, inkY1 int
 }
 
-// ocrWord is one recognized word's box and text, kept only long enough to decide whether the line
-// box it contributed to is really the line's.
+// ocrWord is one recognized word's box, text and confidence, kept only long enough to decide
+// whether the line box it contributed to is really the line's - and, when it is not, to rebuild the
+// lines it should have been (see splitWideGaps, which needs each run's own mean confidence).
+//
+// hasConf distinguishes "the engine scored this word 0" from "the engine gave no score": only a
+// word that carries one may move the mean, exactly as parseTSV has always counted them.
 type ocrWord struct {
 	x0, y0, x1, y1 int
 	text           string
+	conf           float64
+	hasConf        bool
+}
+
+// splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
+// horizontal step wider than ocrMaxWordGapRatio times the line's own median word height. It returns
+// the line itself when there is nothing to cut, which is the answer on every ordinary line.
+//
+// The step is measured between the two boxes and not from left to right, so a right-to-left line is
+// read the same way round as a left-to-right one instead of producing a negative gap on every pair
+// and silently opting out of the rule. Overlapping boxes give a negative step and never cut.
+// Mirrors ocr-cluster.js splitWideGaps (docs/PARITY.md).
+func (l *ocrLine) splitWideGaps() []*ocrLine {
+	if len(l.words) < 2 {
+		return []*ocrLine{l}
+	}
+	med := median(l.wordH, 0)
+	if med <= 0 {
+		return []*ocrLine{l}
+	}
+	maxGap := float64(med) * ocrMaxWordGapRatio
+
+	var runs [][]ocrWord
+	cur := []ocrWord{l.words[0]}
+	for _, w := range l.words[1:] {
+		prev := cur[len(cur)-1]
+		if float64(max(w.x0-prev.x1, prev.x0-w.x1)) > maxGap {
+			runs = append(runs, cur)
+			cur = nil
+		}
+		cur = append(cur, w)
+	}
+	runs = append(runs, cur)
+	if len(runs) < 2 {
+		return []*ocrLine{l}
+	}
+	out := make([]*ocrLine, 0, len(runs))
+	for _, run := range runs {
+		out = append(out, lineFromWords(run))
+	}
+	return out
+}
+
+// lineFromWords rebuilds one line from a run of words. Its box is the union of the run's own words,
+// because the box the engine gave is the stitch itself and would hand every run the full width back.
+func lineFromWords(words []ocrWord) *ocrLine {
+	l := &ocrLine{x0: words[0].x0, y0: words[0].y0, x1: words[0].x1, y1: words[0].y1}
+	for _, w := range words {
+		l.x0, l.y0 = min(l.x0, w.x0), min(l.y0, w.y0)
+		l.x1, l.y1 = max(l.x1, w.x1), max(l.y1, w.y1)
+		if l.text.Len() > 0 {
+			l.text.WriteByte(' ')
+		}
+		l.text.WriteString(w.text)
+		if h := w.y1 - w.y0; h > 0 {
+			l.wordH = append(l.wordH, h)
+		}
+		if w.hasConf {
+			l.confSum += w.conf
+			l.confN++
+		}
+		l.words = append(l.words, w)
+	}
+	return l
+}
+
+// orderColumns is the other half of splitWideGaps, and without it the split trades one defect for
+// another. clusterLines walks its input once and closes the open plate the moment a line does not
+// belong to it, so it needs a column's lines to arrive together - which is exactly what the engine
+// stops providing once a stitched line is cut in two. The runs then interleave left, right, left,
+// right down the page, and measured on test_doc/1.png in the extension edition the left balloon that
+// used to be one plate (inside one oversized bar) came back as three.
+//
+// So the page's runs are regrouped into columns - runs whose x-ranges overlap, by the same test
+// clusterLines itself uses - and handed over column by column, each in vertical order. The caller
+// runs this only for a page the split actually cut somewhere, so a page with no stitch on it keeps
+// the engine's own order and cannot move at all.
+//
+// The scope is the page and not the paragraph, which is where this was first written. clusterLines
+// deliberately merges across the paragraph boundaries the engine invents, and the engine invents
+// them in the middle of a column: measured on synth-two-columns, the third row of both columns lands
+// in a second paragraph, so regrouping each paragraph on its own still handed the clustering
+// L1 L2 R1 R2 L3 R3 and produced four plates over two columns instead of two.
+//
+// Columns are formed from the runs that can actually reach a plate - the same confidence floor
+// clusterLines applies - and a run that cannot is parked at the end, where nothing reads it but the
+// discard record. A line the floor will drop must not decide where a column is: measured on
+// test_doc/1.png, the engine also returns one empty 1982x1864 px "line" across the whole picture,
+// and letting it into the grouping chains both columns into a single column, which sorts the page
+// straight back into the interleaving this exists to undo.
+//
+// Columns go left to right, which is reading order for every script the corpus stitches. A
+// right-to-left page would want them the other way round, and nothing measured says whether its
+// layout analysis ever produces the stitch this repairs - so it is left as it is rather than guessed
+// at. Mirrors ocr-cluster.js orderColumns (docs/PARITY.md).
+func orderColumns(runs []*ocrLine, minConf float64) []*ocrLine {
+	if len(runs) < 2 {
+		return runs
+	}
+	type column struct {
+		x0, x1 int
+		runs   []*ocrLine
+	}
+	var byX, parked []*ocrLine
+	for _, r := range runs {
+		if keepLine(r, minConf) {
+			byX = append(byX, r)
+		} else {
+			parked = append(parked, r)
+		}
+	}
+	sort.SliceStable(byX, func(i, j int) bool { return byX[i].x0 < byX[j].x0 })
+
+	var cols []*column
+	for _, r := range byX {
+		var hit *column
+		for _, c := range cols {
+			overlap := min(r.x1, c.x1) - max(r.x0, c.x0)
+			narrower := min(r.x1-r.x0, c.x1-c.x0)
+			if overlap*10 >= narrower {
+				hit = c
+				break
+			}
+		}
+		if hit == nil {
+			cols = append(cols, &column{x0: r.x0, x1: r.x1, runs: []*ocrLine{r}})
+			continue
+		}
+		hit.x0, hit.x1 = min(hit.x0, r.x0), max(hit.x1, r.x1)
+		hit.runs = append(hit.runs, r)
+	}
+	sort.SliceStable(cols, func(i, j int) bool { return cols[i].x0 < cols[j].x0 })
+
+	out := make([]*ocrLine, 0, len(runs))
+	for _, c := range cols {
+		sort.SliceStable(c.runs, func(i, j int) bool { return c.runs[i].y0 < c.runs[j].y0 })
+		out = append(out, c.runs...)
+	}
+	return append(out, parked...)
 }
 
 // hasLetterOrDigit reports whether a token carries any actual content. A token that does not is
@@ -906,6 +1087,22 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 	var lines []*ocrLine
 	var cur *ocrLine
 
+	// A line is only complete once the next one starts, so this is where the split runs. Whether
+	// anything was cut decides, at the end, if the page's reading order has to be rebuilt - see
+	// splitWideGaps and orderColumns.
+	split := false
+	closeLine := func() {
+		if cur == nil {
+			return
+		}
+		runs := cur.splitWideGaps()
+		if len(runs) > 1 {
+			split = true
+		}
+		lines = append(lines, runs...)
+		cur = nil
+	}
+
 	firstLine := true
 	for sc.Scan() {
 		row := sc.Text()
@@ -928,9 +1125,9 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		switch level {
 		case 1: // page: the image dimensions
 			res.Width, res.Height = w, h
-		case 4: // line: start a fresh accumulator
+		case 4: // line: close the one before it, then start a fresh accumulator
+			closeLine()
 			cur = &ocrLine{x0: left, y0: top, x1: left + w, y1: top + h}
-			lines = append(lines, cur)
 		case 5: // word: fold text + confidence into the current line
 			if cur == nil || strings.TrimSpace(cols[11]) == "" {
 				continue
@@ -942,15 +1139,21 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 			if h > 0 {
 				cur.wordH = append(cur.wordH, h)
 			}
-			cur.words = append(cur.words, ocrWord{x0: left, y0: top, x1: left + w, y1: top + h, text: cols[11]})
+			word := ocrWord{x0: left, y0: top, x1: left + w, y1: top + h, text: cols[11]}
 			if conf, err := strconv.ParseFloat(cols[10], 64); err == nil {
+				word.conf, word.hasConf = conf, true
 				cur.confSum += conf
 				cur.confN++
 			}
+			cur.words = append(cur.words, word)
 		}
 	}
 	if err := sc.Err(); err != nil {
 		return Result{}, err
+	}
+	closeLine()
+	if split {
+		lines = orderColumns(lines, minConf)
 	}
 	for _, l := range lines {
 		l.trimOutlierWords()

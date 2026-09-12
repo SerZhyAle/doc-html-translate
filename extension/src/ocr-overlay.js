@@ -8,7 +8,7 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, medianOf, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
@@ -259,30 +259,56 @@ async function sampleColors(blob, blocks) {
 // Flatten the recognized hierarchy (blocks -> paragraphs -> lines -> words) to a flat list of
 // text lines, each with its bbox, concatenated word text and mean word confidence. Falls back
 // to the paragraph, then the block, when a level exposes no finer children.
+//
+// A recognizer line is not always one line: layout analysis can walk across a picture and stitch
+// two separated texts into one line box, and every rule downstream then reads them as one text.
+// splitWideGaps cuts those here, at the boundary between the engine's answer and our own, so the
+// clustering is never handed an input it cannot recover from - see OCR_MAX_WORD_GAP_RATIO.
 function collectLines(data, scale = 1) {
   const out = [];
-  const push = (u) => {
-    if (!u || !u.bbox) return;
-    const words = u.words || [];
-    const text = (words.length ? words.map((w) => w.text).join(" ") : (u.text || ""))
-      .replace(/\s+/g, " ").trim();
-    const conf = words.length
-      ? words.reduce((s, w) => s + (w.confidence || 0), 0) / words.length
-      : (typeof u.confidence === "number" ? u.confidence : 0);
-    const b = u.bbox;
-    const bbox = scale === 1 ? b : {
-      x0: Math.round(b.x0 / scale), y0: Math.round(b.y0 / scale),
-      x1: Math.round(b.x1 / scale), y1: Math.round(b.y1 / scale),
-    };
+  const at = (v) => Math.round(v / scale);
+  let split = false; // did any line on this page have to be cut?
+  const emit = (bbox, words, text, conf) => {
     // The words' own heights travel with the line so the type-size test can use a median instead
     // of the line box, which one tall artefact sets for the whole line - see lineInkHeight in
     // ocr-cluster.js and tesseract.go inkHeight (docs/PARITY.md).
     const wordH = words
-      .map((w) => (w.bbox ? Math.round((w.bbox.y1 - w.bbox.y0) / scale) : 0))
+      .map((w) => (w.bbox ? at(w.bbox.y1) - at(w.bbox.y0) : 0))
       .filter((h) => h > 0);
     // inkBox is the box a plate is drawn from; bbox stays what every clustering decision reads, so
     // trimming can never change what reaches the page - see trimOutlierWords and tesseract.go ix0.
     out.push({ bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH });
+  };
+  const textOf = (words, fallback) => (words.length ? words.map((w) => w.text).join(" ") : (fallback || ""))
+    .replace(/\s+/g, " ").trim();
+  const confOf = (words, unit) => (words.length
+    ? words.reduce((s, w) => s + (w.confidence || 0), 0) / words.length
+    : (typeof unit.confidence === "number" ? unit.confidence : 0));
+  // A split run's box is the union of its own words, because the unit's box is the stitch itself
+  // and would hand both halves the full width back.
+  const unionOf = (words) => {
+    const boxed = words.filter((w) => w.bbox);
+    if (!boxed.length) return null;
+    return {
+      x0: Math.min(...boxed.map((w) => at(w.bbox.x0))), y0: Math.min(...boxed.map((w) => at(w.bbox.y0))),
+      x1: Math.max(...boxed.map((w) => at(w.bbox.x1))), y1: Math.max(...boxed.map((w) => at(w.bbox.y1))),
+    };
+  };
+  const push = (u) => {
+    if (!u || !u.bbox) return;
+    const words = u.words || [];
+    const parts = splitWideGaps(words, scale);
+    if (parts.length < 2) {
+      const b = u.bbox;
+      const bbox = scale === 1 ? b : { x0: at(b.x0), y0: at(b.y0), x1: at(b.x1), y1: at(b.y1) };
+      emit(bbox, words, textOf(words, u.text), confOf(words, u));
+      return;
+    }
+    split = true;
+    for (const part of parts) {
+      const bbox = unionOf(part);
+      if (bbox) emit(bbox, part, textOf(part, ""), confOf(part, u));
+    }
   };
   for (const b of data.blocks || []) {
     const paras = (b.paragraphs && b.paragraphs.length) ? b.paragraphs : [b];
@@ -291,7 +317,8 @@ function collectLines(data, scale = 1) {
       for (const l of lines) push(l);
     }
   }
-  return out;
+  // Only a page the split actually cut is regrouped - see orderColumns.
+  return split ? orderColumns(out) : out;
 }
 
 // Decide how to feed the image to Tesseract: estimate its DPI, upscale genuinely low-res images
