@@ -31,6 +31,10 @@
     "message": "Правый клик, «Перевести на ..», готово - 100% локально, ничего не покидает ваше устройство.",
     "description": "Screenshot 3 caption."
   },
+  "rootMenu": {
+    "message": "Распознать и перевести",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "Распознать и перевести это изображение",
     "description": "Right-click context-menu item on images."
@@ -54,6 +58,18 @@
   "ocrLoadError": {
     "message": "Не удалось обработать изображение.",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "Это изображение - локальный файл, а расширению пока не разрешено читать локальные файлы. Откройте страницу расширений, включите «Разрешить доступ к файловым URL-адресам» для этого расширения и запустите распознавание снова."
+  },
+  "ocrFileBlockedStatus": {
+    "message": "Локальные файлы этому расширению не разрешены"
+  },
+  "ocrOpenExtensions": {
+    "message": "Открыть страницу расширений"
+  },
+  "ocrUncBlocked": {
+    "message": "Изображение лежит на сетевом пути (\\\\сервер\\ресурс), который расширения читать не могут. Подключите ресурс как диск и откройте изображение оттуда."
   },
   "ocrDone": {
     "message": "Готово - используйте «Перевести страницу» в браузере",
@@ -456,5 +472,65 @@
   "diagHint": {
     "message": "Копирует короткую техническую сводку - без текста документа - чтобы вы вставили её в письмо автору.",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "Распознать текст на всех изображениях страницы",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "Чтение..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "Чтение изображений.. {1} из {2}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "Прочитано изображений: {1} из {2} - используйте «Перевести страницу» в браузере",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "Остановлено - прочитано {1} из {2} изображений",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "(не удалось прочитать: {1})",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "Стоп",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "Найти новые изображения",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "Скрыть текст",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "Показать текст",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "Выделять текст",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "Пропускать клики",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "Убрать",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "Этот сайт не даёт расширению запустить распознавание. Используйте распознавание одного изображения через правый клик.",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "Не удалось начать чтение этой страницы.",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

@@ -15,6 +15,10 @@
     "message": "PDF/EPUB 重排 + 翻译",
     "description": "Tooltip on the toolbar button."
   },
+  "rootMenu": {
+    "message": "识别并翻译",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "识别并翻译这张图片",
     "description": "Right-click context-menu item on images."
@@ -38,6 +42,18 @@
   "ocrLoadError": {
     "message": "无法加载文字识别。",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "这张图片是本地文件，而扩展尚未获准读取本地文件。请打开扩展页面，为本扩展开启“允许访问文件网址”，然后重新运行文字识别。"
+  },
+  "ocrFileBlockedStatus": {
+    "message": "本扩展不允许访问本地文件"
+  },
+  "ocrOpenExtensions": {
+    "message": "打开扩展页面"
+  },
+  "ocrUncBlocked": {
+    "message": "这张图片位于网络路径（\\\\服务器\\共享）上，扩展无法读取。请将共享映射为驱动器，然后从那里打开图片。"
   },
   "ocrDone": {
     "message": "文字已识别 - 现在可以翻译这个页面了。",
@@ -440,5 +456,65 @@
   "diagHint": {
     "message": "复制一份简短的技术摘要——不含文档正文——供你粘贴到写给作者的邮件里。",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "识别此页面所有图片中的文字",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "正在读取..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "正在读取图片.. 第 {1} / {2} 张",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "已读取 {2} 张图片中的 {1} 张 - 请使用浏览器的“翻译此页”",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "已停止 - 已读取 {2} 张图片中的 {1} 张",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "（{1} 张无法读取）",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "停止",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "查找新图片",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "隐藏文字",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "显示文字",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "选择文字",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "让点击穿过",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "移除",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "该网站不允许扩展启动文字识别。请改用右键对单张图片进行识别。",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "无法开始读取此页面。",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

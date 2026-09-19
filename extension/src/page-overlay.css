@@ -1,0 +1,108 @@
+/* page-overlay.css - what the whole-page OCR layer needs that the plate styling does not provide:
+   anchoring a plate container over a picture in a document the extension does not own, and the
+   reader's control bar.
+
+   The plates themselves are styled by ocr-overlay.css, which is injected alongside this file. That
+   separation is the point - a plate must look the same in the viewer, on the single-image page and
+   on a live web page, so nothing here restyles .ocr-plate. */
+
+/* The layer root. It hangs off <html> so it is laid out in document coordinates, and it is inert:
+   every pointer event belongs to the page underneath unless the reader asks otherwise. */
+#dht-ocr-root {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  z-index: 2147483000 !important;
+  pointer-events: none !important;
+}
+
+/* One container per picture, positioned and sized over it by the page agent every frame. The
+   container query root is what lets a plate's cqw font size mean "a share of this picture", the
+   same way it does inside the viewer's overlay. */
+#dht-ocr-root .dht-ocr-layer {
+  position: absolute !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  max-width: none !important;
+  container-type: inline-size;
+  pointer-events: none !important;
+  direction: ltr;
+}
+
+/* Clicks belong to the page. A comic whose panels are links has to keep navigating, so a plate is
+   not a hit target until the reader turns selection on from the bar - at which point the plate
+   takes the pointer so the words under it can be selected and copied. Neither state affects the
+   browser's find or its page translation, which read the text either way. */
+html.dht-ocr-selectable #dht-ocr-root .ocr-plate {
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
+/* The reader's control bar. It sits in the page, so it is spelled out defensively: a page's own
+   rules for div/span/button would otherwise reach it. */
+#dht-ocr-bar {
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483001 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  max-width: min(92vw, 640px) !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 10px !important;
+  background: rgba(24, 24, 24, 0.94) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+  color: #f1f1f1 !important;
+  font: 400 13px/1.35 "Segoe UI", system-ui, sans-serif !important;
+  text-align: left !important;
+  pointer-events: auto !important;
+}
+
+#dht-ocr-bar .dht-ocr-status {
+  flex: 1 1 200px !important;
+  min-width: 140px !important;
+  color: #f1f1f1 !important;
+  font: inherit !important;
+}
+
+#dht-ocr-bar .dht-ocr-btn {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 4px 10px !important;
+  border: 1px solid #5a5a5a !important;
+  border-radius: 6px !important;
+  background: #3a3a3a !important;
+  color: #f1f1f1 !important;
+  font: inherit !important;
+  line-height: 1.35 !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+}
+
+#dht-ocr-bar .dht-ocr-btn:hover { background: #4a4a4a !important; }
+#dht-ocr-bar .dht-ocr-btn:focus-visible { outline: 2px solid #7fb0ff !important; outline-offset: 2px !important; }
+#dht-ocr-bar .dht-ocr-btn[hidden] { display: none !important; }
+
+/* The recognizer host, when it has to live in this page. Parked off-screen rather than hidden:
+   display:none or visibility:hidden would let the browser skip running it, and an extension frame
+   that never runs is a run that never starts. */
+#dht-ocr-host-frame {
+  position: fixed !important;
+  left: -10000px !important;
+  top: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

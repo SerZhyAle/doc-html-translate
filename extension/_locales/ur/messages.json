@@ -15,6 +15,10 @@
     "message": "PDF/EPUB بہاؤ + ترجمہ",
     "description": "Tooltip on the toolbar button."
   },
+  "rootMenu": {
+    "message": "پہچانیں اور ترجمہ کریں",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "اس تصویر کا متن پہچانیں اور ترجمہ کریں",
     "description": "Right-click context-menu item on images."
@@ -38,6 +42,18 @@
   "ocrLoadError": {
     "message": "متن کی پہچان لوڈ نہ ہو سکی۔",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "یہ تصویر ایک مقامی فائل ہے، اور ایکسٹینشن کو ابھی مقامی فائلیں پڑھنے کی اجازت نہیں ہے۔ ایکسٹینشنز کا صفحہ کھولیں، اس ایکسٹینشن کے لیے \"Allow access to file URLs\" آن کریں، پھر متن کی شناخت دوبارہ چلائیں۔"
+  },
+  "ocrFileBlockedStatus": {
+    "message": "اس ایکسٹینشن کے لیے مقامی فائلیں اجازت یافتہ نہیں ہیں"
+  },
+  "ocrOpenExtensions": {
+    "message": "ایکسٹینشنز کا صفحہ کھولیں"
+  },
+  "ocrUncBlocked": {
+    "message": "یہ تصویر نیٹ ورک راستے (\\\\server\\share) پر ہے، جسے ایکسٹینشنز نہیں پڑھ سکتیں۔ شیئر کو ڈرائیو کے طور پر منسلک کریں اور تصویر وہاں سے کھولیں۔"
   },
   "ocrDone": {
     "message": "متن پہچان لیا گیا - اب صفحے کا ترجمہ ہو سکتا ہے۔",
@@ -440,5 +456,65 @@
   "diagHint": {
     "message": "ایک مختصر تکنیکی خلاصہ کاپی کرتا ہے - دستاویز کا متن نہیں - تاکہ آپ اسے مصنف کو بھیجے میل میں چسپاں کر سکیں۔",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "اس صفحے کی تمام تصاویر کا متن پہچانیں",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "پڑھا جا رہا ہے..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "تصاویر پڑھی جا رہی ہیں.. {2} میں سے {1}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "{2} میں سے {1} تصاویر پڑھی گئیں - براؤزر کا «صفحہ ترجمہ کریں» استعمال کریں",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "رک گیا - {2} میں سے {1} تصاویر پڑھی گئیں",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "({1} پڑھی نہیں جا سکیں)",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "روکیں",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "نئی تصاویر تلاش کریں",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "متن چھپائیں",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "متن دکھائیں",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "متن منتخب کریں",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "کلک گزرنے دیں",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "ہٹائیں",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "یہ سائٹ ایکسٹینشن کو متن کی پہچان شروع نہیں کرنے دیتی۔ اس کے بجائے دائیں کلک سے ایک تصویر کا متن پہچانیں۔",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "اس صفحے کو پڑھنا شروع نہیں کیا جا سکا۔",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

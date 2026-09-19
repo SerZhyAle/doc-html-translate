@@ -31,6 +31,10 @@
     "message": "Правий клік, «Перекласти на ..», готово - 100% локально, нічого не залишає ваш пристрій.",
     "description": "Screenshot 3 caption."
   },
+  "rootMenu": {
+    "message": "Розпізнати й перекласти",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "Розпізнати й перекласти це зображення",
     "description": "Right-click context-menu item on images."
@@ -54,6 +58,18 @@
   "ocrLoadError": {
     "message": "Не вдалося обробити зображення.",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "Це зображення - локальний файл, а розширенню ще не дозволено читати локальні файли. Відкрийте сторінку розширень, увімкніть «Дозволити доступ до URL-адрес файлів» для цього розширення та запустіть розпізнавання знову."
+  },
+  "ocrFileBlockedStatus": {
+    "message": "Локальні файли цьому розширенню не дозволені"
+  },
+  "ocrOpenExtensions": {
+    "message": "Відкрити сторінку розширень"
+  },
+  "ocrUncBlocked": {
+    "message": "Зображення лежить на мережевому шляху (\\\\сервер\\ресурс), який розширення читати не можуть. Підключіть ресурс як диск і відкрийте зображення звідти."
   },
   "ocrDone": {
     "message": "Готово - скористайтеся «Перекласти сторінку» у браузері",
@@ -456,5 +472,65 @@
   "diagHint": {
     "message": "Копіює коротку технічну зведення - без тексту документа - щоб ви вставили її в лист авторові.",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "Розпізнати текст на всіх зображеннях сторінки",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "Читання..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "Читання зображень.. {1} з {2}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "Прочитано зображень: {1} з {2} - скористайтеся «Перекласти сторінку» у браузері",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "Зупинено - прочитано {1} з {2} зображень",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "(не вдалося прочитати: {1})",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "Стоп",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "Знайти нові зображення",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "Сховати текст",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "Показати текст",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "Виділяти текст",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "Пропускати кліки",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "Прибрати",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "Цей сайт не дозволяє розширенню запустити розпізнавання. Скористайтеся розпізнаванням одного зображення через правий клік.",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "Не вдалося почати читання цієї сторінки.",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

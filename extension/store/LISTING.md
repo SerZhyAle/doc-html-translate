@@ -113,9 +113,17 @@ Privacy: Everything runs on your device. The extension never uploads your docume
 Limitations: Scanned/image-only PDFs have no text to translate (the extension detects this and offers the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
 
 ## Permission justifications (for the review form)
-- declarativeNetRequest: used with dynamic rules created at runtime to redirect main_frame document loads
-  (`*.pdf`, `*.epub`, `*.mobi`, `*.azw3`, `*.fb2`, `*.rtf`) to the bundled local viewer. The extension does not read or modify the content of other
-  sites; the rules are plain URL redirects.
+Paste these verbatim into the Chrome Web Store / Edge Partner Center privacy form. One field per
+declared permission; keep each under the form's 1000-character limit. They must stay true to the
+manifest - when a permission is added or dropped, edit this block in the same commit.
+
+- declarativeNetRequest: dynamic rules created at runtime redirect main_frame page loads of the document
+  files the extension is registered for (PDF, EPUB and other e-book and document formats, over http/https
+  and file://) to the extension's bundled local viewer, which reflows them into readable text. The exact
+  set is the `regexFilter` of the two rules in `src/background.js`. The rules are plain URL redirects;
+  the extension does not read or modify the content of any site.
+  **Do not enumerate the formats here** - Chrome rejected this listing twice for "excessive keywords"
+  over exactly that list (see the Detailed description notes above); the rule is listing-wide.
 - host_permissions (`<all_urls>`): required because the viewer fetches the opened document's bytes for
   local rendering and the file can live on any origin, and because the toolbar popup reads the active
   tab's hostname for the per-site on/off toggle. (The redirect itself does not consume host permissions.)
@@ -123,7 +131,16 @@ Limitations: Scanned/image-only PDFs have no text to translate (the extension de
   user opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the
   cross-origin fetch because the viewer is an extension page rather than the document's origin - so
   `<all_urls>` is the minimum that works for this single purpose.
-- contextMenus: to add the right-click "OCR & translate this image" action on images.
+- scripting: only for the "Read the pictures on this page" action the user starts from the right-click
+  menu. On that click the extension injects one script and its stylesheet into that one tab; the script
+  collects the page's images, draws the recognized text over them, and removes itself when the user
+  stops. Nothing is injected without that explicit action, and there is no declared content script.
+- offscreen: the OCR engine (bundled Tesseract, WebAssembly) needs a document to run in, and it must not
+  run in the reader's page. The extension creates one offscreen document for the duration of a run and
+  closes it when the run ends. Only image regions and the recognized text cross to it.
+- contextMenus: the extension's actions are started from the right-click menu - "OCR & translate this
+  image" on an image, "Read the pictures on this page" on a page, and "Convert to readable HTML" on a
+  document link or page.
 - storage: to remember your on/off choice, per-site exceptions, reading preferences (font, theme), and
   which OCR languages you have downloaded.
 

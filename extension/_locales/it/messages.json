@@ -15,6 +15,10 @@
     "message": "Riflusso PDF/EPUB + traduzione",
     "description": "Tooltip on the toolbar button."
   },
+  "rootMenu": {
+    "message": "Riconosci e traduci",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "Riconosci e traduci questa immagine",
     "description": "Right-click context-menu item on images."
@@ -38,6 +42,18 @@
   "ocrLoadError": {
     "message": "Impossibile caricare il riconoscimento del testo.",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "Questa immagine è un file locale e l'estensione non può ancora leggere i file locali. Apri la pagina delle estensioni, attiva \"Consenti l'accesso agli URL dei file\" per questa estensione e riavvia il riconoscimento."
+  },
+  "ocrFileBlockedStatus": {
+    "message": "I file locali non sono consentiti a questa estensione"
+  },
+  "ocrOpenExtensions": {
+    "message": "Apri la pagina delle estensioni"
+  },
+  "ocrUncBlocked": {
+    "message": "L'immagine si trova su un percorso di rete (\\\\server\\condivisione), che le estensioni non possono leggere. Connetti la condivisione come unità e apri l'immagine da lì."
   },
   "ocrDone": {
     "message": "Testo riconosciuto - ora la pagina si può tradurre.",
@@ -440,5 +456,65 @@
   "diagHint": {
     "message": "Copia un breve riepilogo tecnico – senza testo del documento – da incollare in una mail all'autore.",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "Riconosci il testo di tutte le immagini di questa pagina",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "Lettura..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "Lettura immagini.. {1} di {2}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "{1} di {2} immagini lette - usa «Traduci pagina» del browser",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "Interrotto - {1} di {2} immagini lette",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "({1} non sono state lette)",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "Ferma",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "Cerca nuove immagini",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "Nascondi il testo",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "Mostra il testo",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "Seleziona il testo",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "Lascia passare i clic",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "Rimuovi",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "Questo sito non consente all'estensione di avviare il riconoscimento del testo. Usa il riconoscimento di una singola immagine con il tasto destro.",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "Impossibile iniziare a leggere questa pagina.",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

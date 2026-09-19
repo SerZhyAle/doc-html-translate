@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OCR host</title>
+</head>
+<body>
+  <!-- The recognizer host. It has no UI and is never shown to the reader: it exists so the
+       recognition engine runs under the extension's own content security policy instead of the
+       reader's page, which is usually restrictive enough to refuse a WebAssembly module. Loaded
+       either as an offscreen document (where the browser offers one) or as an extension-owned
+       frame parked off-screen inside the page. See DEV/plan/2026-09-19_page-ocr-overlay.md. -->
+  <script type="module" src="ocr-host.js"></script>
+</body>
+</html>

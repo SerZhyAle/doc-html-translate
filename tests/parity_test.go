@@ -556,16 +556,21 @@ func flatten(matches [][]string) []string {
 }
 
 // TestParityOCRFontFit: the plate font-fit factor (font-size = median line height x factor) must
-// match across editions - overlay.go fontFitFactor vs ocr-overlay.js FONT_FIT. See docs/PARITY.md
+// match across editions - overlay.go fontFitFactor vs ocr-plates.js FONT_FIT. See docs/PARITY.md
 // "OCR" (plate geometry).
+//
+// The extension's plate half moved to ocr-plates.js so the page-OCR agent can draw plates inside a
+// third-party document without carrying the recognition engine in with it; ocr-overlay.js re-exports
+// it. The guard follows the code - a constant is pinned where it is defined, not where it used to be.
 func TestParityOCRFontFit(t *testing.T) {
 	goSrc := readRepoFile(t, "internal", "ocr", "overlay.go")
 	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	plateSrc := readRepoFile(t, "extension", "src", "ocr-plates.js")
 
 	gv := num(t, "fontFitFactor (overlay.go)", `fontFitFactor\s*=\s*([\d.]+)`, goSrc)
-	jv := num(t, "FONT_FIT (ocr-overlay.js)", `FONT_FIT\s*=\s*([\d.]+)`, jsSrc)
+	jv := num(t, "FONT_FIT (ocr-plates.js)", `FONT_FIT\s*=\s*([\d.]+)`, plateSrc)
 	if gv != jv {
-		t.Errorf("font fit factor drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gv, jv)
+		t.Errorf("font fit factor drift: overlay.go=%v ocr-plates.js=%v (must match - see docs/PARITY.md OCR)", gv, jv)
 	}
 
 	// The runtime fit runs in both directions, and the ceiling on the grow half is the number that
@@ -573,9 +578,9 @@ func TestParityOCRFontFit(t *testing.T) {
 	// leading between its lines, so "grow until the box is full" is not "match the source". A
 	// one-sided change here is a one-sided change to how big translated text renders.
 	gc := num(t, "grow cap (overlay.go)", `cap=base\*([\d.]+)`, goSrc)
-	jc := num(t, "FONT_GROW_CAP (ocr-overlay.js)", `FONT_GROW_CAP\s*=\s*([\d.]+)`, jsSrc)
+	jc := num(t, "FONT_GROW_CAP (ocr-plates.js)", `FONT_GROW_CAP\s*=\s*([\d.]+)`, plateSrc)
 	if gc != jc {
-		t.Errorf("font grow cap drift: overlay.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", gc, jc)
+		t.Errorf("font grow cap drift: overlay.go=%v ocr-plates.js=%v (must match - see docs/PARITY.md OCR)", gc, jc)
 	}
 
 	// The plate's ink colour must be sampled the same way on both sides. It is a median rather than
@@ -599,7 +604,7 @@ func TestParityOCRFontFit(t *testing.T) {
 	for _, c := range []struct{ what, src, re string }{
 		{"overlay.go plate box carries the paper", goSrc, `\.ocr-box\{[^}]*background:#fff`},
 		{"overlay.go writes the sampled paper onto the box", goSrc, `style \+= ";background:" \+ paper`},
-		{"ocr-overlay.js writes the sampled paper onto the plate", jsSrc, `plate\.style\.background = b\.colors\.bg`},
+		{"ocr-plates.js writes the sampled paper onto the plate", plateSrc, `plate\.style\.background = s\.bg`},
 		{"ocr-overlay.css plate box carries the paper", readRepoFile(t, "extension", "src", "ocr-overlay.css"), `(?s)\.ocr-plate \{[^}]*background: #fff`},
 	} {
 		if !regexp.MustCompile(c.re).MatchString(c.src) {
@@ -611,6 +616,7 @@ func TestParityOCRFontFit(t *testing.T) {
 	for _, c := range []struct{ what, src string }{
 		{"overlay.go still carries a paper span", goSrc},
 		{"ocr-overlay.js still carries a paper span", jsSrc},
+		{"ocr-plates.js still carries a paper span", plateSrc},
 		{"ocr-overlay.css still carries a paper span", readRepoFile(t, "extension", "src", "ocr-overlay.css")},
 	} {
 		if strings.Contains(c.src, "ocr-ink") {
@@ -819,4 +825,55 @@ func num(t *testing.T, what, pattern, s string) float64 {
 		t.Fatalf("%s: parse %q: %v", what, m[1], err)
 	}
 	return f
+}
+
+// TestPlateRulesHaveOneImplementation: the whole-page OCR feature draws plates inside a page the
+// extension does not own, which is the obvious place for a second, "just for this surface" copy of
+// the plate rules to appear - and a copy would drift away from overlay.go without any of the
+// constant checks above noticing, because they only compare the two files they know about.
+//
+// So the page agent is pinned to the shipped unit: it loads ocr-plates.js and calls into it, and it
+// does not carry plate arithmetic or plate constants of its own. See docs/PARITY.md "OCR" and
+// DEV/plan/2026-09-19_page-ocr-overlay.md (done criterion 8).
+func TestPlateRulesHaveOneImplementation(t *testing.T) {
+	agent := readRepoFile(t, "extension", "src", "page-agent.js")
+
+	for _, want := range []string{"ocr-plates.js", "renderPlates", "scheduleFit"} {
+		if !strings.Contains(agent, want) {
+			t.Errorf("page-agent.js no longer uses the shipped plate unit (%q missing) - see docs/PARITY.md OCR", want)
+		}
+	}
+	// A constant or a percent-of-the-picture calculation in the agent is the copy this test exists
+	// to catch: plate geometry is computed once, by plateSpecs in ocr-plates.js, and travels to the
+	// page as finished values.
+	for _, banned := range []string{"FONT_FIT", "FONT_GROW_CAP", "lineHeight", "cqw"} {
+		if strings.Contains(agent, banned) {
+			t.Errorf("page-agent.js computes plate geometry of its own (%q) - the plate rules live in ocr-plates.js (docs/PARITY.md OCR)", banned)
+		}
+	}
+	// And the engine stays out of the reader's document: the agent must not reach for the module
+	// that owns the Tesseract worker. See DEV/plan/2026-09-19_page-ocr-overlay.md, ADR-1.
+	if strings.Contains(agent, "ocr-overlay.js") {
+		t.Error("page-agent.js imports ocr-overlay.js, which carries the recognition engine into the reader's page - see DEV/plan/2026-09-19_page-ocr-overlay.md ADR-1")
+	}
+}
+
+// TestPageOcrKeepsTheDeclaredMinimumBrowser: the extension's declared minimum Chrome version is a
+// reach commitment - raising it to buy an API drops installed readers, which this project does not
+// do. The whole-page OCR feature wants an offscreen document, which is newer than that floor, so
+// the broker has to detect it and fall back rather than assume it. A future edit that drops the
+// detection would work on the developer's browser and silently do nothing on the oldest supported
+// one, which is exactly the failure no manual test catches.
+func TestPageOcrKeepsTheDeclaredMinimumBrowser(t *testing.T) {
+	manifest := readRepoFile(t, "extension", "manifest.json")
+	if !regexp.MustCompile(`"minimum_chrome_version":\s*"105"`).MatchString(manifest) {
+		t.Error("manifest.json: minimum_chrome_version moved - a release must not shrink reach (AGENTS.md, SZA canon)")
+	}
+	broker := readRepoFile(t, "extension", "src", "page-ocr.js")
+	if !strings.Contains(broker, "function offscreenAvailable()") {
+		t.Error("page-ocr.js: the offscreen host is no longer capability-detected - below the declared minimum browser the feature would silently do nothing")
+	}
+	if !strings.Contains(broker, "host-frame") {
+		t.Error("page-ocr.js: the in-page fallback host is gone - there is nothing left for a browser older than the offscreen API")
+	}
 }

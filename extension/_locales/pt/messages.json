@@ -15,6 +15,10 @@
     "message": "Refluxo de PDF/EPUB + tradução",
     "description": "Tooltip on the toolbar button."
   },
+  "rootMenu": {
+    "message": "Reconhecer e traduzir",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "Reconhecer e traduzir esta imagem",
     "description": "Right-click context-menu item on images."
@@ -38,6 +42,18 @@
   "ocrLoadError": {
     "message": "Não foi possível carregar o reconhecimento de texto.",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "Esta imagem é um arquivo local e a extensão ainda não pode ler arquivos locais. Abra a página de extensões, ative \"Permitir acesso a URLs de arquivo\" para esta extensão e execute o reconhecimento novamente."
+  },
+  "ocrFileBlockedStatus": {
+    "message": "Arquivos locais não são permitidos para esta extensão"
+  },
+  "ocrOpenExtensions": {
+    "message": "Abrir a página de extensões"
+  },
+  "ocrUncBlocked": {
+    "message": "A imagem está em um caminho de rede (\\\\servidor\\compartilhamento), que as extensões não conseguem ler. Conecte o compartilhamento como unidade e abra a imagem de lá."
   },
   "ocrDone": {
     "message": "Texto reconhecido - agora a página pode ser traduzida.",
@@ -440,5 +456,65 @@
   "diagHint": {
     "message": "Copia um breve resumo técnico – sem texto do documento – para colar num e-mail ao autor.",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "Reconhecer o texto de todas as imagens desta página",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "Lendo..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "Lendo imagens.. {1} de {2}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "{1} de {2} imagens lidas - use «Traduzir página» do navegador",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "Parado - {1} de {2} imagens lidas",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "({1} não puderam ser lidas)",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "Parar",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "Procurar novas imagens",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "Ocultar texto",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "Mostrar texto",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "Selecionar texto",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "Deixar passar os cliques",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "Remover",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "Este site não deixa a extensão iniciar o reconhecimento de texto. Use o reconhecimento de uma única imagem com o botão direito.",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "Não foi possível começar a ler esta página.",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

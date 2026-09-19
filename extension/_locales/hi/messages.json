@@ -15,6 +15,10 @@
     "message": "PDF/EPUB पुनर्प्रवाह + अनुवाद",
     "description": "Tooltip on the toolbar button."
   },
+  "rootMenu": {
+    "message": "पहचानें और अनुवाद करें",
+    "description": "Top-level right-click submenu label. Kept action-only and short: it replaces the long extension name Chrome would otherwise use to group our items."
+  },
   "ocrImageMenu": {
     "message": "इस चित्र का पाठ पहचानें और अनुवाद करें",
     "description": "Right-click context-menu item on images."
@@ -38,6 +42,18 @@
   "ocrLoadError": {
     "message": "पाठ पहचान लोड नहीं हो सकी।",
     "description": "Shown when the image cannot be loaded or OCR fails."
+  },
+  "ocrFileBlocked": {
+    "message": "यह छवि एक स्थानीय फ़ाइल है, और एक्सटेंशन को अभी स्थानीय फ़ाइलें पढ़ने की अनुमति नहीं है। एक्सटेंशन पृष्ठ खोलें, इस एक्सटेंशन के लिए \"Allow access to file URLs\" चालू करें, फिर पाठ पहचान दोबारा चलाएँ।"
+  },
+  "ocrFileBlockedStatus": {
+    "message": "इस एक्सटेंशन के लिए स्थानीय फ़ाइलें अनुमत नहीं हैं"
+  },
+  "ocrOpenExtensions": {
+    "message": "एक्सटेंशन पृष्ठ खोलें"
+  },
+  "ocrUncBlocked": {
+    "message": "यह छवि एक नेटवर्क पथ (\\\\server\\share) पर है, जिसे एक्सटेंशन नहीं पढ़ सकते। शेयर को ड्राइव अक्षर से जोड़ें और छवि वहाँ से खोलें।"
   },
   "ocrDone": {
     "message": "पाठ पहचान लिया गया - अब पृष्ठ का अनुवाद किया जा सकता है।",
@@ -440,5 +456,65 @@
   "diagHint": {
     "message": "एक छोटा तकनीकी सारांश कॉपी करता है - दस्तावेज़ का पाठ नहीं - ताकि आप उसे लेखक को भेजे मेल में चिपका सकें।",
     "description": "Options page: About block."
+  },
+  "ocrPageMenu": {
+    "message": "इस पृष्ठ की सभी छवियों का पाठ पहचानें",
+    "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "pageOcrBadge": {
+    "message": "पढ़ा जा रहा है..",
+    "description": "Badge shown over the picture currently being recognized."
+  },
+  "pageOcrRunning": {
+    "message": "छवियाँ पढ़ी जा रही हैं.. {2} में से {1}",
+    "description": "Page-OCR control bar: progress. {1} is the number read, {2} the total."
+  },
+  "pageOcrDone": {
+    "message": "{2} में से {1} छवियाँ पढ़ी गईं - ब्राउज़र का «पेज अनुवाद» उपयोग करें",
+    "description": "Page-OCR control bar: the run finished. {1} is the number read, {2} the total."
+  },
+  "pageOcrStopped": {
+    "message": "रोका गया - {2} में से {1} छवियाँ पढ़ी गईं",
+    "description": "Page-OCR control bar: the reader stopped the run. {1} is the number read, {2} the total."
+  },
+  "pageOcrFailed": {
+    "message": "({1} पढ़ी नहीं जा सकीं)",
+    "description": "Page-OCR control bar: appended when some pictures failed. {1} is how many."
+  },
+  "pageOcrStop": {
+    "message": "रोकें",
+    "description": "Page-OCR control bar: stop the run."
+  },
+  "pageOcrRescan": {
+    "message": "नई छवियाँ खोजें",
+    "description": "Page-OCR control bar: recognize pictures that appeared after the run started."
+  },
+  "pageOcrHide": {
+    "message": "पाठ छिपाएँ",
+    "description": "Page-OCR control bar: hide the recognized text layer."
+  },
+  "pageOcrShow": {
+    "message": "पाठ दिखाएँ",
+    "description": "Page-OCR control bar: show the recognized text layer again."
+  },
+  "pageOcrSelect": {
+    "message": "पाठ चुनें",
+    "description": "Page-OCR control bar: make the plates take the pointer so the text can be selected."
+  },
+  "pageOcrSelectOff": {
+    "message": "क्लिक जाने दें",
+    "description": "Page-OCR control bar: give the pointer back to the page, so links stay clickable."
+  },
+  "pageOcrRemove": {
+    "message": "हटाएँ",
+    "description": "Page-OCR control bar: remove the layer and leave the page as it was."
+  },
+  "pageOcrHostBlocked": {
+    "message": "यह साइट एक्सटेंशन को पाठ पहचान शुरू नहीं करने देती। इसके बजाय दाएँ क्लिक से एक छवि का पाठ पहचानें।",
+    "description": "Shown when the page's security policy will not let the recognizer start."
+  },
+  "pageOcrFailedStart": {
+    "message": "इस पृष्ठ को पढ़ना शुरू नहीं किया जा सका।",
+    "description": "Shown when the whole-page run could not be started at all."
   }
 }

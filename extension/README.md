@@ -9,10 +9,13 @@ for EPUB, hand-ported readers for TXT/RTF/FB2/HTML, the vendored `marked` for Ma
 with each page's speech-bubble text recognized (OCR) and overlaid as translatable text; **CBR and CB7 are
 desktop-app only** - a browser has no RAR/7z decoder, so those show a "use the desktop app" notice.
 
-It also does **image OCR**: right-click a picture ("OCR & translate this image"), open a standalone image
-file from the popup, or turn on "Use OCR for images" for PDFs/EPUBs - the extension recognizes the text
-baked into the picture and lays it over the image as real text, so the browser's **Translate page** reaches
-that too. English is bundled; more languages download on demand.
+It also does **image OCR**: right-click a picture ("OCR & translate this image"), right-click an ordinary
+web page ("OCR every image on this page"), open a standalone image file from the popup, or turn on "Use
+OCR for images" for PDFs/EPUBs - the extension recognizes the text baked into the picture and lays it over
+the image as real text, so the browser's **Translate page** reaches that too. The whole-page form does it
+**without leaving the page**: a webcomic or a scanned archive keeps its layout, its links and its reading
+order, and the recognized words sit on top of the art where they belong. English is bundled; more
+languages download on demand.
 
 **Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)** (Chrome and Edge / Chromium). An Edge Add-ons listing is still planned; you can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
 
@@ -63,7 +66,13 @@ src/
   options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
   ocr-lang.js          OCR languages: bundled English, on-demand download + IndexedDB cache
   ocr-overlay.js/.css  shared OCR unit: recognize -> opaque translatable plates over the image
+  ocr-plates.js        the plate half of that unit: block geometry -> plate specs -> DOM + runtime fit
   ocr.html/.js         standalone page for the right-click "OCR & translate this image" action
+  page-ocr.js          whole-page OCR broker (in the service worker): intent, queue, host lifecycle
+  page-agent.js        whole-page OCR inside the reader's document: finds pictures, draws/keeps plates
+  page-overlay.css     anchoring for those plates + the reader's control bar
+  ocr-host.html/.js    where the engine runs for a whole-page run - offscreen document, or an
+                       extension-origin frame on browsers older than that API
   pdf-images.js        pull raster images out of a PDF page (embedded XObjects + scanned-page raster)
 vendor/                pdfjs-dist + tesseract/ + marked + foliate/ (mobi.js) + fflate - generated, git-ignored
 icons/                 16/32/48/128
@@ -133,6 +142,17 @@ real, translatable HTML, so one **Translate page** covers pictures too. Ways in:
 
 - **Any web image:** right-click -> **OCR & translate this image**. Opens a new tab, OCRs the image,
   overlays the text, and sets `<html lang>` so the browser offers Translate page.
+- **Every image on a page at once:** right-click anywhere on an ordinary web page ->
+  **OCR every image on this page**. The page itself is not rebuilt or replaced: the plates are drawn
+  over the pictures in the page you are already on, so links still navigate, scripts still run and the
+  reading order is the one the site laid out. Pictures are read one at a time, starting from what is on
+  screen, and a control bar in the corner shows progress and offers **Stop**, **Hide text**,
+  **Select text** (plates are click-through until you ask for them, so a comic whose panels are links
+  keeps working), **Scan new pictures** for anything the page loaded later, and **Remove**, which puts
+  the page back exactly as it was. The plates are real text, so the browser's find reaches them and
+  **Translate page** translates them along with the rest of the page. The recognizer itself runs
+  outside the page - some sites' security policies refuse to run it inside, and where that happens the
+  bar says so instead of quietly producing nothing.
 - **A local image file:** click **Open file** in the viewer (or *Open a document..* in the popup) and pick
   a PNG / JPEG / GIF / BMP / WebP. It is OCR'd on open regardless of the *Use OCR for images* toggle -
   opening a bare image is itself the request to read its text. There is deliberately **no** file-type
@@ -171,6 +191,13 @@ network access, and only when you click **Download**. See [`store/PRIVACY.md`](s
   (`minimum_chrome_version` is 105, comfortably >= 103).
 - OCR accuracy depends on image quality and the chosen language; stylized/vertical text may recognize
   imperfectly. Text is grouped by the engine's blocks, not by detected speech bubbles.
+- Whole-page OCR answers for `<img>` elements only - a picture painted as a CSS background, into a
+  `<canvas>` or by WebGL, and a video frame, are all out of scope, as are pictures inside a
+  cross-origin frame. Pictures under about 96 px on a side are skipped as icons and sprites. The layer
+  is not kept across a reload: it is a thing you ask for on the page in front of you, and **Remove**
+  or a refresh takes it away. On a site whose security policy refuses an extension frame and a browser
+  too old for an offscreen document, the run cannot start at all and says so - the single-image
+  right-click path still works there, because it runs in a tab of the extension's own.
 
 ## Store packaging & publishing
 

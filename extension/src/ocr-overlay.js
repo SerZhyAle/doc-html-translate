@@ -573,137 +573,17 @@ async function measureScreenPitch(blob, covered = []) {
 }
 
 // ---- Overlay rendering -----------------------------------------------------
-// Shrinks the plate font below the block's raw line height so the recognized text fits
-// inside the block box (the opaque box - sized by min-height - is what covers the source,
-// independent of the font). Without it a tall title block wraps to more lines than the
-// source and the plate grows past its region, colliding with the next plate. Shared with
-// the desktop app's overlay.go fontFitFactor (see docs/PARITY.md). 0.92 keeps plate text close to
-// the source size while leaving headroom for longer translations and word-wrap slack.
-const FONT_FIT = 0.92;
-
-// Ceiling for the runtime grow branch, as a multiple of the compile-time size. Shared with the
-// desktop app's ocrScript (see docs/PARITY.md). A block's box is the union of its lines and so
-// includes the leading between them: filling it is not the same as matching the source's type, and
-// on a loosely leaded block "fill the box" would print the translation larger than the words it
-// covers. 1.15 is a little over 1/FONT_FIT, so a plate may reach the measured ink height of the
-// source's own lines and no further.
-const FONT_GROW_CAP = 1.15;
-
-// A container the size of the image (via aspect-ratio) with the image as a base layer
-// and one opaque plate per recognized block, positioned/sized in percent so it survives
-// responsive scaling. Font-size is expressed in container-width units (cqw) derived from
-// the block's median line height, scaled by FONT_FIT so the text fits its block. Plates
-// grow downward (min-height) so longer post-translation text wraps instead of clipping.
-export function buildOverlay({ imageSrc, imageEl, blocks, width, height }) {
-  const container = document.createElement("div");
-  container.className = "ocr-overlay";
-  if (width && height) container.style.aspectRatio = `${width} / ${height}`;
-
-  const img = imageEl || document.createElement("img");
-  if (!imageEl) img.src = imageSrc;
-  img.classList.add("ocr-overlay-img");
-  container.append(img);
-
-  for (const b of blocks) {
-    if (!b.text) continue;
-    const { x0, y0, x1, y1 } = b.bbox;
-    const plate = document.createElement("div");
-    plate.className = "ocr-plate";
-    plate.style.left = `${(x0 / width) * 100}%`;
-    plate.style.top = `${(y0 / height) * 100}%`;
-    plate.style.width = `${((x1 - x0) / width) * 100}%`;
-    plate.style.minHeight = `${((y1 - y0) / height) * 100}%`;
-    plate.style.fontSize = `${((b.lineHeight / width) * 100 * FONT_FIT).toFixed(2)}cqw`;
-    // Paper and ink both land on the plate box: the box is what covers the source region, so it is
-    // what has to be opaque. The paper sat on an inline span hugging the string for one day, which
-    // gave it the shape of the rendered words but left a mean 93% of the source lettering showing
-    // around short strings against 17% for the box - see ocr-overlay.css and docs/PARITY.md for the
-    // measurement, and overlay.go for the desktop mirror.
-    if (b.colors) { plate.style.color = b.colors.ink; plate.style.background = b.colors.bg; }
-    plate.textContent = b.text;
-    container.append(plate);
-  }
-  scheduleFit(container);
-  return container;
-}
-
-// fitPlate fits one plate's text to its box: it shrinks the cqw font down to a floor, and if the
-// text still overflows there it lets the box grow so nothing is ever clipped. The source region
-// height (the inline min-height) is the target the font is fitted to.
-//
-// It also grows, because the compile-time size is deliberately conservative - the font is the
-// median *ink* height times FONT_FIT, and an ink box is shorter than the type that drew it - so a
-// plate whose text is no longer than the source's leaves the string floating in white space, which
-// reads as an oversized patch rather than as the original lettering. Growth is capped at
-// FONT_GROW_CAP x the base and stops one step before the content overflows, so a plate never prints
-// larger than the region it covers. Mirrors the desktop app's ocrScript fit() (see docs/PARITY.md
-// and overlay.go).
-function fitPlate(b) {
-  if (!b.dataset.ocrCqw) {
-    const m = /([0-9.]+)cqw/.exec(b.style.fontSize || "");
-    b.dataset.ocrCqw = m ? m[1] : "0";
-  }
-  const base = parseFloat(b.dataset.ocrCqw);
-  b.style.height = "";
-  const target = parseFloat(getComputedStyle(b).minHeight) || 0;
-  if (target > 0) b.style.height = target + "px";
-  if (base > 0) {
-    let s = base; const floor = base * 0.5; let g = 0;
-    b.style.fontSize = s + "cqw";
-    while (b.scrollHeight > b.clientHeight + 1 && s > floor && g < 40) {
-      s -= Math.max(0.3, s * 0.08); g++;
-      b.style.fontSize = s + "cqw";
-    }
-    if (b.scrollHeight <= b.clientHeight + 1) {
-      const cap = base * FONT_GROW_CAP;
-      let prev = s, n = s, gg = 0;
-      while (n < cap && gg < 20) {
-        n = Math.min(cap, n + Math.max(0.3, n * 0.04)); gg++;
-        b.style.fontSize = n + "cqw";
-        if (b.scrollHeight > b.clientHeight + 1) { b.style.fontSize = prev + "cqw"; break; }
-        prev = n;
-      }
-    }
-  }
-  if (b.scrollHeight > b.clientHeight + 1) b.style.height = "auto";
-}
-
-// scheduleFit fits every plate in a container once it is laid out in the DOM (the caller appends it
-// synchronously, so a setTimeout(0) sees it placed), and re-fits when the page translator swaps a
-// plate's text or the container resizes - the compile-time font size is computed from the source
-// geometry and cannot know the translated length. Mirrors the desktop app's ocrScript scheduling.
-function scheduleFit(container) {
-  const fitAll = () => { container.querySelectorAll(".ocr-plate").forEach(fitPlate); };
-  let t;
-  const go = () => { clearTimeout(t); t = setTimeout(fitAll, 0); };
-  go();
-  if (typeof window !== "undefined") {
-    window.addEventListener("load", go);
-    window.addEventListener("resize", go);
-  }
-  if (typeof MutationObserver !== "undefined") {
-    new MutationObserver((muts) => {
-      for (const mu of muts) {
-        let n = mu.target;
-        while (n && n !== container) {
-          if (n.classList && n.classList.contains("ocr-plate")) { go(); return; }
-          n = n.parentNode;
-        }
-      }
-    }).observe(container, { childList: true, characterData: true, subtree: true });
-  }
-  if (typeof ResizeObserver !== "undefined") {
-    try { new ResizeObserver(go).observe(container); } catch { /* ignore */ }
-  }
-}
-
-// A progress badge (styled by .ocr-badge) callers overlay on a pending image.
-export function makeBadge(text) {
-  const badge = document.createElement("div");
-  badge.className = "ocr-badge";
-  badge.textContent = text;
-  return badge;
-}
+// The plate half lives in ocr-plates.js so it can be loaded where the recognition engine must not
+// be: the page agent draws plates inside a third-party document, and importing this file would
+// carry the Tesseract module into that document with it (DEV/plan/2026-09-19_page-ocr-overlay.md,
+// ADR-1). Re-exported here so every existing importer keeps the names it already used. The parity
+// guards for the plate constants and the paper carrier follow the code - see tests/parity_test.go
+// and docs/PARITY.md "OCR".
+import { buildOverlay } from "./ocr-plates.js";
+export {
+  buildOverlay, makeBadge, plateSpecs, renderPlates, scheduleFit, fitPlate,
+  FONT_FIT, FONT_GROW_CAP,
+} from "./ocr-plates.js";
 
 // ---- One-call convenience + language tag -----------------------------------
 // Recognize then build the overlay, resolving to the container. Pass an <img> to reuse

@@ -238,7 +238,13 @@
       <span data-l="uk">Браузер перекладає будь-яку веб-сторінку безкоштовно, але не PDF і не EPUB: вбудована читалка малює текст PDF на полотні, і перекладач його не бачить, а EPUB браузер взагалі не відкриває. Це розширення (супутник застосунку Doc-HTML-Translate) перемальовує PDF чи EPUB у чистий HTML з абзацами та заголовками - і вбудований «Перекласти сторінку» працює як на звичайному сайті. Усе локально: без ключів і без завантаження файлів на сервер. Революційна ідея: показати перекладачеві текст, який він справді може прочитати. Тепер воно відкриває й MOBI, AZW3, FB2, RTF, TXT, Markdown, локальний HTML та CBZ/CBT-комікси (комікси CBR і CB7 - лише в десктоп-застосунку).</span>
     </p>
     <p class="lead">
-      <b><span data-l="ru">Новое: интерфейс расширения на 13 языках</span><span data-l="en">New: the extension's interface speaks 13 languages</span><span data-l="uk">Нове: інтерфейс розширення 13 мовами</span></b> - <span dir="ltr">en ru uk de it es fr pt ar hi bn ur zh</span>.
+      <b><span data-l="ru">Новое: распознать текст на всех картинках любой страницы - не уходя со страницы</span><span data-l="en">New: read the text in every picture on any page - without leaving the page</span><span data-l="uk">Нове: розпізнати текст на всіх картинках будь-якої сторінки - не залишаючи сторінку</span></b>.
+      <span data-l="ru">Правый клик на обычной странице - веб-комикс, скан архива, галерея скриншотов - и пункт <strong>«Распознать текст на всех изображениях страницы»</strong>. Страница остаётся собой: ссылки работают, скрипты работают, порядок чтения тот же, - а распознанные слова ложатся поверх картинок настоящим текстом. Его можно выделить и скопировать, его находит поиск по странице, и встроенный «Перевести страницу» переводит его вместе со всем остальным - без ключей и без аккаунта. Картинки читаются по одной, начиная с того, что на экране; в углу - прогресс, «Стоп» и «Убрать», после которого страница неотличима от исходной.</span>
+      <span data-l="en">Right-click an ordinary page - a webcomic, a scanned archive, a gallery of screenshots - and choose <strong>OCR every image on this page</strong>. The page stays itself: its links navigate, its scripts run, its reading order is unchanged - and the recognized words land on top of the pictures as real text. You can select and copy it, the browser's find reaches it, and the built-in "Translate page" translates it along with everything else, with no key and no account. Pictures are read one at a time starting from what is on screen; a bar in the corner shows progress and offers Stop and Remove, after which the page is indistinguishable from before.</span>
+      <span data-l="uk">Правий клік на звичайній сторінці - вебкомікс, скан архіву, галерея скриншотів - і пункт <strong>«Розпізнати текст на всіх зображеннях сторінки»</strong>. Сторінка лишається собою: посилання працюють, скрипти працюють, порядок читання той самий, - а розпізнані слова лягають поверх картинок справжнім текстом. Його можна виділити й скопіювати, його знаходить пошук по сторінці, і вбудований «Перекласти сторінку» перекладає його разом з усім іншим - без ключів і без акаунта. Зображення читаються по одному, починаючи з того, що на екрані; у кутку - прогрес, «Стоп» і «Прибрати», після якого сторінка не відрізняється від початкової.</span>
+    </p>
+    <p class="lead">
+      <b><span data-l="ru">Интерфейс расширения на 13 языках</span><span data-l="en">The extension's interface speaks 13 languages</span><span data-l="uk">Інтерфейс розширення 13 мовами</span></b> - <span dir="ltr">en ru uk de it es fr pt ar hi bn ur zh</span>.
       <span data-l="ru">По умолчанию берётся язык браузера, но в настройках можно выбрать любой; арабский и урду отображаются справа налево. Панель читалки говорит на вашем языке, а сам документ сохраняет свой - поэтому «Перевести страницу» продолжает работать.</span>
       <span data-l="en">It follows your browser's language by default, and the options page lets you pick any of them; Arabic and Urdu are laid out right to left. The reader chrome speaks your language while the document keeps its own - which is what keeps "Translate page" working.</span>
       <span data-l="uk">Типово береться мова браузера, але в налаштуваннях можна обрати будь-яку; арабська й урду відображаються справа наліво. Панель читалки говорить вашою мовою, а сам документ зберігає свою - тому «Перекласти сторінку» продовжує працювати.</span>
@@ -330,6 +336,7 @@
             <li><strong>Оглавление:</strong> строится из закладок PDF (outline) или из EPUB-навигации (<code>nav.xhtml</code> / <code>toc.ncx</code>) - сворачиваемый сайдбар с якорями.</li>
             <li><strong>Язык:</strong> определяется автоматически и проставляется в <code>&lt;html lang&gt;</code>, чтобы браузер предложил правильный перевод.</li>
             <li><strong>Тумблеры:</strong> глобальный вкл/выкл и отключение на конкретном сайте - из попапа; тема и подсказка исходного языка - в настройках.</li>
+            <li><strong>OCR всей страницы:</strong> правый клик на обычной веб-странице → <strong>«Распознать текст на всех изображениях страницы»</strong>. Плашки рисуются поверх картинок прямо на этой странице - вёрстка, ссылки и порядок чтения не меняются. Панель в углу: прогресс, «Стоп», «Скрыть текст», «Выделять текст» (по умолчанию клики проходят сквозь плашки, чтобы картинка-ссылка работала), «Найти новые изображения» и «Убрать».</li>
           </ul>
         </div>
       </details>
@@ -420,6 +427,7 @@
             <li><strong>Table of contents:</strong> built from the PDF outline or the EPUB nav (<code>nav.xhtml</code> / <code>toc.ncx</code>) - a collapsible sidebar with anchors.</li>
             <li><strong>Language:</strong> auto-detected and written to <code>&lt;html lang&gt;</code> so the browser offers the right translation.</li>
             <li><strong>Toggles:</strong> global on/off and per-site disable from the popup; theme and a source-language hint in Options.</li>
+            <li><strong>Whole-page OCR:</strong> right-click an ordinary web page → <strong>OCR every image on this page</strong>. Plates are drawn over the pictures in that very page - layout, links and reading order are untouched. A bar in the corner carries progress, Stop, Hide text, Select text (clicks pass through the plates by default, so a picture that is a link keeps working), Scan new pictures and Remove.</li>
           </ul>
         </div>
       </details>
@@ -510,6 +518,7 @@
             <li><strong>Зміст:</strong> будується із закладок PDF (outline) або з EPUB-навігації (<code>nav.xhtml</code> / <code>toc.ncx</code>) - згортуваний сайдбар з якорями.</li>
             <li><strong>Мова:</strong> визначається автоматично й проставляється в <code>&lt;html lang&gt;</code>, щоб браузер запропонував правильний переклад.</li>
             <li><strong>Тумблери:</strong> глобальний увімк/вимк і вимкнення на конкретному сайті - з попапа; тема й підказка вихідної мови - у налаштуваннях.</li>
+            <li><strong>OCR усієї сторінки:</strong> правий клік на звичайній вебсторінці → <strong>«Розпізнати текст на всіх зображеннях сторінки»</strong>. Плашки малюються поверх картинок прямо на цій сторінці - верстка, посилання й порядок читання не змінюються. Панель у кутку: прогрес, «Стоп», «Сховати текст», «Виділяти текст» (типово кліки проходять крізь плашки, щоб картинка-посилання працювала), «Знайти нові зображення» і «Прибрати».</li>
           </ul>
         </div>
       </details>
