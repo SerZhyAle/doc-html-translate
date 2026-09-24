@@ -63,7 +63,10 @@ binaries, and commits (with `DEV/COMMIT_LOG.md` appended):
 - Build-only smoke test (no commit): `./scripts/build-local.ps1 -NoCommit`.
 - Optional real-install test of the Store artifact (still local/free): `./msix/build-msix.ps1 -SelfSign`.
 
-**Step 6 — On gate failure**, read `temp/logs/*.log`, fix the root cause, rerun. Do not bypass the gate.
+**Step 6 — Read the verdict line, not the scrollback.** The gate ends in `check: PASS` (0),
+`check: PASS WITH ADVISORIES (n: ..)` (3, parity drift - say which in the report), `check: FAIL (n: ..)` (1)
+or `check: COULD NOT VERIFY (n: ..)` (2 - a tool or input was missing; **not a pass**, and build-local
+stops on it). On 1 or 2, read `temp/logs/check-<child>.log`, fix the root cause, rerun. Do not bypass the gate.
 
 **Step 7 — Report.** One line each: what was built, the short commit hash, and "nothing was pushed —
 run `/release` for the published flow". List any follow-ups; do not act on them in this pass.

@@ -92,7 +92,8 @@ func tesseractExeName() string {
 }
 
 // Locate finds the tesseract executable: the DOCHT_TESSERACT env var, then a copy shipped
-// next to the running executable (tesseract/tesseract.exe), then PATH.
+// next to the running executable (tesseract/tesseract.exe), then PATH. This order is pinned by
+// OCR-INVOCATION.md section 2 - an embedder sets the variable and expects it to win.
 func Locate() (string, error) {
 	if p := os.Getenv("DOCHT_TESSERACT"); p != "" {
 		if _, err := os.Stat(p); err == nil {
@@ -1188,6 +1189,7 @@ func keepLine(l *ocrLine, minConf float64) bool {
 // is the union of its line boxes and its font tracks the median line height, so a plate covers a
 // coherent text column without spanning the imagery or blank gaps between columns/sections.
 // Mirrors the extension's ocr-cluster.js clusterLines - keep the two in sync (docs/PARITY.md).
+// Grouping by line pitch rather than by the gap between ink boxes is OCR-OVERLAY rule 6.
 //
 // Vertical adjacency is judged on the line pitch (see ocrClusterPitchFactor). A page whose lines
 // yield no measurable pitch at all - one line, or nothing but lines that share no column - has no

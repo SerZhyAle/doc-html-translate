@@ -26,8 +26,8 @@ test_doc/ocrlab/
 # must never reach a commit or the packaged extension.
 extension/*.traineddata
 DEV/private/
-# Spec/plan tickets are working notes, not part of the shipped repo - they stay local.
-DEV/plan/
+# Tickets are the public, collaborative source of truth for planned work.  Keep only
+# private research inputs and generated material above out of Git.
 # Secrets and signing material - pre-empt the leak, never catch it afterwards.
 *.pfx
 *.snk

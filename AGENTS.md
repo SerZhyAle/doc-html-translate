@@ -67,9 +67,16 @@ Run from repository root in PowerShell.
 - Build CLI only: ./scripts/build.ps1
 - Build UI only: ./scripts/build-ui.ps1
 - Build universal installer (setup.exe, x86+x64, per-user, local/free): ./scripts/build-installer.ps1 (needs Inno Setup / ISCC)
-- Test: ./scripts/test.ps1
+- Test: ./scripts/test.ps1 (Go edition) and ./scripts/test-extension.ps1 (extension edition, node --test)
 - Lint: ./scripts/lint.ps1
 - Full local checks: ./scripts/check.ps1
+- Every check speaks `CHECK-VERDICT` (pointer: docs/contracts/CHECK-VERDICT.md): exit `0` PASS, `1` FAIL,
+  `2` COULD NOT VERIFY (a missing tool, input or git result - **never a pass**), `3` PASS WITH ADVISORIES,
+  and the **last line** is the verdict (`check: PASS`, `test: COULD NOT VERIFY (1)`, ..). Quote that line
+  as evidence, not the scrollback above it. A fresh clone without `test_doc/` ends in COULD NOT VERIFY
+  by design. Which runner owns each check: `configs/check-placement.jsonl` (a new check gets a record).
+- `check.ps1` writes `temp/logs/gate-evidence.json` (verdict + tree hash); `release.ps1` blocks the tag
+  step unless that tree is HEAD's.
 - Release checklist (prints only, runs nothing): ./scripts/release.ps1
 - OCR visual-fidelity lab: go run ./tools/ocrlab verify | run | score | report (see tools/ocrlab/README.md)
 
@@ -162,5 +169,15 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - docs/README.md (index of the docs/ tree)
 - docs/PARITY.md (cross-edition invariants + port map - read before adding features)
 - docs/how-i-posted-this-project-to-winget.md
-- DEV/plan/RELEASE_QUEUE.md (what is left before the next release; queue wins on order, ticket wins on status)
+- **The shared contracts catalog is at `P:/Contracts` on this machine** - this is the only tracked file
+  in the repository allowed to name that path. Anything a second product builds against lives there,
+  organized by function (`ocr-overlay/`, `install-trust/`, ..), never in this repo: this product owns
+  `OCR-PIPELINE` and `OCR-INVOCATION`, implements `OCR-OVERLAY` as its reference implementation, and is
+  bound by `INSTALL-TRUST`. Read `_meta/RULES.md`, `_meta/VERSIONING.md` and `_meta/REGISTRY.md` before
+  touching any of them. Rules that bind work here: **edit the contract in the catalog, never a copy**;
+  the contract changes **before** the code; a breaking change is a new dated section plus a version bump,
+  never an in-place rewrite; a deviation is either an amendment or a dated exception in the registry,
+  never silence. In this repo the contracts appear as pointer files under `docs/contracts/`, and code and
+  docs **cite them by id** - `OCR-OVERLAY rule 8`, `OCR-PIPELINE.md section 5` - never by path.
+- DEV/plan/ (public, collaborative specifications and their tactical plans; `RELEASE_QUEUE.md` says what is left before the next release, where the queue wins on order and the ticket wins on status)
 - CLAUDE.md ("Spec / plan tickets") - the ticket store's file names, done-set and package numbering

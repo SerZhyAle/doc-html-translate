@@ -45,6 +45,33 @@ if (-not $Version) {
 }
 $tag = "v$Version"
 
+# ── gate evidence (BUILD-EVIDENCE) ───────────────────────────
+# CI rebuilds the release binaries from the tag and runs no tests, so the only thing binding
+# them to a tested state is this: the last scripts/check.ps1 run passed on exactly the tree
+# HEAD holds (the tree hash, not the commit - build-local commits after the gate ran).
+$headTree = Get-GitValue @("rev-parse", "HEAD^{tree}")
+$evidencePath = "temp/logs/gate-evidence.json"
+$gateOk = $false
+if (Test-Path -LiteralPath $evidencePath) {
+    try {
+        $ev = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+        if ($ev.code -notin 0, 3) {
+            $gateLine = "BLOCKED - the last gate did not pass: $($ev.verdict) ($($ev.time))"
+        } elseif (-not $ev.tree -or $ev.tree -ne $headTree) {
+            $gateLine = "BLOCKED - the last passing gate ran on tree $($ev.tree), HEAD is tree $headTree; re-run scripts/build-local.ps1"
+        } elseif ($dirty) {
+            $gateLine = "BLOCKED - the gate matches HEAD, but the working tree has changes the tag would not contain"
+        } else {
+            $gateOk = $true
+            $gateLine = "$($ev.verdict) on tree $headTree = HEAD ($($ev.time))"
+        }
+    } catch {
+        $gateLine = "BLOCKED - $evidencePath is unreadable: $($_.Exception.Message)"
+    }
+} else {
+    $gateLine = "BLOCKED - no gate evidence ($evidencePath); run scripts/build-local.ps1 first"
+}
+
 $extVer = ""
 $extPkg = "extension/package.json"
 if (Test-Path $extPkg) {
@@ -61,6 +88,10 @@ Write-Host "  last app tag    : $(if ($lastVer) { $lastVer } else { '(none)' })"
 Write-Host "  last ext tag    : $(if ($lastExt) { $lastExt } else { '(none)' })"
 Write-Host "  app version now : $Version   ->  tag $tag"
 Write-Host "  ext version now : $(if ($extVer) { $extVer } else { '(unknown)' })   (bump via: cd extension; npm run version:bump)"
+Write-Host ("  gate evidence   : " + $gateLine) -ForegroundColor $(if ($gateOk) { 'Green' } else { 'Red' })
+if (-not $gateOk) {
+    Write-Host "                    Do NOT push the tag in step 2 until this line is green." -ForegroundColor Red
+}
 Write-Host ""
 Write-Host "  Legend: [PAID] uses paid GitHub Actions minutes   [PUBLIC] publishes to a store/index" -ForegroundColor DarkGray
 Write-Host ""
@@ -84,10 +115,14 @@ Cmd  "./scripts/build-local.ps1 -Message ""docs: release $Version"""
 Write-Host ""
 
 Step "2" "GitHub Release - app binaries  [PAID]"
+Note "Precondition: the 'gate evidence' line above is green (the tag's tree is the tree the gate passed on)."
 Note "Pushing a v* tag triggers .github/workflows/release.yml (builds exes + GitHub Release)."
 Cmd  "git tag -a $tag -m ""Release $tag"""
 Cmd  "git push origin $tag"
 Cmd  "gh run watch   # or: gh release view $tag --json assets"
+Note "Then prove the shipped exes carry the tag's stamp (free, local):"
+Cmd  "gh release download $tag -p ""*.exe"" -D temp/release-$Version"
+Cmd  "./scripts/verify-exe-version.ps1 -Path (Get-ChildItem temp/release-$Version/*.exe).FullName -Expect $Version"
 Note "Attach the universal installer (CI does not build it): build locally, then upload to the release:"
 Cmd  "./scripts/build-installer.ps1"
 Cmd  "gh release upload $tag dist/doc-html-translate-setup-$Version.exe"

@@ -9,7 +9,7 @@ are fixed here; everything else is a statement about what the code does today, w
 the measurement behind it.
 
 The reader who wants the mechanism rather than the answers should start at
-[`docs/ocr-pipeline.md`](../../docs/ocr-pipeline.md).
+`OCR-PIPELINE.md` in the shared contracts catalog (pointer: [`docs/contracts/OCR-PIPELINE.md`](../../docs/contracts/OCR-PIPELINE.md)).
 
 ---
 

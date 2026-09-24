@@ -42,9 +42,21 @@
 
     "position": {
       "overall": {
-        "max": 0,
-        "baseline": 0,
-        "note": "worst drift in px across the three pinned viewports. Measured 0.000 in both editions, which is a real result rather than a missing measurement: the overlay is expressed in natural image coordinates and holds them under responsive scaling. Any non-zero value is a regression, so the bound is the measurement."
+        "min": 0.77,
+        "baseline": 0.7755513812822736,
+        "note": "mean IoU of plate vs annotated group, desktop, 11 scenes. Rounded down to the nearest 0.01. Gating absolute position (IoU floor) rather than only drift catches systematic positioning offsets (e.g. navbar aspect guard scaling defect) that drift=0 cannot see."
+      },
+      "byCategory": {
+        "comic": {
+          "min": 0.75,
+          "baseline": 0.75,
+          "note": "4 scenes."
+        },
+        "texture": {
+          "min": 0.74,
+          "baseline": 0.74,
+          "note": "5 scenes."
+        }
       }
     },
 

@@ -569,7 +569,9 @@ func decodeImage(path string) image.Image {
 // (real text lives there, not figures lower in a merged block - "the colour of the
 // original's first letter"), with a near-black/near-white fallback that guarantees
 // contrast. ok=false leaves the CSS default. Mirrors the extension's ocr-overlay.js
-// blockColors (see docs/PARITY.md - keep the two in sync).
+// blockColors (see docs/PARITY.md - keep the two in sync). Sampling both from the image, as
+// medians rather than means, is OCR-OVERLAY rule 8: a constant white plate with black text is a
+// defect, not a simplification.
 func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 	bnds := img.Bounds()
 	x0 := clampInt(b.X0, bnds.Min.X, bnds.Max.X)

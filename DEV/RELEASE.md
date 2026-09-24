@@ -27,9 +27,12 @@ published path, with a single checklist so no step is forgotten.
 
 Steps it runs:
 
-1. `scripts/check.ps1` - `go test` + `golangci-lint` + `typos` (the quality gate)
-2. `scripts/build.ps1` - `doc-html-translate.exe` (CLI)
-3. `scripts/build-ui.ps1` - `doc-html-ui.exe` (GUI)
+1. `scripts/check.ps1` - `go test` + extension `node --test` + `golangci-lint` + `typos` + parity drift
+   (the quality gate). It ends in one verdict line; the build goes on only on `check: PASS` (exit 0) or
+   `check: PASS WITH ADVISORIES` (exit 3) - `COULD NOT VERIFY` (exit 2) stops it like a failure. It also
+   records `temp/logs/gate-evidence.json`, the tree hash the gate passed on.
+2. `scripts/build.ps1` - `doc-html-translate.exe` (CLI); asserts the exe carries the stamp it was built with
+3. `scripts/build-ui.ps1` - `doc-html-ui.exe` (GUI); same assertion
 4. commit on the **current** branch + append to `DEV/COMMIT_LOG.md`
 
 No tags, no push, no CI. `scripts/commit_after_build.ps1` is a deprecated shim that delegates here.
@@ -54,13 +57,18 @@ Optional universal installer - a single `setup.exe` for x86 + x64, per-user, no 
 to fill in the current version and commands. Run it to get the exact commands, then execute each
 step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishes to a store/index.
 
-0. **Preflight** (free) - clean tree, green gate: `./scripts/build-local.ps1 -Message "..."`.
+0. **Preflight** (free) - clean tree, green gate: `./scripts/build-local.ps1 -Message "..."`. The last commit
+   must go through `build-local.ps1` (it re-runs the gate): `release.ps1` prints **gate evidence** in its
+   header and shows it as BLOCKED unless the last `check.ps1` passed on exactly HEAD's tree.
 1. **Docs & site** (free) - update README.md, `docs.html` / `docs.ru.html` / `docs.uk.html`,
    `index.html`, `extension.html`, `extension/store/LISTING.md`, `extension/README.md`,
    `DEV/CHANGELOG.md`; commit via `build-local.ps1`.
 2. **GitHub Release - app** `[PAID]` - push a `v*` tag → `.github/workflows/release.yml` builds
    the exes and creates the GitHub Release:
-   `git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>`.
+   `git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>`. Push only while the gate-evidence line
+   is green - the tag workflow runs no test, so that line is the only link between the tested tree and the
+   shipped binaries. Afterwards (free): `gh release download v<ver> -p "*.exe" -D temp/release-<ver>` and
+   `./scripts/verify-exe-version.ps1 -Path (Get-ChildItem temp/release-<ver>/*.exe).FullName -Expect <ver>`.
    **Then attach the universal installer** (CI does not build it): `./scripts/build-installer.ps1`
    then `gh release upload v<ver> dist/doc-html-translate-setup-<ver>.exe`.
 3. **winget** `[PUBLIC]` - after the release exists. **Always local-install-test the manifest

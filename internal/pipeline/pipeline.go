@@ -33,7 +33,9 @@ import (
 	gohtml "golang.org/x/net/html"
 )
 
-// ExitCode constants for structured error handling.
+// ExitCode constants for structured error handling. The values are a published contract for the
+// programs that call this CLI - OCR-INVOCATION.md section 1 - so a code never changes meaning and
+// a new one is a contract amendment first.
 const (
 	ExitOK        = 0
 	ExitArgsError = 1

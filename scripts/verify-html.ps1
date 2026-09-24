@@ -45,6 +45,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/lib/verdict.ps1"
+
+# Exit codes follow CHECK-VERDICT: 0 every page OK, 1 a page failed an assertion, 2 nothing could be
+# checked (no headless browser, no such path, no .html under it). The last line is always
+# "verify-html: PASS|FAIL|COULD NOT VERIFY (..)".
 
 # ── locate a headless browser (Edge first, Chrome fallback) ──
 $browser = @(
@@ -53,9 +58,15 @@ $browser = @(
     "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
     "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $browser) { throw "No headless browser found (Edge or Chrome)." }
+if (-not $browser) {
+    Write-Host "No headless browser found (Edge or Chrome)."
+    Exit-Verdict 'verify-html' 2 'no headless browser'
+}
 
-if (-not (Test-Path $Path)) { throw "Path not found: $Path" }
+if (-not (Test-Path $Path)) {
+    Write-Host "Path not found: $Path"
+    Exit-Verdict 'verify-html' 2 'path not found'
+}
 
 # ── follow a redirecting entry page ──────────────────────────
 # internal/htmlgen/singlepage.go writes a 142-byte index.html at the output root when the book's
@@ -118,7 +129,11 @@ if ($item.PSIsContainer) {
     # A single file gets the same treatment: -Path <book>/index.html on an EPUB is the redirect.
     $files = @(Get-Item -LiteralPath (Resolve-EntryPage $item.FullName))
 }
-if (-not $files) { throw "No .html files to check under $Path." }
+if (-not $files) {
+    Write-Host "No .html files to check under $Path."
+    Exit-Verdict 'verify-html' 2 'no .html files'
+}
+Write-Subject 'verify-html' "$($files.Count) page(s) under $Path, rendered by $(Split-Path -Leaf $browser)"
 
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("verify-html-" + [System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
@@ -204,8 +219,6 @@ Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ""
 if ($failures -gt 0) {
-    Write-Host "verify-html: $failures page(s) FAILED" -ForegroundColor Red
-    exit 1
+    Exit-Verdict 'verify-html' 1 "$failures of $($files.Count) page(s)"
 }
-Write-Host "verify-html: all $($files.Count) page(s) OK" -ForegroundColor Green
-exit 0
+Exit-Verdict 'verify-html' 0 "$($files.Count) page(s)"

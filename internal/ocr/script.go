@@ -13,7 +13,8 @@ import (
 // screenshot with the defaults therefore gets an English recognizer pointed at Cyrillic, and
 // Tesseract does not fail on it: it transliterates, and the page comes back covered in plates
 // reading "Katanoru-nonyyarenn" over an interface that was perfectly readable before. The output
-// is strictly worse than the input, and nothing in the log says so
+// is strictly worse than the input, and nothing in the log says so - OCR-OVERLAY rule 10, which
+// asks for no overlay and a reason rather than transliterated debris
 // (DEV/research/ocr_sweep_2026-08-13.md defect 3).
 //
 // So when - and only when - the language was not chosen by the reader, the book's first image is

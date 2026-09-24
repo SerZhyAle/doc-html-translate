@@ -35,7 +35,9 @@ type diagBlock struct {
 }
 
 // diagDropped is one line the confidence floor rejected: text the engine read that the reader
-// never gets. Recorded because the floor is otherwise an invisible decision - a scene where a
+// never gets. It is the discard record of OCR-OVERLAY rule 12 - the text, the confidence, the box
+// and which threshold the line failed, written through the same predicate the pipeline applies.
+// Recorded because the floor is otherwise an invisible decision - a scene where a
 // correctly read word was discarded looks exactly like a scene where nothing was recognized, and
 // the lab cannot score a decision it cannot see.
 type diagDropped struct {

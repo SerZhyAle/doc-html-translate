@@ -6,6 +6,13 @@
 
 Developer-oriented README for local builds and maintenance.
 
+## Collaborative Specifications
+
+[`plan/`](plan/) is tracked: it contains the public ticket specifications, tactical
+plans and release queue used for online development. Private inputs remain under
+`DEV/private/`; sample documents and generated output remain excluded by the root
+`.gitignore`.
+
 ## Current CLI Snapshot
 
 ```powershell

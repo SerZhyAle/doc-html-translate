@@ -39,6 +39,14 @@ if (-not $NoCommit -and [string]::IsNullOrWhiteSpace($Message)) {
 # ── Step 1: quality gate (test + lint + typo) ────────────────
 Write-Host "== [1/4] check (test + lint + typo) ==" -ForegroundColor Cyan
 ./scripts/check.ps1
+# check.ps1 speaks CHECK-VERDICT: 0 pass, 3 pass with advisories (parity drift, named above),
+# 1 fail, 2 could not verify. Only the first two may be built and committed on: "could not verify"
+# is not a pass, however green the rest of the output looks.
+$gate = $LASTEXITCODE
+if ($gate -notin 0, 3) {
+    Write-Host "build-local: stopped - the gate did not pass (exit $gate). Nothing was built or committed." -ForegroundColor Red
+    exit $gate
+}
 
 # ── Step 2-3: build both binaries ────────────────────────────
 Write-Host "== [2/4] build CLI (doc-html-translate.exe) ==" -ForegroundColor Cyan

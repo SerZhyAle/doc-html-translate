@@ -55,7 +55,8 @@ later session reads the file instead of guessing.
    are unclear, note it — the cleanup belongs in `/build` (commit subjects), not here.
 4. Draft the human "What's new in <version>" summary for the user to approve before any tag push.
 
-**Step D — Preflight (free).** Confirm clean tree + green gate; commit anything outstanding:
+**Step D — Preflight (free).** Confirm clean tree + green gate, and that the **gate evidence** line in the
+Step A output is green (the last `check.ps1` passed on HEAD's exact tree); commit anything outstanding:
 
 ```powershell
 ./scripts/build-local.ps1 -Message "..."

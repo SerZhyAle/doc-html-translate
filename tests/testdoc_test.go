@@ -62,8 +62,10 @@ var supportedExts = map[string]bool{
 // TestConvertTestDoc converts every supported sample in test_doc/ through the
 // full pipeline (extract + build HTML, no translation, no browser) and asserts
 // that a valid index.html is produced. Each file is a subtest so failures are
-// isolated and named. The whole test skips cleanly when test_doc/ is absent,
-// which is the normal state in CI (the folder is gitignored).
+// isolated and named. The whole test skips when test_doc/ is absent, which is
+// the normal state on a fresh clone (the folder is gitignored). Both whole-test
+// skips start with "input absent:" - scripts/test.ps1 reads that prefix and
+// reports the run as COULD NOT VERIFY rather than PASS (CHECK-VERDICT rule 2).
 func TestConvertTestDoc(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test_doc conversion in short mode")
@@ -73,7 +75,7 @@ func TestConvertTestDoc(t *testing.T) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Skipf("sample directory %q not present - skipping (set DOC_HTML_TEST_DOC to override)", dir)
+			t.Skipf("input absent: sample directory %q not present (set DOC_HTML_TEST_DOC to override)", dir)
 		}
 		t.Fatalf("read sample dir %q: %v", dir, err)
 	}
@@ -171,7 +173,7 @@ func TestConvertTestDoc(t *testing.T) {
 	}
 
 	if converted == 0 {
-		t.Skipf("no supported samples found in %q - skipping", dir)
+		t.Skipf("input absent: no supported samples found in %q", dir)
 	}
 }
 

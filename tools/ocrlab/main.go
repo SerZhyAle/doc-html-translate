@@ -16,6 +16,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -41,7 +42,8 @@ Commands:
   run           convert, render and record evidence for the selected scenes
   score <dir>   grade a saved run offline against the annotations
   report <dir>  render report.md and a side-by-side report.html
-  gate <dir>    judge a scored run against DEV/ocrlab/thresholds.json (exit 1 on FAIL)
+  gate <dir>    judge a scored run against DEV/ocrlab/thresholds.json
+                (exit 1 on FAIL, 2 when a bound had nothing to judge or an input is missing)
 
 Common flags:
   -manifest <path>      default DEV/ocrlab/corpus.json
@@ -88,8 +90,28 @@ func main() {
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ocrlab "+cmd+": "+err.Error())
+		var cnv couldNotVerify
+		if errors.As(err, &cnv) {
+			fmt.Println("ocrlab " + cmd + ": COULD NOT VERIFY")
+			os.Exit(2)
+		}
 		os.Exit(1)
 	}
+}
+
+// couldNotVerify marks an error that stopped a judging subcommand before it inspected anything: a
+// missing manifest, thresholds file or run summary, a usage mistake. Exit code 2, never 1 - "the
+// input was not there" is not "the input was judged and found defective" (CHECK-VERDICT rule 1).
+type couldNotVerify struct{ err error }
+
+func (e couldNotVerify) Error() string { return e.err.Error() }
+func (e couldNotVerify) Unwrap() error { return e.err }
+
+func cannotVerify(err error) error {
+	if err == nil {
+		return nil
+	}
+	return couldNotVerify{err}
 }
 
 // paths holds the two locations every subcommand needs. Defaults are repo-relative, so the
@@ -121,12 +143,13 @@ func cmdVerify(args []string) error {
 
 	m, err := corpus.Load(p.manifest)
 	if err != nil {
-		return err
+		return cannotVerify(err)
 	}
 	anns, err := truth.LoadDir(p.annotations)
 	if err != nil {
-		return err
+		return cannotVerify(err)
 	}
+	fmt.Printf("ocrlab verify: subject = %s, %s, media root %s\n\n", p.manifest, p.annotations, p.root)
 	defects, shortfalls := corpus.SplitProblems(corpus.Validate(m, p.root))
 	truthProblems := truth.ValidateAll(anns, m)
 	printCoverage(m, anns)
@@ -153,11 +176,28 @@ func cmdVerify(args []string) error {
 		failing += len(shortfalls)
 	}
 	if failing == 0 {
-		fmt.Printf("\nverify: %d scene(s), nothing blocking\n", len(m.Scenes))
+		fmt.Printf("\nocrlab verify: PASS (%d scene(s), nothing blocking)\n", len(m.Scenes))
 		return nil
 	}
+	// A clone without the gitignored media root has every scene "missing" - that is the input being
+	// absent, not a corpus found defective, so it is reported as could-not-verify when nothing else
+	// is wrong.
+	if _, err := os.Stat(p.root); err != nil && len(truthProblems) == 0 && !*strict && onlyMediaMissing(defects) {
+		fmt.Printf("\nocrlab verify: COULD NOT VERIFY (media root %s absent; metadata checks passed)\n", p.root)
+		os.Exit(2)
+	}
+	fmt.Printf("\nocrlab verify: FAIL (%d)\n", failing)
 	os.Exit(1)
 	return nil
+}
+
+func onlyMediaMissing(ps []corpus.Problem) bool {
+	for _, p := range ps {
+		if p.Rule != corpus.RuleMediaMissing {
+			return false
+		}
+	}
+	return true
 }
 
 // printCoverage renders the section 4.1 table against reality: what the corpus has, what it

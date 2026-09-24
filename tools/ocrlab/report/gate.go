@@ -154,7 +154,11 @@ type Check struct {
 	Value     float64 `json:"value"`
 	Limit     float64 `json:"limit"`
 	Pass      bool    `json:"pass"`
-	Detail    string  `json:"detail,omitempty"`
+	// Absent marks a bound that had nothing to judge - a category with no scored scene, a holdout
+	// missing on one side. It is not a pass (CHECK-VERDICT rule 2): Pass is false and the run as a
+	// whole ends in COULD NOT VERIFY unless something actually failed.
+	Absent bool   `json:"absent,omitempty"`
+	Detail string `json:"detail,omitempty"`
 }
 
 // GateResult is the whole verdict, kept as data so the report and the exit code read the same
@@ -163,16 +167,42 @@ type GateResult struct {
 	RunID   string  `json:"runId"`
 	Edition string  `json:"edition"`
 	Pass    bool    `json:"pass"`
+	Verdict string  `json:"verdict"` // PASS, FAIL or COULD NOT VERIFY - the word on the last line
+	Failed  int     `json:"failed"`
+	Absent  int     `json:"absent"`
 	Checks  []Check `json:"checks"`
+}
+
+// Verdict words, CHECK-VERDICT rule 1. A failure outranks an absence: a run that found a real
+// defect says so even when another bound had nothing to judge.
+const (
+	VerdictPass       = "PASS"
+	VerdictFail       = "FAIL"
+	VerdictUnverified = "COULD NOT VERIFY"
+)
+
+// ExitCode is the process exit code the verdict maps to: 0 pass, 1 fail, 2 could not verify.
+func (r GateResult) ExitCode() int {
+	switch r.Verdict {
+	case VerdictPass:
+		return 0
+	case VerdictUnverified:
+		return 2
+	}
+	return 1
 }
 
 // Gate judges a summary. prev may be nil - the first run has nothing to regress against, and
 // saying so is better than inventing a comparison.
 func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResult {
-	res := GateResult{RunID: sum.RunID, Edition: string(sum.Edition), Pass: true}
+	res := GateResult{RunID: sum.RunID, Edition: string(sum.Edition)}
 	add := func(c Check) {
-		if !c.Pass {
-			res.Pass = false
+		switch {
+		case c.Absent:
+			c.Pass = false
+			res.Absent++
+		case !c.Pass:
+			res.Failed++
 		}
 		res.Checks = append(res.Checks, c)
 	}
@@ -210,7 +240,7 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 			if bucket == nil || bucket.Scenes == 0 {
 				add(Check{
 					Dimension: name, Scope: string(cat), Measure: measureOf(name),
-					Pass: true, Detail: "no scored scene in this category - not a pass, an absence",
+					Absent: true, Detail: "no scored scene in this category - not a pass, an absence",
 				})
 				continue
 			}
@@ -220,6 +250,15 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 			add(regressionCheck(name, *d.Tolerance, sum, prev))
 		}
 	}
+	switch {
+	case res.Failed > 0:
+		res.Verdict = VerdictFail
+	case res.Absent > 0:
+		res.Verdict = VerdictUnverified
+	default:
+		res.Verdict = VerdictPass
+	}
+	res.Pass = res.Verdict == VerdictPass
 	return res
 }
 
@@ -233,7 +272,7 @@ func measureOf(dimension string) string {
 	case DimGrouping:
 		return "merges + splits"
 	case DimPosition:
-		return "worst drift (px)"
+		return "mean IoU"
 	case DimConcealment:
 		return "worst residual ink"
 	case DimDamage:
@@ -255,7 +294,7 @@ func valueOf(dimension string, b *metrics.Bucket) float64 {
 	case DimGrouping:
 		return float64(b.Merges + b.Splits)
 	case DimPosition:
-		return b.WorstDrift
+		return b.MeanIoU
 	case DimConcealment:
 		return b.WorstResidual
 	case DimDamage:
@@ -293,13 +332,14 @@ func regressionCheck(dimension string, tolerance float64, sum, prev *metrics.Sum
 	c := Check{Dimension: dimension, Scope: "holdout", Measure: measureOf(dimension) + " vs the last accepted run", Pass: true}
 	now, before := sum.BySplit[corpus.SplitHoldout], prev.BySplit[corpus.SplitHoldout]
 	if now == nil || before == nil || now.Scenes == 0 || before.Scenes == 0 {
+		c.Pass, c.Absent = false, true
 		c.Detail = "no holdout scenes on one side - nothing to compare"
 		return c
 	}
 	nowV, beforeV := valueOf(dimension, now), valueOf(dimension, before)
 	c.Value, c.Limit = nowV, beforeV
-	// Recognition is the one dimension where higher is better, so a regression is a fall.
-	if dimension == DimRecognition {
+	// Recognition and Position are the dimensions where higher is better, so a regression is a fall.
+	if dimension == DimRecognition || dimension == DimPosition {
 		c.Pass = nowV >= beforeV-tolerance
 		c.Detail = fmt.Sprintf("may not fall more than %g below %g", tolerance, beforeV)
 		return c
@@ -309,22 +349,26 @@ func regressionCheck(dimension string, tolerance float64, sum, prev *metrics.Sum
 	return c
 }
 
-// Render writes the verdict the way it must be read: the failures first, then everything, then one
-// line that is the exit code in words.
+// Render writes the verdict the way it must be read: the subject, the failures first, then the
+// absences, then everything that passed, then one line that is the exit code in words
+// ("ocrlab gate: PASS", "ocrlab gate: FAIL (n)", "ocrlab gate: COULD NOT VERIFY (n ..)").
 func (r GateResult) Render() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "gate: %s (%s)\n\n", r.RunID, r.Edition)
-	for _, want := range []bool{false, true} {
+	fmt.Fprintf(&b, "ocrlab gate: subject = run %s, %s edition\n\n", r.RunID, r.Edition)
+	for _, want := range []string{"FAIL", "ABSENT", "PASS"} {
 		for _, c := range r.Checks {
-			if c.Pass != want {
-				continue
-			}
 			verdict := "PASS"
-			if !c.Pass {
+			switch {
+			case c.Absent:
+				verdict = "ABSENT"
+			case !c.Pass:
 				verdict = "FAIL"
 			}
-			fmt.Fprintf(&b, "  %s %-12s %-10s %-34s %10.4g", verdict, c.Dimension, c.Scope, c.Measure, c.Value)
-			if c.Detail != "" && c.Limit == 0 && c.Value == 0 {
+			if verdict != want {
+				continue
+			}
+			fmt.Fprintf(&b, "  %-6s %-12s %-10s %-34s %10.4g", verdict, c.Dimension, c.Scope, c.Measure, c.Value)
+			if c.Absent || (c.Detail != "" && c.Limit == 0 && c.Value == 0) {
 				fmt.Fprintf(&b, "   %s", c.Detail)
 			} else {
 				fmt.Fprintf(&b, "   limit %.4g", c.Limit)
@@ -332,10 +376,13 @@ func (r GateResult) Render() string {
 			b.WriteString("\n")
 		}
 	}
-	if r.Pass {
-		b.WriteString("\nPASS\n")
-	} else {
-		b.WriteString("\nFAIL\n")
+	fmt.Fprintf(&b, "\nocrlab gate: %s", r.Verdict)
+	switch r.Verdict {
+	case VerdictFail:
+		fmt.Fprintf(&b, " (%d)", r.Failed)
+	case VerdictUnverified:
+		fmt.Fprintf(&b, " (%d bound(s) with nothing to judge)", r.Absent)
 	}
+	b.WriteString("\n")
 	return b.String()
 }

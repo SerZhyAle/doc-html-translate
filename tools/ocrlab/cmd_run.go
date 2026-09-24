@@ -243,23 +243,23 @@ func cmdGate(args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return errors.New("usage: ocrlab gate [-thresholds <path>] [-against <run-dir>] <run-dir>")
+		return cannotVerify(errors.New("usage: ocrlab gate [-thresholds <path>] [-against <run-dir>] <run-dir>"))
 	}
 	dir := fs.Arg(0)
 
 	th, err := report.LoadThresholds(*thresholds)
 	if err != nil {
-		return err
+		return cannotVerify(err)
 	}
 	var summary metrics.Summary
 	if err := readJSON(filepath.Join(dir, runner.SummaryFile), &summary); err != nil {
-		return fmt.Errorf("%s: %w (run `ocrlab score` first)", dir, err)
+		return cannotVerify(fmt.Errorf("%s: %w (run `ocrlab score` first)", dir, err))
 	}
 	var prev *metrics.Summary
 	if *against != "" {
 		var p metrics.Summary
 		if err := readJSON(filepath.Join(*against, runner.SummaryFile), &p); err != nil {
-			return fmt.Errorf("-against %s: %w", *against, err)
+			return cannotVerify(fmt.Errorf("-against %s: %w", *against, err))
 		}
 		prev = &p
 	}
@@ -269,8 +269,9 @@ func cmdGate(args []string) error {
 	if err := writeJSON(filepath.Join(dir, "gate.json"), res); err != nil {
 		return err
 	}
-	if !res.Pass {
-		os.Exit(1)
+	// 0 pass, 1 a bound failed, 2 a declared bound had nothing to judge (CHECK-VERDICT rule 2).
+	if code := res.ExitCode(); code != 0 {
+		os.Exit(code)
 	}
 	return nil
 }

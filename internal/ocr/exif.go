@@ -1,6 +1,7 @@
 package ocr
 
-// EXIF orientation, and why the overlay has to know about it.
+// EXIF orientation, and why the overlay has to know about it. OCR-OVERLAY rule 1: recognition
+// happens in display space, so the tag is applied before the engine sees the pixels, never after.
 //
 // Tesseract reads the file's stored pixels; a browser paints an <img> through its EXIF
 // orientation tag (CSS image-orientation defaults to from-image). For a photo tagged

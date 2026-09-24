@@ -34,6 +34,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 |---|---|---|
 | PDF paragraph/heading reflow | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`rowsToText`, `classifyBlock`, `isLigaturesArtifact`) | [`extension/src/reflow.js`](../extension/src/reflow.js) |
 | PDF outline -> TOC | [`internal/pdf/toc.go`](../internal/pdf/toc.go) | [`extension/src/toc.js`](../extension/src/toc.js) |
+| PDF page images: select + same-shape dedupe | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`selectPageImages`, `sameShapeRaster`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`dedupeSameShape`, `sameShapeRaster`) |
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
 | Plain text: source-encoding decode | [`internal/txt/extract.go`](../internal/txt/extract.go) (`decodeText`) | [`extension/src/txt.js`](../extension/src/txt.js) (`decodeText`) |
@@ -47,6 +48,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` |
+| OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
@@ -472,7 +474,10 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   own route and neither has a constant to share:
   - the desktop app applies the orientation itself, to the copy tesseract reads
     ([`internal/ocr/exif.go`](../internal/ocr/exif.go), used by `stageForOCR`), and turns the
-    decoded image it samples plate colours from with it. Without this, a portrait phone shot is
+    decoded image it samples plate colours from with it. EXIF parsing in Go is JPEG-only (PNG `eXIf`
+    and WebP can carry orientation tags, but a rotated camera photo is a JPEG in practice, and an
+    untested parser is worse than a documented gap); the extension relies on `createImageBitmap`
+    which handles all browser-supported image formats with EXIF. Without this, a portrait phone shot is
     recognized on its side - no OSD runs in either PSM this app uses - and whatever does read lands
     in a space the plates are not in;
   - the extension reaches it through the decoder: every `createImageBitmap` in `ocr-overlay.js` is
@@ -491,6 +496,24 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   1.9x its size and off its text - while drifting 0 px between viewports, because it was equally
   wrong at all of them. The guard now skips images inside `.ocr-fig`
   (`internal/htmlgen/navbar.go`, guarded by `TestImageAspectGuardSkipsOCROverlay`).
+
+- **Vertical lettering is catalogued, not supported by design** - `jpn_vert` is in the language
+  catalog on both sides (`tessdata.go` == `ocr-lang.js`), so a user can choose the vertical-text model
+  and recognition works. The plate itself is a horizontal flex container and clustering assumes vertical
+  pitch between horizontally overlapping lines (whereas vertical writing places lines side by side).
+  Vertical layout is unsupported in both editions.
+
+- **RTL and CJK handling** - short CJK ideographs bypass the alphabetic minimum-length and vowel rules
+  in `isTranslatable` (`text.go` == `ocr-text.js`). Plates inherit the document's DOM `dir` without
+  edition-specific RTL word re-sorting. Geometry robustness under RTL replacement is verified by the
+  `rtl-arabic` translation-stress case (1.8x length in `tools/ocrlab/runner/stress.go` == `STRESS_CASES`
+  in `ocrlab.mjs`), ensuring no clipping or drift occurs.
+
+- **Positioning acceptance gates absolute IoU floor, not drift alone** - `DEV/ocrlab/thresholds.json`
+  and `tools/ocrlab/report/gate.go` gate the `position` dimension on mean IoU against ground truth
+  (overall floor `0.77`, category floors for comic `0.75` and texture `0.74`) rather than on drift alone.
+  A systematic offset (such as a mis-sized container) drifts 0 px across viewports because it is equally
+  wrong at all of them; the IoU floor catches it.
 
 - **Empty-result language report** identical in substance: when a pass recognized nothing at all,
   both editions name the language data that was used - code plus catalog name, `tessdata.go`
@@ -808,8 +831,10 @@ These are by design. Do not "sync" them without a decision - document changes he
    `extension/test/sanitize.test.mjs` under `npm test` (a dev-only `linkedom` DOM, never bundled) - these
    assert the JS-side behaviour that mirrors `internal/epub`, complementing the value guards above.
 6. **Structural drift-check (advisory):** `scripts/parity-check.ps1` (alias `a pc`, and run in the
-   `scripts/check.ps1` gate) mirrors the port map above and *warns* when a Go extractor changed without its
-   paired JS module, or vice versa. It never blocks - it turns silent drift into a prompt. Touching this
-   file (docs/PARITY.md) in the same change set silences it, so the escape hatch for an intentional
-   one-sided change is to record it here under [Intentional divergences](#intentional-divergences-do-not-fix).
-   Keep the port map in the script in sync with the table at the top of this file.
+   `scripts/check.ps1` gate) reads the pairs from `configs/parity-map.json` and *warns* when a Go extractor
+   changed without its paired JS module, or vice versa. It never blocks - drift is an advisory (exit 3, named
+   on the gate's verdict line), unless `-Strict` makes it a failure. Touching this file (docs/PARITY.md) in
+   the same change set silences it, so the escape hatch for an intentional one-sided change is to record it
+   here under [Intentional divergences](#intentional-divergences-do-not-fix).
+   `tests/parity_map_test.go` fails when `configs/parity-map.json` and the port map table at the top of this
+   file disagree, so a row added here must be watched there (or excused under `notWatched` with a reason).

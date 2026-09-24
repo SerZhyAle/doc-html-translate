@@ -81,6 +81,11 @@ Remove-Item $versionInfoPath -ErrorAction SilentlyContinue
 
 Write-Host "UI build completed: $Output (embedded web UI, icon embedded)"
 
+# The artifact must carry the stamp it was built with, never the "dev" default
+# (BUILD-EVIDENCE rule 2) - checked before it is copied anywhere.
+& "$PSScriptRoot/verify-exe-version.ps1" -Path $absOutput -Expect $version
+if ($LASTEXITCODE -ne 0) { throw "version assertion failed for $Output (exit $LASTEXITCODE)" }
+
 # ── Step 5: Copy exe to deploy folder ────────────────────
 $deployDir = "C:\GD\tc\SZA\_APP"
 New-Item -ItemType Directory -Force -Path $deployDir | Out-Null
