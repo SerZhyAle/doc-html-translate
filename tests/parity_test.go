@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"doc-html-translate/internal/appearance"
 )
 
 // readRepoFile reads a file by repo-relative path (this package lives in tests/, so the
@@ -43,37 +45,6 @@ func between(s, start, end string) string {
 	return s
 }
 
-// normHex expands #rgb to #rrggbb and lowercases, so #222 and #222222 compare equal.
-func normHex(h string) string {
-	h = strings.ToLower(strings.TrimPrefix(h, "#"))
-	if len(h) == 3 {
-		h = string([]byte{h[0], h[0], h[1], h[1], h[2], h[2]})
-	}
-	return h
-}
-
-var hexRe = regexp.MustCompile(`#[0-9a-fA-F]{3,6}\b`)
-
-func hexesIn(block string) []string {
-	var out []string
-	for _, m := range hexRe.FindAllString(block, -1) {
-		out = append(out, normHex(m))
-	}
-	return out
-}
-
-// cssBlock returns the text between `selector {` and the next `}`. When several blocks
-// share a selector (e.g. :root), mustContain picks the one holding that substring.
-func cssBlock(text, selector, mustContain string) string {
-	re := regexp.MustCompile(`(?s)` + regexp.QuoteMeta(selector) + `\s*\{(.*?)\}`)
-	for _, m := range re.FindAllStringSubmatch(text, -1) {
-		if mustContain == "" || strings.Contains(m[1], mustContain) {
-			return m[1]
-		}
-	}
-	return ""
-}
-
 func codeSet(ms [][]string) []string {
 	seen := map[string]bool{}
 	var out []string
@@ -85,36 +56,6 @@ func codeSet(ms [][]string) []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-// TestParityThemePalette: the four reader themes carry identical colour values in the
-// desktop app's navbar.go readerCSS and the extension's viewer.css (var names differ,
-// values must not). See docs/PARITY.md "Reader theme palette".
-func TestParityThemePalette(t *testing.T) {
-	goReader := regexp.MustCompile("(?s)readerCSS = \x60(.*?)\x60").
-		FindStringSubmatch(readRepoFile(t, "internal", "htmlgen", "navbar.go"))
-	if goReader == nil {
-		t.Fatal("could not locate readerCSS block in navbar.go")
-	}
-	goCSS := goReader[1]
-	jsCSS := readRepoFile(t, "extension", "src", "viewer.css")
-
-	themes := []struct{ name, goSel, jsSel, goHas, jsHas string }{
-		{"light", ":root", ":root", "--dht-bg", "--bg"},
-		{"sepia", `html[data-dht-theme="sepia"]`, `html[data-theme="sepia"]`, "", ""},
-		{"dark", `html[data-dht-theme="dark"]`, `html[data-theme="dark"]`, "", ""},
-		{"night", `html[data-dht-theme="night"]`, `html[data-theme="night"]`, "", ""},
-	}
-	for _, th := range themes {
-		goHex := hexesIn(cssBlock(goCSS, th.goSel, th.goHas))
-		jsHex := hexesIn(cssBlock(jsCSS, th.jsSel, th.jsHas))
-		if len(goHex) == 0 || len(jsHex) == 0 {
-			t.Fatalf("theme %q: palette not found (navbar.go=%d viewer.css=%d hexes) - selectors may have changed", th.name, len(goHex), len(jsHex))
-		}
-		if strings.Join(goHex, ",") != strings.Join(jsHex, ",") {
-			t.Errorf("theme %q palette drift:\n  navbar.go : %v\n  viewer.css: %v\n  values must match - see docs/PARITY.md", th.name, goHex, jsHex)
-		}
-	}
 }
 
 // TestParityOCRVersion: the desktop app and the extension must download the same
@@ -403,29 +344,28 @@ func TestParityOCRDroppedLines(t *testing.T) {
 // background colours from a printed page by default, and a plate is an opaque background carrying
 // text - so without `print-color-adjust:exact` the translation prints on top of the source
 // lettering that is still there, and the sheet is unreadable. Print is the one output where the
-// reader cannot toggle the overlay off, so an edition that loses the declaration loses the page.
-// See docs/PARITY.md "OCR" (plate shape).
+// reader cannot toggle the overlay off. Both editions derive the plate from internal/appearance and
+// TestAppearanceRolesMatchSource holds them to it; this pins that the source keeps the
+// declaration. See docs/PARITY.md "OCR" (plate shape).
 func TestParityOCRPrintPlate(t *testing.T) {
-	for _, c := range []struct{ file, src, re string }{
-		{"overlay.go ocrCSS .ocr-box", readRepoFile(t, "internal", "ocr", "overlay.go"),
-			`\.ocr-box\{[^}]*[^-]print-color-adjust:exact`},
-		{"ocr-overlay.css .ocr-plate", readRepoFile(t, "extension", "src", "ocr-overlay.css"),
-			`(?s)\.ocr-plate \{.*?[^-]print-color-adjust:\s*exact.*?\n\}`},
-	} {
-		if !regexp.MustCompile(c.re).MatchString(c.src) {
-			t.Errorf("%s: the plate no longer prints its paper (%q) - see docs/PARITY.md OCR (plate shape)", c.file, c.re)
-		}
-	}
 	// The -webkit- prefix is what Chromium reads, and Chromium is what both editions are printed
 	// from. Dropping it is a silent revert on the only browser that matters here.
-	for _, c := range []struct{ file, src string }{
-		{"overlay.go ocrCSS", readRepoFile(t, "internal", "ocr", "overlay.go")},
-		{"ocr-overlay.css", readRepoFile(t, "extension", "src", "ocr-overlay.css")},
-	} {
-		if !strings.Contains(c.src, "-webkit-print-color-adjust") {
-			t.Errorf("%s: the -webkit- print-color-adjust prefix is gone - Chromium reads that one (docs/PARITY.md OCR)", c.file)
+	for _, p := range []string{"print-color-adjust", "-webkit-print-color-adjust"} {
+		if v := plateDecl(t, p); v != "exact" {
+			t.Errorf("internal/appearance plate: %s is %q, want exact - the plate no longer prints its paper (docs/PARITY.md OCR, plate shape)", p, v)
 		}
 	}
+}
+
+// plateDecl returns the value the canonical source gives the plate for property, or "".
+func plateDecl(t *testing.T, property string) string {
+	t.Helper()
+	for _, d := range loadAppearance(t).Roles[appearance.RolePlate] {
+		if d.Property == property {
+			return d.Value
+		}
+	}
+	return ""
 }
 
 // TestParityOCRExifOrientation: the two editions must recognize the same picture a reader sees, on
@@ -602,10 +542,8 @@ func TestParityOCRFontFit(t *testing.T) {
 	// the box. A side that moved the background back onto the string would still pass every constant
 	// check here, so the carrier is pinned by name on both sides.
 	for _, c := range []struct{ what, src, re string }{
-		{"overlay.go plate box carries the paper", goSrc, `\.ocr-box\{[^}]*background:#fff`},
 		{"overlay.go writes the sampled paper onto the box", goSrc, `style \+= ";background:" \+ paper`},
 		{"ocr-plates.js writes the sampled paper onto the plate", plateSrc, `plate\.style\.background = s\.bg`},
-		{"ocr-overlay.css plate box carries the paper", readRepoFile(t, "extension", "src", "ocr-overlay.css"), `(?s)\.ocr-plate \{[^}]*background: #fff`},
 	} {
 		if !regexp.MustCompile(c.re).MatchString(c.src) {
 			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (plate shape)", c.what, c.re)
@@ -624,22 +562,11 @@ func TestParityOCRFontFit(t *testing.T) {
 		}
 	}
 
-	// Plate padding is relative to the plate's own type on both sides, and it is a measured value
-	// rather than a taste: it decides how large the runtime fit grows the plate's lettering, and the
-	// lab's residual-ink metric counts that lettering wherever it lands on a source-ink pixel. One
-	// edition drifting here moves a gated number on the other.
-	gp := num(t, "plate padding (overlay.go)", `padding:([\d.]+)em [\d.]+em`, goSrc)
-	jp := num(t, "plate padding (ocr-overlay.css)", `padding:\s*([\d.]+)em\s+[\d.]+em`, readRepoFile(t, "extension", "src", "ocr-overlay.css"))
-	if gp != jp {
-		t.Errorf("plate padding drift: overlay.go=%vem ocr-overlay.css=%vem (must match - see docs/PARITY.md OCR)", gp, jp)
-	}
-
-	// Corner radius is relative to the plate's own type on both sides, so a caption plate and a
-	// full-page plate round in proportion instead of one of them reading as a sharp patch.
-	gr := num(t, "plate radius (overlay.go)", `border-radius:([\d.]+)em`, goSrc)
-	jr := num(t, "plate radius (ocr-overlay.css)", `border-radius:\s*([\d.]+)em`, readRepoFile(t, "extension", "src", "ocr-overlay.css"))
-	if gr != jr {
-		t.Errorf("plate corner radius drift: overlay.go=%vem ocr-overlay.css=%vem (must match - see docs/PARITY.md OCR)", gr, jr)
+	// The plate's own CSS - the paper default on the box, and its padding and corner radius, both
+	// measured values - is a declaration of the plate role in internal/appearance, which both
+	// editions derive from and TestAppearanceRolesMatchSource compares declaration by declaration.
+	if v := plateDecl(t, "background"); v != "#fff" {
+		t.Errorf("internal/appearance plate: background is %q - the paper belongs on the plate box (docs/PARITY.md OCR, plate shape)", v)
 	}
 }
 

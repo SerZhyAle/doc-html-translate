@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"doc-html-translate/internal/appearance"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
@@ -354,37 +355,22 @@ const navBarScript = `
 //]]></script>
 `
 
-// readerCSS styles the reading themes ([12]), the theme toggle button, the
-// thin reading-progress bar and the index-page toolbar ([14]). It is injected
-// into <head> on both chapter pages and index.html.
-// readerCSS defines the shared reading themes (light/sepia/dark/night), the reader font
-// variables (size + family), the theme/font controls, and the progress bar. The colour
-// values are the canonical palette shared with the browser extension's viewer.css so both
-// front-ends look identical. Injected into <head> on chapter pages and index.html.
-const readerCSS = `
+// PaletteStyleNames are this edition's names for the reader palette: the colour tokens are
+// prefixed because the page is a book's own document, whose CSS may already use short names.
+var PaletteStyleNames = appearance.PaletteNames{Prefix: "dht-", Attr: "data-dht-theme"}
+
+// readerCSS styles the reading themes ([12]), the reader font variables (size + family), the
+// theme/font controls, the thin reading-progress bar and the index-page toolbar ([14]). It is
+// injected into <head> on both chapter pages and index.html. The four themes' colours come from
+// internal/appearance, the one source the extension's viewer.css palette is generated from too -
+// edit them there, not here (docs/PARITY.md "Reader theme palette").
+var readerCSS = `
 <style id="dht-reader-css">
+` + appearance.PaletteCSS(PaletteStyleNames) + `
   :root {
-    --dht-bg:#faf9f7; --dht-fg:#1b1b1b; --dht-muted:#6b6b6b;
-    --dht-bar-bg:#ffffff; --dht-bar-fg:#222222; --dht-border:#e2e0db;
-    --dht-accent:#2563eb; --dht-link:#1a4fb4;
     /* keep in step with DEFSZ in the reader script: this styles the page before that
        runs, so a mismatch shows as the text resizing under the reader on every load */
     --dht-reader-size:175%; --dht-reader-font:Georgia,"Times New Roman",serif;
-  }
-  html[data-dht-theme="sepia"] {
-    --dht-bg:#f4ecd8; --dht-fg:#4a3f2f; --dht-muted:#7a6c54;
-    --dht-bar-bg:#efe6cf; --dht-bar-fg:#4a3f2f; --dht-border:#ddd0b0;
-    --dht-accent:#8a5a2b; --dht-link:#7a4a1b;
-  }
-  html[data-dht-theme="dark"] {
-    --dht-bg:#1a1a1c; --dht-fg:#e6e4df; --dht-muted:#9a9893;
-    --dht-bar-bg:#232327; --dht-bar-fg:#e6e4df; --dht-border:#36363b;
-    --dht-accent:#5b8dff; --dht-link:#8fb4ff;
-  }
-  html[data-dht-theme="night"] {
-    --dht-bg:#0a0a0b; --dht-fg:#9a9a9a; --dht-muted:#6a6a6a;
-    --dht-bar-bg:#131315; --dht-bar-fg:#b8b8b8; --dht-border:#262629;
-    --dht-accent:#5599d6; --dht-link:#6aa8e0;
   }
   html, body { background:var(--dht-bg) !important; color:var(--dht-fg) !important; }
   body { font-size:var(--dht-reader-size); font-family:var(--dht-reader-font); }

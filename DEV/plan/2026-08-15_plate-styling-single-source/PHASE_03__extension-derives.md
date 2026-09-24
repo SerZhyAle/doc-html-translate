@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ✅ Done
 **Depends on:** Phase 01
-**Steps done:** 0 / 5
+**Steps done:** 5 / 5
 
 ## Objective
 
@@ -14,8 +14,8 @@ from the reader stylesheet onto the image role.
 
 ## Prerequisites
 
-- [ ] Phase 01 is ✅ Done.
-- [ ] Working tree clean or on a feature branch.
+- [x] Phase 01 is ✅ Done.
+- [x] Working tree clean or on a feature branch.
 
 ## Files touched
 
@@ -55,7 +55,7 @@ from the reader stylesheet onto the image role.
   `<<< generated`.
 - `node extension/scripts/gen-appearance.mjs --check` exits non-zero when a marker is absent.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -77,7 +77,7 @@ from the reader stylesheet onto the image role.
 - `.ocr-badge` still matches exactly once outside the generated region.
 - Re-running the generator leaves the file byte-identical.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -100,7 +100,7 @@ from the reader stylesheet onto the image role.
 - The generated region of `ocr-overlay.css` contains `max-height` and `margin` under the image
   selector.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -120,7 +120,7 @@ from the reader stylesheet onto the image role.
 - The generated region contains 4 selectors and 32 colour declarations.
 - Re-running the generator leaves the file byte-identical.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -139,19 +139,29 @@ from the reader stylesheet onto the image role.
 - `gen-appearance` matches in `extension/build.mjs`.
 - `npm run appearance` in `extension/` exits 0 and leaves the tree unchanged.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ## Phase done criteria
 
-- [ ] Every `Step 03.*` is `[x] done`.
-- [ ] `npm test` in `extension/` exits 0 (136 tests as of 2026-08-15).
-- [ ] Grep for `TODO(phase-03)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [x] Every `Step 03.*` is `[x] done`.
+- [x] `npm test` in `extension/` exits 0 (149 tests on 2026-09-24, with `vendor/` populated).
+- [x] Grep for `TODO(phase-03)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Handoff notes
 
 Establishes: the marker convention and the generator, so the extension's copy of these declarations
 is a render target. Phase 04 asserts that nothing outside the markers declares a role.
+
+## Execution notes (2026-09-24)
+
+- Step 03.3: the `#content img` reset is an id selector and outranks the `.ocr-overlay-img` role rule
+  whatever the order, so deleting the override alone would have re-grown the container. The reset is
+  now `#content img:not(.ocr-overlay-img)`; the role rule carries `margin` / `max-height` everywhere.
+  Checked by a headless-Chromium render, old CSS against new, pixel-identical (see INDEX change log);
+  the same harness does see the bug when the `:not()` is removed.
+- Step 03.5: `npm run build` runs `appearance` after `stamp`; `node build.mjs zip` runs the generator's
+  `--check` and refuses to package a stale region.
 
 ## Rollback plan
 

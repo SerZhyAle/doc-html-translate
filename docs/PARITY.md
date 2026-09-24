@@ -47,7 +47,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
 | Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
-| OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` |
+| OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` (overlay rules generated from `internal/appearance`) |
 | OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
@@ -57,10 +57,51 @@ Each JS module re-implements the named Go code. A change to one side is a change
 
 ## Shared invariants (MUST stay identical on both sides)
 
-These are duplicated across codebases with no shared source. Changing a value on one side without the
-other is a bug. Each row cites the two places that must agree.
+These are duplicated across codebases, mostly with no shared source. Changing a value on one side
+without the other is a bug. Each row cites the two places that must agree.
+
+Every section below opens with a **Guard** line: `Guarded by` names the test that fails when the two
+sides part, `Prose only` means nothing but this document holds them together - being right there is
+currently luck, and the line names what a future ticket would have to pin. The marks were derived from
+the test files (`tests/*_test.go`, `extension/test/*.test.mjs`) on 2026-09-24; a one-sided unit test
+does not count, only a check that reads both editions or a single source both derive from.
+
+### Shared appearance (OCR overlay unit, reader theme palette)
+
+**Guard:** Guarded by `TestAppearanceRolesMatchSource`, `TestAppearanceNoRoleDeclaredOutsideSource` and
+`TestAppearanceComparatorDetectsDrift` ([`tests/appearance_parity_test.go`](../tests/appearance_parity_test.go)).
+
+The one invariant here that is **not duplicated**: the OCR overlay's container, image and plate roles and
+the four reader themes are written once, in
+[`internal/appearance/appearance.json`](../internal/appearance/appearance.json), and both editions derive
+their CSS from it. The desktop app builds it at run time
+([`internal/appearance`](../internal/appearance/appearance.go) `OverlayCSS` / `PaletteCSS`, called by
+`overlay.go` and `navbar.go`) and still inlines it into every page; the extension generates it into marked
+regions of `ocr-overlay.css` and `viewer.css` ([`gen-appearance.mjs`](../extension/scripts/gen-appearance.mjs),
+`npm run appearance`, checked before every package). **Neither edition's copy may be edited by hand** -
+change `internal/appearance/appearance.json` and regenerate. See its [README](../internal/appearance/README.md).
+
+The gate compares every declaration of every role and theme on both sides against the source, keyed on
+the role or theme, never on a selector or custom-property name, so naming stays per-edition and outside
+the comparison. A declaration one side has and the other lacks fails and names the property, the role and
+the side missing it - the hairline `box-shadow` ring that shipped on the extension's plate only is the
+case it was built from. A difference is legal only when the source's `divergences` list names it with a
+reason; that list is what the gate reads, and an entry that licenses a declaration but matches nothing
+fails too. It also fails on a rule outside the derived path - outside the generated regions, or anywhere
+in the desktop Go sources - that targets a role selector or declares a palette colour.
+
+The first full run (2026-09-24) found one equivalence case and resolved it rather than listing it: the
+image role's reset guard (`margin:0; max-height:none`) sat on the role in the desktop app but in the
+extension's reader stylesheet only, so the standalone OCR page relied on a browser default. It is on the
+role now, on both sides; the viewer's `#content img` reset skips the overlay image instead of being
+overridden. The viewer's spacing of the container in its reading column is named in `divergences` as
+placement, not appearance.
 
 ### Input format detection is by byte signature, not extension
+
+**Guard:** Prose only. The Go sniffer has its own unit tests (`internal/txt/sniff_test.go`), but nothing
+compares the two signature lists; a future ticket would pin the set of magics both `detectFormat` and the
+Go sniffer recognize, and the `PK..` tie-break by extension.
 
 Both editions decide what a file *is* from its leading bytes, not its name, so a mislabelled or
 extensionless file still routes correctly and a binary is never fed to a text reader.
@@ -85,6 +126,10 @@ becomes a document.** Go: `internal/txt/sniff.go`. JS: `extension/src/viewer.js`
 `imageMime` / `isMobiBytes`.
 
 ### Plain-text source-encoding decode order
+
+**Guard:** Prose only. Both sides test their own decoder (`internal/txt/extract_test.go`,
+`test/txt.test.mjs`); nothing reads both. A future ticket would pin the order of the steps and
+`MIN_CYRILLIC_FRACTION` across `decodeText` in Go and JS.
 
 Both editions decide a `.txt` file's encoding from its leading bytes, in this order. The **order is the
 invariant**: the same file must not read correctly on one edition and as mojibake on the other.
@@ -132,9 +177,16 @@ stays as-is.
 
 ### Reader theme palette
 
-Exactly four themes, in this order: **`light`, `sepia`, `dark`, `night`**. Eight CSS variables per
-theme. The **values must be identical**; only the variable *names* and the `<html>` attribute differ
-(see [Intentional divergences](#intentional-divergences-do-not-fix)).
+**Guard:** Guarded by `TestAppearanceRolesMatchSource` - the palette is part of the
+[shared appearance](#shared-appearance-ocr-overlay-unit-reader-theme-palette), derived on both sides
+from `internal/appearance/appearance.json`.
+
+Exactly four themes, in this order: **`light`, `sepia`, `dark`, `night`**. Eight colour tokens per
+theme. The **values are identical by construction**; only the custom-property names and the `<html>`
+attribute differ (see [Intentional divergences](#intentional-divergences-do-not-fix)).
+
+The table is the human-readable form of `internal/appearance/appearance.json` - generated-from, not
+authoritative. Change a colour there, not here, then update this table.
 
 | Theme | bg | fg | muted | bar-bg | bar-fg | border | accent | link |
 |---|---|---|---|---|---|---|---|---|
@@ -143,11 +195,13 @@ theme. The **values must be identical**; only the variable *names* and the `<htm
 | dark | `#1a1a1c` | `#e6e4df` | `#9a9893` | `#232327` | `#e6e4df` | `#36363b` | `#5b8dff` | `#8fb4ff` |
 | night | `#0a0a0b` | `#9a9a9a` | `#6a6a6a` | `#131315` | `#b8b8b8` | `#262629` | `#5599d6` | `#6aa8e0` |
 
-Sources: [`navbar.go:353-373`](../internal/htmlgen/navbar.go#L353-L373) (`--dht-*`),
-[`viewer.css:5-51`](../extension/src/viewer.css#L5-L51) (`--*`). Guarded by `tests/parity_test.go`
-(`TestParityThemePalette`), which compares the per-theme colour sequences (3- and 6-digit hex normalized).
+Emitted by [`navbar.go`](../internal/htmlgen/navbar.go) `readerCSS` (`--dht-*`, `data-dht-theme`) and the
+generated region of [`viewer.css`](../extension/src/viewer.css) (`--*`, `data-theme`).
 
 ### Reader fonts
+
+**Guard:** Prose only. A future ticket would pin the three family strings in `readerScript` `FAMILIES`
+against `viewer.js`, whitespace- and quote-normalized - or move them into `internal/appearance`.
 
 Serif / sans / mono families, identical strings both sides:
 `serif` = `Georgia,"Times New Roman",serif` · `sans` = `"Segoe UI",system-ui,Arial,sans-serif` ·
@@ -156,6 +210,8 @@ Serif / sans / mono families, identical strings both sides:
 [`viewer.js:91-95`](../extension/src/viewer.js#L91-L95).
 
 ### PDF reflow heuristics
+
+**Guard:** Guarded by `TestParityReflowConstants`.
 
 | Constant | Value | Go | JS |
 |---|---|---|---|
@@ -171,6 +227,9 @@ Both sides now name these constants (Go: a documented `const` block in `extract.
 the JS-only additions under [Intentional divergences](#intentional-divergences-do-not-fix).
 
 ### PDF page-image selection
+
+**Guard:** Prose only. A future ticket would pin `aspectRatioTolerance` == `ASPECT_RATIO_TOLERANCE` and
+the keep-the-largest rule.
 
 When a PDF page yields more than one raster, both editions collapse **proportional-scale duplicates** -
 the same picture embedded at two resolutions - down to the largest, so a scanned page is not shown twice.
@@ -189,6 +248,9 @@ paint operators, and a `/Thumb` is a page-dict entry the content stream never pa
 
 ### EPUB TOC parsing
 
+**Guard:** Prose only. A future ticket would pin the source priority and the `<nav>` selection order,
+most cheaply by running one fixture EPUB through both parsers and comparing the trees.
+
 | Rule | Both sides |
 |---|---|
 | TOC source priority | EPUB3 `nav.xhtml` (`properties="nav"`) preferred; EPUB2 `toc.ncx` used **only** if nav yields 0 entries |
@@ -205,6 +267,9 @@ difference - Go keeps external TOC entries, the extension drops them (single in-
 under [Intentional divergences](#intentional-divergences-do-not-fix).
 
 ### Comic archive page order and entry filter
+
+**Guard:** Guarded by `TestParityComicPageFilter` for the page-extension set. Page order (`naturalLess` /
+`naturalCompare`) is prose only; a future ticket would run one list of names through both comparators.
 
 A comic archive (CBZ/CBR/CB7/CBT) is a container of page images with no text layer; the reader OCRs each
 page into translatable plates (forced on, like a standalone image - opening a comic *is* the request to
@@ -230,13 +295,18 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 
 ### OCR
 
+**Guard:** Guarded by the `TestParityOCR*` family, `TestPlateRulesHaveOneImplementation`
+([`tests/parity_test.go`](../tests/parity_test.go)) and, for the plate's CSS, the [shared
+appearance](#shared-appearance-ocr-overlay-unit-reader-theme-palette) gate. Individual rows below name
+their own test where one exists.
+
 | Contract | Value / rule | Go | JS |
 |---|---|---|---|
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/build.ps1` -> `<exe>/tessdata/eng.traineddata` | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates. Proximity is not the whole test: a line also has to be the **same type size** as the cluster it would join - its ink height within `OCR_TYPE_SIZE_RATIO (1.6)` of the cluster's own median, either way round - because a page with separated regions gives the page-wide pitch estimate steps that belong to no single text, and a headline can then sit closer to the body than the body's own missing lines do. A fourth rule then looks at the page instead of at the neighbours: a finished cluster that covers more than `OCR_MAX_PLATE_COVERAGE (0.52)` of the image **and** whose own line boxes fill less than `OCR_MIN_PLATE_LINE_FILL (0.72)` of its height is **released into one plate per line** - a form, a list or an application window carries one type at one pitch, so nothing in its typography separates its regions, and the whole page arrives as one plate. Released, not refused: every recognized word still reaches a plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` / `sameTypeSize` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` / `sameTypeSize` |
 | Line integrity (before clustering) | A recognizer "line" is not always one line: PSM 3's layout analysis can walk across a picture and return a phrase from the left of the page and a phrase from the right as **one line box**. Every grouping rule below then reads them as one text and none can recover - the stitched box genuinely spans both columns, so the column test sees a real overlap, and the coverage release does not fire either because the plate is wide but short. So before anything else, a line is **cut between two consecutive words whose boxes stand more than `OCR_MAX_WORD_GAP_RATIO (3.5) x` the line's median word height apart**, each run boxed to its own words and carrying its own mean confidence. The gap is measured **between the boxes**, not left-to-right, so a right-to-left line is judged the same way round. Cutting alone is not enough: the runs then interleave left, right, left, right down the page, and the clustering closes a plate on the first line that does not belong to it - so the runs of a **page** that was cut are **regrouped into columns** (x-overlap, the clustering's own test) and handed over column by column, top to bottom. The scope is the page and not the paragraph, because the clustering deliberately merges across the paragraph boundaries the engine invents and the engine invents them mid-column. A page nothing was cut on keeps the engine's order untouched | [`tesseract.go`](../internal/ocr/tesseract.go) `(*ocrLine).splitWideGaps` / `lineFromWords` / `orderColumns` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `splitWideGaps` / `orderColumns`, [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `collectLines` |
-| Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-plates.js`](../extension/src/ocr-plates.js) `plateSpecs` / `buildOverlay` |
+| Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` on the image role itself, on both editions (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); the container and image CSS come from [`internal/appearance`](../internal/appearance/appearance.json); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-plates.js`](../extension/src/ocr-plates.js) `plateSpecs` / `buildOverlay` |
 | Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. Degrades safely (CSS `overflow:hidden`) if the script does not run | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-plates.js`](../extension/src/ocr-plates.js) `fitPlate` / `scheduleFit` |
 | Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = **median** of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `0.015`/`6`-px min-ink threshold. Median and not mean on both counts: a glyph's edge is a ramp of antialiased pixels running from the ink to the paper and the deviation test admits most of that ramp, so averaging lands between the two by construction - measured on a caption of rgb(17,17,17) on rgb(253,253,253), mean rgb(61,61,61) against median rgb(7,7,7). **Which of the two is the paper is then decided by the band just outside the block** (`1/3` of a **line height** - not of the 1.3-line ink strip - on each side, floor 2 px, deciding only on `>= RING_MIN_SAMPLES (40)` sampled pixels), and the pair is swapped when that band sits nearer the ink: the median assumes the text is the minority of its own box, which holds for body text in a balloon and fails for heavy display capitals, whose strokes fill more of a tight box than the paper between them - measured, a poster's word came out as cream lettering on a near-black ground, the exact inverse of the poster | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
 | Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
@@ -420,8 +490,8 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   blocks by it while the prepared image has not been downscaled. The Go app downscales after the
   sweep, so there every rectangle is already in prepared-image coordinates.
 - **The opaque paper is on the plate box** - identical on both sides, and this is a decision taken
-  against the corpus rather than a default. The box carries the sampled paper
-  (`.ocr-box{background:#fff}` == `.ocr-plate{background:#fff}`, overridden per plate by the sampled
+  against the corpus rather than a default. The box carries the sampled paper (the plate role's
+  `background:#fff` in `internal/appearance/appearance.json`, overridden per plate by the sampled
   colour in the inline style) and the text sits directly in it; there is no inner span, and
   `TestParityOCRFontFit` fails if the string `ocr-ink` reappears in either edition. The box is what
   covers the source region, so the box is what has to be opaque.
@@ -439,7 +509,8 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   and the type-size rule in the grouping row above. Evidence:
   [`DEV/research/ocr_plate_coverage_2026-08-13.md`](../DEV/research/ocr_plate_coverage_2026-08-13.md).
 - **The plate prints its own colours** - `print-color-adjust:exact` (plus the `-webkit-` prefix
-  Chromium still reads) on `.ocr-box` == `.ocr-plate`, guarded by `TestParityOCRPrintPlate`. Scoped
+  Chromium still reads) on the plate role in `internal/appearance/appearance.json`, which both
+  editions derive from; `TestParityOCRPrintPlate` pins that the source keeps it. Scoped
   to the plate, so the rest of the document keeps the browser's print economy. **What it recovers
   was measured rather than assumed, and the measurement corrected the expectation.** Printing an
   overlaid page with "Background graphics" unchecked - the default - does not leave the plate
@@ -541,7 +612,9 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 
 - **CSS class names** differ: Go `.ocr-fig` / `.ocr-box`; JS `.ocr-overlay` / `.ocr-plate` /
   `.ocr-overlay-img` / `.ocr-badge`. Cosmetic; deferred. The toggle's off-state class is part of this
-  split (`dht-ocr-off` / `ocr-layer-off`) and moves with it if the names are ever unified.
+  split (`dht-ocr-off` / `ocr-layer-off`) and moves with it if the names are ever unified. Named in
+  the `divergences` list of `internal/appearance/appearance.json`; the appearance gate is blind to
+  names and compares only the declarations.
 - **Default OCR language rule**: Go derives from `-src` (`TessLang`, else `eng`); the extension uses a
   fixed persisted `eng` (it has no translation source language). Intentional for now.
 - **The script check that corrects an unchosen language is desktop-only.** When `-ocr-lang` is empty
@@ -556,6 +629,11 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
   a Cyrillic page that the desktop no longer produces. Tracked in the parity ticket.
 
 ### Settings defaults
+
+**Guard:** Prose only for the default values and the extension side. `TestParityGUIExposesEveryCLIFlag`
+([`tests/ui_cli_parity_test.go`](../tests/ui_cli_parity_test.go)) guards only that the GUI exposes every
+CLI flag; a future ticket would pin the shared defaults (`-src`/`-dst`, OCR language, `enabledByDefault`)
+across `flags.go`, `ui.html` and `defaults.js`.
 
 Canonical defaults (from [`flags.go`](../internal/config/flags.go)): `-split 5000`, `-toc-depth 0`
 (unlimited), `-src en`, `-dst ru`, `-max-cost 0` (no limit), `-ocr false`, `-ocr-lang ""` (falls back
@@ -578,6 +656,9 @@ the popup toggle is on); the "Convert with doc-html-translate" right-click item
 
 ### Product URL and feedback address
 
+**Guard:** Prose only. Spot-checked consistent on 2026-08-15 across the 13 splash files, the GUI and the
+three extension pages; a future ticket would pin both strings in every file the table lists.
+
 Every edition surfaces the same product page and the same feedback address. Both are duplicated string
 constants - changing either is a cross-edition change; update all rows together.
 
@@ -587,6 +668,8 @@ constants - changing either is a cross-edition change; update all rows together.
 | Feedback | `mailto:sza@ukr.net` | CLI splash [`app.go`](../internal/app/app.go), GUI [`ui.html`](../cmd/doc-html-ui/ui.html) byline, extension [`popup.html`](../extension/src/popup.html) / [`viewer.html`](../extension/src/viewer.html) / [`options.html`](../extension/src/options.html) |
 
 ### Report field labels
+
+**Guard:** Guarded by `TestParityReportFields`.
 
 Both editions hand the author a `key: value` block, one field per line, and both write it **in English
 whatever the interface language is** - the author reads one format, and a summary they cannot read is
@@ -602,6 +685,8 @@ Renaming a shared label on one side only makes two reports that cannot be read t
 `TestParityReportFields`.
 
 ### OCR lab evidence schema
+
+**Guard:** Guarded by `TestParityOCRLabEvidenceSchema` and `test/ocrlab-evidence.test.mjs`.
 
 Not a shipped surface - a **developer** contract. The OCR visual-fidelity lab
 ([`tools/ocrlab`](../tools/ocrlab/README.md)) grades both editions with one metrics package against one
@@ -638,6 +723,10 @@ Bump the schema version on **both** sides or neither. Guarded by `TestParityOCRL
 Go runner actually emitted.
 
 ### Interface language set, and what the interface language must never touch
+
+**Guard:** Prose only for the code list, its order and the RTL/font sets - nothing compares `i18n.Codes`
+with the extension's `LOCALES` and `_locales/`; a future ticket would. The chrome-only rule is guarded by
+`TestConvertedChromeLanguage` (desktop side).
 
 Both editions ship the same 13 interface languages, in this order, `en` first:
 
@@ -821,9 +910,12 @@ These are by design. Do not "sync" them without a decision - document changes he
 3. **Update this file** whenever you touch a shared invariant (a palette value, a heuristic constant, the
    OCR host/catalog, a default). The invariant tables above are the source of truth; the code must match
    them, not the other way around.
-4. **Prefer a single source of truth in code** when practical (e.g. a generated palette both front-ends
-   read) over manual copy + a "values match" comment.
-5. **Guard tests** parse both codebases and fail on drift: `tests/parity_test.go` (theme palette, OCR
+4. **Prefer a single source of truth in code** when practical over manual copy + a "values match"
+   comment. The shared appearance is the worked case: `internal/appearance/appearance.json`, a builder
+   per edition, and a gate that compares every declaration rather than a chosen few (see
+   [Shared appearance](#shared-appearance-ocr-overlay-unit-reader-theme-palette)).
+5. **Guard tests** parse both codebases and fail on drift: `tests/appearance_parity_test.go` (the OCR
+   overlay CSS and the theme palette, against their single source), `tests/parity_test.go` (OCR
    tessdata version, OCR language catalog, PDF reflow constants) and `tests/ui_cli_parity_test.go` (the
    GUI exposes every CLI flag). They run in the normal `scripts/test.ps1` gate - extend them whenever you
    pin a new invariant here. These guard the **value** invariants. The extension's own DOM path (chapter

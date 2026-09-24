@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ⛔ Blocked - Step 05.3 only (catalog not reachable from the session that did 05.1-05.2)
 **Depends on:** Phase 04
-**Steps done:** 0 / 3
+**Steps done:** 2 / 3
 
 ## Objective
 
@@ -13,8 +13,8 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 
 ## Prerequisites
 
-- [ ] Phase 04 is ✅ Done - the marks must describe what actually runs.
-- [ ] Working tree clean or on a feature branch.
+- [x] Phase 04 is ✅ Done - the marks must describe what actually runs.
+- [x] Working tree clean or on a feature branch.
 
 ## Files touched
 
@@ -40,7 +40,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 - `internal/appearance/appearance.json` matches at least twice in `docs/PARITY.md`.
 - The palette table still matches, with its four theme rows.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -62,7 +62,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
   either `Guarded by` or `Prose only`.
 - At least 8 sections carry `Prose only`.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -81,14 +81,19 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 - `internal/appearance` matches at least once in the catalog's `OCR-PIPELINE.md`.
 - The §3.1 paragraph on the opaque paper carrier is unchanged in wording.
 
-**Status:** `[ ]` not done
+**Status:** ⛔ blocked - the catalog lives at the path named in `AGENTS.md`, a Windows drive that is
+not mounted in the Linux session this ran in. The in-repo pointer `docs/contracts/APP-STYLE.md` was
+updated (it named `TestParityThemePalette`); `docs/contracts/OCR-PIPELINE.md` names no file this ticket
+moved. To do on the owner's machine: in the catalog's `ocr-overlay/ocr-pipeline.md`, repoint the
+plate-rendering rows and §3.1 at `internal/appearance/appearance.json` as the single definition, with
+`internal/appearance` (Go) and `extension/scripts/gen-appearance.mjs` (JS) as its consumers.
 
 ## Phase done criteria
 
-- [ ] Every `Step 05.*` is `[x] done`.
-- [ ] `./scripts/typo.ps1` exits 0.
-- [ ] Grep for `TODO(phase-05)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [ ] Every `Step 05.*` is `[x] done` - 05.3 blocked.
+- [ ] `./scripts/typo.ps1` exits 0 - not run (no PowerShell); `tests/typography_test.go` green.
+- [x] Grep for `TODO(phase-05)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Handoff notes
 

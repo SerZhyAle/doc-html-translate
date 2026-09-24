@@ -195,7 +195,7 @@ balloons and real lines overlap (1.87-2.57x) is measured, stated, and left to 07
 rel  ticket                                          changed     status
 2    2026-09-22_ocr-discard-record-missing-for-      2026-09-22  Draft
      blank-images
-2    2026-08-15_plate-styling-single-source          2026-08-15  Tactical (0/6 phases)
+2    2026-08-15_plate-styling-single-source          2026-09-24  In Progress (4/6 phases)
 2    (no ticket) plate box rides over the logo       2026-08-13  Evidenced, unfiled
 2    (no ticket) tesseract.js misses a caption on    2026-08-15  Evidenced, unfiled
      a gradient
@@ -229,12 +229,12 @@ still leaves nothing behind, which is the one case the record exists for. Proven
 package `ocr` (`applyOverlays: changed=false NoText=1`, no diagnostics file). Nothing a reader sees changes
 when it lands; what changes is that a blank scene can be told from a discarded one.
 
-`plate-styling-single-source` has a full tactical plan and 0 of 6 phases done. The visible half of it -
-the ring - ships in 1.1, so what is left is the rule that would have caught it: one description of the
-shared appearance, a gate that reads the whole role instead of three pinned declarations, and a
-named-divergence list. Nothing a reader sees changes when it lands, by its own done-criterion 5. It
-should be the first thing after the release, because every day it is absent is a day the next
-divergence can arrive unnoticed.
+`plate-styling-single-source` is built (2026-09-24): `internal/appearance/appearance.json` is the one
+description of the OCR overlay and the reader palette, both editions derive from it, and
+`tests/appearance_parity_test.go` fails on any declaration one side has and the other lacks. What is left
+needs the owner's machine: the catalog's `ocr-pipeline.md` repoint (Step 05.3 - the catalog was not
+reachable), the four PowerShell gates, and the corpus comic render (Step 06.2); a Chromium render of old
+against new CSS was pixel-identical meanwhile. Then `/spec-check`.
 
 **The `First-Earthman` cover plate rides over the `PLANET COMICS` logo.** The plate's text is the
 cover's own top banner line and it sits on that banner, but its box is taller than its line, so it

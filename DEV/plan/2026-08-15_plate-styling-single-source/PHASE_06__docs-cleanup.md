@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** 🚧 In Progress
 **Depends on:** all
-**Steps done:** 0 / 2
+**Steps done:** 1 / 2
 
 ## Objective
 
@@ -38,7 +38,7 @@ The changelog records every file this ticket touched, and the whole gate runs gr
 - `internal/appearance/appearance.json`, `tests/appearance_parity_test.go`,
   `extension/scripts/gen-appearance.mjs` each match at least once in `DEV/CHANGELOG.md`.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -57,7 +57,11 @@ The changelog records every file this ticket touched, and the whole gate runs gr
 - All five commands exit 0, with their output cited in the INDEX change log.
 - The rendered comparison is recorded with the file name of the page used.
 
-**Status:** `[ ]` not done
+**Status:** `[~]` partial - the four PowerShell gates were not run (no PowerShell in the Linux
+session); their Go / Node equivalents were, and the corpus comic render needs tesseract and the corpus,
+neither present. What ran is in the INDEX change log. Left for the owner's machine: `./scripts/test.ps1`,
+`./scripts/lint.ps1`, `./scripts/typo.ps1`, `./scripts/check.ps1`, and one corpus comic page with OCR on
+compared against its 2026-08-15 output.
 
 ## Phase done criteria
 

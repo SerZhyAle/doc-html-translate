@@ -1,82 +1,85 @@
 /* ocr-overlay.css - shared styling for the OCR overlay unit (ocr-overlay.js). Used by
-   the context-menu OCR page and by the reflow viewer. */
+   the context-menu OCR page, by the reflow viewer and, injected, by the page-OCR layer.
 
+   The container, image, plate and hidden-plate rules are generated from
+   internal/appearance/appearance.json, the one description of the plate both editions share -
+   the desktop app builds its .ocr-fig / .ocr-box rules from the same file. Edit the values there
+   and run `npm run appearance`; tests/appearance_parity_test.go fails on a declaration one edition
+   has and the other lacks, which is how a 1 px box-shadow ring once shipped here and nowhere else.
+   The per-declaration measurements (paper carrier, padding, radius, print) arrive as generated
+   comments. Only the badge and the empty-state hint below are this edition's own. */
+
+/* >>> generated from internal/appearance - do not edit by hand */
+/* role: container */
 .ocr-overlay {
   position: relative;
+  /* Block with an explicit width, not inline-block: a shrink-to-fit box with
+     container-type:inline-size collapses to zero inline size, which hides the image and every
+     plate. */
   display: block;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  /* The container query root is what lets a plate's cqw font size mean a share of this picture. */
   container-type: inline-size;
   line-height: 1.1;
 }
 
+/* role: image */
 .ocr-overlay-img {
   display: block;
   width: 100%;
   height: auto;
+  /* margin and max-height guard the image against a page-level img reset: a margin grew the
+     container around the image and a max-height shrank it below the container, and either drifts
+     the percent-positioned plates off the words they cover. The guard belongs to the role, so
+     every page carrying the overlay states it rather than inheriting a browser default. */
+  margin: 0;
+  max-height: none;
 }
 
-/* Opaque plate covering the source text, carrying the recognized text. Text is centred in its
-   source region; the runtime re-fit (fitPlate in ocr-overlay.js) shrinks the font so a longer
-   string - a translation - fits, and only lets the box grow if it still won't fit at the font
-   floor, so nothing clips. overflow:hidden gives the fit a bounded box to measure against.
-
-   The opaque paper is on the plate box, because the box is what covers the source region. It sat
-   on an inline span hugging the string for one day - which gave the paper the shape of the
-   rendered words - and the corpus was asked which serves a reader better: over 46 scenes the box
-   carrier left a mean 17% of the source lettering still showing under a plate and the string
-   carrier left 93%. The cost of the box is real and was why the span was tried: a block box is
-   wider than centred copy on its last line, so paper lands beside that line (measured at 91 px
-   either side of a 984 px caption). Mirrors overlay.go ocrCSS (docs/PARITY.md). */
+/* role: plate */
 .ocr-plate {
   position: absolute;
   box-sizing: border-box;
+  /* Gives the runtime fit a bounded box to measure against; the fit lets the box grow only when
+     the text still overflows at the font floor, so nothing clips. */
   overflow: hidden;
+  /* The opaque paper is on the plate box, overridden per plate by the sampled colour. Over 46 lab
+     scenes the box carrier left a mean 17% of the source lettering showing under a plate and a
+     span hugging the string left 93%. The cost is paper beside a short centred last line, measured
+     at 91 px either side of a 984 px caption. */
+  background: #fff;
+  /* Relative to the plate's own type, so a caption plate and a full-page plate round in proportion
+     instead of one reading as a sharp patch. */
+  border-radius: 0.35em;
+  /* Load-bearing: the padding decides how large the runtime fit grows the plate's own lettering,
+     which the lab's residual-ink metric counts. On samson-and-delilah-03-scroll, 0.05em 0.15em
+     took the scene from 0.2705 to 0.2841, past the recorded 0.28 bound. Changing it needs a lab
+     run. */
+  padding: 0.08em 0.28em;
+  color: #111;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Load-bearing, not cosmetic: the padding decides how large the runtime fit grows the plate's
-     own lettering, and the lab's residual-ink metric counts that lettering wherever it lands on a
-     source-ink pixel. Measured on samson-and-delilah-03-scroll with byte-identical plate rects,
-     0.05em 0.15em took the scene from 0.2705 to 0.2841, past the recorded 0.28 bound. Shared with
-     overlay.go ocrCSS (docs/PARITY.md). */
-  padding: 0.08em 0.28em;
-  /* Relative to the plate's own type, not a fixed 2px: a caption plate and a full-page plate are
-     drawn at wildly different scales, and a corner that reads as a rounded label on one reads as a
-     sharp-cornered patch on the other. Shared with overlay.go ocrCSS (docs/PARITY.md). */
-  border-radius: 0.35em;
-  background: #fff;
-  color: #111;
   text-align: center;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
   font-family: "Segoe UI", system-ui, Arial, sans-serif;
-  /* Print the paper. A browser omits background colours from a printed page by default, and the
-     plate is nothing but an opaque background carrying text: without this the translated string
-     prints on top of the still-visible source lettering and the page is unreadable on paper - the
-     one output where the reader cannot toggle the overlay off. The declaration applies to the
-     plate only, so the rest of the document keeps the browser's own print economy. The -webkit-
-     prefix is still what Chromium reads. Shared with overlay.go ocrCSS (docs/PARITY.md). */
+  /* A browser drops background colours from a printed page, and the plate is an opaque background
+     carrying text, so without this the translation prints over the source lettering. Print is the
+     one output where the overlay cannot be toggled off. The -webkit- prefix is what Chromium
+     reads. */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
-  /* No hairline ring around the plate. The overlay shipped with a
-     `box-shadow: 0 0 0 1px rgba(0,0,0,0.06)`, which the desktop app's ocrCSS never had, so it was
-     drift rather than a shared invariant. Its purpose was to keep a white plate visible against a
-     white page, but that is exactly the case where the plate should disappear: when the sampled
-     paper colour matches the source (a speech balloon, a plain scan margin), the ring is the only
-     thing that tells the reader an overlay is there, and it draws a box around text the source drew
-     without one. Where the paper colour is wrong the ring does not rescue the plate anyway. */
 }
 
-/* The viewer's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,
-   not visibility/opacity: a hidden plate must not keep taking pointer events or be read out by a
-   screen reader, and the page translator must not find text to swap in a layer the reader turned
-   off. Mirrors overlay.go's html.dht-ocr-off rule (docs/PARITY.md). */
+/* role: hidden-plate */
 html.ocr-layer-off .ocr-plate {
   display: none;
 }
+/* <<< generated */
 
 /* Per-image progress badge overlaid while an image is queued / being recognized. */
 .ocr-badge {

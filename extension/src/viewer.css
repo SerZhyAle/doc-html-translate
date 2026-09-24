@@ -5,27 +5,25 @@
 :root {
   --reader-font: Georgia, "Times New Roman", serif;
   --reader-size: 28px; /* keep in step with viewer.js DEFAULT_PREFS.size */
+}
+
+/* The four theme palettes are generated from internal/appearance/appearance.json, the source the
+   desktop app's pages build theirs from too, so both front-ends render identically (night is
+   deeper than dark, for low-light reading). Edit the colours there and run `npm run appearance`. */
+/* >>> generated from internal/appearance - do not edit by hand */
+/* theme: light */
+:root {
   --bg: #faf9f7;
   --fg: #1b1b1b;
   --muted: #6b6b6b;
   --bar-bg: #ffffff;
-  --bar-fg: #222;
+  --bar-fg: #222222;
   --border: #e2e0db;
   --accent: #2563eb;
   --link: #1a4fb4;
 }
 
-html[data-theme="dark"] {
-  --bg: #1a1a1c;
-  --fg: #e6e4df;
-  --muted: #9a9893;
-  --bar-bg: #232327;
-  --bar-fg: #e6e4df;
-  --border: #36363b;
-  --accent: #5b8dff;
-  --link: #8fb4ff;
-}
-
+/* theme: sepia */
 html[data-theme="sepia"] {
   --bg: #f4ecd8;
   --fg: #4a3f2f;
@@ -37,8 +35,19 @@ html[data-theme="sepia"] {
   --link: #7a4a1b;
 }
 
-/* night: deeper than dark, for low-light reading. Values match the desktop app's
-   generated HTML so both front-ends render identically. */
+/* theme: dark */
+html[data-theme="dark"] {
+  --bg: #1a1a1c;
+  --fg: #e6e4df;
+  --muted: #9a9893;
+  --bar-bg: #232327;
+  --bar-fg: #e6e4df;
+  --border: #36363b;
+  --accent: #5b8dff;
+  --link: #8fb4ff;
+}
+
+/* theme: night */
 html[data-theme="night"] {
   --bg: #0a0a0b;
   --fg: #9a9a9a;
@@ -49,6 +58,7 @@ html[data-theme="night"] {
   --accent: #5599d6;
   --link: #6aa8e0;
 }
+/* <<< generated */
 
 * { box-sizing: border-box; }
 
@@ -158,7 +168,10 @@ body {
 #content h3 { text-align: center; font-size: 1.15em; font-style: italic; margin: 1.4em 0 0.8em; }
 
 /* ---- EPUB content (richer markup than the PDF reflow path) ---- */
-#content img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
+/* Not the overlay image: its role rule (ocr-overlay.css) states margin and max-height itself, and an
+   id selector here would outrank that class rule and grow the container around the picture, which
+   drifts the percent-positioned plates off the words they cover. */
+#content img:not(.ocr-overlay-img) { max-width: 100%; height: auto; display: block; margin: 1em auto; }
 /* Holds a scanned page's height while its raster is still being decoded (extraction is
    deferred until the reader nears the page). Mirrors the "#content img" box a full-page
    raster ends up in - full column width, own aspect ratio - so the document has its real
@@ -247,8 +260,3 @@ body {
 .ocr-pending { position: relative; display: block; margin: 1em auto; max-width: 100%; }
 .ocr-pending img { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 #content .ocr-overlay { margin: 1em auto; max-width: 100%; }
-/* The overlay image must fill its aspect-ratio container exactly, or the percent-positioned
-   plates drift from it. Neutralize the "#content img" reset: its `margin: 1em auto` grew the
-   container by ~2em and centered the image inside it, so plates (positioned as % of the taller
-   container) drifted vertically - up above the image centre, down below it. */
-#content .ocr-overlay-img { margin: 0; max-height: none; }

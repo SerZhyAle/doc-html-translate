@@ -88,7 +88,8 @@ npm install        # pulls pdfjs-dist + tesseract.js / tesseract.js-core (dev de
 npm run vendor     # copies pdfjs + the Tesseract engine and eng.traineddata into vendor/ (run once after install)
 npm run stamp      # sets manifest.json + package.json version to the date-time (yy.MMdd.HHmm) - run before reloading unpacked to see which build you're testing
 npm test           # unit-tests the pure modules (no browser needed)
-npm run build      # stamp + vendor + zip -> dist/ (store-ready, auto-versioned)
+npm run appearance # regenerates the OCR overlay + theme palette regions of ocr-overlay.css / viewer.css from ../internal/appearance (zip refuses a stale region)
+npm run build      # stamp + appearance + vendor + zip -> dist/ (store-ready, auto-versioned)
 npm run zip        # only zip (uses the current version)
 ```
 

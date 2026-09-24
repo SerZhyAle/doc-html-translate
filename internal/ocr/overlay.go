@@ -13,62 +13,33 @@ import (
 	"strings"
 	"sync"
 
+	"doc-html-translate/internal/appearance"
+
 	_ "golang.org/x/image/tiff" // extracted PDF images may be TIFF
 	_ "golang.org/x/image/webp" // EPUB images may be WebP
 	gohtml "golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
 
-// ocrCSS styles the overlay: a positioned container sized to the image (inline-size
-// container query so font-size can scale with it), and opaque plates covering the source
-// text. Injected once per page into <head>.
+// OverlayStyleNames are this edition's selectors for the overlay roles. Naming is per-edition
+// (the extension uses .ocr-overlay / .ocr-plate / html.ocr-layer-off); the declarations are not.
+var OverlayStyleNames = appearance.OverlayNames{
+	Container:   ".ocr-fig",
+	Image:       ".ocr-fig>img",
+	Plate:       ".ocr-box",
+	HiddenPlate: "html.dht-ocr-off .ocr-box",
+}
+
+// ocrCSS styles the overlay: a positioned container sized to the image (inline-size container
+// query so font-size can scale with it), the image filling it, and opaque plates covering the
+// source text; plus the rule the navbar's OCR toggle (html.dht-ocr-off) uses to reveal the
+// untouched artwork. Injected once per page into <head>, so the output stays self-contained.
 //
-// The container MUST be display:block with an explicit width (not inline-block): a
-// shrink-to-fit box with container-type:inline-size collapses to zero inline size (size
-// containment removes the content's contribution), which hides the image and every plate.
-// The image is width:100% - plus margin:0 and max-height:none so a page-level `img` reset can't
-// offset or shrink it below the container (which would drift the plates vertically) - so the
-// percent-positioned plates line up with it. Plates centre their text (align-items:center) so
-// short text sits in the middle of its region rather than pinned to the top with empty space
-// below; the runtime re-fit (ocrScript) then shrinks the font so longer text - a reflow, or the
-// page translator swapping in a longer string - fits instead of clipping. Mirrors the extension's
-// .ocr-overlay (see docs/PARITY.md and ocr-overlay.css).
-//
-// The opaque paper is on the plate box. It was on an inline span hugging the string between
-// 2026-08-13 and this change, so that the paper took the shape of the rendered words rather than
-// of the block rectangle, and the corpus was asked which of the two a reader is better served by:
-// over 46 scenes the box carrier left a mean 17% of the source lettering still showing under a
-// plate and the string carrier left 93% - a plate that concealed almost nothing it covered, and a
-// regression against the lab's recorded 0.28 bound. The cost of coming back is real and is the
-// reason the string carrier was tried: a block box is wider than centred copy on its last line, so
-// the plate paints paper beside that line - measured at 91 px either side of a 984 px caption.
-// That is a patch beside one line against the whole document showing through every plate, and it
-// is bounded by the coverage rule in tesseract.go, which stops a plate from being a page.
-//
-// The padding is `0.08em 0.28em` because that is what the paper had when the lab's concealment
-// bound was measured, and it is load-bearing rather than cosmetic. The lab reads residual ink by
-// asking whether the *rendered* page still has ink where the source had it, so a plate's own
-// lettering counts against it wherever the two coincide - and the padding is what decides how large
-// the runtime fit grows that lettering. Measured on samson-and-delilah-03-scroll, whose plate rects
-// are byte-identical either way: `0.05em 0.15em` grew one plate's font from 56.4 px to 60.0 px and
-// took the scene from 0.2705 to 0.2841, over the recorded 0.28 bound. Changing it needs a lab run,
-// not an opinion.
-//
-// `print-color-adjust:exact` on the plate is the one declaration that makes a printed page hold
-// together. A browser omits background colours when it prints, and the plate is nothing but an
-// opaque background carrying text - so without it the translated string prints over the still
-// legible source lettering and the sheet is unreadable. Print is also the one output where the
-// reader cannot toggle the overlay off (html.dht-ocr-off is a live control, not a paper one), so
-// there is no fallback. It is scoped to `.ocr-box` rather than the page, which leaves the rest of
-// the document on the browser's own print economy. The -webkit- prefix is what Chromium still
-// reads. Mirrors the extension's .ocr-plate (docs/PARITY.md).
-const ocrCSS = `.ocr-fig{position:relative;display:block;width:100%;max-width:100%;margin:0 auto;container-type:inline-size;line-height:1.1}
-.ocr-fig>img{display:block;width:100%;height:auto;margin:0;max-height:none}
-.ocr-box{position:absolute;box-sizing:border-box;overflow:hidden;background:#fff;border-radius:0.35em;padding:0.08em 0.28em;color:#111;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-family:"Segoe UI",system-ui,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-/* The navbar's OCR toggle sets this on <html> to reveal the untouched artwork. display:none,
-   not visibility/opacity: a hidden plate must not keep taking pointer events or be read out,
-   and the page translator must not find text to swap in a layer the reader turned off. */
-html.dht-ocr-off .ocr-box{display:none}`
+// The declarations - and the measurements behind the plate's paper carrier, padding, corner radius
+// and print-color-adjust, which ship as comments - come from internal/appearance, the one source
+// the extension's ocr-overlay.css is generated from as well. Edit them there, not here; see
+// docs/PARITY.md "OCR" (plate shape).
+var ocrCSS = appearance.OverlayCSS(OverlayStyleNames)
 
 // ocrScript fits each plate's text to its box after layout, and again whenever the page
 // translator swaps the text for a longer string - the case a compile-time font size cannot handle,
@@ -500,8 +471,8 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 		if srcImg != nil {
 			if paper, ink, ok := blockColors(srcImg, b); ok {
 				// Paper and ink both land on the plate box: the box is what covers the source
-				// region, so it is what has to be opaque (see ocrCSS for the measurement that
-				// decided this against carrying the paper on the string).
+				// region, so it is what has to be opaque (see the plate's background note in
+				// internal/appearance for the measurement that decided this against the string).
 				style += ";background:" + paper + ";color:" + ink
 			}
 		}

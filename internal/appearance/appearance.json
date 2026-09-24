@@ -1,0 +1,70 @@
+{
+  "roles": {
+    "container": [
+      { "property": "position", "value": "relative" },
+      { "property": "display", "value": "block", "note": "Block with an explicit width, not inline-block: a shrink-to-fit box with container-type:inline-size collapses to zero inline size, which hides the image and every plate." },
+      { "property": "width", "value": "100%" },
+      { "property": "max-width", "value": "100%" },
+      { "property": "margin", "value": "0 auto" },
+      { "property": "container-type", "value": "inline-size", "note": "The container query root is what lets a plate's cqw font size mean a share of this picture." },
+      { "property": "line-height", "value": "1.1" }
+    ],
+    "image": [
+      { "property": "display", "value": "block" },
+      { "property": "width", "value": "100%" },
+      { "property": "height", "value": "auto" },
+      { "property": "margin", "value": "0", "note": "margin and max-height guard the image against a page-level img reset: a margin grew the container around the image and a max-height shrank it below the container, and either drifts the percent-positioned plates off the words they cover. The guard belongs to the role, so every page carrying the overlay states it rather than inheriting a browser default." },
+      { "property": "max-height", "value": "none" }
+    ],
+    "plate": [
+      { "property": "position", "value": "absolute" },
+      { "property": "box-sizing", "value": "border-box" },
+      { "property": "overflow", "value": "hidden", "note": "Gives the runtime fit a bounded box to measure against; the fit lets the box grow only when the text still overflows at the font floor, so nothing clips." },
+      { "property": "background", "value": "#fff", "note": "The opaque paper is on the plate box, overridden per plate by the sampled colour. Over 46 lab scenes the box carrier left a mean 17% of the source lettering showing under a plate and a span hugging the string left 93%. The cost is paper beside a short centred last line, measured at 91 px either side of a 984 px caption." },
+      { "property": "border-radius", "value": "0.35em", "note": "Relative to the plate's own type, so a caption plate and a full-page plate round in proportion instead of one reading as a sharp patch." },
+      { "property": "padding", "value": "0.08em 0.28em", "note": "Load-bearing: the padding decides how large the runtime fit grows the plate's own lettering, which the lab's residual-ink metric counts. On samson-and-delilah-03-scroll, 0.05em 0.15em took the scene from 0.2705 to 0.2841, past the recorded 0.28 bound. Changing it needs a lab run." },
+      { "property": "color", "value": "#111" },
+      { "property": "display", "value": "flex" },
+      { "property": "align-items", "value": "center" },
+      { "property": "justify-content", "value": "center" },
+      { "property": "text-align", "value": "center" },
+      { "property": "white-space", "value": "pre-wrap" },
+      { "property": "overflow-wrap", "value": "anywhere" },
+      { "property": "word-break", "value": "break-word" },
+      { "property": "font-family", "value": "\"Segoe UI\", system-ui, Arial, sans-serif" },
+      { "property": "-webkit-print-color-adjust", "value": "exact", "note": "A browser drops background colours from a printed page, and the plate is an opaque background carrying text, so without this the translation prints over the source lettering. Print is the one output where the overlay cannot be toggled off. The -webkit- prefix is what Chromium reads." },
+      { "property": "print-color-adjust", "value": "exact" }
+    ]
+  },
+  "themes": {
+    "light": { "bg": "#faf9f7", "fg": "#1b1b1b", "muted": "#6b6b6b", "barBg": "#ffffff", "barFg": "#222222", "border": "#e2e0db", "accent": "#2563eb", "link": "#1a4fb4" },
+    "sepia": { "bg": "#f4ecd8", "fg": "#4a3f2f", "muted": "#7a6c54", "barBg": "#efe6cf", "barFg": "#4a3f2f", "border": "#ddd0b0", "accent": "#8a5a2b", "link": "#7a4a1b" },
+    "dark": { "bg": "#1a1a1c", "fg": "#e6e4df", "muted": "#9a9893", "barBg": "#232327", "barFg": "#e6e4df", "border": "#36363b", "accent": "#5b8dff", "link": "#8fb4ff" },
+    "night": { "bg": "#0a0a0b", "fg": "#9a9a9a", "muted": "#6a6a6a", "barBg": "#131315", "barFg": "#b8b8b8", "border": "#262629", "accent": "#5599d6", "link": "#6aa8e0" }
+  },
+  "divergences": [
+    {
+      "what": "Overlay selector names: each edition names the container, image, plate and hidden-plate rules with its own classes.",
+      "reason": "Naming is per-edition and already shipped in pages readers have saved; the gate keys on the role, never on the selector text."
+    },
+    {
+      "what": "OCR toggle class on <html> that hides every plate.",
+      "reason": "Each edition's reader control owns its own toggle name; only the rule it switches (display:none on the plate) is shared."
+    },
+    {
+      "what": "Custom-property prefix and theme attribute of the reader palette: the desktop pages prefix the colour tokens and the theme attribute, the extension does not.",
+      "reason": "Desktop output is injected into documents the app did not author, so its names are prefixed to stay clear of the book's own CSS; the extension viewer owns its whole document."
+    },
+    {
+      "what": "The extension viewer spaces the overlay container in its reading column (a vertical margin from its own reader stylesheet).",
+      "reason": "Placement in a surrounding layout, not the role: the rule targets the viewer's reading column and changes where the unit sits, not what it looks like. The desktop page places the container through its own page layout."
+    }
+  ],
+  "notes": [
+    "The single description of the appearance both editions share: the OCR overlay unit and the reader theme palette. Edit values here only; see README.md.",
+    "roles: container, image and plate map to an ordered list of declarations; note carries the measurement or reason behind a load-bearing value and ships as a CSS comment.",
+    "Every edition also emits a hidden-plate rule, display:none, under its own toggle class: display:none rather than visibility or opacity, so a hidden plate takes no pointer events, is not read out, and gives the page translator no text to swap.",
+    "themes: the first theme is the default, emitted on :root; every other theme is emitted under the edition's theme attribute. Tokens are camelCase here and kebab-case in CSS (barBg -> bar-bg).",
+    "divergences: a difference between the editions is legal only when it is listed here. An entry that also carries role, property and edition lets that one declaration differ on that edition; the parity gate reads those fields and fails on an entry nothing uses."
+  ]
+}

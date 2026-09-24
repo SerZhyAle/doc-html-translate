@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ✅ Done
 **Depends on:** none - foundation phase
-**Steps done:** 0 / 3
+**Steps done:** 3 / 3
 
 ## Objective
 
@@ -14,8 +14,8 @@ reads.
 
 ## Prerequisites
 
-- [ ] Strategic §6 items blocking this phase are Resolved - item 1 is.
-- [ ] Working tree clean or on a feature branch.
+- [x] Strategic §6 items blocking this phase are Resolved - item 1 is.
+- [x] Working tree clean or on a feature branch.
 
 ## Files touched
 
@@ -51,7 +51,7 @@ reads.
 - No value anywhere in the file matches `ocr-box`, `ocr-plate`, `ocr-fig`, `ocr-overlay`, `dht-` or
   `data-theme`.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -79,7 +79,7 @@ reads.
   `border`, `accent`, `link`; `themes` has exactly 4 entries.
 - Every colour value matches `^#[0-9a-f]{6}$`.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -100,15 +100,15 @@ reads.
 - File `internal/appearance/README.md` exists and names both `internal/appearance` (Go) and
   `extension/scripts/gen-appearance.mjs` (JS) as its consumers.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ## Phase done criteria
 
-- [ ] Every `Step 01.*` is `[x] done`.
-- [ ] `go run ./tools/... ` is not required; the narrowest check is `./scripts/lint.ps1` plus a JSON
+- [x] Every `Step 01.*` is `[x] done`.
+- [x] `go run ./tools/... ` is not required; the narrowest check is `./scripts/lint.ps1` plus a JSON
       parse - run `node -e "JSON.parse(require('fs').readFileSync('internal/appearance/appearance.json','utf8'))"`.
-- [ ] Grep for `TODO(phase-01)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [x] Grep for `TODO(phase-01)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Handoff notes
 

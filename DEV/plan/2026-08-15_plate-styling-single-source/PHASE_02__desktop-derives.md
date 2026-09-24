@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ✅ Done
 **Depends on:** Phase 01
-**Steps done:** 0 / 4
+**Steps done:** 4 / 4
 
 ## Objective
 
@@ -14,8 +14,8 @@ carrying its styles inline.
 
 ## Prerequisites
 
-- [ ] Phase 01 is ✅ Done.
-- [ ] Working tree clean or on a feature branch.
+- [x] Phase 01 is ✅ Done.
+- [x] Working tree clean or on a feature branch.
 
 ## Files touched
 
@@ -47,7 +47,7 @@ carrying its styles inline.
 - `//go:embed appearance.json` matches exactly once.
 - `go build ./internal/appearance/` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -68,7 +68,7 @@ carrying its styles inline.
 - `appearance.OverlayCSS(` matches exactly once in `internal/ocr/overlay.go`.
 - `go build ./internal/ocr/` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -90,7 +90,7 @@ carrying its styles inline.
 - `--dht-reader-size:175%` still matches exactly once.
 - `go build ./internal/htmlgen/` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -111,14 +111,14 @@ carrying its styles inline.
   once.
 - `go test ./internal/appearance/` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ## Phase done criteria
 
-- [ ] Every `Step 02.*` is `[x] done`.
-- [ ] `go test ./internal/appearance/ ./internal/ocr/ ./internal/htmlgen/` exits 0.
-- [ ] Grep for `TODO(phase-02)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [x] Every `Step 02.*` is `[x] done`.
+- [x] `go test ./internal/appearance/ ./internal/ocr/ ./internal/htmlgen/` exits 0.
+- [x] Grep for `TODO(phase-02)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Handoff notes
 

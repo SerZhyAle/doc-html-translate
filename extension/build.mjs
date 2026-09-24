@@ -198,6 +198,13 @@ async function zip() {
     console.error("vendor/pdf.mjs missing - run `npm run vendor` before zipping.");
     process.exit(1);
   }
+  // The overlay and palette rules are generated from ../internal/appearance; a package built from
+  // a region nobody regenerated would ship a plate the desktop app does not draw.
+  const fresh = spawnSync(process.execPath, [join(root, "scripts", "gen-appearance.mjs"), "--check"], { stdio: "inherit" });
+  if (fresh.status !== 0) {
+    console.error("generated appearance is stale - run `npm run appearance` before zipping.");
+    process.exit(1);
+  }
   for (const e of PACKAGE) {
     if (!existsSync(join(root, e))) {
       console.error(`required package entry missing: ${e}`);

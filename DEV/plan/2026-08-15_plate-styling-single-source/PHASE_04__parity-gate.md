@@ -2,9 +2,9 @@
 
 **Strategic spec:** [`../2026-08-15_plate-styling-single-source.md`](../2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ✅ Done
 **Depends on:** Phase 02, Phase 03
-**Steps done:** 0 / 4
+**Steps done:** 4 / 4
 
 ## Objective
 
@@ -14,8 +14,8 @@ either side declares a role outside its derived path.
 
 ## Prerequisites
 
-- [ ] Phases 02 and 03 are ✅ Done.
-- [ ] Working tree clean or on a feature branch.
+- [x] Phases 02 and 03 are ✅ Done.
+- [x] Working tree clean or on a feature branch.
 
 ## Files touched
 
@@ -43,7 +43,7 @@ either side declares a role outside its derived path.
 - `func parseDeclarations(` and `func loadAppearance(` each match exactly once.
 - `go test ./tests/ -run TestAppearance` exits 0 (no assertions yet is acceptable at this step).
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -66,7 +66,7 @@ either side declares a role outside its derived path.
   match exactly once.
 - `go test ./tests/ -run TestAppearance` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -88,7 +88,7 @@ either side declares a role outside its derived path.
 - `box-shadow` appears in `tests/appearance_parity_test.go` and in no stylesheet.
 - `go test ./tests/ -run TestAppearance` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ---
 
@@ -109,19 +109,38 @@ either side declares a role outside its derived path.
 - `func TestParityOCRFontFit(` still matches exactly once.
 - `go test ./tests/` exits 0.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done
 
 ## Phase done criteria
 
-- [ ] Every `Step 04.*` is `[x] done`.
-- [ ] `./scripts/test.ps1` exits 0 and `npm test` in `extension/` exits 0.
-- [ ] Grep for `TODO(phase-04)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [x] Every `Step 04.*` is `[x] done`.
+- [x] `go test ./tests/` exits 0 and `npm test` in `extension/` exits 0. `./scripts/test.ps1` itself
+      was not run - no PowerShell in the Linux session; `go test ./...` is green apart from
+      `internal/pdf` `TestPdfTitle`, which fails identically on the base commit (a Windows path).
+- [x] Grep for `TODO(phase-04)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Handoff notes
 
-Establishes: the rule itself. Record here what Step 04.3's first full run surfaced, split into
-"unified" and "named as a divergence" - strategic §6 item 3 is answered by that list.
+Establishes: the rule itself. What Step 04.3's first full run surfaced (strategic §6 item 3):
+
+- **Unified:** the image role's reset guard (`margin:0; max-height:none`) - on the role on both sides
+  now (done in Phase 01 / 03, so the first gate run was already green on it).
+- **Named as a divergence:** selector names, the OCR toggle class, the palette prefix and theme
+  attribute (naming - invisible to the comparator by construction), and the viewer's
+  `#content .ocr-overlay { margin: 1em auto; }` - placement of the unit in the reading column, not a
+  declaration of the role, so the outside-the-source scan (exact role selectors only) does not read it.
+- Nothing else: container, image and plate were declaration-identical once the image guard moved.
+
+Demonstrated on the real tree (then reverted): the ring re-added inside the extension's generated
+region fails `TestAppearanceRolesMatchSource` with `role plate: box-shadow: missing on source,
+desktop`; added as a hand rule after the region it fails `TestAppearanceNoRoleDeclaredOutsideSource`;
+renaming the plate selector and toggle class in the generator only, then regenerating, stays green;
+a dark-theme accent changed in `viewer.css` fails with `theme dark: accent: values differ`; renaming
+the extension's palette prefix stays green.
+
+`TestParityOCRPrintPlate` and the paper-carrier check in `TestParityOCRFontFit` were rewritten to
+read the source rather than two CSS literals - the literal on the desktop side no longer exists.
 
 ## Rollback plan
 

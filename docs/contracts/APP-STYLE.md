@@ -8,7 +8,7 @@
 
 Visual styling and theme mechanisms:
 - Theme support: dark, light, and system modes.
-- Reader theme palette shared across desktop HTML output and browser extension (tested via `TestParityThemePalette`).
+- Reader theme palette shared across desktop HTML output and browser extension (derived on both sides from `internal/appearance`, tested via `TestAppearanceRolesMatchSource`).
 - Clear visual hierarchy with accessible contrast.
 
-**Conformance.** `tests/parity_test.go` and `cmd/doc-html-ui` tests.
+**Conformance.** `tests/appearance_parity_test.go`, `tests/parity_test.go` and `cmd/doc-html-ui` tests.
