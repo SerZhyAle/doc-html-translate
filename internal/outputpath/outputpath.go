@@ -6,7 +6,6 @@ package outputpath
 
 import (
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -27,31 +26,48 @@ func OutputDirFor(filePath, folder string) string {
 }
 
 func sanitizeOutputName(name string) string {
+	// Characters Windows refuses in a file name arrive from non-Windows names and from
+	// -folder values; control characters are invisible and break shell hand-offs.
+	name = strings.Map(func(r rune) rune {
+		if r < 0x20 || strings.ContainsRune(`<>:"/\|?*`, r) {
+			return '_'
+		}
+		return r
+	}, name)
 	name = strings.TrimSpace(name)
 	name = strings.TrimRight(name, ". ")
-	if name == "" || name == "." || name == ".." {
+	if strings.Trim(name, ".") == "" {
 		return "document"
 	}
 
-	if isWindowsReservedName(name) {
-		name += "_"
+	// Windows maps a device name to the device whatever follows its first dot
+	// ("CON.tar" is CON), so the check is on the stem and the suffix goes there too.
+	stem, rest, _ := strings.Cut(name, ".")
+	if isWindowsReservedName(strings.TrimRight(stem, " ")) {
+		name = stem + "_"
+		if rest != "" {
+			name += "." + rest
+		}
 	}
 
 	return name
 }
 
 func isWindowsReservedName(name string) bool {
-	upper := strings.ToUpper(name)
-	if upper == "CON" || upper == "PRN" || upper == "AUX" || upper == "NUL" {
+	switch strings.ToUpper(name) {
+	case "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$":
 		return true
 	}
 
+	upper := strings.ToUpper(name)
 	if strings.HasPrefix(upper, "COM") || strings.HasPrefix(upper, "LPT") {
-		if len(upper) == 4 {
-			n, err := strconv.Atoi(upper[3:])
-			if err == nil && n >= 1 && n <= 9 {
-				return true
-			}
+		// COM0-9 / LPT0-9 plus the superscript digits Windows also treats as ports.
+		switch suffix := []rune(name)[3:]; {
+		case len(suffix) != 1:
+		case suffix[0] >= '0' && suffix[0] <= '9':
+			return true
+		case suffix[0] == '¹' || suffix[0] == '²' || suffix[0] == '³':
+			return true
 		}
 	}
 

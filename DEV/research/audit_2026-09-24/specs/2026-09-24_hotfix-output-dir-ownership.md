@@ -1,7 +1,7 @@
 # Strategic spec: 2026-09-24_hotfix-output-dir-ownership - Never delete or reuse a folder the converter does not own
 
 **Ticket:** 2026-09-24_hotfix-output-dir-ownership
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests on Linux; needs a hands-on Windows check (hidden marker attribute, lock with a real second process, GUI drop and delete).
 **Priority:** 95
 **Date:** 2026-09-24
 **Tier:** Security/Compliance (urgent)
@@ -83,15 +83,15 @@ verify ownership -> remove.
    - **Question:** may an old output with no marker be reused and deleted?
    - **Options:** (a) reuse it read-only but never delete it without an explicit confirmation; (b) treat it as foreign; (c) adopt it if its layout matches what the converter generates.
    - **To find out:** owner decision.
-   - **Status:** Open (required before implementation).
+   - **Status:** Resolved (2026-09-25, a default taken at implementation; revisit if wrong). Option (c): a marker-less folder is adopted only when its `index.html` (or the root redirect stub's target) carries the generator's `dht-` signature. If its navbar names a different source file, it belongs to that document. Anything else is foreign.
 2. **Collision naming**
    - **Question:** what name does the second document with the same base name get?
    - **Options:** `book (pdf)`; `book.pdf.html`; `book-2`.
    - **To find out:** owner decision; check the extension edition for parity (it produces no output folder, so it is likely exempt).
-   - **Status:** Open.
+   - **Status:** Resolved. `book (pdf)`, then `book (pdf) 2`..; `(file)` when there is no extension. The first document keeps the plain name, so existing outputs stay where they are. The extension writes no output folder, so it is exempt from parity.
 3. **Folder input**
    - **Question:** refuse a folder input outright, or later offer batch conversion?
-   - **Status:** Open (the refusal ships regardless).
+   - **Status:** Resolved for now: refused with an argument error. Batch conversion stays a possible later feature.
 
 ## 7. Risks
 - **A marker file shows up in the user's output folder.** Likelihood: high. Impact: cosmetic. Mitigation: hidden attribute on Windows, and a clear name.
@@ -114,6 +114,12 @@ README: note that a folder is not accepted as input, and how same-name documents
 4. `book.epub` and `book.pdf` in one folder produce two separate outputs.
 5. Two simultaneous runs on one input: one succeeds and the other waits or refuses. No output is lost.
 6. Dropping two different files with the same name into the GUI converts each one's own content.
+
+## Implementation notes (2026-09-25)
+- Done criteria 1-6 are covered by tests: `internal/pipeline/outputdir_test.go`, `internal/outputpath/ownership_test.go`, `cmd/doc-html-ui/ownership_test.go`.
+- Deviation: the refusal messages are English, like every other pipeline error. The CLI error path is not localized today, and no new GUI strings were needed.
+- Deviation: the GUI drop area has no retention cleanup. Drops are keyed by content hash, so re-dropping a file no longer adds a copy, and deleting old drops would also delete the conversions stored next to them.
+- The marker is written when the run claims the folder, not at completion. Completion and option matching remain ticket `bugfix-output-completeness`, which extends this record.
 
 ## 12. Next step
 `/spec-tech 2026-09-24_hotfix-output-dir-ownership` - creates the phased tactical plan.

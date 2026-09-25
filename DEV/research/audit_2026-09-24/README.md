@@ -36,7 +36,7 @@ register, not file paths, so the specs stay strategic and the evidence has one h
 
 ## Ticket index
 
-- [01 hotfix-output-dir-ownership](specs/2026-09-24_hotfix-output-dir-ownership.md) - P95 - P1 P2 P6 P7 P16 P17 G9 G11
+- [01 hotfix-output-dir-ownership](specs/2026-09-24_hotfix-output-dir-ownership.md) - P95 - **BlockNeedUserTest** (implemented 2026-09-25) - P1 P2 P6 P7 P16 P17 G9 G11
 - [02 hotfix-epub-href-containment](specs/2026-09-24_hotfix-epub-href-containment.md) - P95 - E1 E5 E10 E20 B19 B20
 - [03 bugfix-shell-open-injection](specs/2026-09-24_bugfix-shell-open-injection.md) - P90 - P3 P24 G4 G13
 - [04 bugfix-gui-local-api-hardening](specs/2026-09-24_bugfix-gui-local-api-hardening.md) - P90 - G1 G3 G5-G8 G10 G12 G14-G19
