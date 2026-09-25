@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "Standardmäßig aus: Bilder, die ein Dokument aus dem Internet nachlädt, werden blockiert, damit der Autor nicht sieht, dass Sie es geöffnet haben. Im Viewer lassen sie sich für einzelne Dokumente laden.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "Gespeichert - die Datei ist {1} MB groß, weil alle Bilder darin stecken; manche Browser öffnen so große Dateien langsam",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

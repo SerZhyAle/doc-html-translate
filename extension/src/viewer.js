@@ -22,7 +22,7 @@ import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
 import { parseComic, DesktopOnlyError } from "./comic.js";
 import { InputLimitError } from "./limits.js";
-import { overlayImage, makeBadge, ocrLangToHtmlLang } from "./ocr-overlay.js";
+import { overlayImage, makeBadge, ocrLangToHtmlLang, releaseOverlays } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
@@ -126,12 +126,19 @@ function imageMime(data, name) {
   return byExt[fileExt(name)] || "";
 }
 
-// Release the previous document's resources (EPUB image blob: URLs) before
-// loading another file into the same tab.
+// Release the previous document's resources before loading another file into the same tab: its
+// book resources (blob: URLs, the MOBI reader), the pdf.js document and any load still in flight,
+// the observers, the OCR overlays' fit listeners, and every blob: URL minted for its images.
 let revokeCurrent = null;
+let pdfTask = null; // the pdf.js loading task of the document being opened, until it settles
 function teardownCurrent() {
   clearRemoteNotice();
+  releaseOverlays($("content"));
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
+  // destroy() ends the document's worker-side state too; dropping the reference alone kept every
+  // PDF opened in this tab alive in the pdf.js worker.
+  if (pdfTask) { try { pdfTask.destroy(); } catch { /* ignore */ } pdfTask = null; }
+  if (pdfDoc) { try { pdfDoc.destroy(); } catch { /* ignore */ } }
   if (ocrObserver) { ocrObserver.disconnect(); ocrObserver = null; }
   // Bumping the generation strands any chunk still rendering from the old document,
   // so it cannot insert its pages into the new one.
@@ -152,6 +159,16 @@ function teardownCurrent() {
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
   pdfImageUrls = [];
 }
+
+// beginLoad tears the current document down and returns the new load's token. Every load checks
+// its token after each await (isCurrent): a slower, older load - a URL still downloading when the
+// reader picks a local file - then stops and releases what it made instead of rendering over the
+// newer document.
+function beginLoad() {
+  teardownCurrent();
+  return docGen;
+}
+const isCurrent = (gen) => gen === docGen;
 
 // ---- Preferences -----------------------------------------------------------
 // size must match viewer.css's --reader-size fallback, which styles the document before
@@ -276,7 +293,11 @@ function getOcrObserver() {
   return ocrObserver;
 }
 
+// The document generation guards the counters: a picture still in the recognition queue when its
+// document was replaced is skipped, and one that finishes anyway does not count toward the new
+// document's progress.
 async function ocrProcessImage(img) {
+  const gen = docGen;
   const wrapper = el("div", "ocr-pending");
   const badge = makeBadge("OCR..");
   img.replaceWith(wrapper);
@@ -284,19 +305,24 @@ async function ocrProcessImage(img) {
   try {
     const container = await overlayImage(img, {
       lang: options.ocrLang || "eng",
+      isCancelled: () => !isCurrent(gen),
       onProgress: (m) => {
         if (m && typeof m.progress === "number") badge.textContent = `OCR ${Math.round(m.progress * 100)}%`;
       },
     });
+    if (!isCurrent(gen)) { releaseOverlays(container); return; }
     wrapper.replaceWith(container);
     if (!container.classList.contains("ocr-empty")) ocrWithText += 1;
     revealOcrToggle();
   } catch (err) {
+    if (!isCurrent(gen)) return;
     console.warn("OCR failed for image", err);
     wrapper.replaceWith(img); // restore the plain image
   } finally {
-    ocrDone += 1;
-    ocrUpdateStatus();
+    if (isCurrent(gen)) {
+      ocrDone += 1;
+      ocrUpdateStatus();
+    }
   }
 }
 
@@ -390,7 +416,7 @@ async function extractSectionImages(section) {
   try {
     page = await pdfDoc.getPage(pageNum);
     if (gen !== docGen) return;
-    await appendPdfImages(page, section, pageChars);
+    await appendPdfImages(page, section, pageChars, gen);
   } catch {
     /* a page that will not yield its images just stays text-only */
   } finally {
@@ -402,11 +428,11 @@ async function extractSectionImages(section) {
 // Extract raster images from a PDF page (scanned pages fall back to a full-page raster),
 // append them to the page section as <img>, and register them for lazy OCR. Must run
 // before page.cleanup(). No-op unless it finds usable images.
-async function appendPdfImages(page, section, pageChars) {
+async function appendPdfImages(page, section, pageChars, gen = docGen) {
   let imgs = [];
   try {
     imgs = await extractPageImages(page);
-    if (!imgs.length && pageChars < 20) {
+    if (!imgs.length && pageChars < 20 && isCurrent(gen)) {
       const raster = await rasterizePage(page);
       if (raster) imgs = [raster];
     }
@@ -414,7 +440,8 @@ async function appendPdfImages(page, section, pageChars) {
     console.warn("PDF image extraction failed", err);
     return;
   }
-  if (!imgs.length) return;
+  // Nothing minted yet: an old document's images are only Blobs, and go with this frame.
+  if (!imgs.length || !isCurrent(gen)) return;
   for (const im of imgs) {
     const url = URL.createObjectURL(im.blob);
     pdfImageUrls.push(url);
@@ -445,7 +472,7 @@ function showNotice(titleText, bodyNodes) {
   const h = el("h1");
   h.textContent = titleText;
   box.append(h);
-  for (const n of bodyNodes) box.append(n);
+  for (const n of bodyNodes) if (n) box.append(n);
   content.append(box);
   hideStatus();
 }
@@ -457,7 +484,10 @@ function para(text) {
   return p;
 }
 
+// originalButton is null when the document came from the file picker: there is no original URL
+// to open, and showNotice skips it.
 function originalButton(label = t("vBtnOpenOriginalPdf", "Open original PDF")) {
+  if (!currentUrl) return null;
   const b = el("button");
   b.textContent = label;
   b.addEventListener("click", openOriginal);
@@ -465,15 +495,21 @@ function originalButton(label = t("vBtnOpenOriginalPdf", "Open original PDF")) {
 }
 
 // ---- Open the untouched PDF (bypass interception for this tab) --------------
+// The URL the current document was loaded from, or "" when it came from the file picker. Not
+// fileUrl: that is only the page-load address, and after the reader picks a local file the
+// "Original" button used to reopen the first document instead of the one on screen.
+let currentUrl = "";
+
 async function openOriginal() {
-  if (!isSafePdfUrl(fileUrl)) return;
+  const url = currentUrl;
+  if (!url || !isSafePdfUrl(url)) return;
   try {
     const tab = await chrome.tabs.getCurrent();
-    await chrome.runtime.sendMessage({ type: "open-original", url: fileUrl, tabId: tab && tab.id });
+    await chrome.runtime.sendMessage({ type: "open-original", url, tabId: tab && tab.id });
   } catch {
     // Last resort: navigate directly. Interception may re-catch it, but better
     // than a dead button.
-    location.href = fileUrl;
+    location.href = url;
   }
 }
 
@@ -533,7 +569,7 @@ async function downloadHtml() {
   const content = $("content");
   if (!content || !content.children.length) return;
 
-  const imgMap = buildImageDataMap(content); // read decoded live images once
+  const imgMap = await buildImageDataMap(content); // read decoded live images once
   const clone = content.cloneNode(true);
   unwrapTranslateFonts(clone);
   applyImageDataMap(clone, imgMap);
@@ -552,7 +588,19 @@ async function downloadHtml() {
   const url = URL.createObjectURL(blob);
   triggerDownload(url, `${safeBase(title)}.html`);
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  reportPartialSave();
+  if (blob.size >= EXPORT_WARN_BYTES) reportLargeSave(blob.size);
+  else reportPartialSave();
+}
+
+// Every image rides inside the saved file as a data: URI, so an image-heavy book saves as a file
+// several times its source size. Past this a browser opens it slowly or not at all, and the
+// reader is told so rather than left wondering why the file will not open.
+const EXPORT_WARN_BYTES = 100 * 1024 * 1024;
+
+function reportLargeSave(bytes) {
+  $("status").classList.remove("done");
+  setStatus(t("vSavedLarge", "Saved - the file is {1} MB because every image is inside it; some browsers open files this large slowly", Math.round(bytes / (1024 * 1024))));
+  setTimeout(hideStatus, 6000);
 }
 
 // A chunk-rendered PDF holds only the pages the reader has reached, so the export is
@@ -583,24 +631,41 @@ function cssVar(name) {
 // Rasterize every live blob: image to a data: URI, keyed by src. Live images are already
 // decoded, so naturalWidth/Height are valid (a fresh clone's would be 0). http(s)/data
 // images are left untouched - they are already portable.
-function buildImageDataMap(root) {
+//
+// Encoding is asynchronous and one image at a time: toDataURL encoded every picture of a comic
+// synchronously in one task, freezing the tab and holding each canvas until the loop ended. Each
+// canvas is emptied as soon as its image is encoded.
+async function buildImageDataMap(root) {
   const map = new Map();
   for (const img of root.querySelectorAll("img")) {
     const src = img.getAttribute("src") || "";
     if (!src || map.has(src) || !/^blob:/i.test(src)) continue;
+    const c = el("canvas");
     try {
       const w = img.naturalWidth, h = img.naturalHeight;
       if (!w || !h) { map.set(src, null); continue; }
-      const c = el("canvas");
       c.width = w;
       c.height = h;
       c.getContext("2d").drawImage(img, 0, 0);
-      map.set(src, c.toDataURL("image/jpeg", 0.85));
+      const jpeg = await new Promise((resolve) => c.toBlob(resolve, "image/jpeg", 0.85));
+      map.set(src, jpeg ? await blobToDataUrl(jpeg) : null);
     } catch {
       map.set(src, null); // tainted or too large - dropped below
+    } finally {
+      c.width = 0;
+      c.height = 0;
     }
   }
   return map;
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
 }
 
 function applyImageDataMap(clone, map) {
@@ -796,6 +861,8 @@ function isHtmlReplyForDocument(resp, url) {
 // loadUrl downloads a PDF by URL and renders it. On failure it offers the local
 // file picker (which needs no host access and no file-URL toggle) as a fallback.
 async function loadUrl(url) {
+  const gen = beginLoad();
+  currentUrl = url;
   // file URLs with a host (UNC, \\server\share) are unreachable for extensions:
   // file-scheme match patterns only cover empty-host URLs, so fetch() can never
   // be permitted. Fail fast with a targeted hint instead of a doomed download.
@@ -814,6 +881,7 @@ async function loadUrl(url) {
     // a plain tab. The extension's host access already bypasses CORS, so this adds nothing a
     // page could use - the request is the viewer's own and its reply never reaches a page.
     const resp = await fetch(url, { credentials: "include" });
+    if (!isCurrent(gen)) return;
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     if (isHtmlReplyForDocument(resp, url)) {
       // A login wall or an interstitial answers a document URL with a web page. Parsing it as
@@ -826,9 +894,12 @@ async function loadUrl(url) {
       return;
     }
     const blob = await resp.blob();
-    setOriginalDownload(blob, filenameFromUrl(url)); // keep a downloadable copy (browser-backed)
+    if (!isCurrent(gen)) return;
     data = await blob.arrayBuffer();
+    if (!isCurrent(gen)) return;
+    setOriginalDownload(blob, filenameFromUrl(url)); // keep a downloadable copy (browser-backed)
   } catch (err) {
+    if (!isCurrent(gen)) return;
     showNotice(t("vLoadFailTitle", "Couldn't load this document"), [
       para(t("vLoadFailBody", "The file could not be downloaded by the extension.")),
       para(isFileUrl(url)
@@ -839,7 +910,7 @@ async function loadUrl(url) {
     ]);
     return;
   }
-  await loadFromData(data, fileTitle(url), url);
+  await loadFromData(data, fileTitle(url), url, gen);
 }
 
 // loadFromData routes already-fetched bytes (URL fetch or local file picker) to
@@ -853,8 +924,8 @@ function setPageTotal(total) {
   recordRun({ pages: total });
 }
 
-async function loadFromData(data, title, name) {
-  teardownCurrent();
+async function loadFromData(data, title, name, gen) {
+  if (!isCurrent(gen)) return;
   const format = detectFormat(data, name);
   // The format id only - never the document's name, bytes or URL. See diagnostics.js.
   recordRun({ format });
@@ -877,6 +948,7 @@ async function loadFromData(data, title, name) {
 // the PDF-only Original button, parse the bytes into the shared book shape, and
 // render it. On a parse error it shows a notice with the file picker.
 async function loadBook(data, title, parseFn, statusLabel) {
+  const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
   $("btn-original").classList.add("hidden");
@@ -887,6 +959,7 @@ async function loadBook(data, title, parseFn, statusLabel) {
   try {
     book = await parseFn(data);
   } catch (err) {
+    if (!isCurrent(gen)) return;
     showNotice(t("vOpenFileFailTitle", "Couldn't open this file"), [
       para(t("vCorruptBody", "The file may be corrupt or not a supported document.")),
       para(err && err.message ? t("vDetails", "Details: {1}", err.message) : ""),
@@ -894,6 +967,7 @@ async function loadBook(data, title, parseFn, statusLabel) {
     ]);
     return;
   }
+  if (!isCurrent(gen)) { if (book.revoke) book.revoke(); return; }
   renderBook(book, title);
 }
 
@@ -903,6 +977,7 @@ async function loadBook(data, title, parseFn, statusLabel) {
 // for images" toggle: opening a bare image is itself the explicit request to read its
 // text, and without OCR there is nothing for the browser translator to work on.
 async function loadImageData(data, title, mime) {
+  const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
   $("btn-original").classList.add("hidden"); // no "native viewer" concept for a picture
@@ -922,7 +997,9 @@ async function loadImageData(data, title, mime) {
     const container = await overlayImage(url, {
       lang,
       onProgress: (m) => { if (m && typeof m.progress === "number") setProgress(m.progress); },
+      isCancelled: () => !isCurrent(gen),
     });
+    if (!isCurrent(gen)) { releaseOverlays(container); return; }
     content.append(container);
     applyLang(ocrLangToHtmlLang(lang));
     if (container.classList.contains("ocr-empty")) {
@@ -936,6 +1013,7 @@ async function loadImageData(data, title, mime) {
       setStatus(t("ocrDone", 'Done - use the browser\'s "Translate page"'));
     }
   } catch (err) {
+    if (!isCurrent(gen)) return;
     showNotice(t("vImageFailTitle", "Couldn't read this image"), [
       para(err && err.message ? t("vDetails", "Details: {1}", err.message) : t("vImageFailBody", "The image could not be processed.")),
       filePickerButton(),
@@ -957,6 +1035,7 @@ const comicLoaders = new WeakMap();
 // speech bubbles. CBR/CB7 (RAR/7z) have no in-browser decoder and are declined with a
 // notice pointing at the desktop app.
 async function loadComicData(data, title) {
+  const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
   $("btn-original").classList.add("hidden"); // no "native viewer" concept for a comic
@@ -969,6 +1048,7 @@ async function loadComicData(data, title) {
   try {
     pages = await parseComic(data);
   } catch (err) {
+    if (!isCurrent(gen)) return;
     if (err instanceof InputLimitError) {
       showLimitNotice(err);
     } else if (err instanceof DesktopOnlyError) {
@@ -985,6 +1065,7 @@ async function loadComicData(data, title) {
     }
     return;
   }
+  if (!isCurrent(gen)) return;
   renderComic(pages);
 }
 
@@ -1076,9 +1157,10 @@ async function insertComicPage(section) {
 
 // loadPdfData runs the PDF.js + reflow pipeline over PDF bytes.
 async function loadPdfData(data, title) {
+  const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
-  $("btn-original").classList.remove("hidden");
+  $("btn-original").classList.toggle("hidden", !currentUrl);
   $("status").classList.remove("done");
   setProgress(0.05);
 
@@ -1097,13 +1179,18 @@ async function loadPdfData(data, title) {
       if (p && p.total) setProgress(Math.min(0.15, (p.loaded / p.total) * 0.15));
     };
     task.onPassword = (updatePassword, reason) => askPassword(updatePassword, reason);
+    pdfTask = task;
     pdf = await task.promise;
   } catch (err) {
+    if (!isCurrent(gen)) return; // destroyed by the teardown of a newer load
+    pdfTask = null;
     handleLoadError(err);
     return;
   }
+  if (!isCurrent(gen)) { try { pdf.destroy(); } catch { /* ignore */ } return; }
+  pdfTask = null;
 
-  await renderDocument(pdf, title);
+  await renderDocument(pdf, title, gen);
 }
 
 // openFilePicker reads a user-chosen local PDF via the OS file dialog. This needs
@@ -1115,14 +1202,18 @@ function openFilePicker() {
   input.onchange = async () => {
     const f = input.files && input.files[0];
     if (!f) return;
+    const gen = beginLoad();
+    currentUrl = "";
     $("content").replaceChildren();
     $("status").classList.remove("done");
     setStatus(t("vStatusReadingFile", "Reading file.."));
     try {
       const data = await f.arrayBuffer();
+      if (!isCurrent(gen)) return;
       setOriginalDownload(f, f.name); // the picked File is itself a downloadable Blob
-      await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, ""), f.name);
+      await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, ""), f.name, gen);
     } catch (err) {
+      if (!isCurrent(gen)) return;
       showNotice(t("vReadFileFailTitle", "Couldn't read the file"), [para(err.message || String(err)), filePickerButton()]);
     }
   };
@@ -1207,7 +1298,7 @@ let chunkPending = null;  // in-flight chunk - concurrent callers await this one
 let chunkObserver = null; // watches the lead page of the rendered run
 let docGen = 0;           // bumped per loaded document; strands chunks from the old one
 
-async function renderDocument(pdf, title) {
+async function renderDocument(pdf, title, gen = docGen) {
   const total = pdf.numPages;
   setPageTotal(total);
   $("page-jump").max = String(total);
@@ -1220,6 +1311,8 @@ async function renderDocument(pdf, title) {
   // TOC from the outline.
   let toc = [];
   try { toc = await buildToc(pdf); } catch { toc = []; }
+  // Nothing of this document is referenced yet, so a superseded load releases it here.
+  if (!isCurrent(gen)) { try { pdf.destroy(); } catch { /* ignore */ } return; }
   renderToc(toc);
 
   $("content").replaceChildren();
@@ -1434,6 +1527,7 @@ function offerRemoteContent(count) {
 // in-page anchors) that we drop into the same #content / TOC / page UI the PDF
 // path uses. Each spine document is one "page" for navigation.
 async function loadEpubData(data, title) {
+  const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
   // No "native viewer" exists for EPUB; hide the PDF-only Original button.
@@ -1446,6 +1540,7 @@ async function loadEpubData(data, title) {
   try {
     book = await loadEpub(data);
   } catch (err) {
+    if (!isCurrent(gen)) return;
     if (err instanceof InputLimitError) {
       showLimitNotice(err);
       return;
@@ -1457,6 +1552,7 @@ async function loadEpubData(data, title) {
     ]);
     return;
   }
+  if (!isCurrent(gen)) { if (book.revoke) book.revoke(); return; }
   renderBook(book, title);
 }
 
@@ -1549,7 +1645,8 @@ function warnIfNoText() {
         para(t("vLittleTextOcrHint", "To translate scanned pages, run them through OCR first (turn on \"Use OCR for images\", or use the doc-html-translate desktop app), then reopen the result.")),
       );
     }
-    banner.append(originalButton());
+    const orig = originalButton();
+    if (orig) banner.append(orig);
     content.prepend(banner);
   }
 }

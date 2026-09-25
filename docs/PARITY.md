@@ -476,6 +476,11 @@ The rules that go with the numbers:
   (Go: `limits.CopyCapped`, and the zip reader's own size check; JS: `inflateRawCapped` capped at the
   listed size).
 - **Inflation counts bytes.** Neither edition inflates an entry whole and measures afterwards.
+- **The extension's page raster is capped** (2026-09-25, extension-only): a scanned PDF page rasterized
+  for OCR is drawn at scale 2 unless that canvas would pass `RASTER_MAX_PIXELS` (16 MP) or
+  `RASTER_MAX_SIDE` (8192 px), in which case the scale shrinks to fit ([`pdf-images.js`](../extension/src/pdf-images.js)
+  `rasterScale`). No shared constant: the desktop app renders pages through its own tools and has the
+  decode budget above instead.
 - **Symlinks are never followed.** Symlink entries are skipped from the listing; on the desktop, files
   7-Zip unpacked are `Lstat`-checked.
 - **Container by signature.** `PK\x03\x04` ZIP, `Rar!\x1a\x07` RAR, `7z\xBC\xAF\x27\x1C` 7z, `ustar` at

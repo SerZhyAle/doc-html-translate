@@ -44,7 +44,7 @@ test("sanitizeToFragment: no heading yields an empty label", () => {
   assert.equal(label, "");
 });
 
-// ---- Content security (DEV/plan/19_2026-09-24_bugfix-extension-content-security.md) ----
+// ---- Content security (DEV/plan/done/19_2026-09-24_bugfix-extension-content-security.md) ----
 
 import { restoreRemote, urlKind, isSafeLinkHref, resourceVerdict } from "../src/url-policy.js";
 

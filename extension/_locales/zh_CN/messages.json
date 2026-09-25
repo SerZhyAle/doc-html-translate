@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "默认关闭：文档从互联网拉取的图片会被阻止，这样作者就无法得知你打开了它。你可以在查看器中针对单个文档加载它们。",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "已保存 - 文件大小为 {1} MB，因为所有图片都在其中；部分浏览器打开这么大的文件会很慢",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

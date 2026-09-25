@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "डिफ़ॉल्ट रूप से बंद: दस्तावेज़ जो चित्र इंटरनेट से लाता है वे ब्लॉक होते हैं, ताकि लेखक को पता न चले कि आपने इसे खोला। व्यूअर में आप उन्हें एक-एक दस्तावेज़ के लिए लोड कर सकते हैं।",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "सहेजा गया - फ़ाइल {1} MB की है क्योंकि सभी चित्र इसके अंदर हैं; कुछ ब्राउज़र इतनी बड़ी फ़ाइलें धीरे खोलते हैं",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

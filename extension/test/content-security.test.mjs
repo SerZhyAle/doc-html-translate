@@ -1,6 +1,6 @@
 // Content-security guards that are not one module's behaviour: the manifest's web-accessible
 // surface, the export's own policy and the MOBI link retargeting. See
-// DEV/plan/19_2026-09-24_bugfix-extension-content-security.md.
+// DEV/plan/done/19_2026-09-24_bugfix-extension-content-security.md.
 
 import "./_dom.mjs";
 import { fragHtml } from "./_dom.mjs";

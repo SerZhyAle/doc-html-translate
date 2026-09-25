@@ -173,3 +173,39 @@ test("a viewer loaded inside a frame refuses to run", async () => {
   assert.equal(fetchedDoc, false);
   assert.deepEqual(pageFetches, []);
 });
+
+test("a local file picked during a slow URL load is the document that stays shown", async () => {
+  let release;
+  const slow = new Promise((r) => { release = r; });
+  const { document, window } = parseHTML(VIEWER_HTML);
+  window.top = window;
+  window.self = window;
+  globalThis.document = document;
+  globalThis.window = window;
+  globalThis.location = { search: "?file=https://books.test/slow.txt", href: "chrome-extension://test/src/viewer.html" };
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith("chrome-extension://")) return new Response("", { status: 404 });
+    await slow;
+    return new Response("The remote book that arrived too late.\n", { status: 200 });
+  };
+  await import(`../src/viewer.js?case=${++caseSeq}`);
+  const content = document.getElementById("content");
+  // Let main() reach the pending download.
+  for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+
+  // The reader picks a local file through the toolbar while the download is still pending.
+  const input = document.getElementById("file-input");
+  input.click = () => {};
+  document.getElementById("btn-open").dispatchEvent(new window.Event("click"));
+  const bytes = new TextEncoder().encode("The local book the reader chose.\n");
+  Object.defineProperty(input, "files", { configurable: true, value: [{ name: "local.txt", arrayBuffer: async () => bytes.buffer }] });
+  await input.onchange();
+  assert.match(content.textContent, /local book the reader chose/);
+
+  // The stale download finishes afterwards; it must neither replace nor join the local document.
+  release();
+  for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+  assert.match(content.textContent, /local book the reader chose/);
+  assert.doesNotMatch(content.textContent, /arrived too late/);
+  assert.equal(document.getElementById("doc-title").textContent, "local");
+});

@@ -31,6 +31,15 @@
   // owns the queue. An incoming message resets that timer, so the agent says hello while a run is
   // going and stops as soon as it is not.
   const PING_MS = 20000;
+  // The broker reports after every picture, and gives one picture at most 150 s. Past this much
+  // silence there is no run left to keep alive - the worker restarted, or the run ended without a
+  // word - and pinging on would only keep an idle worker awake.
+  const PING_STALE_MS = 180000;
+
+  // Positioning is event-driven: scroll, resize, the pictures' own size changes and page mutations
+  // each ask for one frame of placement. This slow poll is the safety net for what raises no event
+  // at all - a CSS animation or transition carrying a picture - and runs only while a layer exists.
+  const FALLBACK_POLL_MS = 1000;
 
   // Trailing arguments fill {1}, {2}, .. the same way i18n.js's t() does, so a message file written
   // for one surface reads correctly on the other.
@@ -52,6 +61,10 @@
     bar: null,
     els: {},
     raf: 0,
+    poll: 0,
+    ro: null,
+    listening: false,
+    lastStatusAt: 0,
     io: null,
     mo: null,
     pendingNew: 0,
@@ -82,6 +95,7 @@
   }
 
   function collect() {
+    prune();
     const out = [];
     for (const img of document.images) {
       if (!img.isConnected) continue;
@@ -126,10 +140,12 @@
   }
 
   // ---- Placement -----------------------------------------------------------
-  // One animation frame loop for the whole layer, running only while a layer exists and touching
-  // only the pictures currently in or near the viewport. Reading the live rect every frame is what
-  // makes the layer survive the things a page does to a picture: responsive re-sourcing, a sticky
-  // or transformed container, a lazily grown box, a virtualized list that moves it.
+  // Placement reads each drawn picture's live rect, touching only the pictures in or near the
+  // viewport. It used to run every animation frame for as long as any plate existed - a page left
+  // open with plates on it did layout work sixty times a second while nothing moved. Now it runs
+  // one frame per change signal (see watchLayout), which still covers what a page does to a
+  // picture: responsive re-sourcing, a sticky or transformed container, a lazily grown box, a
+  // virtualized list that moves it.
   function place(a) {
     const r = a.img.getBoundingClientRect();
     if (a.badgeLayer) put(a.badgeLayer, r);
@@ -152,18 +168,67 @@
     }
   }
 
+  function hasLayers() {
+    for (const a of state.anchors.values()) if (a.layer || a.badgeLayer) return true;
+    return false;
+  }
+
+  // prune forgets pictures the page removed. The anchor held the <img> itself, so a single-page
+  // app swapping its content kept every old picture - and its plates - alive for the tab's life.
+  function prune() {
+    for (const [id, a] of state.anchors) {
+      if (a.img.isConnected) continue;
+      clearLayer(a);
+      if (a.badgeLayer) { a.badgeLayer.remove(); a.badgeLayer = null; }
+      if (state.io) { try { state.io.unobserve(a.img); } catch { /* ignore */ } }
+      if (state.ro) { try { state.ro.unobserve(a.img); } catch { /* ignore */ } }
+      state.anchors.delete(id);
+    }
+  }
+
   function tick() {
     state.raf = 0;
-    if (!state.anchors.size) return;
+    prune();
     for (const a of state.anchors.values()) {
       if ((a.layer || a.badgeLayer) && a.visible !== false) place(a);
     }
-    schedule();
+    if (!hasLayers()) unwatchLayout();
   }
 
   function schedule() {
     if (state.raf || !state.anchors.size) return;
     state.raf = requestAnimationFrame(tick);
+  }
+
+  function watchLayout() {
+    if (state.listening) return;
+    state.listening = true;
+    // Capture: a scroll inside a scrolling container does not bubble to window.
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    if (!state.ro && typeof ResizeObserver !== "undefined") {
+      state.ro = new ResizeObserver(schedule);
+      try { state.ro.observe(document.documentElement); } catch { /* ignore */ }
+    }
+    for (const a of state.anchors.values()) {
+      if (state.ro && (a.layer || a.badgeLayer)) { try { state.ro.observe(a.img); } catch { /* ignore */ } }
+    }
+    state.poll = setInterval(schedule, FALLBACK_POLL_MS);
+  }
+
+  function unwatchLayout() {
+    if (!state.listening) return;
+    state.listening = false;
+    window.removeEventListener("scroll", schedule, { capture: true });
+    window.removeEventListener("resize", schedule);
+    if (state.ro) { state.ro.disconnect(); state.ro = null; }
+    if (state.poll) { clearInterval(state.poll); state.poll = 0; }
+  }
+
+  function track(a) {
+    watchLayout();
+    if (state.ro) { try { state.ro.observe(a.img); } catch { /* ignore */ } }
+    schedule();
   }
 
   // ---- Drawing -------------------------------------------------------------
@@ -187,7 +252,7 @@
     a.layer = layer;
     place(a);
     a.stopFit = scheduleFit(layer);
-    schedule();
+    track(a);
   }
 
   function clearLayer(a) {
@@ -210,7 +275,7 @@
     ensureRoot().append(holder);
     a.badgeLayer = holder;
     place(a);
-    schedule();
+    track(a);
   }
 
   // ---- The reader's controls ----------------------------------------------
@@ -272,12 +337,18 @@
   }
 
   function setPing(on) {
-    if (on && !state.ping) state.ping = setInterval(() => toBroker("ping"), PING_MS);
+    if (on && !state.ping) {
+      state.ping = setInterval(() => {
+        if (Date.now() - state.lastStatusAt > PING_STALE_MS) { setPing(false); return; }
+        toBroker("ping");
+      }, PING_MS);
+    }
     if (!on && state.ping) { clearInterval(state.ping); state.ping = 0; }
   }
 
   function setStatus(s) {
     ensureBar();
+    state.lastStatusAt = Date.now();
     state.running = !!s.running;
     setPing(state.running);
     let text;
@@ -307,6 +378,8 @@
         }
       }
       if (found) { state.pendingNew += found; render(); }
+      // A mutation can move a picture without resizing it; one placement frame settles that.
+      if (state.listening) schedule();
     });
     state.mo.observe(document.documentElement, { childList: true, subtree: true });
   }
@@ -346,6 +419,7 @@
     if (state.io) { state.io.disconnect(); state.io = null; }
     if (state.mo) { state.mo.disconnect(); state.mo = null; }
     if (state.raf) { cancelAnimationFrame(state.raf); state.raf = 0; }
+    unwatchLayout();
     setPing(false);
     removeHostFrame();
     if (state.root) { state.root.remove(); state.root = null; }

@@ -223,3 +223,71 @@ test("host messages count only from the host page that carries the job's host id
 
   assert.deepEqual(forTab(16, "plates").map((p) => p.specs[0].text), ["real"]);
 });
+
+test("two tabs finish their runs and the shared offscreen host closes once both are done", async () => {
+  useOffscreenHost();
+  const closedBefore = offscreenCalls.closed;
+  const createdBefore = offscreenCalls.created;
+  const answers = [];
+  agent = (tabId, msg) => (msg.t === "collect" ? { images: [{ id: `t${tabId}`, src: `https://x.test/${tabId}.png` }] } : null);
+  host = (msg) => { if (msg.t === "recognize") answers.push(msg); };
+
+  const a = startRun(21);
+  const b = startRun(22);
+  for (let i = 0; i < 50 && answers.length < 2; i++) await new Promise((r) => setTimeout(r, 1));
+  assert.equal(answers.length, 2, "both tabs reached the host");
+  assert.equal(offscreenCalls.created, createdBefore + 1, "one shared host");
+  deliver({ t: "job-done", hostId: answers[0].hostId, jobId: answers[0].jobId, ok: true, specs: [] });
+  await (answers[0].src.includes("21") ? a : b);
+  // One run is still using the host, so the finished one must not close it under the other.
+  assert.equal(offscreenCalls.closed, closedBefore);
+  deliver({ t: "job-done", hostId: answers[1].hostId, jobId: answers[1].jobId, ok: true, specs: [] });
+  await Promise.all([a, b]);
+  assert.equal(offscreenCalls.closed, closedBefore + 1, "the host closes when the last run ends");
+});
+
+test("stop in one tab names only that tab's job, and the other tab's picture still lands", async () => {
+  useOffscreenHost();
+  const jobs = [];
+  const stops = [];
+  agent = (tabId, msg) => (msg.t === "collect" ? { images: [{ id: `t${tabId}`, src: `https://x.test/${tabId}.png` }] } : null);
+  host = (msg) => {
+    if (msg.t === "recognize") jobs.push(msg);
+    if (msg.t === "stop") stops.push(msg);
+  };
+
+  const a = startRun(23);
+  const b = startRun(24);
+  for (let i = 0; i < 50 && jobs.length < 2; i++) await new Promise((r) => setTimeout(r, 1));
+  const jobA = jobs.find((j) => j.src.includes("23"));
+  const jobB = jobs.find((j) => j.src.includes("24"));
+  deliver({ t: "stop" }, 23);
+  await a;
+  assert.deepEqual(stops.map((s) => s.jobId), [jobA.jobId], "the stop carries tab A's job only");
+  deliver({ t: "job-done", hostId: jobB.hostId, jobId: jobB.jobId, ok: true, specs: [{ text: "b" }] });
+  await b;
+  assert.deepEqual(forTab(24, "plates").map((p) => p.specs[0].text), ["b"]);
+  assert.equal(forTab(23, "plates").length, 0);
+});
+
+test("navigating away settles the picture in flight at once instead of after the job timeout", async () => {
+  useOffscreenHost();
+  let sent = null;
+  agent = (tabId, msg) => (msg.t === "collect" ? { images: [{ id: "a", src: "https://x.test/a.png" }, { id: "b", src: "https://x.test/b.png" }] } : null);
+  host = (msg) => {
+    if (msg.t !== "recognize") return;
+    sent = msg;
+    queueMicrotask(() => { for (const fn of listeners.updated) fn(25, { status: "loading" }); });
+  };
+  const warn = console.warn;
+  console.warn = () => {};
+  const started = Date.now();
+  try {
+    await startRun(25);
+  } finally {
+    console.warn = warn;
+  }
+  assert.ok(sent, "the first picture was sent");
+  assert.ok(Date.now() - started < 5000, "drain must not wait out the 150 s job timeout");
+  assert.equal(forTab(25, "plates").length, 0);
+});

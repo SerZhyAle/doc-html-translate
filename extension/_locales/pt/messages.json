@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "Desativado por padrão: imagens que um documento busca na internet são bloqueadas para que o autor não saiba que você o abriu. O visualizador permite carregá-las documento a documento.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "Salvo - o arquivo tem {1} MB porque contém todas as imagens; alguns navegadores abrem arquivos tão grandes devagar",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

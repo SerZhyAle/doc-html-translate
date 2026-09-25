@@ -66,3 +66,22 @@ test("the About block's keys exist in every locale", () => {
     }
   }
 });
+
+test("a new run forgets the previous run's error and page count", async () => {
+  await recordRun({ format: "pdf" });
+  await recordRun({ pages: 12 });
+  await recordRun({ error: "Couldn't open this PDF" });
+  await recordRun({ format: "epub" });
+  const run = await readRun();
+  assert.equal(run.format, "epub");
+  assert.equal(run.error, "");
+  assert.equal(run.pages, 0);
+});
+
+test("unawaited writes land in call order without overwriting each other", async () => {
+  recordRun({ format: "txt" });
+  recordRun({ pages: 3 });
+  await recordRun({ error: "late" });
+  const run = await readRun();
+  assert.deepEqual([run.format, run.pages, run.error], ["txt", 3, "late"]);
+});

@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "Desactivado por defecto: las imágenes que un documento trae de internet se bloquean para que su autor no sepa que lo abriste. El visor permite cargarlas documento a documento.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "Guardado - el archivo ocupa {1} MB porque contiene todas las imágenes; algunos navegadores abren archivos tan grandes con lentitud",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

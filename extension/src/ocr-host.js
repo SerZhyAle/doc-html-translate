@@ -28,20 +28,25 @@ function send(msg) {
 }
 
 // One job at a time is not a policy choice here - the recognition unit already funnels every
-// call through a single shared worker - but the host tracks it anyway so a stop can be honoured
-// between jobs rather than only after the whole queue drains.
-let stopped = false;
+// call through a single shared worker. A stop names the job it cancels: the offscreen host
+// serves every tab, so one tab's stop must not reach another tab's picture. A cancelled job
+// that is still queued is skipped before recognition starts; one already running is not
+// answered.
+const cancelled = new Set();
+const MAX_CANCELLED = 256; // a stop for a job this host never saw must not grow the set forever
 
 async function runJob(job) {
-  if (stopped) return;
+  const isCancelled = () => cancelled.has(job.jobId);
+  if (isCancelled()) { cancelled.delete(job.jobId); return; }
   try {
     const { blocks, width, height } = await recognize(job.src, {
       lang: job.lang,
+      isCancelled,
       onProgress: (m) => {
         if (m && typeof m.progress === "number") send({ t: "job-progress", jobId: job.jobId, p: m.progress });
       },
     });
-    if (stopped) return;
+    if (isCancelled()) return;
     send({
       t: "job-done",
       jobId: job.jobId,
@@ -56,6 +61,7 @@ async function runJob(job) {
       htmlLang: ocrLangToHtmlLang(job.lang),
     });
   } catch (e) {
+    if (isCancelled()) return;
     // A picture that cannot be fetched or cannot be read fails alone. The broker moves to the next
     // one; the reader is told how many were skipped, not left with a run that stopped silently.
     send({ t: "job-done", jobId: job.jobId, ok: false, error: String((e && e.message) || e) });
@@ -70,8 +76,11 @@ function fromBroker(sender) {
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (!HOST_ID || !msg || msg.dht !== "page-ocr" || msg.hostId !== HOST_ID || !fromBroker(sender)) return;
-  if (msg.t === "recognize") { stopped = false; runJob(msg); return; }
-  if (msg.t === "stop") { stopped = true; return; }
+  if (msg.t === "recognize") { runJob(msg).finally(() => cancelled.delete(msg.jobId)); return; }
+  if (msg.t === "stop" && msg.jobId) {
+    if (cancelled.size >= MAX_CANCELLED) cancelled.clear();
+    cancelled.add(msg.jobId);
+  }
 });
 
 // Announce readiness last, so the broker never sends a job before the listener is attached. The

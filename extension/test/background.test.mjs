@@ -13,6 +13,7 @@ const calls = {
 };
 let storedOptions;               // what chrome.storage.local holds under "options"
 let failSessionRules = false;
+let failDynamicRules = false;
 
 const event = (name) => ({ addListener: (fn) => { (on[name] ||= []).push(fn); } });
 const fire = (name, ...args) => (on[name] || []).map((fn) => fn(...args));
@@ -30,7 +31,10 @@ globalThis.chrome = {
     onChanged: event("storageChanged"),
   },
   declarativeNetRequest: {
-    updateDynamicRules: async (arg) => { calls.dynamicRules.push(arg); },
+    updateDynamicRules: async (arg) => {
+      if (failDynamicRules) throw new Error("Rule with id 1 specifies an incorrect value for the \"excludedRequestDomains\" key.");
+      calls.dynamicRules.push(arg);
+    },
     updateSessionRules: async (arg) => {
       if (failSessionRules) throw new Error("quota");
       calls.sessionRules.push(arg);
@@ -208,4 +212,41 @@ test("sync-rules answers after resyncing, and unrelated messages get no response
 
   assert.equal(await sendMessage({ type: "nope" }), undefined);
   assert.equal(await sendMessage(null), undefined);
+});
+
+test("disabled hosts DNR would reject are dropped, so one bad entry cannot fail the whole update", async () => {
+  const { ruleDomains } = await import("../src/background.js");
+  assert.deepEqual(
+    ruleDomains(["Example.COM", "[::1]", "bad host", "xn--bcher-kva.example", "example.com", "", "10.0.0.1", "a..b"]),
+    ["example.com", "xn--bcher-kva.example", "10.0.0.1"],
+  );
+});
+
+test("a rule update that fails is reported, and the next sync still runs", async () => {
+  storedOptions = { enabledByDefault: true };
+  const warn = console.warn;
+  console.warn = () => {};
+  failDynamicRules = true;
+  try {
+    const res = await sendMessage({ type: "sync-rules" });
+    assert.equal(res.ok, false);
+    assert.match(res.error, /excludedRequestDomains/);
+  } finally {
+    failDynamicRules = false;
+    console.warn = warn;
+  }
+  assert.deepEqual(await sendMessage({ type: "sync-rules" }), { ok: true });
+});
+
+test("rule syncs apply in order, each with the options current at its turn", async () => {
+  const before = calls.dynamicRules.length;
+  storedOptions = { enabledByDefault: true };
+  const first = sendMessage({ type: "sync-rules" });
+  storedOptions = { enabledByDefault: false };
+  const second = sendMessage({ type: "sync-rules" });
+  await Promise.all([first, second]);
+  const applied = calls.dynamicRules.slice(before);
+  assert.equal(applied.length, 2);
+  // The later sync ran last, so the rules left in place are the latest options' (off: none).
+  assert.equal(applied.at(-1).addRules.length, 0);
 });

@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "Désactivé par défaut : les images qu'un document récupère sur internet sont bloquées pour que son auteur ne sache pas que vous l'avez ouvert. Le lecteur permet de les charger document par document.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "Enregistré - le fichier fait {1} Mo car il contient toutes les images ; certains navigateurs ouvrent lentement des fichiers aussi gros",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

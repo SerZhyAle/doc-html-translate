@@ -3,7 +3,7 @@
 //
 // The saved file leaves the extension, and with it the extension's content policy - the only
 // thing that kept a stray script URL inert in the viewer (ADR-1 of
-// DEV/plan/19_2026-09-24_bugfix-extension-content-security.md). So the file carries its own
+// DEV/plan/done/19_2026-09-24_bugfix-extension-content-security.md). So the file carries its own
 // policy: no script of any kind, no plugins, no forms, no base rewrite. Images and media may be
 // remote because the reader may have allowed remote content in the viewer, and a parked
 // (unallowed) URL sits in a data- attribute that no policy needs to cover.

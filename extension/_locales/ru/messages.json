@@ -576,5 +576,9 @@
   "optAllowRemoteHint": {
     "message": "По умолчанию выключено: изображения, которые документ подтягивает из интернета, блокируются, чтобы автор не узнал, что вы его открыли. В просмотрщике их можно загрузить для отдельного документа.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "Сохранено - файл весит {1} МБ, потому что все изображения внутри него; некоторые браузеры открывают такие файлы медленно",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

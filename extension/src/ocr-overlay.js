@@ -49,7 +49,7 @@ async function getWorker(lang) {
   workerLang = lang;
   const options = workerOptions(lang);
   options.logger = (m) => { if (currentProgress) currentProgress(m); };
-  workerPromise = createWorker(lang, 1, options).then(async (w) => {
+  const started = createWorker(lang, 1, options).then(async (w) => {
     // Best-effort worker params (keep the worker if a call fails). Set PSM first and on its own so
     // silencing the logs below can never revert it.
     // - PSM 3 to match the desktop CLI (see OCR_PSM).
@@ -62,7 +62,29 @@ async function getWorker(lang) {
     try { await w.setParameters({ debug_file: "/dev/null" }); } catch { /* leave engine logs on */ }
     return w;
   });
-  return workerPromise;
+  workerPromise = started;
+  // A failed start - a language file that did not download, a worker the browser killed - must
+  // not be the answer to every later request: forget it, so the next one tries again.
+  started.catch(() => {
+    if (workerPromise === started) { workerPromise = null; workerLang = null; }
+  });
+  return started;
+}
+
+// The engine holds tens of megabytes of model and WASM heap. It is kept warm while pictures keep
+// arriving and released once the queue has been idle this long, so a viewer tab left open, or an
+// offscreen host between runs, does not hold it for the rest of the session.
+const ENGINE_IDLE_MS = 60000;
+let idleTimer = 0;
+let pendingTasks = 0;
+
+function releaseIdleEngine() {
+  idleTimer = 0;
+  if (pendingTasks > 0 || !workerPromise) return;
+  const p = workerPromise;
+  workerPromise = null;
+  workerLang = null;
+  p.then((w) => w.terminate()).catch(() => {});
 }
 
 // ---- FIFO queue (single-flight) --------------------------------------------
@@ -70,8 +92,16 @@ async function getWorker(lang) {
 // time, whatever the caller does. A failed task never breaks the chain.
 let queueTail = Promise.resolve();
 function enqueue(task) {
+  pendingTasks++;
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = 0; }
   const run = queueTail.then(task, task);
-  queueTail = run.then(() => {}, () => {});
+  queueTail = run.then(() => {}, () => {}).then(() => {
+    pendingTasks--;
+    if (pendingTasks === 0 && !idleTimer) {
+      idleTimer = setTimeout(releaseIdleEngine, ENGINE_IDLE_MS);
+      if (idleTimer.unref) idleTimer.unref(); // node (the lab harness) must be able to exit
+    }
+  });
   return run;
 }
 
@@ -105,8 +135,11 @@ const BITMAP_OPTS = { imageOrientation: "from-image" };
 
 async function toBitmap(src) {
   if (src instanceof Blob) {
+    // Decoded only for its size: the decoded pixels are the biggest thing here, so they go at once.
     const bmp = await createImageBitmap(src, BITMAP_OPTS);
-    return { source: src, width: bmp.width, height: bmp.height };
+    const { width, height } = bmp;
+    if (bmp.close) bmp.close();
+    return { source: src, width, height };
   }
   if (typeof HTMLImageElement !== "undefined" && src instanceof HTMLImageElement) {
     return toBitmap(await fetchToBlob(src.currentSrc || src.src));
@@ -420,8 +453,11 @@ async function greyCanvas(blob, extraFilter = "") {
 
 // Returns block-level results with bounding boxes (pixel coords) plus the image's
 // natural dimensions, so callers can position plates in percent.
-export async function recognize(imageSource, { lang = "eng", onProgress } = {}) {
+// isCancelled, when given, is asked as the task reaches the head of the queue: a picture whose
+// document was replaced, or whose run was stopped, is skipped instead of recognized for nobody.
+export async function recognize(imageSource, { lang = "eng", onProgress, isCancelled } = {}) {
   return enqueue(async () => {
+    if (isCancelled && isCancelled()) throw new Error("cancelled");
     const bitmap = await toBitmap(imageSource);
     const worker = await getWorker(lang);
     currentProgress = onProgress || null;
@@ -581,16 +617,16 @@ async function measureScreenPitch(blob, covered = []) {
 // and docs/PARITY.md "OCR".
 import { buildOverlay } from "./ocr-plates.js";
 export {
-  buildOverlay, makeBadge, plateSpecs, renderPlates, scheduleFit, fitPlate,
+  buildOverlay, makeBadge, plateSpecs, renderPlates, scheduleFit, fitPlate, releaseOverlays,
   FONT_FIT, FONT_GROW_CAP,
 } from "./ocr-plates.js";
 
 // ---- One-call convenience + language tag -----------------------------------
 // Recognize then build the overlay, resolving to the container. Pass an <img> to reuse
 // (and move) that element; pass a URL/Blob to create a fresh <img>.
-export async function overlayImage(source, { lang = "eng", onProgress } = {}) {
+export async function overlayImage(source, { lang = "eng", onProgress, isCancelled } = {}) {
   const isEl = typeof HTMLImageElement !== "undefined" && source instanceof HTMLImageElement;
-  const { blocks, dropped, width, height } = await recognize(source, { lang, onProgress });
+  const { blocks, dropped, width, height } = await recognize(source, { lang, onProgress, isCancelled });
   const container = buildOverlay(
     isEl
       ? { imageEl: source, blocks, width, height }

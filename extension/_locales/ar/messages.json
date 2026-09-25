@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "معطّل افتراضيًا: تُحظر الصور التي يجلبها المستند من الإنترنت حتى لا يعرف مؤلفه أنك فتحته. يتيح لك العارض تحميلها لكل مستند على حدة.",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "تم الحفظ - حجم الملف {1} ميغابايت لأن كل الصور بداخله؛ بعض المتصفحات تفتح الملفات بهذا الحجم ببطء",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

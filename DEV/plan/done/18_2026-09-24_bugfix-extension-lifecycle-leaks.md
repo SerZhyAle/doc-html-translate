@@ -1,12 +1,12 @@
 # Strategic spec: 18_2026-09-24_bugfix-extension-lifecycle-leaks - Extension: release every resource, never render a stale document
 
 **Ticket:** 18_2026-09-24_bugfix-extension-lifecycle-leaks
-**Status:** Draft
+**Status:** Implemented (2026-09-25; heap-snapshot and live two-tab checks of §13 still to run)
 **Priority:** 60
 **Date:** 2026-09-24
 **Tier:** Moderate
-**Tactical plan:** `DEV/plan/18_2026-09-24_bugfix-extension-lifecycle-leaks/` (created by /spec-tech)
-**Findings:** B1-B13 B25 B27 B28 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Tactical plan:** none - implemented directly from this spec (see §13)
+**Findings:** B1-B13 B25 B27 B28 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -73,7 +73,9 @@ positions plates every animation frame.
 ## 6. Open questions / research items
 1. **Heap-regression check in CI**
    - **Question:** can a headless heap check run in the extension's test harness?
-   - **Status:** Open.
+   - **Status:** Open - not attempted. The harness is `node --test` over linkedom, with no pdf.js worker
+     and no engine, so a heap number there would not measure the leaks that matter. It needs the real
+     extension under a browser (the `ocrlab` CDP harness is the nearest start).
 
 ## 7. Risks
 - **Event-driven positioning misses layout shifts that only a frame loop catches.** Likelihood: medium. Impact: misaligned plates. Mitigation: a resize/mutation observer plus a slow fallback poll.
@@ -95,3 +97,34 @@ No changes to user docs.
 
 ## 12. Next step
 `/spec-tech 18_2026-09-24_bugfix-extension-lifecycle-leaks`
+
+## 13. Implementation record (2026-09-25)
+
+| Finding | Change |
+|---|---|
+| B1 | `teardownCurrent` destroys the pdf.js document and any loading task still in flight. |
+| B2 | `buildOverlay` registers each fit; `releaseOverlays(root)` stops them (viewer teardown), and a fit stops itself once its container is placed and then detached. |
+| B3 | The offscreen host stays only while another run is *running* on it; `releaseHost` clears the run's host fields. Also a failed start releases its host. |
+| host-refused | the ready waiter and its timer are dropped on refusal. |
+| B4 | A rejected engine start is forgotten, so the next request retries; the engine is also terminated after 60 s of an idle queue. |
+| B5, B6 | The page agent places plates per change signal (scroll, resize, ResizeObserver, mutations) plus a 1 s poll while layers exist, instead of every frame; anchors whose image left the page are pruned with their layers. |
+| B7 | The size-probe ImageBitmap is closed at once. |
+| B8 | Export encodes images asynchronously one at a time (`toBlob` + FileReader), empties each canvas, and warns in the status line past 100 MB (`vSavedLarge`, 13 locales). Blob URLs are still held until teardown - they back OCR re-fetches of those images. |
+| B9 | `rasterizePage` caps the canvas at 16 MP / 8192 px per side (`rasterScale`). |
+| B10 | Load tokens: `beginLoad` tears down and returns the generation; `loadUrl`, the file picker and every loader check it after each await and release what a superseded load made. |
+| B11 | A queued OCR image of a replaced document is skipped (`isCancelled`), and a finished one does not touch the new document's counters. |
+| B12 | Stop names the job (`jobId`); the host cancels that job only. |
+| B13 | Navigation settles the job in flight and tells the host; the agent stops pinging after 180 s without a status. SPA content swaps are covered by the pruning of B6. |
+| B25 | Rule syncs are serialized, report failure (`sync-rules` answers `{ok:false,error}`), and disabled hosts DNR would reject are dropped (`ruleDomains`). |
+| B27 | A run that names a format starts clean; writes are serialized. |
+| B28 | "Original" acts on the URL of the document on screen (`currentUrl`), and is hidden for picked files. |
+
+Tests: `viewer.test.mjs` (stale-load race - fails on the old code), `page-ocr.test.mjs` (two tabs close
+the host, stop scoped to a job, navigation settles at once), `background.test.mjs`, `diagnostics.test.mjs`,
+`lifecycle.test.mjs`, `pdf-images.test.mjs`.
+
+Not done / open:
+- Done criterion 1 (memory back near baseline after 10 PDFs) and the live two-tab page-OCR runs need a
+  real browser; not run.
+- The event-driven placement (spec §7 risk) needs a manual check on a page with sticky or animated
+  pictures.

@@ -93,8 +93,25 @@ export function buildOverlay({ imageSrc, imageEl, blocks, width, height }) {
   container.append(img);
 
   renderPlates(container, plateSpecs({ blocks, width, height }));
-  scheduleFit(container);
+  liveFits.set(container, scheduleFit(container));
   return container;
+}
+
+// Every overlay buildOverlay made and has not released yet, with its fit's stop function. The
+// viewer swaps documents inside one long-lived page, so an overlay's window listeners and
+// observers outlive its image unless someone stops them; this is that someone.
+const liveFits = new Map();
+
+// releaseOverlays stops the fit of every overlay under root (root itself included). The viewer
+// calls it before replacing a document. A fit also stops itself once it finds its container
+// detached, which covers an overlay dropped any other way.
+export function releaseOverlays(root) {
+  for (const [container, stop] of liveFits) {
+    if (root === container || (root && root.contains && root.contains(container))) {
+      liveFits.delete(container);
+      try { stop(); } catch { /* ignore */ }
+    }
+  }
 }
 
 // fitPlate fits one plate's text to its box: it shrinks the cqw font down to a floor, and if the
@@ -147,11 +164,29 @@ export function fitPlate(b) {
 // lives on, and observers left running on a detached container are a leak the viewer never had to
 // care about because its page went away with the overlay.
 export function scheduleFit(container) {
-  const fitAll = () => { container.querySelectorAll(".ocr-plate").forEach(fitPlate); };
+  let placed = false;
+  let stopped = false;
+  const fitAll = () => {
+    if (stopped) return;
+    if (!container.isConnected) {
+      // Detached after having been placed: nothing will ever need fitting again.
+      if (placed) stop();
+      return;
+    }
+    placed = true;
+    container.querySelectorAll(".ocr-plate").forEach(fitPlate);
+  };
   let t;
   const go = () => { clearTimeout(t); t = setTimeout(fitAll, 0); };
-  go();
   const stops = [];
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    clearTimeout(t);
+    for (const s of stops) s();
+    liveFits.delete(container);
+  };
+  go();
   if (typeof window !== "undefined") {
     window.addEventListener("load", go);
     window.addEventListener("resize", go);
@@ -177,7 +212,7 @@ export function scheduleFit(container) {
       stops.push(() => ro.disconnect());
     } catch { /* ignore */ }
   }
-  return () => { clearTimeout(t); for (const s of stops) s(); };
+  return stop;
 }
 
 // A progress badge (styled by .ocr-badge) callers overlay on a pending image.

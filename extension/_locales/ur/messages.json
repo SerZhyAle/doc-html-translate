@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "بطور طے شدہ بند: دستاویز جو تصاویر انٹرنیٹ سے لاتی ہے وہ بلاک ہوتی ہیں تاکہ مصنف کو پتا نہ چلے کہ آپ نے اسے کھولا۔ ویوئر میں آپ انہیں ایک ایک دستاویز کے لیے لوڈ کر سکتے ہیں۔",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "محفوظ ہو گیا - فائل {1} MB کی ہے کیونکہ تمام تصاویر اس کے اندر ہیں؛ کچھ براؤزر اتنی بڑی فائلیں آہستہ کھولتے ہیں",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

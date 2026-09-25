@@ -560,5 +560,9 @@
   "optAllowRemoteHint": {
     "message": "ডিফল্টভাবে বন্ধ: নথি ইন্টারনেট থেকে যে ছবি আনে সেগুলো ব্লক করা হয়, যাতে লেখক জানতে না পারেন যে আপনি এটি খুলেছেন। ভিউয়ারে প্রতিটি নথির জন্য আলাদাভাবে সেগুলো লোড করা যায়।",
     "description": "Hint under the remote-images checkbox."
+  },
+  "vSavedLarge": {
+    "message": "সংরক্ষিত - ফাইলটি {1} MB কারণ সব ছবি এর ভেতরে আছে; কিছু ব্রাউজার এত বড় ফাইল ধীরে খোলে",
+    "description": "Status after saving a very large HTML export. {1} is the size in MB."
   }
 }

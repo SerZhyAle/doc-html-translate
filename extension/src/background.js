@@ -44,6 +44,21 @@ function viewerBase() {
   return chrome.runtime.getURL("src/viewer.html");
 }
 
+// ruleDomains keeps the disabled-host entries DNR accepts: lower-case ASCII (punycode) domain
+// names. The popup stores location.hostname, which for an IPv6 page is "[::1]" and for an IDN is
+// already punycode, but a single entry DNR rejects fails the whole atomic update - interception
+// then silently keeps the previous rules. An entry that cannot be a DNR domain is dropped instead.
+export function ruleDomains(hosts) {
+  const out = [];
+  for (const h of Array.isArray(hosts) ? hosts : []) {
+    let host;
+    try { host = new URL(`http://${String(h).trim()}/`).hostname; } catch { continue; }
+    if (!host || !/^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(host)) continue;
+    if (!out.includes(host)) out.push(host);
+  }
+  return out;
+}
+
 // Build the dynamic redirect rules from current options. Returns [] when the
 // extension is globally off, which removes interception entirely.
 function buildRules(options) {
@@ -59,9 +74,8 @@ function buildRules(options) {
       resourceTypes: ["main_frame"],
     },
   };
-  if (options.disabledHosts && options.disabledHosts.length) {
-    httpsRule.condition.excludedRequestDomains = options.disabledHosts;
-  }
+  const excluded = ruleDomains(options.disabledHosts);
+  if (excluded.length) httpsRule.condition.excludedRequestDomains = excluded;
   const fileRule = {
     id: RULE_FILE,
     priority: 1,
@@ -74,12 +88,23 @@ function buildRules(options) {
   return [httpsRule, fileRule];
 }
 
-async function syncRules() {
-  const options = await getOptions();
-  const addRules = buildRules(options);
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [RULE_HTTPS, RULE_FILE],
-    addRules,
+// Syncs run one at a time, each reading the options when its turn comes. Two storage changes in
+// quick succession used to race, and the one whose read finished last could apply the older
+// options. A failure is logged and reported, never left as an unhandled rejection.
+let syncTail = Promise.resolve();
+
+function syncRules() {
+  const run = syncTail.then(async () => {
+    const options = await getOptions();
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [RULE_HTTPS, RULE_FILE],
+      addRules: buildRules(options),
+    });
+  });
+  syncTail = run.catch(() => {});
+  return run.then(() => ({ ok: true }), (e) => {
+    console.warn("interception rules not updated", e);
+    return { ok: false, error: String((e && e.message) || e) };
   });
 }
 
@@ -240,7 +265,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true; // async response
   }
   if (msg.type === "sync-rules") {
-    syncRules().then(() => sendResponse({ ok: true }));
+    syncRules().then(sendResponse);
     return true;
   }
 });

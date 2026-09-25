@@ -20,9 +20,22 @@ const MAX_ERROR = 200;
 
 // recordRun remembers what the viewer just did. It swallows storage errors: diagnostics exist
 // to explain a broken render, never to cause one.
-export async function recordRun({ format, pages, error } = {}) {
+//
+// A call naming a format starts a new run, so the previous document's page count and error do not
+// carry over into it - a clean open used to keep reporting the last failure. Writes are
+// read-modify-write, so they run one after another; unawaited callers used to overwrite each
+// other's fields.
+let writeTail = Promise.resolve();
+
+export function recordRun(patch = {}) {
+  const run = writeTail.then(() => writeRun(patch));
+  writeTail = run;
+  return run;
+}
+
+async function writeRun({ format, pages, error } = {}) {
   try {
-    const prev = (await chrome.storage.local.get(KEY))[KEY] || {};
+    const prev = format != null ? {} : (await chrome.storage.local.get(KEY))[KEY] || {};
     const run = {
       format: format != null ? String(format) : prev.format || "",
       pages: pages != null ? Number(pages) : prev.pages || 0,

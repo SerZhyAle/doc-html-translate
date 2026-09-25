@@ -16,7 +16,7 @@ globalThis.DOMMatrix ??= class DOMMatrix {
   }
 };
 
-const { composeTransform, paintFlips, sameShapeRaster, dedupeSameShape } = await import("../src/pdf-images.js");
+const { composeTransform, paintFlips, sameShapeRaster, dedupeSameShape, rasterScale, RASTER_MAX_PIXELS, RASTER_MAX_SIDE } = await import("../src/pdf-images.js");
 
 const IDENTITY = [1, 0, 0, 1, 0, 0];
 
@@ -79,4 +79,16 @@ test("dedupeSameShape: a composed page of differently-shaped images keeps all", 
   const landscape = { blob: "l", width: 900, height: 600 };
   const square = { blob: "s", width: 500, height: 500 };
   assert.equal(dedupeSameShape([portrait, landscape, square]).length, 3);
+});
+
+test("the page raster keeps ordinary pages at full scale and caps outsized ones", () => {
+  // A4 in PDF points at scale 2 is well under the cap.
+  assert.equal(rasterScale(595, 842, 2), 2);
+  // A0 poster: the pixel cap decides.
+  const a0 = rasterScale(2384, 3370, 2);
+  assert.ok(a0 < 2 && Math.round(2384 * a0) * Math.round(3370 * a0) <= RASTER_MAX_PIXELS * 1.001);
+  // A long strip: the side cap decides.
+  const strip = rasterScale(500, 40000, 2);
+  assert.ok(40000 * strip <= RASTER_MAX_SIDE + 1e-6);
+  assert.equal(rasterScale(0, 0, 2), 2);
 });

@@ -197,11 +197,28 @@ export async function extractPageImages(page, { minSize = 64 } = {}) {
   return dedupeSameShape(out);
 }
 
+// A raster is width x height x 4 bytes of canvas, and a PDF page can be a poster or a map sheet
+// metres across: at scale 2 that is a canvas the tab cannot allocate, or one that takes the tab
+// down with it. The cap keeps an ordinary page at full scale (A4 at scale 2 is about 2 MP) and
+// shrinks only the outsized ones. Extension-only: the desktop app has its own decode budget
+// (limits.MaxImagePixels, docs/PARITY.md "Input limits").
+export const RASTER_MAX_PIXELS = 16 * 1024 * 1024;
+export const RASTER_MAX_SIDE = 8192;
+
+// rasterScale is the requested scale, reduced until the canvas fits both caps.
+export function rasterScale(width1, height1, scale) {
+  if (!(width1 > 0) || !(height1 > 0)) return scale;
+  const byPixels = Math.sqrt(RASTER_MAX_PIXELS / (width1 * height1));
+  const bySide = RASTER_MAX_SIDE / Math.max(width1, height1);
+  return Math.min(scale, byPixels, bySide);
+}
+
 // Render the whole page as one image - the fallback for scanned pages that are a single
 // full-page image with no separately-extractable XObject.
 export async function rasterizePage(page, { scale = 2 } = {}) {
   try {
-    const viewport = page.getViewport({ scale });
+    const unit = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: rasterScale(unit.width, unit.height, scale) });
     const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
     const ctx = canvas.getContext("2d");
     await page.render({ canvasContext: ctx, viewport }).promise;

@@ -71,6 +71,11 @@ function offscreenAvailable() {
   return typeof chrome.offscreen !== "undefined" && typeof chrome.offscreen.createDocument === "function";
 }
 
+function dropWaiter(hostId) {
+  const waiter = hostReady.get(hostId);
+  if (waiter) { clearTimeout(waiter.timer); hostReady.delete(hostId); }
+}
+
 function waitForHost(hostId) {
   return new Promise((resolve) => {
     const timer = setTimeout(() => { hostReady.delete(hostId); resolve(false); }, HOST_READY_TIMEOUT_MS);
@@ -91,8 +96,7 @@ async function ensureOffscreenHost() {
           justification: "Runs the text-recognition engine outside the web page, so the page's own security policy cannot block it and the page's scripts cannot reach it.",
         });
       } catch (e) {
-        const waiter = hostReady.get(hostId);
-        if (waiter) { clearTimeout(waiter.timer); hostReady.delete(hostId); }
+        dropWaiter(hostId);
         throw e;
       }
       if (!(await ready)) throw new Error("host-silent");
@@ -131,20 +135,37 @@ async function ensureHost(run) {
     t: "host-frame",
     url: chrome.runtime.getURL(`src/ocr-host.html?host=${hostId}`),
   });
-  if (!res || !res.ok) throw new Error("host-refused");
+  // The ready wait was armed before the request so a fast host cannot answer into nothing; a
+  // refusal means no host will ever answer, so the wait and its timer go now.
+  if (!res || !res.ok) { dropWaiter(hostId); throw new Error("host-refused"); }
   if (!(await ready)) throw new Error("host-blocked");
   run.hostKind = "frame";
   run.hostId = hostId;
 }
 
+// The offscreen document is shared, so it stays only while another run is actually using it. A
+// finished run keeps its entry in `runs` (the page's counts live there), which is why the test is
+// "running", not "present": counting finished runs kept the host open for the whole session.
+function offscreenInUse(except) {
+  return [...runs.values()].some((r) => r !== except && r.running && r.hostKind === "offscreen");
+}
+
+function closeOffscreen() {
+  offscreenPromise = null;
+  offscreenHostId = "";
+  try {
+    const p = chrome.offscreen.closeDocument();
+    if (p && typeof p.catch === "function") return p.catch(() => {});
+  } catch { /* already gone */ }
+  return Promise.resolve();
+}
+
 async function releaseHost(run) {
-  if (run.hostKind === "frame") { await toTab(run.tabId, { t: "drop-host-frame" }); return; }
-  // The offscreen document is shared, so it only goes away once nothing is using it.
-  if (run.hostKind === "offscreen" && ![...runs.values()].some((r) => r !== run && r.hostKind === "offscreen")) {
-    offscreenPromise = null;
-    offscreenHostId = "";
-    try { await chrome.offscreen.closeDocument(); } catch { /* already gone */ }
-  }
+  const kind = run.hostKind;
+  run.hostKind = "";
+  run.hostId = "";
+  if (kind === "frame") { await toTab(run.tabId, { t: "drop-host-frame" }); return; }
+  if (kind === "offscreen" && !offscreenInUse(run)) await closeOffscreen();
 }
 
 // ---- One picture -----------------------------------------------------------
@@ -259,6 +280,7 @@ async function startRun(tabId, { rescan = false } = {}) {
     run.running = false;
     run.queue = [];
     console.warn("page OCR: could not start", e);
+    await releaseHost(run);
     await status(run, { error: hostFailureMessage(e) });
     return;
   }
@@ -270,7 +292,9 @@ async function stopRun(tabId) {
   if (!run) return;
   run.stopped = true;
   run.queue = [];
-  broadcast({ hostId: run.hostId, t: "stop" });
+  // The stop names this run's job: the offscreen host is shared, and a stop for the host as a
+  // whole would cancel another tab's picture too.
+  if (run.jobId) broadcast({ hostId: run.hostId, t: "stop", jobId: run.jobId });
   // Settle the picture this run was in the middle of, so drain() is not left waiting on one the
   // reader has already given up on. Only this run's job: another tab's run is not the reader's to
   // stop from here.
@@ -326,17 +350,21 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 
 // A tab that navigates or closes takes its layer with it. The run state must go too, or a later
 // run in the same tab starts with the previous page's picture count.
+// The picture in flight is settled here too: its page is gone, and leaving it pending held drain()
+// - and the worker, through the job timer - for the full job timeout.
 function forgetTab(tabId) {
   const run = runs.get(tabId);
   if (!run) return;
   run.stopped = true;
   run.queue = [];
-  runs.delete(tabId);
-  if (run.hostKind === "offscreen" && ![...runs.values()].some((r) => r.hostKind === "offscreen")) {
-    offscreenPromise = null;
-    offscreenHostId = "";
-    try { chrome.offscreen.closeDocument().catch(() => {}); } catch { /* ignore */ }
+  if (run.jobId) {
+    if (run.hostId) broadcast({ hostId: run.hostId, t: "stop", jobId: run.jobId });
+    settleJob(run.jobId, { ok: false, error: "navigated" });
   }
+  runs.delete(tabId);
+  if (run.hostKind === "offscreen" && !offscreenInUse(run)) closeOffscreen();
+  run.hostKind = "";
+  run.hostId = "";
 }
 
 chrome.tabs.onRemoved.addListener((tabId) => forgetTab(tabId));
