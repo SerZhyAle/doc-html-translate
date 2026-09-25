@@ -3,7 +3,7 @@
 **Date:** 2026-08-15
 **Runs:** `temp/ocrlab/ext-0815` (extension, this run) against `temp/ocrlab/p47b` (desktop, 2026-08-13)
 **Question:** the plate-composition cycle
-([`30_2026-08-13_ocr-sweep-plate-composition`](../../plan/30_2026-08-13_ocr-sweep-plate-composition.md))
+([`16_2026-08-13_ocr-sweep-plate-composition`](../../plan/16_2026-08-13_ocr-sweep-plate-composition.md))
 landed in both editions but was measured only on the desktop one, which that note recorded as an
 open item: *"The extension edition was not run (`npm run ocrlab`). .. its own evidence is a separate
 run."* This is that run.

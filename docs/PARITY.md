@@ -441,7 +441,7 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 
 **Guard:** Guarded by `TestParityInputLimits` ([`tests/limits_parity_test.go`](../tests/limits_parity_test.go)),
 which compares the Go and JS values and pins the published numbers. Ticket
-`12_2026-09-24_bugfix-resource-budgets`.
+`2026-09-24_bugfix-resource-budgets`.
 
 One hostile or merely huge file must be turned into a message before it is allocated: the desktop app
 ships a 32-bit build with a 2 GB address space, and a browser tab has less. Both editions probe first (an

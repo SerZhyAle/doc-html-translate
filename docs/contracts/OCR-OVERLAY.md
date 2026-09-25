@@ -23,7 +23,7 @@ two editions (Go and the browser extension) held to one constant table by the gu
 - Two deviations are recorded as dated exceptions in the catalog registry, not fixed here in silence: the
   discard record of rule 12 is not written for an image that produced no plates, and the extension edition
   recognizes with an assumed `eng` because it has no script-detection pass (rule 10's failure mode).
-  Tickets: [`../../DEV/plan/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
+  Tickets: [`../../DEV/plan/05_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/05_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
   and [`../PARITY.md`](../PARITY.md) ("Intentional divergences").
 
 **Conformance.** The catalog has no shared vector set for this contract yet; section 6 of its README names

@@ -39,7 +39,7 @@ be "fixed" by raising the factor:
 - **Splitting** (this ticket): one balloon becomes several plates.
 - **Merging**: two adjacent balloons, or two text columns, become one plate that crosses an unrelated
   reading group. The lab scores this as `merges` and `crossGroup`, and it is Step 07.3 of
-  [`ocr-visual-fidelity-lab`](../16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
+  [`ocr-visual-fidelity-lab`](../07_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
   whose written instruction is explicitly *"keep `ocrMinLineConf` and `ocrClusterGapFactor`
   unchanged; this is an added condition, not a retuned one"*.
 

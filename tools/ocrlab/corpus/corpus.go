@@ -7,7 +7,7 @@
 // it is why every scene carries a hash: the manifest is the claim, the file on disk is the
 // thing, and Validate is what confronts one with the other.
 //
-// See DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md sections 4.1 and 4.2 for the rules this
+// See DEV/plan/07_2026-08-11_ocr-visual-fidelity-lab.md sections 4.1 and 4.2 for the rules this
 // package encodes.
 package corpus
 

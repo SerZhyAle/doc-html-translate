@@ -70,7 +70,7 @@ Two tiers, and which tier a surface belongs to is a decision, not an accident:
 Not every change moves the sixteen places above. A ticket recorded here is one that deliberately
 touches none of them, so a later reader does not go looking for the missing README line.
 
-- **`16_2026-08-11_ocr-visual-fidelity-lab`** - the OCR quality benchmark (`tools/ocrlab`). Developer
+- **`07_2026-08-11_ocr-visual-fidelity-lab`** - the OCR quality benchmark (`tools/ocrlab`). Developer
   surfaces only: `tools/ocrlab/README.md`, `AGENTS.md`, `test_doc/CORPUS.md`, `DEV/plan/ROADMAP.md`
   and the changelog. **No** README, site, landing-page, store-listing or `_locales` change, and no
   translation work. The strategic spec declines it outright: no public quality claim moves until the

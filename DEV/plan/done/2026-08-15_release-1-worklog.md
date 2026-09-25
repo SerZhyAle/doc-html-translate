@@ -53,7 +53,7 @@ this item; it is now unblocked and is the next dated baseline run, not a release
 
 [`2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
 - closed 2026-09-25 as **Implemented** (instrument and measurement); the recall it asked for moved to
-[`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md). Evidence:
+[`15_2026-09-25_ocr-rescue-third-axis`](../15_2026-09-25_ocr-rescue-third-axis.md). Evidence:
 [`DEV/research/ocr_rescue_floor_2026-08-15.md`](../../research/ocr_rescue_floor_2026-08-15.md).
 
 The ticket asked for the band behind `ocrRescueLineConf` to be re-measured. It was, and **the band
@@ -162,7 +162,7 @@ nobody can trust.
    ticket to use) and `DEV/plan/2026-07-28_thirteen-ui-languages.md`. `DEV/plan/` was in `.gitignore` then (it is
    tracked since), so none of them could be recovered from history. Either they were deleted or they never existed on this
    clone; both `CLAUDE.md` and three files in `done/` still link to them.
-2. **`16_2026-08-11_ocr-visual-fidelity-lab.md` said `Tactical` while its `INDEX.md` said `In Progress`.**
+2. **`07_2026-08-11_ocr-visual-fidelity-lab.md` said `Tactical` while its `INDEX.md` said `In Progress`.**
    Corrected 2026-08-15 in favour of the INDEX, which is the authority on phase state. The previous
    edition of this file recorded the same disagreement and left it standing, and it had also gone stale
    in the other direction - it reported 4 of 8 phases where the INDEX says 6.

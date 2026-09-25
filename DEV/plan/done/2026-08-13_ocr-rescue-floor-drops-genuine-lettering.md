@@ -3,7 +3,7 @@
 **Status:** Implemented (2026-09-25) - scope closed on what the ticket could answer: the discard record
 ships in both editions and the floor was re-measured. The recall it hoped for did not come from the
 floor, and that work moved to
-[`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md).
+[`15_2026-09-25_ocr-rescue-third-axis`](../15_2026-09-25_ocr-rescue-third-axis.md).
 **Priority:** 49
 **Date:** 2026-08-13
 **Measured:** 2026-08-15 - evidence in
@@ -129,7 +129,7 @@ answered, and the one outcome still missing - `ЗАЧЕМ` on the poster - needs
 not name: an axis that is neither confidence nor length. Keeping the ticket open would have left a
 queue line whose next step is research, sitting in release 1 against rule 3.
 
-- What moved to [`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md):
+- What moved to [`15_2026-09-25_ocr-rescue-third-axis`](../15_2026-09-25_ocr-rescue-third-axis.md):
   finding and measuring that axis, and the three open questions below.
 - What changed in code on the close: only `TestRescueConfidenceFloorIsStricter`, which still cited
   the 2026-08-13 pair and would have let a future floor of 75 pass while admitting the 73.9 misread.
