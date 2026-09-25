@@ -58,7 +58,7 @@ pass, `ocrRescueLineConf` = 80 for a rescue:
 > reach the lab's 0.5 IoU floor. That lever is **P49**, opened here because the tactical plan
 > pre-authorised exactly this follow-up. The rule separates sizes, not regions: `accounts.jpg` goes
 > from one plate over 80.6% of the image to 68.3%, and same-size separated regions remain **P47**
-> ([`2026-08-13_ocr-sweep-plate-composition`](../2026-08-13_ocr-sweep-plate-composition.md)).
+> ([`30_2026-08-13_ocr-sweep-plate-composition`](../30_2026-08-13_ocr-sweep-plate-composition.md)).
 >
 > **Found while measuring, and not this ticket's:** concealment collapsed corpus-wide between the two
 > runs - residual ink mean 17% -> 93% over 46 scenes - and it is the 2026-08-13 plate-shape change,

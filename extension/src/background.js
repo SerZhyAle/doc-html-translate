@@ -10,7 +10,7 @@
 
 import { DEFAULT_OPTIONS } from "./defaults.js";
 // The whole-page OCR broker attaches its own message and tab listeners on import; this file only
-// owns the menu entry that starts it. See DEV/plan/2026-09-19_page-ocr-overlay.md.
+// owns the menu entry that starts it. See DEV/plan/29_2026-09-19_page-ocr-overlay.md.
 import { startRun as startPageOcr } from "./page-ocr.js";
 
 const RULE_HTTPS = 1;

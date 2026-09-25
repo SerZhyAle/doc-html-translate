@@ -96,8 +96,11 @@ Where these conflict with [AGENTS.md](AGENTS.md), **AGENTS.md wins**.
 
 ## Spec / plan tickets
 
-- One ticket = one Markdown file `DEV/plan/<YYYY-MM-DD>_<slug>.md`; a ticket with a tactical breakdown gets
-  a sibling directory of the same name whose `INDEX.md` is the authority on phase state. The status is the
+- One ticket = one Markdown file `DEV/plan/NN_<YYYY-MM-DD>_<slug>.md`; a ticket with a tactical breakdown gets
+  a sibling directory of the same name whose `INDEX.md` is the authority on phase state. `NN` is the ticket's
+  position in the queue, so the listing reads in execution order: a new ticket takes its number when its line
+  enters the queue, a reorder renames the files and fixes their links in the same commit, and a move to
+  `done/` drops the prefix. Every open ticket lives in `DEV/plan/`, nowhere else. The status is the
   first `**Status:**` line in the file; keep it honest by hand.
 - **[DEV/plan/RELEASE_QUEUE.md](DEV/plan/RELEASE_QUEUE.md) is the queue** - what is left to do before the
   next release, in execution order, grouped into release packages (`rel` is a package ordinal, never a

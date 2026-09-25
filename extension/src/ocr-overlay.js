@@ -575,7 +575,7 @@ async function measureScreenPitch(blob, covered = []) {
 // ---- Overlay rendering -----------------------------------------------------
 // The plate half lives in ocr-plates.js so it can be loaded where the recognition engine must not
 // be: the page agent draws plates inside a third-party document, and importing this file would
-// carry the Tesseract module into that document with it (DEV/plan/2026-09-19_page-ocr-overlay.md,
+// carry the Tesseract module into that document with it (DEV/plan/29_2026-09-19_page-ocr-overlay.md,
 // ADR-1). Re-exported here so every existing importer keeps the names it already used. The parity
 // guards for the plate constants and the paper carrier follow the code - see tests/parity_test.go
 // and docs/PARITY.md "OCR".

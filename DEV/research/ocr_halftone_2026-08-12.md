@@ -1,6 +1,6 @@
 # Lettering on a halftone screen - measure-fix cycle, 2026-08-12
 
-**Ticket:** [`2026-08-11_ocr-halftone-defeats-recognition`](../plan/2026-08-11_ocr-halftone-defeats-recognition.md)
+**Ticket:** [`2026-08-11_ocr-halftone-defeats-recognition`](../plan/done/2026-08-11_ocr-halftone-defeats-recognition.md)
 **Question:** `synth-text-on-halftone` produces no plates at all, and the grey rescue ladder does not
 recover it. What does, and does that fix anything a reader would ever meet?
 **Runs:** a 59-image transform sweep (the whole lab corpus, the synthetic scenes, and 19 images
@@ -127,7 +127,7 @@ That is not a failure of the transform. It is a fact about where the screen defe
   whose new, non-overlapping plates are merged into the first pass's result - with its own
   regression surface (plate composition changes on every screened page) and its own cost (a second
   full recognition on every image carrying a screen). That is
-  [`2026-08-12_ocr-screen-pass-for-pages-that-already-read`](../plan/2026-08-12_ocr-screen-pass-for-pages-that-already-read.md),
+  [`2026-08-12_ocr-screen-pass-for-pages-that-already-read`](../plan/done/2026-08-12_ocr-screen-pass-for-pages-that-already-read.md),
   not this ticket.
 
 The same sweep is also the case *against* applying the low-pass more widely: as a replacement it is

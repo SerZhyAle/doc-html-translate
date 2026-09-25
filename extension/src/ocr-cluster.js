@@ -122,7 +122,7 @@ export const OCR_RESCUE_LINE_CONF = 80;
 // stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
 // geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
 // words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
-// (DEV/plan/2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+// (DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
 export const OCR_MAX_WORD_GAP_RATIO = 3.5;
 
 export const OCR_MIN_LINE_CONF = 50;

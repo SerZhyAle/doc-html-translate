@@ -1,6 +1,6 @@
 # OCR grey rescue - measure-fix cycle, 2026-08-11
 
-**Ticket:** [`2026-08-11_ocr-visual-fidelity-lab`](../plan/2026-08-11_ocr-visual-fidelity-lab.md)
+**Ticket:** [`16_2026-08-11_ocr-visual-fidelity-lab`](../plan/16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Question:** the loop1 report showed 14 of 40 scenes producing no plates at all. Why, and what is
 the smallest correction that recovers them without regressing anything?
 **Runs:** `temp/ocrlab/loop1` (baseline) -> `loop2` (grey rescue ladder) -> `loop3` (+ rescue

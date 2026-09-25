@@ -20,6 +20,8 @@ and confirm it in the output.
 Output file: `DEV/plan/YYYY-MM-DD_<slug>_<slug>.md`. Allocate `YYYY-MM-DD_<slug>` by scanning `DEV/plan/` for the
 highest existing id and incrementing (e.g. `T0041` → `T0042`). The tactical folder
 `DEV/plan/YYYY-MM-DD_<slug>_<slug>/` is created later by `/spec-tech`.
+This repo prefixes the file with its queue position once its line enters `DEV/plan/RELEASE_QUEUE.md`:
+`DEV/plan/NN_YYYY-MM-DD_<slug>.md` (see CLAUDE.md, "Spec / plan tickets").
 
 ## Process
 

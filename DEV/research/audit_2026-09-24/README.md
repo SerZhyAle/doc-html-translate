@@ -1,18 +1,17 @@
 # Code audit 2026-09-24 - findings register and spec set
 
-**Status:** Research complete; the 17 tickets under `specs/` are `Draft`.
+**Status:** Research complete; the 17 tickets moved into `DEV/plan/` on 2026-09-25 and are tracked in [`RELEASE_QUEUE.md`](../../plan/RELEASE_QUEUE.md).
 **Scope:** the whole repo - Go CLI/GUI (`cmd/`, `internal/`) and the JS extension (`extension/src`).
 **Method:** a full read of every non-test source file, split into six areas. The findings were
 cross-checked against the live tree, and `go vet` (linux + `GOOS=windows`), `go test -race ./internal/... ./cmd/...`
 and `staticcheck` were run. Line numbers refer to commit `41fbc1b`.
 
-## Why the tickets live here and not in `DEV/plan/`
+## Where the tickets live
 
-`DEV/plan/` is gitignored ("tickets stay local"), and this audit ran in an ephemeral cloud container.
-A ticket written only there would have been lost. The specs are committed here in the ticket shape
-(`YYYY-MM-DD_<slug>.md`, first `**Status:**` line) so they can be moved into `DEV/plan/` locally as-is,
-with a line added to `DEV/plan/RELEASE_QUEUE.md` for each. Each ticket cites finding ids from this
-register, not file paths, so the specs stay strategic and the evidence has one home.
+The tickets were first committed here under `specs/`, because `DEV/plan/` was then gitignored and the
+audit ran in an ephemeral container. `DEV/plan/` is tracked now, so on 2026-09-25 they moved there and
+joined the one queue, [`DEV/plan/RELEASE_QUEUE.md`](../../plan/RELEASE_QUEUE.md). Each ticket cites
+finding ids from this register, not file paths, so the specs stay strategic and the evidence has one home.
 
 ## Reproduced by hand
 
@@ -23,36 +22,32 @@ register, not file paths, so the specs stay strategic and the evidence has one h
 - **X1, X4, X5** were executed by the auditing agent: RTF `\uN` becomes NUL, windows-1251 FB2 fails to
   parse, and truncated UTF-8 TXT turns into mojibake.
 
-## Suggested execution order (release packages)
+## Execution order
 
-- **rel 1 - data safety:** `hotfix-output-dir-ownership`, `hotfix-epub-href-containment`,
-  `bugfix-shell-open-injection`, `bugfix-gui-local-api-hardening`.
-- **rel 2 - output truth:** `bugfix-output-completeness`, `bugfix-translation-engine-correctness`,
-  `bugfix-reader-layer-and-single-page`, `bugfix-legacy-text-decoding`.
-- **rel 3 - robustness:** `bugfix-external-process-bounds`, `bugfix-resource-budgets`,
-  `bugfix-ocr-language-data-and-detection`, `bugfix-pdf-extraction-accuracy`.
-- **rel 4 - fidelity and extension:** `bugfix-epub-html-content-fidelity`, `bugfix-extension-lifecycle-leaks`,
-  `bugfix-extension-content-security`, `bugfix-windows-registration-honesty`, `chore-hygiene-and-test-gaps`.
+The order and the release packages are the queue's, not this file's: the audit's own suggestion
+(four packages: data safety, output truth, robustness, fidelity and extension) was merged into
+[`DEV/plan/RELEASE_QUEUE.md`](../../plan/RELEASE_QUEUE.md) together with the tickets that were
+already open. The number in front of each ticket is its queue position.
 
 ## Ticket index
 
-- [01 hotfix-output-dir-ownership](specs/2026-09-24_hotfix-output-dir-ownership.md) - P95 - **BlockNeedUserTest** (implemented 2026-09-25) - P1 P2 P6 P7 P16 P17 G9 G11
-- [02 hotfix-epub-href-containment](specs/2026-09-24_hotfix-epub-href-containment.md) - P95 - E1 E5 E10 E20 B19 B20
-- [03 bugfix-shell-open-injection](specs/2026-09-24_bugfix-shell-open-injection.md) - P90 - P3 P24 G4 G13
-- [04 bugfix-gui-local-api-hardening](specs/2026-09-24_bugfix-gui-local-api-hardening.md) - P90 - G1 G3 G5-G8 G10 G12 G14-G19
-- [05 bugfix-output-completeness](specs/2026-09-24_bugfix-output-completeness.md) - P90 - P4 P5 P8 P9 T5 O10
-- [06 bugfix-translation-engine-correctness](specs/2026-09-24_bugfix-translation-engine-correctness.md) - P85 - T1-T4 T6-T9 P10 P11 P20
-- [07 bugfix-reader-layer-and-single-page](specs/2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23
-- [08 bugfix-epub-html-content-fidelity](specs/2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - E6-E9 E11 E12 E14 E15 E21 E22
-- [09 bugfix-legacy-text-decoding](specs/2026-09-24_bugfix-legacy-text-decoding.md) - P80 - X1-X5 X18 X19 X21 X22 P23 B21
-- [10 bugfix-external-process-bounds](specs/2026-09-24_bugfix-external-process-bounds.md) - P75 - X7 X9 X10 O5 O7 O9 P15
-- [11 bugfix-resource-budgets](specs/2026-09-24_bugfix-resource-budgets.md) - P75 - X11-X17 X20 X24 O6 E16 B23
-- [12 bugfix-pdf-extraction-accuracy](specs/2026-09-24_bugfix-pdf-extraction-accuracy.md) - P65 - X6 X8 Q6 Q7
-- [13 bugfix-ocr-language-data-and-detection](specs/2026-09-24_bugfix-ocr-language-data-and-detection.md) - P70 - O1-O4 O8 O11 O12
-- [14 bugfix-windows-registration-honesty](specs/2026-09-24_bugfix-windows-registration-honesty.md) - P50 - P12 P13 P14
-- [15 bugfix-extension-lifecycle-leaks](specs/2026-09-24_bugfix-extension-lifecycle-leaks.md) - P60 - B1-B13 B25 B27 B28
-- [16 bugfix-extension-content-security](specs/2026-09-24_bugfix-extension-content-security.md) - P60 - B14-B18 B22 B24 B26 B29
-- [17 chore-hygiene-and-test-gaps](specs/2026-09-24_chore-hygiene-and-test-gaps.md) - P40 - P18 P19 P21 P22 Q1-Q5 + test gaps
+- [01 hotfix-epub-href-containment](../../plan/01_2026-09-24_hotfix-epub-href-containment.md) - P95 - E1 E5 E10 E20 B19 B20
+- [02 bugfix-shell-open-injection](../../plan/02_2026-09-24_bugfix-shell-open-injection.md) - P90 - P3 P24 G4 G13
+- [03 bugfix-gui-local-api-hardening](../../plan/03_2026-09-24_bugfix-gui-local-api-hardening.md) - P90 - G1 G3 G5-G8 G10 G12 G14-G19
+- [05 hotfix-output-dir-ownership](../../plan/05_2026-09-24_hotfix-output-dir-ownership.md) - P95 - **BlockNeedUserTest** (implemented 2026-09-25) - P1 P2 P6 P7 P16 P17 G9 G11
+- [06 bugfix-epub-html-content-fidelity](../../plan/06_2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - **In Progress** - E6-E9 E11 E12 E14 E15 E21 E22
+- [07 bugfix-output-completeness](../../plan/07_2026-09-24_bugfix-output-completeness.md) - P90 - P4 P5 P8 P9 T5 O10
+- [08 bugfix-translation-engine-correctness](../../plan/08_2026-09-24_bugfix-translation-engine-correctness.md) - P85 - T1-T4 T6-T9 P10 P11 P20
+- [09 bugfix-reader-layer-and-single-page](../../plan/09_2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23
+- [10 bugfix-legacy-text-decoding](../../plan/10_2026-09-24_bugfix-legacy-text-decoding.md) - P80 - X1-X5 X18 X19 X21 X22 P23 B21
+- [11 bugfix-external-process-bounds](../../plan/11_2026-09-24_bugfix-external-process-bounds.md) - P75 - X7 X9 X10 O5 O7 O9 P15
+- [12 bugfix-resource-budgets](../../plan/12_2026-09-24_bugfix-resource-budgets.md) - P75 - X11-X17 X20 X24 O6 E16 B23
+- [13 bugfix-ocr-language-data-and-detection](../../plan/13_2026-09-24_bugfix-ocr-language-data-and-detection.md) - P70 - O1-O4 O8 O11 O12
+- [14 bugfix-pdf-extraction-accuracy](../../plan/14_2026-09-24_bugfix-pdf-extraction-accuracy.md) - P65 - X6 X8 Q6 Q7
+- [18 bugfix-extension-lifecycle-leaks](../../plan/18_2026-09-24_bugfix-extension-lifecycle-leaks.md) - P60 - B1-B13 B25 B27 B28
+- [19 bugfix-extension-content-security](../../plan/19_2026-09-24_bugfix-extension-content-security.md) - P60 - B14-B18 B22 B24 B26 B29
+- [20 bugfix-windows-registration-honesty](../../plan/20_2026-09-24_bugfix-windows-registration-honesty.md) - P50 - P12 P13 P14
+- [25 chore-hygiene-and-test-gaps](../../plan/25_2026-09-24_chore-hygiene-and-test-gaps.md) - P40 - P18 P19 P21 P22 Q1-Q5 + test gaps
 
 Every finding below maps to exactly one ticket.
 

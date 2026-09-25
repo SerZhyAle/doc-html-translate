@@ -5,9 +5,15 @@ What is still LEFT TO DO before the next release, in execution order. Everything
 step - those need sorting too. Finished work is not here: the moment a ticket reaches `Implemented` or
 `Verified` its file moves to [`done/`](done/) and its line leaves this table.
 
-Rebuilt 2026-08-15 against the ticket files themselves. The previous edition of this file was written
-on 2026-08-11 and had gone stale: four of the six tickets it listed are now in `done/`, and none of the
-five OCR tickets opened between 08-12 and 08-15 appeared in it at all.
+Rebuilt 2026-09-25 against the ticket files themselves: the 17 tickets of the 2026-09-24 code audit
+(until then parked under `DEV/research/audit_2026-09-24/specs/`) joined the 13 that were already open, so
+this is now the one queue for every open ticket. Finished lines and the release-1 narrative of
+2026-08-15 .. 2026-09-12 moved to [`done/2026-08-15_release-1-worklog.md`](done/2026-08-15_release-1-worklog.md).
+
+**File names carry the queue position.** An open ticket is `DEV/plan/NN_YYYY-MM-DD_<slug>.md` (its
+tactical folder `NN_YYYY-MM-DD_<slug>/`), where `NN` is its line number in the tables below, so a
+directory listing reads in execution order. Reordering the queue means renaming the files and fixing
+every link to them in the same commit. A ticket that moves to `done/` drops its `NN_` prefix.
 
 - `rel` - the release package this ticket ships in. It is an **ordinal**, not a version: this product's
   version is derived mechanically from the build date (`26.MMDD.HHmm`) and is never hand-picked.
@@ -37,179 +43,98 @@ The line order inside a package is execution order, built by these rules, top to
 
 Packages, so a new ticket lands in the right one:
 
-- `1` - **must ship before the next release.** A user-visible defect in shipped code, or the
-  instrument that certifies the release is honest. Nothing enters this package for tidiness.
-- `2` - real, evidenced, and survivable for one more release. Hygiene, gates, and quality work whose
-  absence costs no reader anything today.
+- `1` - **must ship before the next release.** A user-visible defect in shipped code that loses or
+  exposes the user's data, or the instrument that certifies the release is honest. Nothing enters this
+  package for tidiness.
+- `2` - output truth: the converted book or its translation is wrong or incomplete, silently.
+- `3` - robustness: a hostile or oversized input, or a hung external tool, takes the run down.
+- `4` - real, evidenced, and survivable for one more release. OCR quality, the extension, contract
+  sync, hygiene and gates whose absence costs no reader anything today.
 - `--` - living backlogs, human-gated corpus work, and items with no code left, so no package.
 
-current-next-release: 1 (worked 2026-08-15; see the notes under each line)
+current-next-release: 1 (rebuilt 2026-09-25)
 
 ## release 1 - must ship
 
-Worked 2026-08-15. Every line below reached a stated outcome; two of them are outcomes the work did
-not expect, and those are the entries worth reading.
-
 ```
-rel  ticket                                          changed     status
---   (no ticket) uncommitted OCR + lab work          2026-08-15  Gates green, unproven -> proven
---   (no ticket) lab scores "found nothing" as       2026-08-15  Fixed and measured
-     "concealed perfectly"
-1    2026-08-13_ocr-rescue-floor-drops-genuine-      2026-08-15  Partial - rule measured and refused
-     lettering
---   2026-08-12_ocr-exchange-followups (items 2, 6)  2026-08-15  Done, both measured
---   (no ticket) verify-html.ps1 false-FAILs EPUB    2026-08-15  Fixed and measured
---   (no ticket) blackletter PDF extracts a          2026-08-15  Fixed; ticket in done/
-     corrupt raster
+#   ticket                                              changed     status
+01  01_2026-09-24_hotfix-epub-href-containment          2026-09-24  Draft (P95)
+02  02_2026-09-24_bugfix-shell-open-injection           2026-09-24  Draft (P90)
+03  03_2026-09-24_bugfix-gui-local-api-hardening        2026-09-24  Draft (P90)
+04  04_2026-08-13_ocr-rescue-floor-drops-genuine-       2026-08-15  Partial - rule measured and refused
+    lettering
+05  05_2026-09-24_hotfix-output-dir-ownership           2026-09-25  BlockNeedUserTest - Windows hands-on
 ```
 
-### 1.1 The tree is committed-ready, and its two shipped-code fixes are proven
+The three data-safety Drafts lead because each one lets a crafted book or a local page reach outside
+the output folder. `href-containment` goes first: it reuses the DOM link rewriter that ticket 06 already
+landed, so it is the cheapest of the three.
 
-The gates the previous edition of this file said had never been run against this tree have been:
-`./scripts/test.ps1` exit 0 (`tests` 137 s, no FAIL), `./scripts/lint.ps1` and
-`./scripts/typo.ps1` pass, `npm test` 140/140. `docs/PARITY.md` carries `inkHeight` and the
-changelog carries its row - both were already in the tree when the gates were run, so what was
-missing was the proof, and the proof exists now.
+**04 sits below them for a stated reason, against rule 3** (Partial before Draft): its next step is not
+ready to build. The corpus refused the length rule and a third separating axis has to be found first -
+see [worklog §1.3](done/2026-08-15_release-1-worklog.md#13-the-floor-could-not-be-re-derived-and-the-rule-that-followed-was-refused-by-the-corpus).
+Ticket 15 corrects that section's claim about the no-plate record.
 
-Two things were found while proving it and fixed here: the former coordinate field
-names that `scripts/typo.ps1` read as misspellings (renamed to `inkX0`/`inkY0`), and
-`extension/eng.traineddata` - 4 MB that `npm run ocrlab` drops beside the extension and that
-nothing ignored, so it would have gone into the release commit. Now in `.gitignore`.
+**05 is implemented** (58c9caa) and covered by tests on Linux. It stays out of `done/` because
+`BlockNeedUserTest` is not `Implemented`: the hidden marker attribute, the lock against a real second
+process and the GUI drop/delete need a pass on Windows. Rule 7 puts it at the bottom.
 
-### 1.2 The concealment gate can see the failure it exists to catch - and it is now red
-
-Fixed and **verified by a run**: `temp/ocrlab/20260815-190756`, dev split, 13 annotated scenes.
-`unmeasuredConcealment` is **0** - every scene was measured - and `worstResidual` goes
-**0.2705 -> 0.9992**, exactly the number the extension run predicted for the same scenes. Everything
-else is identical to the reference run to the digit: recall 0.6154, mean IoU 0.7756, worst IoU
-0.3489, merges 1, splits 0, cross-group 6, clipped 0, drift 0, protected damage 0.
-
-**The consequence is that `ocrlab gate` now fails on concealment (0.9992 against a 0.28 bound), and
-that is the fix working.** The bound was derived while the scorer was blind to every scene where
-recognition found nothing. The `comic` category still passes at 0.2705, which is the real number
-from the plate-composition ticket. Re-deriving `thresholds.json` was already listed as blocked on
-this item; it is now unblocked and is the next dated baseline run, not a release blocker.
-
-### 1.3 The floor could not be re-derived, and the rule that followed was refused by the corpus
-
-[`2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
-- now **Partial**. Evidence:
-[`DEV/research/ocr_rescue_floor_2026-08-15.md`](../research/ocr_rescue_floor_2026-08-15.md).
-
-The ticket asked for the band behind `ocrRescueLineConf` to be re-measured. It was, and **the band
-does not exist**: genuine rescued lettering runs 32.8-69.2 and invented lettering 8.4-73.9, with the
-highest invention above the highest genuine line, so no single floor admits `ЗАЧЕМ` (69.2) while
-rejecting `ОБ ЗЛОМ` (73.9). The ticket's own third bullet asked for exactly this to be said rather
-than for the number to be nudged.
-
-The axis that does separate them is length - of 175 rejected lines the eight highest-scoring are
-debris of one to six characters, and a four-letter run leaves nine that bracket an empty band
-(36.1 / 58.3). **That rule was implemented in both editions, run over the dev split, and the corpus
-refused it:** the whole delta is one scene, `poster-display-type-on-flat-colour`, which under the
-default `eng` goes from no plates to one 782x310 px plate of transliterated debris across its own
-lettering. Reverted; the floor stays at 80.
-
-**What ships is the instrument.** Both editions now record the lines the floor rejected - text,
-confidence, box and the floor failed - through one `keepLine` predicate that `clusterLines` also
-asks, and the record is written **even for a page that produced no plates**, the case that used to
-write nothing. That is the ticket's fourth done-criterion, and it is what makes the next attempt a
-measurement instead of a guess. The next attempt needs a third axis; the most promising is not
-running the rescue ladder at all when the script check says the language is wrong.
-
-### 1.4 Both cheap items out of the positioning-exchange list are done and measured
-
-[`2026-08-12_ocr-exchange-followups`](2026-08-12_ocr-exchange-followups.md) items 2 and 6.
-
-**Item 2 - print. The ticket's premise was wrong and the fix is still right.** Measured through
-`Page.printToPDF(printBackground:false)` - the print dialog's own path - on
-`img-png_Nyoka-comic-page`: Chromium does not leave the plate transparent over legible source
-lettering. It repaints it **white** and darkens its text, so the sheet stays readable and stops
-matching the artwork. **20 of 20 sampled plate papers forced to `1 1 1`** and 14 ink colours
-darkened without `print-color-adjust:exact`, **0** with it, out of 59 colour operators; the
-extension, same instrument on the shipped stylesheet, 3 of 3 forced against 0. Chrome's
-`--print-to-pdf` switch cannot see the difference at all, which is recorded because the first
-measurement attempt looked like the fix not working.
-
-**Item 6 - EXIF.** Every `createImageBitmap` in `ocr-overlay.js` now names
-`imageOrientation: "from-image"`; `TestParityOCRExifOrientation` fails on any bare call.
-
-Item 1 (grade absolute position) stays package 2. Items 3, 4, 5, 7 stay package `--`.
-
-### 1.5 The pre-flight sweep can gate an EPUB conversion
-
-`scripts/verify-html.ps1` now resolves a redirecting entry page before anything is checked - the
-JS `location.replace` stub and `<meta refresh>`, up to four hops, size-guarded so it never runs on
-a real chapter - and for a folder it enumerates the directory the stub points into, so a multi-page
-EPUB's `page_*.html` is checked too. Measured on `temp/ocrsweep/19_epub-illustrated`:
-**`broken=55` -> `total=55 render=55 broken=0`**; a PDF output in the same sweep is unchanged at
-`total=1 render=1 broken=0` on both its pages.
-
-### 1.6 The PDF smear was a layer, not a decoder
-
-Fixed, with its own ticket in
-[`done/2026-08-15_pdf-mrc-foreground-layer-extracted-as-page.md`](done/2026-08-15_pdf-mrc-foreground-layer-extracted-as-page.md).
-It is a mixed-raster-content scan: a 1455x2065 background layer plus a 4363x6193 **foreground** layer
-painted through a stencil `/Mask`, undefined wherever the mask does not select it, and 91 KB for 27
-megapixels. `selectPageImages` kept the larger of the same-shape pair, so it kept the layer that is
-not a picture. Inside a duplicate group a masked raster now loses to an unmasked one however big it
-is; `/SMask` deliberately does not demote and a lone masked illustration is still kept.
-
-**Both plausible answers were wrong and are recorded as such:** ffmpeg's native JPEG 2000 decoder
-(the only JPX converter on this machine) decodes the background layer correctly and reports
-`0 decode errors` on the foreground one, and the duplicate-collapse rule is right for what it was
-written for. Class width measured over `test_doc/`: **1 file of 21, 1 image XObject of 2 560** - the
-triage the queue asked for, and narrow, but fixed as a rule because the rule is one comparison and
-the input class is one this product is aimed at.
-
-### 1.7 A "line" the recognizer stitched across a picture became a bar across the artwork
-
-Worked 2026-09-12, out of order and for a stated reason: it arrived as a user report on
-`test_doc/1.png` and is the worst class of overlay defect there is - not text that is missing, but
-**artwork covered by a plate that should not exist**, carrying a sentence neither speaker said. Own
-ticket in
-[`done/2026-09-12_ocr-line-stitched-across-the-picture.md`](done/2026-09-12_ocr-line-stitched-across-the-picture.md),
-measurement in [`../research/ocr_word_gap_2026-09-12.md`](../research/ocr_word_gap_2026-09-12.md).
-
-The defect is in the **engine's own line assembly**, identically in both editions: PSM 3's layout
-analysis walks across the photographed figure and returns line boxes 987-1727 px wide holding text
-from both columns. Nothing downstream could recover - the clustering's column test sees a genuine
-overlap, and `ocrMaxPlateCoverage` never fires because the bar is wide but short (0.04 of the image).
-So the repair runs before the clustering: cut a line at a word gap wider than
-`ocrMaxWordGapRatio (3.5) x` its median word height, then regroup the page's runs into columns.
-
-**This closes the one merge `DEV/ocrlab/thresholds.json` names in its grouping baseline.**
-`synth-two-columns` goes 1 plate crossing the gutter -> 2 plates matching both hand-drawn
-transcripts verbatim, with no split traded for it; the reported image goes 9 plates with 3 bars ->
-10 plates, one per balloon, in both editions. Two things were got wrong on the way and are recorded
-in the research note, because both were invisible until the corpus was run: the reordering's scope is
-the page and not the recognizer paragraph, and a line the confidence floor will drop must not be
-allowed to form a column.
-
-It does **not** close Phase 07 Step 07.3 of the lab ticket, and the two are not alternatives: 07.3
-adds a boundary test to the clustering, this repairs the clustering's input. The band where comic
-balloons and real lines overlap (1.87-2.57x) is measured, stated, and left to 07.3.
-
-## release 2 - can slip one release, with the reason stated
+## release 2 - output truth
 
 ```
-rel  ticket                                          changed     status
-2    2026-09-22_ocr-discard-record-missing-for-      2026-09-22  Draft
-     blank-images
-2    2026-08-15_plate-styling-single-source          2026-09-25  BlockNeedUserTest (4 manual, owner machine)
-2    (no ticket) plate box rides over the logo       2026-08-13  Evidenced, unfiled
-2    (no ticket) tesseract.js misses a caption on    2026-08-15  Evidenced, unfiled
-     a gradient
-2    2026-08-11_ocr-visual-fidelity-lab              2026-08-15  In Progress (6/8 phases)
-2    2026-08-13_ocr-sweep-plate-composition          2026-08-13  Partial (7/8 criteria)
-2    2026-09-22_tsv-columns-read-by-position         2026-09-22  Draft
-2    2026-09-23_contract-ocr-pipeline-sync           2026-09-23  Draft - catalog amendment first, then code
-2    2026-09-23_contract-rule-adoption-sync          2026-09-23  Draft - no product code
-2    2026-09-23_contract-desktop-app-ux-sync         2026-09-23  Draft
-2    2026-09-23_contract-iconography-sync            2026-09-23  Draft - proposals before code
-2    2026-09-23_contract-product-web-pages-sync      2026-09-23  Draft - site, every authored locale
-2    2026-09-22_install-trust-page                   2026-09-22  Draft - docs only, every authored locale
-2    2026-09-19_page-ocr-overlay                     2026-09-19  BlockNeedUserTest - code done, hands-on pass + store permission text left
+#   ticket                                              changed     status
+06  06_2026-09-24_bugfix-epub-html-content-fidelity     2026-09-25  In Progress (E6-E9, E11, E12, E14 EPUB half)
+07  07_2026-09-24_bugfix-output-completeness            2026-09-24  Draft (P90)
+08  08_2026-09-24_bugfix-translation-engine-correctness 2026-09-24  Draft (P85)
+09  09_2026-09-24_bugfix-reader-layer-and-single-page   2026-09-24  Draft (P80)
+10  10_2026-09-24_bugfix-legacy-text-decoding           2026-09-24  Draft (P80)
 ```
+
+06 was in the audit's fourth package and leads here by rule 1: half of it is committed (c1e9ec7,
+274fdb8). 09 shares its link-rewrite machinery, so it follows the finished 06 rather than racing it.
+
+## release 3 - robustness
+
+```
+#   ticket                                              changed     status
+11  11_2026-09-24_bugfix-external-process-bounds        2026-09-24  Draft (P75)
+12  12_2026-09-24_bugfix-resource-budgets               2026-09-24  Draft (P75)
+13  13_2026-09-24_bugfix-ocr-language-data-and-         2026-09-24  Draft (P70)
+    detection
+14  14_2026-09-24_bugfix-pdf-extraction-accuracy        2026-09-24  Draft (P65)
+```
+
+## release 4 - can slip one release, with the reason stated
+
+```
+#   ticket                                              changed     status
+15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-22  Draft
+    blank-images
+16  16_2026-08-11_ocr-visual-fidelity-lab               2026-08-15  In Progress (6/8 phases)
+17  17_2026-09-22_tsv-columns-read-by-position          2026-09-22  Draft
+18  18_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-24  Draft (P60)
+19  19_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
+20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
+21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-23  Draft - catalog amendment first, then code
+22  22_2026-09-23_contract-rule-adoption-sync           2026-09-23  Draft - no product code
+23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  Draft
+24  24_2026-09-23_contract-iconography-sync             2026-09-23  Draft - proposals before code
+25  25_2026-09-24_chore-hygiene-and-test-gaps           2026-09-24  Draft (P40)
+26  26_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
+27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
+28  28_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
+29  29_2026-09-19_page-ocr-overlay                      2026-09-19  BlockNeedUserTest - hands-on pass + store permission text
+30  30_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
+--  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
+--  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
+    a gradient
+```
+
+Changes against the previous edition of this package, each for a rule: 28 (`plate-styling`) and 30
+(`ocr-sweep`) moved to the bottom by rule 7 - the first waits on four manual checks on the owner's
+machine, the second on human corpus entry with no code left. The audit's extension and registration
+tickets (18-20) sit with the other ready Drafts; its hygiene ticket (25) sits just above the docs-only
+lines by rule 5. The two unfiled items carry no number until they get a ticket file.
 
 **The six `2026-09-23_contract-*` tickets** (five left - `automated-checks` reached Implemented on 2026-09-24 and moved to `done/`) come out of one contract-sync pass over every catalog domain
 that touches this product. Each has two halves: what the repo changes to conform, and what the catalog
@@ -221,8 +146,8 @@ ticket carries one user-visible bug that should not wait for the rest of it: the
 `ua` on the landing page and `uk` on the extension page, so a language chosen on one shows all three on the
 other - a `/fix` candidate on its own. `WAVE-PARTICLES` was read and does not apply (no canvas backdrop).
 
-[`2026-09-22_ocr-discard-record-missing-for-blank-images`](2026-09-22_ocr-discard-record-missing-for-blank-images.md)
-is first in the package by rule 2: it is the instrument the rest is measured with. Opened by the contract
+[`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
+is first among the OCR lines by rule 2: it is the instrument the rest is measured with. Opened by the contract
 alignment run of 2026-09-22 against `OCR-OVERLAY rule 12`, and it corrects §1.3 of this file - the record
 was preserved as far as `applyOverlays` and is then not written, so an image that produced **no** plates
 still leaves nothing behind, which is the one case the record exists for. Proven with a throwaway probe in
@@ -234,7 +159,7 @@ description of the OCR overlay and the reader palette, both editions derive from
 `tests/appearance_parity_test.go` fails on any declaration one side has and the other lacks. What is left
 needs the owner's machine: the catalog's `ocr-pipeline.md` repoint (Step 05.3 - the catalog was not
 reachable), the four PowerShell gates, and the corpus comic render (Step 06.2); a Chromium render of old
-against new CSS was pixel-identical meanwhile. Then `/spec-check`.
+against new CSS was pixel-identical meanwhile.
 
 **The `First-Earthman` cover plate rides over the `PLANET COMICS` logo.** The plate's text is the
 cover's own top banner line and it sits on that banner, but its box is taller than its line, so it
@@ -260,19 +185,19 @@ a person has corrected it, and `licenceVerifiedBy` is filled by hand after openi
 page. It stays out of `done/` because `Partial` is not `Implemented`, and it stays out of package 1
 because nothing in it ships. Moving it is the owner's call.
 
-[`2026-09-22_tsv-columns-read-by-position`](2026-09-22_tsv-columns-read-by-position.md) is the other
+[`17_2026-09-22_tsv-columns-read-by-position`](17_2026-09-22_tsv-columns-read-by-position.md) is the other
 finding of the alignment run: `parseTSV` skips the header row that names the columns and then reads fixed
 indices, so a Tesseract build that inserts a column would not fail - it would put plates in the wrong place
 with the wrong confidences. No build in use today does, which is why it is package 2 and not 1.
 
-[`2026-09-22_install-trust-page`](2026-09-22_install-trust-page.md) is docs-only work, so rule 5 puts it
+[`27_2026-09-22_install-trust-page`](27_2026-09-22_install-trust-page.md) is docs-only work, so rule 5 puts it
 last among the schedulable lines. Three of the four download channels are unsigned - the setup exe and both
 portable exes - and nothing we ship says the word SmartScreen, so a user who meets "Windows protected your
 PC" reads nothing from us. It is package 2 rather than 1 because no shipped code is wrong; it is not `--`
 because every unanswered warning is a user who does not come back. The contract it closes is
 `INSTALL-TRUST` 1.0, and until it lands the gap is a dated exception in the shared registry.
 
-[`2026-09-19_page-ocr-overlay`](2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**
+[`29_2026-09-19_page-ocr-overlay`](29_2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**
 in this queue rather than a defect or an instrument: recognize every picture on an ordinary live web
 page and lay the plates over them in place, so the words can be copied and the browser's own page
 translation reaches them. **The code is written and the gates are green**; what gates it now is a human
@@ -281,7 +206,7 @@ is newer than the extension's declared minimum Chrome version, and raising that 
 was answered in code: the newer host is used where it exists and an extension-origin frame in the page
 is used where it does not, and `minimum_chrome_version` stays at 105, pinned by a test. What is left is
 a hands-on pass on real sites (which is also how research items 2, 3 and 4 get their measurements) and
-the store-listing permission text, which needs the owner's sign-off first. It stays last in package 2
+the store-listing permission text, which needs the owner's sign-off first. It sits at the bottom of package 4
 for the reason rule 7 gives: it is waiting on a human pass, so it must not sit where it looks like the
 next task.
 
@@ -289,7 +214,7 @@ next task.
 
 ```
 --   lab corpus growth + holdout annotation          2026-08-11  Human-owned
---   thresholds.json is stale against its own        2026-08-15  Unblocked by 1.2, next baseline
+--   thresholds.json is stale against its own        2026-08-15  Unblocked (worklog 1.2), next baseline
      corpus
 --   the halo metric penalises a correct plate on    2026-08-13  Evidenced, no gate
      a screened ground
@@ -299,30 +224,8 @@ The lab's remaining human phases - acquiring 200+ licence-verified scenes, each 
 person, and the two-reviewer holdout annotation - are the real gate on the whole visual-fidelity
 package and cannot be scheduled against a release date.
 
-`thresholds.json` is now the **first thing after the release**: 1.2 landed, so the blocker named below is gone and the concealment bound is knowingly derived against a blind scorer. It was derived from 11 annotated scenes; there are 13, and the two added since are the
+`thresholds.json` is now the **first thing after the release**: 1.2 landed, so the blocker (worklog 1.2) is gone and the concealment bound is knowingly derived against a blind scorer. It was derived from 11 annotated scenes; there are 13, and the two added since are the
 hardest in the corpus, so `recall` and `review` fail on arithmetic rather than on a regression, and
 `cost` is stale because the rescue ladder now runs every rung. Re-deriving belongs to a dated baseline
 run; the baseline it should be derived against is `temp/ocrlab/20260815-190756`, the first run whose
 concealment numbers cover every scene.
-
-## Bookkeeping found while rebuilding this file
-
-Recorded rather than quietly fixed, because a status that two files state differently is a status
-nobody can trust.
-
-1. **Four referenced plan files do not exist on this machine.** `DEV/plan/ROADMAP.md` (referenced by
-   this file and by `CLAUDE.md` as "the queue"), `DEV/plan/2026-07-01_cross-edition-parity.md`
-   (referenced by `CLAUDE.md` as the standing parity backlog),
-   `DEV/plan/_TEMPLATE_cross-edition.md` (the cross-edition ticket template `CLAUDE.md` tells every new
-   ticket to use) and `DEV/plan/2026-07-28_thirteen-ui-languages.md`. `DEV/plan/` is in `.gitignore`, so
-   none of them can be recovered from history. Either they were deleted or they never existed on this
-   clone; both `CLAUDE.md` and three files in `done/` still link to them.
-2. **`2026-08-11_ocr-visual-fidelity-lab.md` said `Tactical` while its `INDEX.md` said `In Progress`.**
-   Corrected 2026-08-15 in favour of the INDEX, which is the authority on phase state. The previous
-   edition of this file recorded the same disagreement and left it standing, and it had also gone stale
-   in the other direction - it reported 4 of 8 phases where the INDEX says 6.
-3. **Two tickets moved to `done/` on 2026-08-15** with their tactical folders and their relative links
-   repaired: `2026-08-12_extension-crashes-the-tab-on-a-detailed-scan` (Implemented 2026-08-12) and
-   `2026-08-12_ocr-misses-display-lettering-on-saturated-art` (Implemented 2026-08-13, 7/7 phases).
-   Earlier moves had not repaired their links; the seven that could be resolved were fixed at the same
-   time, and the nine that point at the files from item 1 were left visible.

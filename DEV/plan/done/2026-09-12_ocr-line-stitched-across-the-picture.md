@@ -78,7 +78,7 @@ translates the run-on as one sentence, so the damage survives into every languag
 - [ ] **Not done: a full lab re-baseline.** `npm run ocrlab` was run on `synth-two-columns` alone,
       which is the scene the corpus names for this defect. A whole-corpus run would also have to
       re-derive `thresholds.json`, and that is blocked on the concealment gate already being red for
-      an unrelated reason (see `RELEASE_QUEUE.md` §1.2) - it belongs to Phase 06's re-derivation, not
+      an unrelated reason (see `2026-08-15_release-1-worklog.md` §1.2) - it belongs to Phase 06's re-derivation, not
       here.
 
 ## Edition parity checklist
@@ -111,7 +111,7 @@ translates the run-on as one sentence, so the damage survives into every languag
 - **Adjacent balloons that stitch below 3.5x stay merged** (`samson-and-delilah-03/15`, nearest
   declined case 3.46x). Geometry cannot separate them - the measured bands overlap - and the evidence
   that can is the pixels between the two words. That is Phase 07 Step 07.3 of
-  [`2026-08-11_ocr-visual-fidelity-lab`](../2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
+  [`16_2026-08-11_ocr-visual-fidelity-lab`](../16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
   whose objective this ticket does not replace: 07.3 adds a boundary test to the *clustering*, this
   repairs the clustering's *input*. Both are needed.
 - **One tail fragment on the reported image** ("better.") stays its own plate, in both editions. It

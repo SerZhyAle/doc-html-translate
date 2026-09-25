@@ -86,7 +86,7 @@ would come back transparent with their translated text printed *over* the still-
 lettering. The fix is one declaration (`print-color-adjust: exact` on `.ocr-box` / `.ocr-plate`),
 but we have not measured a printed page, so this is recorded as a gap with a proposed fix rather
 than claimed as handled. Ticket:
-[`2026-08-12_ocr-exchange-followups`](../plan/2026-08-12_ocr-exchange-followups.md).
+[`2026-08-12_ocr-exchange-followups`](../plan/done/2026-08-12_ocr-exchange-followups.md).
 
 ## 4. How positioning error is measured, and the tolerance (their 3.4)
 
@@ -242,7 +242,7 @@ Assembled under `temp/ocr-exchange/` (gitignored; see its `README.md` for the ma
 
 ## 8. What is still open on our side
 
-Ticket: [`2026-08-12_ocr-exchange-followups`](../plan/2026-08-12_ocr-exchange-followups.md).
+Ticket: [`2026-08-12_ocr-exchange-followups`](../plan/done/2026-08-12_ocr-exchange-followups.md).
 
 - No absolute-position bound in the gate (section 4).
 - Print produces transparent plates (section 3).

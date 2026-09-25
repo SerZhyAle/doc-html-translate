@@ -122,5 +122,5 @@ The 17 scenes have never actually been measured before, and now they have been. 
 any *good* on them is a separate question this ticket does not answer - `samson-and-delilah-03-jpg` at
 0.4583 residual ink and `ludwig-hohlwein-..-garmisch-partenkirchen-jpg` at 0.3897 are the two worst, and
 they belong to Phase 07 of
-[`2026-08-11_ocr-visual-fidelity-lab`](../2026-08-11_ocr-visual-fidelity-lab.md), which is where
+[`16_2026-08-11_ocr-visual-fidelity-lab`](../16_2026-08-11_ocr-visual-fidelity-lab.md), which is where
 concealment and grouping are dealt with.

@@ -1,5 +1,5 @@
 // Command ocrlab is the OCR visual-fidelity lab: the instrument the strategic spec
-// DEV/plan/2026-08-11_ocr-visual-fidelity-lab.md requires before any OCR or redraw change is
+// DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md requires before any OCR or redraw change is
 // accepted.
 //
 // It is a developer tool. No build script compiles it, it ships in no package, and it is not

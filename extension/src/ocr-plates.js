@@ -3,7 +3,7 @@
 // Split out of ocr-overlay.js so this half can run where the recognition engine must not:
 // the page agent draws plates inside a third-party document, and pulling ocr-overlay.js in
 // would carry the Tesseract module into that document with it (see
-// DEV/plan/2026-09-19_page-ocr-overlay.md, ADR-1). ocr-overlay.js re-exports everything here,
+// DEV/plan/29_2026-09-19_page-ocr-overlay.md, ADR-1). ocr-overlay.js re-exports everything here,
 // so the viewer and the single-image page import the same names they always did.
 //
 // There is exactly one implementation of the plate rules, in this file, for every surface -

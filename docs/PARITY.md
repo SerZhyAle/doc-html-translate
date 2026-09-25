@@ -515,7 +515,7 @@ their own test where one exists.
   was measured rather than assumed, and the measurement corrected the expectation.** Printing an
   overlaid page with "Background graphics" unchecked - the default - does not leave the plate
   transparent over legible source lettering, which is what
-  [`DEV/plan/2026-08-12_ocr-exchange-followups.md`](../DEV/plan/2026-08-12_ocr-exchange-followups.md)
+  [`DEV/plan/2026-08-12_ocr-exchange-followups.md`](../DEV/plan/done/2026-08-12_ocr-exchange-followups.md)
   item 2 predicted: Chromium repaints the plate **white** and darkens its text to keep contrast
   against it. So the printed page stays readable and stops matching the artwork - every sampled
   balloon, panel and paper tone becomes a stark white patch. Measured 2026-08-15 on
@@ -815,7 +815,7 @@ These are by design. Do not "sync" them without a decision - document changes he
   recognition, clustering and plate geometry are the same code the viewer uses
   ([`ocr-plates.js`](../extension/src/ocr-plates.js)), pinned by `TestPlateRulesHaveOneImplementation`,
   so the page agent can never grow a second set of plate rules. Decided in
-  [`DEV/plan/2026-09-19_page-ocr-overlay.md`](../DEV/plan/2026-09-19_page-ocr-overlay.md) (ADR-3).
+  [`DEV/plan/29_2026-09-19_page-ocr-overlay.md`](../DEV/plan/29_2026-09-19_page-ocr-overlay.md) (ADR-3).
 - **Where the recognition engine runs, in the extension, is decided at runtime.** The engine never
   runs inside the reader's document - a third-party page's content security policy governs what
   compiles there, and a great many sites would refuse the WebAssembly module silently. It runs in an

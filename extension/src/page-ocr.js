@@ -3,7 +3,7 @@
 // pictures, hands them one at a time to the recognizer host, forwards the resulting plates back to
 // the page, and can stop and undo the whole thing.
 //
-// Three roles, and this is the middle one (see DEV/plan/2026-09-19_page-ocr-overlay.md):
+// Three roles, and this is the middle one (see DEV/plan/29_2026-09-19_page-ocr-overlay.md):
 //   page-agent.js  - the only code in the reader's document; draws and keeps the plates
 //   page-ocr.js    - this file; intent, ordering, host lifecycle, stopping
 //   ocr-host.js    - an extension-owned document where the engine actually runs
