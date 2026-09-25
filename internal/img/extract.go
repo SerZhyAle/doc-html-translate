@@ -22,6 +22,7 @@ import (
 	"golang.org/x/image/tiff"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 )
 
@@ -69,7 +70,7 @@ func Extract(imgPath, outputDir string) (*epub.Book, error) {
 	}
 
 	pageHTML := buildPageHTML(title, imgName, 1, 1)
-	if err := os.WriteFile(filepath.Join(outputDir, "page_001.html"), []byte(pageHTML), 0o644); err != nil {
+	if err := fsutil.WriteFile(filepath.Join(outputDir, "page_001.html"), []byte(pageHTML), 0o644); err != nil {
 		return nil, fmt.Errorf("write page: %w", err)
 	}
 
@@ -120,7 +121,7 @@ func extractTIFF(imgPath, outputDir, title string) (*epub.Book, error) {
 		// len(offsets) is the frame count before any undecodable frame is dropped, so it
 		// can overstate the total by the number skipped. That only affects the alt text,
 		// and an over-count reads better than renumbering pages after the fact.
-		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName, pageNum, len(offsets))), 0o644); werr != nil {
+		if werr := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName, pageNum, len(offsets))), 0o644); werr != nil {
 			return nil, fmt.Errorf("write tiff page %d: %w", pageNum, werr)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{ID: id, Href: href, MediaType: "text/html"})

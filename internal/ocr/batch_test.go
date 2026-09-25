@@ -2,6 +2,7 @@ package ocr
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -125,7 +126,7 @@ func TestApplyOverlaysNoChange(t *testing.T) {
 // contract, and the short-circuit that keeps the pool off an empty queue.
 func TestOverlayBookNoImagesNeverTouchesEngine(t *testing.T) {
 	_, paths := writeBook(t, nil, `<p>no images here</p>`, `<img src="https://x/only-external.png">`)
-	stats := OverlayBook("definitely-not-a-real-tesseract-binary", paths, "eng", "", true, nil)
+	stats := OverlayBook(context.Background(), "definitely-not-a-real-tesseract-binary", paths, "eng", "", true, nil)
 	if stats.Overlaid != 0 || stats.NoText != 0 || len(stats.Failed) != 0 {
 		t.Errorf("empty book should overlay nothing and touch no engine, got %+v", stats)
 	}

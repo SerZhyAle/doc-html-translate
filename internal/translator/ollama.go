@@ -2,6 +2,7 @@ package translator
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -107,7 +108,11 @@ func (c *OllamaClient) SetNumCtx(n int) {
 // Translate implements the Client interface using Ollama.
 // Batches are sent concurrently (up to c.parallelism) for better GPU utilization
 // when OLLAMA_NUM_PARALLEL is set accordingly.
-func (c *OllamaClient) Translate(texts []string, sourceLang, targetLang string) ([]string, error) {
+//
+// A batch that fails does not discard the batches that succeeded: their translations come back
+// with a *PartialError naming the untranslated slots. No new batch starts after a failure or a
+// cancelled ctx.
+func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error) {
 	if len(texts) == 0 {
 		return nil, nil
 	}
@@ -129,7 +134,7 @@ func (c *OllamaClient) Translate(texts []string, sourceLang, targetLang string) 
 		errMu.Lock()
 		abort := firstErr != nil
 		errMu.Unlock()
-		if abort {
+		if abort || ctx.Err() != nil {
 			break
 		}
 
@@ -147,7 +152,7 @@ func (c *OllamaClient) Translate(texts []string, sourceLang, targetLang string) 
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			translated, err := c.translateBatch(batchTexts, sourceLang, targetLang)
+			translated, err := c.translateBatch(ctx, batchTexts, sourceLang, targetLang)
 			if err != nil {
 				errMu.Lock()
 				if firstErr == nil {
@@ -164,7 +169,7 @@ func (c *OllamaClient) Translate(texts []string, sourceLang, targetLang string) 
 					if !isEchoBack(translated[j], orig) {
 						continue
 					}
-					retried, err := c.translateSingle(orig, sourceLang, targetLang)
+					retried, err := c.translateSingle(ctx, orig, sourceLang, targetLang)
 					if err != nil {
 						break
 					}
@@ -189,23 +194,35 @@ func (c *OllamaClient) Translate(texts []string, sourceLang, targetLang string) 
 
 	wg.Wait()
 
-	if firstErr != nil {
-		return nil, firstErr
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 
 	results := make([]string, len(texts))
+	var missing []int
 	for b, tr := range batchResults {
+		start := b * ollamaBatchSize
 		if tr == nil {
+			end := min(start+ollamaBatchSize, len(texts))
+			for i := start; i < end; i++ {
+				missing = append(missing, i)
+			}
 			continue
 		}
-		copy(results[b*ollamaBatchSize:], tr)
+		copy(results[start:], tr)
+	}
+	if firstErr != nil {
+		if len(missing) == len(texts) {
+			return nil, firstErr
+		}
+		return results, &PartialError{Missing: missing, Err: firstErr}
 	}
 	return results, nil
 }
 
 // translateSingle translates one text string using a simple, direct prompt.
 // Used for retry passes where the numbered-batch format failed.
-func (c *OllamaClient) translateSingle(text, srcLang, dstLang string) (string, error) {
+func (c *OllamaClient) translateSingle(ctx context.Context, text, srcLang, dstLang string) (string, error) {
 	prompt := fmt.Sprintf(
 		"Translate the following text from %s to %s.\n"+
 			"Output ONLY the translation. Do not add explanations or repeat the original.\n\n%s",
@@ -221,7 +238,7 @@ func (c *OllamaClient) translateSingle(text, srcLang, dstLang string) (string, e
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.httpClient.Post(c.baseURL, "application/json", bytes.NewReader(body))
+	resp, err := c.post(ctx, body)
 	if err != nil {
 		return "", err
 	}
@@ -273,7 +290,7 @@ type ollamaResponse struct {
 	Error    string `json:"error,omitempty"`
 }
 
-func (c *OllamaClient) translateBatch(texts []string, srcLang, dstLang string) ([]string, error) {
+func (c *OllamaClient) translateBatch(ctx context.Context, texts []string, srcLang, dstLang string) ([]string, error) {
 	// Build numbered list prompt
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(
@@ -315,7 +332,7 @@ func (c *OllamaClient) translateBatch(texts []string, srcLang, dstLang string) (
 	}
 
 	t0 := time.Now()
-	resp, err := c.httpClient.Post(c.baseURL, "application/json", bytes.NewReader(body))
+	resp, err := c.post(ctx, body)
 	if isFirst {
 		logging.Printf("  Model ready in %s\n", formatLoadTime(time.Since(t0)))
 	}
@@ -342,6 +359,15 @@ func (c *OllamaClient) translateBatch(texts []string, srcLang, dstLang string) (
 	}
 
 	return parseNumberedResponse(result.Response, len(texts)), nil
+}
+
+func (c *OllamaClient) post(ctx context.Context, body []byte) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return c.httpClient.Do(req)
 }
 
 // parseNumberedResponse extracts "N. text" lines from the model output.

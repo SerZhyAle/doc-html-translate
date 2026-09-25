@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 
 	gohtml "golang.org/x/net/html"
@@ -156,7 +157,7 @@ func normalizeChapter(srcPath, dstPath, fileHref string, xhtml bool, lookup func
 	if err := os.MkdirAll(filepath.Dir(dstPath), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(dstPath, buf.Bytes(), 0o644)
+	return fsutil.WriteFile(dstPath, buf.Bytes(), 0o644)
 }
 
 // htmlVoidElements are the HTML elements that never have an end tag, so an

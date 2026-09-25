@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"doc-html-translate/internal/fsutil"
 )
 
 // faviconICO is the app icon. Kept in step with assets/doc-html-translate.ico by
@@ -52,5 +54,5 @@ func injectFavicon(filePath, fromDir string) {
 	if idx < 0 {
 		return
 	}
-	_ = os.WriteFile(filePath, []byte(content[:idx]+faviconLink(fromDir)+content[idx:]), 0o644)
+	_ = fsutil.WriteFile(filePath, []byte(content[:idx]+faviconLink(fromDir)+content[idx:]), 0o644)
 }

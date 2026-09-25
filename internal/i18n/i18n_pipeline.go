@@ -1,0 +1,119 @@
+package i18n
+
+// Console strings of the conversion pipeline: why an existing output is rebuilt instead of
+// reopened, and how a run that did not finish ended.
+//
+// Order of the translations is always Codes[1:]: ru uk de it es fr pt ar hi bn ur zh.
+func init() {
+	Add("The document changed since it was converted - rebuilding the output.",
+		"Документ изменился после конвертации - результат собирается заново.",
+		"Документ змінився після конвертації - результат збирається заново.",
+		"Das Dokument hat sich seit der Konvertierung geändert - die Ausgabe wird neu erstellt.",
+		"Il documento è cambiato dopo la conversione - il risultato viene ricreato.",
+		"El documento cambió desde la conversión - se vuelve a generar el resultado.",
+		"Le document a changé depuis la conversion - le résultat est reconstruit.",
+		"O documento mudou desde a conversão - o resultado será recriado.",
+		"تغيّر المستند منذ تحويله - تتم إعادة إنشاء النتيجة.",
+		"रूपांतरण के बाद दस्तावेज़ बदल गया है - परिणाम फिर से बनाया जा रहा है।",
+		"রূপান্তরের পরে নথিটি বদলেছে - ফলাফল আবার তৈরি হচ্ছে।",
+		"تبدیلی کے بعد دستاویز بدل گئی ہے - نتیجہ دوبارہ بنایا جا رہا ہے۔",
+		"文档在转换后已更改 - 正在重新生成输出。")
+
+	Add("The existing output was made with different settings (%s) - rebuilding it.",
+		"Готовый результат сделан с другими настройками (%s) - собирается заново.",
+		"Готовий результат зроблено з іншими налаштуваннями (%s) - збирається заново.",
+		"Die vorhandene Ausgabe wurde mit anderen Einstellungen erstellt (%s) - sie wird neu erstellt.",
+		"Il risultato esistente è stato creato con impostazioni diverse (%s) - viene ricreato.",
+		"El resultado existente se creó con otros ajustes (%s) - se vuelve a generar.",
+		"Le résultat existant a été créé avec d'autres réglages (%s) - il est reconstruit.",
+		"O resultado existente foi criado com outras configurações (%s) - será recriado.",
+		"النتيجة الموجودة أُنشئت بإعدادات مختلفة (%s) - تتم إعادة إنشائها.",
+		"मौजूदा परिणाम अलग सेटिंग्स (%s) से बना था - इसे फिर से बनाया जा रहा है।",
+		"বিদ্যমান ফলাফল অন্য সেটিংসে (%s) তৈরি - আবার তৈরি হচ্ছে।",
+		"موجودہ نتیجہ مختلف ترتیبات (%s) سے بنا تھا - دوبارہ بنایا جا رہا ہے۔",
+		"现有输出使用了不同的设置 (%s) - 正在重新生成。")
+
+	Add("The existing output is only partially translated - rebuilding it.",
+		"Готовый результат переведён лишь частично - собирается заново.",
+		"Готовий результат перекладено лише частково - збирається заново.",
+		"Die vorhandene Ausgabe ist nur teilweise übersetzt - sie wird neu erstellt.",
+		"Il risultato esistente è tradotto solo in parte - viene ricreato.",
+		"El resultado existente está traducido solo en parte - se vuelve a generar.",
+		"Le résultat existant n'est que partiellement traduit - il est reconstruit.",
+		"O resultado existente está traduzido apenas em parte - será recriado.",
+		"النتيجة الموجودة مترجمة جزئيًا فقط - تتم إعادة إنشائها.",
+		"मौजूदा परिणाम केवल आंशिक रूप से अनूदित है - इसे फिर से बनाया जा रहा है।",
+		"বিদ্যমান ফলাফল আংশিক অনূদিত - আবার তৈরি হচ্ছে।",
+		"موجودہ نتیجہ صرف جزوی طور پر ترجمہ شدہ ہے - دوبارہ بنایا جا رہا ہے۔",
+		"现有输出仅部分翻译 - 正在重新生成。")
+
+	Add("The existing output was never translated - rebuilding it.",
+		"Готовый результат так и не был переведён - собирается заново.",
+		"Готовий результат так і не було перекладено - збирається заново.",
+		"Die vorhandene Ausgabe wurde nie übersetzt - sie wird neu erstellt.",
+		"Il risultato esistente non è mai stato tradotto - viene ricreato.",
+		"El resultado existente nunca se tradujo - se vuelve a generar.",
+		"Le résultat existant n'a jamais été traduit - il est reconstruit.",
+		"O resultado existente nunca foi traduzido - será recriado.",
+		"النتيجة الموجودة لم تُترجم قط - تتم إعادة إنشائها.",
+		"मौजूदा परिणाम का कभी अनुवाद नहीं हुआ - इसे फिर से बनाया जा रहा है।",
+		"বিদ্যমান ফলাফল কখনও অনূদিত হয়নি - আবার তৈরি হচ্ছে।",
+		"موجودہ نتیجے کا کبھی ترجمہ نہیں ہوا - دوبارہ بنایا جا رہا ہے۔",
+		"现有输出从未被翻译 - 正在重新生成。")
+
+	Add("The existing output is incomplete (interrupted, or made by an older version) - rebuilding it.",
+		"Готовый результат не завершён (прерван или сделан старой версией) - собирается заново.",
+		"Готовий результат не завершено (перервано або зроблено старою версією) - збирається заново.",
+		"Die vorhandene Ausgabe ist unvollständig (abgebrochen oder von einer älteren Version) - sie wird neu erstellt.",
+		"Il risultato esistente è incompleto (interrotto o creato da una versione precedente) - viene ricreato.",
+		"El resultado existente está incompleto (interrumpido o de una versión anterior) - se vuelve a generar.",
+		"Le résultat existant est incomplet (interrompu ou créé par une version antérieure) - il est reconstruit.",
+		"O resultado existente está incompleto (interrompido ou criado por uma versão anterior) - será recriado.",
+		"النتيجة الموجودة غير مكتملة (توقفت أو أنشأها إصدار أقدم) - تتم إعادة إنشائها.",
+		"मौजूदा परिणाम अधूरा है (बीच में रुका या पुराने संस्करण से बना) - इसे फिर से बनाया जा रहा है।",
+		"বিদ্যমান ফলাফল অসম্পূর্ণ (মাঝপথে থেমেছে বা পুরনো সংস্করণে তৈরি) - আবার তৈরি হচ্ছে।",
+		"موجودہ نتیجہ نامکمل ہے (درمیان میں رکا یا پرانے ورژن سے بنا) - دوبارہ بنایا جا رہا ہے۔",
+		"现有输出不完整 (被中断或由旧版本生成) - 正在重新生成。")
+
+	Add("partially translated, %d of %d pages",
+		"переведено частично, %d из %d страниц",
+		"перекладено частково, %d з %d сторінок",
+		"teilweise übersetzt, %d von %d Seiten",
+		"tradotto in parte, %d di %d pagine",
+		"traducido en parte, %d de %d páginas",
+		"partiellement traduit, %d pages sur %d",
+		"traduzido em parte, %d de %d páginas",
+		"تُرجم جزئيًا، %d من %d صفحة",
+		"आंशिक रूप से अनूदित, %[2]d में से %[1]d पृष्ठ",
+		"আংশিক অনূদিত, %d / %d পৃষ্ঠা",
+		"جزوی ترجمہ، %[2]d میں سے %[1]d صفحات",
+		"部分翻译，%d / %d 页")
+
+	Add("translated, but the title or table of contents labels were not",
+		"переведено, но название или пункты оглавления - нет",
+		"перекладено, але назву або пункти змісту - ні",
+		"übersetzt, aber Titel oder Inhaltsverzeichnis nicht",
+		"tradotto, ma il titolo o le voci dell'indice no",
+		"traducido, pero el título o las entradas del índice no",
+		"traduit, mais pas le titre ni les entrées de la table des matières",
+		"traduzido, mas o título ou os itens do sumário não",
+		"تُرجم، لكن العنوان أو عناصر الفهرس لم تُترجم",
+		"अनूदित, पर शीर्षक या विषय-सूची के शीर्षक नहीं",
+		"অনূদিত, কিন্তু শিরোনাম বা সূচিপত্রের নাম নয়",
+		"ترجمہ ہو گیا، مگر عنوان یا فہرست کے عنوانات نہیں",
+		"已翻译，但标题或目录条目未翻译")
+
+	Add("interrupted - the output is incomplete and will be rebuilt on the next run",
+		"прервано - результат не завершён и будет собран заново при следующем запуске",
+		"перервано - результат не завершено, його буде зібрано заново під час наступного запуску",
+		"abgebrochen - die Ausgabe ist unvollständig und wird beim nächsten Lauf neu erstellt",
+		"interrotto - il risultato è incompleto e verrà ricreato alla prossima esecuzione",
+		"interrumpido - el resultado está incompleto y se volverá a generar en la próxima ejecución",
+		"interrompu - le résultat est incomplet et sera reconstruit à la prochaine exécution",
+		"interrompido - o resultado está incompleto e será recriado na próxima execução",
+		"تمت المقاطعة - النتيجة غير مكتملة وستُعاد في التشغيل التالي",
+		"बाधित - परिणाम अधूरा है और अगली बार फिर से बनाया जाएगा",
+		"বাধাপ্রাপ্ত - ফলাফল অসম্পূর্ণ, পরের বার আবার তৈরি হবে",
+		"رک گیا - نتیجہ نامکمل ہے اور اگلی بار دوبارہ بنایا جائے گا",
+		"已中断 - 输出不完整，下次运行时将重新生成")
+}

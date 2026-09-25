@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/i18n"
 
 	gohtml "golang.org/x/net/html"
@@ -141,7 +142,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	if err := os.MkdirAll(filepath.Dir(mergedPath), 0o755); err != nil {
 		return "", fmt.Errorf("create merged dir: %w", err)
 	}
-	if err := os.WriteFile(mergedPath, []byte(sb.String()), 0o644); err != nil {
+	if err := fsutil.WriteFile(mergedPath, []byte(sb.String()), 0o644); err != nil {
 		return "", fmt.Errorf("write single page: %w", err)
 	}
 
@@ -173,7 +174,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 <body></body>
 </html>
 `, target)
-		if err := os.WriteFile(entry, []byte(redirect), 0o644); err != nil {
+		if err := fsutil.WriteFile(entry, []byte(redirect), 0o644); err != nil {
 			return "", fmt.Errorf("write redirect index: %w", err)
 		}
 	}

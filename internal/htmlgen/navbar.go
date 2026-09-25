@@ -11,6 +11,7 @@ import (
 
 	"doc-html-translate/internal/appearance"
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 )
@@ -745,7 +746,7 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 		content = content[:bodyIdx] + navHTML + content[bodyIdx:]
 	}
 
-	return os.WriteFile(filePath, []byte(content), 0o644)
+	return fsutil.WriteFile(filePath, []byte(content), 0o644)
 }
 
 // findBodyTagEnd finds the position right after the <body...> tag.

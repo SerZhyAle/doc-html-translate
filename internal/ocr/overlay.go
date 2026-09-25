@@ -1,11 +1,13 @@
 package ocr
 
 import (
+	"context"
 	"fmt"
 	"image"
 	_ "image/gif"  // register decoders for colour sampling
 	_ "image/jpeg" //
 	_ "image/png"  //
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -14,6 +16,7 @@ import (
 	"sync"
 
 	"doc-html-translate/internal/appearance"
+	"doc-html-translate/internal/fsutil"
 
 	_ "golang.org/x/image/tiff" // extracted PDF images may be TIFF
 	_ "golang.org/x/image/webp" // EPUB images may be WebP
@@ -114,7 +117,10 @@ if(document.body)watch();else document.addEventListener("DOMContentLoaded",watch
 // onProgress, when non-nil, is called as images finish with the number done and the total to
 // do across the book; the counter is per-image (not per-file), so single-page mode - where the
 // whole book is one file - still shows real motion instead of sitting at 0/1.
-func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed bool, onProgress func(done, total int)) OverlayResult {
+//
+// ctx is checked between images and between pages: a cancelled run stops recognizing, writes no
+// further page and returns what it has, with Cancelled set.
+func OverlayBook(ctx context.Context, bin string, htmlPaths []string, lang, dataDir string, langFixed bool, onProgress func(done, total int)) OverlayResult {
 	var stats OverlayResult
 	stats.Lang = lang
 
@@ -140,10 +146,14 @@ func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed
 	lang = use
 
 	// Phase 2: recognize every image once, across one pool spanning the whole book.
-	results := recognizePaths(bin, lang, dataDir, order, onProgress)
+	results := recognizePaths(ctx, bin, lang, dataDir, order, onProgress)
 
 	// Phase 3: re-parse each file (one at a time) and wrap its images from the results.
 	for _, htmlPath := range htmlPaths {
+		if ctx.Err() != nil {
+			stats.Cancelled = true
+			return stats
+		}
 		doc, baseDir, err := parseHTMLFile(htmlPath)
 		if err != nil {
 			continue
@@ -167,7 +177,7 @@ func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed
 // single-file callers and tests; the pool it runs is that file's images only, so prefer
 // OverlayBook when a whole book's worth of pages is available.
 func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, total int)) (OverlayResult, error) {
-	return OverlayBook(bin, []string{htmlPath}, lang, dataDir, true, onProgress), nil
+	return OverlayBook(context.Background(), bin, []string{htmlPath}, lang, dataDir, true, onProgress), nil
 }
 
 // parseHTMLFile opens and parses one content file, returning its DOM and the directory its
@@ -185,17 +195,10 @@ func parseHTMLFile(htmlPath string) (*gohtml.Node, string, error) {
 	return doc, filepath.Dir(htmlPath), nil
 }
 
-// renderHTMLFile writes the (possibly rewritten) DOM back to disk.
+// renderHTMLFile writes the rewritten DOM back to disk. A failed render leaves the original page
+// in place rather than a truncated one.
 func renderHTMLFile(htmlPath string, doc *gohtml.Node) error {
-	out, err := os.Create(htmlPath)
-	if err != nil {
-		return err
-	}
-	if err := gohtml.Render(out, doc); err != nil {
-		out.Close()
-		return err
-	}
-	return out.Close()
+	return fsutil.Write(htmlPath, 0o644, func(w io.Writer) error { return gohtml.Render(w, doc) })
 }
 
 // applyOverlays wraps every recognizable image in doc from the precomputed recognition
@@ -255,6 +258,8 @@ type OverlayResult struct {
 	// (script.go). ScriptNote is the sentence explaining that, empty when nothing happened.
 	Lang       string
 	ScriptNote string
+	// Cancelled is set when the run was interrupted before every page was rewritten.
+	Cancelled bool
 }
 
 // OverlayFailure is one image that could not be recognized, and why.
@@ -357,7 +362,7 @@ func classifyRecognition(res Result, err error) (ok bool, reason error) {
 // pins about one core, so this is what actually uses a multi-core machine; a scanned book that
 // recognized serially left ~90% of the cores idle while the reader waited. Completions are
 // reported to onProgress in finishing order (not path order).
-func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(done, total int)) map[string]recognition {
+func recognizePaths(ctx context.Context, bin, lang, dataDir string, paths []string, onProgress func(done, total int)) map[string]recognition {
 	if onProgress != nil {
 		onProgress(0, len(paths))
 	}
@@ -399,8 +404,15 @@ func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(d
 			}
 		}()
 	}
+	// Images already handed to a worker finish; the rest are never started, so an interrupt
+	// waits for at most one Tesseract process per worker.
+feed:
 	for i := range paths {
-		queue <- i
+		select {
+		case queue <- i:
+		case <-ctx.Done():
+			break feed
+		}
 	}
 	close(queue)
 	wg.Wait()

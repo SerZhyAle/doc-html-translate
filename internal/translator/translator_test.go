@@ -1,6 +1,7 @@
 package translator
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -59,7 +60,7 @@ func TestTranslateSuccess(t *testing.T) {
 	defer server.Close()
 
 	client := newTestClient(server.URL)
-	results, err := client.Translate([]string{"hello", "world"}, "en", "ru")
+	results, err := client.Translate(context.Background(), []string{"hello", "world"}, "en", "ru")
 	if err != nil {
 		t.Fatalf("Translate failed: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestTranslateRetryOn429(t *testing.T) {
 	defer server.Close()
 
 	client := newTestClient(server.URL)
-	results, err := client.Translate([]string{"test"}, "en", "ru")
+	results, err := client.Translate(context.Background(), []string{"test"}, "en", "ru")
 	if err != nil {
 		t.Fatalf("Translate should succeed after retries, got: %v", err)
 	}
@@ -120,7 +121,7 @@ func TestTranslateNonRetryableError(t *testing.T) {
 	defer server.Close()
 
 	client := newTestClient(server.URL)
-	_, err := client.Translate([]string{"test"}, "en", "ru")
+	_, err := client.Translate(context.Background(), []string{"test"}, "en", "ru")
 	if err == nil {
 		t.Fatal("expected error on 403, got nil")
 	}
@@ -128,7 +129,7 @@ func TestTranslateNonRetryableError(t *testing.T) {
 
 func TestTranslateEmpty(t *testing.T) {
 	client := NewGoogleClient("test-key")
-	results, err := client.Translate(nil, "en", "ru")
+	results, err := client.Translate(context.Background(), nil, "en", "ru")
 	if err != nil {
 		t.Fatalf("expected nil error for empty input, got: %v", err)
 	}

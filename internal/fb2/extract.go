@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 )
 
@@ -138,7 +139,7 @@ func Extract(fb2Path, outputDir string) (*epub.Book, error) {
 		id := fmt.Sprintf("page_%03d", pageNum)
 
 		pageHTML := buildPageHTML(title, pageNum, totalPages, resolved[start:end])
-		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pageNum, err)
 		}
 

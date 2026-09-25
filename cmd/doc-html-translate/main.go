@@ -53,7 +53,10 @@ func main() {
 	exitCode, err := application.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		waitOnError()
+		// Whoever pressed Ctrl+C is at the console and wants it back, not a pause.
+		if exitCode != app.ExitInterrupted {
+			waitOnError()
+		}
 		os.Exit(exitCode)
 	}
 

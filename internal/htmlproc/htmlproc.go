@@ -11,6 +11,8 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+
+	"doc-html-translate/internal/fsutil"
 )
 
 // skipTags defines HTML elements whose text content should NOT be translated.
@@ -98,5 +100,5 @@ func RenderToFile(doc *html.Node, filePath string) error {
 	if err := html.Render(&buf, doc); err != nil {
 		return fmt.Errorf("render html: %w", err)
 	}
-	return os.WriteFile(filePath, buf.Bytes(), 0o644)
+	return fsutil.WriteFile(filePath, buf.Bytes(), 0o644)
 }

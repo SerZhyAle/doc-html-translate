@@ -1,6 +1,10 @@
 package translator
 
-import "fmt"
+import (
+	"context"
+	"errors"
+	"fmt"
+)
 
 // CachingClient wraps any Client and deduplicates repeated segments within a run.
 // Useful for navigation bars, headers, and repeated phrases across chapters.
@@ -24,7 +28,7 @@ func (c *CachingClient) SetProgress(f func(done, total int)) {
 	}
 }
 
-func (c *CachingClient) Translate(texts []string, srcLang, dstLang string) ([]string, error) {
+func (c *CachingClient) Translate(ctx context.Context, texts []string, srcLang, dstLang string) ([]string, error) {
 	results := make([]string, len(texts))
 	var missTexts []string
 	var missIdx []int
@@ -43,17 +47,33 @@ func (c *CachingClient) Translate(texts []string, srcLang, dstLang string) ([]st
 		return results, nil
 	}
 
-	translated, err := c.inner.Translate(missTexts, srcLang, dstLang)
-	if err != nil {
+	translated, err := c.inner.Translate(ctx, missTexts, srcLang, dstLang)
+	var partial *PartialError
+	if err != nil && !errors.As(err, &partial) {
 		return nil, err
 	}
 
+	// A slot the inner client could not fill must not be cached: the next page asking for the
+	// same text would get the empty string back as if it were the translation.
+	skip := map[int]bool{}
+	if partial != nil {
+		for _, j := range partial.Missing {
+			skip[j] = true
+		}
+	}
+	var missing []int
 	for j, idx := range missIdx {
+		if skip[j] {
+			missing = append(missing, idx)
+			continue
+		}
 		results[idx] = translated[j]
 		key := fmt.Sprintf("%s:%s:%s", srcLang, dstLang, missTexts[j])
 		c.cache[key] = translated[j]
 	}
-
+	if partial != nil {
+		return results, &PartialError{Missing: missing, Err: partial.Err}
+	}
 	return results, nil
 }
 

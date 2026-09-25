@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 )
 
@@ -111,7 +112,7 @@ func Extract(comicPath, outputDir string) (*epub.Book, error) {
 		}
 		href := fmt.Sprintf("page_%03d.html", pageNum)
 		id := fmt.Sprintf("page_%03d", pageNum)
-		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, imgName, pageNum, len(pages))), 0o644); werr != nil {
+		if werr := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, imgName, pageNum, len(pages))), 0o644); werr != nil {
 			return nil, fmt.Errorf("write page %d html: %w", pageNum, werr)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{ID: id, Href: href, MediaType: "text/html"})

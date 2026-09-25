@@ -142,7 +142,7 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 ## Conventions And Behavior To Preserve
 
 - Script-first dev flow: prefer existing scripts in scripts/ for routine tasks.
-- Idempotent output reuse: if output index exists, pipeline reuses it unless -force is set.
+- Idempotent output reuse: an output is reopened only when its completion record (internal/outputpath completion.go, written as the run's last step) matches the source identity and the result-affecting options; anything else is rebuilt with a logged reason, and -force always rebuilds. Pipeline page writes go through internal/fsutil (temp file + rename), never an in-place truncating write.
 - Default CLI with no args enters registration flow (not conversion).
 - Translation is optional; default run is convert + open without translation engine unless -google or -ollama is passed.
 - Paid engines respect -max-cost: the estimate (chars/1e6*$20) is enforced as a pre-flight guard in internal/pipeline/pipeline.go before any request is sent.

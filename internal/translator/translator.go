@@ -3,6 +3,7 @@ package translator
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,10 +31,26 @@ const (
 	maxCharsPerRequest = 5000
 )
 
-// Client defines the translation interface (for mocking in tests).
+// Client defines the translation interface (for mocking in tests). ctx cancels the work:
+// requests in flight are aborted and no new one is started.
 type Client interface {
-	Translate(texts []string, sourceLang, targetLang string) ([]string, error)
+	Translate(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error)
 }
+
+// PartialError is returned together with a full-length result slice when only some texts were
+// translated. Missing lists the indexes whose slot is empty because their request failed; every
+// other slot holds a real translation. A caller that can use part of a page keeps what did
+// arrive instead of discarding it.
+type PartialError struct {
+	Missing []int
+	Err     error
+}
+
+func (e *PartialError) Error() string {
+	return fmt.Sprintf("%d text(s) untranslated: %v", len(e.Missing), e.Err)
+}
+
+func (e *PartialError) Unwrap() error { return e.Err }
 
 // ProgressReporter is an optional interface for clients that support per-batch progress callbacks.
 // done and total are segment counts (done <= total).
@@ -127,7 +144,7 @@ type apiError struct {
 
 // Translate sends texts to Google Translate v2 and returns translated texts.
 // Handles batching, retries with exponential backoff for 429/5xx errors.
-func (c *GoogleClient) Translate(texts []string, sourceLang, targetLang string) ([]string, error) {
+func (c *GoogleClient) Translate(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error) {
 	if len(texts) == 0 {
 		return nil, nil
 	}
@@ -137,7 +154,7 @@ func (c *GoogleClient) Translate(texts []string, sourceLang, targetLang string) 
 	var allResults []string
 
 	for _, batch := range batches {
-		results, err := c.translateBatch(batch, sourceLang, targetLang)
+		results, err := c.translateBatch(ctx, batch, sourceLang, targetLang)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +165,7 @@ func (c *GoogleClient) Translate(texts []string, sourceLang, targetLang string) 
 }
 
 // translateBatch sends a single batch with retries.
-func (c *GoogleClient) translateBatch(texts []string, sourceLang, targetLang string) ([]string, error) {
+func (c *GoogleClient) translateBatch(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error) {
 	reqBody := translateRequest{
 		Q:      texts,
 		Source: sourceLang,
@@ -168,10 +185,14 @@ func (c *GoogleClient) translateBatch(texts []string, sourceLang, targetLang str
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s
 			delay := time.Duration(math.Pow(2, float64(attempt-1))) * time.Second
-			time.Sleep(delay)
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
 		}
 
-		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 		if err != nil {
 			return nil, fmt.Errorf("create request: %w", err)
 		}
@@ -179,6 +200,9 @@ func (c *GoogleClient) translateBatch(texts []string, sourceLang, targetLang str
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
 			lastErr = fmt.Errorf("http request: %w", err)
 			continue
 		}

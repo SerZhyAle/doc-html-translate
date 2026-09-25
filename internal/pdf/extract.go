@@ -20,6 +20,7 @@ import (
 	"doc-html-translate/internal/bundledtools"
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 
@@ -237,7 +238,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 		pdfPageToHref[pdfPageNum] = href
 
 		pageHTML := buildPDFPageHTML(outputDir, title, pdfPageNum, totalPages, items, imgs)
-		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pdfPageNum, err)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{
@@ -605,7 +606,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 
 		pageHTML := buildPageHTML(outputDir, title, i, totalPages, pageContent, imgs)
 		pagePath := filepath.Join(outputDir, href)
-		if err := os.WriteFile(pagePath, []byte(pageHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(pagePath, []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", i, err)
 		}
 
@@ -632,7 +633,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 		fallbackHTML := buildFallbackPDFHTML(title, pdfCopyName)
 		href := "page_001.html"
 		id := "page_001"
-		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(fallbackHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(fallbackHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write fallback html: %w", err)
 		}
 
