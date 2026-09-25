@@ -1,6 +1,6 @@
 # Both editions describe the same plate twice, and nothing notices when the copies part
 
-**Status:** In Progress
+**Status:** Partial
 **Priority:** 44
 **Date:** 2026-08-15
 **Tactical plan:** [`2026-08-15_plate-styling-single-source/`](2026-08-15_plate-styling-single-source/INDEX.md)
@@ -188,3 +188,32 @@ it from a screenshot.
   widens. Those measurements are inputs here, not open questions.
 - [`docs/PARITY.md`](../../docs/PARITY.md) - the process note preferring a single source in code over
   a copy plus a comment is the rule this ticket applies.
+
+## Last Audit
+
+**Date:** 2026-09-25
+**Mode:** full (re-audit after /spec-fix)
+**Outcome:** Partial
+**Counts:** PASS 81 · WARN 2 · FAIL 0 · MANUAL 4 · EXEMPT 1
+
+Static audit of the tree at `1c04bc1` plus the /spec-fix predicate and budget corrections. Build and test
+predicates are taken from the 2026-09-24 run recorded in the INDEX change log. /spec-fix closed 6 of
+the 8 WARNs: two stale predicates (plate count 17; box-shadow narrowed to the plate role) and four
+re-budgets (overlay.go, ocr-overlay.css, parity_test.go, PARITY.md). The two left need a decision:
+trim the code or re-budget with a reason.
+
+### Action items
+1. **[WARN Phase 02 budget]** `internal/appearance/appearance.go` has 250 lines against 220. Decide:
+   trim it (the decode validation could go, `appearance_test.go` already covers the shape) or re-budget.
+2. **[WARN Phase 04 budget]** `tests/appearance_parity_test.go` has 577 lines against 320. Decide:
+   fold `desktopEdition` and `extensionEdition` into one reader and drop the duplicated role/theme
+   plumbing, or re-budget with a reason.
+
+### Manual / on-target
+- [ ] Step 05.3: repoint the catalog's `ocr-pipeline.md` plate rows and §3.1 at
+      `internal/appearance`. The catalog is not reachable from the audit session.
+- [ ] Criterion 5: render one corpus comic page with OCR on, in both editions, and compare it with the
+      2026-08-15 output. The headless-Chromium CSS comparison found 0 differing pixels, but it does
+      not replace the corpus run.
+- [ ] Criterion 9: `./scripts/test.ps1`, `lint.ps1`, `typo.ps1` and `check.ps1` exit 0 on Windows.
+- [ ] Step 06.2: record the exit codes and the corpus page in the INDEX change log.

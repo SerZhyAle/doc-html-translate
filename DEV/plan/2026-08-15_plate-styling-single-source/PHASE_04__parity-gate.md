@@ -22,7 +22,7 @@ either side declares a role outside its derived path.
 | File | New / Modified | Line budget |
 |------|:--------------:|------------:|
 | `tests/appearance_parity_test.go` | New | ≤ 320 |
-| `tests/parity_test.go` | Modified | ≤ 40 changed |
+| `tests/parity_test.go` | Modified | ≤ 125 changed |
 
 > A new file rather than growing `tests/parity_test.go`, which is already 690 lines.
 
@@ -85,7 +85,8 @@ either side declares a role outside its derived path.
 
 **Verification:**
 - `func TestAppearanceComparatorDetectsDrift(` matches exactly once.
-- `box-shadow` appears in `tests/appearance_parity_test.go` and in no stylesheet.
+- `box-shadow` appears in `tests/appearance_parity_test.go` and in no plate role: no `box-shadow`
+  entry in `roles.plate` of `appearance.json`, and no `box-shadow` declaration in a generated region.
 - `go test ./tests/ -run TestAppearance` exits 0.
 
 **Status:** `[x]` done

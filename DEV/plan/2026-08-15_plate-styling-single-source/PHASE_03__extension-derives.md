@@ -22,7 +22,7 @@ from the reader stylesheet onto the image role.
 | File | New / Modified | Line budget |
 |------|:--------------:|------------:|
 | `extension/scripts/gen-appearance.mjs` | New | ≤ 200 |
-| `extension/src/ocr-overlay.css` | Modified | ≤ 90 |
+| `extension/src/ocr-overlay.css` | Modified | ≤ 105 |
 | `extension/src/viewer.css` | Modified | ≤ 60 changed |
 | `extension/package.json` | Modified | ≤ 5 changed |
 | `extension/build.mjs` | Modified | ≤ 10 changed |

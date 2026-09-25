@@ -195,7 +195,7 @@ balloons and real lines overlap (1.87-2.57x) is measured, stated, and left to 07
 rel  ticket                                          changed     status
 2    2026-09-22_ocr-discard-record-missing-for-      2026-09-22  Draft
      blank-images
-2    2026-08-15_plate-styling-single-source          2026-09-24  In Progress (4/6 phases)
+2    2026-08-15_plate-styling-single-source          2026-09-25  Partial (2 WARN need a decision, 4 manual)
 2    (no ticket) plate box rides over the logo       2026-08-13  Evidenced, unfiled
 2    (no ticket) tesseract.js misses a caption on    2026-08-15  Evidenced, unfiled
      a gradient
