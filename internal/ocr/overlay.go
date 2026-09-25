@@ -398,7 +398,7 @@ func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(d
 			for i := range queue {
 				// Recognize is self-contained (its own temp file, its own process), so it
 				// is safe to run concurrently; each worker writes only its own slot.
-				res, err := Recognize(bin, paths[i], lang, dataDir)
+				res, err := recognizeSafe(bin, paths[i], lang, dataDir)
 				ok, reason := classifyRecognition(res, err)
 				r := recognition{ok: ok, err: reason}
 				switch {

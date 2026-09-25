@@ -1,6 +1,8 @@
 package comic
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -8,6 +10,7 @@ import (
 	"path/filepath"
 
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/procrun"
 )
 
 // find7Zip locates the 7-Zip binary. It follows the MOBI/Calibre precedent
@@ -62,17 +65,22 @@ func readSevenZip(path, ext string) ([]page, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	logging.Printf("  Extracting comic via 7-Zip (%s)..\n", bin)
 	// x = extract with full paths; -y assume yes; -bd no progress; -o output dir.
-	cmd := exec.Command(bin, "x", path, "-y", "-bd", "-o"+tmpDir)
-	if out, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
-		msg := string(out)
-		if len(msg) > 500 {
-			msg = msg[:500] + ".."
+	if _, cmdErr := procrun.Run(context.Background(), procrun.Cmd{
+		Tool:      "7-Zip",
+		Path:      bin,
+		Args:      []string{"x", path, "-y", "-bd", "-o" + tmpDir},
+		Timeout:   procrun.SevenZip.ForFile(path),
+		MaxStdout: 64 << 10,
+		MaxStderr: 500,
+	}); cmdErr != nil {
+		if errors.Is(cmdErr, procrun.ErrTimeout) {
+			return nil, cmdErr
 		}
-		return nil, fmt.Errorf("7-Zip failed to extract comic (archive may be encrypted or corrupt): %w\n%s", cmdErr, msg)
+		return nil, fmt.Errorf("7-Zip failed to extract comic (archive may be encrypted or corrupt): %w", cmdErr)
 	}
 
 	var c collector

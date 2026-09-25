@@ -62,9 +62,9 @@ func NewRunner(cfg config.Config) Runner {
 	return Runner{cfg: cfg}
 }
 
-// Run executes the file-to-HTML pipeline (EPUB or PDF).
+// run executes the file-to-HTML pipeline (EPUB or PDF); Run wraps it in the panic guard.
 // Steps: [1] Check existing / Extract → [2] Build HTML → [3] Translate → [4] Open browser.
-func (r Runner) Run() (int, error) {
+func (r Runner) run() (int, error) {
 	inputPath, err := filepath.Abs(r.cfg.InputFile)
 	if err != nil {
 		return ExitIOError, fmt.Errorf("resolve input path: %w", err)
@@ -291,7 +291,7 @@ func (r Runner) Run() (int, error) {
 	// Optional: OCR document images and overlay translatable text plates. Runs before
 	// translation so the overlay text is translated too. Best-effort - never fatal.
 	if r.cfg.OCR || forceOCR {
-		r.overlayImages(book, outputDir)
+		r.overlayImagesSafe(book, outputDir)
 	}
 
 	// Step 3: Translation

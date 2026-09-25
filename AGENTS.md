@@ -107,6 +107,9 @@ Notes:
   - internal/htmlproc, internal/htmlsplit, internal/htmlgen
   - internal/assets: local asset copying shared by internal/htmlconv and internal/md (img src/srcset, picture sources, CSS url() and local stylesheets); names unique case-insensitively, generated names reserved, nothing resolved outside the source folder is copied
   - EPUB chapters are normalized on the parsed tree (internal/epub normalize.go, links.go `rewriteLinks`), never by text replacement; the splitter retargets TOC entries and links through an id-to-part map
+- External helpers (pdftotext, Tesseract, Calibre, 7-Zip, ffmpeg/ImageMagick):
+  - internal/procrun: the one way to run a helper - per-tool size-scaled deadline (`DOCHT_TOOL_TIMEOUT_SCALE` multiplies it), process-tree kill (job object on Windows, process group elsewhere), capped output, one error type naming the tool. Do not call exec.Command for a helper directly.
+  - internal/bundledtools: the Windows-only bundled pdftotext, unpacked into a content-hash-named cache folder. Nothing is ever installed on the user's machine (tests/no_auto_install_test.go).
 - Translation:
   - internal/translator
 - Interface language (13 languages, `en ru uk de it es fr pt ar hi bn ur zh`):

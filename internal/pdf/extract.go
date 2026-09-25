@@ -4,109 +4,33 @@
 package pdf
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"html"
 	"image"
 	"io"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
-	"strconv"
 	"strings"
 
-	"doc-html-translate/internal/bundledtools"
-	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/procrun"
 	"doc-html-translate/internal/textutil"
 
 	pdflib "github.com/ledongthuc/pdf"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
-	pdfcpulib "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"golang.org/x/image/tiff"
 )
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
 
-// isExecFileNotFound reports whether err came from a failed fork/exec attempt
-// (file missing or access denied — typical when antivirus quarantines the binary).
-func isExecFileNotFound(err error) bool {
-	var pathErr *os.PathError
-	return errors.As(err, &pathErr) && pathErr.Op == "fork/exec"
-}
-
-// findPDFToText locates the pdftotext binary: bundled copy first, then PATH,
-// then well-known install paths.
-func findPDFToText() string {
-	if p, err := bundledtools.PDFToTextPath(); err == nil {
-		return p
-	}
-	if p, err := exec.LookPath("pdftotext"); err == nil {
-		return p
-	}
-	for _, p := range []string{
-		`C:\Program Files\Git\mingw64\bin\pdftotext.exe`,
-		`C:\Program Files (x86)\Git\mingw64\bin\pdftotext.exe`,
-		`C:\Program Files\Xpdf\bin64\pdftotext.exe`,
-		`C:\Program Files\poppler\bin\pdftotext.exe`,
-	} {
-		if _, err := os.Stat(p); err == nil {
-			return p
-		}
-	}
-	return ""
-}
-
-// findSystemPDFToText is like findPDFToText but skips the bundled binary.
-// Used after the bundled copy has been blocked by antivirus.
-func findSystemPDFToText() string {
-	if p, err := exec.LookPath("pdftotext"); err == nil {
-		return p
-	}
-	for _, p := range []string{
-		`C:\Program Files\poppler\bin\pdftotext.exe`,
-		`C:\Program Files (x86)\poppler\bin\pdftotext.exe`,
-		`C:\Program Files\Git\mingw64\bin\pdftotext.exe`,
-		`C:\Program Files (x86)\Git\mingw64\bin\pdftotext.exe`,
-		`C:\Program Files\Xpdf\bin64\pdftotext.exe`,
-	} {
-		if _, err := os.Stat(p); err == nil {
-			return p
-		}
-	}
-	for _, pattern := range []string{
-		`C:\Program Files\poppler*\bin\pdftotext.exe`,
-		`C:\Program Files (x86)\poppler*\bin\pdftotext.exe`,
-	} {
-		if matches, _ := filepath.Glob(pattern); len(matches) > 0 {
-			return matches[0]
-		}
-	}
-	return ""
-}
-
-// tryInstallPoppler runs "winget install ossia.poppler" and returns the path to
-// pdftotext if installation succeeded and the binary can be located.
-func tryInstallPoppler() string {
-	winget, err := exec.LookPath("winget")
-	if err != nil {
-		return ""
-	}
-	logging.Printf("  Installing Poppler via winget..\n")
-	cmd := exec.Command(winget, "install", "--id", "ossia.poppler",
-		"--accept-package-agreements", "--accept-source-agreements")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return ""
-	}
-	return findSystemPDFToText()
-}
+// maxPDFToTextOutput caps what is kept of pdftotext's output. Text runs to a few megabytes
+// even for a very long book, so reaching the cap means something is wrong with the file.
+const maxPDFToTextOutput = 256 << 20
 
 // Extract reads a PDF file, generates per-page HTML files in outputDir,
 // and returns an *epub.Book adapter for pipeline compatibility.
@@ -121,27 +45,12 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 		}
 		logging.Printf("  WARNING: pdftotext failed, falling back to pdflib: %v\n", err)
 		if isExecFileNotFound(err) {
-			logging.Printf("  pdftotext blocked (possibly by antivirus) - attempting auto-install..\n")
-			if p := tryInstallPoppler(); p != "" {
-				logging.Printf("  Retrying with system pdftotext: %s\n", p)
-				if book2, err2 := extractWithPDFToText(p, pdfPath, outputDir); err2 == nil {
-					return book2, nil
-				}
+			if book := retryBlockedPDFToText(pdfPath, outputDir); book != nil {
+				return book, nil
 			}
-			logging.Printf("  Auto-install failed. To install manually, run:\n")
-			logging.Printf("    winget install ossia.poppler\n")
-			dialog.ShowWarning(
-				"PDF Quality Reduced - pdftotext Unavailable",
-				"pdftotext could not run (blocked by antivirus or unavailable)\n"+
-					"and automatic installation failed.\n"+
-					"Text extraction fell back to a less accurate method - ligatures\n"+
-					"and complex fonts may not render correctly.\n\n"+
-					"To restore full quality, run:\n\n"+
-					"  winget install ossia.poppler\n\n"+
-					"Or exclude the app cache from antivirus scans:\n"+
-					"  %LOCALAPPDATA%\\doc-html-translate\\pdftotext\\",
-			)
 		}
+	} else if advice := pdftotextMissingAdvice(); advice != "" {
+		logging.Printf("  %s\n", advice)
 	}
 
 	book, err := extractWithPDFLib(pdfPath, outputDir)
@@ -154,7 +63,7 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 	if repErr != nil {
 		return nil, err
 	}
-	defer os.Remove(repairedPath)
+	defer func() { _ = os.Remove(repairedPath) }()
 
 	book, retryErr := extractWithPDFLib(repairedPath, outputDir)
 	if retryErr != nil {
@@ -189,13 +98,23 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	}
 	defer cleanup()
 
-	cmd := exec.Command(pdftotextBin, "-layout", "-enc", "UTF-8", pdfPathForTool, "-")
-	out, err := cmd.Output()
+	res, err := procrun.Run(context.Background(), procrun.Cmd{
+		Tool:      "pdftotext",
+		Path:      pdftotextBin,
+		Args:      []string{"-layout", "-enc", "UTF-8", pdfPathForTool, "-"},
+		Timeout:   procrun.PDFToText.ForFile(pdfPath),
+		MaxStdout: maxPDFToTextOutput,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("pdftotext: %w", err)
+		return nil, err
+	}
+	// A cut-off text would silently lose the book's last pages; the pure-Go reader is slower
+	// but reads them all.
+	if res.StdoutTruncated {
+		return nil, fmt.Errorf("pdftotext: output larger than %d MB", maxPDFToTextOutput>>20)
 	}
 
-	text := textutil.NormalizeLineSeparatorsPreserveFormFeed(string(out))
+	text := textutil.NormalizeLineSeparatorsPreserveFormFeed(string(res.Stdout))
 
 	// Pages are separated by form-feed \f
 	pageTexts := strings.Split(text, "\f")
@@ -207,10 +126,18 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	}
 
 	title := pdfTitle(pdfPath)
-	totalPages := len(pageTexts)
 	book := &epub.Book{Title: title}
 
-	pageImages := extractImages(pdfPath, outputDir, totalPages)
+	images := extractImages(pdfPath, outputDir)
+	pageImages := images.byPage
+	// The trim above also drops trailing pages that have no text but do have a picture
+	// (a back cover, scanned plates). The document's own count brings them back; it only
+	// ever extends the list, so a count pdfcpu gets wrong on a malformed file cannot cost
+	// pages the text extractor did see.
+	for len(pageTexts) < images.pageCount {
+		pageTexts = append(pageTexts, "")
+	}
+	totalPages := len(pageTexts)
 
 	// Map each emitted page's source PDF page number to its generated href, so
 	// PDF bookmarks (which reference 1-based PDF pages) can be linked even when
@@ -549,7 +476,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("open pdf: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	totalPages := reader.NumPage()
 	if totalPages == 0 {
@@ -564,7 +491,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	}
 
 	// Extract embedded images (non-fatal if PDF has none).
-	pageImages := extractImages(pdfPath, outputDir, totalPages)
+	pageImages := extractImages(pdfPath, outputDir).byPage
 
 	// Source PDF page number -> generated href (blank pages are skipped).
 	pdfPageToHref := make(map[int]string, totalPages)
@@ -670,11 +597,25 @@ func tryRepairPDF(inputPath string) (string, error) {
 	repairedPath := tmp.Name()
 	_ = tmp.Close()
 
-	if err := api.OptimizeFile(inputPath, repairedPath, nil); err != nil {
+	if err := optimizeSafe(inputPath, repairedPath); err != nil {
 		_ = os.Remove(repairedPath)
 		return "", fmt.Errorf("repair pdf with pdfcpu: %w", err)
 	}
 	return repairedPath, nil
+}
+
+// optimizeSafe is the repair attempt behind a panic guard. The file reaching it has already
+// defeated one PDF library, which is exactly the input most likely to panic the next one; a
+// failed repair must end as the original extraction error, not as a crash.
+func optimizeSafe(inputPath, outputPath string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logging.Printf("  WARNING: PDF repair panicked: %v\n", r)
+			logging.RunLogf("%s\n", debug.Stack())
+			err = fmt.Errorf("pdfcpu panic: %v", r)
+		}
+	}()
+	return api.OptimizeFile(inputPath, outputPath, nil)
 }
 
 // extractPage safely extracts text from a single PDF page.
@@ -884,318 +825,6 @@ func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text st
 	return sb.String()
 }
 
-// writePDFImages dumps every embedded image into imagesDir in a single pass over the
-// PDF, reporting progress as it goes. Reports whether anything was written.
-//
-// The single pass is the point. api.ExtractImagesFile takes a file *path*, so every
-// call re-opens, re-reads, re-validates and re-optimizes the whole document; asking it
-// for one page at a time therefore bought one full parse per page. Measured on the
-// 379 MB, 2304-page PDF that prompted this: 3.6s per call, about 2h20m for the loop,
-// silent throughout - indistinguishable from a hang. The per-page form was there to cap
-// peak memory, but it never could: each call already loaded the entire document, and
-// images stream to disk one at a time either way. One pass over that same file takes
-// 8.9s and peaks at 1.1 GB - the memory the old loop paid 2304 times in a row.
-//
-// Pages are still walked one by one (rather than handing the whole selection to
-// api.ExtractImages) so that a single unreadable image stays a skipped page instead of
-// aborting the run, and so page numbers can drive a progress line.
-func writePDFImages(pdfPath, imagesDir string, totalPages int) bool {
-	f, err := os.Open(pdfPath)
-	if err != nil {
-		logging.Printf("  WARNING: could not open PDF for image extraction: %v\n", err)
-		return false
-	}
-	defer f.Close()
-
-	conf := model.NewDefaultConfiguration()
-	conf.Cmd = model.EXTRACTIMAGES
-	ctx, err := api.ReadValidateAndOptimize(f, conf)
-	if err != nil {
-		logging.Printf("  WARNING: could not read PDF for image extraction: %v\n", err)
-		return false
-	}
-
-	// pdfcpu builds image file names from the source name and the page number, and
-	// parseImagePageNum reads that number back out. maxPageDigits stays 1 - i.e. no
-	// zero padding - because a single-page selection is what the old per-page calls
-	// computed, so existing output directories keep matching names.
-	write := api.WriteImageToDisk(imagesDir, strings.TrimSuffix(filepath.Base(pdfPath), ".pdf"))
-	const maxPageDigits = 1
-
-	written := 0
-	skippedThumbs := 0
-	skippedDups := 0
-	tick := logging.NewTicker("Extracting images", "pages")
-	for pageNum := 1; pageNum <= totalPages && pageNum <= ctx.PageCount; pageNum++ {
-		tick.Report(pageNum-1, totalPages)
-		imgs, err := pdfcpulib.ExtractPageImages(ctx, pageNum, false)
-		if err != nil {
-			continue // expected for pages with no (or unreadable) images
-		}
-		// The real (non-stub) extraction leaves Width/Height zero and never looks at the
-		// dictionary's mask entries; a stub pass fills both from the image dict without
-		// decoding any pixels. selectPageImages needs the dimensions to spot a page
-		// embedded twice at two resolutions, and the /Mask flag to tell an MRC scan's
-		// foreground layer from the page it is painted over.
-		if stubs, serr := pdfcpulib.ExtractPageImages(ctx, pageNum, true); serr == nil {
-			for objNr, img := range imgs {
-				if s, ok := stubs[objNr]; ok {
-					img.Width = s.Width
-					img.Height = s.Height
-					img.HasImgMask = s.HasImgMask
-					img.HasSMask = s.HasSMask
-					imgs[objNr] = img
-				}
-			}
-		}
-		kept, thumbs, dups := selectPageImages(imgs)
-		skippedThumbs += thumbs
-		skippedDups += dups
-		singleImgPerPage := len(kept) == 1
-		for _, img := range kept {
-			if err := write(img, singleImgPerPage, maxPageDigits); err != nil {
-				logging.Printf("  WARNING: could not write image from page %d: %v\n", pageNum, err)
-				continue
-			}
-			written++
-		}
-	}
-	if written > 0 && !tick.Quiet() {
-		tick.Report(totalPages, totalPages)
-	}
-	// Say what was dropped so an image count of 0 (or of "fewer than the PDF holds")
-	// is explained rather than looking like a silent loss.
-	switch {
-	case skippedThumbs > 0 && skippedDups > 0:
-		logging.Printf("  NOTE: skipped %d page thumbnail(s) and %d duplicate raster(s), not page content\n", skippedThumbs, skippedDups)
-	case skippedThumbs > 0:
-		logging.Printf("  NOTE: skipped %d page thumbnail(s), not page content\n", skippedThumbs)
-	case skippedDups > 0:
-		logging.Printf("  NOTE: skipped %d duplicate raster(s) - same page embedded at another resolution\n", skippedDups)
-	}
-	return written > 0
-}
-
-// selectPageImages decides which of a page's extracted rasters are real page
-// content, dropping two kinds that otherwise reach the reader as bugs:
-//
-//   - Thumbnails. pdfcpu returns a page's /Thumb preview as one of its images;
-//     taken as content it renders a ~128px postage stamp where the page should be.
-//   - Proportional-scale duplicates. A scanned page is often embedded twice - the
-//     same picture at two resolutions (e.g. 1455x2065 and 4363x6193) - and emitting
-//     both shows the page twice. Only the largest of a same-shape group is kept,
-//     unless the largest is painted through a stencil /Mask (see below).
-//
-// Images of different shapes are left alone: a composed page (an illustration beside
-// a figure) keeps all of them, because there guessing "the page" would be wrong as
-// often as right. The returned slice is ordered by object number so output is stable.
-//
-// Size decides a duplicate group only among rasters that are whole pictures. A mixed
-// raster content (MRC) scan - what library and archive scanners produce - embeds a page
-// as a low-resolution *background* layer plus a high-resolution *foreground* layer that
-// is painted through a stencil /Mask, and the foreground layer is undefined wherever the
-// mask does not select it. Extracted whole it is not a lower-quality page, it is not a
-// page at all: measured on pdf-1page-blackletter_Plague-Proclamation-1625, the 4363x6193
-// foreground layer comes out as a pink-and-brown smear with the lettering trailed into
-// vertical streaks, while the 1455x2065 background layer beside it is the readable page.
-// Both are JPXDecode and the decoder reports no error, so nothing downstream can tell
-// them apart - the /Mask on the dictionary is the only signal, and it is decisive here
-// exactly because the two rasters are already known to be the same page.
-//
-// Only /Mask counts, not /SMask: soft-masked transparency leaves the base image a
-// complete picture, and it is the ordinary shape of a PNG-with-alpha illustration. And
-// the preference applies only *inside* a duplicate group, so a lone masked illustration -
-// which has no unmasked twin to fall back to - is still kept and still reaches the reader.
-func selectPageImages(imgs map[int]model.Image) (kept []model.Image, thumbs, dups int) {
-	list := make([]model.Image, 0, len(imgs))
-	for _, img := range imgs {
-		if img.Thumb {
-			thumbs++
-			continue
-		}
-		list = append(list, img)
-	}
-	sort.Slice(list, func(i, j int) bool { return list[i].ObjNr < list[j].ObjNr })
-
-	for _, img := range list {
-		merged := false
-		for k := range kept {
-			if sameShapeRaster(kept[k], img) {
-				dups++
-				if betterPageRaster(img, kept[k]) {
-					kept[k] = img
-				}
-				merged = true
-				break
-			}
-		}
-		if !merged {
-			kept = append(kept, img)
-		}
-	}
-	return kept, thumbs, dups
-}
-
-func imagePixels(img model.Image) int64 {
-	return int64(img.Width) * int64(img.Height)
-}
-
-// betterPageRaster reports whether candidate should replace current as the one raster kept
-// for a page shape. A raster painted through a stencil /Mask loses to one without a mask
-// however big it is - that is the MRC foreground layer, undefined outside its mask - and
-// otherwise the larger picture wins, as it always did.
-func betterPageRaster(candidate, current model.Image) bool {
-	if candidate.HasImgMask != current.HasImgMask {
-		return !candidate.HasImgMask
-	}
-	return imagePixels(candidate) > imagePixels(current)
-}
-
-// aspectRatioTolerance is how close two rasters' aspect ratios must be to count as
-// the same picture at a different resolution: 1% absorbs rounding in stored pixel
-// dimensions without matching genuinely different shapes.
-const aspectRatioTolerance = 0.01
-
-// sameShapeRaster reports whether two rasters are the same picture at a different
-// scale: both dimensions positive and their aspect ratios equal within tolerance.
-// A uniform scale preserves the aspect ratio, so equal ratios is exactly the signal
-// for "one is a resized copy of the other".
-func sameShapeRaster(a, b model.Image) bool {
-	if a.Width <= 0 || a.Height <= 0 || b.Width <= 0 || b.Height <= 0 {
-		return false
-	}
-	ra := float64(a.Width) / float64(a.Height)
-	rb := float64(b.Width) / float64(b.Height)
-	return math.Abs(ra-rb) <= aspectRatioTolerance*math.Max(ra, rb)
-}
-
-// extractImages extracts all embedded images from the PDF using pdfcpu into
-// outputDir/pdf_images/ and returns a map of PDF page number -> relative image paths.
-// Returns nil map (non-fatal) if no images exist or extraction fails.
-func extractImages(pdfPath, outputDir string, totalPages int) map[int][]string {
-	imagesSubdir := "pdf_images"
-	imagesDir := filepath.Join(outputDir, imagesSubdir)
-	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
-		logging.Printf("  WARNING: could not create images dir: %v\n", err)
-		return nil
-	}
-
-	if !writePDFImages(pdfPath, imagesDir, totalPages) {
-		logging.Printf("  NOTE: no images extracted from PDF\n")
-		return nil
-	}
-
-	entries, err := os.ReadDir(imagesDir)
-	if err != nil {
-		logging.Printf("  WARNING: could not read images dir: %v\n", err)
-		return nil
-	}
-	if err := normalizeExtractedPDFImages(imagesDir, entries); err != nil {
-		logging.Printf("  WARNING: could not normalize extracted PDF images: %v\n", err)
-		if strings.Contains(err.Error(), "no JPX converter found") {
-			dialog.ShowWarning(
-				"PDF Images Not Displayed",
-				"This PDF contains images in JPEG2000 format (.jpx).\n"+
-					"Browsers cannot display JPEG2000 - images will be missing in the result.\n\n"+
-					"To fix, install ffmpeg:\n"+
-					"  winget install ffmpeg\n\n"+
-					"Or download from: https://www.gyan.dev/ffmpeg/builds/\n"+
-					`(choose "release essentials" build)`,
-			)
-		}
-	}
-	// Re-read after normalization: jpx→jpg conversions change file names.
-	if refreshed, err := os.ReadDir(imagesDir); err == nil {
-		entries = refreshed
-	}
-
-	pageImages := make(map[int][]string)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		pageNum := parseImagePageNum(name, totalPages)
-		if pageNum > 0 {
-			pageImages[pageNum] = append(pageImages[pageNum], imagesSubdir+"/"+name)
-		}
-	}
-
-	if len(pageImages) > 0 {
-		total := 0
-		for _, imgs := range pageImages {
-			total += len(imgs)
-		}
-		logging.Printf("  Images: %d extracted across %d pages\n", total, len(pageImages))
-	}
-
-	return pageImages
-}
-
-func normalizeExtractedPDFImages(imagesDir string, entries []os.DirEntry) error {
-	var firstErr error
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		path := filepath.Join(imagesDir, entry.Name())
-		ext := strings.ToLower(filepath.Ext(entry.Name()))
-		if ext == ".jpx" {
-			if _, err := convertJPXFile(path); err != nil && firstErr == nil {
-				firstErr = fmt.Errorf("%s: %w", entry.Name(), err)
-			}
-			continue
-		}
-		if err := flipImageFileVertically(path); err != nil && firstErr == nil {
-			firstErr = fmt.Errorf("%s: %w", entry.Name(), err)
-		}
-	}
-	return firstErr
-}
-
-// findJPXConverter returns the path to a binary that can convert JPEG2000 (.jpx)
-// images to JPEG, along with a tag identifying the tool ("magick" or "ffmpeg").
-// Browsers do not support JPEG2000; pdfcpu extracts JPXDecode PDF streams as .jpx.
-func findJPXConverter() (bin, kind string) {
-	if p, err := exec.LookPath("magick"); err == nil {
-		return p, "magick"
-	}
-	for _, pattern := range []string{
-		`C:\Program Files\ImageMagick-*\magick.exe`,
-		`C:\Program Files (x86)\ImageMagick-*\magick.exe`,
-	} {
-		if matches, _ := filepath.Glob(pattern); len(matches) > 0 {
-			return matches[0], "magick"
-		}
-	}
-	if p, err := exec.LookPath("ffmpeg"); err == nil {
-		return p, "ffmpeg"
-	}
-	return "", ""
-}
-
-// convertJPXFile converts a JPEG 2000 (.jpx) file to JPEG using ImageMagick or
-// ffmpeg, removes the original, and returns the new .jpg path.
-func convertJPXFile(jpxPath string) (string, error) {
-	bin, kind := findJPXConverter()
-	if bin == "" {
-		return "", fmt.Errorf("no JPX converter found (install ImageMagick or ffmpeg)")
-	}
-	jpgPath := strings.TrimSuffix(jpxPath, filepath.Ext(jpxPath)) + ".jpg"
-	var cmd *exec.Cmd
-	switch kind {
-	case "ffmpeg":
-		cmd = exec.Command(bin, "-y", "-i", jpxPath, "-update", "1", jpgPath)
-	default: // magick
-		cmd = exec.Command(bin, jpxPath, jpgPath)
-	}
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("%s: %w\n%s", kind, err, out)
-	}
-	_ = os.Remove(jpxPath)
-	return jpgPath, nil
-}
-
 // pageScanBox sizes the box holding a page that is nothing but a scan.
 //
 // Such a page is a page, not an illustration sitting in a column of text: held to the
@@ -1226,7 +855,7 @@ func imageSize(path string) (int, int) {
 	if err != nil {
 		return 0, 0
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	cfg, _, err := image.DecodeConfig(f)
 	if err != nil {
 		return 0, 0
@@ -1240,96 +869,6 @@ func imageHTMLClassAttr(path string) string {
 		return ` class="pdf-flip-y"`
 	}
 	return ""
-}
-
-// flipImageFileVertically vertically flips a TIFF image file in place.
-// JPEG and PNG images extracted by pdfcpu are raw embedded streams and are
-// already correctly oriented; only TIFFs (reconstructed from raw PDF pixel
-// data, which uses a bottom-up Y axis) need a Y-flip.
-func flipImageFileVertically(path string) error {
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".tif" && ext != ".tiff" {
-		return nil
-	}
-
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-
-	var src image.Image
-	src, err = tiff.Decode(file)
-	if err != nil {
-		_ = file.Close()
-		return err
-	}
-	if err := file.Close(); err != nil {
-		return err
-	}
-
-	bounds := src.Bounds()
-	dst := image.NewNRGBA(bounds)
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			dst.Set(x, bounds.Min.Y+bounds.Max.Y-1-y, src.At(x, y))
-		}
-	}
-
-	tmpPath := path + ".tmp"
-	out, err := os.Create(tmpPath)
-	if err != nil {
-		return err
-	}
-
-	success := false
-	defer func() {
-		out.Close()
-		if !success {
-			_ = os.Remove(tmpPath)
-		}
-	}()
-
-	err = tiff.Encode(out, dst, nil)
-	if err != nil {
-		return err
-	}
-	if err := out.Close(); err != nil {
-		return err
-	}
-	if err := os.Remove(path); err != nil {
-		return err
-	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		return err
-	}
-	success = true
-	return nil
-}
-
-// parseImagePageNum extracts the PDF page number from a pdfcpu image filename.
-// pdfcpu names files: {baseName}_{pageNr}_{identifier}.{ext}
-// We find the first numeric-only segment (after position 0) that is in [1, totalPages].
-func parseImagePageNum(filename string, totalPages int) int {
-	base := filename
-	if dot := strings.LastIndex(base, "."); dot >= 0 {
-		base = base[:dot]
-	}
-	parts := strings.Split(base, "_")
-	// Try segments from index 1, skip the last (it's the identifier, not a number)
-	for i := 1; i < len(parts)-1; i++ {
-		n, err := strconv.Atoi(parts[i])
-		if err == nil && n >= 1 && n <= totalPages {
-			return n
-		}
-	}
-	// Also try last segment in case format differs
-	if len(parts) >= 2 {
-		n, err := strconv.Atoi(parts[len(parts)-1])
-		if err == nil && n >= 1 && n <= totalPages {
-			return n
-		}
-	}
-	return 0
 }
 
 // pdfTitle is the file name without its extension. Both separators count, as they
@@ -1403,13 +942,13 @@ func copyFile(srcPath, dstPath string) error {
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	dst, err := os.Create(dstPath)
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 
 	if _, err := io.Copy(dst, src); err != nil {
 		return err
