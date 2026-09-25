@@ -242,3 +242,33 @@ func TestGenerateIndex_FallbackLabelNotDoubleNumbered(t *testing.T) {
 		t.Fatal("fallback TOC label should keep a single chapter number")
 	}
 }
+
+// The TOC page is in the book's language: it takes lang/dir from the first content page and
+// falls back to "en" only when that page declares none.
+func TestGenerateIndexCarriesDocumentLang(t *testing.T) {
+	for _, c := range []struct{ page, want string }{
+		{`<html lang="ar" dir="rtl"><body><p>x</p></body></html>`, `<html lang="ar" dir="rtl">`},
+		{`<html xml:lang="ru"><body><p>x</p></body></html>`, `<html lang="ru">`},
+		{`<html><body><p>x</p></body></html>`, `<html lang="en">`},
+	} {
+		dir := t.TempDir()
+		for _, name := range []string{"a.html", "b.html"} {
+			if err := os.WriteFile(filepath.Join(dir, name), []byte(c.page), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		book := &epub.Book{
+			Title:    "Book",
+			Manifest: []epub.ManifestItem{{ID: "a", Href: "a.html"}, {ID: "b", Href: "b.html"}},
+			Spine:    []epub.SpineItem{{IDRef: "a"}, {IDRef: "b"}},
+		}
+		indexPath, err := GenerateIndex(book, dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, _ := os.ReadFile(indexPath)
+		if !strings.Contains(string(data), c.want) {
+			t.Errorf("want %s for page %s", c.want, c.page)
+		}
+	}
+}

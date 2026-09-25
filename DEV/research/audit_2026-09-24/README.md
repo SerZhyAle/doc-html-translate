@@ -43,7 +43,7 @@ register, not file paths, so the specs stay strategic and the evidence has one h
 - [05 bugfix-output-completeness](specs/2026-09-24_bugfix-output-completeness.md) - P90 - P4 P5 P8 P9 T5 O10
 - [06 bugfix-translation-engine-correctness](specs/2026-09-24_bugfix-translation-engine-correctness.md) - P85 - T1-T4 T6-T9 P10 P11 P20
 - [07 bugfix-reader-layer-and-single-page](specs/2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23
-- [08 bugfix-epub-html-content-fidelity](specs/2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - E6-E9 E11 E12 E14 E15 E21 E22
+- [08 bugfix-epub-html-content-fidelity](specs/2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - **Implemented** (2026-09-25) - E6-E9 E11 E12 E14 E15 E21 E22
 - [09 bugfix-legacy-text-decoding](specs/2026-09-24_bugfix-legacy-text-decoding.md) - P80 - X1-X5 X18 X19 X21 X22 P23 B21
 - [10 bugfix-external-process-bounds](specs/2026-09-24_bugfix-external-process-bounds.md) - P75 - X7 X9 X10 O5 O7 O9 P15
 - [11 bugfix-resource-budgets](specs/2026-09-24_bugfix-resource-budgets.md) - P75 - X11-X17 X20 X24 O6 E16 B23

@@ -1,7 +1,7 @@
 # Strategic spec: 2026-09-24_bugfix-epub-html-content-fidelity - EPUB, HTML and Markdown content survives normalization and splitting
 
 **Ticket:** 2026-09-24_bugfix-epub-html-content-fidelity
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 65
 **Date:** 2026-09-24
 **Tier:** Strategic
@@ -72,7 +72,11 @@ reader emits a fixed shell.
 1. **Source head CSS**
    - **Question:** keep all of the source's styles, or only inline ones?
    - **Options:** keep linked and inline CSS copied locally; keep none (current).
-   - **Status:** Open.
+   - **Status:** Resolved 2026-09-25 by the implementing session: inline `<style>` blocks and local
+     linked stylesheets are kept, written as CSS files next to the page (so the default single-page
+     merge, which carries manifest stylesheets, keeps them too) and linked before the reader CSS so the
+     reader layer still wins. Remote stylesheets and remote `@import`s are dropped, since output must stay
+     offline. Revisit if the owner prefers "keep none".
 
 ## 7. Risks
 - **Moving from regexes to DOM rewrites changes output for many books.** Likelihood: high. Impact: visual diffs. Mitigation: a corpus before/after sweep (`/verify-view`), accepting only intended diffs.
@@ -95,3 +99,38 @@ No changes to user docs.
 
 ## 12. Next step
 `/spec-tech 2026-09-24_bugfix-epub-html-content-fidelity`
+
+## Implementation notes (2026-09-25)
+
+Built without a tactical plan, in three disjoint parts, on branch `claude/bold-planck-cypr9s`.
+
+- **EPUB (E6, E11, E12, E14 EPUB half):** `internal/epub/normalize.go`, `links.go`, `charset.go`. Every
+  chapter is decoded, run once through the HTML tokenizer to expand non-void self-closing tags, parsed,
+  rewritten on the DOM, and rendered once. `rewriteLinks` is the shared link helper that
+  `hotfix-epub-href-containment` should build on.
+- **Splitting (E7, E8, E9):** `internal/htmlsplit` `chunk.go`, `links.go`. The splitter descends through
+  block-only wrappers, counts runes, copies the html/head/body shell with its attributes, and retargets
+  `book.TOC` and `a`/`area` hrefs through an id-to-part map.
+- **HTML and Markdown input (E14 HTML half, E15, E21, E22):** new `internal/assets` package, used by
+  `internal/htmlconv` and `internal/md`. `htmlgen` carries lang/dir onto the generated TOC page and
+  into the single-page merge.
+- **Done criteria 1-5:** each shown end to end with the CLI on generated fixtures, and the output read
+  back through headless Chromium `--dump-dom`:
+  - both middle paragraphs survive between two SVG covers;
+  - the Calibre `<a id/>` chapter keeps all its text in the body;
+  - a 50 000-character RTL single-wrapper chapter splits into 12 parts, each carrying `lang="ar"
+    dir="rtl"` and the wrapper class, and both the NCX entry and a cross-chapter link to `#last` open
+    `ch_s11.html`;
+  - the default single-page output of the same book carries `lang="ar" dir="rtl"`;
+  - a windows-1251 HTML page reads correctly.
+
+  Package tests cover each case too.
+- **Checks:** `go test ./...` is green apart from `internal/pdf TestPdfTitle`, which fails on the base
+  commit too (Q6). `go vet` and `gofmt` are clean. `golangci-lint` found nothing in the touched files.
+- **Not done:**
+  - The corpus before/after `/verify-view` sweep named under §7 Risks.
+  - The extension gaps, recorded in `docs/PARITY.md` "EPUB and HTML content fidelity": XHTML parsed as
+    `text/html`, UTF-8-only decoding, and an SVG cover with text.
+  - A windows-1251 HTML page with no charset declaration still reads as windows-1252.
+  - `<base href>` in EPUB chapters is ignored.
+  - `image-set()`, video `poster` and SVG `<image>` in HTML input are not copied.

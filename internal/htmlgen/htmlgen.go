@@ -68,7 +68,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
-	sb.WriteString("<html lang=\"en\">\n")
+	sb.WriteString("<html" + indexRootAttrs(book, outputDir, spineHrefs) + ">\n")
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
@@ -115,6 +115,50 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	}
 
 	return indexPath, nil
+}
+
+// indexRootAttrs returns the lang (and dir) attributes for the TOC page's <html>, taken
+// from the first content page: the index lists the book's own headings, so it is in the
+// book's language. Falls back to "en" when that page declares none, as the single-page
+// merge does.
+func indexRootAttrs(book *epub.Book, outputDir string, spineHrefs []string) string {
+	lang, dir := "en", ""
+	if len(spineHrefs) > 0 {
+		l, d := pageRootLang(bookPath(outputDir, book.BasePath, spineHrefs[0]))
+		if l != "" {
+			lang = l
+		}
+		dir = d
+	}
+	attrs := fmt.Sprintf(" lang=\"%s\"", html.EscapeString(lang))
+	if dir == "rtl" || dir == "ltr" || dir == "auto" {
+		attrs += fmt.Sprintf(" dir=\"%s\"", dir)
+	}
+	return attrs
+}
+
+// pageRootLang returns the lang (or xml:lang) and lower-cased dir declared on a page's
+// <html>, "" for whatever it does not declare or cannot be read.
+func pageRootLang(pagePath string) (lang, dir string) {
+	data, err := os.ReadFile(pagePath)
+	if err != nil {
+		return "", ""
+	}
+	doc, err := gohtml.Parse(bytes.NewReader(data))
+	if err != nil {
+		return "", ""
+	}
+	for root := doc.FirstChild; root != nil; root = root.NextSibling {
+		if root.Type != gohtml.ElementNode || root.Data != "html" {
+			continue
+		}
+		lang = strings.TrimSpace(nodeAttr(root, "lang"))
+		if lang == "" {
+			lang = strings.TrimSpace(nodeAttr(root, "xml:lang"))
+		}
+		return lang, strings.ToLower(strings.TrimSpace(nodeAttr(root, "dir")))
+	}
+	return "", ""
 }
 
 // renderFlatSpineTOC renders the legacy one-entry-per-spine-page list, with a

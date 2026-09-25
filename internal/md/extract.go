@@ -10,14 +10,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"doc-html-translate/internal/assets"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
 
 	"github.com/yuin/goldmark"
+	gohtml "golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // Extract reads a Markdown file, converts it to HTML, generates per-page HTML
 // files in outputDir, and returns an *epub.Book adapter for pipeline compatibility.
+// Local images the Markdown references are copied into outputDir so they still display.
 func Extract(mdPath, outputDir string) (*epub.Book, error) {
 	data, err := os.ReadFile(mdPath)
 	if err != nil {
@@ -34,7 +38,14 @@ func Extract(mdPath, outputDir string) (*epub.Book, error) {
 	}
 
 	title := fileTitle(mdPath)
-	body := htmlBuf.String()
+	copier, err := assets.NewCopier(filepath.Dir(mdPath), outputDir)
+	if err != nil {
+		return nil, err
+	}
+	body, err := copyImages(htmlBuf.String(), copier)
+	if err != nil {
+		return nil, fmt.Errorf("render markdown: %w", err)
+	}
 
 	book := &epub.Book{
 		Title:    title,
@@ -66,8 +77,35 @@ func Extract(mdPath, outputDir string) (*epub.Book, error) {
 
 	logging.Printf("  Title: %s\n", title)
 	logging.Printf("  Sections: %d\n", totalPages)
+	if n := copier.Files(); n > 0 {
+		logging.Printf("  Images: %d\n", n)
+	}
 
 	return book, nil
+}
+
+// copyImages copies the local images the rendered HTML references into the output and
+// points each reference at its copy.
+func copyImages(rendered string, copier *assets.Copier) (string, error) {
+	if !strings.Contains(rendered, "<img") {
+		return rendered, nil // nothing to copy: keep goldmark's output byte for byte
+	}
+	ctx := &gohtml.Node{Type: gohtml.ElementNode, Data: "body", DataAtom: atom.Body}
+	nodes, err := gohtml.ParseFragment(strings.NewReader(rendered), ctx)
+	if err != nil {
+		return "", err
+	}
+	var sb strings.Builder
+	for _, n := range nodes {
+		ctx.AppendChild(n)
+	}
+	copier.RewriteHTML(ctx)
+	for n := ctx.FirstChild; n != nil; n = n.NextSibling {
+		if err := gohtml.Render(&sb, n); err != nil {
+			return "", err
+		}
+	}
+	return sb.String(), nil
 }
 
 // splitBySections splits HTML content at <h1> or <h2> boundaries.
@@ -110,7 +148,10 @@ func splitBySections(body string) []string {
 // wrapPageHTML wraps rendered Markdown HTML into a full HTML page.
 func wrapPageHTML(title string, pageNum, totalPages int, content string) string {
 	var sb strings.Builder
-	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
+	// Markdown declares no language, so the page declares none rather than a guessed one:
+	// a wrong <html lang> can stop Chrome offering "Translate page", while no declaration
+	// lets it detect the language from the text.
+	sb.WriteString("<!DOCTYPE html>\n<html>\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(title), pageNum))

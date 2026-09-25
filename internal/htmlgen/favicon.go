@@ -14,8 +14,9 @@ import (
 //go:embed favicon.ico
 var faviconICO []byte
 
-// faviconName is the file written beside index.html and linked from every generated page.
-const faviconName = "favicon.ico"
+// FaviconName is the file written beside index.html and linked from every generated page.
+// Exported so extractors that copy source assets into the output can keep clear of it.
+const FaviconName = "favicon.ico"
 
 // WriteFavicon drops the app icon into the output folder so a converted book carries its
 // own tab icon instead of the browser's blank-page glyph - the reader usually has several
@@ -29,13 +30,13 @@ func WriteFavicon(outputDir string) {
 	if len(faviconICO) == 0 {
 		return
 	}
-	_ = os.WriteFile(filepath.Join(outputDir, faviconName), faviconICO, 0o644)
+	_ = os.WriteFile(filepath.Join(outputDir, FaviconName), faviconICO, 0o644)
 }
 
 // faviconLink is the <link> tag for a page sitting in fromDir, relative to the output
 // root ("" or "." for a page at the root itself).
 func faviconLink(fromDir string) string {
-	return `<link rel="icon" href="` + relativePath(fromDir, faviconName) + "\">\n"
+	return `<link rel="icon" href="` + relativePath(fromDir, FaviconName) + "\">\n"
 }
 
 // injectFavicon adds the tab-icon link to a page that was already written. Needed for the

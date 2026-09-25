@@ -266,6 +266,24 @@ and the external-href definition (extension `isExternalHref` now mirrors `toc.go
 difference - Go keeps external TOC entries, the extension drops them (single in-memory DOM) - is listed
 under [Intentional divergences](#intentional-divergences-do-not-fix).
 
+### EPUB and HTML content fidelity (2026-09-25)
+
+**Guard:** Prose only. The desktop behaviour is covered by its own package tests; nothing compares it
+with the extension. A future ticket would port the two extension gaps below and pin them with one
+fixture read by both editions.
+
+Ticket `2026-09-24_bugfix-epub-html-content-fidelity` moved the desktop EPUB normalization onto the
+parsed tree and made HTML input charset-aware. Checked against the extension on the same date:
+
+| Behaviour | Go app | Extension |
+|---|---|---|
+| Single-image SVG cover -> `<img>` | DOM, only an `<svg>` whose sole content is one `<image>` ([`normalize.go`](../internal/epub/normalize.go) `rewriteCoverSVGs`) | DOM, `convertSvgImage` in [`epub.js`](../extension/src/epub.js) replaces an `<svg>` holding one `<image>` - but does not check for `<text>` beside it, so a titled cover drawing loses its text |
+| Link rewrites | real link attributes only, resolved per file ([`links.go`](../internal/epub/links.go) `rewriteLinks`) | `<a>` on the DOM, resolved per chapter (`rewriteAnchor`) - same model |
+| XHTML self-closing tags (`<a id/>`, `<script/>`, `<title/>`) | expanded before parsing | **open gap:** `renderChapter` parses the XHTML as `text/html`, so the same Calibre markup still swallows text in the viewer |
+| Chapter / HTML-input charset | BOM, then XML declaration or meta charset, then detection ([`charset.go`](../internal/epub/charset.go), [`htmlconv`](../internal/htmlconv/extract.go)) | **open gap:** `TextDecoder("utf-8")` in `epub.js` `decodeText` and `html.js` - a windows-1251 page reads as mojibake |
+| Long-chapter splitting | [`htmlsplit`](../internal/htmlsplit/) splits through wrappers, by characters, keeping root attributes and retargeting links | none - the viewer renders one DOM, nothing to split (by construction) |
+| HTML input images / styles | copied locally ([`internal/assets`](../internal/assets/)) | the viewer cannot reach a local page's sibling files (by construction) |
+
 ### Comic archive page order and entry filter
 
 **Guard:** Guarded by `TestParityComicPageFilter` for the page-extension set. Page order (`naturalLess` /

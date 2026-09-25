@@ -42,9 +42,10 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 		return "", fmt.Errorf("book has no spine entries")
 	}
 
-	// Merge chapter bodies in spine order; take the source language from the first page.
+	// Merge chapter bodies in spine order; take the source language and direction from the
+	// first page. Dropping dir turned an RTL book LTR in the default single-page flow.
 	var body strings.Builder
-	lang := "en"
+	lang, dir := "en", ""
 	var inners []string
 	for i, href := range spineHrefs {
 		pagePath := bookPath(outputDir, book.BasePath, href)
@@ -60,6 +61,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 			if l := htmlLang(doc); l != "" {
 				lang = l
 			}
+			dir = htmlDir(doc)
 		}
 		inner, err := bodyInnerHTML(doc)
 		if err != nil {
@@ -99,7 +101,11 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
-	sb.WriteString(fmt.Sprintf("<html lang=%q>\n", lang))
+	if dir == "rtl" || dir == "ltr" || dir == "auto" {
+		sb.WriteString(fmt.Sprintf("<html lang=%q dir=%q>\n", lang, dir))
+	} else {
+		sb.WriteString(fmt.Sprintf("<html lang=%q>\n", lang))
+	}
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
@@ -246,6 +252,23 @@ func htmlLang(doc *gohtml.Node) string {
 		return ""
 	}
 	return find(doc)
+}
+
+// htmlDir returns the lower-cased dir of the document's <html> element, falling back to
+// <body>, because a converted HTML page may declare its direction on either.
+func htmlDir(doc *gohtml.Node) string {
+	var d string
+	var find func(*gohtml.Node)
+	find = func(n *gohtml.Node) {
+		if n.Type == gohtml.ElementNode && (n.Data == "html" || n.Data == "body") && d == "" {
+			d = strings.ToLower(strings.TrimSpace(nodeAttr(n, "dir")))
+		}
+		for c := n.FirstChild; c != nil && d == ""; c = c.NextSibling {
+			find(c)
+		}
+	}
+	find(doc)
+	return d
 }
 
 // bodyInnerHTML renders the inner HTML of a parsed document's <body>.
