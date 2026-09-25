@@ -1,4 +1,5 @@
-// Package bundledtools embeds and extracts external binaries bundled with the app.
+//go:build windows
+
 package bundledtools
 
 import (
