@@ -6,6 +6,7 @@ package tests
 // contract's reference incident.
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -162,4 +163,95 @@ func TestParityCheckOutcomes(t *testing.T) {
 	git("checkout", "-q", "--", "docs/PARITY.md")
 	writeFile(t, filepath.Join(dir, "extension", "src", "reflow.js"), "// js changed\n")
 	expect("both sides moved", 0, "parity-check: PASS (2 file(s) inspected")
+}
+
+// gateLine returns the "gate evidence" line of scripts/release.ps1's checklist header.
+func gateLine(t *testing.T, out string) string {
+	t.Helper()
+	for _, l := range strings.Split(out, "\n") {
+		if s := strings.TrimSpace(l); strings.HasPrefix(s, "gate evidence") {
+			return s
+		}
+	}
+	t.Fatalf("release.ps1 printed no gate evidence line:\n%s", out)
+	return ""
+}
+
+// TestGateEvidenceBindsTheRelease drives scripts/check.ps1 and scripts/release.ps1 together over a
+// scratch repository whose gate children are stubs, and reads the release checklist's gate line:
+// only the full default plan, every child passing, on HEAD's tree unlocks the tag step (ticket 36,
+// R1-R3). The contract gate is not copied, so release.ps1 always exits 1 here - the line is the
+// verdict under test, not the exit code.
+func TestGateEvidenceBindsTheRelease(t *testing.T) {
+	pwsh := findPwsh(t)
+	dir, git := scratchRepo(t, "check.ps1", "release.ps1", "lib/verdict.ps1")
+	w := func(rel, content string) { writeFile(t, filepath.Join(dir, filepath.FromSlash(rel)), content) }
+	placement := readRepoFile(t, "configs", "check-placement.jsonl")
+	w("configs/check-placement.jsonl", placement)
+	w(".gitignore", "temp/\n")
+	w("DEV/COMMIT_LOG.md", "# COMMIT LOG\n")
+	w("src.txt", "one\n")
+
+	// A passing stub for every gate child the placement record names, at the path check.ps1 runs.
+	var gate []string
+	for _, l := range strings.Split(placement, "\n") {
+		var r struct{ Check, Class, Runner string }
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		if err := json.Unmarshal([]byte(l), &r); err != nil {
+			t.Fatalf("configs/check-placement.jsonl: %v", err)
+		}
+		if r.Class == "gate" && r.Runner == "scripts/check.ps1" {
+			name := strings.TrimSuffix(filepath.Base(r.Check), ".ps1")
+			w(r.Check, "Write-Host '"+name+": PASS'\nexit 0\n")
+			gate = append(gate, r.Check)
+		}
+	}
+	if len(gate) < 2 {
+		t.Fatalf("configs/check-placement.jsonl names %d gate check(s); the subset case needs two", len(gate))
+	}
+	// A child that edits a tracked file while the gate runs.
+	w("scripts/editor.ps1", "Add-Content -LiteralPath src.txt -Value 'edited'\nWrite-Host 'editor: PASS'\nexit 0\n")
+	git("add", "-A")
+	git("commit", "-q", "-m", "init")
+
+	check := filepath.Join(dir, "scripts", "check.ps1")
+	release := func(what, wantPrefix string) {
+		t.Helper()
+		_, _, out := runScript(t, pwsh, dir, filepath.Join(dir, "scripts", "release.ps1"))
+		if line := gateLine(t, out); !strings.HasPrefix(line, "gate evidence   : "+wantPrefix) {
+			t.Fatalf("%s: %q; want prefix %q\n%s", what, line, wantPrefix, out)
+		}
+	}
+
+	if code, last, out := runScript(t, pwsh, dir, check); code != 0 || last != "check: PASS" {
+		t.Fatalf("full plan: exit %d, %q\n%s", code, last, out)
+	}
+	release("the full plan on HEAD's tree", "check: PASS on tree")
+
+	// R1: one child passing is not the gate passing.
+	if code, last, out := runScript(t, pwsh, dir, check, "-Plan", gate[0]); code != 0 || last != "check: PASS" {
+		t.Fatalf("subset plan: exit %d, %q\n%s", code, last, out)
+	}
+	release("a -Plan subset", "BLOCKED - the last gate ran a partial plan")
+
+	// R3: an edit landing while the gate runs voids the evidence, whatever the children said.
+	code, last, out := runScript(t, pwsh, dir, check, "-Plan", strings.Join(append(append([]string{}, gate...), "scripts/editor.ps1"), ","))
+	if code != 2 || last != "check: COULD NOT VERIFY (the working tree changed during the run)" {
+		t.Fatalf("edit during the run: exit %d, %q\n%s", code, last, out)
+	}
+	release("an edit during the run", "BLOCKED - the last gate did not pass")
+	git("checkout", "-q", "--", "src.txt")
+
+	// R2: the build log build-local appends after its commit is the one path allowed to differ.
+	if code, last, out := runScript(t, pwsh, dir, check); code != 0 || last != "check: PASS" {
+		t.Fatalf("full plan again: exit %d, %q\n%s", code, last, out)
+	}
+	w("DEV/COMMIT_LOG.md", "# COMMIT LOG\n\n| entry |\n")
+	git("commit", "-q", "-am", "log")
+	release("only DEV/COMMIT_LOG.md moved after the gate", "check: PASS on tree")
+	w("src.txt", "two\n")
+	git("commit", "-q", "-am", "ungated")
+	release("a commit the gate never read", "BLOCKED - the last passing gate ran on tree")
 }

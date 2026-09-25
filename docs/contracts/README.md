@@ -35,6 +35,7 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [REPO-LAYOUT.md](REPO-LAYOUT.md) | `REPO-LAYOUT` | 0.9 draft | consumer - repository structure and named entry points |
 | [HARNESS-PROFILE.md](HARNESS-PROFILE.md) | `HARNESS-PROFILE` | 0.9 draft | not applicable - the shipped harness is never run here, no `.sza-profile.json` |
 | [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule set via the `sza` plugin; stamp current at `2026.09.24.1` |
+| [DOC-QUALITY.md](DOC-QUALITY.md) | `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY` | 0.9 draft | consumer - the documentation registry and its gates; gaps in tickets 48, 49 |
 
 Read and **not applicable**: `WAVE-PARTICLES` 0.10 (`animated-backdrop/`, checked 2026-09-25). No site page and no
 GUI surface draws a canvas or runs `requestAnimationFrame`; the only background is the kit's CSS blobs. The

@@ -21,6 +21,9 @@
   "ledgerShape": 2,
   "ledgerFile": "DEV/CHANGELOG.md",
 
+  "docRegistryShape": 1,
+  "docRegistryFile": "docs/DOCUMENT_REGISTRY.jsonl",
+
   "channels": ["github", "winget", "msstore", "installer", "chrome", "edge"],
 
   "site": {
@@ -54,6 +57,11 @@
       "id": "SZA-SEC04",
       "path": "internal/translator/translator_test.go",
       "reason": "testKey is AIzaTESTKEY- followed by 0123456789 and the alphabet: a made-up value in the shape a user's key has, used by the tests proving the key travels only in the X-Goog-Api-Key header and never survives into a transport error or an echoed error body. No real key exists; nothing to rotate."
+    },
+    {
+      "id": "SZA-SEC04",
+      "path": "DEV/plan/done/22_2026-09-23_contract-rule-adoption-sync.md",
+      "reason": "The finished ticket quotes the translator test's testKey fixture (the row above) verbatim, as the evidence of the SZA-SEC04 finding it resolved. It is in the frozen ticket archive (REPO-LAYOUT rule 6), which is left as written. No real key exists; nothing to rotate."
     }
   ]
 }

@@ -94,6 +94,9 @@
         <uap:Extension Category="windows.fileTypeAssociation">
           <uap:FileTypeAssociation Name="dochtmltranslate">
             <uap:DisplayName>DOC-HTML-TRANSLATE Document</uap:DisplayName>
+            <!-- content.document in the one tone #808080 (ICON-RENDER rule 9), resolved to its
+                 targetsize-* / altform-unplated forms through resources.pri. -->
+            <uap:Logo>Assets\DocumentType.png</uap:Logo>
             <uap:SupportedFileTypes>
               <uap:FileType>.epub</uap:FileType>
               <uap:FileType>.pdf</uap:FileType>

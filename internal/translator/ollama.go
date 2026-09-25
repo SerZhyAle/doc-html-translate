@@ -403,8 +403,10 @@ func isEchoBack(translated, original string) bool {
 	return strings.EqualFold(t, o)
 }
 
-// numberedLineRe matches one "N. text" answer line of the model output.
-var numberedLineRe = regexp.MustCompile(`(?m)^\s*(\d+)\.\s*(.+)$`)
+// numberedLineRe matches one "N. text" answer line of the model output. The blanks around the
+// number are spaces and tabs only: \s would also cross a line break, so an empty "2." answer
+// took the next line ("3. text") as its own and slot 3 went missing.
+var numberedLineRe = regexp.MustCompile(`(?m)^[ \t]*(\d+)\.[ \t]*(.+)$`)
 
 // parseNumberedResponse maps "N. text" lines onto the expected slots. The first answer for a
 // number wins and numbers outside 1..expected are ignored, so a translated line that itself

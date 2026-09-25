@@ -251,8 +251,8 @@ func desktopEdition(t *testing.T, s appearance.Source) *edition {
 		}
 		e.addRole(role, r.Selector, r.Decls)
 	}
-	pn := htmlgen.PaletteStyleNames
-	for i, r := range parseDeclarations(appearance.PaletteCSS(pn)) {
+	styleNames := htmlgen.PaletteStyleNames
+	for i, r := range parseDeclarations(appearance.PaletteCSS(styleNames)) {
 		if i >= len(s.Themes) {
 			t.Fatalf("desktop palette CSS: more rules than themes")
 		}

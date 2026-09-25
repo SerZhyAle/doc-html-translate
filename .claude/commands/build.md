@@ -53,8 +53,8 @@ This is the build-granularity record; at release time it feeds the version's "Wh
 line in the next version's "What's new". Use a conventional, user-readable subject:
 `feat: ...` · `fix: ...` · `perf: ...` · `docs: ...` · `refactor: ...` · `chore: ...`.
 
-**Step 5 — Run the build.** This runs the gate (test + lint + typo), builds the CLI and UI
-binaries, and commits (with `DEV/COMMIT_LOG.md` appended):
+**Step 5 — Run the build.** This builds the CLI and UI binaries, runs the full gate over that tree,
+and commits (with `DEV/COMMIT_LOG.md` appended):
 
 ```powershell
 ./scripts/build-local.ps1 -Message "<conventional subject>"

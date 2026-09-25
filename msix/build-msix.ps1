@@ -7,34 +7,41 @@
   to an environment-specific folder). Steps:
     1. Compute version  -> stamp YY.MMDD.HHmm  +  4-part MSIX identity version YY.MMDD.HHmm.0
     2. Build CLI + GUI   (go build, amd64, icon + version embedded via goversioninfo)
-    3. Generate logos    (Store/44/71/150/wide PNGs rendered from the brand color)
+    3. Visual assets     (go run ./tools/icongen -msix: the mark and the document-type glyph
+                          in the targetsize-* / altform-* / scale-* set)
     4. Fill manifest     (placeholders -> staging\AppxManifest.xml)
-    5. makeappx pack     -> out\<name>_<version>_x64.msix
-    6. -SelfSign (opt)   sign for LOCAL testing and print the install commands
+    5. makepri new       -> staging\resources.pri, which resolves the qualified asset names
+    6. makeappx pack     -> out\<name>_<version>_x64.msix
+    7. -SelfSign (opt)   sign for LOCAL testing and print the install commands
 
-  For a STORE upload, pass the three identity values from Partner Center
-  (Product > Product identity) and DO NOT use -SelfSign — upload the unsigned .msix;
-  Microsoft re-signs it during certification.
+  All three identity values default to the reserved Partner Center identity of this product,
+  so a STORE upload passes none of them. It passes -Tag instead and DOES NOT use -SelfSign -
+  upload the unsigned .msix; Microsoft re-signs it during certification. An unsigned build
+  without -Tag is refused: the Store package must hold exactly the tagged tree.
 
 .EXAMPLE
-  # Local smoke test (self-signed, installable on this machine):
+  # Local smoke test (self-signed, installable on this machine, stamped now):
   .\msix\build-msix.ps1 -SelfSign
 
 .EXAMPLE
-  # Store package (unsigned, ready to upload). -Publisher / -PublisherDisplayName already
-  # default to the SZA account values, so only the reserved per-product Name is required:
-  .\msix\build-msix.ps1 -IdentityName "<Package/Identity/Name from Partner Center>"
+  # Store package (unsigned, ready to upload) of the checked-out release tag:
+  .\msix\build-msix.ps1 -Tag v26.0612.0124
 #>
 param(
-    # Package/Identity/Name from Partner Center. Default suits self-signed local tests;
-    # for a Store upload, pass the reserved per-product Name (Partner Center > Product identity).
-    [string]$IdentityName = "SerZhyAle.DocHtmlTranslate",
+    # Package/Identity/Name - the frozen anchor reserved in Partner Center (Product > Product
+    # identity). Never change it for a Store build; a self-signed test that must not collide with
+    # an installed Store copy passes its own name (reinstall.ps1 does).
+    [string]$IdentityName = "SZA.Doc-HTML-Translate",
     # Package/Identity/Publisher. Account-wide for the SZA publisher and identical across all
     # SZA products, so it is the default. For -SelfSign this MUST equal the cert subject (it does).
     [string]$Publisher = "CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD",
     # Package/Properties/PublisherDisplayName (shown on the Store listing). Account-wide for SZA.
     [string]$PublisherDisplayName = "SZA",
-    # Override the version stamp (YY.MMDD.HHmm). Default: now.
+    # Release build: the app tag (vYY.MMDD.HHmm). The version comes from the tag, and the build
+    # refuses a HEAD that is not the tag's commit or a working tree with changes. Required for an
+    # unsigned (Store) package; exclusive with -Stamp.
+    [string]$Tag,
+    # Development build: override the version stamp (YY.MMDD.HHmm). Default: now. No tree check.
     [string]$Stamp,
     # Sign the package with a self-signed cert and print local-install commands.
     [switch]$SelfSign
@@ -55,6 +62,31 @@ function Get-SdkTool([string]$Name) {
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 if (-not (Get-Command goversioninfo -ErrorAction SilentlyContinue)) { throw "goversioninfo not on PATH. Run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest" }
 $MakeAppx = Get-SdkTool "makeappx.exe"
+$MakePri  = Get-SdkTool "makepri.exe"
+
+# ── release tree (ticket 37) ─────────────────────────────────
+# -Tag: HEAD must be the tag's commit and nothing may be uncommitted, so the working tree the build
+# reads is the tag's tree. Returns the version the tag names.
+function Assert-ReleaseTree([string]$ReleaseTag) {
+    if ($ReleaseTag -notmatch '^v\d{2}\.\d{4}\.\d{4}$') { throw "-Tag must look like vYY.MMDD.HHmm (e.g. v26.0612.0124)" }
+    Push-Location $RepoRoot
+    try {
+        $want = & git rev-parse --verify --quiet "refs/tags/$ReleaseTag^{commit}"
+        if ($LASTEXITCODE -ne 0 -or -not $want) { throw "Tag $ReleaseTag does not exist in this clone (git fetch --tags)" }
+        $head = & git rev-parse HEAD
+        if ($head -ne $want) { throw "HEAD $head is not the commit of $ReleaseTag ($want); check the tag out first: git switch --detach $ReleaseTag" }
+        $dirty = @(& git status --porcelain)
+        if ($dirty) { throw "The working tree has changes $ReleaseTag does not hold:`n$($dirty -join "`n")" }
+    } finally { Pop-Location }
+    return $ReleaseTag.Substring(1)
+}
+
+if ($Tag) {
+    if ($Stamp) { throw "-Tag and -Stamp are exclusive: a release build takes its version from the tag" }
+    $Stamp = Assert-ReleaseTree $Tag
+} elseif (-not $SelfSign) {
+    throw "An unsigned package is the Store upload and must be built from its release tag: pass -Tag vYY.MMDD.HHmm (or -SelfSign for a local test)"
+}
 
 # ── version ──────────────────────────────────────────────────
 if ($Stamp) {
@@ -117,46 +149,20 @@ try {
 # third-party material inside the binaries (the Material Icons glyphs of the reader chrome and GUI)
 Copy-Item (Join-Path $RepoRoot "THIRD-PARTY-NOTICES.txt") $Staging -Force
 
-# ── generate logo PNGs (brand color #1E3A8A, white DOC/HTML) ──
-Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase
-function New-LogoPng([string]$Path, [int]$W, [int]$H, [string[]]$Lines, [double]$FontFrac) {
-    $bg = New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(30,58,138))
-    $fg = New-Object Windows.Media.SolidColorBrush ([Windows.Media.Color]::FromRgb(255,255,255))
-    $tf = New-Object Windows.Media.Typeface(
-        (New-Object Windows.Media.FontFamily("Segoe UI")),
-        [Windows.FontStyles]::Normal, [Windows.FontWeights]::Bold, [Windows.FontStretches]::Normal)
-    $size = [Math]::Max(8, [int]($H * $FontFrac))
-    $visual = New-Object Windows.Media.DrawingVisual
-    $ctx = $visual.RenderOpen()
-    $ctx.DrawRectangle($bg, $null, (New-Object Windows.Rect(0,0,$W,$H)))
-    $texts = foreach ($l in $Lines) {
-        New-Object Windows.Media.FormattedText($l,
-            [Globalization.CultureInfo]::InvariantCulture, [Windows.FlowDirection]::LeftToRight,
-            $tf, $size, $fg, 1.0)
-    }
-    $gap = $size * 0.05
-    $totalH = ($texts | Measure-Object Height -Sum).Sum + ($gap * ($texts.Count - 1))
-    $y = ($H - $totalH) / 2
-    foreach ($t in $texts) {
-        $x = ($W - $t.Width) / 2
-        $ctx.DrawText($t, (New-Object Windows.Point($x, $y)))
-        $y += $t.Height + $gap
-    }
-    $ctx.Close()
-    $rtb = New-Object Windows.Media.Imaging.RenderTargetBitmap($W, $H, 96, 96, [Windows.Media.PixelFormats]::Pbgra32)
-    $rtb.Render($visual)
-    $enc = New-Object Windows.Media.Imaging.PngBitmapEncoder
-    $enc.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create($rtb))
-    $fs = [IO.File]::Open($Path, [IO.FileMode]::Create, [IO.FileAccess]::Write)
-    try { $enc.Save($fs) } finally { $fs.Dispose() }
-}
-Write-Host "Generating logos..." -ForegroundColor Cyan
+# ── generate the visual assets (ICON-RENDER rule 9, ticket 32) ──
+# internal/iconart draws the product mark and the document-type glyph into the MRT-qualified
+# set: Square44x44Logo in targetsize-16/24/32/48/256 with its altform-unplated and
+# altform-lightunplated forms, the scale-100/200 tiles and StoreLogo, and DocumentType for the
+# file type association. Windows picks among them only through resources.pri (below).
+Write-Host "Generating visual assets..." -ForegroundColor Cyan
 $A = Join-Path $Staging "Assets"
-New-LogoPng (Join-Path $A "StoreLogo.png")        50  50  @("DOC","HTML")     0.30
-New-LogoPng (Join-Path $A "Square44x44Logo.png")  44  44  @("DH")             0.55
-New-LogoPng (Join-Path $A "Square71x71Logo.png")  71  71  @("DOC","HTML")     0.30
-New-LogoPng (Join-Path $A "Square150x150Logo.png") 150 150 @("DOC","HTML")    0.26
-New-LogoPng (Join-Path $A "Wide310x150Logo.png")  310 150 @("DOC-HTML")       0.30
+Push-Location $RepoRoot
+try {
+    # Build-Exe left GOOS/GOARCH set for the package; the generator runs on this machine.
+    Remove-Item Env:GOARCH, Env:GOOS -ErrorAction SilentlyContinue
+    go run ./tools/icongen -msix $A | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "icongen failed" }
+} finally { Pop-Location }
 
 # ── fill manifest ────────────────────────────────────────────
 (Get-Content (Join-Path $PSScriptRoot "AppxManifest.xml") -Raw) `
@@ -166,6 +172,23 @@ New-LogoPng (Join-Path $A "Wide310x150Logo.png")  310 150 @("DOC-HTML")       0.
     -replace '\{\{VERSION\}\}',                $MsixVersion |
     Set-Content (Join-Path $Staging "AppxManifest.xml") -Encoding utf8
 
+# ── resources.pri ────────────────────────────────────────────
+# The index Windows resolves the qualified asset names through (scale-*, targetsize-*,
+# altform-*). Without it the taskbar and Start fall back to the plated tile scaled down.
+# The config lives outside the staging folder so it is not packed.
+Write-Host "Indexing resources (makepri)..." -ForegroundColor Cyan
+$PriConfig = Join-Path $OutDir "priconfig.xml"
+& $MakePri createconfig /cf $PriConfig /dq en-US /pv 10.0.0 /o | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "makepri createconfig failed" }
+# The default config splits scale and language candidates into resources.<qualifier>.pri files
+# meant for resource packs of a bundle; this is a single package, so everything stays in one.
+[xml]$pri = Get-Content -LiteralPath $PriConfig -Raw
+$pack = $pri.SelectSingleNode("/resources/packaging")
+if ($pack) { [void]$pri.resources.RemoveChild($pack) }
+$pri.Save($PriConfig)
+& $MakePri new /pr $Staging /cf $PriConfig /mn (Join-Path $Staging "AppxManifest.xml") /of (Join-Path $Staging "resources.pri") /o | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "makepri new failed" }
+
 # ── pack ─────────────────────────────────────────────────────
 $safeName = ($IdentityName -replace '[^A-Za-z0-9._-]', '_')
 $MsixOut = Join-Path $OutDir ("{0}_{1}_x64.msix" -f $safeName, $MsixVersion)
@@ -173,6 +196,12 @@ Write-Host "Packing $MsixOut ..." -ForegroundColor Cyan
 & $MakeAppx pack /d $Staging /p $MsixOut /o
 if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed" }
 Write-Host "Package created: $MsixOut" -ForegroundColor Green
+
+# A release build whose tree moved while it ran did not build the tag.
+if ($Tag) {
+    $after = @(& git -C $RepoRoot status --porcelain)
+    if ($after) { throw "The build left the tree dirty, so $MsixOut is not $Tag's tree:`n$($after -join "`n")" }
+}
 
 # ── optional self-sign for local testing ────────────────────
 if ($SelfSign) {

@@ -87,9 +87,16 @@ func CopyCapped(dst io.Writer, src io.Reader, name string, limit int64) (int64, 
 	if err != nil {
 		return n, err
 	}
+	// The probe read is also where a reader reports a failure it only detects at end of
+	// stream - archive/zip's checksum and size checks - so an entry of exactly limit bytes
+	// must not have that error dropped.
 	var probe [1]byte
-	if m, _ := io.ReadFull(src, probe[:]); m > 0 {
+	m, perr := io.ReadFull(src, probe[:])
+	if m > 0 {
 		return n, EntryTooLarge(name, limit)
+	}
+	if perr != nil && perr != io.EOF {
+		return n, perr
 	}
 	return n, nil
 }

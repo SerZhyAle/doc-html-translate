@@ -30,6 +30,7 @@
       "CharsetID": "04B0"
     }
   },
-  "IconPath": "../../assets/doc-html-translate.ico",
+  "IconPath": "../../assets/doc-html-translate.ico,../../assets/convert-verb.ico,../../assets/document-type.ico",
+  "ApplicationIconPath": "../../assets/doc-html-translate.ico",
   "ManifestPath": ""
 }

@@ -1,0 +1,47 @@
+Bundled pdftotext set - internal/bundledtools/pdftotext/
+
+This file sits beside the pdftotext/ folder, not inside it: pdftotext_windows.go embeds that
+folder whole, so a text file placed there would ship inside the executable and change the
+content hash that names the unpacked cache folder (cache.go).
+
+Origin: unmodified binaries of Git for Windows, taken from its mingw64/bin folder when the set was
+vendored (commit 0954513, 2026-04-22). Re-read 2026-09-25: all four files are byte-identical to the
+same files of Git for Windows 2.53.0.windows.2 on the build machine, whose etc/package-versions.txt
+names the MSYS2 packages below, and the GCC build strings inside the binaries agree.
+
+  pdftotext.exe         mingw-w64-x86_64-xpdf-tools 4.00-1. `pdftotext -v`: "pdftotext version 4.00,
+                        Copyright 1996-2017 Glyph & Cog, LLC". Built by MSYS2 with GCC 7.3.0 (Rev2).
+                        Git for Windows build recipe: https://github.com/git-for-windows/MINGW-packages
+                        folder mingw-w64-xpdf (its history holds the 4.00-1 revision).
+  libstdc++-6.dll       mingw-w64-x86_64-gcc-libs 15.2.0-11 (GCC 15.2.0, MSYS2 Rev11).
+  libgcc_s_seh-1.dll    mingw-w64-x86_64-gcc-libs 15.2.0-11 (GCC 15.2.0, MSYS2 Rev11).
+  libwinpthread-1.dll   mingw-w64-x86_64-libwinpthread 13.0.0.r488.g3fedac280-2.
+
+Upstream source of the exact versions (the Corresponding Source the GPL asks for):
+
+  Xpdf 4.00             https://dl.xpdfreader.com/old/xpdf-4.00.tar.gz
+                        854175 bytes, sha256 ff3d92c42166e35b1ba6aec9b5f0adffb5fc05a3eb95dc49505b6e344e4216d6
+                        (downloaded and hashed 2026-09-25)
+  GCC 15.2.0            https://ftp.gnu.org/gnu/gcc/gcc-15.2.0/
+                        MSYS2 recipe: https://github.com/msys2/MINGW-packages/tree/master/mingw-w64-gcc
+  winpthreads           https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/
+                        MSYS2 recipe: https://github.com/msys2/MINGW-packages/tree/master/mingw-w64-winpthreads
+
+Licences: Xpdf - GPL v2 or v3 (its README), GCC runtime - GPL v3 or later with the GCC Runtime
+Library Exception 3.1, winpthreads - MIT-style plus a 3-clause BSD notice for the parts derived from
+Lockless Inc. The texts ship in THIRD-PARTY-NOTICES.txt at the repository root, which every Windows
+channel stages beside the executables.
+
+All four files are tracked in git (.gitignore re-includes them past its *.exe rule), so a clean
+checkout and the CI release build embed the same set as a local build. Until 2026-09-26 only the
+DLLs were tracked and the CI-built assets shipped without pdftotext.exe (ticket 35). A build that
+lacks pdftotext.exe reports ErrNotBundled and falls back to a pdftotext installed on the system;
+.github/workflows/release.yml refuses to build when any file of the table below is missing or
+differs from its hash. tests/bundled_notices_test.go holds every file present in pdftotext/ to a
+line below and to a mention in THIRD-PARTY-NOTICES.txt, and none of them to a git-ignore rule.
+
+sha256                                                            bytes    file
+252d2b345662ba6d3705d79d53dad059aa8ef14f9dcf3afe015facbf1ca995e0  1537966  pdftotext.exe
+a4c599da9bba64b6d8a3bb6d3d55e5da8067befe535295e9410c4663ba61d77f  2461684  libstdc++-6.dll
+f9b64f3fc26fd1e8899503e84a62567cbe5cefc2bd3ef0fee5501386b2302cd5  150196   libgcc_s_seh-1.dll
+d66b00e4a4385344bf2be54b03446ea19ced654c78a18a024a0b43971d68459b  64931    libwinpthread-1.dll

@@ -74,8 +74,9 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 
 | Surface | What it shows | Status |
 | --- | --- | --- |
-| `.ico`, extension action icons, MSIX tiles | the "DOC HTML" / "DH" product artwork | artwork (`ICON-SET` rule 7); the platform shape rules of `ICON-RENDER` rule 9 are an exception until ticket 32 |
-| File-type icon, "Convert to HTML" shell verb | the exe icon | exception until ticket 32: the verb takes `action.convert` in the mono look, `#808080` (rule 9) |
+| `.ico` (16-256 px), extension action icons (16/32/48/128), MSIX tiles and `Square44x44Logo` `targetsize-*` / `altform-unplated` / `altform-lightunplated` through `resources.pri` | the product mark: a white sheet with a folded corner and `</>` cut into it, on the navy plate `#1E3A8A`; a simpler 16-20 px drawing without the slash | artwork (`ICON-SET` rule 7) in the platform forms of `ICON-RENDER` rule 9 - the extension icon is the mark on its own plate (plate at least 9.3 : 1 on a light toolbar, sheet at least 11.2 : 1 on a dark one) |
+| "Convert to HTML" shell verb | `action.convert`, mono, `#808080`, 16 px with 20, 24, 32 (`assets/convert-verb.ico`, exe icon resource 1) | conforms (rule 9: 3.9 : 1 on the light menu, 3.6 : 1 on `#2B2B2B`) |
+| Registered document type (`-register`, and the MSIX file type association) | `content.document`, mono, `#808080`, 16-256 px (`assets/document-type.ico`, exe icon resource 2; `DocumentType` in the package) | conforms (rule 9) |
 | A converted book's own images | the book's content | outside the vocabulary (`ICON-EXTERNAL`; the proposal's item 12 is still open) |
 
 No third-party mark is drawn anywhere (`ICON-EXTERNAL` rule 1 holds by absence): the store channels

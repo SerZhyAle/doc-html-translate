@@ -130,8 +130,9 @@ func RegisterHandler() (Registration, error) {
 	}
 
 	command := fmt.Sprintf("\"%s\" \"%%1\"", exePath)
-	// Icon is embedded in the exe - reference it directly as resource index 0.
-	defaultIconValue := fmt.Sprintf("\"%s\",0", exePath)
+	// A registered document type shows content.document in the one tone (ICON-RENDER rule 9),
+	// embedded in the exe as icon resource iconDocumentType.
+	defaultIconValue := exeIcon(exePath, iconDocumentType)
 
 	// Create ProgID key once (shared across all extensions)
 	progKeyPath := `Software\Classes\` + progID
@@ -233,7 +234,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("create default icon key: %w", err)
 	}
 	defer iconKey.Close()
-	if err := w.set(iconKey, "", fmt.Sprintf("\"%s\",0", exePath)); err != nil {
+	if err := w.set(iconKey, "", exeIcon(exePath, iconMark)); err != nil {
 		return nil, fmt.Errorf("set default icon value: %w", err)
 	}
 
@@ -282,7 +283,7 @@ func RegisterContextMenu() ([]string, error) {
 //
 //	Software\Classes\SystemFileAssociations\<ext>\shell\dochtmltranslate.convert\
 //	    MUIVerb                = "Convert to HTML"
-//	    Icon                   = "<exe>",0
+//	    Icon                   = "<exe>",1   (action.convert in the one tone #808080)
 //	    command\(default)      = "<exe>" "%1"
 //
 // SystemFileAssociations verbs attach to the file *type*, so the entry appears in the
@@ -292,7 +293,7 @@ func RegisterContextMenu() ([]string, error) {
 // the extensions the verb was added to.
 func RegisterContextMenuFor(exePath string) ([]string, error) {
 	command := fmt.Sprintf("\"%s\" \"%%1\"", exePath)
-	icon := fmt.Sprintf("\"%s\",0", exePath)
+	icon := exeIcon(exePath, iconVerb)
 	var w changeTracker
 	defer w.notifyIfChanged()
 
@@ -393,6 +394,20 @@ func RemoveShellEntries() ([]string, error) {
 		return removed, fmt.Errorf("could not remove %s", strings.Join(failed, ", "))
 	}
 	return removed, nil
+}
+
+// Icon resource indexes of the ICOs embedded in both executables, in the order
+// cmd/*/versioninfo.json IconPath lists them (internal/iconart.ExeIcons; tests/icons_test.go
+// holds that list and the IconPath values in step).
+const (
+	iconMark         = 0 // the product mark - the program itself
+	iconVerb         = 1 // action.convert, the "Convert to HTML" verb
+	iconDocumentType = 2 // content.document, a registered document type
+)
+
+// exeIcon is a registry icon value naming one icon resource of exePath.
+func exeIcon(exePath string, index int) string {
+	return fmt.Sprintf("\"%s\",%d", exePath, index)
 }
 
 // contextMenuVerbPath is the HKCU key of the "Convert to HTML" verb for one extension.

@@ -31,6 +31,11 @@ the subset you will edit, in one line, before editing.
 - **The trios** - `docs.html` / `docs.ru.html` / `docs.uk.html`, and `_locales/{en,ru,uk}/messages.json`:
   edit all three in the same pass. For `messages.json`, add/rename a key in all three or none (keys must match).
 - A new user-facing feature **leads** the landing hero (not a collapsed section) and is mirrored everywhere.
+- **Privacy facts are rows, not prose.** A change to what the product reads, writes, sends or declares is an
+  edit to `docs/security-posture.json`, then `./scripts/security-posture.ps1 -Render`; never edit the marked
+  blocks of `privacy.html`, `extension-privacy.html`, `PRIVACY.md`, `LISTING.md` or `msix/README.md` by hand.
+- **A new document or page** gets its record in `docs/DOCUMENT_REGISTRY.jsonl` before anything links to it;
+  a new or renamed site page then needs `./scripts/doc-registry.ps1 -Generate` for the sitemap.
 
 **Step 4 — Verify parity.** Confirm the trio files carry the same information (only translated), and that
 `messages.json` key sets are identical across en/ru/uk. Call out any surface you deliberately skipped and why.

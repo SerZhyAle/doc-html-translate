@@ -119,6 +119,7 @@ func (c *Copier) place(ref, baseDir string, sheet bool) (string, outcome) {
 	// Recorded before the write so a stylesheet that @imports itself (or a cycle of them)
 	// resolves to the name instead of recursing.
 	c.byPath[real] = name
+	idx := len(c.infos)
 	c.infos = append(c.infos, copiedFile{info: info, name: name})
 	if sheet {
 		err = c.writeSheetFile(real, name)
@@ -128,7 +129,8 @@ func (c *Copier) place(ref, baseDir string, sheet bool) (string, outcome) {
 	if err != nil {
 		logging.Errorf("WARNING: could not copy %s: %v\n", ref, err)
 		delete(c.byPath, real)
-		c.infos = c.infos[:len(c.infos)-1]
+		// By index, not the tail: a stylesheet's own references were appended after it.
+		c.infos = append(c.infos[:idx], c.infos[idx+1:]...)
 		return "", kept
 	}
 	if sheet {

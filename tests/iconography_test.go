@@ -256,11 +256,16 @@ func TestGlyphMapListsEveryDrawnGlyph(t *testing.T) {
 
 // The glyphs' licence ships where the glyphs ship (ICON-EXTERNAL rule 5): beside the desktop
 // binaries (installer and MSIX stage the root file) and inside the extension package, whose zip
-// takes extension/src whole. The two copies are one text.
+// takes extension/src whole. The extension copy is the root file up to the end of the glyph
+// section: the sections after it cover the pdftotext set, which only the Windows executables carry.
 func TestGlyphNoticesShipWithTheGlyphs(t *testing.T) {
 	root := readRepoFile(t, "THIRD-PARTY-NOTICES.txt")
-	if ext := readRepoFile(t, "extension", "src", "THIRD-PARTY-NOTICES.txt"); ext != root {
-		t.Error("extension/src/THIRD-PARTY-NOTICES.txt differs from the root THIRD-PARTY-NOTICES.txt - copy it again")
+	ext := readRepoFile(t, "extension", "src", "THIRD-PARTY-NOTICES.txt")
+	if !strings.HasPrefix(root, ext) || !strings.HasSuffix(ext, "END OF TERMS AND CONDITIONS\n") {
+		t.Error("extension/src/THIRD-PARTY-NOTICES.txt is not the glyph part of the root THIRD-PARTY-NOTICES.txt - copy it again")
+	}
+	if strings.Contains(ext, "pdftotext") {
+		t.Error("extension/src/THIRD-PARTY-NOTICES.txt names pdftotext, which the extension does not bundle")
 	}
 	for _, want := range []string{"Apache License", "Version 2.0, January 2004", "END OF TERMS AND CONDITIONS"} {
 		if !strings.Contains(root, want) {

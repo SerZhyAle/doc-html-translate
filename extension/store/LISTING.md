@@ -114,24 +114,27 @@ Limitations: Scanned/image-only PDFs have no text to translate (the extension de
 
 ## Permission justifications (for the review form)
 Paste these verbatim into the Chrome Web Store / Edge Partner Center privacy form. One field per
-declared permission; keep each under the form's 1000-character limit. They must stay true to the
-manifest - when a permission is added or dropped, edit this block in the same commit.
+declared permission; keep each under the form's 1000-character limit. The bullets are rendered from
+the permission rows in `docs/security-posture.json` - when a permission is added or dropped, edit its
+row there in the same commit and run `scripts/security-posture.ps1 -Render`; the check in
+`scripts/check.ps1` fails while the manifest and the rows disagree.
 
+<!-- security-posture:begin ext-justifications (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
 - declarativeNetRequest: dynamic rules created at runtime redirect main_frame page loads of the document
   files the extension is registered for (PDF, EPUB and other e-book and document formats, over http/https
   and file://) to the extension's bundled local viewer, which reflows them into readable text. The exact
-  set is the `regexFilter` of the two rules in `src/background.js`. The rules are plain URL redirects;
-  the extension does not read or modify the content of any site.
-  **Do not enumerate the formats here** - Chrome rejected this listing twice for "excessive keywords"
-  over exactly that list (see the Detailed description notes above); the rule is listing-wide.
+  set is the `regexFilter` of the two rules in `src/background.js`. A session rule lets "Open original"
+  load the file once in the browser's own viewer. The rules are plain URL redirects; the extension does
+  not read or modify the content of any site.
 - host_permissions (`<all_urls>`): required because the viewer fetches the opened document's bytes for
-  local rendering and the file can live on any origin, and because the toolbar popup reads the active
-  tab's hostname for the per-site on/off toggle. (The redirect itself does not consume host permissions.)
-  No page content is read or transmitted. Because the opened document's origin is unknowable before the
-  user opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the
-  cross-origin fetch because the viewer is an extension page rather than the document's origin - so
-  `<all_urls>` is the minimum that works for this single purpose.
-- scripting: only for the "Read the pictures on this page" action the user starts from the right-click
+  local rendering and the file can live on any origin, because the OCR actions fetch the image the user
+  picked (or the pictures of the page the user started them on) from whatever site serves them, and
+  because the toolbar popup reads the active tab's hostname for the per-site on/off toggle. (The redirect
+  itself does not consume host permissions.) No page content is read or transmitted. Because the opened
+  document's origin is unknowable before the user opens the file, no fixed narrower match-pattern set is
+  possible, and `activeTab` cannot grant the cross-origin fetch because the viewer is an extension page
+  rather than the document's origin - so `<all_urls>` is the minimum that works for this single purpose.
+- scripting: only for the "OCR every image on this page" action the user starts from the right-click
   menu. On that click the extension injects one script and its stylesheet into that one tab; the script
   collects the page's images, draws the recognized text over them, and removes itself when the user
   stops. Nothing is injected without that explicit action, and there is no declared content script.
@@ -139,10 +142,17 @@ manifest - when a permission is added or dropped, edit this block in the same co
   run in the reader's page. The extension creates one offscreen document for the duration of a run and
   closes it when the run ends. Only image regions and the recognized text cross to it.
 - contextMenus: the extension's actions are started from the right-click menu - "OCR & translate this
-  image" on an image, "Read the pictures on this page" on a page, and "Convert to readable HTML" on a
-  document link or page.
-- storage: to remember your on/off choice, per-site exceptions, reading preferences (font, theme), and
-  which OCR languages you have downloaded.
+  image" on an image, "OCR every image on this page" on a page, and "Convert with doc-html-translate" on
+  a document link or page.
+- storage: to remember the user's on/off choice, per-site exceptions, reading preferences (font, theme),
+  interface language and remote-image setting, which OCR languages have been downloaded, and the format,
+  page count and last error of the most recent document for the "Copy diagnostics" button. Nothing stored
+  leaves the device.
+<!-- security-posture:end ext-justifications -->
+
+**Do not enumerate the formats in the declarativeNetRequest justification** - Chrome rejected this
+listing twice for "excessive keywords" over exactly that list (see the Detailed description notes
+above); the rule is listing-wide.
 
 ## Data use disclosures
 - Does the extension collect or transmit user data? No.

@@ -8,18 +8,22 @@ during certification) and a Store-signed build also reduces antivirus false posi
 | File | Role |
 | --- | --- |
 | [`AppxManifest.xml`](AppxManifest.xml) | Package manifest **template** - `runFullTrust`, file-type associations, visual assets. `{{...}}` placeholders are filled by the build script. |
-| [`build-msix.ps1`](build-msix.ps1) | go build (CLI + GUI) → version remap → generate logos → fill manifest → `makeappx pack` → optional self-sign. |
+| [`build-msix.ps1`](build-msix.ps1) | go build (CLI + GUI) → version remap → visual assets (`tools/icongen -msix`) → fill manifest → `makepri new` (`resources.pri`) → `makeappx pack` → optional self-sign. |
 | `staging/`, `out/` | Generated (git-ignored). `out/*.msix` is what you upload. |
 
 ## What's in the package
 
-Both binaries ship side by side, plus the manifest and generated logos:
+Both binaries ship side by side, plus the manifest, the generated visual assets and the
+`resources.pri` that resolves their qualified names (ICON-RENDER rule 9):
 
 ```
 doc-html-ui.exe            ← GUI application (the launchable Start-menu tile)
 doc-html-translate.exe     ← CLI: the GUI spawns it to do the actual conversion
 AppxManifest.xml
-Assets\StoreLogo.png  Square44x44Logo.png  Square71x71Logo.png  Square150x150Logo.png  Wide310x150Logo.png
+resources.pri
+Assets\Square44x44Logo.targetsize-{16,24,32,48,256}[_altform-unplated|_altform-lightunplated].png
+Assets\Square44x44Logo.scale-*  StoreLogo.scale-*  Square71x71Logo.scale-*  Square150x150Logo.scale-*
+Assets\Wide310x150Logo.scale-*  DocumentType.targetsize-* / scale-*   (scale-100 and scale-200)
 ```
 
 The package declares **one application** (see `AppxManifest.xml`):
@@ -42,8 +46,8 @@ The package declares **one application** (see `AppxManifest.xml`):
 ## Prerequisites
 
 ```powershell
-winget install Microsoft.WindowsSDK.10.0.26100         # makeappx.exe + signtool.exe
-go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+winget install Microsoft.WindowsSDK.10.0.26100         # makeappx.exe + makepri.exe + signtool.exe
+go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest   # v1.5.0+: IconPath lists three ICOs
 ```
 
 (Go itself is already required to build the app.)
@@ -60,12 +64,17 @@ This builds, packs, self-signs, and prints two commands. To install on this mach
 # once, as Administrator - trust the self-signed test cert:
 Import-Certificate -FilePath 'msix\out\doc-html-translate-test.cer' -CertStoreLocation Cert:\LocalMachine\Root
 # install (does NOT launch - start it from the Start menu afterwards):
-Add-AppxPackage 'msix\out\SerZhyAle.DocHtmlTranslate_<version>_x64.msix'
+Add-AppxPackage 'msix\out\SZA.Doc-HTML-Translate_<version>_x64.msix'
 ```
+
+The package carries the Store identity `SZA.Doc-HTML-Translate` by default, so on a machine that has
+the Store copy installed the self-signed one cannot replace it. To test beside the Store copy, pass a
+test name: `-IdentityName SerZhyAle.DocHtmlTranslate` (what `reinstall.ps1` does).
 
 Smoke test under the MSIX container: launch from Start, convert a sample `.epub`/`.pdf`, confirm the
 browser opens the result; double-click an associated file in Explorer and confirm the GUI opens with
-it pre-filled. Uninstall with `Get-AppxPackage *DocHtmlTranslate* | Remove-AppxPackage`.
+it pre-filled. Uninstall with `Get-AppxPackage SZA.Doc-HTML-Translate | Remove-AppxPackage` (or the
+test name you passed).
 
 ## Publisher identity (SZA account - portable across products)
 
@@ -77,7 +86,8 @@ so they are already baked into `build-msix.ps1` as defaults - you do not pass th
 | `CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD` | `Package/Identity/Publisher` (`-Publisher`) | tied to the account; same for all SZA products |
 | `SZA` | `Package/Properties/PublisherDisplayName` (`-PublisherDisplayName`) | same for all SZA products |
 
-Only `Package/Identity/Name` (`-IdentityName`) is **per-product** and must be reserved for this app.
+Only `Package/Identity/Name` (`-IdentityName`) is **per-product**. This app's reserved name is
+`SZA.Doc-HTML-Translate` - a frozen anchor, and the script's default, so a Store build passes no identity.
 
 ## 2. Partner Center: account + identity
 
@@ -85,7 +95,7 @@ Only `Package/Identity/Name` (`-IdentityName`) is **per-product** and must be re
    The SZA account already exists; registration was free (Individual).
 2. **Create a new product → MSIX or PWA app** → reserve the app name (e.g. *doc-html-translate*).
 3. **Product ▸ Product identity** → confirm the values match:
-   - `Package/Identity/Name` → `-IdentityName` (**new, this product**)
+   - `Package/Identity/Name` → `SZA.Doc-HTML-Translate` (this product; the `-IdentityName` default)
    - `Package/Identity/Publisher` → must be `CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD` (the default)
    - `Package/Properties/PublisherDisplayName` → must be `SZA` (the default)
 
@@ -93,14 +103,17 @@ Only `Package/Identity/Name` (`-IdentityName`) is **per-product** and must be re
 
 ## 3. Build the Store package (unsigned) & upload
 
-`-Publisher` and `-PublisherDisplayName` already default to the SZA account values, so only the
-reserved per-product Name is required:
+All three identity values default to this product's reserved identity, so the Store build passes only
+the release tag it packages:
 
 ```powershell
-.\msix\build-msix.ps1 -IdentityName "<Package/Identity/Name from Partner Center>"
+.\msix\build-msix.ps1 -Tag v26.0612.0124
 ```
 
-No `-SelfSign` - upload the **unsigned** `out\*.msix`; Microsoft signs it during certification.
+`-Tag` takes the version from the tag and refuses to build unless HEAD is the tag's commit and the
+working tree is clean (and fails if the build leaves it dirty): the package holds exactly the tree the
+GitHub Release was built from. An unsigned build without `-Tag` is refused. No `-SelfSign` - upload the
+**unsigned** `out\*.msix`; Microsoft signs it during certification.
 
 ### Version mapping (important)
 
@@ -111,7 +124,8 @@ The app's stamp is `YY.MMDD.HHmm` (e.g. `26.0612.0124`). The Store requires a **
 26.0612.0124  →  26.612.124.0       (YY . MMDD . HHmm . 0)
 ```
 
-Monotonic over time and unique per minute. Override the stamp with `-Stamp 26.0612.0124` if needed.
+Monotonic over time and unique per minute. A development build can override the stamp with
+`-Stamp 26.0612.0124`; a release build takes it from `-Tag`.
 
 ## 4. Listing materials
 
@@ -193,27 +207,21 @@ Open source - no accounts, no telemetry, no ads, no data collection
 ```
 
 ### runFullTrust justification (keep under ~1000 chars)
+<!-- security-posture:begin msix-justification (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
 ```
 doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:
 - Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.
 - Launching the bundled command-line converter and the user's web browser to display the result.
-- Calling Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), and a local Ollama server when those optional features are used.
-These capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated translation (Google Cloud Translation API or a local Ollama model), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate
+- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), and a local Ollama server when those optional features are used.
+These capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated ones (Google Cloud Translation API, a local Ollama model, or downloading an extra OCR language from GitHub), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate
 ```
+<!-- security-posture:end msix-justification -->
 
 ### Privacy policy (host as a page; paste the URL into Partner Center)
-```
-doc-html-translate does not collect, store, log, or transmit any personal data. It runs entirely on your device, has no servers of its own, and contains no telemetry, analytics, ads, or accounts.
-
-What it accesses and why:
-- The document files you open - to convert them to local HTML.
-- Your web browser - to display the converted HTML.
-- The internet - only if you explicitly choose Google translation: the extracted text is sent to the Google Cloud Translation API using a key you supply. With the local Ollama option, text is sent only to a translation server running on your own machine.
-
-Local files it writes: the converted HTML output (next to the source file, or in a folder you choose). These never leave your device.
-
-Data sharing: none. Children: no data collected. Open source: https://github.com/SerZhyAle/doc-html-translate. Contact: sza@ukr.net
-```
+Paste the URL of the hosted page, https://serzhyale.github.io/doc-html-translate/privacy.html - it is
+`privacy.html` in the repository root. Keep no copy of its text here: the facts it states (what the
+app accesses, what it sends, what it writes) are rendered from the rows in `docs/security-posture.json`,
+and a second copy is exactly what drifted before.
 
 ---
 

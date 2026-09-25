@@ -56,7 +56,10 @@ later session reads the file instead of guessing.
 4. Draft the human "What's new in <version>" summary for the user to approve before any tag push.
 
 **Step D — Preflight (free).** Confirm clean tree + green gate, and that the **gate evidence** line in the
-Step A output is green (the last `check.ps1` passed on HEAD's exact tree); commit anything outstanding:
+Step A output is green (the last `check.ps1` passed on HEAD's exact tree). Quote the **contract gate** line
+of the same output - PASS, WARN, FAIL or UNVERIFIED (`scripts/contract-gate.ps1` against the catalog's
+registry) - in the report to the user, with every WARN it names. `release.ps1` exits 1 while either line
+blocks the tag. Commit anything outstanding:
 
 ```powershell
 ./scripts/build-local.ps1 -Message "..."
@@ -67,7 +70,11 @@ Step A output is green (the last `check.ps1` passed on HEAD's exact tree); commi
 `extension.html`, `extension/store/LISTING.md`, `extension/README.md`, `_locales/*/messages.json`) plus the
 `DEV/CHANGELOG.md` "What's new" entries from Step C, then commit via `build-local.ps1`.
 
-**Step F — GitHub Release `[PAID]`.** Confirm, then push the tag (triggers `release.yml`):
+**Step F — GitHub Release `[PAID]`.** Re-run `./scripts/release.ps1` and **refuse to push the tag** unless it
+exits 0: the gate-evidence line green and the contract gate at PASS or WARN. A contract-gate FAIL is fixed in
+the catalog first (the contract change comes before the code, never after); UNVERIFIED means this machine
+cannot see the catalog, and the release is cut where it can. Then confirm, and push the tag (triggers
+`release.yml`):
 
 ```powershell
 git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>
@@ -89,10 +96,11 @@ Sign the CLA on the PR if prompted. Details: [docs/how-i-posted-this-project-to-
 by hand in Partner Center (no API for create/listing):
 
 ```powershell
-./msix/build-msix.ps1 -IdentityName "<Package/Identity/Name from Partner Center>"
+./msix/build-msix.ps1 -Tag v<ver>
 ```
 
-Details: [msix/README.md](../../msix/README.md).
+The identity defaults to the reserved `SZA.Doc-HTML-Translate` - pass none. `-Tag` refuses unless HEAD
+is the tag's commit and the tree is clean. Details: [msix/README.md](../../msix/README.md).
 
 **Step I — Chrome / Edge extension `[PAID]` `[PUBLIC]`.** Chrome and Edge publish **independently** -
 separate tags, separate build-time versions. Push `ext-cws-v*` for Chrome (triggers `publish-cws.yml`)
@@ -108,6 +116,8 @@ Details: [extension/PUBLISHING.md](../../extension/PUBLISHING.md).
 
 **Step J — Verify.** `gh release view v<ver> --json assets`; `winget search SerZhyAle.DocHtmlTranslate`
 (≈30-60 min after the winget PR merges); confirm Store and Chrome/Edge dashboards show the new version.
+Once the Pages build of the release commit is live, ask the user to resubmit `sitemap.xml` in Google Search
+Console and Bing Webmaster Tools - once per release, never per edit (DEV/RELEASE.md step 6).
 
 **Step K — Report & record state.** Update [DEV/RELEASE_STATE.md](../../DEV/RELEASE_STATE.md) for every
 channel (`a rs -Channel <name> -Status <live|submitted|blocked> -Ref <PR#/tag/id> -Note "..."`) so the

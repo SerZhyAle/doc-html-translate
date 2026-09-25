@@ -138,7 +138,7 @@ func TestRegisterHandlerMakesAppTheDefault(t *testing.T) {
 	if v, _ := h.value(`Software\Classes\`+progID+`\shell\open\command`, ""); v != fmt.Sprintf(`"%s" "%%1"`, exe) {
 		t.Errorf("open command = %q", v)
 	}
-	if v, _ := h.value(`Software\Classes\`+progID+`\DefaultIcon`, ""); v != fmt.Sprintf(`"%s",0`, exe) {
+	if v, _ := h.value(`Software\Classes\`+progID+`\DefaultIcon`, ""); v != fmt.Sprintf(`"%s",2`, exe) {
 		t.Errorf("icon = %q", v)
 	}
 	for p := range h.keys {
@@ -298,6 +298,10 @@ func TestRegisterContextMenuFor(t *testing.T) {
 	verb := `Software\Classes\SystemFileAssociations\.epub\shell\` + contextMenuVerb
 	if v, _ := h.value(verb, "MUIVerb"); v != "Convert to HTML" {
 		t.Errorf("MUIVerb = %q", v)
+	}
+	// The verb shows action.convert (icon resource 1), not the program's mark.
+	if v, _ := h.value(verb, "Icon"); v != `"`+exe+`",1` {
+		t.Errorf("Icon = %q", v)
 	}
 	if v, _ := h.value(verb+`\command`, ""); v != `"`+exe+`" "%1"` {
 		t.Errorf("command = %q", v)

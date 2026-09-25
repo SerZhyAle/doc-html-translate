@@ -23,8 +23,11 @@ test. The local gate runs on a local build. What binds the two is this repo's ow
   `build-ui.ps1`, and [`../../scripts/release.ps1`](../../scripts/release.ps1) prints it as a free step
   against the downloaded release assets.
 - **Tested tree = tagged tree.** [`../../scripts/check.ps1`](../../scripts/check.ps1) writes
-  `temp/logs/gate-evidence.json` with the verdict and the git tree hash of what it read; `release.ps1`
-  shows the tag step as BLOCKED unless that tree is HEAD's and the working tree is clean.
+  `temp/logs/gate-evidence.json` with the verdict, the plan, every child's verdict and the git tree hash
+  of what it read, hashed before and after the run (a mismatch voids it); `release.ps1` shows the tag step
+  as BLOCKED unless it is the full default plan with every child passing, the tree is HEAD's (bar
+  `DEV/COMMIT_LOG.md`, appended after the build commit), and the working tree is clean. Pinned by
+  `tests/verdict_scripts_test.go` (`TestGateEvidenceBindsTheRelease`).
 - **No retry (rule 3).** No test here is re-run to green; the Go toolchain's arch is pinned instead.
 - **Twin and check ship together (rule 7).** `configs/parity-map.json` (read by `parity-check.ps1`) is
   compared with the port map in [`../PARITY.md`](../PARITY.md) by

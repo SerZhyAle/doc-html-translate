@@ -9,7 +9,7 @@ func processGone(pid int) bool {
 	if err != nil {
 		return true
 	}
-	defer windows.CloseHandle(h)
+	defer func() { _ = windows.CloseHandle(h) }()
 	ev, err := windows.WaitForSingleObject(h, 0)
 	return err == nil && ev == windows.WAIT_OBJECT_0
 }

@@ -13,8 +13,8 @@ import (
 //go:embed pdftotext
 var pdftotextFS embed.FS
 
-// pdftotextSet is what PDFToTextPath unpacks; a test swaps in its own set, since a source
-// checkout may not carry the vendored pdftotext.exe.
+// pdftotextSet is what PDFToTextPath unpacks; a test swaps in its own set so it does not
+// depend on the vendored binaries.
 var pdftotextSet fs.FS = pdftotextFS
 
 const pdftotextExe = "pdftotext.exe"
@@ -27,8 +27,8 @@ var (
 // PDFToTextPath returns the path to the bundled pdftotext.exe, unpacking the bundled set into
 // a folder named after its content hash on first use (see extractSet). It re-extracts when the
 // cached file has gone, e.g. quarantined by antivirus after the first run. A build whose
-// embedded set carries no pdftotext.exe (a source checkout without the vendored binary)
-// reports ErrNotBundled.
+// embedded set carries no pdftotext.exe reports ErrNotBundled; the release workflow refuses
+// to build such a set.
 func PDFToTextPath() (string, error) {
 	pdftotextMu.Lock()
 	defer pdftotextMu.Unlock()

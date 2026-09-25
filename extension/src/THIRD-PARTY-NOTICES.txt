@@ -8,14 +8,15 @@ Interface glyphs - Material Icons (filled)
 --------------------------------------------------------------------------------------------------
 
 Where: the navigation and control glyphs of the converted book's reader chrome, the desktop GUI,
-the browser extension and the product site - the icon vocabulary ids media.previous, media.next,
-nav.contents, feature.continue-reading, nav.expand, nav.collapse, action.save, action.export,
-nav.open-external, action.swap, content.document, nav.scroll-top, nav.go-to, action.text-smaller,
-action.text-larger, view.text-layer, app.theme, nav.go-to-page and action.install. Each is the path
-data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
+the browser extension and the product site, and the Windows "Convert to HTML" Explorer verb and
+registered document-type icons embedded in the executables - the icon vocabulary ids
+media.previous, media.next, nav.contents, feature.continue-reading, nav.expand, nav.collapse,
+action.save, action.export, nav.open-external, action.swap, content.document, nav.scroll-top,
+nav.go-to, action.text-smaller, action.text-larger, view.text-layer, app.theme, nav.go-to-page,
+action.install and action.convert. Each is the path data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
 menu_book, expand_more, expand_less, save, upload, open_in_new, swap_horiz, description,
 vertical_align_top, chevron_right, text_decrease, text_increase, subtitles, contrast, 123,
-install_desktop); nav.contents moves the toc bullets to the left edge. They reach
+install_desktop, transform); nav.contents moves the toc bullets to the left edge. They reach
 this product through the portfolio's shared icon vocabulary, and their per-file SHA-256 is recorded
 in assets/glyphs/PROVENANCE.txt.
 

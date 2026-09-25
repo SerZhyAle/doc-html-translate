@@ -52,8 +52,10 @@ read):
 
 **Step 5 — Persist findings (ticket-bound runs only).**
 - Write curated findings — conclusions, chosen option, rejected options *with reasons*,
-  affected areas — to `DEV/plan/YYYY-MM-DD_<slug>_<slug>/research/<NN>__<topic-slug>.md`. Create the
-  folder if missing.
+  affected areas — to `DEV/plan/NN_<YYYY-MM-DD>_<slug>/research/<NN>__<topic-slug>.md`, inside the
+  ticket's own folder. Create the folder if missing.
+- A finding that outlives one ticket goes to `DEV/research/RESEARCH_<topic-slug>_<YYYY-MM-DD>.md` - the
+  naming CLAUDE.md ("Research notes") declares and `tests/research_naming_test.go` enforces.
 - The scratch dossier stays scratch; the artifact is the durable result a tactical plan
   will consume. Raw grep dumps stay out of it.
 

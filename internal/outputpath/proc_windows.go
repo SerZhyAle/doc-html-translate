@@ -15,7 +15,7 @@ func processAlive(pid int) bool {
 		// Access denied means the process exists (another user's); anything else means gone.
 		return err == windows.ERROR_ACCESS_DENIED
 	}
-	defer windows.CloseHandle(h)
+	defer func() { _ = windows.CloseHandle(h) }()
 	var code uint32
 	if err := windows.GetExitCodeProcess(h, &code); err != nil {
 		return true

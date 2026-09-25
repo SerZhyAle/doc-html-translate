@@ -10,11 +10,13 @@ Vocabulary at copy time: vocabulary.jsonl, 238 records, sha256 378d2d4b..c62 (IC
 re-checked against ICON-SET 0.14 (253 records, sha256 340aee58..e0ac) the same day - the 13
 drawings and their records are unchanged. Re-checked against ICON-SET 0.15 (260 records,
 sha256 b32d1a56..eba8) the same day, when the six files marked 0.15 below were added: the first
-thirteen drawings are unchanged, their records gained `ref.source`.
+thirteen drawings are unchanged, their records gained `ref.source`. `action.convert` (0.15) was
+copied the same day by ticket 32: no page draws it - internal/iconart renders it into the Explorer
+verb icon, assets/convert-verb.ico (ICON-RENDER rule 9).
 
 Licence: every drawing below is a Material Icons (filled) path, (c) Google LLC, Apache License 2.0,
 named in the last column. The catalog records it - `ref.source` on the thirteen exported records,
-`glyph.source` on the six drawn ones (ICON-EXTERNAL 0.10 rule 5) - and this product ships the licence
+`glyph.source` on the seven drawn ones (ICON-EXTERNAL 0.10 rule 5) - and this product ships the licence
 in THIRD-PARTY-NOTICES.txt at the repository root.
 
 sha256                                                            file                          Material Icons origin
@@ -37,3 +39,4 @@ efd70b5cfcd76fd3576447ece383dd62f4eb6f6d14a3b894df32a3e431fc1aec  action.text-la
 5ca25b24022fb2de3699c12bc67ab5d91b32eb3d7bfe7347276beca5739034c4  app.theme.svg                 contrast (0.15)
 f03bbde287175a8d27e3ad1010a1bcb630108b13c0eb0c4414039b39e820c7e9  nav.go-to-page.svg            123 (0.15)
 44bc4edcfbf35c8ebf498c3cf7e46cf6c39c096861473d999c6ba42a02935297  action.install.svg            install_desktop (0.15)
+c9595414a14d77021162d29a52440fec08c6a63b0f91fdd4522d25b98dc00c34  action.convert.svg            transform (0.15; the Explorer verb icon, ticket 32)

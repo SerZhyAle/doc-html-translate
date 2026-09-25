@@ -25,7 +25,9 @@ type placement struct {
 	Reason  string `json:"reason"`
 }
 
-var placementClasses = map[string]bool{"gate": true, "build": true, "hand-run": true, "none": true}
+// "release" is a check the release checklist (scripts/release.ps1) runs before the tag step: its
+// input exists only on the machine a release is cut on, so the gate cannot hold it.
+var placementClasses = map[string]bool{"gate": true, "build": true, "release": true, "hand-run": true, "none": true}
 
 func loadPlacement(t *testing.T) map[string]placement {
 	t.Helper()
@@ -104,7 +106,7 @@ func TestCheckPlacement(t *testing.T) {
 			if r.Runner != "scripts/check.ps1" || !inPlan[r.Check] {
 				t.Errorf("%s is recorded as a gate check but scripts/check.ps1 does not run it", r.Check)
 			}
-		case "build":
+		case "build", "release":
 			for _, runner := range strings.Split(r.Runner, ",") {
 				runner = strings.TrimSpace(runner)
 				if !strings.Contains(readRepoFile(t, filepath.FromSlash(runner)), filepath.Base(r.Check)) {

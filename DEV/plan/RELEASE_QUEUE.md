@@ -16,7 +16,7 @@ when the ticket is filed - the next unused number, never one a ticket has had be
 changes: not on a reorder, not on the move to `done/`, which keeps the prefix. Execution order is the
 order of the lines below, so reordering the queue moves lines and renames nothing.
 
-next-ticket-number: 34
+next-ticket-number: 50
 
 - `#` - the ticket's id, the same number as the file's `NN_` prefix. `--` = no ticket file yet.
 - The release package is the `## release N` heading a line sits under. It is an **ordinal**, not a
@@ -63,12 +63,42 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-33  33_2026-09-25_bundled-binaries-notices              2026-09-25  Draft - GPL pdftotext ships without its licence
+42  42_2026-09-26_bugfix-page-ocr-image-origin            2026-09-26  Draft - B49 (high): page OCR fetches any image a page names
+35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked + release guard; awaits commit and a CI build
+36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - implemented; green gate waits on #43 (X25)
+--  (no ticket) installer x86 build does not link     2026-09-26  Evidenced, unfiled - blocks the next setup.exe
+39  39_2026-09-26_bugfix-single-page-merge-drops-page-styles 2026-09-26  Draft - E31 (high): merged page loses page styles
+41  41_2026-09-26_bugfix-translation-scope-and-partial-results 2026-09-26  Draft - T13 (high): reader chrome sent to the paid engine
+43  43_2026-09-26_bugfix-pdf-text-and-image-fidelity     2026-09-26  Draft - X25 (high): PDF short lines dropped, test.ps1 red
+38  38_2026-09-26_bugfix-bundled-ocr-data-per-channel    2026-09-26  Draft - unpinned eng data, OCR claim the zip does not meet
+46  46_2026-09-26_bugfix-ocr-desktop-paths-and-language  2026-09-26  Draft - non-ANSI profile OCR, GUI script check never runs
+40  40_2026-09-26_bugfix-declare-source-language         2026-09-26  Draft - lang="en" guessed on FB2 / merged / index pages
+44  44_2026-09-26_bugfix-extension-viewer-state-and-references 2026-09-26  Draft - stale loads, export alpha, id refs, popup site
+47  47_2026-09-26_bugfix-cli-robustness-audit-34          2026-09-26  Draft - chapter overwrite, blocking dialogs, silent errors
+45  45_2026-09-26_bugfix-parity-drift-audit-34            2026-09-26  Draft - 18 Go/JS drifts and PARITY.md staleness
 ```
 
-15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 joined the
-same day: the Windows executable embeds Xpdf's pdftotext and three MinGW runtime DLLs with no licence
-text, found while ticket 24 wrote the glyph notices.
+15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 (the bundled
+pdftotext set shipped without its licences) joined and was implemented the same day and moved to [`done/`](done/).
+
+35 was found by 33: `pdftotext.exe` was never tracked in git, so the CI-built release assets and the winget zip embed
+the runtime DLLs without the executable. It sits first because it is a known defect in a shipped channel.
+
+36-47 come from the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md), which
+closed on 2026-09-26 (22 slices, 138 findings: 0 crit, 6 high, 31 med, 101 low; register in its
+[`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md)). 42 sits first: it is the one
+finding that can expose a user's local or intranet images to a web page. The five other highs follow 35 -
+the two that let a release ship something other than the tested tag (36, 37), then the three that give a
+visibly wrong result in the default flow (39, 41, 43). The meds follow, parity drift (45) last because each of
+its items may end as a PARITY.md entry rather than code. 34 re-checked every implemented id of the 2026-09-24
+audit: none regressed.
+
+37 reached `Implemented` on 2026-09-26 and moved to [`done/`](done/37_2026-09-26_bugfix-release-workflow-provenance.md):
+the release workflow builds only the tag it names, the local installer and MSIX builds take `-Tag` and refuse
+any other tree, the MSIX identity defaults to the frozen `SZA.Doc-HTML-Translate`, and every action is pinned by
+commit. Its scratch-clone run found the unfiled line above: `build-installer.ps1` fails in the x86 link
+(`resource.syso: unknown relocation type 3` with `goversioninfo` v1.7.0; the v1.4.1 on this machine's `PATH`
+cannot read the three-ICO `IconPath` at all), so no setup.exe can be built for the next release until it is fixed.
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
 25 (`hygiene`) went first and is done (waiting on a Windows pass, listed below); the pipeline sandbox
@@ -124,11 +154,17 @@ rung. Decide, do not leave it unwritten.
 #   ticket                                              changed     status
 21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-25  In Progress (catalog done 2026-09-25; left: A3 plate font + lab, A5 overflow rule, A7, A11)
 23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  In Progress
-32  32_2026-09-25_icon-system-surfaces                  2026-09-25  Draft - the mark first (owner), then tiles, ICO, verb, extension icon
+32  32_2026-09-25_icon-system-surfaces                  2026-09-25  In Progress (built 2026-09-25; left: the owner's on-device look - taskbar light/dark, Chrome/Edge toolbar)
 26  26_2026-09-23_contract-product-web-pages-sync       2026-09-25  In Progress - Direction A done in the repo; rendered 360/768/1280 check, catalog row + exceptions and B1-B12 local only
-27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
-31  31_2026-09-25_canon-resync-new-duties               2026-09-25  Draft - owner decisions first
+27  27_2026-09-22_install-trust-page                    2026-09-25  In Progress - page + links done in the repo; left: publish, then the local catalog row
+48  48_2026-09-26_contract-doc-internal-quality-gaps    2026-09-26  Draft - rules 3-6: link/anchor/asset gate, .md typography, flag-list drift
+49  49_2026-09-26_contract-doc-external-quality-gaps    2026-09-26  Draft - after 48: freshness, termbase, glossary, screenshots, SEO lengths
 ```
+
+48 and 49 come from the `documentation-quality` adoption run of 2026-09-26: both contracts adopted as a
+consumer, the rules not met recorded here and as dated exceptions in the shared registry. They sit last in
+the package by rule 5 (docs-only work), 49 below 48 because the external contract requires the internal
+one first.
 
 **The six `2026-09-23_contract-*` tickets** (three left - `automated-checks` reached Implemented on 2026-09-24, `rule-adoption` and `iconography` on 2026-09-25, all moved to `done/`; iconography's system surfaces continue as 32) come out of one contract-sync pass over every catalog domain
 that touches this product. Each has two halves: what the repo changes to conform, and what the catalog
@@ -147,11 +183,14 @@ PC" reads nothing from us. No shipped code is wrong, but it is not `--` either: 
 unanswered warning is a user who does not come back. The contract it closes is
 `INSTALL-TRUST` 1.0, and until it lands the gap is a dated exception in the shared registry.
 
-[`31_2026-09-25_canon-resync-new-duties`](31_2026-09-25_canon-resync-new-duties.md) is what the canon
-re-sync of 2026-09-25 found owed: a documentation registry, the permission and network-surface inventories,
-a contract gate on the release path, and a name for the research notes. It sits last by rule 6 - each item
-is a new standing artifact or a naming choice, so the owner decides build-or-defer before any of it is
-scheduled.
+[`31_2026-09-25_canon-resync-new-duties`](done/31_2026-09-25_canon-resync-new-duties.md) moved to
+[`done/`](done/) on 2026-09-25 with all four items built on the owner's instruction: the documentation
+registry (`scripts/doc-registry.ps1`, which now generates `sitemap.xml`), the permission and
+network-surface inventories every privacy text renders from (`scripts/security-posture.ps1`), the contract
+gate in `scripts/release.ps1`, and the `RESEARCH_` naming. Both new checks run in `scripts/check.ps1`, so
+26 and 27 now edit `sitemap.xml` through `-Generate` and the privacy facts through
+`docs/security-posture.json`. Its first contract-gate run names five rows of 23, 26 and 27 to re-verify.
+One owner step is left, listed below.
 
 ## release 4 - waiting on the owner's machine or a human
 
@@ -198,6 +237,9 @@ ticket (in done/)                                   check left
 13_2026-09-24_bugfix-ocr-language-data-and-detection   language download in the Store build
 25_2026-09-24_chore-hygiene-and-test-gaps              scripts/check.ps1 on Windows (Windows-only tests)
 20_2026-09-24_bugfix-windows-registration-honesty      Windows 11 with an existing .epub user choice
+31_2026-09-25_canon-resync-new-duties                  owner reads the rendered privacy texts before main is pushed
+33_2026-09-25_bundled-binaries-notices                 next release: THIRD-PARTY-NOTICES.txt in the zip and as an asset
+37_2026-09-26_bugfix-release-workflow-provenance       next release: the first tag run of release.yml with the pinned actions
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

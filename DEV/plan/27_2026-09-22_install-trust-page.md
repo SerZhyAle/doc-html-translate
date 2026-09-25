@@ -1,6 +1,6 @@
 # The user meets SmartScreen and nothing we ship answers it
 
-**Status:** Draft
+**Status:** In Progress (repo half done 2026-09-25; left: publish the site, then the ⛔ local catalog step)
 **Priority:** 51
 **Date:** 2026-09-22
 
@@ -34,22 +34,45 @@ rights rather than invent a prompt section.
 
 ## Done criteria
 
-- [ ] One trust page carrying the contract's four sections **in order**: what the warning is, why it
+- [x] One trust page carrying the contract's four sections **in order**: what the warning is, why it
       appears, exactly what to click, and what the app never does. A reader who reads only the third
       section is unblocked.
-- [ ] The dialog is quoted verbatim ("Windows protected your PC"), so the user can match what is on their
+- [x] The dialog is quoted verbatim ("Windows protected your PC"), so the user can match what is on their
       screen without reading the page.
-- [ ] The reason states the truth, cost included: the build is not signed, a certificate costs money, that
+- [x] The reason states the truth, cost included: the build is not signed, a certificate costs money, that
       was a choice, and reputation accrues so the warning fades. No implication that the warning is a bug.
-- [ ] No instruction that weakens a protection - no "turn off SmartScreen", no "disable antivirus". Only
+- [x] No instruction that weakens a protection - no "turn off SmartScreen", no "disable antivirus". Only
       More info -> Run anyway.
-- [ ] "What the app never does" agrees with [`privacy.html`](../../privacy.html) and the Store data-safety
+- [x] "What the app never does" agrees with [`privacy.html`](../../privacy.html) and the Store data-safety
       answers.
-- [ ] Reachable from every place a download is offered: `README.md` + `README_RU.md` + `README_UK.md`,
+- [x] Reachable from every place a download is offered: `README.md` + `README_RU.md` + `README_UK.md`,
       `index.html` and the localized site pages, in each authored locale.
 - [ ] **⛔ Local only - changes the contract catalog.** The catalog registry row for `INSTALL-TRUST` moves
       from "not adopted" to adopted, and the exception is closed rather than re-dated (both rows quoted
       below). Runs after the page is merged and published.
+
+## Implementation record (2026-09-25)
+
+- **The page:** [`install-trust.html`](../../install-trust.html), en/ru/uk in-page like `privacy.html`
+  (the three authored locales; the long-form tier of `DEV/DOCS_SURFACES.md`). A lead with the two clicks,
+  then the four rule-1 sections in order. The dialog is quoted in English on all three, plus the Russian
+  Windows wording on `ru`; the Ukrainian Windows wording was not verified, so `ua` quotes the English and
+  says the labels are translated rather than guessing them. The browser "not commonly downloaded" step and
+  the one-folder antivirus exception are the only other instructions (both per-file / per-folder, rule 4).
+  Rule 5 has no elevation to itemize: the page says the installer asks for no administrator rights.
+- **"Never does"** restates `privacy.html` (no personal data, no telemetry/ads/accounts/servers, documents
+  leave only with Google translation chosen, logs never uploaded) and adds two code-checked facts: the GUI
+  listens on `127.0.0.1` only (`cmd/doc-html-ui/main.go`), and the installer's "Open with" task never
+  takes a default handler and is swept on uninstall (`installer/doc-html-translate.iss` `[Registry]`).
+- **Links:** `index.html` `#get` note (`id="smartscreen"`), the same note in the ten `<code>/index.html`
+  landing pages (machine-translated, pointing at the English page; the dialog labels quoted in English),
+  the README trio under "Download", the `docs.*` trio next to "Download the latest release".
+- **Registration:** `sitemap.xml` (three hreflang entries), `.sza-canon.json` `site.pages`,
+  `tests/site_test.go` `authorPages`, `DEV/DOCS_SURFACES.md`.
+- **Check:** `go test ./tests/ -run 'Site|Typography|Parity' -count=1` - `ok`, exit 0. Headless Chrome
+  render of `?l=ru` read back.
+- **Not done here:** the GUI has no first-run surface to link from (the user has already passed SmartScreen
+  by the time it opens). The Partner Center data-safety form agreement is the owner's to confirm.
 
 ## Contract snapshot (2026-09-25)
 

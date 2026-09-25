@@ -17,15 +17,19 @@
   a COULD NOT VERIFY, because a green line over an unrun check is the lie the contract forbids;
   advisories only colour an otherwise clean run. Only the bare PASS is a clean verdict.
 
-  Every run writes temp/logs/gate-evidence.json: the verdict, HEAD, and the git tree hash of the
-  working tree the gate read (untracked files included, exactly what `git add -A` would commit).
+  Every run writes temp/logs/gate-evidence.json: the verdict, HEAD, the plan and every child's
+  verdict, and the git tree hash of the working tree the gate read (untracked files included,
+  exactly what `git add -A` would commit). The tree is hashed before the children run and again
+  after; when the two differ, an edit landed while the gate ran, so the evidence carries no tree
+  and the verdict is COULD NOT VERIFY (a FAIL stays a FAIL).
   scripts/release.ps1 compares that tree with the one it is about to tag - BUILD-EVIDENCE: the
   release binaries are rebuilt in CI from the tag, so the only thing binding them to a tested
   state is that the tag's tree is the tree the gate passed on.
 
 .PARAMETER Plan
   Test hook: the child scripts to run instead of the default set. The default set is the one
-  configs/check-placement.jsonl declares for runner scripts/check.ps1.
+  configs/check-placement.jsonl declares for runner scripts/check.ps1. A subset run still writes
+  evidence, with its plan in it, and scripts/release.ps1 refuses anything short of the full set.
 #>
 param(
     [string[]]$Plan
@@ -44,11 +48,44 @@ $defaultPlan = @(
     'scripts/lint.ps1'
     'scripts/typo.ps1'
     'scripts/parity-check.ps1'
+    'scripts/doc-registry.ps1'
+    'scripts/security-posture.ps1'
 )
 if (-not $Plan) { $Plan = $defaultPlan }
 # `pwsh -File check.ps1 -Plan a,b` binds "a,b" as one string; split it the way a call from inside
 # PowerShell would have.
 $Plan = @($Plan | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+
+# ── gate evidence: the tree ──────────────────────────────────
+# The tree hash comes from a scratch copy of the index, so the real index (what the user staged)
+# is never touched. Copying the index keeps git's stat cache: `git add -A` then re-hashes only
+# what changed instead of every tracked file.
+function Get-WorkingTreeHash {
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    try {
+        $indexPath = (& git rev-parse --git-path index 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $indexPath) { return $null }
+        $scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("check-index-" + [System.IO.Path]::GetRandomFileName())
+        try {
+            if (Test-Path -LiteralPath $indexPath.Trim()) { Copy-Item -LiteralPath $indexPath.Trim() -Destination $scratch }
+            $env:GIT_INDEX_FILE = $scratch
+            & git add -A 2>$null | Out-Null
+            if ($LASTEXITCODE -ne 0) { return $null }
+            $tree = (& git write-tree 2>$null)
+            if ($LASTEXITCODE -ne 0) { return $null }
+            return $tree.Trim()
+        } finally {
+            Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $scratch -ErrorAction SilentlyContinue
+        }
+    } finally {
+        $ErrorActionPreference = $prevEap
+    }
+}
+
+# Hashed before any child runs: the tree the children are about to read.
+$treeBefore = Get-WorkingTreeHash
 
 $pwsh = (Get-Process -Id $PID).Path
 Write-Subject 'check' "$($Plan.Count) child check(s), $(Get-TreeLabel); per-child subjects below"
@@ -82,32 +119,13 @@ elseif ($advisory) { $code = 3; $named = $advisory }
 else { $code = 0; $named = @() }
 $detail = if ($named) { "$($named.Count): " + (($named | ForEach-Object Name) -join ', ') } else { '' }
 
-# ── gate evidence ────────────────────────────────────────────
-# The tree hash comes from a scratch copy of the index, so the real index (what the user staged)
-# is never touched. Copying the index keeps git's stat cache: `git add -A` then re-hashes only
-# what changed instead of every tracked file.
-function Get-WorkingTreeHash {
-    $prevEap = $ErrorActionPreference
-    $ErrorActionPreference = 'SilentlyContinue'
-    try {
-        $indexPath = (& git rev-parse --git-path index 2>$null)
-        if ($LASTEXITCODE -ne 0 -or -not $indexPath) { return $null }
-        $scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("check-index-" + [System.IO.Path]::GetRandomFileName())
-        try {
-            if (Test-Path -LiteralPath $indexPath.Trim()) { Copy-Item -LiteralPath $indexPath.Trim() -Destination $scratch }
-            $env:GIT_INDEX_FILE = $scratch
-            & git add -A 2>$null | Out-Null
-            if ($LASTEXITCODE -ne 0) { return $null }
-            $tree = (& git write-tree 2>$null)
-            if ($LASTEXITCODE -ne 0) { return $null }
-            return $tree.Trim()
-        } finally {
-            Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath $scratch -ErrorAction SilentlyContinue
-        }
-    } finally {
-        $ErrorActionPreference = $prevEap
-    }
+# Hashed again after the last child: a different tree means an edit landed while the gate ran, and
+# the children judged a mix of the two. That is not evidence about either, so it is not a pass.
+$treeAfter = Get-WorkingTreeHash
+$treeMoved = $treeBefore -ne $treeAfter
+if ($treeMoved) {
+    Write-Host "  the working tree changed while the gate ran (tree $treeBefore before, $treeAfter after)" -ForegroundColor Magenta
+    if ($code -ne 1) { $code = 2; $detail = 'the working tree changed during the run' }
 }
 
 $prevEap = $ErrorActionPreference
@@ -117,14 +135,21 @@ $dirty = [bool](& git status --porcelain 2>$null)
 $ErrorActionPreference = $prevEap
 
 $evidence = [ordered]@{
-    verdict  = "check: $(Get-VerdictWord $code)" + $(if ($detail) { " ($detail)" } else { '' })
-    code     = $code
-    head     = if ($head) { $head.Trim() } else { $null }
-    tree     = Get-WorkingTreeHash
-    dirty    = $dirty
-    time     = (Get-Date).ToString('o')
-    subject  = 'Go edition (windows/amd64) + extension edition (node); see each child banner'
-    children = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict } })
+    verdict    = "check: $(Get-VerdictWord $code)" + $(if ($detail) { " ($detail)" } else { '' })
+    code       = $code
+    head       = if ($head) { $head.Trim() } else { $null }
+    # The tree scripts/release.ps1 matches against HEAD: empty when the tree moved under the gate.
+    tree       = if ($treeMoved) { $null } else { $treeAfter }
+    treeBefore = $treeBefore
+    treeAfter  = $treeAfter
+    dirty      = $dirty
+    time       = (Get-Date).ToString('o')
+    subject    = 'Go edition (windows/amd64) + extension edition (node); see each child banner'
+    # What ran, as given. release.ps1 compares it with configs/check-placement.jsonl itself rather
+    # than trusting fullPlan, which is here for a reader.
+    plan       = @($Plan)
+    fullPlan   = ($Plan.Count -eq $defaultPlan.Count) -and -not @($defaultPlan | Where-Object { $_ -notin $Plan })
+    children   = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict } })
 }
 $evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "temp/logs/gate-evidence.json" -Encoding utf8
 

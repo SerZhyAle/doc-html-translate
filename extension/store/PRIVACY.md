@@ -1,8 +1,8 @@
 # Privacy Policy - Documents to translatable HTML
 
-_Last updated: 2026-08-11_
+_Last updated: 2026-09-25_
 
-_Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html - rendered from this text as `extension-privacy.html` in the repo root._
+_Hosted (paste this URL into the store forms): https://serzhyale.github.io/doc-html-translate/extension-privacy.html - the same policy as `extension-privacy.html` in the repo root. The *Network access* and *Permissions* sections of both are rendered from the rows in `docs/security-posture.json`; edit the rows, not the sections._
 
 ## Summary
 This extension processes documents - PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, and local HTML -
@@ -30,9 +30,12 @@ third party.
 None. We have no servers and receive no data from the extension.
 
 ## Data stored on your device
-The extension uses the browser's local extension storage only to remember your settings: whether reflow
-is enabled (globally and per-site), and your reading preferences (font size, font family, theme). This
-data never leaves your device and is removed if you uninstall the extension.
+The extension uses the browser's local extension storage only to remember your settings - whether the
+viewer is on (globally and per site), your reading preferences (font size, font family, theme), the
+interface language and whether remote images may load - which OCR languages you have downloaded, and the
+short summary of the most recent document that "Copy diagnostics" reads. The recognition data of a
+downloaded language is cached in the browser's storage for reuse. None of it leaves your device, and it
+is removed if you uninstall the extension.
 
 ## Diagnostics you copy yourself
 The options page carries a "Copy diagnostics" button. Pressing it writes a short English summary to your
@@ -43,22 +46,45 @@ names. The button adds no permission and sends nothing anywhere - it writes to t
 you decide whether to paste it into a mail to the author.
 
 ## Network access
-The extension itself makes no network requests to any server we control. It fetches the document you
-opened (from the site or local file you chose) in order to render it, and it fetches an image you asked
-it to OCR. Images a document itself points at on the internet are blocked until you choose to load
-them, so opening a document does not tell its author or a tracker that you opened it. The only outbound
-request beyond that is optional: when you explicitly download an extra OCR
-language, its data file is fetched from the public open-source host named above and cached locally.
-Translation is performed by your browser's own built-in translation feature, which you invoke yourself;
-that feature is governed by your browser vendor's privacy policy, not ours.
+<!-- security-posture:begin ext-network (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
+- **The document you open** - fetched from the site or local file you chose, with your sign-in for that
+  site as an ordinary tab would send it, so that the viewer can render it.
+- **The pictures you ask it to read** - the image you right-click, or the pictures of the page where you
+  start *OCR every image on this page*, fetched from the sites that serve them.
+- **Images a document points at on the internet** - blocked until you choose *Load them* for that
+  document or turn on *Load remote images in documents*, so opening a document does not tell its author
+  or a tracker that you opened it.
+- **tessdata.projectnaptha.com, for extra OCR languages** - only when you click *Download* for a
+  language: its data file is fetched, as data and not code, from that public open-source host and cached
+  on your device. English ships inside the extension.
+
+Nothing else leaves your browser: the extension has no server of its own. Translation is done by your
+browser's built-in feature, which you start yourself and which your browser vendor's privacy policy
+governs.
+<!-- security-posture:end ext-network -->
 
 ## Permissions
-- declarativeNetRequest and host access: used solely to redirect PDF opens to the local viewer, to
-  fetch the opened PDF for local rendering, and to fetch an image you choose to OCR. No browsing data
-  is read or transmitted.
-- contextMenus: used solely to add the right-click "OCR & translate this image" action on images.
-- storage: used solely to save the settings described above (including which OCR languages you have
-  downloaded).
+<!-- security-posture:begin ext-permissions (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
+- **declarativeNetRequest** - used solely to open a document you open in the browser in the extension's
+  local viewer instead, and to let *Open original* show it the browser's own way. The rules redirect
+  addresses only; no page content is read.
+- **Access to all sites** (host access) - used solely to fetch the document you opened and the pictures
+  you ask it to read, from whichever site or folder they come from, and to read the current site's name
+  for switching the viewer on or off per site. No browsing data is read or transmitted.
+- **scripting** - used only when you choose *OCR every image on this page* from the right-click menu: the
+  extension then adds one script and its stylesheet to that one tab, lays the recognized text over the
+  page's pictures, and removes both when you stop. Nothing is added to a page without that click.
+- **offscreen** - the recognition engine for a page runs in a hidden page of the extension, opened for
+  one run and closed when it ends; only the picture areas and the recognized text pass through it, and
+  none of it leaves your device.
+- **contextMenus** - adds the extension's right-click actions: *OCR & translate this image* on a picture,
+  *OCR every image on this page* on a page, and *Convert with doc-html-translate* on a document link or
+  page.
+- **storage** - used solely to remember, on this device, your settings (the viewer on or off, globally
+  and per site, reading preferences, the interface language, whether remote images may load), which OCR
+  languages you have downloaded, and the format, page count and last error of the most recent document
+  for *Copy diagnostics*.
+<!-- security-posture:end ext-permissions -->
 
 ## Children's privacy
 The extension is a document-reading utility and does not knowingly collect any data from anyone,

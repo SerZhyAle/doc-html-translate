@@ -1,0 +1,2101 @@
+{
+  "about": "Written by scripts/audit-slices.ps1 - do not edit by hand; rerun it. The phase state lives in INDEX.md, the findings in FINDINGS.md.",
+  "base": "41fbc1b",
+  "maxLines": 3000,
+  "maxFiles": 25,
+  "includeClassB": false,
+  "register": "DEV/research/audit_2026-09-24/README.md",
+  "slices": [
+    {
+      "id": "S01",
+      "name": "cmd/doc-html-ui (part 1 of 2)",
+      "units": [
+        "cmd/doc-html-ui"
+      ],
+      "part": 1,
+      "parts": 2,
+      "siblings": [
+        "S02"
+      ],
+      "pinned": false,
+      "lines": 2170,
+      "changed": 1276,
+      "risk": 124.4,
+      "files": [
+        {
+          "path": "cmd/doc-html-ui/failure.go",
+          "lines": 43,
+          "changed": 43,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/guard.go",
+          "lines": 142,
+          "changed": 142,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/hide_other.go",
+          "lines": 7,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/hide_windows.go",
+          "lines": 17,
+          "changed": 6,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/liveness.go",
+          "lines": 89,
+          "changed": 89,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/main.go",
+          "lines": 1223,
+          "changed": 483,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/proc_other.go",
+          "lines": 23,
+          "changed": 23,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/proc_windows.go",
+          "lines": 61,
+          "changed": 61,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/report.go",
+          "lines": 149,
+          "changed": 13,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/run.go",
+          "lines": 416,
+          "changed": 416,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "G1",
+        "G2",
+        "G3",
+        "G4",
+        "G5",
+        "G6",
+        "G7",
+        "G8",
+        "G9",
+        "G10",
+        "G11",
+        "G12",
+        "G13",
+        "G14",
+        "G16"
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "cmd/doc-html-ui (part 2 of 2)",
+      "units": [
+        "cmd/doc-html-ui"
+      ],
+      "part": 2,
+      "parts": 2,
+      "siblings": [
+        "S01"
+      ],
+      "pinned": false,
+      "lines": 1838,
+      "changed": 743,
+      "risk": 22.9,
+      "files": [
+        {
+          "path": "cmd/doc-html-ui/store.go",
+          "lines": 123,
+          "changed": 123,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/ui.html",
+          "lines": 1679,
+          "changed": 618,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-ui/versioninfo.json",
+          "lines": 36,
+          "changed": 2,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "G5",
+        "G10",
+        "G15",
+        "G17",
+        "G18"
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "internal/app .. internal/comic",
+      "units": [
+        "internal/app",
+        "internal/appearance",
+        "internal/assets",
+        "internal/browser",
+        "internal/bundledtools",
+        "internal/comic"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2588,
+      "changed": 1789,
+      "risk": 49.0,
+      "files": [
+        {
+          "path": "internal/app/app.go",
+          "lines": 320,
+          "changed": 137,
+          "generated": false
+        },
+        {
+          "path": "internal/app/splash.go",
+          "lines": 37,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/appearance/appearance.go",
+          "lines": 238,
+          "changed": 238,
+          "generated": false
+        },
+        {
+          "path": "internal/assets/copier.go",
+          "lines": 290,
+          "changed": 290,
+          "generated": false
+        },
+        {
+          "path": "internal/assets/css.go",
+          "lines": 125,
+          "changed": 125,
+          "generated": false
+        },
+        {
+          "path": "internal/assets/html.go",
+          "lines": 197,
+          "changed": 197,
+          "generated": false
+        },
+        {
+          "path": "internal/browser/browser.go",
+          "lines": 2,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/browser/browser_nonwindows.go",
+          "lines": 10,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/browser/browser_windows.go",
+          "lines": 76,
+          "changed": 62,
+          "generated": false
+        },
+        {
+          "path": "internal/bundledtools/cache.go",
+          "lines": 139,
+          "changed": 139,
+          "generated": false
+        },
+        {
+          "path": "internal/bundledtools/doc.go",
+          "lines": 9,
+          "changed": 9,
+          "generated": false
+        },
+        {
+          "path": "internal/bundledtools/pdftotext_nonwindows.go",
+          "lines": 9,
+          "changed": 9,
+          "generated": false
+        },
+        {
+          "path": "internal/bundledtools/pdftotext_windows.go",
+          "lines": 49,
+          "changed": 49,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/container.go",
+          "lines": 66,
+          "changed": 66,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/extract.go",
+          "lines": 261,
+          "changed": 105,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/natural.go",
+          "lines": 73,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/readers_sevenzip.go",
+          "lines": 265,
+          "changed": 206,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/readers_tar.go",
+          "lines": 66,
+          "changed": 36,
+          "generated": false
+        },
+        {
+          "path": "internal/comic/readers_zip.go",
+          "lines": 30,
+          "changed": 13,
+          "generated": false
+        },
+        {
+          "path": "extension/src/comic.js",
+          "lines": 326,
+          "changed": 108,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P3",
+        "P12",
+        "P14",
+        "P15",
+        "P24",
+        "X9",
+        "X15",
+        "X16",
+        "X17",
+        "X24",
+        "B22",
+        "B23",
+        "Q1",
+        "Q2"
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "scripts/build.ps1 .. scripts/verify-html.ps1",
+      "units": [
+        "scripts/build.ps1",
+        "scripts/check.ps1",
+        "scripts/commit-push.ps1",
+        "scripts/commit_after_build.ps1",
+        "scripts/contract-gate.ps1",
+        "scripts/doc-query.ps1",
+        "scripts/doc-registry.ps1",
+        "scripts/generate-icon.ps1",
+        "scripts/lib/docregistry.ps1",
+        "scripts/lib/verdict.ps1",
+        "scripts/lint.ps1",
+        "scripts/parity-check.ps1",
+        "scripts/release-state.ps1",
+        "scripts/release.ps1",
+        "scripts/security-posture.ps1",
+        "scripts/test-extension.ps1",
+        "scripts/test.ps1",
+        "scripts/typo.ps1",
+        "scripts/verify-exe-version.ps1",
+        "scripts/verify-html.ps1"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2564,
+      "changed": 1747,
+      "risk": 37.4,
+      "files": [
+        {
+          "path": "scripts/build.ps1",
+          "lines": 123,
+          "changed": 7,
+          "generated": false
+        },
+        {
+          "path": "scripts/check.ps1",
+          "lines": 134,
+          "changed": 128,
+          "generated": false
+        },
+        {
+          "path": "scripts/commit-push.ps1",
+          "lines": 68,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/commit_after_build.ps1",
+          "lines": 18,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/contract-gate.ps1",
+          "lines": 214,
+          "changed": 214,
+          "generated": false
+        },
+        {
+          "path": "scripts/doc-query.ps1",
+          "lines": 81,
+          "changed": 81,
+          "generated": false
+        },
+        {
+          "path": "scripts/doc-registry.ps1",
+          "lines": 249,
+          "changed": 249,
+          "generated": false
+        },
+        {
+          "path": "scripts/generate-icon.ps1",
+          "lines": 39,
+          "changed": 26,
+          "generated": false
+        },
+        {
+          "path": "scripts/lib/docregistry.ps1",
+          "lines": 192,
+          "changed": 192,
+          "generated": false
+        },
+        {
+          "path": "scripts/lib/verdict.ps1",
+          "lines": 52,
+          "changed": 52,
+          "generated": false
+        },
+        {
+          "path": "scripts/lint.ps1",
+          "lines": 20,
+          "changed": 9,
+          "generated": false
+        },
+        {
+          "path": "scripts/parity-check.ps1",
+          "lines": 146,
+          "changed": 62,
+          "generated": false
+        },
+        {
+          "path": "scripts/release-state.ps1",
+          "lines": 142,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/release.ps1",
+          "lines": 203,
+          "changed": 72,
+          "generated": false
+        },
+        {
+          "path": "scripts/security-posture.ps1",
+          "lines": 368,
+          "changed": 368,
+          "generated": false
+        },
+        {
+          "path": "scripts/test-extension.ps1",
+          "lines": 51,
+          "changed": 51,
+          "generated": false
+        },
+        {
+          "path": "scripts/test.ps1",
+          "lines": 127,
+          "changed": 114,
+          "generated": false
+        },
+        {
+          "path": "scripts/typo.ps1",
+          "lines": 20,
+          "changed": 9,
+          "generated": false
+        },
+        {
+          "path": "scripts/verify-exe-version.ps1",
+          "lines": 93,
+          "changed": 93,
+          "generated": false
+        },
+        {
+          "path": "scripts/verify-html.ps1",
+          "lines": 224,
+          "changed": 20,
+          "generated": false
+        }
+      ],
+      "recheck": []
+    },
+    {
+      "id": "S05",
+      "name": "internal/outputpath .. internal/pdf",
+      "units": [
+        "internal/outputpath",
+        "internal/pdf"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2895,
+      "changed": 1355,
+      "risk": 37.0,
+      "files": [
+        {
+          "path": "internal/outputpath/completion.go",
+          "lines": 221,
+          "changed": 221,
+          "generated": false
+        },
+        {
+          "path": "internal/outputpath/lock.go",
+          "lines": 92,
+          "changed": 92,
+          "generated": false
+        },
+        {
+          "path": "internal/outputpath/outputpath.go",
+          "lines": 75,
+          "changed": 27,
+          "generated": false
+        },
+        {
+          "path": "internal/outputpath/ownership.go",
+          "lines": 265,
+          "changed": 265,
+          "generated": false
+        },
+        {
+          "path": "internal/outputpath/proc_nonwindows.go",
+          "lines": 21,
+          "changed": 21,
+          "generated": false
+        },
+        {
+          "path": "internal/outputpath/proc_windows.go",
+          "lines": 38,
+          "changed": 38,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/extract.go",
+          "lines": 958,
+          "changed": 63,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/images.go",
+          "lines": 488,
+          "changed": 488,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/pdftotext.go",
+          "lines": 46,
+          "changed": 46,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/pdftotext_nonwindows.go",
+          "lines": 30,
+          "changed": 30,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/pdftotext_windows.go",
+          "lines": 46,
+          "changed": 46,
+          "generated": false
+        },
+        {
+          "path": "internal/pdf/toc.go",
+          "lines": 95,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/pdf-images.js",
+          "lines": 230,
+          "changed": 18,
+          "generated": false
+        },
+        {
+          "path": "extension/src/reflow.js",
+          "lines": 231,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/toc.js",
+          "lines": 59,
+          "changed": 0,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P1",
+        "P6",
+        "P16",
+        "P23",
+        "X6",
+        "X7",
+        "X8",
+        "X9",
+        "X10",
+        "X11",
+        "X14",
+        "B9"
+      ]
+    },
+    {
+      "id": "S06",
+      "name": "internal/limits .. internal/mobi",
+      "units": [
+        "internal/limits",
+        "internal/logging",
+        "internal/md",
+        "internal/mobi"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 880,
+      "changed": 402,
+      "risk": 36.4,
+      "files": [
+        {
+          "path": "internal/limits/limits.go",
+          "lines": 109,
+          "changed": 109,
+          "generated": false
+        },
+        {
+          "path": "internal/limits/tiff.go",
+          "lines": 69,
+          "changed": 69,
+          "generated": false
+        },
+        {
+          "path": "extension/src/limits.js",
+          "lines": 80,
+          "changed": 80,
+          "generated": false
+        },
+        {
+          "path": "internal/logging/log.go",
+          "lines": 182,
+          "changed": 29,
+          "generated": false
+        },
+        {
+          "path": "internal/md/extract.go",
+          "lines": 178,
+          "changed": 45,
+          "generated": false
+        },
+        {
+          "path": "extension/src/md.js",
+          "lines": 40,
+          "changed": 2,
+          "generated": false
+        },
+        {
+          "path": "internal/mobi/extract.go",
+          "lines": 88,
+          "changed": 15,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ebook.js",
+          "lines": 134,
+          "changed": 53,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P21",
+        "E22",
+        "X9",
+        "Q4"
+      ]
+    },
+    {
+      "id": "S07",
+      "name": ".github/workflows .. scripts/build-ui.ps1",
+      "units": [
+        ".github/workflows",
+        "extension (build + publish)",
+        "installer",
+        "msix",
+        "scripts/add_to_dev_log.ps1",
+        "scripts/audit-slices.ps1",
+        "scripts/bootstrap-tools.ps1",
+        "scripts/build-extension.ps1",
+        "scripts/build-installer.ps1",
+        "scripts/build-local.ps1",
+        "scripts/build-ui.ps1"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2978,
+      "changed": 1044,
+      "risk": 30.8,
+      "files": [
+        {
+          "path": ".github/workflows/publish-cws.yml",
+          "lines": 53,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": ".github/workflows/publish-edge.yml",
+          "lines": 49,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "lines": 246,
+          "changed": 25,
+          "generated": false
+        },
+        {
+          "path": "extension/build.mjs",
+          "lines": 294,
+          "changed": 28,
+          "generated": false
+        },
+        {
+          "path": "extension/manifest.json",
+          "lines": 68,
+          "changed": 12,
+          "generated": false
+        },
+        {
+          "path": "extension/scripts/bump-version.mjs",
+          "lines": 35,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/scripts/gen-appearance.mjs",
+          "lines": 125,
+          "changed": 125,
+          "generated": false
+        },
+        {
+          "path": "extension/scripts/publish-cws.mjs",
+          "lines": 149,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/scripts/publish-edge.mjs",
+          "lines": 85,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "installer/doc-html-translate.iss",
+          "lines": 178,
+          "changed": 1,
+          "generated": false
+        },
+        {
+          "path": "msix/AppxManifest.xml",
+          "lines": 132,
+          "changed": 3,
+          "generated": false
+        },
+        {
+          "path": "msix/build-msix.ps1",
+          "lines": 200,
+          "changed": 39,
+          "generated": false
+        },
+        {
+          "path": "scripts/add_to_dev_log.ps1",
+          "lines": 98,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/audit-slices.ps1",
+          "lines": 792,
+          "changed": 792,
+          "generated": false
+        },
+        {
+          "path": "scripts/bootstrap-tools.ps1",
+          "lines": 15,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/build-extension.ps1",
+          "lines": 85,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "scripts/build-installer.ps1",
+          "lines": 155,
+          "changed": 4,
+          "generated": false
+        },
+        {
+          "path": "scripts/build-local.ps1",
+          "lines": 104,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "scripts/build-ui.ps1",
+          "lines": 115,
+          "changed": 7,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "B15",
+        "B29"
+      ]
+    },
+    {
+      "id": "S08",
+      "name": "internal/pipeline .. internal/syslocale",
+      "units": [
+        "internal/pipeline",
+        "internal/procrun",
+        "internal/report",
+        "internal/rtf",
+        "internal/syslocale"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2969,
+      "changed": 2144,
+      "risk": 26.1,
+      "files": [
+        {
+          "path": "internal/pipeline/cost.go",
+          "lines": 89,
+          "changed": 89,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/guard.go",
+          "lines": 49,
+          "changed": 49,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/ocrstep.go",
+          "lines": 113,
+          "changed": 113,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/outputdir.go",
+          "lines": 81,
+          "changed": 81,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/pipeline.go",
+          "lines": 379,
+          "changed": 137,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/reuse.go",
+          "lines": 25,
+          "changed": 25,
+          "generated": false
+        },
+        {
+          "path": "internal/pipeline/translate.go",
+          "lines": 348,
+          "changed": 348,
+          "generated": false
+        },
+        {
+          "path": "internal/procrun/budget.go",
+          "lines": 83,
+          "changed": 83,
+          "generated": false
+        },
+        {
+          "path": "internal/procrun/procrun.go",
+          "lines": 184,
+          "changed": 184,
+          "generated": false
+        },
+        {
+          "path": "internal/procrun/tree_nonwindows.go",
+          "lines": 38,
+          "changed": 38,
+          "generated": false
+        },
+        {
+          "path": "internal/procrun/tree_windows.go",
+          "lines": 67,
+          "changed": 67,
+          "generated": false
+        },
+        {
+          "path": "internal/report/archive.go",
+          "lines": 124,
+          "changed": 19,
+          "generated": false
+        },
+        {
+          "path": "internal/report/environment.go",
+          "lines": 70,
+          "changed": 2,
+          "generated": false
+        },
+        {
+          "path": "internal/report/redact.go",
+          "lines": 79,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/report/store.go",
+          "lines": 164,
+          "changed": 48,
+          "generated": false
+        },
+        {
+          "path": "internal/rtf/codepage.go",
+          "lines": 141,
+          "changed": 141,
+          "generated": false
+        },
+        {
+          "path": "internal/rtf/extract.go",
+          "lines": 127,
+          "changed": 6,
+          "generated": false
+        },
+        {
+          "path": "internal/rtf/parse.go",
+          "lines": 382,
+          "changed": 382,
+          "generated": false
+        },
+        {
+          "path": "extension/src/rtf.js",
+          "lines": 367,
+          "changed": 332,
+          "generated": false
+        },
+        {
+          "path": "internal/syslocale/locale_nonwindows.go",
+          "lines": 6,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/syslocale/locale_windows.go",
+          "lines": 53,
+          "changed": 0,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P7",
+        "P8",
+        "P9",
+        "P10",
+        "P11",
+        "P17",
+        "P22",
+        "E2",
+        "X1",
+        "X2",
+        "X3",
+        "X22",
+        "T1",
+        "T5",
+        "T8",
+        "B21"
+      ]
+    },
+    {
+      "id": "S09",
+      "name": "internal/fb2 .. internal/htmlconv",
+      "units": [
+        "internal/fb2",
+        "internal/fsutil",
+        "internal/htmlconv"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 1124,
+      "changed": 691,
+      "risk": 24.4,
+      "files": [
+        {
+          "path": "internal/fb2/content.go",
+          "lines": 297,
+          "changed": 297,
+          "generated": false
+        },
+        {
+          "path": "internal/fb2/extract.go",
+          "lines": 247,
+          "changed": 72,
+          "generated": false
+        },
+        {
+          "path": "extension/src/fb2.js",
+          "lines": 218,
+          "changed": 124,
+          "generated": false
+        },
+        {
+          "path": "internal/fsutil/atomic.go",
+          "lines": 74,
+          "changed": 74,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlconv/extract.go",
+          "lines": 260,
+          "changed": 122,
+          "generated": false
+        },
+        {
+          "path": "extension/src/html.js",
+          "lines": 28,
+          "changed": 2,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "E14",
+        "E15",
+        "E21",
+        "E22",
+        "X4",
+        "X18",
+        "X19",
+        "X20"
+      ]
+    },
+    {
+      "id": "S10",
+      "name": "internal/ocr (part 1 of 3)",
+      "units": [
+        "internal/ocr"
+      ],
+      "part": 1,
+      "parts": 3,
+      "siblings": [
+        "S11",
+        "S12"
+      ],
+      "pinned": false,
+      "lines": 2141,
+      "changed": 762,
+      "risk": 19.0,
+      "files": [
+        {
+          "path": "internal/ocr/boundary.go",
+          "lines": 109,
+          "changed": 109,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/budget.go",
+          "lines": 115,
+          "changed": 115,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/diag.go",
+          "lines": 115,
+          "changed": 15,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/download.go",
+          "lines": 265,
+          "changed": 265,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/exif.go",
+          "lines": 205,
+          "changed": 12,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/overlay.go",
+          "lines": 921,
+          "changed": 190,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/run.go",
+          "lines": 51,
+          "changed": 51,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/screen.go",
+          "lines": 360,
+          "changed": 5,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "O5",
+        "O6",
+        "O7",
+        "O8",
+        "O9",
+        "O10",
+        "O11",
+        "O12"
+      ]
+    },
+    {
+      "id": "S11",
+      "name": "internal/ocr (part 2 of 3)",
+      "units": [
+        "internal/ocr"
+      ],
+      "part": 2,
+      "parts": 3,
+      "siblings": [
+        "S10",
+        "S12"
+      ],
+      "pinned": false,
+      "lines": 2072,
+      "changed": 466,
+      "risk": 22.5,
+      "files": [
+        {
+          "path": "internal/ocr/script.go",
+          "lines": 166,
+          "changed": 23,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/strength.go",
+          "lines": 32,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/tessdata.go",
+          "lines": 255,
+          "changed": 117,
+          "generated": false
+        },
+        {
+          "path": "internal/ocr/tesseract.go",
+          "lines": 1619,
+          "changed": 326,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "O1",
+        "O2",
+        "O3",
+        "O4",
+        "O5",
+        "O6",
+        "O8"
+      ]
+    },
+    {
+      "id": "S12",
+      "name": "internal/ocr (part 3 of 3)",
+      "units": [
+        "internal/ocr"
+      ],
+      "part": 3,
+      "parts": 3,
+      "siblings": [
+        "S10",
+        "S11"
+      ],
+      "pinned": false,
+      "lines": 1999,
+      "changed": 483,
+      "risk": 0.6,
+      "files": [
+        {
+          "path": "internal/ocr/text.go",
+          "lines": 87,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-cluster.js",
+          "lines": 606,
+          "changed": 161,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-lang.js",
+          "lines": 137,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-overlay.css",
+          "lines": 101,
+          "changed": 45,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-overlay.js",
+          "lines": 718,
+          "changed": 149,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-plates.js",
+          "lines": 312,
+          "changed": 128,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-text.js",
+          "lines": 38,
+          "changed": 0,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "B2",
+        "B4",
+        "B7",
+        "B16",
+        "B26"
+      ]
+    },
+    {
+      "id": "S13",
+      "name": "internal/htmlgen (part 1 of 2)",
+      "units": [
+        "internal/htmlgen"
+      ],
+      "part": 1,
+      "parts": 2,
+      "siblings": [
+        "S14"
+      ],
+      "pinned": false,
+      "lines": 2305,
+      "changed": 604,
+      "risk": 14.8,
+      "files": [
+        {
+          "path": "internal/htmlgen/encode.go",
+          "lines": 13,
+          "changed": 13,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/favicon.go",
+          "lines": 58,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/glyphs.go",
+          "lines": 54,
+          "changed": 54,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/htmlgen.go",
+          "lines": 452,
+          "changed": 82,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/merge.go",
+          "lines": 287,
+          "changed": 287,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/navbar.go",
+          "lines": 819,
+          "changed": 62,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/reader_key.go",
+          "lines": 31,
+          "changed": 31,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/singlepage.go",
+          "lines": 303,
+          "changed": 61,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlgen/toc_scan.go",
+          "lines": 288,
+          "changed": 6,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E13",
+        "E14",
+        "E17",
+        "E18",
+        "E19",
+        "E21",
+        "E22",
+        "E23",
+        "E24"
+      ]
+    },
+    {
+      "id": "S14",
+      "name": "internal/htmlgen (part 2 of 2)",
+      "units": [
+        "internal/htmlgen"
+      ],
+      "part": 2,
+      "parts": 2,
+      "siblings": [
+        "S13"
+      ],
+      "pinned": false,
+      "lines": 2179,
+      "changed": 367,
+      "risk": 3.8,
+      "files": [
+        {
+          "path": "extension/src/glyphs.js",
+          "lines": 57,
+          "changed": 57,
+          "generated": false
+        },
+        {
+          "path": "extension/src/viewer.css",
+          "lines": 297,
+          "changed": 64,
+          "generated": false
+        },
+        {
+          "path": "extension/src/viewer.html",
+          "lines": 68,
+          "changed": 12,
+          "generated": false
+        },
+        {
+          "path": "extension/src/viewer.js",
+          "lines": 1757,
+          "changed": 234,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "B1",
+        "B8",
+        "B10",
+        "B11",
+        "B14",
+        "B26",
+        "B27",
+        "B28"
+      ]
+    },
+    {
+      "id": "S15",
+      "name": "internal/epub",
+      "units": [
+        "internal/epub"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2277,
+      "changed": 1158,
+      "risk": 13.9,
+      "files": [
+        {
+          "path": "internal/epub/charset.go",
+          "lines": 101,
+          "changed": 101,
+          "generated": false
+        },
+        {
+          "path": "internal/epub/epub.go",
+          "lines": 412,
+          "changed": 117,
+          "generated": false
+        },
+        {
+          "path": "internal/epub/links.go",
+          "lines": 264,
+          "changed": 264,
+          "generated": false
+        },
+        {
+          "path": "internal/epub/normalize.go",
+          "lines": 393,
+          "changed": 393,
+          "generated": false
+        },
+        {
+          "path": "internal/epub/resolve.go",
+          "lines": 130,
+          "changed": 130,
+          "generated": false
+        },
+        {
+          "path": "internal/epub/toc.go",
+          "lines": 409,
+          "changed": 19,
+          "generated": false
+        },
+        {
+          "path": "extension/src/epub.js",
+          "lines": 568,
+          "changed": 134,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "E1",
+        "E5",
+        "E6",
+        "E10",
+        "E11",
+        "E12",
+        "E16",
+        "E18",
+        "E20",
+        "B16",
+        "B17",
+        "B19",
+        "B20",
+        "B23"
+      ]
+    },
+    {
+      "id": "S16",
+      "name": "extension/src/defaults* .. extension/src/url*",
+      "units": [
+        "extension/src/defaults*",
+        "extension/src/diagnostics*",
+        "extension/src/export*",
+        "extension/src/i18n*",
+        "extension/src/lang*",
+        "extension/src/ocr*",
+        "extension/src/page*",
+        "extension/src/sanitize*",
+        "extension/src/url*"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2082,
+      "changed": 491,
+      "risk": 12.5,
+      "files": [
+        {
+          "path": "extension/src/defaults.js",
+          "lines": 22,
+          "changed": 5,
+          "generated": false
+        },
+        {
+          "path": "extension/src/diagnostics.js",
+          "lines": 86,
+          "changed": 15,
+          "generated": false
+        },
+        {
+          "path": "extension/src/export-html.js",
+          "lines": 48,
+          "changed": 48,
+          "generated": false
+        },
+        {
+          "path": "extension/src/i18n.js",
+          "lines": 118,
+          "changed": 5,
+          "generated": false
+        },
+        {
+          "path": "extension/src/lang.js",
+          "lines": 97,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-host.html",
+          "lines": 15,
+          "changed": 1,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-host.js",
+          "lines": 89,
+          "changed": 27,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr-screen.js",
+          "lines": 229,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr.html",
+          "lines": 29,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/ocr.js",
+          "lines": 175,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "extension/src/page-agent.js",
+          "lines": 509,
+          "changed": 126,
+          "generated": false
+        },
+        {
+          "path": "extension/src/page-ocr.js",
+          "lines": 376,
+          "changed": 96,
+          "generated": false
+        },
+        {
+          "path": "extension/src/page-overlay.css",
+          "lines": 108,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/sanitize.js",
+          "lines": 35,
+          "changed": 6,
+          "generated": false
+        },
+        {
+          "path": "extension/src/url-policy.js",
+          "lines": 146,
+          "changed": 146,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "B3",
+        "B5",
+        "B6",
+        "B12",
+        "B13",
+        "B14",
+        "B15",
+        "B17",
+        "B18",
+        "B27"
+      ]
+    },
+    {
+      "id": "S17",
+      "name": "internal/htmlproc .. internal/img",
+      "units": [
+        "internal/htmlproc",
+        "internal/htmlsplit",
+        "internal/i18n",
+        "internal/iconart",
+        "internal/img"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2937,
+      "changed": 2149,
+      "risk": 12.4,
+      "files": [
+        {
+          "path": "internal/htmlproc/htmlproc.go",
+          "lines": 104,
+          "changed": 3,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlsplit/chunk.go",
+          "lines": 312,
+          "changed": 312,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlsplit/links.go",
+          "lines": 195,
+          "changed": 195,
+          "generated": false
+        },
+        {
+          "path": "internal/htmlsplit/split.go",
+          "lines": 127,
+          "changed": 23,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n.go",
+          "lines": 127,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_cli.go",
+          "lines": 423,
+          "changed": 269,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_epub.go",
+          "lines": 49,
+          "changed": 49,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_limits.go",
+          "lines": 119,
+          "changed": 119,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_ocr.go",
+          "lines": 62,
+          "changed": 62,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_pipeline.go",
+          "lines": 163,
+          "changed": 163,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_reader.go",
+          "lines": 100,
+          "changed": 25,
+          "generated": false
+        },
+        {
+          "path": "internal/i18n/i18n_tools.go",
+          "lines": 77,
+          "changed": 77,
+          "generated": false
+        },
+        {
+          "path": "internal/iconart/contrast.go",
+          "lines": 27,
+          "changed": 27,
+          "generated": false
+        },
+        {
+          "path": "internal/iconart/mark.go",
+          "lines": 107,
+          "changed": 107,
+          "generated": false
+        },
+        {
+          "path": "internal/iconart/outputs.go",
+          "lines": 230,
+          "changed": 230,
+          "generated": false
+        },
+        {
+          "path": "internal/iconart/path.go",
+          "lines": 226,
+          "changed": 226,
+          "generated": false
+        },
+        {
+          "path": "internal/iconart/raster.go",
+          "lines": 176,
+          "changed": 176,
+          "generated": false
+        },
+        {
+          "path": "internal/img/extract.go",
+          "lines": 313,
+          "changed": 86,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P8",
+        "E1",
+        "E7",
+        "E8",
+        "E9",
+        "X11",
+        "X12",
+        "X13",
+        "X23",
+        "T2",
+        "Q3"
+      ]
+    },
+    {
+      "id": "S18",
+      "name": "internal/textutil .. internal/windowsreg",
+      "units": [
+        "internal/textutil",
+        "internal/translator",
+        "internal/txt",
+        "internal/windowsreg"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 2748,
+      "changed": 1589,
+      "risk": 8.6,
+      "files": [
+        {
+          "path": "internal/textutil/codec.go",
+          "lines": 109,
+          "changed": 109,
+          "generated": false
+        },
+        {
+          "path": "internal/textutil/lines.go",
+          "lines": 41,
+          "changed": 3,
+          "generated": false
+        },
+        {
+          "path": "internal/textutil/utf8.go",
+          "lines": 119,
+          "changed": 119,
+          "generated": false
+        },
+        {
+          "path": "internal/translator/cache.go",
+          "lines": 88,
+          "changed": 30,
+          "generated": false
+        },
+        {
+          "path": "internal/translator/google.go",
+          "lines": 272,
+          "changed": 272,
+          "generated": false
+        },
+        {
+          "path": "internal/translator/ollama.go",
+          "lines": 459,
+          "changed": 201,
+          "generated": false
+        },
+        {
+          "path": "internal/translator/retry.go",
+          "lines": 98,
+          "changed": 98,
+          "generated": false
+        },
+        {
+          "path": "internal/translator/translator.go",
+          "lines": 89,
+          "changed": 21,
+          "generated": false
+        },
+        {
+          "path": "internal/txt/decode.go",
+          "lines": 77,
+          "changed": 77,
+          "generated": false
+        },
+        {
+          "path": "internal/txt/extract.go",
+          "lines": 234,
+          "changed": 41,
+          "generated": false
+        },
+        {
+          "path": "internal/txt/legacy.go",
+          "lines": 90,
+          "changed": 19,
+          "generated": false
+        },
+        {
+          "path": "internal/txt/sniff.go",
+          "lines": 113,
+          "changed": 5,
+          "generated": false
+        },
+        {
+          "path": "extension/src/txt.js",
+          "lines": 226,
+          "changed": 103,
+          "generated": false
+        },
+        {
+          "path": "internal/windowsreg/register_nonwindows.go",
+          "lines": 54,
+          "changed": 25,
+          "generated": false
+        },
+        {
+          "path": "internal/windowsreg/register_windows.go",
+          "lines": 633,
+          "changed": 420,
+          "generated": false
+        },
+        {
+          "path": "internal/windowsreg/status.go",
+          "lines": 46,
+          "changed": 46,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P12",
+        "P13",
+        "P19",
+        "P23",
+        "X5",
+        "X21",
+        "X22",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ]
+    },
+    {
+      "id": "S19",
+      "name": "internal/config .. internal/dialog",
+      "units": [
+        "internal/config",
+        "internal/dialog"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 1327,
+      "changed": 233,
+      "risk": 7.1,
+      "files": [
+        {
+          "path": "internal/config/flags.go",
+          "lines": 271,
+          "changed": 51,
+          "generated": false
+        },
+        {
+          "path": "internal/config/lang.go",
+          "lines": 25,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "extension/src/background.js",
+          "lines": 271,
+          "changed": 48,
+          "generated": false
+        },
+        {
+          "path": "extension/src/options.html",
+          "lines": 109,
+          "changed": 5,
+          "generated": false
+        },
+        {
+          "path": "extension/src/options.js",
+          "lines": 247,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "extension/src/popup.html",
+          "lines": 73,
+          "changed": 4,
+          "generated": false
+        },
+        {
+          "path": "extension/src/popup.js",
+          "lines": 170,
+          "changed": 2,
+          "generated": false
+        },
+        {
+          "path": "internal/dialog/dialog_nonwindows.go",
+          "lines": 32,
+          "changed": 11,
+          "generated": false
+        },
+        {
+          "path": "internal/dialog/dialog_windows.go",
+          "lines": 78,
+          "changed": 53,
+          "generated": false
+        },
+        {
+          "path": "internal/dialog/host.go",
+          "lines": 51,
+          "changed": 51,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P10",
+        "P18",
+        "P19",
+        "P20",
+        "B24",
+        "B25"
+      ]
+    },
+    {
+      "id": "S20",
+      "name": "cmd/doc-html-translate",
+      "units": [
+        "cmd/doc-html-translate"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 112,
+      "changed": 10,
+      "risk": 2.9,
+      "files": [
+        {
+          "path": "cmd/doc-html-translate/main.go",
+          "lines": 76,
+          "changed": 8,
+          "generated": false
+        },
+        {
+          "path": "cmd/doc-html-translate/versioninfo.json",
+          "lines": 36,
+          "changed": 2,
+          "generated": false
+        }
+      ],
+      "recheck": [
+        "P18"
+      ]
+    },
+    {
+      "id": "S21",
+      "name": "winget",
+      "units": [
+        "winget"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 605,
+      "changed": 0,
+      "risk": 0.0,
+      "files": [
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.installer.yaml",
+          "lines": 18,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.ar-SA.yaml",
+          "lines": 43,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.bn-BD.yaml",
+          "lines": 44,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.de-DE.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml",
+          "lines": 51,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.es-ES.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.fr-FR.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.hi-IN.yaml",
+          "lines": 44,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.it-IT.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.pt-BR.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.ru-RU.yaml",
+          "lines": 45,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.uk-UA.yaml",
+          "lines": 44,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.ur-PK.yaml",
+          "lines": 44,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml",
+          "lines": 40,
+          "changed": 0,
+          "generated": false
+        },
+        {
+          "path": "winget/SerZhyAle.DocHtmlTranslate.yaml",
+          "lines": 7,
+          "changed": 0,
+          "generated": false
+        }
+      ],
+      "recheck": []
+    },
+    {
+      "id": "S22",
+      "name": "extension (build + publish)",
+      "units": [
+        "extension (build + publish)"
+      ],
+      "part": 1,
+      "parts": 1,
+      "siblings": [],
+      "pinned": false,
+      "lines": 100,
+      "changed": 2,
+      "risk": 1.4,
+      "files": [
+        {
+          "path": "extension/package.json",
+          "lines": 32,
+          "changed": 2,
+          "generated": false
+        },
+        {
+          "path": "extension/scripts/_lib.mjs",
+          "lines": 68,
+          "changed": 0,
+          "generated": false
+        }
+      ],
+      "recheck": []
+    }
+  ],
+  "generated": [],
+  "registerNoCode": [
+    "Q7"
+  ],
+  "registerClassB": [
+    "G19",
+    "Q5",
+    "Q6"
+  ]
+}

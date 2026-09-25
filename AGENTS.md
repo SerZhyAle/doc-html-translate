@@ -51,8 +51,8 @@ This repo's overlay shape (four overlay facts):
 
 Two distinct flows - see [DEV/RELEASE.md](DEV/RELEASE.md):
 
-- **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "<commit message>"` (gate + build
-  CLI + build UI + commit). Never touches GitHub/CI. This is the default for any "build"/"сборка" ask.
+- **Build ("сборка")** = local and FREE. `./scripts/build-local.ps1 -Message "<commit message>"` (build
+  CLI + build UI, then the gate over that tree, then commit). Never touches GitHub/CI. This is the default for any "build"/"сборка" ask.
 - **Release ("релиз")** = published and PAID. `./scripts/release.ps1` prints the full checklist and
   runs nothing; tags (`v*`, `ext-cws-v*`, `ext-edge-v*`) trigger paid CI. Only do this for an explicit "release"/"релиз".
 
@@ -75,9 +75,33 @@ Run from repository root in PowerShell.
   and the **last line** is the verdict (`check: PASS`, `test: COULD NOT VERIFY (1)`, ..). Quote that line
   as evidence, not the scrollback above it. A fresh clone without `test_doc/` ends in COULD NOT VERIFY
   by design. Which runner owns each check: `configs/check-placement.jsonl` (a new check gets a record).
-- `check.ps1` writes `temp/logs/gate-evidence.json` (verdict + tree hash); `release.ps1` blocks the tag
-  step unless that tree is HEAD's.
-- Release checklist (prints only, runs nothing): ./scripts/release.ps1
+- `check.ps1` writes `temp/logs/gate-evidence.json` (verdict, plan, every child's verdict, and the tree
+  hash taken before and after the run - an edit during the run voids it); `release.ps1` blocks the tag
+  step unless it is the full default plan, every child passing, on HEAD's tree (only `DEV/COMMIT_LOG.md`,
+  appended by build-local after its commit, may differ). A `-Plan` subset never unlocks it.
+- `scripts/commit-push.ps1` (`a c`) refuses to push `main` without `-PublishSite`: Pages serves the site
+  from `main`, so that push publishes it, ungated.
+- `check.ps1` also holds two whole-tree checks. `scripts/doc-registry.ps1`: every maintained document is a
+  record of `docs/DOCUMENT_REGISTRY.jsonl` (record shape 1, declared in the stamp), every `.md` / `.html`
+  file is claimed by a record or by `configs/doc-registry-exclusions.jsonl`, every announced page carries
+  the SEO block, and `sitemap.xml` is generated - after adding or renaming a site page, run it with
+  `-Generate`, never edit the sitemap. `scripts/security-posture.ps1`: the permission and network-surface
+  inventories in `docs/security-posture.json` against `extension/manifest.json`, `msix/AppxManifest.xml`,
+  the code and the dependency set; the privacy pages, `extension/store/PRIVACY.md`, the permission
+  justifications in `extension/store/LISTING.md` and the runFullTrust text in `msix/README.md` are
+  rendered from those rows - edit the rows, then run it with `-Render`. A new permission, network call
+  or telemetry-shaped dependency fails it until a row covers it.
+- "What must I read before touching this?": `./scripts/doc-query.ps1 -Area <area> -Trigger <trigger>`
+  (`-Path <file>` for one file's record, `-List` for the vocabularies). Register a document before
+  anything links to it.
+- Release checklist (prints only, runs nothing but read-only checks): ./scripts/release.ps1. Its header
+  carries two verdicts the tag step takes as input: the gate evidence, and the contract gate
+  (`scripts/contract-gate.ps1`: the pointers in `docs/contracts/` against the catalog registry -
+  PASS / WARN pass, FAIL / UNVERIFIED block, and an unreachable catalog is UNVERIFIED, never PASS).
+- Sliced code audit: ./scripts/audit-slices.ps1 cuts the audit scope (shipped code + release path) into
+  slices a session can read line by line (`-Write` writes the manifest into the audit ticket's folder,
+  `-Tail` slices files added since, `-Summary` measures the campaign and exits 0 only when it is closed).
+  Hand-run; ticket 34 is its first campaign.
 - OCR visual-fidelity lab: go run ./tools/ocrlab verify | run | score | report (see tools/ocrlab/README.md)
 
 Tool bootstrap (when missing):
@@ -158,7 +182,8 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 ## Pitfalls
 
 - scripts/build.ps1 and scripts/build-ui.ps1 copy artifacts to C:/GD/tc/SZA/_APP. This is environment-specific and may fail on other machines.
-- Build scripts rely on goversioninfo for Windows resource embedding.
+- Build scripts rely on goversioninfo for Windows resource embedding - v1.5.0 or later, because `IconPath` lists three ICOs (mark, verb, document type) whose resource indexes internal/windowsreg writes into the registry; an older one fails opening the comma-joined path.
+- System-surface icons (the program ICO and its favicon copies, `assets/convert-verb.ico`, `assets/document-type.ico`, `extension/icons/*`, the MSIX assets) are render targets of internal/iconart: redraw them with `scripts/generate-icon.ps1` (`go run ./tools/icongen`), never by hand - tests/icons_test.go compares every pixel.
 - MOBI/AZW3 conversion depends on Calibre at runtime; CBR/CB7 comics depend on 7-Zip at runtime (CBZ/CBT need nothing).
 
 ## Editing Guidance
@@ -173,6 +198,8 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - DEV/README.md
 - docs/README.md (index of the docs/ tree)
 - docs/PARITY.md (cross-edition invariants + port map - read before adding features)
+- docs/DOCUMENT_REGISTRY.jsonl (every maintained document, its product areas and change triggers; queried by scripts/doc-query.ps1)
+- docs/security-posture.json (what each edition can touch and send; docs/SECURITY_POSTURE.md is its readable render)
 - docs/how-i-posted-this-project-to-winget.md
 - **The shared contracts catalog is at `P:/Contracts` on this machine** - this is the only tracked file
   in the repository allowed to name that path. Anything a second product builds against lives there,

@@ -404,7 +404,10 @@ func recognizePaths(ctx context.Context, bin, lang, dataDir string, paths []stri
 	var mu sync.Mutex
 	done := 0
 
-	for w := 0; w < poolWorkers(paths); w++ {
+	// Computed once: poolWorkers reads every image's header, so evaluating it in the loop
+	// condition re-read the whole book's headers once per worker started.
+	workers := poolWorkers(paths)
+	for w := 0; w < workers; w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

@@ -6,9 +6,11 @@ coverage.out
 # The two build/ exes are committed on purpose: they are this product's own release output and the
 # winget/MSIX manifests point a clone at them without a local Go toolchain.
 !build/*.exe
-# pdftotext and its three MinGW runtime DLLs are a vendored upstream binary (Poppler), not build
-# output - the converter shells out to them and they ship inside every package.
+# pdftotext and its three MinGW runtime DLLs are a vendored upstream binary (Xpdf 4.00 via Git for Windows, see internal/bundledtools/PROVENANCE.txt), not build
+# output - the converter shells out to them and they ship inside every package. The exe is tracked too:
+# the CI release build embeds only what a clean checkout holds (ticket 35).
 !internal/bundledtools/pdftotext/*.dll
+!internal/bundledtools/pdftotext/pdftotext.exe
 # Extracted EPUB directories in test_epub
 test_epub/
 test_pdf/

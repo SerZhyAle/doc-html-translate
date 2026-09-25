@@ -92,6 +92,9 @@ func RunLogf(format string, args ...any) {
 	runLogMu.Lock()
 	defer runLogMu.Unlock()
 	if runLog != nil {
+		if runLogFilter != nil {
+			line = runLogFilter(line)
+		}
 		_, _ = io.WriteString(runLog, line)
 	}
 }

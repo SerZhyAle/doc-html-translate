@@ -191,13 +191,15 @@ func endLine(e runEnd) string {
 }
 
 // outcome turns how the converter ended into the end line's payload. The raw error goes to the
-// GUI's own log, never to the page.
+// GUI's own log, never to the page. A clean exit is "done" even when Cancel was pressed: a cancel
+// that arrives after the converter finished (while the relay drains its last output) kills
+// nothing, so the result on disk is complete and the page must not call it cancelled.
 func outcome(cancelled bool, err error) runEnd {
 	switch {
-	case cancelled:
-		return runEnd{State: "cancelled"}
 	case err == nil:
 		return runEnd{State: "done"}
+	case cancelled:
+		return runEnd{State: "cancelled"}
 	}
 	logFailure("conversion", err)
 	var exit *exec.ExitError

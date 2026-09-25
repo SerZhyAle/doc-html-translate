@@ -10,7 +10,7 @@
   <meta property="og:title" content="Privacy Policy - Doc-HTML-Translate">
   <meta property="og:description" content="Privacy policy for Doc-HTML-Translate: no data collection, no telemetry, runs entirely on your device.">
   <meta property="og:image" content="https://serzhyale.github.io/doc-html-translate/tools/store/gui-en-us.png">
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Privacy Policy - Doc-HTML-Translate">
   <meta name="twitter:description" content="No data collection, no telemetry, runs entirely on your device.">
   <meta name="twitter:image" content="https://serzhyale.github.io/doc-html-translate/tools/store/gui-en-us.png">
@@ -57,7 +57,7 @@
 
   <main class="container prose" id="top">
     <h1><span data-l="ru">Политика конфиденциальности</span><span data-l="en">Privacy Policy</span><span data-l="ua">Політика конфіденційності</span></h1>
-    <p class="meta"><span data-l="ru">Doc-HTML-Translate &middot; обновлено 2026-08-11</span><span data-l="en">Doc-HTML-Translate &middot; last updated 2026-08-11</span><span data-l="ua">Doc-HTML-Translate &middot; оновлено 2026-08-11</span></p>
+    <p class="meta"><span data-l="ru">Doc-HTML-Translate &middot; обновлено 2026-09-25</span><span data-l="en">Doc-HTML-Translate &middot; last updated 2026-09-25</span><span data-l="ua">Doc-HTML-Translate &middot; оновлено 2026-09-25</span></p>
 
     <p class="lead" data-l="ru"><strong>Doc-HTML-Translate не собирает, не хранит, не записывает в журналы и не передаёт никаких персональных данных.</strong> Приложение работает полностью на вашем устройстве, не имеет собственных серверов и не содержит телеметрии, аналитики, рекламы и учётных записей.</p>
     <p class="lead" data-l="en"><strong>Doc-HTML-Translate does not collect, store, log, or transmit any
@@ -66,30 +66,63 @@
     <p class="lead" data-l="ua"><strong>Doc-HTML-Translate не збирає, не зберігає, не записує до журналів і не передає жодних персональних даних.</strong> Застосунок працює повністю на вашому пристрої, не має власних серверів і не містить телеметрії, аналітики, реклами чи облікових записів.</p>
 
     <h2><span data-l="ru">К чему приложение обращается и зачем</span><span data-l="en">What it accesses and why</span><span data-l="ua">До чого застосунок звертається і навіщо</span></h2>
+    <!-- security-posture:begin app-access (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
     <ul data-l="ru">
       <li><strong>Файлы документов, которые вы открываете</strong> - чтобы преобразовать их в локальный HTML.</li>
-      <li><strong>Ваш браузер</strong> - чтобы показать преобразованный HTML.</li>
-      <li><strong>Интернет</strong> - только если вы явно выберете перевод через Google: извлечённый текст отправляется в Google Cloud Translation API с ключом, который вы предоставляете сами. В локальном режиме Ollama текст отправляется только на сервер перевода, работающий на вашем собственном компьютере. При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.</li>
+      <li><strong>Ваш браузер</strong> - чтобы показать преобразованный HTML, а для настольного приложения - и его собственное окно.</li>
+      <li><strong>Соединение только внутри вашего компьютера</strong> - настольное приложение общается со своим окном через <code>127.0.0.1</code> под защитой секрета, который создаётся заново при каждом запуске, и закрывает соединение вместе с окном. Через него ничто не покидает ваше устройство.</li>
+      <li><strong>Интернет, для перевода через Google</strong> - только если вы явно его выберете: извлечённый текст отправляется в Google Cloud Translation API с ключом, который вы предоставляете сами.</li>
+      <li><strong>Локальный сервер Ollama</strong> - только если вы выберете вариант Ollama: текст отправляется на сервер перевода на вашем собственном компьютере (<code>localhost:11434</code>) и больше никуда.</li>
+      <li><strong>GitHub, для дополнительных языков OCR</strong> - только когда вы скачиваете язык (<em>Скачать</em> в приложении или <code>-ocr-download</code>): файл данных языка загружается из открытого репозитория <code>tessdata_fast</code> проекта Tesseract и сверяется с закреплённым отпечатком SHA-256. Запрос называет только язык; ничего вашего не отправляется. Английский встроен.</li>
+      <li><strong>Сопоставления файлов Windows</strong> - только если вы их выберете, по умолчанию выключено: записи для вашей учётной записи, чтобы документ открывался двойным щелчком, через пункт <em>Convert to HTML</em> в контекстном меню или через <em>Открыть с помощью</em>. При удалении восстанавливается прежний обработчик.</li>
+      <li><strong>Вспомогательные программы на вашем компьютере</strong> - встроенный pdftotext для PDF, а также Tesseract, Calibre, 7-Zip, ffmpeg или ImageMagick, если вы их установили, запускаются локально, чтобы прочитать формат. Приложение ничего не устанавливает.</li>
+      <li><strong>Ваша почтовая программа</strong> - только когда вы нажмёте <em>Отправить журналы автору</em>: приложение открывает в ней неотправленное письмо и само ничего не отправляет (см. ниже).</li>
     </ul>
     <ul data-l="en">
       <li><strong>The document files you open</strong> - to convert them to local HTML.</li>
-      <li><strong>Your web browser</strong> - to display the converted HTML.</li>
-      <li><strong>The internet</strong> - only if you explicitly choose Google translation: the
-        extracted text is sent to the Google Cloud Translation API using a key you supply. With
-        the local Ollama option, text is sent only to a translation server running on your own
-        machine. With the default free browser translation, nothing is sent by the app at all.</li>
+      <li><strong>Your web browser</strong> - to display the converted HTML, and, for the desktop app, its own window.</li>
+      <li><strong>A connection inside your computer only</strong> - the desktop app talks to its own window over <code>127.0.0.1</code>, guarded by a secret made anew at each launch, and closes it with the window. Nothing leaves your device through it.</li>
+      <li><strong>The internet, for Google translation</strong> - only if you explicitly choose it: the extracted text is sent to the Google Cloud Translation API using a key you supply.</li>
+      <li><strong>A local Ollama server</strong> - only if you choose the Ollama option: the text is sent to the translation server on your own machine (<code>localhost:11434</code>), nowhere else.</li>
+      <li><strong>GitHub, for extra OCR languages</strong> - only when you download one (<em>Download</em> in the app, or <code>-ocr-download</code>): the language's data file is fetched from the Tesseract project's public <code>tessdata_fast</code> repository and checked against a pinned SHA-256 digest. The request names the language; nothing of yours is sent. English is built in.</li>
+      <li><strong>Windows file associations</strong> - only if you choose them, off by default: per-user entries so that double-clicking a document, the right-click <em>Convert to HTML</em> entry or <em>Open with</em> reach the app. Removing them restores the handler you had before.</li>
+      <li><strong>Helper programs on your computer</strong> - the bundled pdftotext for PDF, and Tesseract, Calibre, 7-Zip, ffmpeg or ImageMagick where you have installed them, run locally to read a format. The app never installs anything.</li>
+      <li><strong>Your mail program</strong> - only when you press <em>Send logs to the author</em>: the app opens an unsent message there and never sends anything itself (see below).</li>
     </ul>
     <ul data-l="ua">
       <li><strong>Файли документів, які ви відкриваєте</strong> - щоб перетворити їх на локальний HTML.</li>
-      <li><strong>Ваш браузер</strong> - щоб показати перетворений HTML.</li>
-      <li><strong>Інтернет</strong> - лише якщо ви явно оберете переклад через Google: видобутий текст надсилається до Google Cloud Translation API з ключем, який ви надаєте самі. У локальному режимі Ollama текст надсилається лише на сервер перекладу, що працює на вашому власному комп'ютері. За безкоштовного перекладу в браузері, який використовується типово, застосунок узагалі нічого не надсилає.</li>
+      <li><strong>Ваш браузер</strong> - щоб показати перетворений HTML, а для настільного застосунку - і його власне вікно.</li>
+      <li><strong>З'єднання лише всередині вашого комп'ютера</strong> - настільний застосунок спілкується зі своїм вікном через <code>127.0.0.1</code> під захистом секрету, що створюється заново під час кожного запуску, і закриває з'єднання разом із вікном. Через нього ніщо не залишає ваш пристрій.</li>
+      <li><strong>Інтернет, для перекладу через Google</strong> - лише якщо ви явно його оберете: видобутий текст надсилається до Google Cloud Translation API з ключем, який ви надаєте самі.</li>
+      <li><strong>Локальний сервер Ollama</strong> - лише якщо ви оберете варіант Ollama: текст надсилається на сервер перекладу на вашому власному комп'ютері (<code>localhost:11434</code>) і більше нікуди.</li>
+      <li><strong>GitHub, для додаткових мов OCR</strong> - лише коли ви завантажуєте мову (<em>Завантажити</em> в застосунку або <code>-ocr-download</code>): файл даних мови завантажується з відкритого репозиторію <code>tessdata_fast</code> проєкту Tesseract і звіряється із закріпленим відбитком SHA-256. Запит називає лише мову; нічого вашого не надсилається. Англійська вбудована.</li>
+      <li><strong>Зіставлення файлів Windows</strong> - лише якщо ви їх оберете, типово вимкнено: записи для вашого облікового запису, щоб документ відкривався подвійним клацанням, через пункт <em>Convert to HTML</em> у контекстному меню або через <em>Відкрити за допомогою</em>. Під час видалення відновлюється попередній обробник.</li>
+      <li><strong>Допоміжні програми на вашому комп'ютері</strong> - вбудований pdftotext для PDF, а також Tesseract, Calibre, 7-Zip, ffmpeg чи ImageMagick, якщо ви їх встановили, запускаються локально, щоб прочитати формат. Застосунок нічого не встановлює.</li>
+      <li><strong>Ваша поштова програма</strong> - лише коли ви натиснете <em>Надіслати журнали авторові</em>: застосунок відкриває в ній ненадісланий лист і сам нічого не надсилає (див. нижче).</li>
     </ul>
+    <p data-l="ru">При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.</p>
+    <p data-l="en">With the default free browser translation, the app sends nothing at all.</p>
+    <p data-l="ua">За безкоштовного перекладу в браузері, який використовується типово, застосунок узагалі нічого не надсилає.</p>
+    <!-- security-posture:end app-access -->
 
     <h2><span data-l="ru">Локальные файлы, которые записывает приложение</span><span data-l="en">Local files it writes</span><span data-l="ua">Локальні файли, які записує застосунок</span></h2>
-    <p data-l="ru">Преобразованный HTML (рядом с исходным файлом или в выбранной вами папке) и необязательный файл с API-ключом, который вы размещаете сами. Эти файлы никогда не покидают ваше устройство.</p>
-    <p data-l="en">The converted HTML output (next to the source file, or in a folder you choose), and an
-    optional API key file you place yourself. These never leave your device.</p>
-    <p data-l="ua">Перетворений HTML (поруч із вихідним файлом або в обраній вами теці) і необов'язковий файл з API-ключем, який ви розміщуєте самі. Ці файли ніколи не залишають ваш пристрій.</p>
+    <!-- security-posture:begin app-writes (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
+    <ul data-l="ru">
+      <li><strong>Преобразованный HTML</strong> - рядом с исходным файлом или в выбранной вами папке, вместе с небольшой записью о том, как он был сделан, чтобы неизменённая книга открывалась повторно, а не пересобиралась.</li>
+      <li><strong>Папка приложения вашей учётной записи</strong> (<code>%LOCALAPPDATA%\doc-html-translate</code>) - ваши настройки, необязательный ключ Google API, который вы сохраняете, журналы последних запусков, скачанные языки OCR и распакованная копия встроенного pdftotext.</li>
+    </ul>
+    <ul data-l="en">
+      <li><strong>The converted HTML</strong> - next to the source file, or in a folder you choose, with a small record of how it was made so that an unchanged book is reopened instead of rebuilt.</li>
+      <li><strong>Your per-user app folder</strong> (<code>%LOCALAPPDATA%\doc-html-translate</code>) - your settings, the optional Google API key you save, the recent run logs, downloaded OCR languages and an unpacked copy of the bundled pdftotext.</li>
+    </ul>
+    <ul data-l="ua">
+      <li><strong>Перетворений HTML</strong> - поруч із вихідним файлом або в обраній вами теці, разом із невеликим записом про те, як його зроблено, щоб незмінена книжка відкривалася повторно, а не перебудовувалася.</li>
+      <li><strong>Тека застосунку вашого облікового запису</strong> (<code>%LOCALAPPDATA%\doc-html-translate</code>) - ваші налаштування, необов'язковий ключ Google API, який ви зберігаєте, журнали останніх запусків, завантажені мови OCR і розпакована копія вбудованого pdftotext.</li>
+    </ul>
+    <p data-l="ru">Эти файлы никогда не покидают ваше устройство.</p>
+    <p data-l="en">These files never leave your device.</p>
+    <p data-l="ua">Ці файли ніколи не залишають ваш пристрій.</p>
+    <!-- security-posture:end app-writes -->
 
     <h2><span data-l="ru">Отправка журналов автору</span><span data-l="en">Sending logs to the author</span><span data-l="ua">Надсилання журналів авторові</span></h2>
     <div data-l="ru">

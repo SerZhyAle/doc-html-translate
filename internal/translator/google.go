@@ -226,9 +226,9 @@ func errorText(body []byte) string {
 
 // transportCause drops the *url.Error wrapper, whose text repeats the full request URL.
 func transportCause(err error) string {
-	var ue *url.Error
-	if errors.As(err, &ue) {
-		return ue.Err.Error()
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return urlErr.Err.Error()
 	}
 	return err.Error()
 }

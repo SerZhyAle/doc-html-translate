@@ -46,9 +46,12 @@ func TestParseScale(t *testing.T) {
 
 func TestRunMissingBinaryKeepsThePathError(t *testing.T) {
 	_, err := Run(context.Background(), Cmd{Tool: "nothing", Path: "/definitely/not/here/tool", Timeout: time.Second})
+	// The start error is kept whatever its type: on Unix a missing path fails in fork/exec with an
+	// *os.PathError; on Windows exec.Command resolves the extension first and reports *exec.Error.
 	var pe *os.PathError
-	if !errors.As(err, &pe) {
-		t.Fatalf("err = %v, want an *os.PathError in the chain", err)
+	var ee *exec.Error
+	if !errors.As(err, &pe) && !errors.As(err, &ee) {
+		t.Fatalf("err = %v, want the start error (*os.PathError or *exec.Error) in the chain", err)
 	}
 	var re *Error
 	if !errors.As(err, &re) || re.Tool != "nothing" {

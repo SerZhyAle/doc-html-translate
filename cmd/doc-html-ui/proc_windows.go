@@ -34,7 +34,7 @@ func attachTree(cmd *exec.Cmd) (procTree, error) {
 		_ = windows.CloseHandle(job)
 		return nil, err
 	}
-	defer windows.CloseHandle(h)
+	defer func() { _ = windows.CloseHandle(h) }()
 	if err := windows.AssignProcessToJobObject(job, h); err != nil {
 		_ = windows.CloseHandle(job)
 		return nil, err

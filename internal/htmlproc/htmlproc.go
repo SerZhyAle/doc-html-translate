@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -79,17 +80,11 @@ func ReplaceTexts(segments []*TextSegment, translated []string) {
 			// Model returned nothing — keep original text intact.
 			continue
 		}
-		// Preserve leading/trailing whitespace from the original node.
+		// Preserve leading/trailing whitespace from the original node - the same Unicode
+		// set ExtractTexts trimmed, so a no-break space before an inline element survives.
 		origData := seg.Node.Data
-		leading := ""
-		trailing := ""
-		if len(origData) > 0 && (origData[0] == ' ' || origData[0] == '\n' || origData[0] == '\t') {
-			leading = origData[:len(origData)-len(strings.TrimLeft(origData, " \t\n\r"))]
-		}
-		if len(origData) > 0 {
-			trimmed := strings.TrimRight(origData, " \t\n\r")
-			trailing = origData[len(trimmed):]
-		}
+		leading := origData[:len(origData)-len(strings.TrimLeftFunc(origData, unicode.IsSpace))]
+		trailing := origData[len(strings.TrimRightFunc(origData, unicode.IsSpace)):]
 		seg.Node.Data = leading + t + trailing
 	}
 }

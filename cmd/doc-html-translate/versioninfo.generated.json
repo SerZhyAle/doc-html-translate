@@ -1,0 +1,42 @@
+{
+  "FixedFileInfo": {
+    "FileVersion": {
+      "Major": 26,
+      "Minor": 9,
+      "Patch": 26,
+      "Build": 153
+    },
+    "ProductVersion": {
+      "Major": 26,
+      "Minor": 9,
+      "Patch": 26,
+      "Build": 153
+    },
+    "FileFlagsMask": "3f",
+    "FileFlags": "00",
+    "FileOS": "040004",
+    "FileType": "01",
+    "FileSubType": "00"
+  },
+  "StringFileInfo": {
+    "Comments": "",
+    "CompanyName": "",
+    "FileDescription": "DOC-HTML-TRANSLATE",
+    "FileVersion": "26.0926.0153",
+    "InternalName": "doc-html-translate",
+    "LegalCopyright": "",
+    "LegalTrademarks": "",
+    "OriginalFilename": "doc-html-translate.exe",
+    "ProductName": "DOC-HTML-TRANSLATE",
+    "ProductVersion": "26.0926.0153"
+  },
+  "VarFileInfo": {
+    "Translation": {
+      "LangID": "0409",
+      "CharsetID": "04B0"
+    }
+  },
+  "IconPath": "../../assets/doc-html-translate.ico,../../assets/convert-verb.ico,../../assets/document-type.ico",
+  "ApplicationIconPath": "../../assets/doc-html-translate.ico",
+  "ManifestPath": ""
+}

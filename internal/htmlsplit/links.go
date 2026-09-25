@@ -75,7 +75,13 @@ func rewriteTOC(entries []epub.TOCEntry, ix anchorIndex) {
 			if u, err := url.PathUnescape(file); err == nil {
 				file = u
 			}
-			if moved, changed := ix.relocate(path.Clean(file), frag, frag); changed {
+			// The fragment is kept as the book wrote it, which may be percent-encoded
+			// ("#%D0%B3" for id="г"); look it up decoded first, as retarget does.
+			decoded := frag
+			if u, err := url.PathUnescape(frag); err == nil {
+				decoded = u
+			}
+			if moved, changed := ix.relocate(path.Clean(file), decoded, frag); changed {
 				e.Href = epub.URLPath(moved) + "#" + frag
 			}
 		}

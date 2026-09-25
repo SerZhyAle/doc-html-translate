@@ -3,61 +3,108 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # A re-run for an EXISTING tag. The job checks that tag out and proves HEAD is its commit, so a
+  # dispatch cannot publish the branch it was started from under the tag's name (ticket 37, R18).
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (e.g. v26.0427.1430)'
+        description: 'Existing tag to release (e.g. v26.0427.1430)'
         required: true
 
 permissions:
-  contents: write
+  contents: read
 
 # Не даём двум прогонам одного тега идти параллельно. cancel-in-progress
 # намеренно false: отмена релиза на середине заливки ассетов оставила бы
 # полу-собранный GitHub Release.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   release:
+    # A dispatch runs the workflow file of the branch it was started from; only main's is trusted.
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
     # Linux-раннер вдвое дешевле windows-latest. Бинари под Windows собираются
     # кросс-компиляцией (CGO_ENABLED=0, GOOS=windows), goversioninfo и pwsh
     # работают на Linux, иконка берётся из закоммиченного assets/*.ico.
     runs-on: ubuntu-latest
     timeout-minutes: 20            # страховка от зависаний (обычный прогон ~3-5 мин)
+    permissions:
+      contents: write              # the release step creates the GitHub Release
     defaults:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
+      # Runs before the checkout: the tag it resolves is what gets checked out. The dispatch input
+      # reaches the script through the environment, never pasted into its text.
       - name: Resolve version from tag
         id: ver
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          $tag = if ($env:GITHUB_REF -like 'refs/tags/*') { $env:GITHUB_REF -replace '^refs/tags/','' } else { '${{ inputs.tag }}' }
-          if (-not $tag) { throw "No tag resolved" }
-          $version = $tag -replace '^v',''
-          $parts = $version.Split('.')
-          if ($parts.Count -ne 3) { throw "Expected version yy.MMdd.HHmm, got '$version'" }
-          $major = [int]$parts[0]
-          $mmdd  = $parts[1]
-          if ($mmdd.Length -ne 4) { throw "Expected MMdd to be 4 digits, got '$mmdd'" }
-          $minor = [int]$mmdd.Substring(0,2)
-          $patch = [int]$mmdd.Substring(2,2)
-          $build = [int]$parts[2]
+          if ($env:GITHUB_EVENT_NAME -eq 'push') {
+            if ($env:GITHUB_REF -notlike 'refs/tags/*') { throw "A push run must come from a tag, got '$env:GITHUB_REF'" }
+            $tag = $env:GITHUB_REF_NAME
+          } else {
+            $tag = "$env:INPUT_TAG".Trim()
+          }
+          if (-not ($tag -match '^v(\d{2})\.(\d{2})(\d{2})\.(\d{2})(\d{2})$')) { throw "Expected a tag vYY.MMDD.HHmm, got '$tag'" }
+          $major = [int]$Matches[1]
+          $minor = [int]$Matches[2]
+          $patch = [int]$Matches[3]
+          $build = [int]($Matches[4] + $Matches[5])
+          if ($minor -lt 1 -or $minor -gt 12 -or $patch -lt 1 -or $patch -gt 31 -or [int]$Matches[4] -gt 23 -or [int]$Matches[5] -gt 59) {
+            throw "Tag '$tag' is not a real YY.MMDD.HHmm stamp"
+          }
+          $version = $tag.Substring(1)
           "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "major=$major"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "minor=$minor"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "patch=$patch"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "build=$build"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      # The tag must already exist: the checkout of a missing ref fails here, so the release step
+      # never gets to create the tag on whatever commit the run happens to hold.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: refs/tags/${{ steps.ver.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Verify the checkout is the tag
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          $want = & git rev-parse --verify --quiet "refs/tags/$env:TAG^{commit}"
+          if ($LASTEXITCODE -ne 0 -or -not $want) { throw "Tag $env:TAG does not exist in the repository" }
+          $head = & git rev-parse HEAD
+          if ($head -ne $want) { throw "HEAD $head is not the commit of $env:TAG ($want) - refusing to publish another tree under this tag" }
+          $dirty = & git status --porcelain
+          if ($dirty) { throw "The checkout of $env:TAG is not clean:`n$dirty" }
+          Write-Host "Building $env:TAG at $head"
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+
+      # Both executables embed internal/bundledtools/pdftotext/ as the checkout holds it. A set
+      # without pdftotext.exe still builds and silently ships the DLLs alone (ticket 35), so
+      # every file of the hash table in PROVENANCE.txt must be present with that hash.
+      - name: Verify the bundled pdftotext set
+        run: |
+          $dir  = 'internal/bundledtools/pdftotext'
+          $rows = Get-Content -LiteralPath 'internal/bundledtools/PROVENANCE.txt' |
+            ForEach-Object { ,($_ -split '\s+') } |
+            Where-Object { $_.Count -eq 3 -and $_[0] -match '^[0-9a-f]{64}$' }
+          if (-not ($rows | Where-Object { $_[2] -eq 'pdftotext.exe' })) { throw "PROVENANCE.txt has no pdftotext.exe row" }
+          foreach ($r in $rows) {
+            $path = Join-Path $dir $r[2]
+            if (-not (Test-Path -LiteralPath $path)) { throw "Bundled set lacks $($r[2]) - the release would ship without it" }
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash.ToLowerInvariant()
+            if ($hash -ne $r[0]) { throw "$($r[2]) sha256 $hash does not match PROVENANCE.txt $($r[0])" }
+          }
+          Write-Host "Bundled pdftotext set verified: $($rows.Count) files"
 
       - name: Install goversioninfo
         # Пин версии вместо @latest: воспроизводимая сборка, без внезапных апдейтов.
@@ -142,6 +189,7 @@ jobs:
           Copy-Item build/doc-html-ui.exe        $stage/
           Copy-Item LICENSE                      $stage/
           Copy-Item README.md                    $stage/
+          Copy-Item THIRD-PARTY-NOTICES.txt $stage/
           $name = "doc-html-translate-$version-windows-x64.zip"
           $zip  = "dist/$name"
           if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -155,6 +203,9 @@ jobs:
           $uiName  = "doc-html-ui-$version-windows-x64.exe"
           Copy-Item build/doc-html-translate.exe "dist/$cliName"
           Copy-Item build/doc-html-ui.exe        "dist/$uiName"
+          # Both executables embed the bundled pdftotext runtime (GPL / MIT); its licences travel
+          # beside the standalone .exe assets as well as inside the zip.
+          Copy-Item THIRD-PARTY-NOTICES.txt dist/THIRD-PARTY-NOTICES.txt
           $cliHash = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$cliName").Hash
           $uiHash  = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$uiName").Hash
           "$cliHash  $cliName" | Set-Content -LiteralPath "dist/$cliName.sha256" -Encoding ascii
@@ -175,7 +226,9 @@ jobs:
         run: |
           $tag = '${{ steps.ver.outputs.tag }}'
           $version = '${{ steps.ver.outputs.version }}'
-          $prev = & git describe --tags --abbrev=0 "$tag^" 2>$null
+          # Only app tags bound the range: the extension's ext-cws-v* / ext-edge-v* tags sit on the
+          # same history and would cut the notes short.
+          $prev = & git describe --tags --abbrev=0 --match 'v*' "$tag^" 2>$null
           if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($prev)) {
             $log = & git log --pretty=format:"- %s" $tag
           } else {
@@ -201,14 +254,15 @@ jobs:
           $lines += "  SHA256: ``$cliSha``"
           $lines += "- ``$ui`` - GUI desktop app"
           $lines += "  SHA256: ``$uiSha``"
-          $lines += "- ``$pkg`` - full archive (both binaries + LICENSE + README)"
+          $lines += "- ``$pkg`` - full archive (both binaries + LICENSE + README + THIRD-PARTY-NOTICES)"
           $lines += "  SHA256: ``$pkgSha``"
+          $lines += "- ``THIRD-PARTY-NOTICES.txt`` - licences of the third-party material inside both binaries"
 
           $path = "dist/release-notes.md"
           Set-Content -LiteralPath $path -Value ($lines -join "`n") -Encoding utf8
           "path=$path" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.tag }}
@@ -219,4 +273,5 @@ jobs:
             dist/${{ steps.pkg.outputs.ui_name }}.sha256
             dist/${{ steps.pkg.outputs.name }}
             dist/${{ steps.pkg.outputs.name }}.sha256
+            dist/THIRD-PARTY-NOTICES.txt
           body_path: ${{ steps.notes.outputs.path }}

@@ -11,3 +11,7 @@ assets/glyphs/*.svg -text
 # The SZA web kit is a byte copy of the contracts catalog reference (PAGE-STYLE), pinned by SHA-256
 # in tests/site_test.go - page-local rules live in assets/site.css, never in the kit.
 assets/sza-kit.css -text
+
+# The bundled pdftotext set is byte copies of upstream binaries, pinned by SHA-256 in
+# internal/bundledtools/PROVENANCE.txt - never let a checkout rewrite them.
+internal/bundledtools/pdftotext/* -text

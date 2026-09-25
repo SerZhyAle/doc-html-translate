@@ -1,6 +1,6 @@
 # The product's system surfaces follow the platform's shape rules
 
-**Status:** Draft
+**Status:** In Progress - built and checked by tool on 2026-09-25; the owner's on-device look is what is left
 **Priority:** 45
 **Date:** 2026-09-25
 
@@ -49,18 +49,59 @@ see, so rule 2 (colour from the theme) cannot hold there - rule 9 says what hold
 6. Close the `ICON-RENDER` rule 9 row of this product in the catalog registry, and move the "System
    surfaces" rows of [`docs/GLYPH-MAP.md`](../../docs/GLYPH-MAP.md) to `conforms` / `artwork`.
 
+## Decisions (2026-09-25)
+
+- **The mark** (owner): a white sheet with a folded corner and `</>` cut into it, on the navy plate
+  `#1E3A8A`; the fold is the tint `#A9B8E0`. From 24 px up it is drawn on a 48 grid. At 16 and 20 px a
+  separate 16-grid drawing drops the slash and thickens the brackets. It is artwork (`ICON-SET` rule 7) - no
+  vocabulary glyph is used in it. Geometry: `internal/iconart/mark.go`.
+- **One generator.** `internal/iconart` draws every surface: an SVG path parser for the vendored glyphs, an
+  antialiased rasterizer on `golang.org/x/image/vector` (already a dependency), and an ICO writer.
+  `go run ./tools/icongen` writes the committed files (`scripts/generate-icon.ps1` wraps it). With `-msix <dir>`
+  it writes the package assets. The files are render targets: `tests/icons_test.go` compares every pixel.
+- **Explorer icons live inside the exe.** `IconPath` in both `cmd/*/versioninfo.json` lists the mark, the verb
+  and the document type, which become icon resources 0, 1 and 2. `internal/windowsreg` writes `"<exe>",1` for
+  the verb and `"<exe>",2` for the ProgID's `DefaultIcon`; "Open with" keeps `,0`. There is no loose file to ship
+  or to lose. This needs goversioninfo v1.5.0 or later, and `ApplicationIconPath` names the mark alone, because
+  v1.7.0 would otherwise pass the whole list as one path.
+- **The document type is `content.document`** ("a text, PDF or other readable document"). That is the meaning
+  of every type the product registers, so rule 9 takes the glyph, not the mark. The same glyph is the MSIX file
+  type association's `uap:Logo`: white in the plated form, `#808080` in the unplated forms.
+- **Open question 2 - `makepri` is a build prerequisite, not a tracked file.** It ships in the same Windows SDK
+  as `makeappx` and `signtool`, and `build-msix.ps1` already finds those with `Get-SdkTool`. So nothing is added
+  to the setup. The config's `<packaging>` block is removed so that a single package gets one
+  `resources.pri`, not one split per scale.
+
+## Evidence (2026-09-25)
+
+- `msix/build-msix.ps1` (unsigned, local) built, indexed and packed `SerZhyAle.DocHtmlTranslate_26.925.2337.0_x64.msix`:
+  "Package creation succeeded". `makepri dump` lists 17 candidates each for `Square44x44Logo.png` and
+  `DocumentType.png`: `TargetSize` 16-256 × {plated, `UNPLATED`, `LIGHTUNPLATED`} plus scale-100/200.
+- `ExtractIconEx` on the built `doc-html-translate.exe`: 4 groups - 0 the mark, 1 `action.convert`,
+  2 `content.document`, 3 goversioninfo's application group (ID 32512, last, so the indexes hold).
+- Contrast (`iconart.Contrast`): `#808080` 3.95 : 1 on white, 3.59 : 1 on `#2B2B2B`. Extension plate 9.31-10.36 : 1
+  on the light toolbars (`#FFFFFF`, `#F1F3F4`, `#F7F7F7`). Sheet 11.20-16.10 : 1 on the dark toolbars
+  (`#202124`, `#35363A`, `#3B3B3B`). Brackets on the sheet: 10.36 : 1.
+- `go test ./internal/iconart/ ./internal/windowsreg/` ok. `go test ./tests/` ok on the second run: the first run
+  died in the runtime, the known 386 memory ceiling. `gofmt -l` is clean and `go vet ./...` exits 0.
+- Failures that were already there and are not this ticket's: `internal/pdf` `TestExtract_Volume3ImagesOnTheirPages`
+  and `internal/procrun` `TestRunMissingBinaryKeepsThePathError`, both in files this ticket does not touch. The
+  lint's three `errcheck` findings are in `cmd/doc-html-ui/proc_windows*.go`.
+
 ## Done criteria
 
-- [ ] The mark is decided and recorded here.
-- [ ] The MSIX carries the `targetsize-*` / `altform-*` tiles resolved through `resources.pri`, seen on the
-      taskbar in light and dark mode.
-- [ ] The ICO has every rule 9 size; the 16 px frame is legible.
-- [ ] The Explorer verb shows `action.convert` in `#808080`, measured at 3 : 1 on the light and the dark menu.
-- [ ] The extension action icon holds 3 : 1 on a light and a dark toolbar.
-- [ ] The registry exception is closed and the glyph map updated.
+- [x] The mark is decided and recorded here.
+- [ ] The MSIX carries the `targetsize-*` / `altform-*` tiles resolved through `resources.pri` (done, see
+      Evidence), **seen on the taskbar in light and dark mode** - owed: install a `-SelfSign` build and look.
+- [x] The ICO has every rule 9 size (16, 20, 24, 32, 48, 64, 256); the 16 px frame keeps the sheet and "<>"
+      (`TestSmallMarkKeepsTheBrackets`, and a look at the 16 px frame enlarged).
+- [x] The Explorer verb shows `action.convert` in `#808080`, measured at 3.95 : 1 (light) and 3.59 : 1 (dark menu).
+- [x] The extension action icon holds 3 : 1 on a light and a dark toolbar by measurement. **Owed: a look in
+      Chrome and Edge.**
+- [x] The registry exception is closed and the glyph map updated.
 
-## Open questions
+## Follow-ups outside this ticket
 
-1. The mark (Direction 1) - the owner's call.
-2. Does `makepri` join the build prerequisites (`goversioninfo` is the precedent), or is `resources.pri`
-   generated once and tracked?
+- The Store listing artwork under `tools/store/logos/` (box art, the listing logos) still shows the lettering.
+  It is uploaded in the Partner Center dashboard by hand, so it changes with the next listing update, not with
+  the build.

@@ -1,0 +1,2 @@
+{"path":"cmd/doc-html-ui/ui.html","reason":"The desktop GUI's own page, embedded into doc-html-ui.exe and served on 127.0.0.1; program source, not a document and not a site page."}
+{"path":"extension/src/*.html","reason":"The browser extension's own pages (viewer, popup, options, OCR host), packaged into the extension; program source, not documents and not site pages."}

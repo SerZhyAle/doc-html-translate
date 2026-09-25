@@ -3,7 +3,7 @@
 - **Id:** `INSTALL-TRUST`
 - **Version:** 1.0
 - **Home:** the shared contracts catalog, `install-trust/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
-- **Role:** producer - bound by the contract, **not yet adopted**
+- **Role:** producer - bound by the contract; the page ships in the repo (2026-09-25), the catalog row still reads "not adopted" until the site is published
 - **Reference rendering:** FMS Companion's trust guide, in the same catalog folder
 
 What a user reads in the thirty seconds after Windows tells them it protected their PC: four sections in
@@ -11,7 +11,10 @@ order (what the warning is, why it appears, exactly what to click, what the app 
 quoted, the real reason including the cost of a certificate, and never an instruction to weaken a
 protection.
 
-**Where this product stands.** It ships a per-user installer (`doc-html-translate-setup-<version>.exe`) and
+**The page:** [`../../install-trust.html`](../../install-trust.html) (en/ru/uk), linked from the landing
+page and the ten locale pages (`#smartscreen` note), the README trio and the `docs.*` trio.
+
+**Where this product stood (2026-09-22).** It ships a per-user installer (`doc-html-translate-setup-<version>.exe`) and
 portable executables from GitHub and winget, and none of them is code-signed
 ([`../../installer/doc-html-translate.iss`](../../installer/doc-html-translate.iss) configures no signing),
 so a user downloading any of the three meets SmartScreen. No surface answers it: neither the READMEs, nor

@@ -20,9 +20,9 @@
     ("релиз") stays a manual, per-step flow - see 'r'.
 
       COMMIT
-        c    - quick commit + push branch (auto timestamp msg)       (scripts/commit-push.ps1)
+        c    - quick commit + push branch (main needs -PublishSite)  (scripts/commit-push.ps1)
         cc   - quick commit, no push (auto timestamp msg)            (scripts/commit-push.ps1 -NoPush)
-        bl   - gated "сборка": test+lint+typo + build + commit       (scripts/build-local.ps1)   [-Message ".."]
+        bl   - gated "сборка": build + full gate + commit           (scripts/build-local.ps1)   [-Message ".."]
 
       CHECK
         ch   - check: test + lint + typo (the gate)                  (scripts/check.ps1)
@@ -54,13 +54,13 @@
         id   - install locally: build MSIX -> uninstall -> install -> launch   (reinstall.ps1)
         ind  - install the last MSIX, skip rebuild                   (reinstall.ps1 -SkipBuild)
         ivn  - alias for ind
-        msix - build the UNSIGNED Store package                      (msix/build-msix.ps1)
+        msix - build the UNSIGNED Store package (needs -Tag v<ver>) (msix/build-msix.ps1)
         sign - build the SELF-SIGNED local package                  (msix/build-msix.ps1 -SelfSign)
 
       RELEASE / TOOLING
         r    - print the release checklist (RUNS NOTHING)            (scripts/release.ps1)
         s    - setup dev tools (golangci-lint + typos)              (scripts/bootstrap-tools.ps1)
-        icon - regenerate assets/doc-html-translate.ico             (scripts/generate-icon.ps1)
+        icon - redraw the system-surface icons (ICO, verb, type, ext)  (scripts/generate-icon.ps1)
         log  - append a DEV/CHANGELOG.md row (-Target -Description; Path auto from git)
 .EXAMPLE
     .\a.ps1 ch
@@ -81,7 +81,7 @@ param(
 )
 
 # Everything after <Command> is forwarded verbatim to the target script (after its
-# preset Args), e.g. `.\a.ps1 cc -Message ".."` or `.\a.ps1 msix -IdentityName X`.
+# preset Args), e.g. `.\a.ps1 cc -Message ".."` or `.\a.ps1 msix -Tag v26.0715.2003`.
 # Reading the automatic $args (simple-script mode) rather than a declared
 # ValueFromRemainingArguments parameter is deliberate: the automatic $args re-splats
 # with -flag tokens INTACT (a literal array would splat positionally and swallow flags),
@@ -102,9 +102,9 @@ $ProjectRoot = $PSScriptRoot
 # means "no preset args". Each value is $true for a switch, or a string/int for a typed param.
 $scripts = [ordered]@{
     # --- commit ---
-    'c'    = @{ Group = 'Commit';        Path = 'scripts/commit-push.ps1';      Args = @{};                   Desc = 'quick commit + push branch (auto timestamp msg)' }
+    'c'    = @{ Group = 'Commit';        Path = 'scripts/commit-push.ps1';      Args = @{};                   Desc = 'quick commit + push branch (main: needs -PublishSite, it publishes the site)' }
     'cc'   = @{ Group = 'Commit';        Path = 'scripts/commit-push.ps1';      Args = @{ NoPush = $true };   Desc = 'quick commit, no push (auto timestamp msg)' }
-    'bl'   = @{ Group = 'Commit';        Path = 'scripts/build-local.ps1';      Args = @{};                   Desc = 'gated "сборка": gate + build + commit (needs -Message)' }
+    'bl'   = @{ Group = 'Commit';        Path = 'scripts/build-local.ps1';      Args = @{};                   Desc = 'gated "сборка": build + gate + commit (needs -Message)' }
 
     # --- check ---
     'ch'   = @{ Group = 'Check';         Path = 'scripts/check.ps1';            Args = @{};                   Desc = 'check: test + lint + typo (the gate)' }
@@ -136,13 +136,13 @@ $scripts = [ordered]@{
     'id'   = @{ Group = 'Install / MSIX';Path = 'reinstall.ps1';                Args = @{};                   Desc = 'install locally: build MSIX -> uninstall -> install -> launch' }
     'ind'  = @{ Group = 'Install / MSIX';Path = 'reinstall.ps1';                Args = @{ SkipBuild = $true };Desc = 'install the last MSIX, skip rebuild' }
     'ivn'  = @{ Group = 'Install / MSIX';Path = 'reinstall.ps1';                Args = @{ SkipBuild = $true };Desc = 'alias for ind' }
-    'msix' = @{ Group = 'Install / MSIX';Path = 'msix/build-msix.ps1';          Args = @{};                   Desc = 'build the UNSIGNED Store package' }
+    'msix' = @{ Group = 'Install / MSIX';Path = 'msix/build-msix.ps1';          Args = @{};                   Desc = 'build the UNSIGNED Store package (needs -Tag v<ver>)' }
     'sign' = @{ Group = 'Install / MSIX';Path = 'msix/build-msix.ps1';          Args = @{ SelfSign = $true }; Desc = 'build the SELF-SIGNED local package' }
 
     # --- release / tooling ---
     'r'    = @{ Group = 'Release / tool';Path = 'scripts/release.ps1';          Args = @{};                   Desc = 'print the release checklist (RUNS NOTHING)' }
     's'    = @{ Group = 'Release / tool';Path = 'scripts/bootstrap-tools.ps1';  Args = @{};                   Desc = 'setup dev tools (golangci-lint + typos)' }
-    'icon' = @{ Group = 'Release / tool';Path = 'scripts/generate-icon.ps1';    Args = @{};                   Desc = 'regenerate assets/doc-html-translate.ico' }
+    'icon' = @{ Group = 'Release / tool';Path = 'scripts/generate-icon.ps1';    Args = @{};                   Desc = 'redraw the system-surface icons (internal/iconart)' }
     'log'  = @{ Group = 'Release / tool';Path = 'scripts/add_to_dev_log.ps1';   Args = @{};                   Desc = 'append a DEV/CHANGELOG.md row (-Target -Description; Path auto)' }
     'rs'   = @{ Group = 'Release / tool';Path = 'scripts/release-state.ps1';     Args = @{};                   Desc = 'show/set release publish-state (DEV/RELEASE_STATE.md)' }
     'v'    = @{ Group = 'Release / tool';Path = 'scripts/verify-html.ps1';        Args = @{};                   Desc = 'headless-verify converted HTML (-Path folder/file)' }

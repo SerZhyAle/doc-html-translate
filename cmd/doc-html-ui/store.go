@@ -11,11 +11,12 @@ import (
 	"time"
 )
 
-// The GUI's small state files (settings, output history, the Google key) used to be
-// rewritten in place. A crash mid-write left a truncated file that the next read treated as
-// "nothing saved", and two GUI windows doing read-modify-write on the history dropped each
-// other's entries. Writes now go to a temporary file that replaces the target in one rename,
-// and read-modify-write cycles run under a lock that other instances honour too.
+// The GUI's small state files (settings, the Google key) used to be rewritten in place. A
+// crash mid-write left a truncated file that the next read treated as "nothing saved". Writes
+// now go to a temporary file that replaces the target in one rename, and the settings file is
+// written and set aside under a lock that other GUI instances honour too. (The output history
+// that once needed a read-modify-write cycle is gone: a previous result is now found from the
+// completion record the converter writes into the output itself.)
 
 // writeFileAtomic replaces path with data, or leaves the old file untouched.
 func writeFileAtomic(path string, data []byte, perm fs.FileMode) error {

@@ -5,7 +5,8 @@
 
 .DESCRIPTION
   The "copy setup.exe to any Windows PC" artifact. From the repo root it:
-    1. Computes the version stamp (YY.MMDD.HHmm), same scheme as the other build scripts.
+    1. Computes the version stamp (YY.MMDD.HHmm), same scheme as the other build scripts -
+       or, with -Tag, takes it from the release tag and refuses a tree that is not that tag's.
     2. Builds CLI + GUI for amd64 AND 386 (pure Go, CGO off, icon + version embedded).
     3. Stages the payload under temp\installer-staging (x64\, x86\, tessdata\, icon, docs).
     4. Compiles installer\doc-html-translate.iss with ISCC -> dist\doc-html-translate-setup-<ver>.exe.
@@ -18,16 +19,26 @@
   For the plain compile+deploy path use build.ps1; for the Store package use
   msix\build-msix.ps1; to publish use scripts\release.ps1.
 
+.PARAMETER Tag
+  Release build: the app tag (vYY.MMDD.HHmm) the installer is attached to. The version comes
+  from the tag, and the build refuses to run unless HEAD is the tag's commit and the working
+  tree is clean - and fails if the build itself leaves the tree dirty - so the setup.exe holds
+  exactly the tree the GitHub Release was built from. Cannot be combined with -Stamp.
+
 .PARAMETER Stamp
-  Override the version stamp (YY.MMDD.HHmm). Default: now.
+  Development build: override the version stamp (YY.MMDD.HHmm). Default: now. No tree check.
 
 .PARAMETER KeepStaging
   Leave temp\installer-staging in place after the build (for inspection).
 
 .EXAMPLE
-  ./scripts/build-installer.ps1
+  ./scripts/build-installer.ps1                      # development build, stamped now
+
+.EXAMPLE
+  ./scripts/build-installer.ps1 -Tag v26.0715.2003   # release build of the checked-out tag
 #>
 param(
+    [string]$Tag,
     [string]$Stamp,
     [switch]$KeepStaging
 )
@@ -54,6 +65,25 @@ $Iscc = Get-Iscc
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 if (-not (Get-Command goversioninfo -ErrorAction SilentlyContinue)) { throw "goversioninfo not on PATH. Run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest" }
 
+# ── release tree (ticket 37) ─────────────────────────────────
+# -Tag: HEAD must be the tag's commit and nothing may be uncommitted, so the working tree the build
+# reads is the tag's tree. Returns the version the tag names.
+function Assert-ReleaseTree([string]$ReleaseTag) {
+    if ($ReleaseTag -notmatch '^v\d{2}\.\d{4}\.\d{4}$') { throw "-Tag must look like vYY.MMDD.HHmm (e.g. v26.0715.2003)" }
+    $want = & git rev-parse --verify --quiet "refs/tags/$ReleaseTag^{commit}"
+    if ($LASTEXITCODE -ne 0 -or -not $want) { throw "Tag $ReleaseTag does not exist in this clone (git fetch --tags)" }
+    $head = & git rev-parse HEAD
+    if ($head -ne $want) { throw "HEAD $head is not the commit of $ReleaseTag ($want); check the tag out first: git switch --detach $ReleaseTag" }
+    $dirty = @(& git status --porcelain)
+    if ($dirty) { throw "The working tree has changes $ReleaseTag does not hold:`n$($dirty -join "`n")" }
+    return $ReleaseTag.Substring(1)
+}
+
+if ($Tag) {
+    if ($Stamp) { throw "-Tag and -Stamp are exclusive: a release build takes its version from the tag" }
+    $Stamp = Assert-ReleaseTree $Tag
+}
+
 # ── version stamp ────────────────────────────────────────────
 if ($Stamp) {
     if ($Stamp -notmatch '^\d{2}\.\d{4}\.\d{4}$') { throw "-Stamp must look like YY.MMDD.HHmm (e.g. 26.0715.2003)" }
@@ -74,8 +104,7 @@ New-Item -ItemType Directory -Force -Path $Staging, (Join-Path $Staging "x64"), 
 
 # ── icon (shared) ────────────────────────────────────────────
 $icon = Join-Path $Staging "doc-html-translate.ico"
-./scripts/generate-icon.ps1 -Output $icon
-Copy-Item $icon "cmd/doc-html-ui/favicon.ico" -Force  # keep GUI window icon in sync (see build-ui.ps1)
+./scripts/generate-icon.ps1 -Output $icon  # also redraws the committed favicons and verb/type ICOs
 
 # ── build one exe (icon + version embedded) for a given arch ─
 function New-VersionResourceFile([string]$TemplatePath, [string]$OutputPath, [string]$VersionString) {
@@ -148,6 +177,12 @@ Write-Host "== compile installer (ISCC) ==" -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
 
 if (-not $KeepStaging) { Remove-Item $Staging -Recurse -Force -ErrorAction SilentlyContinue }
+
+# The icon step redraws committed files; a release build whose tree moved did not build the tag.
+if ($Tag) {
+    $after = @(& git status --porcelain)
+    if ($after) { throw "The build left the tree dirty, so the installer is not $Tag's tree:`n$($after -join "`n")" }
+}
 
 $setup = Join-Path $OutDir "doc-html-translate-setup-$Stamp.exe"
 Write-Host ""
