@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -127,25 +126,10 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 		return nil, fmt.Errorf("parse content.opf: %w", err)
 	}
 
-	// Browser translators (notably Chrome Translate) often fail on local XHTML/XML
-	// documents. Prepare HTML copies and update hrefs for better compatibility.
-	if err := normalizeXHTMLToHTML(book, outputDir); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: XHTML->HTML normalization skipped: %v\n", err)
-	}
-
-	// Rewrite Calibre/Kindlegen single-image SVG cover wrappers into plain <img>
-	// so the injected img CSS controls sizing and the browser applies EXIF
-	// orientation (SVG <image> does neither — see normalizeCoverImages).
-	if err := normalizeCoverImages(book, outputDir); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: cover image normalization skipped: %v\n", err)
-	}
-
-	// Rename any content file whose resolved path conflicts with the generated
-	// nav file (index.html). Must run after normalizeXHTMLToHTML so that
-	// index.xhtml → index.html renames are already reflected in the manifest.
-	if err := resolveReservedNames(book, outputDir); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: reserved-name conflict resolution skipped: %v\n", err)
-	}
+	// Re-serialize XHTML as HTML, transcode to UTF-8, unwrap SVG covers and
+	// resolve the reserved index.html name, rewriting in-book links to match.
+	// Must run before parseTOC so the TOC follows the recorded renames.
+	normalizeContent(book, outputDir)
 
 	// Parse the authored table of contents (EPUB3 nav.xhtml or EPUB2 toc.ncx)
 	// into book.TOC. Best-effort: a missing/malformed TOC just leaves it nil
@@ -184,188 +168,6 @@ func (b *Book) resolveHrefChain(href string) string {
 		seen[href] = true
 		href = next
 	}
-}
-
-// resolveReservedNames renames content files whose disk path would conflict
-// with the nav file generated later (always outputDir/index.html).
-// Updates manifest hrefs and cross-references within all HTML content files.
-func resolveReservedNames(book *Book, outputDir string) error {
-	navPath := filepath.Clean(filepath.Join(outputDir, "index.html"))
-	hrefMap := make(map[string]string)
-
-	for i := range book.Manifest {
-		item := &book.Manifest[i]
-		if !isHTMLMediaType(item.MediaType) {
-			continue
-		}
-		contentPath := filepath.Clean(bookPath(outputDir, book.BasePath, item.Href))
-		if contentPath != navPath {
-			continue
-		}
-		// Conflict: rename to _content_<original> (e.g. _content_index.html)
-		newHref := "_content_" + item.Href
-		newPath := bookPath(outputDir, book.BasePath, newHref)
-		if err := os.Rename(contentPath, newPath); err != nil {
-			return fmt.Errorf("rename conflicting %s: %w", item.Href, err)
-		}
-		hrefMap[item.Href] = newHref
-		book.recordHrefRewrite(item.Href, newHref)
-		item.Href = newHref
-	}
-
-	if len(hrefMap) == 0 {
-		return nil
-	}
-
-	// Update href references inside all HTML content files.
-	for _, item := range book.Manifest {
-		if !isHTMLMediaType(item.MediaType) {
-			continue
-		}
-		path := bookPath(outputDir, book.BasePath, item.Href)
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		content := string(data)
-		changed := false
-		for old, newHref := range hrefMap {
-			if strings.Contains(content, old) {
-				content = strings.ReplaceAll(content, old, newHref)
-				changed = true
-			}
-		}
-		if changed {
-			_ = os.WriteFile(path, []byte(content), 0o644)
-		}
-	}
-
-	return nil
-}
-
-// normalizeXHTMLToHTML creates .html copies for XHTML content files and rewrites
-// manifest hrefs plus intra-book links to point to the new .html files.
-func normalizeXHTMLToHTML(book *Book, outputDir string) error {
-	hrefMap := make(map[string]string)
-
-	for i := range book.Manifest {
-		item := &book.Manifest[i]
-		if !isHTMLMediaType(item.MediaType) {
-			continue
-		}
-
-		oldHref := item.Href
-		newHref := toHTMLExt(oldHref)
-		if newHref == oldHref {
-			continue
-		}
-
-		srcPath := bookPath(outputDir, book.BasePath, oldHref)
-		dstPath := bookPath(outputDir, book.BasePath, newHref)
-
-		data, err := os.ReadFile(srcPath)
-		if err != nil {
-			return fmt.Errorf("read xhtml %s: %w", oldHref, err)
-		}
-
-		content := string(data)
-		// Make links and references prefer HTML targets.
-		content = strings.ReplaceAll(content, ".xhtml", ".html")
-		content = strings.ReplaceAll(content, ".xhtm", ".html")
-
-		if err := os.MkdirAll(filepath.Dir(dstPath), 0o755); err != nil {
-			return fmt.Errorf("mkdir for %s: %w", newHref, err)
-		}
-		if err := os.WriteFile(dstPath, []byte(content), 0o644); err != nil {
-			return fmt.Errorf("write html %s: %w", newHref, err)
-		}
-
-		hrefMap[oldHref] = newHref
-		book.recordHrefRewrite(oldHref, newHref)
-		item.Href = newHref
-		item.MediaType = "text/html"
-	}
-
-	if len(hrefMap) == 0 {
-		return nil
-	}
-
-	// Second pass: rewrite cross-links in all HTML content files using exact href map.
-	for _, item := range book.Manifest {
-		if !isHTMLMediaType(item.MediaType) {
-			continue
-		}
-		path := bookPath(outputDir, book.BasePath, item.Href)
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		content := string(data)
-		for oldHref, newHref := range hrefMap {
-			content = strings.ReplaceAll(content, oldHref, newHref)
-		}
-		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-			continue
-		}
-	}
-
-	return nil
-}
-
-// coverSVGWrapperRe matches a Calibre/Kindlegen-style SVG element that exists
-// only to embed a single raster image (the cover-page idiom). Capture group 1
-// is the image href. It is lazy at both .*? so each match spans exactly one
-// <svg>…</svg> block.
-var coverSVGWrapperRe = regexp.MustCompile(
-	`(?is)<svg\b[^>]*>.*?<image\b[^>]*?\b(?:xlink:)?href\s*=\s*["']([^"']+)["'][^>]*>.*?</svg>`)
-
-// rewriteSVGImageWrappers replaces single-image SVG wrappers with a plain <img>.
-//
-// EPUB tools commonly wrap the cover in <svg><image .../></svg>. That breaks two
-// things in the generated output: the injected `img { object-fit: contain }` CSS
-// and aspect-ratio JS guard never touch SVG <image>, and Calibre often emits
-// preserveAspectRatio="none" — together this stretches the cover to fill the
-// viewport. Browsers also do not apply EXIF orientation to SVG <image>, so a
-// cover tagged Orientation=3 shows upside down. Converting to <img> fixes both:
-// sizing falls under the injected CSS and the browser honours EXIF orientation.
-//
-// SVG blocks holding more than one <image> are left untouched so genuinely
-// illustrated pages are not collapsed to a single picture.
-func rewriteSVGImageWrappers(content string) string {
-	return coverSVGWrapperRe.ReplaceAllStringFunc(content, func(match string) string {
-		if strings.Count(strings.ToLower(match), "<image") != 1 {
-			return match
-		}
-		sub := coverSVGWrapperRe.FindStringSubmatch(match)
-		if len(sub) < 2 || strings.TrimSpace(sub[1]) == "" {
-			return match
-		}
-		// sub[1] excludes both quote characters by construction, so it is safe
-		// to wrap in double quotes without re-escaping.
-		return fmt.Sprintf(`<img src="%s" alt=""/>`, strings.TrimSpace(sub[1]))
-	})
-}
-
-// normalizeCoverImages rewrites single-image SVG wrappers into <img> across all
-// HTML content files. Best-effort: unreadable or unwritable files are skipped.
-func normalizeCoverImages(book *Book, outputDir string) error {
-	for _, item := range book.Manifest {
-		if !isHTMLMediaType(item.MediaType) {
-			continue
-		}
-		path := bookPath(outputDir, book.BasePath, item.Href)
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		content := string(data)
-		rewritten := rewriteSVGImageWrappers(content)
-		if rewritten == content {
-			continue
-		}
-		_ = os.WriteFile(path, []byte(rewritten), 0o644)
-	}
-	return nil
 }
 
 func toHTMLExt(href string) string {
