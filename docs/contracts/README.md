@@ -28,10 +28,10 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [CHECK-BASELINE.md](CHECK-BASELINE.md) | `CHECK-BASELINE` | 0.9 draft | consumer, dormant - no baseline file in use |
 | [CHECK-PLACEMENT.md](CHECK-PLACEMENT.md) | `CHECK-PLACEMENT` | 0.10 draft | consumer - `configs/check-placement.jsonl` |
 | [BUILD-EVIDENCE.md](BUILD-EVIDENCE.md) | `BUILD-EVIDENCE` | 0.9 draft | consumer - subject banners, artifact version, tested tree = tagged tree |
-| [REPO-STAMP.md](REPO-STAMP.md) | `REPO-STAMP` | 0.9 draft | producer/consumer - `.sza-canon.json` declaration file at repository root |
+| [REPO-STAMP.md](REPO-STAMP.md) | `REPO-STAMP` | 0.9 draft | producer - `.sza-canon.json` at the repository root |
 | [REPO-LAYOUT.md](REPO-LAYOUT.md) | `REPO-LAYOUT` | 0.9 draft | consumer - repository structure and named entry points |
-| [HARNESS-PROFILE.md](HARNESS-PROFILE.md) | `HARNESS-PROFILE` | 0.9 draft | consumer - tool runner profile and paths |
-| [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule distribution and verification |
+| [HARNESS-PROFILE.md](HARNESS-PROFILE.md) | `HARNESS-PROFILE` | 0.9 draft | not applicable - the shipped harness is never run here, no `.sza-profile.json` |
+| [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule set via the `sza` plugin; stamp currently stale |
 
 Two further documents in the same catalog folder are **records** owned by other products and cite this one:
 `OCR-ACCURACY` (FastMediaSorter Android's measurement record) and `OCR-EXCHANGE` (FastMediaSorter_Lite's

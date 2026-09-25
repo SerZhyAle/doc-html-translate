@@ -71,13 +71,14 @@ tree.
    `2026.09.24.1`).
 3. Pointer files for the four ids, listed in the pointer README, with `HARNESS-PROFILE` marked not
    applicable and why.
-   **Partly done 2026-09-25** - `docs/contracts/REPO-STAMP.md`, `HARNESS-PROFILE.md`, `REPO-LAYOUT.md`,
+   Pointers `docs/contracts/REPO-STAMP.md`, `HARNESS-PROFILE.md`, `REPO-LAYOUT.md`,
    `RULE-DELIVERY.md` exist, are tracked and are listed in `docs/contracts/README.md` (lines 31-34).
-   *Still open (repo-only):* `HARNESS-PROFILE.md` and its README line call the repo a "consumer - tool
-   runner profile and paths" and cite `configs/check-placement.jsonl` / `tests/placement_test.go`, which
-   belong to `CHECK-PLACEMENT`, not to the harness profile. Rewrite it as not applicable: the shipped
-   harness is never run here, there is no `.sza-profile.json`, and snapshot `HARNESS-PROFILE` rule 7
-   (missing profile means the defaults) plus the latent-risk note above say why that matters.
+   **Done 2026-09-25** - `HARNESS-PROFILE.md` rewritten as not applicable (no `.sza-profile.json`, harness
+   never run, rule 7 defaults vs this repo's ticket scheme as the latent risk); its README line updated.
+   The same pass fixed the other three pointers: their conformance lines named a
+   `tools/check-compliance.ps1` that is not in this repository (the gate ships with the plugin), and each
+   now says what the repo owes the contract. `RULE-DELIVERY.md` records the stale stamp and
+   `REPO-LAYOUT.md` records the rule-3 question, both pointing back here.
 4. **⛔ Local only - changes the contract catalog.** Registry: this product's row replacing the placeholder.
    **Done 2026-09-24, with errors** - the catalog's `_meta/REGISTRY.md` carries a doc-html-translate row
    for all four ids dated 2026-09-24 (quoted in the snapshot); the generic "every canon-adopting
@@ -128,8 +129,8 @@ universal-agent-kit (`universal-agent-kit-adoption`). None names doc-html-transl
       the same commit. *Done 2026-09-25 - commit `0c67c4e`, 21 tracked files.*
 - [ ] **⛔ Waits on Direction A step 2 (local).** The compliance gate reports no `SZA-CANON03` finding -
       the gate ships with the canon plugin and the finding clears only after the tool-written stamp update.
-- [ ] Pointer files and the registry row exist. *Pointer files exist (2026-09-25); `HARNESS-PROFILE.md`
-      still to be rewritten as not applicable (step 3, repo-only).* **⛔ Local only - changes the contract
+- [ ] Pointer files and the registry row exist. *Pointer files done 2026-09-25, `HARNESS-PROFILE.md`
+      marked not applicable (step 3).* **⛔ Local only - changes the contract
       catalog** for the registry half: the row exists since 2026-09-24 but needs the correction in step 4.
 - [ ] **⛔ Local only - changes the contract catalog.** B1-B6 filed or withdrawn in writing here.
 - [ ] `.sza-canon.json` `site.pages` is updated by
@@ -141,6 +142,57 @@ universal-agent-kit (`universal-agent-kit-adoption`). None names doc-html-transl
 1. **⛔ Local only - needs the canon plugin/repo.** Reconcile to the published plugin version now, or wait
    for 2026.09.23.1 to be published? *2026-09-25:* the canon repository has moved on to `2026.09.24.1`,
    so the question is now "reconcile to whatever is published when step 2 runs".
+
+## Drafts for the local steps (2026-09-25)
+
+Written in a cloud session so the ⛔ steps are paste-and-file. Not filed; the catalog is not touched.
+
+**Step 4 - registry row correction.** Replace the row's last cell with:
+
+> **producer (`REPO-STAMP`), consumer (`REPO-LAYOUT`, `RULE-DELIVERY`), not applicable (`HARNESS-PROFILE`).**
+> Root `.sza-canon.json` (role: product, overlay `A`, ledgerShape 2); no `.sza-profile.json` - the shipped
+> harness is never run here; `AGENTS.md` authoritative canon pointer; pointers under `docs/contracts/<ID>.md`
+> indexed by `docs/contracts/README.md`. `RULE-DELIVERY` rule 5: stale (stamp `2026.09.06.1`), warning,
+> reconciliation owed.
+
+Role column: `P/C` stays correct for the four ids taken together.
+
+**B1** - comment on FileDO's `PROPOSAL-2026-09-23-adoption-date.md`:
+
+> Co-signed by doc-html-translate. Same history: `canon.adoptedOn` is `2026-08-18` and was not reset by two
+> later re-syncs, so the 180-day escalation counts from a date that no longer marks an adoption.
+
+**B2** - new `PROPOSAL-2026-09-23-harness-not-run.md`:
+
+> `HARNESS-PROFILE` rule 7 reads a missing profile as "use the defaults". A repository that never runs the
+> shipped harness has no profile for a different reason, and a reader cannot tell the two apart. Proposal:
+> a repository that does not run the harness declares `HARNESS-PROFILE` not applicable in its pointer and
+> registry row, and a checker treats the missing file as expected there. Evidence: doc-html-translate,
+> whose ticket scheme (`DEV/plan/NN_<date>_<slug>.md`) the defaults would misread as an empty queue.
+
+**B3** - addendum to FileDO's `PROPOSAL-2026-09-23-stamp-defaults.md`:
+
+> Co-signed by doc-html-translate, with one key added: `exemptions[].path`. Suggested meaning of absence:
+> the exemption applies to every path the finding id matches. This repo sets it on both exemptions, so the
+> question is only what a missing one means.
+
+**B4** - addendum to FileDO's `PROPOSAL-2026-09-23-own-spec-scheme.md`:
+
+> Asks that the carve-out follow the declaration, not the folder: a spec-id scheme declared in the
+> agent-rules file is outside the rule-3 prefix requirement wherever it lives. doc-html-translate declares
+> `DEV/plan/NN_<date>_<slug>.md` and `DEV/research/<topic>_<date>.md` in `AGENTS.md` and `CLAUDE.md`.
+
+**B5** - new `PROPOSAL-2026-09-23-staleness-ladder.md`:
+
+> The adopt-canon skill escalates to an error at two versions behind; the compliance gate reports
+> `SZA-CANON03` as a warning. `RULE-DELIVERY` rule 5 already answers: digest-based, warning until the
+> adoption date is 180 days old. Proposal: the skill follows rule 5 and drops the version count.
+
+**B6** - new `PROPOSAL-2026-09-23-gate-host.md`:
+
+> The compliance gate has no `#requires -Version 7`. Under Windows PowerShell 5.1 it reported 7 errors and
+> exit 1 on a tree where pwsh 7 reported none. Proposal: the gate declares its host, and running under a
+> host it cannot verify with reports "could not verify" (the `CHECK-VERDICT` shape), never a failure.
 
 ## Contract snapshot (2026-09-25)
 
