@@ -123,7 +123,8 @@ func TestExtract_HTMLLocalImagesCopied(t *testing.T) {
 }
 
 // A src that escapes the source directory subtree must NOT copy an arbitrary disk file into the
-// output; it is left as-is (and will simply not resolve).
+// output. The src is dropped rather than left as written: "../secret.png" would resolve against
+// the output folder's parent and could show whatever file sits there.
 func TestExtract_HTMLPathTraversalRefused(t *testing.T) {
 	root := t.TempDir()
 	secret := filepath.Join(root, "secret.png")
@@ -145,8 +146,11 @@ func TestExtract_HTMLPathTraversalRefused(t *testing.T) {
 		t.Error("a ../ traversal copied a file from outside the source subtree into the output")
 	}
 	page, _ := os.ReadFile(filepath.Join(outDir, "page_001.html"))
-	if !strings.Contains(string(page), "../secret.png") {
-		t.Error("the escaping ref should be left untouched (visibly broken), not rewritten")
+	if strings.Contains(string(page), "secret.png") {
+		t.Error("the escaping ref should be dropped from the output")
+	}
+	if !strings.Contains(string(page), "<img") {
+		t.Error("the <img> itself should stay")
 	}
 }
 

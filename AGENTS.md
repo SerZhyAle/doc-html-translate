@@ -105,6 +105,8 @@ Notes:
   - internal/comic: comic archives (CBZ/CBR/CB7/CBT) - one page image per spine entry in natural filename order, forced OCR (same rationale as internal/img). CBZ=zip, CBT=tar (stdlib); CBR/CB7 shell out to 7-Zip (LookPath + probe paths, the MOBI/Calibre precedent)
 - HTML processing/generation:
   - internal/htmlproc, internal/htmlsplit, internal/htmlgen
+  - internal/assets: local asset copying shared by internal/htmlconv and internal/md (img src/srcset, picture sources, CSS url() and local stylesheets); names unique case-insensitively, generated names reserved, nothing resolved outside the source folder is copied
+  - EPUB chapters are normalized on the parsed tree (internal/epub normalize.go, links.go `rewriteLinks`), never by text replacement; the splitter retargets TOC entries and links through an id-to-part map
 - Translation:
   - internal/translator
 - Interface language (13 languages, `en ru uk de it es fr pt ar hi bn ur zh`):

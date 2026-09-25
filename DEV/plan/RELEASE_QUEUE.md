@@ -84,7 +84,7 @@ process and the GUI drop/delete need a pass on Windows. Rule 7 puts it at the bo
 
 ```
 #   ticket                                              changed     status
-06  06_2026-09-24_bugfix-epub-html-content-fidelity     2026-09-25  In Progress (E6-E9, E11, E12, E14 EPUB half)
+06  06_2026-09-24_bugfix-epub-html-content-fidelity     2026-09-25  Implemented (8810164) - not yet moved to done/
 07  07_2026-09-24_bugfix-output-completeness            2026-09-24  Draft (P90)
 08  08_2026-09-24_bugfix-translation-engine-correctness 2026-09-24  Draft (P85)
 09  09_2026-09-24_bugfix-reader-layer-and-single-page   2026-09-24  Draft (P80)

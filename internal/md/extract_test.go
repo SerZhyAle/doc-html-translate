@@ -96,3 +96,62 @@ func TestExtract_FileNotFound(t *testing.T) {
 		t.Error("expected error for missing file")
 	}
 }
+
+// A local image the Markdown references is copied next to the pages and the reference
+// rewritten; one outside the Markdown's folder is not copied.
+func TestExtract_MarkdownLocalImagesCopied(t *testing.T) {
+	root := t.TempDir()
+	srcDir := filepath.Join(root, "src")
+	outDir := filepath.Join(root, "out")
+	for _, d := range []string{filepath.Join(srcDir, "img"), outDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, p := range []string{filepath.Join(srcDir, "img", "pic.png"), filepath.Join(root, "secret.png")} {
+		if err := os.WriteFile(p, []byte("png"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	mdPath := filepath.Join(srcDir, "doc.md")
+	content := "# Title\n\n![x](img/pic.png)\n\n![y](../secret.png)\n\n![z](https://example.com/r.png)\n"
+	if err := os.WriteFile(mdPath, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := md.Extract(mdPath, outDir); err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	page, err := os.ReadFile(filepath.Join(outDir, "page_001.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(page)
+	if !strings.Contains(body, `src="pic.png"`) {
+		t.Errorf("image ref not rewritten: %s", body)
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "pic.png")); err != nil {
+		t.Error("pic.png not copied")
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "secret.png")); err == nil || strings.Contains(body, "secret.png") {
+		t.Error("an image outside the Markdown's folder was copied or left referenced")
+	}
+	if !strings.Contains(body, "https://example.com/r.png") {
+		t.Error("remote image should be untouched")
+	}
+}
+
+// Markdown carries no language, so the page must not claim one.
+func TestExtract_MarkdownNoInventedLang(t *testing.T) {
+	dir := t.TempDir()
+	mdPath := filepath.Join(dir, "doc.md")
+	if err := os.WriteFile(mdPath, []byte("Текст без заголовка.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := md.Extract(mdPath, dir); err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	page, _ := os.ReadFile(filepath.Join(dir, "page_001.html"))
+	if strings.Contains(string(page), "lang=") {
+		t.Errorf("page declares a language it does not know: %s", page)
+	}
+}
