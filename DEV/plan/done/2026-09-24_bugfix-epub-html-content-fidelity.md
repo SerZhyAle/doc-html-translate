@@ -1,12 +1,12 @@
-# Strategic spec: 06_2026-09-24_bugfix-epub-html-content-fidelity - EPUB, HTML and Markdown content survives normalization and splitting
+# Strategic spec: 2026-09-24_bugfix-epub-html-content-fidelity - EPUB, HTML and Markdown content survives normalization and splitting
 
-**Ticket:** 06_2026-09-24_bugfix-epub-html-content-fidelity
+**Ticket:** 2026-09-24_bugfix-epub-html-content-fidelity
 **Status:** Implemented
 **Priority:** 65
 **Date:** 2026-09-24
 **Tier:** Strategic
-**Tactical plan:** `DEV/plan/06_2026-09-24_bugfix-epub-html-content-fidelity/` (created by /spec-tech)
-**Findings:** E6 E7 E8 E9 E11 E12 E14 E15 E21 E22 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Tactical plan:** none - built without one (see "Implementation notes")
+**Findings:** E6 E7 E8 E9 E11 E12 E14 E15 E21 E22 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -98,7 +98,7 @@ No changes to user docs.
 5. A windows-1251 HTML page reads correctly.
 
 ## 12. Next step
-`/spec-tech 06_2026-09-24_bugfix-epub-html-content-fidelity`
+None - Implemented. The open gaps are listed under "Implementation notes", "Not done".
 
 ## Implementation notes (2026-09-25)
 

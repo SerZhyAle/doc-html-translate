@@ -69,7 +69,7 @@ current-next-release: 1 (rebuilt 2026-09-25)
 
 The three data-safety Drafts lead because each one lets a crafted book or a local page reach outside
 the output folder. `href-containment` goes first: it reuses the DOM link rewriter that ticket 06 already
-landed, so it is the cheapest of the three.
+landed ([`done/2026-09-24_bugfix-epub-html-content-fidelity`](done/2026-09-24_bugfix-epub-html-content-fidelity.md)), so it is the cheapest of the three.
 
 **04 sits below them for a stated reason, against rule 3** (Partial before Draft): its next step is not
 ready to build. The corpus refused the length rule and a third separating axis has to be found first -
@@ -84,15 +84,15 @@ process and the GUI drop/delete need a pass on Windows. Rule 7 puts it at the bo
 
 ```
 #   ticket                                              changed     status
-06  06_2026-09-24_bugfix-epub-html-content-fidelity     2026-09-25  Implemented (8810164) - not yet moved to done/
 07  07_2026-09-24_bugfix-output-completeness            2026-09-24  Draft (P90)
 08  08_2026-09-24_bugfix-translation-engine-correctness 2026-09-24  Draft (P85)
 09  09_2026-09-24_bugfix-reader-layer-and-single-page   2026-09-24  Draft (P80)
 10  10_2026-09-24_bugfix-legacy-text-decoding           2026-09-24  Draft (P80)
 ```
 
-06 was in the audit's fourth package and leads here by rule 1: half of it is committed (c1e9ec7,
-274fdb8). 09 shares its link-rewrite machinery, so it follows the finished 06 rather than racing it.
+06 was in the audit's fourth package and led here by rule 1; it reached Implemented on 2026-09-25 (c1e9ec7,
+274fdb8, 8810164) and moved to [`done/`](done/2026-09-24_bugfix-epub-html-content-fidelity.md). 09 builds on its
+link-rewrite machinery.
 
 ## release 3 - robustness
 

@@ -35,7 +35,7 @@ already open. The number in front of each ticket is its queue position.
 - [02 bugfix-shell-open-injection](../../plan/02_2026-09-24_bugfix-shell-open-injection.md) - P90 - P3 P24 G4 G13
 - [03 bugfix-gui-local-api-hardening](../../plan/03_2026-09-24_bugfix-gui-local-api-hardening.md) - P90 - G1 G3 G5-G8 G10 G12 G14-G19
 - [05 hotfix-output-dir-ownership](../../plan/05_2026-09-24_hotfix-output-dir-ownership.md) - P95 - **BlockNeedUserTest** (implemented 2026-09-25) - P1 P2 P6 P7 P16 P17 G9 G11
-- [06 bugfix-epub-html-content-fidelity](../../plan/06_2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - **Implemented** (2026-09-25) - E6-E9 E11 E12 E14 E15 E21 E22
+- [06 bugfix-epub-html-content-fidelity](../../plan/done/2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - **Implemented** (2026-09-25) - E6-E9 E11 E12 E14 E15 E21 E22
 - [07 bugfix-output-completeness](../../plan/07_2026-09-24_bugfix-output-completeness.md) - P90 - P4 P5 P8 P9 T5 O10
 - [08 bugfix-translation-engine-correctness](../../plan/08_2026-09-24_bugfix-translation-engine-correctness.md) - P85 - T1-T4 T6-T9 P10 P11 P20
 - [09 bugfix-reader-layer-and-single-page](../../plan/09_2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23

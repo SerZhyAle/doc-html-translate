@@ -1,7 +1,7 @@
 # The reader can only OCR a live page one picture at a time, in a tab that is no longer the page
 
 **Ticket:** 2026-09-19_page-ocr-overlay
-**Status:** BlockNeedUserTest - implemented; needs a hands-on pass on a real webcomic, a real scanned-archive page and a page whose pictures are cross-origin, plus one site with a restrictive content security policy and one browser below the offscreen-API version, before the store-listing permission text is written (§3.3 owner sign-off).
+**Status:** Implemented - moved to done/ by the owner on 2026-09-25. Still open outside this ticket: a hands-on pass on a real webcomic, a real scanned-archive page and a page whose pictures are cross-origin, plus one site with a restrictive content security policy and one browser below the offscreen-API version, before the store-listing permission text is written (§3.3 owner sign-off).
 **Priority:** 50
 **Date:** 2026-09-19
 **Tier:** Strategic
