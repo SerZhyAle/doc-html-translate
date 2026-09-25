@@ -1,6 +1,6 @@
 # Both editions describe the same plate twice, and nothing notices when the copies part
 
-**Status:** Partial
+**Status:** BlockNeedUserTest
 **Priority:** 44
 **Date:** 2026-08-15
 **Tactical plan:** [`2026-08-15_plate-styling-single-source/`](2026-08-15_plate-styling-single-source/INDEX.md)
@@ -192,29 +192,22 @@ it from a screenshot.
 ## Last Audit
 
 **Date:** 2026-09-25
-**Mode:** full (re-audit after /spec-fix)
-**Outcome:** Partial
-**Counts:** PASS 81 · WARN 2 · FAIL 0 · MANUAL 4 · EXEMPT 1
+**Mode:** full
+**Outcome:** BlockNeedUserTest
+**Counts:** PASS 90 · WARN 0 · FAIL 0 · MANUAL 4 · EXEMPT 2
 
-Static audit of the tree at `1c04bc1` plus the /spec-fix predicate and budget corrections. Build and test
-predicates are taken from the 2026-09-24 run recorded in the INDEX change log. /spec-fix closed 6 of
-the 8 WARNs: two stale predicates (plate count 17; box-shadow narrowed to the plate role) and four
-re-budgets (overlay.go, ocr-overlay.css, parity_test.go, PARITY.md). The two left need a decision:
-trim the code or re-budget with a reason.
-
-### Action items
-1. ~~**[WARN Phase 02 budget]** `appearance.go` 250 against 220.~~ Resolved 2026-09-25: shape checks
-   moved into `TestSourceShape`, theme decode folded into one `orderedObject`; 238 lines, re-budgeted
-   to 240 with the reason in PHASE_02.
-2. ~~**[WARN Phase 04 budget]** `appearance_parity_test.go` 577 against 320.~~ Resolved 2026-09-25:
-   the duplicated label reader folded into `addLabelled`; re-budgeted to 600 with the reason in
-   PHASE_04 (the parser, divergence exemption and ring self-test were not in the estimate).
+Static audit of the tree after the budget fix-up. Every step predicate of phases 01-04, 05.1-05.2
+and 06.1 holds; every file is within its (re-set) budget - appearance.go 238/240,
+appearance_parity_test.go 580/600, overlay.go 73/75 changed, parity_test.go 121/125, PARITY.md
+126/130. Count mismatches on `.ocr-badge`, `#content img` and `--reader-size` are a compound selector,
+a comment and a `var()` use - one declaration each. Criteria 1-4 and 6-8 hold statically. EXEMPT:
+user docs (§8 mandates none) and the verification-tag invariant - no manual item below points at
+a source location, so there is nothing to tag.
 
 ### Manual / on-target
 - [ ] Step 05.3: repoint the catalog's `ocr-pipeline.md` plate rows and §3.1 at
-      `internal/appearance`. The catalog is not reachable from the audit session.
+      `internal/appearance`. The catalog is not reachable from a cloud session.
 - [ ] Criterion 5: render one corpus comic page with OCR on, in both editions, and compare it with the
-      2026-08-15 output. The headless-Chromium CSS comparison found 0 differing pixels, but it does
-      not replace the corpus run.
+      2026-08-15 output. The headless-Chromium CSS comparison (0 differing pixels) does not replace it.
 - [ ] Criterion 9: `./scripts/test.ps1`, `lint.ps1`, `typo.ps1` and `check.ps1` exit 0 on Windows.
 - [ ] Step 06.2: record the exit codes and the corpus page in the INDEX change log.
