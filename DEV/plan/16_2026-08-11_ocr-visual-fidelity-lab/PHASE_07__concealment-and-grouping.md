@@ -2,7 +2,7 @@
 
 **Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⬜ Not started
+**Status:** ⛔ Blocked (reconciled 2026-09-25 - see "Reconciliation" below)
 **Depends on:** Phase 06
 **Steps done:** 0 / 7
 
@@ -205,6 +205,55 @@ Two of this phase's own targets are now measured and still open:
   been renamed, so read `ocrClusterGapFactor` there as `ocrClusterPitchFactor`.
 - `synth-two-columns` still merges its two columns into one plate that crosses the other column at
   every stress case.
+
+## Reconciliation (2026-09-25)
+
+The queue asked for this phase to be reconciled with what landed out of band before it is planned.
+Done against a fresh measurement rather than the 2026-08-11 tables: `ocrlab run` over the eight
+synthetic scenes, desktop edition, in a cloud session (tesseract 5.3.4 with the distribution's `eng`
+data, Chromium 141, the corpus media absent - `test_doc/ocrlab/` is gitignored, so only the scenes
+`ocrlab synth` redraws are measurable there). The run folder is temp and not committed; the numbers:
+
+| Scene | IoU | Residual | Cut-glyph ink | Damage px | Merges | Cross-group |
+|---|---:|---:|---:|---:|---:|---:|
+| `synth-uniform-paper` | 0.96 | 0.14 | 0.00 | 0 | 0 | 0 |
+| `synth-two-columns` | 0.94 | 0.10 | 0.00 | 0 | 0 | 0 |
+| `synth-balloon-on-panel` | 0.91 | 0.12 | 0.00 | 0 | 0 | 0 |
+| `synth-adjacent-balloons` | 0.84 | 0.19 | 0.00 | 0 | 0 | 0 |
+| `synth-caption-on-gradient` | 0.93 | 0.08 | 0.00 | 0 | 0 | 0 |
+| `synth-text-on-halftone` | 0.76 | 0.18 | 0.21 | 0 | 0 | 0 |
+| `synth-display-lettering` | 0.83 | 0.13 | 0.00 | 0 | 0 | 0 |
+| `synth-rtl-layout` | 0.92 | 0.05 | 0.00 | 0 | 0 | 0 |
+
+Residual and cut-glyph ink are the self-diagnosis at the desktop viewport; the scored report's
+"worst residual" column (0.38 on `synth-display-lettering`) is the annotated-group measure. Every hard
+gate is at zero and recall is 1.00 on all eight.
+
+What that says about each step, under this phase's own prerequisite ("a step with no measured cause
+does not run"):
+
+- **07.3 has no measured cause left in the repo.** Its target, `synth-two-columns` merging its two
+  columns, was closed on 2026-09-12 by a different mechanism - the word-gap split and column
+  regrouping of [`done/2026-09-12_ocr-line-stitched-across-the-picture`](../done/2026-09-12_ocr-line-stitched-across-the-picture.md) -
+  and the run above confirms it: 0 merges and 0 cross-group overlaps across all eight scenes. The
+  remaining candidate, the comic-balloon band at 1.87-2.57x line pitch (release-1 worklog §1.7), was
+  measured on the gitignored corpus only. Re-measure it there before 07.3 is written; if it holds, the
+  step's substance (an *added*, named boundary condition) still stands.
+- **07.1 / 07.2 have a cause but not a method.** Residual ink on non-paper backgrounds (baseline
+  §8.4) is real, but the step would pick its mask and reconstruction rules by intuition: strategic
+  §9.1 (mask fidelity) and §9.2 (background reconstruction) are still Open in baseline §10, blocked on
+  annotated `texture` scenes and on protected polygons, both human-owned. The synthetic run adds two
+  facts against guessing: residual is 0.14 on flat paper, where the decision would pick today's fill
+  anyway, so the mode choice is not what drives it; and the one scene with a finding
+  (`synth-text-on-halftone`, 21% cut-glyph ink) is a plate that stops short of its glyphs - a mask
+  restricted to the line boxes paints less, not more. With damage at zero everywhere there is also
+  nothing the mask mode could be shown to protect.
+- **07.4 - 07.7** follow 07.1 - 07.3 and inherit their block.
+
+**Unblocks when:** the §4.3 annotation gate delivers annotated `texture` scenes with protected
+polygons (resolving §9.1 / §9.2 for 07.1 - 07.2), and an owner-machine corpus run re-measures the
+balloon merge band (for 07.3). No step below is marked done by this reconciliation, and no rendering
+decision moved.
 
 ## Handoff notes
 

@@ -97,16 +97,18 @@ with the wrong confidences. No build in use today does, so nothing is misplaced 
 
 ```
 #   ticket                                              changed     status
-16  16_2026-08-11_ocr-visual-fidelity-lab               2026-08-15  In Progress (6/8 phases)
+16  16_2026-08-11_ocr-visual-fidelity-lab               2026-09-25  In Progress (6/8; 07 ⛔ annotation)
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
     a gradient
 ```
 
-`ocr-visual-fidelity-lab` is 6 of 8 phases. Phase 07 (concealment and grouping) reads "Not started"
-while most of its subject matter was in fact delivered out of band by the P46 and P47 tickets - that
-mismatch needs reconciling before the phase is planned, not after. Phase 08 is 5 of 6 with its last step
-waiting on 07. Its two genuinely open pieces are human-owned and sit in package `--`.
+`ocr-visual-fidelity-lab` is 6 of 8 phases. Phase 07 (concealment and grouping) was reconciled on
+2026-09-25 against a fresh synthetic-scene run and is now ⛔ Blocked rather than "Not started": its
+grouping target (`synth-two-columns`) was closed out of band on 2026-09-12 and measures 0 merges, and
+its concealment-mode steps need strategic §9.1 / §9.2, which wait on annotated `texture` scenes and
+protected polygons - human-owned work in package `--`. Phase 08 is 5 of 6 with its changelog step
+waiting only on 07's files.
 
 **The `First-Earthman` cover plate rides over the `PLANET COMICS` logo.** The plate's text is the
 cover's own top banner line and it sits on that banner, but its box is taller than its line, so it

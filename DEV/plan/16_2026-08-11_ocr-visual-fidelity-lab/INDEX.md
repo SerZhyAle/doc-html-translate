@@ -5,7 +5,7 @@
 **Tier:** Complex, cross-edition · **Priority:** 40
 **Status:** In Progress
 **Phases:** 6 / 8 done
-**Last updated:** 2026-08-11
+**Last updated:** 2026-09-25
 
 > **Scope:** tactical, English, developer handoff. Every step has a verification predicate.
 > Rationale lives in the strategic spec.
@@ -20,7 +20,7 @@
 | 04 | desktop-runner | 03 | ✅ Done | 6/6 | [PHASE_04__desktop-runner.md](PHASE_04__desktop-runner.md) |
 | 05 | extension-runner | 04 | ✅ Done | 5/5 | [PHASE_05__extension-runner.md](PHASE_05__extension-runner.md) |
 | 06 | baseline-and-thresholds | 04, 05 | ✅ Done | 5/5 | [PHASE_06__baseline-and-thresholds.md](PHASE_06__baseline-and-thresholds.md) |
-| 07 | concealment-and-grouping | 06 | ⬜ Not started | 0/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
+| 07 | concealment-and-grouping | 06 | ⛔ Blocked | 0/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
 | 08 | docs-cleanup | all | 🚧 In Progress | 5/6 | [PHASE_08__docs-cleanup.md](PHASE_08__docs-cleanup.md) |
 
 Legend: ⬜ Not started · 🚧 In Progress · ✅ Done · ⛔ Blocked · ⏭️ Skipped
@@ -166,3 +166,11 @@ Two rows of strategic §6 produce no step, and that is a decision rather than an
   advances: no step of either is done, both stay ⬜ Not started, and each now carries a note saying
   what to re-derive rather than inherit. The non-negotiable "no phase before 06 changes a threshold,
   a constant or a rendering decision" is recorded as broken here rather than quietly rewritten.
+- 2026-09-25 - **phase 07 reconciled and set ⛔ Blocked**, not started. A fresh desktop run over the
+  eight synthetic scenes (cloud session, tesseract 5.3.4) shows every hard gate at zero: 07.3's target
+  merge on `synth-two-columns` was closed on 2026-09-12 by the word-gap split, and 07.1 / 07.2 still
+  need strategic §9.1 / §9.2, which wait on human-owned annotation. The table and the unblock
+  condition are in [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md).
+  Step 08.6 stays open on phase 07; its phase 01-06 and 08 files are all in the changelog.
+  Separately, ticket 15 made the `DOCHT_OCR_DIAG` sidecar write a line for a no-plate image as well,
+  and the extension runner now writes the same `ocr-diag.jsonl`.
