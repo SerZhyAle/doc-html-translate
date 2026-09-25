@@ -6,6 +6,7 @@ import (
 	_ "image/gif"  // register decoders for colour sampling
 	_ "image/jpeg" //
 	_ "image/png"  //
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -303,13 +304,36 @@ func collectOverlayJobs(imgs []*gohtml.Node, baseDir string) []overlayJob {
 		if src == "" || isExternal(src) {
 			continue
 		}
-		file := filepath.Join(baseDir, filepath.FromSlash(src))
-		if _, err := os.Stat(file); err != nil {
+		file := localImageFile(baseDir, src)
+		if file == "" {
 			continue
 		}
 		jobs = append(jobs, overlayJob{node: img, file: file})
 	}
 	return jobs
+}
+
+// localImageFile maps an <img src> to the file it loads, or "". The src is a URL: a
+// ?query or #fragment is not part of the name, and generated pages percent-encode the
+// path ("scan%231.png"), so the decoded path is tried first. The raw value stays the
+// fallback for a page that wrote a literal name.
+func localImageFile(baseDir, src string) string {
+	p := src
+	if i := strings.IndexAny(p, "?#"); i >= 0 {
+		p = p[:i]
+	}
+	var candidates []string
+	if dec, err := url.PathUnescape(p); err == nil && dec != "" {
+		candidates = append(candidates, dec)
+	}
+	candidates = append(candidates, src)
+	for _, c := range candidates {
+		file := filepath.Join(baseDir, filepath.FromSlash(c))
+		if st, err := os.Stat(file); err == nil && st.Mode().IsRegular() {
+			return file
+		}
+	}
+	return ""
 }
 
 // ocrWorkers is how many Tesseract processes to keep in flight. Each one is essentially

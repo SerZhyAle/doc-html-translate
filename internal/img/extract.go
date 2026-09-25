@@ -254,7 +254,9 @@ func buildPageHTML(title, imgName string, pageNum, totalPages int) string {
 	sb.WriteString("    section.dht-page img { display: block; width: 100%; height: auto; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
 	sb.WriteString(fmt.Sprintf("  <section class=\"dht-page\" id=\"page_%03d\" aria-label=\"%s\">\n", pageNum, alt))
-	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), alt))
+	// The source file name is the user's: "scan#1.png" or "50%.png" must be a path, not a
+	// fragment or a broken escape.
+	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(epub.URLPath(imgName)), alt))
 	sb.WriteString("  </section>\n</body>\n</html>\n")
 	return sb.String()
 }

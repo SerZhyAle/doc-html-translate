@@ -65,8 +65,31 @@ func TestExtract(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read page: %v", err)
 	}
-	if !strings.Contains(string(pageHTML), `src="My Photo.png"`) {
+	if !strings.Contains(string(pageHTML), `src="My%20Photo.png"`) {
 		t.Errorf("page does not reference the image:\n%s", pageHTML)
+	}
+}
+
+// The src is a URL, so a file name holding "#" or "%" is percent-encoded: raw, "scan#1.png"
+// would load "scan" with fragment "1.png", and "50%.png" is a malformed escape.
+func TestExtractEncodesImageSrc(t *testing.T) {
+	for name, want := range map[string]string{
+		"scan#1.png": `src="scan%231.png"`,
+		"50%.png":    `src="50%25.png"`,
+	} {
+		srcDir, outDir := t.TempDir(), t.TempDir()
+		imgPath := filepath.Join(srcDir, name)
+		writePNG(t, imgPath, 4, 3)
+		if _, err := Extract(imgPath, outDir); err != nil {
+			t.Fatalf("Extract(%q): %v", name, err)
+		}
+		pageHTML, err := os.ReadFile(filepath.Join(outDir, "page_001.html"))
+		if err != nil {
+			t.Fatalf("read page: %v", err)
+		}
+		if !strings.Contains(string(pageHTML), want) {
+			t.Errorf("%s: page lacks %s:\n%s", name, want, pageHTML)
+		}
 	}
 }
 

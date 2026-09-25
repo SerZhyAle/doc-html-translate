@@ -59,6 +59,25 @@ func TestCollectBookImagesBatchesAndDedupes(t *testing.T) {
 	}
 }
 
+// A generated page percent-encodes the image path ("scan%231.png" for scan#1.png), so the
+// overlay must decode it to find the file; a literal name written by an older page still
+// resolves through the raw fallback.
+func TestCollectBookImagesDecodesEncodedSrc(t *testing.T) {
+	dir, paths := writeBook(t,
+		[]string{"scan#1.png", "50%.png", "a b.png"},
+		`<img src="scan%231.png"><img src="50%25.png"><img src="a b.png">`,
+	)
+	got := collectBookImages(paths)
+	want := []string{
+		filepath.Join(dir, "scan#1.png"),
+		filepath.Join(dir, "50%.png"),
+		filepath.Join(dir, "a b.png"),
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("encoded srcs not resolved:\n got  %v\n want %v", got, want)
+	}
+}
+
 // TestApplyOverlays checks phase 3: each image is wrapped from its precomputed recognition,
 // with the three outcomes (overlaid / no-text / failed) counted apart and the "changed" flag
 // set only when something was added.
