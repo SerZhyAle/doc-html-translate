@@ -593,8 +593,8 @@ func TestParityOCRLangReport(t *testing.T) {
 		t.Error("ocr-lang.js: langLabel no longer renders \"code (Name)\" (see docs/PARITY.md OCR)")
 	}
 	// And it has to reach the reader on both sides, not just exist.
-	if !strings.Contains(readRepoFile(t, "internal", "pipeline", "pipeline.go"), "ocr.LangLabel(") {
-		t.Error("pipeline.go: the overlay report no longer names the language")
+	if !strings.Contains(readRepoFile(t, "internal", "pipeline", "ocrstep.go"), "ocr.LangLabel(") {
+		t.Error("ocrstep.go: the overlay report no longer names the language")
 	}
 	for _, f := range []string{"viewer.js", "ocr.js"} {
 		if !strings.Contains(readRepoFile(t, "extension", "src", f), "ocrNoTextLang") {

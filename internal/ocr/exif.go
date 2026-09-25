@@ -66,7 +66,7 @@ func exifOrientation(path string) int {
 	if err != nil {
 		return orientNormal
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	buf := make([]byte, exifHeaderBytes)
 	n, _ := f.Read(buf)
 	return exifOrientationFromHeader(buf[:n])
@@ -160,12 +160,18 @@ func orientImage(src image.Image, orientation int) image.Image {
 		dw, dh = h, w
 	}
 	dst := image.NewRGBA(image.Rect(0, 0, dw, dh))
-	src2 := image.NewRGBA(image.Rect(0, 0, w, h))
-	draw.Draw(src2, src2.Bounds(), src, b.Min, draw.Src)
+	// A decoded PNG is usually RGBA already, and a second full copy of it is what pushes a big
+	// scan past the 386 build's address space while the source and the result are both alive.
+	src2, ok := src.(*image.RGBA)
+	if !ok || b.Min != (image.Point{}) {
+		src2 = image.NewRGBA(image.Rect(0, 0, w, h))
+		draw.Draw(src2, src2.Bounds(), src, b.Min, draw.Src)
+	}
 	for y := range h {
 		for x := range w {
 			nx, ny := orientPixel(x, y, w, h, orientation)
-			dst.Set(nx, ny, src2.At(x, y))
+			si, di := y*src2.Stride+x*4, ny*dst.Stride+nx*4
+			copy(dst.Pix[di:di+4], src2.Pix[si:si+4])
 		}
 	}
 	return dst

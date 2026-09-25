@@ -88,7 +88,7 @@ function cyrillicFit(s) {
 
 // detectLegacy decodes non-UTF-8, BOM-less bytes as the most Russian-looking candidate code
 // page, committing only when the result is confidently Cyrillic; otherwise null, so the caller
-// leaves the bytes as UTF-8. Mirrors detectLegacy in internal/txt/legacy.go.
+// falls back to the Western code page. Mirrors detectLegacy in internal/txt/legacy.go.
 function detectLegacy(data) {
   let best = null;
   for (const label of LEGACY_CANDIDATES) {
@@ -105,31 +105,119 @@ function detectLegacy(data) {
   return best.decoded;
 }
 
+// The Western default code page: the last rung of the ladder. Mirrors westernLabel in legacy.go.
+const WESTERN_LABEL = "windows-1252";
+
+// The BOM-less UTF-16 check reads only the head of the file. Mirrors utf16SniffBytes.
+const UTF16_SNIFF_BYTES = 4096;
+
+// sniffUtf16 recognizes UTF-16 saved without a byte-order mark by where its NUL bytes sit: the
+// high byte of every Latin letter, digit, space and punctuation mark is zero, so NULs pile up
+// on one parity (odd offsets for little-endian) and real 8-bit text has none. The dominant
+// parity needs at least 2 NULs covering 5% of the code units, the other at most a tenth as
+// many. Returns the TextDecoder label, or null. Mirrors sniffUTF16 in internal/txt/decode.go.
+export function sniffUtf16(b) {
+  const n = Math.min(b.length, UTF16_SNIFF_BYTES) & ~1;
+  const units = n / 2;
+  if (units < 2) return null;
+  let even = 0;
+  let odd = 0;
+  for (let i = 0; i < n; i += 2) {
+    if (b[i] === 0) even++;
+    if (b[i + 1] === 0) odd++;
+  }
+  const dominates = (hi, lo) => hi >= 2 && hi * 20 >= units && lo * 10 <= hi;
+  if (dominates(odd, even)) return "utf-16le";
+  if (dominates(even, odd)) return "utf-16be";
+  return null;
+}
+
+// measureUtf8 counts UTF-8 damage with the WHATWG decoder algorithm - the one TextDecoder
+// runs - so it agrees with the replacement characters the decode then emits: well-formed
+// multi-byte sequences, bytes that become U+FFFD, the number of U+FFFD, and whether the data
+// ends inside an otherwise well-formed sequence. Mirrors textutil.MeasureUTF8.
+export function measureUtf8(b) {
+  let multi = 0;
+  let invalidBytes = 0;
+  let errors = 0;
+  let needed = 0;
+  let seen = 0;
+  let lower = 0x80;
+  let upper = 0xbf;
+  const bad = (size) => { errors++; invalidBytes += size; };
+  for (let i = 0; i < b.length; ) {
+    const c = b[i];
+    if (needed === 0) {
+      i++;
+      if (c < 0x80) continue;
+      if (c >= 0xc2 && c <= 0xdf) needed = 1;
+      else if (c >= 0xe0 && c <= 0xef) {
+        if (c === 0xe0) lower = 0xa0;
+        else if (c === 0xed) upper = 0x9f;
+        needed = 2;
+      } else if (c >= 0xf0 && c <= 0xf4) {
+        if (c === 0xf0) lower = 0x90;
+        else if (c === 0xf4) upper = 0x8f;
+        needed = 3;
+      } else bad(1);
+      continue;
+    }
+    if (c < lower || c > upper) {
+      bad(seen + 1);
+      needed = 0; seen = 0; lower = 0x80; upper = 0xbf;
+      continue;
+    }
+    i++;
+    lower = 0x80; upper = 0xbf;
+    seen++;
+    if (seen === needed) {
+      multi++;
+      needed = 0; seen = 0;
+    }
+  }
+  const truncatedTail = needed > 0;
+  if (truncatedTail) bad(seen + 1);
+  return { multi, invalidBytes, errors, truncatedTail };
+}
+
+// acceptAsUtf8: bytes that are not strictly valid UTF-8 are still UTF-8 with a little damage
+// when they hold at least one valid multi-byte sequence and the invalid bytes are under 1% of
+// those sequences, or when the only invalidity is a sequence cut off by the end of the file
+// (ticket 10, section 6.1). Mirrors acceptAsUTF8 in internal/txt/decode.go.
+export function acceptAsUtf8(b) {
+  const d = measureUtf8(b);
+  if (d.errors === 0) return true;
+  if (d.errors === 1 && d.truncatedTail) return true;
+  return d.multi > 0 && d.invalidBytes * 100 < d.multi;
+}
+
 // decodeText turns a text file's bytes into a string, honouring the encoding those bytes
 // declare. Mirrors internal/txt/extract.go decodeText - keep the two in step (docs/PARITY.md).
 //
-// Decoding everything as UTF-8 turned a Notepad "Unicode" save into mojibake: UTF-16 is two
-// bytes per character, so the decoder saw a NUL between every letter and a Cyrillic file came
-// out as replacement characters. A pre-Unicode Cyrillic code page (cp1251, koi8-r, cp866,
-// iso-8859-5) came out equally wrong. Order: BOM first, then valid UTF-8 as-is, then a legacy
-// code page by detection, else UTF-8.
+// The ladder: a BOM is authoritative; then BOM-less UTF-16 by its NUL pattern; then UTF-8,
+// tolerating a little damage; then a Cyrillic legacy code page by detection; then
+// windows-1252. Damage shows as U+FFFD, never dropped: one bad byte in a Russian UTF-8 book
+// used to send the whole file to the legacy detector and turn it into mojibake.
 //
-// One place the two editions genuinely differ: TextDecoder strips a leading BOM on its own
-// (ignoreBOM defaults to false), for utf-8 and utf-16 alike, so this side never had the Go
-// side's UTF-8-BOM leak. Exported for the unit test.
+// TextDecoder strips a leading BOM on its own (ignoreBOM defaults to false), for utf-8 and
+// utf-16 alike, so the BOM branches only choose the decoder. Exported for the unit test.
 export function decodeText(data) {
   const b = new Uint8Array(data);
+  if (b.length >= 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return new TextDecoder("utf-8").decode(b);
   if (b.length >= 2) {
-    if (b[0] === 0xff && b[1] === 0xfe) return new TextDecoder("utf-16le").decode(data);
-    if (b[0] === 0xfe && b[1] === 0xff) return new TextDecoder("utf-16be").decode(data);
+    if (b[0] === 0xff && b[1] === 0xfe) return new TextDecoder("utf-16le").decode(b);
+    if (b[0] === 0xfe && b[1] === 0xff) return new TextDecoder("utf-16be").decode(b);
   }
-  // A fatal utf-8 decode throws on the first invalid sequence, which is the cheap
-  // equivalent of Go's utf8.Valid gate: if it succeeds, the bytes were UTF-8.
+  const utf16 = sniffUtf16(b);
+  if (utf16) return new TextDecoder(utf16, { ignoreBOM: true }).decode(b);
+  // A fatal decode is the fast path for the common, fully valid file.
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(data);
+    return new TextDecoder("utf-8", { fatal: true }).decode(b);
   } catch {
-    return detectLegacy(data) ?? new TextDecoder("utf-8").decode(data);
+    // Not strictly valid: measure the damage below.
   }
+  if (acceptAsUtf8(b)) return new TextDecoder("utf-8").decode(b);
+  return detectLegacy(b) ?? new TextDecoder(WESTERN_LABEL).decode(b);
 }
 
 // parseText decodes the bytes and returns the render-ready book shape.

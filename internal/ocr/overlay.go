@@ -1,19 +1,25 @@
 package ocr
 
 import (
+	"context"
 	"fmt"
 	"image"
 	_ "image/gif"  // register decoders for colour sampling
 	_ "image/jpeg" //
 	_ "image/png"  //
+	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 
 	"doc-html-translate/internal/appearance"
+	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 
 	_ "golang.org/x/image/tiff" // extracted PDF images may be TIFF
 	_ "golang.org/x/image/webp" // EPUB images may be WebP
@@ -114,7 +120,10 @@ if(document.body)watch();else document.addEventListener("DOMContentLoaded",watch
 // onProgress, when non-nil, is called as images finish with the number done and the total to
 // do across the book; the counter is per-image (not per-file), so single-page mode - where the
 // whole book is one file - still shows real motion instead of sitting at 0/1.
-func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed bool, onProgress func(done, total int)) OverlayResult {
+//
+// ctx is checked between images and between pages: a cancelled run stops recognizing, writes no
+// further page and returns what it has, with Cancelled set.
+func OverlayBook(ctx context.Context, bin string, htmlPaths []string, lang, dataDir string, langFixed bool, onProgress func(done, total int)) OverlayResult {
 	var stats OverlayResult
 	stats.Lang = lang
 
@@ -140,10 +149,14 @@ func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed
 	lang = use
 
 	// Phase 2: recognize every image once, across one pool spanning the whole book.
-	results := recognizePaths(bin, lang, dataDir, order, onProgress)
+	results := recognizePaths(ctx, bin, lang, dataDir, order, onProgress)
 
 	// Phase 3: re-parse each file (one at a time) and wrap its images from the results.
 	for _, htmlPath := range htmlPaths {
+		if ctx.Err() != nil {
+			stats.Cancelled = true
+			return stats
+		}
 		doc, baseDir, err := parseHTMLFile(htmlPath)
 		if err != nil {
 			continue
@@ -167,7 +180,7 @@ func OverlayBook(bin string, htmlPaths []string, lang, dataDir string, langFixed
 // single-file callers and tests; the pool it runs is that file's images only, so prefer
 // OverlayBook when a whole book's worth of pages is available.
 func OverlayFile(bin, htmlPath, lang, dataDir string, onProgress func(done, total int)) (OverlayResult, error) {
-	return OverlayBook(bin, []string{htmlPath}, lang, dataDir, true, onProgress), nil
+	return OverlayBook(context.Background(), bin, []string{htmlPath}, lang, dataDir, true, onProgress), nil
 }
 
 // parseHTMLFile opens and parses one content file, returning its DOM and the directory its
@@ -185,17 +198,10 @@ func parseHTMLFile(htmlPath string) (*gohtml.Node, string, error) {
 	return doc, filepath.Dir(htmlPath), nil
 }
 
-// renderHTMLFile writes the (possibly rewritten) DOM back to disk.
+// renderHTMLFile writes the rewritten DOM back to disk. A failed render leaves the original page
+// in place rather than a truncated one.
 func renderHTMLFile(htmlPath string, doc *gohtml.Node) error {
-	out, err := os.Create(htmlPath)
-	if err != nil {
-		return err
-	}
-	if err := gohtml.Render(out, doc); err != nil {
-		out.Close()
-		return err
-	}
-	return out.Close()
+	return fsutil.Write(htmlPath, 0o644, func(w io.Writer) error { return gohtml.Render(w, doc) })
 }
 
 // applyOverlays wraps every recognizable image in doc from the precomputed recognition
@@ -255,6 +261,8 @@ type OverlayResult struct {
 	// (script.go). ScriptNote is the sentence explaining that, empty when nothing happened.
 	Lang       string
 	ScriptNote string
+	// Cancelled is set when the run was interrupted before every page was rewritten.
+	Cancelled bool
 }
 
 // OverlayFailure is one image that could not be recognized, and why.
@@ -300,16 +308,39 @@ func collectOverlayJobs(imgs []*gohtml.Node, baseDir string) []overlayJob {
 	jobs := make([]overlayJob, 0, len(imgs))
 	for _, img := range imgs {
 		src := attrVal(img, "src")
-		if src == "" || isExternal(src) {
+		if src == "" || isExternal(src) || isWrapped(img) {
 			continue
 		}
-		file := filepath.Join(baseDir, filepath.FromSlash(src))
-		if _, err := os.Stat(file); err != nil {
+		file := localImageFile(baseDir, src)
+		if file == "" {
 			continue
 		}
 		jobs = append(jobs, overlayJob{node: img, file: file})
 	}
 	return jobs
+}
+
+// localImageFile maps an <img src> to the file it loads, or "". The src is a URL: a
+// ?query or #fragment is not part of the name, and generated pages percent-encode the
+// path ("scan%231.png"), so the decoded path is tried first. The raw value stays the
+// fallback for a page that wrote a literal name.
+func localImageFile(baseDir, src string) string {
+	p := src
+	if i := strings.IndexAny(p, "?#"); i >= 0 {
+		p = p[:i]
+	}
+	var candidates []string
+	if dec, err := url.PathUnescape(p); err == nil && dec != "" {
+		candidates = append(candidates, dec)
+	}
+	candidates = append(candidates, src)
+	for _, c := range candidates {
+		file := filepath.Join(baseDir, filepath.FromSlash(c))
+		if st, err := os.Stat(file); err == nil && st.Mode().IsRegular() {
+			return file
+		}
+	}
+	return ""
 }
 
 // ocrWorkers is how many Tesseract processes to keep in flight. Each one is essentially
@@ -351,13 +382,13 @@ func classifyRecognition(res Result, err error) (ok bool, reason error) {
 	}
 }
 
-// recognizePaths OCRs every image path across ocrWorkers() Tesseract processes and returns a
+// recognizePaths OCRs every image path across poolWorkers(paths) Tesseract processes and returns a
 // map from path to its outcome. The pool spans the whole slice it is given, so a book's worth
 // of pages is recognized at full width rather than one file's images at a time. One process
 // pins about one core, so this is what actually uses a multi-core machine; a scanned book that
 // recognized serially left ~90% of the cores idle while the reader waited. Completions are
 // reported to onProgress in finishing order (not path order).
-func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(done, total int)) map[string]recognition {
+func recognizePaths(ctx context.Context, bin, lang, dataDir string, paths []string, onProgress func(done, total int)) map[string]recognition {
 	if onProgress != nil {
 		onProgress(0, len(paths))
 	}
@@ -367,14 +398,14 @@ func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(d
 	var mu sync.Mutex
 	done := 0
 
-	for w := 0; w < ocrWorkers(); w++ {
+	for w := 0; w < poolWorkers(paths); w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for i := range queue {
 				// Recognize is self-contained (its own temp file, its own process), so it
 				// is safe to run concurrently; each worker writes only its own slot.
-				res, err := Recognize(bin, paths[i], lang, dataDir)
+				res, err := recognizeSafe(bin, paths[i], lang, dataDir)
 				ok, reason := classifyRecognition(res, err)
 				r := recognition{ok: ok, err: reason}
 				switch {
@@ -399,8 +430,15 @@ func recognizePaths(bin, lang, dataDir string, paths []string, onProgress func(d
 			}
 		}()
 	}
+	// Images already handed to a worker finish; the rest are never started, so an interrupt
+	// waits for at most one Tesseract process per worker.
+feed:
 	for i := range paths {
-		queue <- i
+		select {
+		case queue <- i:
+		case <-ctx.Done():
+			break feed
+		}
 	}
 	close(queue)
 	wg.Wait()
@@ -519,13 +557,22 @@ func pct(v, total int) float64 {
 
 // ---- Adaptive plate colours ------------------------------------------------
 // decodeImage decodes an image file for colour sampling; nil on any failure (plates then
-// keep the default white/dark CSS).
+// keep the default white/dark CSS). nil too for an image whose header declares more than the
+// pixel budget (internal/limits): every in-process pass is best-effort and keeps its default
+// without the picture, while one such image decoded in full can exhaust the 386 build.
 func decodeImage(path string) image.Image {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil || limits.CheckPixels(int64(cfg.Width), int64(cfg.Height)) != nil {
+		return nil
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil
+	}
 	im, _, err := image.Decode(f)
 	if err != nil {
 		return nil
@@ -756,9 +803,61 @@ func ensureStyle(doc *gohtml.Node) {
 	if target == nil {
 		target = doc
 	}
-	style := &gohtml.Node{Type: gohtml.ElementNode, Data: "style", DataAtom: atom.Style}
+	if old := findInjected(doc, atom.Style, "style", ocrCSS); old != nil {
+		setText(old, ocrCSS)
+		return
+	}
+	style := &gohtml.Node{Type: gohtml.ElementNode, Data: "style", DataAtom: atom.Style,
+		Attr: []gohtml.Attribute{{Key: overlayMarker, Val: "style"}}}
 	style.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: ocrCSS})
 	target.AppendChild(style)
+}
+
+// overlayMarker tags the style and script the overlay injects, so a second pass over a page -
+// a re-run, or a converted page fed back in as HTML - refreshes them instead of stacking copies.
+const overlayMarker = "data-dht-ocr"
+
+// findInjected returns the element an earlier overlay pass injected for role: one carrying the
+// marker, or - on a page written before the marker existed - one whose content is exactly body.
+func findInjected(doc *gohtml.Node, a atom.Atom, role, body string) *gohtml.Node {
+	var found *gohtml.Node
+	var walk func(*gohtml.Node)
+	walk = func(n *gohtml.Node) {
+		if found != nil {
+			return
+		}
+		if n.Type == gohtml.ElementNode && n.DataAtom == a {
+			if attrVal(n, overlayMarker) == role ||
+				(n.FirstChild != nil && n.FirstChild == n.LastChild && n.FirstChild.Data == body) {
+				found = n
+				return
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(doc)
+	return found
+}
+
+// setText replaces n's children with one text node, bringing an earlier pass's injected style or
+// script up to the current version.
+func setText(n *gohtml.Node, text string) {
+	for c := n.FirstChild; c != nil; c = n.FirstChild {
+		n.RemoveChild(c)
+	}
+	n.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: text})
+}
+
+// isWrapped reports whether img already sits in an overlay container from an earlier pass;
+// wrapping it again would nest a second set of plates over the first.
+func isWrapped(img *gohtml.Node) bool {
+	p := img.Parent
+	if p == nil || p.Type != gohtml.ElementNode {
+		return false
+	}
+	return slices.Contains(strings.Fields(attrVal(p, "class")), "ocr-fig")
 }
 
 // ensureScript appends the plate re-fit script (ocrScript) to <body> - or <html>/document if there
@@ -793,7 +892,12 @@ func ensureScript(doc *gohtml.Node) {
 	if target == nil {
 		target = doc
 	}
-	script := &gohtml.Node{Type: gohtml.ElementNode, Data: "script", DataAtom: atom.Script}
+	if old := findInjected(doc, atom.Script, "script", ocrScript); old != nil {
+		setText(old, ocrScript)
+		return
+	}
+	script := &gohtml.Node{Type: gohtml.ElementNode, Data: "script", DataAtom: atom.Script,
+		Attr: []gohtml.Attribute{{Key: overlayMarker, Val: "script"}}}
 	script.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: ocrScript})
 	target.AppendChild(script)
 }

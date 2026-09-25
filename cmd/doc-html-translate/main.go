@@ -40,6 +40,7 @@ func main() {
 	_, _ = report.Trim()
 	if err := os.MkdirAll(report.LogsDir(), 0o755); err == nil {
 		if f, err := os.OpenFile(report.RunLogPath(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
+			logging.SetRunLogFilter(report.Redact)
 			logging.StartRunLog(f)
 			defer func() {
 				logging.StopRunLog()
@@ -53,7 +54,10 @@ func main() {
 	exitCode, err := application.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		waitOnError()
+		// Whoever pressed Ctrl+C is at the console and wants it back, not a pause.
+		if exitCode != app.ExitInterrupted {
+			waitOnError()
+		}
 		os.Exit(exitCode)
 	}
 

@@ -28,6 +28,8 @@ import (
 	"strings"
 	"unicode"
 
+	"doc-html-translate/internal/procrun"
+
 	xdraw "golang.org/x/image/draw"
 )
 
@@ -119,11 +121,11 @@ func Locate() (string, error) {
 // must not turn a failed probe into a claim about the user's machine.
 func EngineLangs(bin string) ([]string, error) {
 	// The list goes to stdout on some builds and to stderr on others, so both are read.
-	out, err := exec.Command(bin, "--list-langs").CombinedOutput()
+	res, err := runTesseract(procrun.TesseractProbe, bin, "", []string{"--list-langs"})
 	if err != nil {
 		return nil, err
 	}
-	return parseLangList(string(out)), nil
+	return parseLangList(string(res.Stdout) + "\n" + string(res.Stderr)), nil
 }
 
 // parseLangList pulls the codes out of "tesseract --list-langs". Its first line names the
@@ -205,15 +207,16 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 		lang = "eng"
 	}
 
-	ocrPath, scale, dpi, cleanup := prepareForOCR(imgPath)
+	warnOverBudget(imgPath)
+	frame, scale, dpi, cleanup := prepareForOCR(imgPath)
 	defer cleanup()
 
-	res, err := recognizePass(bin, ocrPath, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf)
+	res, err := recognizePass(bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf)
 	if err != nil {
 		return Result{}, err
 	}
 	if len(res.Blocks) == 0 {
-		alt, ok := greyRescue(bin, ocrPath, lang, dataDir, dpi)
+		alt, ok := greyRescue(bin, frame, lang, dataDir, dpi)
 		switch {
 		case ok:
 			res = alt
@@ -225,7 +228,7 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 			res.Dropped = append(res.Dropped, alt.Dropped...)
 		}
 	} else {
-		res.Blocks = screenSweep(bin, ocrPath, lang, dataDir, dpi, res.Blocks)
+		res.Blocks = screenSweep(bin, frame, lang, dataDir, dpi, res.Blocks)
 	}
 	if scale > 1 {
 		scaleDown(&res, scale)
@@ -244,14 +247,15 @@ const (
 // thresholding method. Splitting it out is what lets Recognize retry a picture that came back
 // empty without re-deciding how the image was staged.
 func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64) (Result, error) {
-	cmd := exec.Command(bin, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm)...)
-	var out, errb bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errb
-	if err := cmd.Run(); err != nil {
-		return Result{}, fmt.Errorf("tesseract: %w: %s", err, strings.TrimSpace(errb.String()))
+	res, err := runTesseract(procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
+	if err != nil {
+		return Result{}, err
 	}
-	return parseTSV(out.Bytes(), minConf)
+	// A truncated TSV parses into a page missing its lower half; better no plates than wrong ones.
+	if res.StdoutTruncated {
+		return Result{}, fmt.Errorf("tesseract: output larger than %d MB", procrun.DefaultMaxStdout>>20)
+	}
+	return parseTSV(res.Stdout, minConf)
 }
 
 // tesseractArgs builds one pass's command line.
@@ -338,8 +342,8 @@ type rescueRung struct {
 // The screen pass is last because it is the only rung that changes the picture rather than the
 // reading of it: a low-pass costs a little accuracy on lettering the earlier rungs can already
 // read, so it is spent only after they have all failed.
-func greyRescue(bin, ocrPath, lang, dataDir string, dpi int) (Result, bool) {
-	grey := greyRendition(ocrPath)
+func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Result, bool) {
+	grey := frame.grey()
 	if grey == nil {
 		return Result{}, false
 	}
@@ -440,8 +444,8 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 // inherited rather than excluded because excluding it would be an unmeasured decision too, and the
 // corpus run over all 46 scenes is what checks it - precision, cross-group and protected-area
 // damage are exactly what a wrong plate on a good page moves.
-func screenSweep(bin, ocrPath, lang, dataDir string, dpi int, kept []Block) []Block {
-	grey := greyRendition(ocrPath)
+func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block) []Block {
+	grey := frame.grey()
 	if grey == nil {
 		return kept
 	}
@@ -499,8 +503,10 @@ const ocrRescueLineConf = 80
 // over three equal channels is one decision. 8-bit is simply the cheaper way to say it here - the
 // extension gets there through a canvas filter and stays RGBA (docs/PARITY.md). The pixels are
 // kept rather than only written out because the screen rung measures them (see screen.go).
-func greyRendition(imgPath string) *image.Gray {
-	src := decodeImage(imgPath)
+func greyRendition(imgPath string) *image.Gray { return greyOf(decodeImage(imgPath)) }
+
+// greyOf is greyRendition for a picture already in memory; nil in, nil out.
+func greyOf(src image.Image) *image.Gray {
 	if src == nil {
 		return nil
 	}
@@ -546,12 +552,13 @@ func clampDeclaredDPI(d int) int {
 	return d
 }
 
-// prepareForOCR returns the path to hand tesseract, the scale factor applied (to map coordinates
-// back), the DPI to declare (0 = none), and a cleanup func (never nil). It upscales images whose
+// prepareForOCR returns the frame to hand tesseract (its path, plus the staged picture when one
+// was made in memory, so later passes need not decode it again), the scale factor applied (to map
+// coordinates back), the DPI to declare (0 = none), and a cleanup func (never nil). It upscales images whose
 // estimated DPI is below the floor, and always resolves to an ASCII path: tesseract/leptonica open
 // a path with the Windows ANSI codepage and mangle any byte outside it, so a book under a Cyrillic
 // name would otherwise fail recognition silently. Best-effort: any failure recognizes the original.
-func prepareForOCR(imgPath string) (path string, scale, dpi int, cleanup func()) {
+func prepareForOCR(imgPath string) (frame *ocrFrame, scale, dpi int, cleanup func()) {
 	dpi = estimateDPI(imageLongSide(imgPath))
 	upscale := dpi > 0 && dpi < ocrUpscaleDPIFloor
 	// A photo carries its rotation in a tag rather than in its pixels, and recognition must be
@@ -560,15 +567,16 @@ func prepareForOCR(imgPath string) (path string, scale, dpi int, cleanup func())
 	// back in the space the plates are positioned in, so nothing downstream has to know (exif.go).
 	orientation := exifOrientation(imgPath)
 	if upscale || orientation != orientNormal {
-		if p, cl, ok := stageForOCR(imgPath, orientation, upscale); ok {
+		if p, img, cl, ok := stageForOCR(imgPath, orientation, upscale); ok {
+			frame = &ocrFrame{path: p, img: img, tried: true}
 			if upscale {
-				return p, ocrUpscaleFactor, clampDeclaredDPI(dpi * ocrUpscaleFactor), cl
+				return frame, ocrUpscaleFactor, clampDeclaredDPI(dpi * ocrUpscaleFactor), cl
 			}
-			return p, 1, clampDeclaredDPI(dpi), cl
+			return frame, 1, clampDeclaredDPI(dpi), cl
 		}
 	}
 	staged, cl := stageASCIIPath(imgPath)
-	return staged, 1, clampDeclaredDPI(dpi), cl
+	return &ocrFrame{path: staged}, 1, clampDeclaredDPI(dpi), cl
 }
 
 // imageLongSide reads only the image header (cheap, no full decode) and returns its longer pixel
@@ -588,28 +596,32 @@ func imageLongSide(path string) int {
 }
 
 // stageForOCR writes the copy tesseract actually reads to a temp PNG (ASCII path), returning it
-// with a cleanup func: the picture turned the way a reader sees it, and - for a genuinely low-res
+// with the picture itself (the later passes read that, not the PNG) and a cleanup func: the picture turned the way a reader sees it, and - for a genuinely low-res
 // scan - enlarged ocrUpscaleFactor-fold so the lettering is legible to the engine.
 //
 // One decode for both, and the rotation first: enlarging is the expensive half, and doing it to
 // pixels that are about to be moved wastes the work either way round. Best-effort - any
 // decode/scale/encode failure returns ok=false and the caller recognizes the original.
-func stageForOCR(imgPath string, orientation int, upscale bool) (path string, cleanup func(), ok bool) {
+func stageForOCR(imgPath string, orientation int, upscale bool) (path string, staged image.Image, cleanup func(), ok bool) {
 	src := decodeImage(imgPath)
 	if src == nil {
-		return "", nil, false
+		return "", nil, nil, false
 	}
 	img := orientImage(src, orientation)
 	if upscale {
 		b := img.Bounds()
 		if b.Dx() <= 0 || b.Dy() <= 0 {
-			return "", nil, false
+			return "", nil, nil, false
 		}
 		dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*ocrUpscaleFactor, b.Dy()*ocrUpscaleFactor))
 		xdraw.CatmullRom.Scale(dst, dst.Bounds(), img, b, xdraw.Over, nil)
 		img = dst
 	}
-	return writeTempPNG(img)
+	path, cleanup, ok = writeTempPNG(img)
+	if !ok {
+		return "", nil, nil, false
+	}
+	return path, img, cleanup, true
 }
 
 // writeTempPNG encodes an image to a temp PNG on an ASCII path and returns it with a cleanup
@@ -623,11 +635,11 @@ func writeTempPNG(img image.Image) (path string, cleanup func(), ok bool) {
 	name := f.Name()
 	if err := png.Encode(f, img); err != nil {
 		f.Close()
-		os.Remove(name)
+		_ = os.Remove(name)
 		return "", nil, false
 	}
 	f.Close()
-	return name, func() { os.Remove(name) }, true
+	return name, func() { _ = os.Remove(name) }, true
 }
 
 // stageASCIIPath returns a path safe to hand tesseract. A path with non-ASCII bytes is copied to an
@@ -655,7 +667,7 @@ func stageASCIIPath(imgPath string) (string, func()) {
 		return imgPath, noop
 	}
 	_, cerr := io.Copy(f, src)
-	src.Close()
+	_ = src.Close()
 	f.Close()
 	if cerr != nil {
 		os.Remove(name)

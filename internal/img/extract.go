@@ -8,8 +8,8 @@
 package img
 
 import (
-	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"html"
 	"image"
@@ -22,6 +22,8 @@ import (
 	"golang.org/x/image/tiff"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 )
 
@@ -69,7 +71,7 @@ func Extract(imgPath, outputDir string) (*epub.Book, error) {
 	}
 
 	pageHTML := buildPageHTML(title, imgName, 1, 1)
-	if err := os.WriteFile(filepath.Join(outputDir, "page_001.html"), []byte(pageHTML), 0o644); err != nil {
+	if err := fsutil.WriteFile(filepath.Join(outputDir, "page_001.html"), []byte(pageHTML), 0o644); err != nil {
 		return nil, fmt.Errorf("write page: %w", err)
 	}
 
@@ -91,23 +93,32 @@ func Extract(imgPath, outputDir string) (*epub.Book, error) {
 // therefore reads page by page instead of stacking every frame's OCR plates onto a
 // single image the browser will not draw.
 func extractTIFF(imgPath, outputDir, title string) (*epub.Book, error) {
-	data, err := os.ReadFile(imgPath)
+	f, err := os.Open(imgPath)
 	if err != nil {
 		return nil, fmt.Errorf("read tiff: %w", err)
 	}
-	offsets, order, err := tiffFrameOffsets(data)
+	defer func() { _ = f.Close() }()
+	st, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("read tiff: %w", err)
+	}
+	offsets, order, err := tiffFrameOffsets(f, st.Size())
 	if err != nil {
 		return nil, fmt.Errorf("parse tiff: %w", err)
 	}
 
 	book := &epub.Book{Title: title}
+	var budgetErr error
 	for i, off := range offsets {
-		frame, derr := decodeTIFFFrame(data, order, off)
+		frame, derr := decodeTIFFFrame(f, st.Size(), order, off)
 		if derr != nil {
 			// A frame we cannot decode is dropped with a named reason rather than
 			// aborting the whole document - the same best-effort contract the rest of
 			// the pipeline keeps.
 			logging.Printf("  WARNING: TIFF frame %d could not be decoded, skipped: %v\n", i+1, derr)
+			if errors.Is(derr, limits.ErrTooLarge) {
+				budgetErr = derr
+			}
 			continue
 		}
 		pageNum := len(book.Spine) + 1
@@ -120,13 +131,17 @@ func extractTIFF(imgPath, outputDir, title string) (*epub.Book, error) {
 		// len(offsets) is the frame count before any undecodable frame is dropped, so it
 		// can overstate the total by the number skipped. That only affects the alt text,
 		// and an over-count reads better than renumbering pages after the fact.
-		if werr := os.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName, pageNum, len(offsets))), 0o644); werr != nil {
+		if werr := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(buildPageHTML(title, pngName, pageNum, len(offsets))), 0o644); werr != nil {
 			return nil, fmt.Errorf("write tiff page %d: %w", pageNum, werr)
 		}
 		book.Manifest = append(book.Manifest, epub.ManifestItem{ID: id, Href: href, MediaType: "text/html"})
 		book.Spine = append(book.Spine, epub.SpineItem{IDRef: id})
 	}
 	if len(book.Spine) == 0 {
+		if budgetErr != nil {
+			// Name the limit rather than "no decodable frames": the file is fine, only too big.
+			return nil, budgetErr
+		}
 		return nil, fmt.Errorf("no decodable frames in TIFF")
 	}
 
@@ -139,46 +154,60 @@ func extractTIFF(imgPath, outputDir, title string) (*epub.Book, error) {
 	return book, nil
 }
 
+// maxTIFFFrames is a sanity cap on the IFD walk; no real document has this many frames.
+const maxTIFFFrames = 4096
+
 // tiffFrameOffsets walks the IFD chain and returns the file offset of each frame's
 // image file directory, plus the file's byte order. golang.org/x/image/tiff.Decode
 // reads only the first IFD, so to reach later frames we need their offsets - and a
 // TIFF's structure hands them over cheaply: an 8-byte header points at the first IFD,
 // and every IFD ends with the offset of the next (0 = last).
-func tiffFrameOffsets(data []byte) ([]uint32, binary.ByteOrder, error) {
-	if len(data) < 8 {
+//
+// Offsets are uint32 in the file and are compared against the size in 64 bits: on the
+// 386 build int(off) of an offset past 2 GB goes negative, passes a "< len" test and
+// panics on the slice that follows.
+func tiffFrameOffsets(r io.ReaderAt, size int64) ([]uint32, binary.ByteOrder, error) {
+	var hdr [8]byte
+	if size < int64(len(hdr)) {
 		return nil, nil, fmt.Errorf("too short for a TIFF header")
+	}
+	if _, err := r.ReadAt(hdr[:], 0); err != nil {
+		return nil, nil, err
 	}
 	var order binary.ByteOrder
 	switch {
-	case data[0] == 'I' && data[1] == 'I':
+	case hdr[0] == 'I' && hdr[1] == 'I':
 		order = binary.LittleEndian
-	case data[0] == 'M' && data[1] == 'M':
+	case hdr[0] == 'M' && hdr[1] == 'M':
 		order = binary.BigEndian
 	default:
 		return nil, nil, fmt.Errorf("not a TIFF: bad byte-order mark")
 	}
-	if order.Uint16(data[2:4]) != 42 {
+	if order.Uint16(hdr[2:4]) != 42 {
 		return nil, nil, fmt.Errorf("not a TIFF: bad magic number")
 	}
 
 	var offsets []uint32
 	seen := make(map[uint32]bool) // a malformed file could point an IFD at itself
-	off := order.Uint32(data[4:8])
-	for off != 0 {
-		if int(off)+2 > len(data) || seen[off] {
+	var buf [4]byte
+	off := order.Uint32(hdr[4:8])
+	for off != 0 && len(offsets) < maxTIFFFrames {
+		if int64(off)+2 > size || seen[off] {
 			break
 		}
 		seen[off] = true
 		offsets = append(offsets, off)
-		entries := int(order.Uint16(data[off : off+2]))
-		next := int(off) + 2 + entries*12
-		if next+4 > len(data) {
+		if _, err := r.ReadAt(buf[:2], int64(off)); err != nil {
 			break
 		}
-		off = order.Uint32(data[next : next+4])
-		if len(offsets) >= 4096 { // sanity cap; no real document has this many frames
+		next := int64(off) + 2 + int64(order.Uint16(buf[:2]))*12
+		if next+4 > size {
 			break
 		}
+		if _, err := r.ReadAt(buf[:4], next); err != nil {
+			break
+		}
+		off = order.Uint32(buf[:4])
 	}
 	if len(offsets) == 0 {
 		return nil, nil, fmt.Errorf("no image frames found")
@@ -186,16 +215,38 @@ func tiffFrameOffsets(data []byte) ([]uint32, binary.ByteOrder, error) {
 	return offsets, order, nil
 }
 
-// decodeTIFFFrame decodes the frame whose IFD sits at ifdOffset. It copies the file
-// and repoints the header's first-IFD offset at that frame, so Decode returns it: the
-// strip/tile offsets inside the IFD are absolute file offsets and stay valid because
-// the whole file is preserved. This reuses the standard decoder for every frame
-// instead of reimplementing TIFF.
-func decodeTIFFFrame(data []byte, order binary.ByteOrder, ifdOffset uint32) (image.Image, error) {
-	buf := make([]byte, len(data))
-	copy(buf, data)
-	order.PutUint32(buf[4:8], ifdOffset)
-	return tiff.Decode(bytes.NewReader(buf))
+// frameView presents the file as if its header pointed at one chosen IFD, so Decode
+// returns that frame. The strip/tile offsets inside the IFD are absolute file offsets and
+// stay valid because the file itself is untouched; only the four bytes of the first-IFD
+// pointer are substituted. Reading through the file instead of copying it per frame keeps
+// a 4096-frame fax at one file's worth of memory, not 4096 copies of it.
+type frameView struct {
+	r   io.ReaderAt
+	ifd [4]byte
+}
+
+func (v *frameView) ReadAt(p []byte, off int64) (int, error) {
+	n, err := v.r.ReadAt(p, off)
+	for i := 4; i < 8; i++ {
+		if j := int64(i) - off; j >= 0 && j < int64(n) {
+			p[j] = v.ifd[i-4]
+		}
+	}
+	return n, err
+}
+
+// decodeTIFFFrame decodes the frame whose IFD sits at ifdOffset, after a header-only
+// probe of its declared size: a 1 KB file can declare 60000 x 60000, and Decode would
+// then allocate the whole raster before reading a single pixel.
+func decodeTIFFFrame(r io.ReaderAt, size int64, order binary.ByteOrder, ifdOffset uint32) (image.Image, error) {
+	if w, h, ok := limits.TIFFFrameSize(r, size, order, ifdOffset); ok {
+		if err := limits.CheckPixels(w, h); err != nil {
+			return nil, err
+		}
+	}
+	view := &frameView{r: r}
+	order.PutUint32(view.ifd[:], ifdOffset)
+	return tiff.Decode(io.NewSectionReader(view, 0, size))
 }
 
 // encodePNG encodes img to a PNG file.
@@ -205,7 +256,7 @@ func encodePNG(path string, img image.Image) error {
 		return err
 	}
 	if err := png.Encode(out, img); err != nil {
-		out.Close()
+		_ = out.Close()
 		return err
 	}
 	return out.Close()
@@ -217,13 +268,13 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
 	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
+		_ = out.Close()
 		return err
 	}
 	return out.Close()
@@ -254,7 +305,9 @@ func buildPageHTML(title, imgName string, pageNum, totalPages int) string {
 	sb.WriteString("    section.dht-page img { display: block; width: 100%; height: auto; }\n")
 	sb.WriteString("  </style>\n</head>\n<body>\n")
 	sb.WriteString(fmt.Sprintf("  <section class=\"dht-page\" id=\"page_%03d\" aria-label=\"%s\">\n", pageNum, alt))
-	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(imgName), alt))
+	// The source file name is the user's: "scan#1.png" or "50%.png" must be a path, not a
+	// fragment or a broken escape.
+	sb.WriteString(fmt.Sprintf("    <img src=\"%s\" alt=\"%s\">\n", html.EscapeString(epub.URLPath(imgName)), alt))
 	sb.WriteString("  </section>\n</body>\n</html>\n")
 	return sb.String()
 }

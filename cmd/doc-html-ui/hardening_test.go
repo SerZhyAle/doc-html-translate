@@ -482,24 +482,6 @@ func TestSettingsSaveLeavesNoTemporaryFiles(t *testing.T) {
 	}
 }
 
-func TestParamsHistoryKeepsConcurrentUpdates(t *testing.T) {
-	t.Setenv("LOCALAPPDATA", t.TempDir())
-	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := updateParamsHistory(func(m map[string]string) { m[strconv.Itoa(i)] = "x" }); err != nil {
-				t.Error(err)
-			}
-		}()
-	}
-	wg.Wait()
-	if got := len(loadParamsHistory()); got != 20 {
-		t.Fatalf("history holds %d entries, want 20", got)
-	}
-}
-
 // ── liveness ────────────────────────────────────────────────
 
 func TestWatchdogOutlivesAQuietButOpenPage(t *testing.T) {

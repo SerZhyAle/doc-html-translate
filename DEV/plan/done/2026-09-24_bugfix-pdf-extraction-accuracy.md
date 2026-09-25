@@ -1,12 +1,12 @@
 # Strategic spec: 14_2026-09-24_bugfix-pdf-extraction-accuracy - PDF images on the right page, no pages lost
 
 **Ticket:** 14_2026-09-24_bugfix-pdf-extraction-accuracy
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 65
 **Date:** 2026-09-24
 **Tier:** Easy
 **Tactical plan:** `DEV/plan/14_2026-09-24_bugfix-pdf-extraction-accuracy/` (created by /spec-tech)
-**Findings:** X6 X8 Q6 Q7 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Findings:** X6 X8 Q6 Q7 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -49,7 +49,12 @@ pass. Helper discovery is written for Windows only.
 - **Portable tests:** path-shaped test inputs use the platform's separator, or are skipped when not on that platform.
 
 ## 6. Open questions / research items
-No open questions.
+No open questions. Owner decisions applied:
+
+- **Decided: page mapping.** The page number of an extracted image comes from the library's own page iteration, recorded when the file is written; nothing parses a file name back.
+- **Decided: page count.** The PDF's own page count (pdfcpu) is used only to extend the text extractor's page list, so trailing image-only pages are kept; it never shrinks the list.
+- **Decided: non-Windows helper.** The helper is `pdftotext` looked up on PATH (plus the usual install locations); nothing is bundled or installed there, the advice names Poppler / `poppler-utils`, and the pure-Go fallback is kept.
+- **Decided: Q6.** `TestPdfTitle` is portable (already fixed on this branch by `3fa32e0`, which makes the title split on either separator).
 
 ## 7. Risks
 - **The page count from the library disagrees with pdftotext on malformed PDFs.** Likelihood: low. Impact: an empty page at the end. Mitigation: use the library count only to extend the page list, never to shrink it.
@@ -70,3 +75,17 @@ No ADRs. The decision follows established project patterns.
 
 ## 12. Next step
 `/spec-tech 14_2026-09-24_bugfix-pdf-extraction-accuracy`
+
+## Implementation
+
+- **X6 - images on the right page.** `internal/pdf/images.go` (the image pass, moved out of `extract.go`, which was over the size budget): `writePDFImages` walks pdfcpu's pages and records each written file under the page it came from; `parseImagePageNum` is gone. File names keep pdfcpu's shape (`{source}_{page}_{resource}.{type}`, same sanitizer), with the object number appended only on a name collision. `.jpx` to `.jpg` conversion updates the recorded name.
+- **X8 - trailing image-only pages.** `extractImages` now returns the pdfcpu page count with the page map; `extractWithPDFToText` pads the trimmed pdftotext page list up to that count and never below its own length.
+- **Q7 - non-Windows helper.** `internal/bundledtools` is split: the embedded Windows binary is built only into the Windows build, and `PDFToTextPath` returns `ErrNotBundled` elsewhere. `internal/pdf/pdftotext*.go` holds the lookup (PATH, then per-OS install locations) and the per-OS advice; on non-Windows a missing pdftotext logs a localized "install Poppler (poppler-utils)" note and never reaches the Windows installer branch.
+- **Q6.** Already green on Linux (`3fa32e0`).
+- Also: a per-page `recover` around pdfcpu image extraction and one around the whole image pass, so a pdfcpu panic there costs pictures, not the book.
+
+Tests (`go test ./internal/pdf/...` passes on Linux):
+
+- Done 1: `TestExtractImages_PageComesFromThePageNotTheFileName` and `TestExtract_Volume3ImagesOnTheirPages` - a generated `Volume_3.pdf` with images on pages 1, 5 and 9 maps them to pages 1, 5 and 9.
+- Done 2: `TestExtractWithPDFToText_KeepsTrailingImageOnlyPages` - five pages, two trailing image-only plates, a stub pdftotext that emits text for three; the output has five pages with the plates. `TestExtractWithPDFToText_UnreadableCountNeverShrinks` covers the "never shrink" rule.
+- Done 3: the package suite on Linux.

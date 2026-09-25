@@ -6,13 +6,14 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
-	"io"
+
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"doc-html-translate/internal/i18n"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 )
 
@@ -23,6 +24,10 @@ type Book struct {
 	Spine    []SpineItem
 	BasePath string     // directory within EPUB where content.opf resides (slash path, "." at the root)
 	TOC      []TOCEntry // authored table of contents (NCX navMap / nav.xhtml), nil if none
+
+	// ReaderKey namespaces the reader's saved position (htmlgen.ReaderKey). It is
+	// set once, before translation rewrites Title, and never recomputed.
+	ReaderKey string
 
 	// hrefRewrites maps an original content href to its final href after
 	// normalization (e.g. "chapter1.xhtml" -> "chapter1.html", or an
@@ -114,14 +119,17 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open epub: %w", err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
-	// Extract all files
+	if err := checkListing(r.File); err != nil {
+		return nil, err
+	}
+
 	foldedNames := make(map[string]string, len(r.File))
 	for _, f := range r.File {
 		if err := extractFile(f, outputDir); err != nil {
 			// best-effort: warn and continue
-			fmt.Fprintf(os.Stderr, "WARNING: skip %s: %v\n", f.Name, err)
+			logging.Errorf("WARNING: skip %s: %v\n", f.Name, err)
 			continue
 		}
 		warnCaseCollision(foldedNames, f.Name)
@@ -150,7 +158,7 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 	// into book.TOC. Best-effort: a missing/malformed TOC just leaves it nil
 	// and the generator falls back to a spine/heading-based TOC.
 	if err := parseTOC(book, outputDir); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: table-of-contents parse skipped: %v\n", err)
+		logging.Errorf("WARNING: table-of-contents parse skipped: %v\n", err)
 	}
 
 	return book, nil
@@ -237,7 +245,26 @@ func bookPath(outputDir, basePath, href string) string {
 	return filepath.Join(outputDir, filepath.FromSlash(href))
 }
 
+// maxEntryBytes caps one unpacked book file. Stricter than the general archive budget on
+// purpose: no chapter, image or font in a real EPUB comes near it.
+const maxEntryBytes = 100 << 20
+
+// checkListing refuses the archive from its central directory, before a byte is unpacked,
+// when the entry count or the total the extraction would write is over the budget. Entries
+// over the per-file cap are left out of the total because extractFile skips them.
+func checkListing(files []*zip.File) error {
+	var total uint64
+	for _, f := range files {
+		if f.UncompressedSize64 <= maxEntryBytes {
+			total += f.UncompressedSize64
+		}
+	}
+	return limits.CheckArchive(len(files), total)
+}
+
 // extractFile safely extracts a single file from the ZIP, protecting against path traversal.
+// A file over maxEntryBytes is an error the caller reports by name, never a silently
+// shortened file: a chapter cut mid-tag would otherwise read as a complete book.
 func extractFile(f *zip.File, destDir string) error {
 	// Normalize path separators
 	name := filepath.FromSlash(f.Name)
@@ -251,6 +278,12 @@ func extractFile(f *zip.File, destDir string) error {
 	if f.FileInfo().IsDir() {
 		return os.MkdirAll(target, 0o755)
 	}
+	if !f.Mode().IsRegular() {
+		return fmt.Errorf("not a regular file (%s)", f.Mode().Type())
+	}
+	if f.UncompressedSize64 > maxEntryBytes {
+		return limits.EntryTooLarge(f.Name, maxEntryBytes)
+	}
 
 	// Ensure parent directory exists
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
@@ -261,17 +294,18 @@ func extractFile(f *zip.File, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	out, err := os.Create(target)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-
-	// Limit extraction to 100 MB per file as a safety measure
-	_, err = io.Copy(out, io.LimitReader(rc, 100*1024*1024))
-	return err
+	if _, err := limits.CopyCapped(out, rc, f.Name, maxEntryBytes); err != nil {
+		_ = out.Close()
+		_ = os.Remove(target)
+		return err
+	}
+	return out.Close()
 }
 
 // parseContainer reads META-INF/container.xml and returns the full-path to the .opf file.

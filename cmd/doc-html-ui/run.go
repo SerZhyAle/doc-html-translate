@@ -169,10 +169,6 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "\nExit: %v\n", err)
 	default:
 		fmt.Fprintf(w, "\nDone.\n")
-		if outputDir, err := previousResult(req.Input, req.Output); err == nil {
-			fp := fingerprintFor(req)
-			_ = updateParamsHistory(func(m map[string]string) { m[outputDir] = fp })
-		}
 	}
 	flusher.Flush()
 }

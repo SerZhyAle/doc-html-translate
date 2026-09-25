@@ -4,17 +4,18 @@ package txt
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"html"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode/utf8"
 
 	"golang.org/x/text/encoding/unicode"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 )
@@ -39,46 +40,55 @@ var (
 // mojibake, depending on the alphabet and on -multipage. The decode belongs here; the merge's
 // NUL-stripping is a coincidence, not a fix.
 //
-// A BOM is authoritative when present. Without one, valid UTF-8 is taken at face value (the
-// overwhelmingly common case, and free to check), and anything else is handed to
-// decodeLegacy.
+// The ladder, identical in both editions (docs/PARITY.md): a BOM is authoritative; then
+// BOM-less UTF-16 by its NUL pattern; then UTF-8, tolerating a little damage (acceptAsUTF8);
+// then a Cyrillic legacy code page by detection; then windows-1252 as the Western fallback.
+// The result is always valid UTF-8, and damage shows as U+FFFD rather than vanishing.
 func decodeText(raw []byte) string {
 	switch {
 	case bytes.HasPrefix(raw, bomUTF8):
-		// x/text would decode this too, but trimming says exactly what happens: the bytes
-		// after the mark are already UTF-8. Left in place, the mark showed up as an
-		// invisible character opening the first paragraph.
-		return string(bytes.TrimPrefix(raw, bomUTF8))
-
-	case bytes.HasPrefix(raw, bomUTF16LE), bytes.HasPrefix(raw, bomUTF16BE):
-		// UseBOM reads the endianness off the mark and removes it, so one branch covers both
-		// orders; the LittleEndian argument is only the fallback for BOM-less input, which
-		// cannot reach here.
-		out, err := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewDecoder().Bytes(raw)
-		if err != nil {
-			// Truncated or malformed UTF-16. Returning the raw bytes keeps the old
-			// behaviour for a file we cannot honestly decode, rather than losing it.
-			return string(raw)
-		}
-		return string(out)
+		// Left in place, the mark showed up as an invisible character opening the first
+		// paragraph.
+		return textutil.DecodeUTF8(raw[len(bomUTF8):])
+	case bytes.HasPrefix(raw, bomUTF16LE):
+		return decodeUTF16(raw[len(bomUTF16LE):], unicode.LittleEndian)
+	case bytes.HasPrefix(raw, bomUTF16BE):
+		return decodeUTF16(raw[len(bomUTF16BE):], unicode.BigEndian)
 	}
-
-	if utf8.Valid(raw) {
-		return string(raw)
+	if order, ok := sniffUTF16(raw); ok {
+		if order == binary.BigEndian {
+			return decodeUTF16(raw, unicode.BigEndian)
+		}
+		return decodeUTF16(raw, unicode.LittleEndian)
+	}
+	if acceptAsUTF8(raw) {
+		return textutil.DecodeUTF8(raw)
 	}
 	return decodeLegacy(raw)
 }
 
-// decodeLegacy handles bytes that carry no BOM and are not valid UTF-8 - a text file saved in
-// a pre-Unicode Cyrillic code page (Windows-1251, KOI8-R, CP866, ISO-8859-5). It commits to a
-// code page only when the decode is confidently Russian; otherwise the bytes pass through
-// unchanged, exactly as before, so a non-Cyrillic file is never forced into an alphabet.
-// The detected encoding is logged, so a reader whose decades-old .txt suddenly reads correctly
-// can see why.
+// decodeUTF16 decodes BOM-less UTF-16; a lone surrogate or an odd trailing byte becomes U+FFFD.
+func decodeUTF16(raw []byte, order unicode.Endianness) string {
+	out, err := unicode.UTF16(order, unicode.IgnoreBOM).NewDecoder().Bytes(raw)
+	if err != nil {
+		return textutil.DecodeUTF8(raw)
+	}
+	return string(out)
+}
+
+// decodeLegacy handles bytes that carry no BOM and are not UTF-8. A pre-Unicode Cyrillic code
+// page (Windows-1251, KOI8-R, CP866, ISO-8859-5) is used only when the decode is confidently
+// Russian; anything else is read as windows-1252, the Western default, because writing the raw
+// bytes into a page that declares UTF-8 turned every accented letter into garbage. The chosen
+// encoding is logged, so a reader whose decades-old .txt suddenly reads correctly can see why.
 func decodeLegacy(raw []byte) string {
 	text, encName, ok := detectLegacy(raw)
 	if !ok {
-		return string(raw)
+		western, found := textutil.LookupCodec(westernLabel)
+		if !found {
+			return textutil.DecodeUTF8(raw)
+		}
+		text, encName = western.Decode(raw), western.Name()
 	}
 	logging.Printf("  Decoded from %s\n", encName)
 	return text
@@ -94,7 +104,7 @@ func Extract(txtPath, outputDir string) (*epub.Book, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open txt: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	paragraphs := parseParagraphs(f)
 	if len(paragraphs) == 0 {
@@ -120,7 +130,7 @@ func Extract(txtPath, outputDir string) (*epub.Book, error) {
 		id := fmt.Sprintf("page_%03d", pageNum)
 
 		pageHTML := buildPageHTML(title, pageNum, totalPages, paragraphs[start:end])
-		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pageNum, err)
 		}
 

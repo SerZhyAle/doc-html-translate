@@ -12,6 +12,7 @@ import (
 
 	"doc-html-translate/internal/assets"
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 
 	"github.com/yuin/goldmark"
@@ -65,7 +66,7 @@ func Extract(mdPath, outputDir string) (*epub.Book, error) {
 		id := fmt.Sprintf("page_%03d", pageNum)
 
 		pageHTML := wrapPageHTML(title, pageNum, totalPages, section)
-		if err := os.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
+		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pageNum, err)
 		}
 

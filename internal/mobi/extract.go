@@ -5,6 +5,8 @@
 package mobi
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,6 +14,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/procrun"
 )
 
 // findEbookConvert locates the Calibre ebook-convert binary via PATH or
@@ -51,21 +54,24 @@ func Extract(mobiPath, outputDir string) (*epub.Book, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	baseName := filepath.Base(mobiPath)
 	baseName = baseName[:len(baseName)-len(filepath.Ext(baseName))]
 	epubPath := filepath.Join(tmpDir, baseName+".epub")
 
 	logging.Println("  Converting MOBI → EPUB via Calibre ebook-convert..")
-	cmd := exec.Command(bin, mobiPath, epubPath)
-	out, cmdErr := cmd.CombinedOutput()
-	if cmdErr != nil {
-		msg := string(out)
-		if len(msg) > 500 {
-			msg = msg[:500] + ".."
+	if _, cmdErr := procrun.Run(context.Background(), procrun.Cmd{
+		Tool:      "ebook-convert",
+		Path:      bin,
+		Args:      []string{mobiPath, epubPath},
+		Timeout:   procrun.Calibre.ForFile(mobiPath),
+		MaxStderr: 500,
+	}); cmdErr != nil {
+		if errors.Is(cmdErr, procrun.ErrTimeout) {
+			return nil, cmdErr
 		}
-		return nil, fmt.Errorf("ebook-convert failed (file may be DRM-protected): %w\n%s", cmdErr, msg)
+		return nil, fmt.Errorf("ebook-convert failed (file may be DRM-protected): %w", cmdErr)
 	}
 
 	if _, err := os.Stat(epubPath); err != nil {

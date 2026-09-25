@@ -16,7 +16,11 @@
 // The pure pieces - naturalCompare(), isPageEntry(), the archive walkers - use no
 // DOM and are unit-tested under node. Inflation is lazy: the walkers return one
 // entry per page carrying a load() that inflates just that page on demand, so a
-// large comic never inflates every page into memory at once.
+// large comic never inflates every page into memory at once. The listing is held
+// against the input limits (limits.js, docs/PARITY.md "Input limits") before any
+// page is inflated, and each inflation counts its bytes.
+
+import { COMIC_MAX_PAGE_BYTES, checkArchive, entryTooLarge, inflateRawCapped } from "./limits.js";
 
 // PAGE_EXTS are the image extensions that count as a comic page. TIFF is excluded
 // (browsers cannot display it and it is vanishingly rare in comics). This set must
@@ -117,8 +121,9 @@ export class DesktopOnlyError extends Error {}
 
 // parseComic reads a comic archive and returns its page list in natural order.
 // Each page is { name, mime, load } where load() inflates just that page's bytes
-// on demand (Uint8Array). Throws DesktopOnlyError for CBR/CB7 and a plain Error
-// for a container with no page images.
+// on demand (Uint8Array). Throws DesktopOnlyError for CBR/CB7, InputLimitError for
+// a listing over the input limits, and a plain Error for a container with no page
+// images.
 export async function parseComic(arrayBuffer) {
   const u8 = new Uint8Array(arrayBuffer);
   const kind = detectContainer(u8);
@@ -129,8 +134,20 @@ export async function parseComic(arrayBuffer) {
     );
   }
 
-  const entries = kind === "zip" ? await zipEntries(arrayBuffer) : tarEntries(u8);
-  const pages = entries.filter((e) => isPageEntry(e.name));
+  const { entries, count } = kind === "zip" ? zipEntries(arrayBuffer) : tarEntries(u8);
+  const pages = [];
+  let total = 0;
+  for (const e of entries) {
+    if (!isPageEntry(e.name)) continue;
+    if (e.size > COMIC_MAX_PAGE_BYTES) {
+      // Skipped by name, as the desktop edition skips it; the rest of the book opens.
+      console.warn(`comic: skipped ${entryTooLarge(e.name, COMIC_MAX_PAGE_BYTES).message}`);
+      continue;
+    }
+    total += e.size;
+    pages.push(e);
+  }
+  checkArchive(count, total);
   if (pages.length === 0) {
     throw new Error("no page images found in this comic archive");
   }
@@ -148,11 +165,6 @@ export async function parseComic(arrayBuffer) {
 const SIG_EOCD = 0x06054b50;
 const SIG_CEN = 0x02014b50;
 
-async function inflateRaw(bytes) {
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
-}
-
 function findEOCD(dv, len) {
   const min = Math.max(0, len - 22 - 0xffff);
   for (let i = len - 22; i >= min; i--) {
@@ -161,7 +173,9 @@ function findEOCD(dv, len) {
   return -1;
 }
 
-async function zipEntries(arrayBuffer) {
+// zipEntries lists the regular files with their declared sizes; count is every
+// entry in the central directory, directories included.
+function zipEntries(arrayBuffer) {
   const u8 = new Uint8Array(arrayBuffer);
   const dv = new DataView(arrayBuffer);
   if (u8.length < 22) throw new Error("not a ZIP archive (too small)");
@@ -178,6 +192,7 @@ async function zipEntries(arrayBuffer) {
     if (p + 46 > u8.length || dv.getUint32(p, true) !== SIG_CEN) break;
     const method = dv.getUint16(p + 10, true);
     const compSize = dv.getUint32(p + 20, true);
+    const size = dv.getUint32(p + 24, true);
     const nameLen = dv.getUint16(p + 28, true);
     const extraLen = dv.getUint16(p + 30, true);
     const commentLen = dv.getUint16(p + 32, true);
@@ -192,14 +207,20 @@ async function zipEntries(arrayBuffer) {
     const comp = u8.subarray(dataStart, dataStart + compSize);
     out.push({
       name,
+      size,
       load: async () => {
-        if (method === 0) return comp.slice();
-        if (method === 8) return inflateRaw(comp);
-        throw new Error(`unsupported ZIP compression method ${method} for ${name}`);
+        let bytes;
+        if (method === 0) bytes = comp.slice();
+        // Capped at the listing's size, which is what the budget was checked against
+        // (parseComic already dropped any page listed over COMIC_MAX_PAGE_BYTES).
+        else if (method === 8) bytes = await inflateRawCapped(comp, name, size);
+        else throw new Error(`unsupported ZIP compression method ${method} for ${name}`);
+        if (bytes.length > size) throw entryTooLarge(name, size);
+        return bytes;
       },
     });
   }
-  return out;
+  return { entries: out, count };
 }
 
 // ---- TAR reader (lazy) -----------------------------------------------------
@@ -209,6 +230,7 @@ async function zipEntries(arrayBuffer) {
 
 function tarEntries(u8) {
   const out = [];
+  let count = 0;
   const dec = new TextDecoder("utf-8");
   let off = 0;
   while (off + 512 <= u8.length) {
@@ -223,14 +245,15 @@ function tarEntries(u8) {
     if (prefix) name = `${prefix}/${name}`;
     const dataStart = off + 512;
     off = dataStart + Math.ceil(size / 512) * 512;
+    count++;
     // typeflag '0' or '\0' is a regular file; skip directories and other types.
     if (typeflag === 0x30 || typeflag === 0x00) {
       const start = dataStart;
       const end = dataStart + size;
-      out.push({ name, load: async () => u8.slice(start, end) });
+      out.push({ name, size, load: async () => u8.slice(start, end) });
     }
   }
-  return out;
+  return { entries: out, count };
 }
 
 function parseOctal(bytes) {

@@ -2,6 +2,7 @@ package ocr
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -56,6 +57,25 @@ func TestCollectBookImagesBatchesAndDedupes(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("batching/dedup wrong:\n got  %v\n want %v", got, want)
+	}
+}
+
+// A generated page percent-encodes the image path ("scan%231.png" for scan#1.png), so the
+// overlay must decode it to find the file; a literal name written by an older page still
+// resolves through the raw fallback.
+func TestCollectBookImagesDecodesEncodedSrc(t *testing.T) {
+	dir, paths := writeBook(t,
+		[]string{"scan#1.png", "50%.png", "a b.png"},
+		`<img src="scan%231.png"><img src="50%25.png"><img src="a b.png">`,
+	)
+	got := collectBookImages(paths)
+	want := []string{
+		filepath.Join(dir, "scan#1.png"),
+		filepath.Join(dir, "50%.png"),
+		filepath.Join(dir, "a b.png"),
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("encoded srcs not resolved:\n got  %v\n want %v", got, want)
 	}
 }
 
@@ -125,7 +145,7 @@ func TestApplyOverlaysNoChange(t *testing.T) {
 // contract, and the short-circuit that keeps the pool off an empty queue.
 func TestOverlayBookNoImagesNeverTouchesEngine(t *testing.T) {
 	_, paths := writeBook(t, nil, `<p>no images here</p>`, `<img src="https://x/only-external.png">`)
-	stats := OverlayBook("definitely-not-a-real-tesseract-binary", paths, "eng", "", true, nil)
+	stats := OverlayBook(context.Background(), "definitely-not-a-real-tesseract-binary", paths, "eng", "", true, nil)
 	if stats.Overlaid != 0 || stats.NoText != 0 || len(stats.Failed) != 0 {
 		t.Errorf("empty book should overlay nothing and touch no engine, got %+v", stats)
 	}

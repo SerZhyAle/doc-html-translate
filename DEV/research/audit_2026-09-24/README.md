@@ -38,12 +38,12 @@ already open. The number in front of each ticket is its queue position.
 - [06 bugfix-epub-html-content-fidelity](../../plan/done/2026-09-24_bugfix-epub-html-content-fidelity.md) - P65 - **Implemented** (2026-09-25) - E6-E9 E11 E12 E14 E15 E21 E22
 - [07 bugfix-output-completeness](../../plan/07_2026-09-24_bugfix-output-completeness.md) - P90 - P4 P5 P8 P9 T5 O10
 - [08 bugfix-translation-engine-correctness](../../plan/08_2026-09-24_bugfix-translation-engine-correctness.md) - P85 - T1-T4 T6-T9 P10 P11 P20
-- [09 bugfix-reader-layer-and-single-page](../../plan/09_2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23
-- [10 bugfix-legacy-text-decoding](../../plan/10_2026-09-24_bugfix-legacy-text-decoding.md) - P80 - X1-X5 X18 X19 X21 X22 P23 B21
+- [09 bugfix-reader-layer-and-single-page](../../plan/done/2026-09-24_bugfix-reader-layer-and-single-page.md) - P80 - E2 E3 E4 E13 E17 E18 E19 E23 E24 X23
+- [10 bugfix-legacy-text-decoding](../../plan/done/2026-09-24_bugfix-legacy-text-decoding.md) - P80 - X1-X5 X18 X19 X21 X22 P23 B21
 - [11 bugfix-external-process-bounds](../../plan/11_2026-09-24_bugfix-external-process-bounds.md) - P75 - X7 X9 X10 O5 O7 O9 P15
 - [12 bugfix-resource-budgets](../../plan/12_2026-09-24_bugfix-resource-budgets.md) - P75 - X11-X17 X20 X24 O6 E16 B23
 - [13 bugfix-ocr-language-data-and-detection](../../plan/13_2026-09-24_bugfix-ocr-language-data-and-detection.md) - P70 - O1-O4 O8 O11 O12
-- [14 bugfix-pdf-extraction-accuracy](../../plan/14_2026-09-24_bugfix-pdf-extraction-accuracy.md) - P65 - X6 X8 Q6 Q7
+- [14 bugfix-pdf-extraction-accuracy](../../plan/done/2026-09-24_bugfix-pdf-extraction-accuracy.md) - P65 - X6 X8 Q6 Q7
 - [18 bugfix-extension-lifecycle-leaks](../../plan/18_2026-09-24_bugfix-extension-lifecycle-leaks.md) - P60 - B1-B13 B25 B27 B28
 - [19 bugfix-extension-content-security](../../plan/19_2026-09-24_bugfix-extension-content-security.md) - P60 - B14-B18 B22 B24 B26 B29
 - [20 bugfix-windows-registration-honesty](../../plan/20_2026-09-24_bugfix-windows-registration-honesty.md) - P50 - P12 P13 P14

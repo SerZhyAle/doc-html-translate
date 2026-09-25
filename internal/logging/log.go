@@ -19,9 +19,19 @@ var stdoutIsTerminal = detectStdoutTerminal()
 // installed, and a failing sink is ignored rather than reported, because a log that cannot be
 // written must never be able to fail the conversion it was only observing.
 var (
-	runLogMu sync.Mutex
-	runLog   io.Writer
+	runLogMu     sync.Mutex
+	runLog       io.Writer
+	runLogFilter func(string) string
 )
+
+// SetRunLogFilter rewrites every line before it reaches the run log. The log is kept on disk and
+// later packed into a report, so it gets the report's redaction at the moment it is written,
+// rather than trusting every caller never to print a credential.
+func SetRunLogFilter(f func(string) string) {
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	runLogFilter = f
+}
 
 // StartRunLog tees every subsequent log line into w until StopRunLog.
 func StartRunLog(w io.Writer) {
@@ -45,6 +55,9 @@ func emit(dst io.Writer, console, logLine string) {
 	runLogMu.Lock()
 	defer runLogMu.Unlock()
 	if runLog != nil {
+		if runLogFilter != nil {
+			logLine = runLogFilter(logLine)
+		}
 		_, _ = io.WriteString(runLog, logLine)
 	}
 }
@@ -69,6 +82,17 @@ func Println(s string) {
 func Errorf(format string, args ...any) {
 	line := ts() + fmt.Sprintf(format, args...)
 	emit(os.Stderr, line, line)
+}
+
+// RunLogf writes a timestamped message to the run log only. It is for detail a reader of the
+// console cannot act on but a bug report needs, such as the stack of a recovered panic.
+func RunLogf(format string, args ...any) {
+	line := ts() + fmt.Sprintf(format, args...)
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	if runLog != nil {
+		_, _ = io.WriteString(runLog, line)
+	}
 }
 
 // Progress prints an in-place progress update line (uses \r to overwrite, no trailing newline).

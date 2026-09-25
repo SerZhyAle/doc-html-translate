@@ -2,10 +2,11 @@ package ocr
 
 import (
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"doc-html-translate/internal/procrun"
 )
 
 // The OCR language is chosen from -ocr-lang, or - when that is empty - from -src, a flag about
@@ -87,14 +88,17 @@ func installedForScript(dataDir, script string) []string {
 // only eng, so this is the common case on a fresh install), too few characters on the page, a
 // broken engine - because the rule this feeds must never act on an answer that was not given.
 func DetectScript(bin, imgPath, dataDir string) (script string, conf float64, ok bool) {
-	args := []string{imgPath, "stdout", "--psm", "0"}
+	osdPath, cleanup := stageForDetection(imgPath)
+	defer cleanup()
+	args := []string{osdPath, "stdout", "--psm", "0"}
 	if dataDir != "" && hasLangFile(dataDir, "osd") {
 		args = append(args, "--tessdata-dir", dataDir)
 	}
-	out, err := exec.Command(bin, args...).CombinedOutput()
+	res, err := runTesseract(procrun.TesseractProbe, bin, osdPath, args)
 	if err != nil {
 		return "", 0, false
 	}
+	out := append(res.Stdout, res.Stderr...)
 	m := osdScriptLine.FindSubmatch(out)
 	if m == nil {
 		return "", 0, false
@@ -108,6 +112,20 @@ func DetectScript(bin, imgPath, dataDir string) (script string, conf float64, ok
 		s = alias
 	}
 	return s, c, true
+}
+
+// stageForDetection hands the detector what recognition hands Tesseract (prepareForOCR): the
+// picture turned the way a reader sees it, on an ASCII path. Tesseract opens paths through the
+// Windows ANSI code page, so a book in a Cyrillic-named folder - exactly the book detection is
+// for - failed the pass silently. No upscale: the confidence floor above was measured on
+// unscaled images, and enlarging changes what the detector reports.
+func stageForDetection(imgPath string) (string, func()) {
+	if o := exifOrientation(imgPath); o != orientNormal {
+		if p, _, cleanup, ok := stageForOCR(imgPath, o, false); ok {
+			return p, cleanup
+		}
+	}
+	return stageASCIIPath(imgPath)
 }
 
 // resolveScript decides what the book's OCR language should be once the detector has spoken. It is

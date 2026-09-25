@@ -156,7 +156,7 @@ Why this workflow is popular (besides the obvious):
 | `-ollama-model` | `gemma3:12b` | Ollama model name |
 | `-ollama-parallel` | `1` | Parallel batch requests |
 | `-ollama-ctx` | `8192` | Ollama context size |
-| `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N (`0` = no limit) |
+| `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N; within N it runs without the cost dialog (`0` = no limit; negative, NaN or Inf is refused) |
 | `-ocr` | `false` | OCR text inside document images and overlay it as translatable HTML (needs Tesseract) |
 | `-ocr-lang` | (`-src`) | OCR language(s), e.g. `eng` or `eng+rus`. Left empty it defaults from `-src` (else `eng`) and the app checks the page's writing system: it adds a language rather than replacing one (`rus+eng`) where the data is installed, and leaves the page without text plates - naming the pack to install - where it is not. Passing the flag turns that check off |
 | `-ocr-langs` | `false` | List installed/available OCR languages and exit |
@@ -202,7 +202,9 @@ and PDF); other formats are unaffected.
   `tesseract\tesseract.exe` next to the app, then `PATH`. If none is found, conversion still completes
   (without overlays) and logs a hint.
 - **Languages:** English (`eng.traineddata`) ships with the app and works offline. Other languages are
-  downloaded on demand into the app's `tessdata\` folder:
+  downloaded on demand into the per-user folder `%LOCALAPPDATA%\doc-html-translate\tessdata\` (writable
+  in the Store build too) and installed only after their size and SHA-256 match the published file; packs
+  already in the app's own `tessdata\` folder keep working:
   - `doc-html-translate.exe -ocr-langs` - list installed and available languages.
   - `doc-html-translate.exe -ocr-download rus` - download Russian (etc.).
   - In `doc-html-ui`, use the **Image OCR** section: tick the toggle, pick the OCR language, and use
@@ -214,7 +216,8 @@ and PDF); other formats are unaffected.
 ## Behavior Notes
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
-- Existing extracted output with `index.html` is reused unless `-force` is set.
+- An existing output is reopened instead of converted again only when the run that made it finished, from the same document (same path, size and modification time), with the same settings that shape the result: translation engine, `-src`/`-dst`, Ollama model, `-ocr`/`-ocr-lang`, `-multipage`, `-split` and `-toc-depth`. Otherwise it is rebuilt, and the log says why (interrupted, source changed, different settings, only partially translated). `-force` always rebuilds. Pages are written atomically, so an interrupted run never leaves a half-written page.
+- Exit codes: `0` done, `1` bad arguments, `2` I/O error, `3` the document could not be parsed, `4` translation failed or stopped part-way (the book is still produced and opened, with the rest in the source language; the message says `partially translated, N of M pages`), `130` interrupted with Ctrl+C (the next run rebuilds the output).
 - Every output folder carries a small hidden ownership record (`.doc-html-translate.json`). The converter only reuses, rebuilds (`-force`) or cleans up after a failure a folder that it created for that same document. A folder of your own that happens to share the book's name is never touched: the output then goes to a sibling such as `book (pdf)`. The same happens when `book.epub` and `book.pdf` sit side by side, so each gets its own output.
 - The input must be a document file: a folder or a 0-byte file is refused before anything is written. A second conversion of the same output while one is running is refused rather than interleaved.
 - Plain-text (`.txt`) input is decoded by sniffing its leading bytes: a UTF-8/UTF-16 byte-order mark first, then valid UTF-8, then a legacy Cyrillic code page (Windows-1251, KOI8-R, CP866) by detection - so a DOS-era or Notepad "Unicode" `.txt` reads as text, not mojibake.
@@ -222,8 +225,12 @@ and PDF); other formats are unaffected.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`-`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
-- For paid engines the estimated cost is `chars / 1e6 * $20`. `-max-cost N` turns the existing advisory dialog into a hard pre-flight guard: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated.
+- For paid engines the estimated cost is `characters / 1e6 * $20`, counted in characters (not bytes) over everything that is sent: the pages, the book title and the table-of-contents labels. `-max-cost N` is a hard pre-flight guard at any document size: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated. A set limit is also the approval: an estimate within `N` translates without the cost dialog, so an unattended or scripted run (`-google -max-cost 2 -noopen book.epub`) never stops to ask. Without `-max-cost` the dialog asks as before for anything over 1000 characters. A negative, `NaN` or infinite `-max-cost` is refused at startup (exit code `1`).
+- The Google API key is sent in a request header, never in the URL, and it is removed from any error text and from the run log.
 - PDF extraction is best-effort and includes fallback flows for difficult files (PDFs have opinions, and they are rarely kind).
+- PDF text comes from `pdftotext` (Poppler), bundled with the Windows app. **Nothing is ever installed automatically.** If antivirus blocks the bundled copy, the converter uses a Poppler you installed yourself; otherwise it falls back to its built-in reader and says how to install Poppler manually: `winget install ossia.poppler` on Windows, the `poppler-utils` package on Linux, `brew install poppler` on macOS. The bundled copy is unpacked per app version into `%LOCALAPPDATA%\doc-html-translate\pdftotext-<hash>\`, so an upgrade always uses the new one; older folders are removed.
+- Every external helper (pdftotext, Tesseract, Calibre, 7-Zip, ffmpeg/ImageMagick) runs with a deadline that grows with the input size. When it expires, the helper and anything it started are stopped, and the step falls back or fails with a message naming the tool. On a slow machine or an unusually heavy file, set the environment variable `DOCHT_TOOL_TIMEOUT_SCALE` to a multiplier - for example `set DOCHT_TOOL_TIMEOUT_SCALE=3` allows three times as long.
+- Input limits, so one hostile or huge file cannot exhaust memory or the temp drive (the 32-bit build has a 2 GB address space). An image is decoded only when its header declares at most 100 megapixels and at most 32768 pixels per side: a larger TIFF is refused with a message naming the limit, and a larger picture on a page is still shown as is, with Tesseract reading it without plate colours or the rescue passes. An archive (EPUB, CBZ, CBT, CBR, CB7) is checked from its listing before anything is unpacked: at most 20000 entries and 4 GB unpacked in total, else it is refused; a single file over 100 MB in an EPUB, or a comic page over 200 MB, is skipped with a warning naming it. CBR/CB7 are listed with 7-Zip first and only the accepted pages are unpacked. Symlinks inside an archive are never followed. A comic is recognized by its content, so a RAR saved as `.cbz` opens through 7-Zip. The browser extension applies the same archive limits.
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required) and CBZ/CBR/CB7/CBT comics (CBR/CB7 need 7-Zip).
 - In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.

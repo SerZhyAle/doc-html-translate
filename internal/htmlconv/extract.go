@@ -13,6 +13,7 @@ import (
 
 	"doc-html-translate/internal/assets"
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
 
 	gohtml "golang.org/x/net/html"
@@ -56,7 +57,7 @@ func Extract(htmlPath, outputDir string) (*epub.Book, error) {
 	href := "page_001.html"
 	id := "page_001"
 	outputHTML := wrapHTML(title, rootAttrs(doc), sheets, body)
-	if err := os.WriteFile(filepath.Join(outputDir, href), []byte(outputHTML), 0o644); err != nil {
+	if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(outputHTML), 0o644); err != nil {
 		return nil, fmt.Errorf("write html page: %w", err)
 	}
 

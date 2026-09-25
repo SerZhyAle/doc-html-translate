@@ -133,7 +133,9 @@ func TestRewriteSrcset(t *testing.T) {
 		}
 		return "", false
 	}
-	got, ok := rewriteSrcset("text", "../img/a.png 1x, data:image/png;base64,AA,BB 2x,../img/a.png", fn)
+	got, ok := rewriteSrcset("../img/a.png 1x, data:image/png;base64,AA,BB 2x,../img/a.png", func(v string) (string, bool) {
+		return rewriteLinkValue("text", v, fn)
+	})
 	want := "../img/b.png 1x, data:image/png;base64,AA,BB 2x,../img/b.png"
 	if !ok || got != want {
 		t.Errorf("rewriteSrcset() = %q, %v; want %q", got, ok, want)

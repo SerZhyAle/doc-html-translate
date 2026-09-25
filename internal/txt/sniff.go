@@ -31,7 +31,11 @@ func LooksBinary(head []byte) string {
 
 	// No signature we name, but a NUL byte in the first few KB is the reliable mark of binary
 	// data: measured, every text fixture in the corpus has zero, every binary has many. Real
-	// text does not embed NUL.
+	// text does not embed NUL. BOM-less UTF-16 is the exception, recognized by its NULs
+	// sitting on one byte parity only; the text reader decodes it the same way.
+	if _, ok := sniffUTF16(head); ok {
+		return ""
+	}
 	if bytes.IndexByte(head, 0x00) >= 0 {
 		return "binary data"
 	}

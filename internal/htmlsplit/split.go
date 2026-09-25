@@ -6,11 +6,11 @@ package htmlsplit
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 )
 
 // SplitIfNeeded inspects every HTML spine item and splits any file whose text
@@ -87,7 +87,7 @@ func SplitIfNeeded(book *epub.Book, outputDir string, maxChars int) (int, error)
 			}
 			hrefs[i] = href
 			destPath := resolveHref(outputDir, book.BasePath, href)
-			if err := os.WriteFile(destPath, part.html, 0o644); err != nil {
+			if err := fsutil.WriteFile(destPath, part.html, 0o644); err != nil {
 				return added, fmt.Errorf("write split part %d of %s: %w", i+1, mItem.Href, err)
 			}
 			newManifest = append(newManifest, epub.ManifestItem{

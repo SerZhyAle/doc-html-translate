@@ -10,6 +10,7 @@
     { "name": "HTML body extract", "go": ["internal/htmlconv/"], "js": ["extension/src/html.js"] },
     { "name": "MOBI / AZW3", "go": ["internal/mobi/"], "js": ["extension/src/ebook.js"] },
     { "name": "Comic archives (CBZ/CBR/CB7/CBT)", "go": ["internal/comic/"], "js": ["extension/src/comic.js"] },
+    { "name": "Input limits (archive budget / capped inflation)", "go": ["internal/limits/"], "js": ["extension/src/limits.js"] },
     { "name": "OCR overlay / language", "go": ["internal/ocr/"], "js": ["extension/src/ocr-overlay.js", "extension/src/ocr-plates.js", "extension/src/ocr-cluster.js", "extension/src/ocr-text.js", "extension/src/ocr-lang.js"] },
     { "name": "Reader chrome (themes/fonts/UI)", "go": ["internal/htmlgen/navbar.go"], "js": ["extension/src/viewer.css", "extension/src/viewer.js", "extension/src/viewer.html"] },
     { "name": "Settings / options surface", "go": ["internal/config/flags.go", "cmd/doc-html-ui/ui.html"], "js": ["extension/src/popup.js", "extension/src/options.js", "extension/src/background.js"] }

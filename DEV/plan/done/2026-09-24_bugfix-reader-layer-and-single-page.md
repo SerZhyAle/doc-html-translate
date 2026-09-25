@@ -1,12 +1,12 @@
 # Strategic spec: 09_2026-09-24_bugfix-reader-layer-and-single-page - Links, images and reading position survive conversion
 
 **Ticket:** 09_2026-09-24_bugfix-reader-layer-and-single-page
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 80
 **Date:** 2026-09-24
 **Tier:** Moderate
 **Tactical plan:** `DEV/plan/09_2026-09-24_bugfix-reader-layer-and-single-page/` (created by /spec-tech)
-**Findings:** E2 E3 E4 E13 E17 E18 E19 E23 E24 X23 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Findings:** E2 E3 E4 E13 E17 E18 E19 E23 E24 X23 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -67,11 +67,13 @@ Chapters -> merge (rebase, remap ids and links) -> merged page -> reader layer (
 ## 6. Open questions / research items
 1. **Old saved positions**
    - **Question:** migrate them, or accept a one-time loss?
-   - **Status:** Open.
+   - **Status:** Decided: accept a one-time loss, no migration. The new key cannot be derived from the
+     old one (it adds the source file name and size), and a lost position costs one scroll.
 2. **Keep the chapter files?**
    - **Question:** after proper link rewriting, is deleting the originals still wanted?
    - **Options:** delete (smaller output); keep (safer for external deep links).
-   - **Status:** Open.
+   - **Status:** Decided: keep today's behaviour - delete the merged chapter files, now that every
+     in-book link and id is rewritten into the merged page.
 
 ## 7. Risks
 - **The id prefix breaks book CSS that targets ids.** Likelihood: medium. Impact: styling lost. Mitigation: rewrite `#id` selectors in inline styles too, or prefix only colliding ids.
@@ -94,4 +96,57 @@ No changes to user docs.
 5. An image named `scan#1.png` displays.
 
 ## 12. Next step
-`/spec-tech 09_2026-09-24_bugfix-reader-layer-and-single-page`
+`/spec-check 09_2026-09-24_bugfix-reader-layer-and-single-page` (implemented directly from this spec with
+the owner's decisions; no tactical plan was written).
+
+## Implementation
+
+Owner decisions applied beyond §6: one book key computed once from immutable inputs; rebase every relative
+reference on merge; rename only colliding ids; restore only without a fragment; one path-to-href and one
+string-to-script helper; external TOC links kept as authored with an http/https/mailto allow-list;
+idempotent injection honouring `xml:lang`.
+
+- **E3, E4 - merge** (`internal/htmlgen/merge.go`, `prepareMerge`, called from `singlepage.go`): each
+  chapter is parsed, its ids and `<a name>` anchors are collected across the book and only a colliding one
+  is renamed `cN-<id>` (the first holder keeps it, so book CSS still matches); every relative
+  `src`/`href`/`srcset`/`poster`/`data`, CSS `url()` and quoted `@import` in style attributes and body
+  `<style>` blocks is rebased from the chapter folder to the merged page's folder; `file#id` becomes
+  `#<merged id>`, a bare `file` (or a link to a `<body>` id, or an unknown fragment) becomes a
+  `#dht-ch-N` marker inserted only when something links to it; `for`/`headers`/`aria-*` id lists follow
+  renames. The attribute walk is `epub.RewriteURLs`, the walk under `rewriteLinks`, now exported; CSS goes
+  through `epub.RewriteCSSURLs`. Manifest stylesheets were already linked from the base folder. Chapter
+  files are still deleted (§6.2). Proof: `TestSinglePageMergeSigilLayout` (Sigil layout via
+  `epub.Extract`: images and `url()` resolve on disk, every `#` link lands on an existing id, ids unique,
+  no link to a deleted chapter), `TestSinglePageMergeFlatBookUnchanged`.
+- **E2, E24 - book key** (`internal/htmlgen/reader_key.go`, `epub.Book.ReaderKey`): `ReaderKey(source
+  name, source size, title, page count)` is set once in `pipeline.go` after the split and before
+  navigation/translation; chapter pages, the merged page and `index.html` read it through `readerKey`,
+  which derives and stores it on first use for library callers. Proof:
+  `TestReaderKeySameOnChaptersAndIndexAcrossTranslation` (title changed between the navbar pass and the
+  index), `TestReaderKeyDistinguishesBooks`.
+- **E13 - fragment first** (`navbar.go` reader script): restore only when `location.hash` is empty. The
+  Continue link also refuses a stored href with a scheme or a leading slash, because `file://` pages share
+  one storage origin. Proof: `TestReaderScriptRestoresOnlyWithoutFragment`.
+- **E17, E19 - encoding** (`encode.go` `jsString`, `epub.URLPath`): reader-script values and both redirect
+  pages use `jsString` (JSON: `</script>`, U+2028 safe); `lang` is HTML-escaped inside quotes; fallback-TOC
+  heading ids are escaped as fragments. Proof: `TestReaderScriptEscapesValues`,
+  `TestSinglePageLangIsEscaped`, `TestFallbackTOCEscapesHeadingIDs`, `TestSinglePageIndexRedirectIsJSLiteral`.
+- **X23 - image src** (`internal/img/extract.go`): `src` goes through `epub.URLPath`. The OCR overlay
+  (`internal/ocr/overlay.go` `localImageFile`) now cuts `?`/`#` and percent-decodes a `src` before looking
+  for the file, raw value as fallback - without it the forced OCR of a standalone image would stop finding
+  an encoded name. Proof: `TestExtractEncodesImageSrc`, `TestCollectBookImagesDecodesEncodedSrc`.
+- **E18 - external TOC links** (`epub.ExternalHref` in `links.go`, `toc.go`, `htmlgen.go`
+  `renderTOCEntry`): any scheme or `//` is external; `http`/`https`/`mailto` are kept as written without
+  the base prefix; any other scheme keeps its label as plain text. Proof: `TestResolveTOCExternalSchemes`,
+  `TestExternalHref`, `TestRenderTOCExternalLinks`.
+- **E23 - idempotent injection, `xml:lang`**: `injectNavIntoFile` skips a page that already carries the
+  reader script marker; the merge takes `xml:lang` when `lang` is absent (the index already did). Proof:
+  `TestInjectNavBarsIsIdempotent`, the `<html lang="de">` assertion in `TestSinglePageMergeSigilLayout`.
+- **Cross-edition:** the extension persists no reading position, so it has neither the key drift nor the
+  fragment-restore bug; its merge already namespaces ids and remaps anchors in one DOM. Recorded in
+  docs/PARITY.md ("Single-page merge and the reader layer", "EPUB TOC parsing"); no JS behaviour change.
+- **Headless check** (ad hoc, Playwright + Chromium 1194 on Linux, the CLI on a Sigil fixture with an
+  image named `scan#1.png`): single-page - images decode, the style `url()` loads, a footnote click puts
+  the note at the top, `<html lang>` kept; multipage - opening a page at `#note1` after a saved scroll to
+  the bottom lands on the note, and `index.html` shows "Continue reading" for that page. Done criteria
+  1, 2, 4, 5 are covered by it; 3 by the unit test above (a translation engine was not run).

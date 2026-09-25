@@ -1,0 +1,3 @@
+# The fixtures are byte-exact encodings (UTF-16 without a BOM, a truncated UTF-8 tail, CRLF in
+# RTF): no end-of-line conversion on checkout, or the bytes under test change.
+* -text

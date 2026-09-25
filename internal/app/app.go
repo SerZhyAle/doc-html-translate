@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 
@@ -115,17 +117,29 @@ func (a App) Run() (int, error) {
 	}
 
 	if a.cfg.OCRDownload != "" {
+		if err := ocr.CheckLang(a.cfg.OCRDownload); err != nil {
+			return 1, err
+		}
 		fmt.Printf("Downloading OCR language %q (%s)..\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
 		if err := ocr.Download(a.cfg.OCRDownload); err != nil {
 			return 1, err
 		}
-		fmt.Printf("Installed into %s\n", ocr.DataDir())
+		fmt.Printf("Installed into %s\n", ocr.UserDataDir())
 		return 0, nil
 	}
 
-	runner := pipeline.NewRunner(a.cfg)
-	return runner.Run()
+	// Ctrl+C cancels the run cooperatively: the pipeline stops between pages and returns
+	// ExitInterrupted instead of the process exiting in the middle of a page write. Once the
+	// first interrupt is seen the default handling is back, so a second Ctrl+C still kills a run
+	// that is stuck inside one long step.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	context.AfterFunc(ctx, stop)
+	return pipeline.NewRunner(a.cfg).RunContext(ctx)
 }
+
+// ExitInterrupted is the exit code of a run stopped by Ctrl+C.
+const ExitInterrupted = pipeline.ExitInterrupted
 
 // printOCRLangs lists which OCR languages are installed and which can be downloaded.
 func printOCRLangs() {
@@ -133,7 +147,7 @@ func printOCRLangs() {
 	for _, c := range ocr.Installed() {
 		installed[c] = true
 	}
-	fmt.Println("OCR languages (tessdata:", ocr.DataDir()+")")
+	fmt.Println("OCR languages (tessdata:", strings.Join(ocr.DataDirs(), "; ")+")")
 	for _, l := range ocr.Available {
 		mark := "  available - download with: -ocr-download " + l.Code
 		if installed[l.Code] {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 
 	gohtml "golang.org/x/net/html"
 )
@@ -116,7 +117,7 @@ func scanAndAnchorHeadings(pagePath string) []flatHeading {
 	if injected {
 		var buf bytes.Buffer
 		if err := gohtml.Render(&buf, doc); err == nil {
-			_ = os.WriteFile(pagePath, buf.Bytes(), 0o644)
+			_ = fsutil.WriteFile(pagePath, buf.Bytes(), 0o644)
 		}
 	}
 
@@ -137,7 +138,7 @@ func nestHeadings(flat []flatHeading, href string) []epub.TOCEntry {
 
 	for _, h := range flat {
 		n := &node{
-			entry: epub.TOCEntry{Title: h.title, Href: href + "#" + h.id},
+			entry: epub.TOCEntry{Title: h.title, Href: href + "#" + epub.URLPath(h.id)},
 			level: h.level,
 		}
 		for len(stack) > 0 && stack[len(stack)-1].level >= h.level {
