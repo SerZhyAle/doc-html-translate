@@ -1,12 +1,12 @@
 # Strategic spec: 25_2026-09-24_chore-hygiene-and-test-gaps - Small correctness fixes and missing tests
 
 **Ticket:** 25_2026-09-24_chore-hygiene-and-test-gaps
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests; the Windows-only tests (registration, dialog, browser open, bundled pdftotext) compile on Linux and run only on Windows, and `scripts/check.ps1` needs a Windows pass.
 **Priority:** 40
 **Date:** 2026-09-24
 **Tier:** Quick Win
-**Tactical plan:** `DEV/plan/25_2026-09-24_chore-hygiene-and-test-gaps/` (created by /spec-tech)
-**Findings:** P18 P19 P21 P22 Q1-Q5, plus the test gaps listed in §1 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Tactical plan:** none - implemented directly from this spec (Quick Win tier).
+**Findings:** P18 P19 P21 P22 Q1-Q5, plus the test gaps listed in §1 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -86,3 +86,41 @@ All tickets under this audit.
 
 ## 12. Next step
 `/spec-tech 25_2026-09-24_chore-hygiene-and-test-gaps`
+
+## Resolution
+
+Implemented 2026-09-25 without a tactical plan. Findings, then tests.
+
+- **P18:** `config.ErrVersion` is a sentinel; `main` matches it with `errors.Is`.
+- **P19:** `ParseArgs` refuses a negative `-split`, `-toc-depth`, `-ollama-ctx` or `-ollama-parallel`.
+  A value below the floor (`-ollama-parallel 0`, `-ollama-ctx` under 512) is raised and reported:
+  `Config.Notices`, printed by `app.Run` before the pipeline starts. Both messages follow `-ui-lang`,
+  13 languages in `i18n_cli.go`. The translator keeps its own clamps as a second line.
+- **P21:** `logging.emit` takes the lock before the console write, not after it.
+- **P22:**
+  - Run logs are `run-<yyyymmdd-hhmmss>-<pid>.log`, so same-second runs get separate files.
+  - `report.CapRunLog` stops a run's log at `MaxRunLogBytes` (5 MiB) with one marker line.
+  - Report archives carry seconds, and a taken name gets `-2`, `-3`.. instead of being overwritten.
+- **Q1:** `normalizeTarget` moved to `browser_windows.go`, its only caller's side.
+- **Q2:** already clean when this ran.
+- **Q3:** the raw U+200F in `i18n_cli.go` is now the `\u200f` escape.
+- **Q4/Q5:** error-string style in `mobi/extract.go` and `tools/ocrlab/cmd_add.go`.
+- **Test seams** (behaviour unchanged): the registry calls in `windowsreg`, `MessageBoxW` in `dialog` and
+  the embedded pdftotext set in `bundledtools` are indirected, like `shellExecute` in `browser`.
+- **Tests:**
+  - pipeline sandbox harness (`internal/pipeline/harness_test.go`) and runs over it covering success,
+    failure cleanup (first run and rebuild), reuse vs rebuild triggers, and `-force`;
+  - document splitting (`htmlsplit/split_flat_test.go`), Markdown input (`md/sections_test.go`);
+  - registration, dialog, browser open, helper extraction - Windows sides with fakes, plus non-Windows
+    sides;
+  - flag validation, log serialization, run-log names and cap, report names;
+  - extension viewer, background and page-OCR (`extension/test/{viewer,background,page-ocr}.test.mjs`,
+    17 tests, no `src/` change; `vendor/` imports are stubbed so the tests do not need a vendored build).
+- **Found, not fixed here:** a refused page-OCR host frame leaves its wait and timer pending - added to
+  ticket 18 (`lifecycle-leaks`), which owns that code.
+- **Extension:** `npm test` 215/216; the one failure is `ebook.test.mjs`, because `vendor/foliate` is
+  absent here (the vendor step stops on a tessdata download refused by the network), not this change.
+- **Checks here (Linux):** `go test ./...`, `go vet` and `staticcheck ./...` for both `GOOS=linux` and
+  `GOOS=windows` are clean; every Windows-only test package builds with `GOOS=windows go test -c`.
+  `golangci-lint` was not run: the container has v2 and `configs/.golangci.yml` is v1.
+- **Left for Windows:** run `scripts/check.ps1`; it executes the Windows-only tests above.

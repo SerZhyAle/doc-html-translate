@@ -63,7 +63,6 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-25  25_2026-09-24_chore-hygiene-and-test-gaps           2026-09-24  Draft (P40)
 19  19_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
 18  18_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-24  Draft (P60)
 20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
@@ -72,9 +71,9 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 ```
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
-25 (`hygiene`) leads although its priority is the lowest of the five: its own text asks to land early,
-because the pipeline tests it adds make every later change safer (rule 2). The two extension tickets
-follow, content security (19) first - an untrusted document that stays live is the more serious defect, and
+25 (`hygiene`) went first and is done (waiting on a Windows pass, listed below); the pipeline sandbox
+harness it added (`internal/pipeline/harness_test.go`) is there for the tickets after it to extend. The two
+extension tickets lead now, content security (19) first - an untrusted document that stays live is the more serious defect, and
 `lifecycle-leaks` (18) touches the same viewer code right after it. 20 (`registration`) is Windows-only and
 independent. 15 is the remaining OCR defect from the 2026-09-22 alignment run (17, its sibling, is done); it is the
 instrument 29 is measured with (rule 4).
@@ -188,6 +187,7 @@ ticket (in done/)                                   check left
 11_2026-09-24_bugfix-external-process-bounds           process-tree kill, upgraded pdftotext cache
 12_2026-09-24_bugfix-resource-budgets                  2 GB CBZ on the 386 build, real 7-Zip
 13_2026-09-24_bugfix-ocr-language-data-and-detection   language download in the Store build
+25_2026-09-24_chore-hygiene-and-test-gaps              scripts/check.ps1 on Windows (Windows-only tests)
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

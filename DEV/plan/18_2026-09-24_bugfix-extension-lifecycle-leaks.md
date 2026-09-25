@@ -17,6 +17,7 @@ The extension viewer and the page-OCR feature accumulate resources over a sessio
 - **PDF documents:** never released.
 - **OCR image fitting:** its listeners and observers pile up for every OCR'd image.
 - **Offscreen OCR host:** never closes once two tabs have used it.
+- **Refused page-OCR host frame:** when the page refuses the host frame (`host-refused`), the `waitForHost` entry and its 10 s timer are left pending (found by ticket 25's `page-ocr.test.mjs`, which steps over it with fake timers).
 - **OCR engine errors:** a failed engine start is cached forever.
 - **Positioning loop:** the page agent runs a frame loop for as long as plated images exist.
 - **Memory:** detached images stay pinned, decoded bitmaps are not closed, big files are held twice, and page rasterization has no size cap.

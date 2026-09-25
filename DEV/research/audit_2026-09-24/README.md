@@ -47,7 +47,7 @@ already open. The number in front of each ticket is its permanent id.
 - [18 bugfix-extension-lifecycle-leaks](../../plan/18_2026-09-24_bugfix-extension-lifecycle-leaks.md) - P60 - B1-B13 B25 B27 B28
 - [19 bugfix-extension-content-security](../../plan/19_2026-09-24_bugfix-extension-content-security.md) - P60 - B14-B18 B22 B24 B26 B29
 - [20 bugfix-windows-registration-honesty](../../plan/20_2026-09-24_bugfix-windows-registration-honesty.md) - P50 - P12 P13 P14
-- [25 chore-hygiene-and-test-gaps](../../plan/25_2026-09-24_chore-hygiene-and-test-gaps.md) - P40 - P18 P19 P21 P22 Q1-Q5 + test gaps
+- [25 chore-hygiene-and-test-gaps](../../plan/done/25_2026-09-24_chore-hygiene-and-test-gaps.md) - P40 - P18 P19 P21 P22 Q1-Q5 + test gaps
 
 Every finding below maps to exactly one ticket.
 
