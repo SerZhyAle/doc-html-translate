@@ -757,16 +757,21 @@ func handleOCRLangs(w http.ResponseWriter, _ *http.Request) {
 // handleOCRDownload downloads a single OCR language pack on request from the GUI.
 func handleOCRDownload(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Lang string `json:"lang"`
+		Lang   string `json:"lang"`
+		UILang string `json:"uiLang"` // the page's language, for the error text
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 	resp := map[string]any{"ok": true}
-	if err := ocr.Download(req.Lang); err != nil {
+	err := ocr.CheckLang(req.Lang)
+	if err == nil {
+		err = ocr.Download(req.Lang)
+	}
+	if err != nil {
 		resp["ok"] = false
-		resp["error"] = err.Error()
+		resp["error"] = ocr.ErrorText(err, req.UILang)
 	}
 	_ = json.NewEncoder(w).Encode(resp)
 }

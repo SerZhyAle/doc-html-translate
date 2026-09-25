@@ -202,7 +202,9 @@ and PDF); other formats are unaffected.
   `tesseract\tesseract.exe` next to the app, then `PATH`. If none is found, conversion still completes
   (without overlays) and logs a hint.
 - **Languages:** English (`eng.traineddata`) ships with the app and works offline. Other languages are
-  downloaded on demand into the app's `tessdata\` folder:
+  downloaded on demand into the per-user folder `%LOCALAPPDATA%\doc-html-translate\tessdata\` (writable
+  in the Store build too) and installed only after their size and SHA-256 match the published file; packs
+  already in the app's own `tessdata\` folder keep working:
   - `doc-html-translate.exe -ocr-langs` - list installed and available languages.
   - `doc-html-translate.exe -ocr-download rus` - download Russian (etc.).
   - In `doc-html-ui`, use the **Image OCR** section: tick the toggle, pick the OCR language, and use

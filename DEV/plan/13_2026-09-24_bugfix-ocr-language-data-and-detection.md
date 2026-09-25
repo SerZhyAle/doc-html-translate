@@ -1,7 +1,7 @@
 # Strategic spec: 13_2026-09-24_bugfix-ocr-language-data-and-detection - Safe language downloads and reliable OCR detection
 
 **Ticket:** 13_2026-09-24_bugfix-ocr-language-data-and-detection
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests on Linux; needs done criterion 3 by hand: in the Store (MSIX) build, download `deu` from the GUI and run OCR with it, then confirm the pack landed under `%LOCALAPPDATA%\doc-html-translate\tessdata` (or the package's redirected LocalCache) and Tesseract loads it
 **Priority:** 70
 **Date:** 2026-09-24
 **Tier:** Moderate
@@ -63,7 +63,28 @@ without checking for an earlier pass.
 ## 6. Open questions / research items
 1. **Checksum source**
    - **Question:** pin digests in code, or fetch a signed manifest?
-   - **Status:** Open (pinning is simpler; the catalogue is fixed).
+   - **Status:** Decided: pin SHA-256 digests and exact sizes in code for every catalogue language
+     (`internal/ocr/download.go` `packDigests`), taken from the 4.0.0 files on 2026-09-25. The code's
+     URL (`github.com/.../raw/4.0.0`) is not reachable from the build sandbox, so the digests were
+     computed from its redirect target `raw.githubusercontent.com/tesseract-ocr/tessdata_fast/4.0.0/`,
+     which serves the same bytes. Not shared with the extension: tesseract.js fetches a gzipped build
+     from projectnaptha and never exposes the bytes; the difference is recorded in docs/PARITY.md.
+2. **Catalogue gate** - Decided: a code is valid only if it is in `Available`; enforced by
+   `ocr.CheckLang` in `-ocr-download` (internal/app), the GUI's `/api/ocr-download` and `ocr.Download`.
+3. **Verified installs** - Decided: unique temp file per download in the target folder, body bounded
+   to the pinned size, SHA-256 checked, atomic rename; a per-language in-process mutex, and a pack
+   another process installed is accepted when it verifies. Temp files older than a day are removed
+   on the next download.
+4. **Layered data locations** - Decided: per-user `os.UserCacheDir()/doc-html-translate/tessdata`
+   (`%LOCALAPPDATA%` on Windows, the translator's precedent) first, then `<exe>/tessdata`. Downloads
+   go to the per-user folder. When both folders hold packs, the bundled ones are copied into the
+   per-user folder once and that folder is passed to Tesseract, so a split `rus+eng` loads.
+5. **Overlay idempotency (O12)** - Decided: the injected style and script carry `data-dht-ocr` and are
+   refreshed, not stacked (an unmarked copy from an older page is recognized by its content); an
+   image already inside `.ocr-fig` is not wrapped again.
+6. **Localization** - Decided: the four new download messages are registered with `i18n.Add` in all
+   12 translations; the GUI sends its page language so the error comes back in it. No new
+   `i18n.js` strings were needed.
 
 ## 7. Risks
 - **Upstream traineddata files change, so the pinned checksums fail.** Likelihood: low (the version is pinned in the URL). Impact: the download is refused. Mitigation: a clear message; update the digests on a release.
@@ -83,5 +104,32 @@ No ADRs. The decision follows established project patterns (the translator alrea
 3. The Store build downloads `deu` successfully.
 4. A Russian comic in a folder named in Cyrillic gets script detection applied.
 
+## Implementation
+Built without a tactical plan.
+- **O1** `internal/ocr/download.go` `CheckLang`, called from `internal/app/app.go` (`-ocr-download`),
+  `cmd/doc-html-ui/main.go` `handleOCRDownload` and `Download`. Criterion 1:
+  `TestDownloadRefusesTraversalCode` (no server hit, nothing written), `TestOCRDownloadRefusesATraversalCode`
+  (CLI, exit 1), `TestHandleOCRDownloadRefusesATraversalCode` (GUI, refusal in the page language).
+- **O2 / O3** `Download` / `fetchPack` / `verifyPack` / `removeStaleTemps`. Criterion 2:
+  `TestConcurrentDownloadsInstallOnePack` (one transfer, one verified pack, no temp file). Also
+  `TestDownloadRefusesChecksumMismatch`, `TestDownloadRefusesOversizeBody` (with and without
+  Content-Length), `TestDownloadAcceptsAnInstalledVerifiedPack`, `TestDownloadRemovesOnlyStaleTemps`,
+  `TestEveryCataloguePackHasADigest`.
+- **O4** `internal/ocr/tessdata.go` `UserDataDir` / `DataDirs` / `DataDir` (staging) / `Installed` /
+  `IsInstalled`; `-ocr-langs`, the report summary and "Installed into" name the new folders.
+  `TestLayeredDataDirs`. Criterion 3 needs the Store build (see Status).
+- **O8** `internal/ocr/script.go` `stageForDetection`: orientation and ASCII staging as in
+  `prepareForOCR`, without the upscale (the confidence floor was measured on unscaled images), run
+  through `runTesseract`. Criterion 4: `TestDetectScriptStagesANonASCIIPath` (a stand-in engine that
+  fails on a non-ASCII path, image under `Книга/`).
+- **O11** already fixed by ticket 09 (`localImageFile` decodes the src and drops `?`/`#`). The encoded
+  case was tested; `TestCollectBookImagesStripsQueryAndFragment` adds the query and fragment case.
+- **O12** `internal/ocr/overlay.go` `findInjected` / `isWrapped` and the `data-dht-ocr` marker.
+  `TestOverlayTwiceEqualsOnce`, `TestEnsureAssetsRecognizesAnUnmarkedEarlierPass`.
+- Localization: `internal/i18n/i18n_ocr.go`.
+- Docs: README (download folder), AGENTS.md, docs/PARITY.md "OCR" (download integrity is desktop-only).
+- Not done: `scripts/build.ps1` still provisions the bundled eng without checking it against
+  `packDigests` (Windows build script, outside this ticket's entry points).
+
 ## 12. Next step
-`/spec-tech 13_2026-09-24_bugfix-ocr-language-data-and-detection`
+The Store-build check in Status, then `/spec-check`.

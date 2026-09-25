@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -306,7 +307,7 @@ func collectOverlayJobs(imgs []*gohtml.Node, baseDir string) []overlayJob {
 	jobs := make([]overlayJob, 0, len(imgs))
 	for _, img := range imgs {
 		src := attrVal(img, "src")
-		if src == "" || isExternal(src) {
+		if src == "" || isExternal(src) || isWrapped(img) {
 			continue
 		}
 		file := localImageFile(baseDir, src)
@@ -792,9 +793,61 @@ func ensureStyle(doc *gohtml.Node) {
 	if target == nil {
 		target = doc
 	}
-	style := &gohtml.Node{Type: gohtml.ElementNode, Data: "style", DataAtom: atom.Style}
+	if old := findInjected(doc, atom.Style, "style", ocrCSS); old != nil {
+		setText(old, ocrCSS)
+		return
+	}
+	style := &gohtml.Node{Type: gohtml.ElementNode, Data: "style", DataAtom: atom.Style,
+		Attr: []gohtml.Attribute{{Key: overlayMarker, Val: "style"}}}
 	style.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: ocrCSS})
 	target.AppendChild(style)
+}
+
+// overlayMarker tags the style and script the overlay injects, so a second pass over a page -
+// a re-run, or a converted page fed back in as HTML - refreshes them instead of stacking copies.
+const overlayMarker = "data-dht-ocr"
+
+// findInjected returns the element an earlier overlay pass injected for role: one carrying the
+// marker, or - on a page written before the marker existed - one whose content is exactly body.
+func findInjected(doc *gohtml.Node, a atom.Atom, role, body string) *gohtml.Node {
+	var found *gohtml.Node
+	var walk func(*gohtml.Node)
+	walk = func(n *gohtml.Node) {
+		if found != nil {
+			return
+		}
+		if n.Type == gohtml.ElementNode && n.DataAtom == a {
+			if attrVal(n, overlayMarker) == role ||
+				(n.FirstChild != nil && n.FirstChild == n.LastChild && n.FirstChild.Data == body) {
+				found = n
+				return
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(doc)
+	return found
+}
+
+// setText replaces n's children with one text node, bringing an earlier pass's injected style or
+// script up to the current version.
+func setText(n *gohtml.Node, text string) {
+	for c := n.FirstChild; c != nil; c = n.FirstChild {
+		n.RemoveChild(c)
+	}
+	n.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: text})
+}
+
+// isWrapped reports whether img already sits in an overlay container from an earlier pass;
+// wrapping it again would nest a second set of plates over the first.
+func isWrapped(img *gohtml.Node) bool {
+	p := img.Parent
+	if p == nil || p.Type != gohtml.ElementNode {
+		return false
+	}
+	return slices.Contains(strings.Fields(attrVal(p, "class")), "ocr-fig")
 }
 
 // ensureScript appends the plate re-fit script (ocrScript) to <body> - or <html>/document if there
@@ -829,7 +882,12 @@ func ensureScript(doc *gohtml.Node) {
 	if target == nil {
 		target = doc
 	}
-	script := &gohtml.Node{Type: gohtml.ElementNode, Data: "script", DataAtom: atom.Script}
+	if old := findInjected(doc, atom.Script, "script", ocrScript); old != nil {
+		setText(old, ocrScript)
+		return
+	}
+	script := &gohtml.Node{Type: gohtml.ElementNode, Data: "script", DataAtom: atom.Script,
+		Attr: []gohtml.Attribute{{Key: overlayMarker, Val: "script"}}}
 	script.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: ocrScript})
 	target.AppendChild(script)
 }

@@ -117,11 +117,14 @@ func (a App) Run() (int, error) {
 	}
 
 	if a.cfg.OCRDownload != "" {
+		if err := ocr.CheckLang(a.cfg.OCRDownload); err != nil {
+			return 1, err
+		}
 		fmt.Printf("Downloading OCR language %q (%s)..\n", a.cfg.OCRDownload, ocr.LangName(a.cfg.OCRDownload))
 		if err := ocr.Download(a.cfg.OCRDownload); err != nil {
 			return 1, err
 		}
-		fmt.Printf("Installed into %s\n", ocr.DataDir())
+		fmt.Printf("Installed into %s\n", ocr.UserDataDir())
 		return 0, nil
 	}
 
@@ -144,7 +147,7 @@ func printOCRLangs() {
 	for _, c := range ocr.Installed() {
 		installed[c] = true
 	}
-	fmt.Println("OCR languages (tessdata:", ocr.DataDir()+")")
+	fmt.Println("OCR languages (tessdata:", strings.Join(ocr.DataDirs(), "; ")+")")
 	for _, l := range ocr.Available {
 		mark := "  available - download with: -ocr-download " + l.Code
 		if installed[l.Code] {

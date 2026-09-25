@@ -915,7 +915,7 @@ el('btnOcrDownload').addEventListener('click', async () => {
     setStatus('ocrStatus', 'ocrDownloading', {lang});
     try {
         const r = await (await fetch('/api/ocr-download', {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang}),
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang, uiLang: currentLang}),
         })).json();
         if (r.ok) { setStatus('ocrStatus', 'ocrInstalledMsg', {lang}); el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
         else { setStatus('ocrStatus', 'ocrDownloadFail', {err: r.error || t('unknown')}); }

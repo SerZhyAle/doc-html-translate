@@ -73,7 +73,7 @@ func ParseArgs(args []string) (Config, error) {
 	ocr := fs.Bool("ocr", false, "OCR text inside document images and overlay it as translatable HTML (needs tesseract)")
 	ocrLang := fs.String("ocr-lang", "", "OCR language(s) for -ocr, e.g. eng or eng+rus (default: -src, else eng)")
 	ocrLangs := fs.Bool("ocr-langs", false, "list installed and available OCR languages, then exit")
-	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the app's tessdata, then exit")
+	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the per-user tessdata folder, then exit")
 	uiLang := fs.String("ui-lang", "", "interface language for the console output and the converted page's navigation "+
 		"(default: the Windows UI language); one of: "+strings.Join(i18n.Codes, " "))
 	report := fs.Bool("report", false, "pack the recent run logs plus an environment summary into an archive for the author, then exit")

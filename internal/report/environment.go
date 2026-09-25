@@ -58,7 +58,8 @@ func Environment(appVersion string, packaged bool) string {
 		{"interface language", env.UILang},
 		{"ocr", env.Tesseract},
 		{"ocr languages", langs},
-		{"ocr data dir", ocr.DataDir()},
+		// DataDir would stage packs as a side effect; a report only reads.
+		{"ocr data dir", strings.Join(ocr.DataDirs(), "; ")},
 		{"ollama model", env.OllamaModel},
 	} {
 		b.WriteString(f[0] + ": " + f[1] + "\n")
