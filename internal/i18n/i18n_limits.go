@@ -1,0 +1,119 @@
+package i18n
+
+// Console strings for the published input limits (internal/limits): an image, an archive or one
+// archive member that is refused or degraded because it is over its budget.
+//
+// Order of the translations is always Codes[1:]: ru uk de it es fr pt ar hi bn ur zh.
+func init() {
+	Add("The image is %d x %d pixels, above the limit of %d megapixels and %d pixels per side",
+		"Изображение размером %d x %d пикселей превышает предел в %d мегапикселей и %d пикселей по стороне",
+		"Зображення розміром %d x %d пікселів перевищує межу в %d мегапікселів і %d пікселів на сторону",
+		"Das Bild hat %d x %d Pixel und liegt über der Grenze von %d Megapixeln und %d Pixeln pro Seite",
+		"L'immagine è di %d x %d pixel, oltre il limite di %d megapixel e %d pixel per lato",
+		"La imagen mide %d x %d píxeles, por encima del límite de %d megapíxeles y %d píxeles por lado",
+		"L'image fait %d x %d pixels, au-delà de la limite de %d mégapixels et %d pixels par côté",
+		"A imagem tem %d x %d pixels, acima do limite de %d megapixels e %d pixels por lado",
+		"أبعاد الصورة %d x %d بكسل، وهي تتجاوز الحد البالغ %d ميغابكسل و%d بكسل لكل ضلع",
+		"छवि %d x %d पिक्सेल की है, जो %d मेगापिक्सेल और प्रति भुजा %d पिक्सेल की सीमा से अधिक है",
+		"ছবিটি %d x %d পিক্সেল, যা %d মেগাপিক্সেল এবং প্রতি পাশে %d পিক্সেলের সীমার বেশি",
+		"تصویر %d x %d پکسل کی ہے، جو %d میگاپکسل اور فی ضلع %d پکسل کی حد سے زیادہ ہے",
+		"图像为 %d x %d 像素，超过了 %d 百万像素、每边 %d 像素的上限")
+
+	Add("The archive has %d entries, above the limit of %d",
+		"В архиве %d записей, это больше предела в %d",
+		"В архіві %d записів, це більше за межу в %d",
+		"Das Archiv enthält %d Einträge und liegt über der Grenze von %d",
+		"L'archivio contiene %d voci, oltre il limite di %d",
+		"El archivo comprimido tiene %d entradas, por encima del límite de %d",
+		"L'archive contient %d entrées, au-delà de la limite de %d",
+		"O arquivo compactado tem %d entradas, acima do limite de %d",
+		"يحتوي الأرشيف على %d عنصرًا، وهذا يتجاوز الحد البالغ %d",
+		"संग्रह में %d प्रविष्टियाँ हैं, जो %d की सीमा से अधिक हैं",
+		"আর্কাইভে %dটি এন্ট্রি আছে, যা %d-এর সীমার বেশি",
+		"آرکائیو میں %d اندراجات ہیں، جو %d کی حد سے زیادہ ہیں",
+		"归档包含 %d 个条目，超过了 %d 的上限")
+
+	Add("The archive unpacks to %s, above the limit of %s",
+		"Архив распаковывается в %s, это больше предела в %s",
+		"Архів розпаковується в %s, це більше за межу в %s",
+		"Das Archiv wird entpackt %s groß und liegt über der Grenze von %s",
+		"L'archivio decompresso occupa %s, oltre il limite di %s",
+		"El archivo comprimido ocupa %s al descomprimirse, por encima del límite de %s",
+		"L'archive décompressée occupe %s, au-delà de la limite de %s",
+		"O arquivo compactado ocupa %s descompactado, acima do limite de %s",
+		"يبلغ حجم الأرشيف بعد فك الضغط %s، وهذا يتجاوز الحد البالغ %s",
+		"संग्रह खोलने पर %s का होता है, जो %s की सीमा से अधिक है",
+		"আর্কাইভটি খুললে %s হয়, যা %s-এর সীমার বেশি",
+		"آرکائیو کھولنے پر %s کا ہوتا ہے، جو %s کی حد سے زیادہ ہے",
+		"归档解压后为 %s，超过了 %s 的上限")
+
+	Add("%s unpacks to more than %s, the limit for one file",
+		"%s распаковывается больше чем в %s - это предел для одного файла",
+		"%s розпаковується більше ніж у %s - це межа для одного файлу",
+		"%s wird entpackt größer als %s, die Grenze für eine Datei",
+		"%s decompresso supera %s, il limite per un singolo file",
+		"%s ocupa más de %s al descomprimirse, el límite para un archivo",
+		"%s décompressé dépasse %s, la limite pour un fichier",
+		"%s descompactado passa de %s, o limite para um arquivo",
+		"يتجاوز حجم %s بعد فك الضغط %s، وهو الحد لملف واحد",
+		"%s खोलने पर %s से बड़ी होती है, जो एक फ़ाइल की सीमा है",
+		"%s খুললে %s-এর বেশি হয়, যা একটি ফাইলের সীমা",
+		"%s کھولنے پر %s سے بڑی ہوتی ہے، جو ایک فائل کی حد ہے",
+		"%s 解压后超过 %s，即单个文件的上限")
+
+	Add("Image %s is above the %d-megapixel limit: Tesseract reads it on its own, without plate colours or rescue passes",
+		"Изображение %s больше предела в %d мегапикселей: Tesseract читает его сам, без подбора цвета плашек и повторных проходов",
+		"Зображення %s більше за межу в %d мегапікселів: Tesseract читає його сам, без добору кольору плашок і повторних проходів",
+		"Bild %s liegt über der Grenze von %d Megapixeln: Tesseract liest es allein, ohne Plattenfarben und Rettungsdurchläufe",
+		"L'immagine %s supera il limite di %d megapixel: Tesseract la legge da solo, senza colori delle etichette né passaggi di recupero",
+		"La imagen %s supera el límite de %d megapíxeles: Tesseract la lee por sí solo, sin colores de placa ni pasadas de rescate",
+		"L'image %s dépasse la limite de %d mégapixels : Tesseract la lit seul, sans couleurs de plaque ni passes de secours",
+		"A imagem %s passa do limite de %d megapixels: o Tesseract a lê sozinho, sem cores de placa nem passagens de resgate",
+		"الصورة %s تتجاوز حد %d ميغابكسل: يقرؤها Tesseract وحده، دون ألوان اللوحات أو مرات الإنقاذ",
+		"छवि %s %d मेगापिक्सेल की सीमा से बड़ी है: Tesseract इसे अकेले पढ़ता है, बिना प्लेट रंगों या बचाव पास के",
+		"ছবি %s %d মেগাপিক্সেলের সীমার বেশি: Tesseract এটি একাই পড়ে, প্লেটের রং বা উদ্ধার পাস ছাড়া",
+		"تصویر %s %d میگاپکسل کی حد سے بڑی ہے: Tesseract اسے اکیلے پڑھتا ہے، پلیٹ کے رنگوں یا بچاؤ پاس کے بغیر",
+		"图像 %s 超过 %d 百万像素上限：由 Tesseract 单独识别，不做文字底板配色和补救识别")
+
+	Add("%s is a %s archive despite its extension, and is opened as one",
+		"%s на самом деле архив %s, несмотря на расширение, и открывается как он",
+		"%s насправді архів %s, попри розширення, і відкривається як він",
+		"%s ist trotz seiner Endung ein %s-Archiv und wird als solches geöffnet",
+		"%s è un archivio %s nonostante l'estensione, e viene aperto come tale",
+		"%s es un archivo %s pese a su extensión, y se abre como tal",
+		"%s est une archive %s malgré son extension, et est ouverte comme telle",
+		"%s é um arquivo %s apesar da extensão, e é aberto como tal",
+		"%s هو أرشيف %s رغم امتداده، ويُفتح على هذا الأساس",
+		"%s अपने एक्सटेंशन के बावजूद %s संग्रह है, और उसी रूप में खोला जाता है",
+		"%s এক্সটেনশন সত্ত্বেও একটি %s আর্কাইভ, এবং সেভাবেই খোলা হয়",
+		"%s اپنی ایکسٹینشن کے باوجود %s آرکائیو ہے، اور اسی طرح کھولا جاتا ہے",
+		"%s 虽然扩展名不同，实际是 %s 归档，将按此打开")
+
+	Add("7-Zip did not report the unpacked size of %s, so the archive cannot be checked against the size limits",
+		"7-Zip не сообщил распакованный размер %s, поэтому архив нельзя проверить на пределы размера",
+		"7-Zip не повідомив розпакований розмір %s, тому архів не можна перевірити на межі розміру",
+		"7-Zip hat die entpackte Größe von %s nicht gemeldet, daher kann das Archiv nicht gegen die Größengrenzen geprüft werden",
+		"7-Zip non ha indicato la dimensione decompressa di %s, quindi l'archivio non può essere verificato rispetto ai limiti",
+		"7-Zip no indicó el tamaño descomprimido de %s, así que el archivo no puede comprobarse contra los límites",
+		"7-Zip n'a pas indiqué la taille décompressée de %s, l'archive ne peut donc pas être vérifiée par rapport aux limites",
+		"O 7-Zip não informou o tamanho descompactado de %s, então o arquivo não pode ser verificado quanto aos limites",
+		"لم يذكر 7-Zip الحجم بعد فك الضغط لـ %s، لذا لا يمكن التحقق من الأرشيف مقابل حدود الحجم",
+		"7-Zip ने %s का खुला आकार नहीं बताया, इसलिए संग्रह को आकार सीमाओं से जाँचा नहीं जा सकता",
+		"7-Zip %s-এর খোলা আকার জানায়নি, তাই আর্কাইভটি আকারের সীমার সাথে যাচাই করা যায় না",
+		"7-Zip نے %s کا کھلا سائز نہیں بتایا، اس لیے آرکائیو کو سائز کی حدود سے جانچا نہیں جا سکتا",
+		"7-Zip 未报告 %s 的解压大小，因此无法按大小上限检查该归档")
+
+	Add("The archive listing is too long to check against the size limits",
+		"Список содержимого архива слишком длинный, чтобы проверить его на пределы размера",
+		"Список вмісту архіву занадто довгий, щоб перевірити його на межі розміру",
+		"Das Inhaltsverzeichnis des Archivs ist zu lang, um es gegen die Größengrenzen zu prüfen",
+		"L'elenco dell'archivio è troppo lungo per essere verificato rispetto ai limiti",
+		"La lista del archivo es demasiado larga para comprobarla contra los límites",
+		"La liste de l'archive est trop longue pour être vérifiée par rapport aux limites",
+		"A listagem do arquivo é longa demais para ser verificada quanto aos limites",
+		"قائمة محتويات الأرشيف أطول من أن يُتحقق منها مقابل حدود الحجم",
+		"संग्रह की सूची आकार सीमाओं से जाँचने के लिए बहुत लंबी है",
+		"আর্কাইভের তালিকা আকারের সীমার সাথে যাচাই করার জন্য অনেক দীর্ঘ",
+		"آرکائیو کی فہرست سائز کی حدود سے جانچنے کے لیے بہت لمبی ہے",
+		"归档清单过长，无法按大小上限检查")
+}

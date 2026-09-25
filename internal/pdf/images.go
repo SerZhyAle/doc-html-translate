@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/draw"
+	"io"
 	"math"
 	"os"
 	"os/exec"
@@ -14,6 +16,8 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/dialog"
+	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/procrun"
 
@@ -398,6 +402,10 @@ func convertJPXFile(jpxPath string) (string, error) {
 // JPEG and PNG images extracted by pdfcpu are raw embedded streams and are
 // already correctly oriented; only TIFFs (reconstructed from raw PDF pixel
 // data, which uses a bottom-up Y axis) need a Y-flip.
+//
+// The size is probed from the header first and a frame over the pixel budget is refused:
+// the flip needs the whole raster in memory, and the dimensions come from the PDF, which
+// is untrusted input.
 func flipImageFileVertically(path string) error {
 	ext := strings.ToLower(filepath.Ext(path))
 	if ext != ".tif" && ext != ".tiff" {
@@ -408,52 +416,73 @@ func flipImageFileVertically(path string) error {
 	if err != nil {
 		return err
 	}
-
-	var src image.Image
-	src, err = tiff.Decode(file)
+	defer func() { _ = file.Close() }()
+	st, err := file.Stat()
 	if err != nil {
-		_ = file.Close()
+		return err
+	}
+	if err := limits.CheckTIFF(file, st.Size()); err != nil {
+		return err
+	}
+	src, err := tiff.Decode(file)
+	if err != nil {
 		return err
 	}
 	if err := file.Close(); err != nil {
 		return err
 	}
 
-	bounds := src.Bounds()
-	dst := image.NewNRGBA(bounds)
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			dst.Set(x, bounds.Min.Y+bounds.Max.Y-1-y, src.At(x, y))
-		}
-	}
+	flipped := flipRowsInPlace(src)
+	return fsutil.Write(path, 0o644, func(w io.Writer) error { return tiff.Encode(w, flipped, nil) })
+}
 
-	tmpPath := path + ".tmp"
-	out, err := os.Create(tmpPath)
-	if err != nil {
-		return err
+// flipRowsInPlace mirrors an image top to bottom by swapping whole Pix rows, and returns it.
+// A per-pixel At/Set loop into a second image went through two interface calls per pixel and
+// held two full rasters at once; a row swap on the decoder's own buffer does neither. A type
+// with no Pix slice is converted once to NRGBA and flipped the same way.
+func flipRowsInPlace(img image.Image) image.Image {
+	var pix []byte
+	var stride int
+	switch m := img.(type) {
+	case *image.Gray:
+		pix, stride = m.Pix, m.Stride
+	case *image.Gray16:
+		pix, stride = m.Pix, m.Stride
+	case *image.RGBA:
+		pix, stride = m.Pix, m.Stride
+	case *image.RGBA64:
+		pix, stride = m.Pix, m.Stride
+	case *image.NRGBA:
+		pix, stride = m.Pix, m.Stride
+	case *image.NRGBA64:
+		pix, stride = m.Pix, m.Stride
+	case *image.CMYK:
+		pix, stride = m.Pix, m.Stride
+	case *image.Paletted:
+		pix, stride = m.Pix, m.Stride
+	default:
+		b := img.Bounds()
+		dst := image.NewNRGBA(b)
+		draw.Draw(dst, b, img, b.Min, draw.Src)
+		img, pix, stride = dst, dst.Pix, dst.Stride
 	}
-
-	success := false
-	defer func() {
-		_ = out.Close()
-		if !success {
-			_ = os.Remove(tmpPath)
-		}
-	}()
-
-	err = tiff.Encode(out, dst, nil)
-	if err != nil {
-		return err
+	rows := img.Bounds().Dy()
+	if rows < 2 || stride <= 0 {
+		return img
 	}
-	if err := out.Close(); err != nil {
-		return err
+	// The last row of a sub-image can be shorter than the stride; every row has at least
+	// its length of pixel data, so swapping that many bytes never reads past the buffer.
+	rowLen := len(pix) - (rows-1)*stride
+	if rowLen <= 0 {
+		return img
 	}
-	if err := os.Remove(path); err != nil {
-		return err
+	tmp := make([]byte, rowLen)
+	for top, bot := 0, rows-1; top < bot; top, bot = top+1, bot-1 {
+		a := pix[top*stride : top*stride+rowLen]
+		b := pix[bot*stride : bot*stride+rowLen]
+		copy(tmp, a)
+		copy(a, b)
+		copy(b, tmp)
 	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		return err
-	}
-	success = true
-	return nil
+	return img
 }

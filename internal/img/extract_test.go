@@ -139,7 +139,7 @@ func TestExtractMultiFrameTIFFOnePagePerFrame(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	offsets, _, err := tiffFrameOffsets(data)
+	offsets, _, err := tiffFrameOffsets(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		t.Fatalf("tiffFrameOffsets: %v", err)
 	}
