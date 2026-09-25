@@ -46,6 +46,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | Comic archive -> page book | [`internal/comic/`](../internal/comic/) (CBZ/CBT stdlib; CBR/CB7 shell out to 7-Zip) | [`extension/src/comic.js`](../extension/src/comic.js) (CBZ/CBT only; CBR/CB7 declined) |
 | Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
 | Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
+| Input limits (archive listing budget, per-entry caps, capped inflation) | [`internal/limits/`](../internal/limits/) (+ `internal/epub` `maxEntryBytes`, `internal/comic` `maxPageBytes`) | [`extension/src/limits.js`](../extension/src/limits.js) |
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` (overlay rules generated from `internal/appearance`) |
 | OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
@@ -435,6 +436,51 @@ Container support differs by capability, not drift (see [Intentional divergences
 the desktop app opens all four (CBR/CB7 by shelling out to 7-Zip, the MOBI/Calibre precedent), while the
 extension opens **CBZ (ZIP) and CBT (TAR) only** - a browser has no RAR/7z decoder and cannot shell out,
 so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice.
+
+### Input limits
+
+**Guard:** Guarded by `TestParityInputLimits` ([`tests/limits_parity_test.go`](../tests/limits_parity_test.go)),
+which compares the Go and JS values and pins the published numbers. Ticket
+`12_2026-09-24_bugfix-resource-budgets`.
+
+One hostile or merely huge file must be turned into a message before it is allocated: the desktop app
+ships a 32-bit build with a 2 GB address space, and a browser tab has less. Both editions probe first (an
+archive listing, an image header) and refuse or degrade from the probe. The same archive must be refused
+by both editions, so these numbers are one invariant:
+
+| Limit | Value | Go | JS |
+|---|---|---|---|
+| Archive entry count (EPUB, CBZ, CBT; CBR/CB7 desktop only) | `20000` - also the comic page cap | `limits.MaxArchiveEntries` | `ARCHIVE_MAX_ENTRIES` |
+| Archive unpacked total, over the entries that will be unpacked | `4 GB` (`4 << 30`) | `limits.MaxArchiveTotalBytes` | `ARCHIVE_MAX_TOTAL_BYTES` |
+| One EPUB file | `100 MB` | `internal/epub` `maxEntryBytes` | `EPUB_MAX_ENTRY_BYTES` |
+| One comic page | `200 MB` | `internal/comic` `maxPageBytes` | `COMIC_MAX_PAGE_BYTES` |
+| Full image decode (desktop only) | `100` megapixels and `32768` px per side | `limits.MaxImagePixels` / `MaxImageSide` | - (the browser decodes images itself) |
+
+The rules that go with the numbers:
+
+- **Listing first.** Entry count and unpacked total are checked from the ZIP central directory, the TAR
+  headers or `7z l -slt` before any entry is unpacked; over either, the whole archive is refused with a
+  localized message naming the limit. The total counts only the entries that will be unpacked (an entry
+  skipped for its own size does not count).
+- **Per-entry caps skip by name.** An entry whose listed size is over its cap is skipped with a warning
+  that names it (Go: console/run log; JS: `console.warn`), and the rest of the book converts. An entry that
+  holds more bytes than its listing states is an error for that entry, never a silently shortened file
+  (Go: `limits.CopyCapped`, and the zip reader's own size check; JS: `inflateRawCapped` capped at the
+  listed size).
+- **Inflation counts bytes.** Neither edition inflates an entry whole and measures afterwards.
+- **Symlinks are never followed.** Symlink entries are skipped from the listing; on the desktop, files
+  7-Zip unpacked are `Lstat`-checked.
+- **Container by signature.** `PK\x03\x04` ZIP, `Rar!\x1a\x07` RAR, `7z\xBC\xAF\x27\x1C` 7z, `ustar` at
+  offset 257 TAR; the extension is only a fallback. Go: `internal/comic` `sniffContainer`; JS: `comic.js`
+  `detectContainer`. A RAR saved as `.cbz` converts on the desktop through 7-Zip and is declined in the
+  extension with the "use the desktop app" notice.
+
+Desktop-only, by capability: a TIFF frame or a PDF TIFF whose header is over the pixel budget is refused
+(converting it needs the full decode). An image on a page over the budget is shown untouched and OCR
+degrades: Tesseract still reads it in its own process, while the in-process passes (staging, grey ladder,
+screen pass, plate colours) are skipped with a warning, because shrinking it would itself need the full
+decode. The OCR worker pool is `min(CPU count, memory count)`, the memory count assuming four 4-byte
+copies of the largest image against 1 GB (32-bit) or 4 GB (64-bit).
 
 ### OCR
 

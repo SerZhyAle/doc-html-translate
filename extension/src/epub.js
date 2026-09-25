@@ -13,6 +13,7 @@
 // node; everything that parses XHTML uses DOMParser and runs only in the viewer.
 
 import { normalizeLangTag } from "./lang.js";
+import { EPUB_MAX_ENTRY_BYTES, InputLimitError, checkArchive, entryTooLarge, inflateRawCapped } from "./limits.js";
 
 // ---- ZIP reader ------------------------------------------------------------
 // A minimal, central-directory-driven reader. Sizes and the local-header offset
@@ -20,15 +21,14 @@ import { normalizeLangTag } from "./lang.js";
 // (streamed sizes in the local header) need no special handling. Deflate is
 // inflated with the platform's native DecompressionStream (Chrome 80+ / node 18+),
 // so we ship no compression dependency.
+//
+// The listing is held against the input limits (limits.js) before anything is
+// inflated, and each inflation counts its bytes, so a zip bomb is refused rather
+// than expanded into the tab's memory. The same limits apply on the desktop
+// (internal/epub, docs/PARITY.md "Input limits").
 
 const SIG_EOCD = 0x06054b50;
 const SIG_CEN = 0x02014b50;
-
-// inflateRaw decompresses a raw DEFLATE stream (ZIP method 8) to bytes.
-async function inflateRaw(bytes) {
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
-}
 
 // findEOCD scans backwards for the End Of Central Directory signature. The record
 // is 22 bytes plus an up-to-64KB trailing comment, so we look no further back.
@@ -41,8 +41,10 @@ function findEOCD(dv, len) {
 }
 
 // unzip parses a ZIP archive into a Map of entry name -> bytes. Directory entries
-// are skipped. Throws on a non-ZIP buffer, ZIP64, or an unsupported compression
-// method. Async because inflate is stream-based. Pure (no DOM) - unit-tested.
+// are skipped, and so is an entry over EPUB_MAX_ENTRY_BYTES, by name (the desktop
+// edition skips it the same way). Throws on a non-ZIP buffer, ZIP64, an
+// unsupported compression method, or a listing over the archive limits. Async
+// because inflate is stream-based. Pure (no DOM) - unit-tested.
 export async function unzip(arrayBuffer) {
   const u8 = new Uint8Array(arrayBuffer);
   const dv = new DataView(arrayBuffer);
@@ -56,34 +58,56 @@ export async function unzip(arrayBuffer) {
   if (cdOffset === 0xffffffff) throw new Error("ZIP64 archives are not supported");
 
   const dec = new TextDecoder("utf-8");
-  const files = new Map();
+  const listing = [];
+  let total = 0;
   let p = cdOffset;
   for (let i = 0; i < count; i++) {
     if (p + 46 > u8.length || dv.getUint32(p, true) !== SIG_CEN) break;
-    const method = dv.getUint16(p + 10, true);
-    const compSize = dv.getUint32(p + 20, true);
     const nameLen = dv.getUint16(p + 28, true);
-    const extraLen = dv.getUint16(p + 30, true);
-    const commentLen = dv.getUint16(p + 32, true);
-    const localOff = dv.getUint32(p + 42, true);
-    const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
+    const entry = {
+      method: dv.getUint16(p + 10, true),
+      compSize: dv.getUint32(p + 20, true),
+      size: dv.getUint32(p + 24, true),
+      localOff: dv.getUint32(p + 42, true),
+      name: dec.decode(u8.subarray(p + 46, p + 46 + nameLen)),
+    };
+    p += 46 + nameLen + dv.getUint16(p + 30, true) + dv.getUint16(p + 32, true);
+    if (entry.name.endsWith("/")) continue;
+    if (entry.size > EPUB_MAX_ENTRY_BYTES) {
+      console.warn(`EPUB: skipped ${entryTooLarge(entry.name, EPUB_MAX_ENTRY_BYTES).message}`);
+      continue;
+    }
+    total += entry.size;
+    listing.push(entry);
+  }
+  checkArchive(count, total);
 
+  const files = new Map();
+  for (const e of listing) {
     // Locate the entry's data via its local header (only its name/extra lengths
     // are needed; the sizes there may be zero for streamed entries).
-    const lhNameLen = dv.getUint16(localOff + 26, true);
-    const lhExtraLen = dv.getUint16(localOff + 28, true);
-    const dataStart = localOff + 30 + lhNameLen + lhExtraLen;
-    const comp = u8.subarray(dataStart, dataStart + compSize);
-
-    if (!name.endsWith("/")) {
-      let bytes;
-      if (method === 0) bytes = comp.slice();
-      else if (method === 8) bytes = await inflateRaw(comp);
-      else throw new Error(`unsupported ZIP compression method ${method} for ${name}`);
-      files.set(name, bytes);
+    const lhNameLen = dv.getUint16(e.localOff + 26, true);
+    const lhExtraLen = dv.getUint16(e.localOff + 28, true);
+    const dataStart = e.localOff + 30 + lhNameLen + lhExtraLen;
+    const comp = u8.subarray(dataStart, dataStart + e.compSize);
+    try {
+      if (e.method === 0) {
+        if (comp.length > EPUB_MAX_ENTRY_BYTES) throw entryTooLarge(e.name, EPUB_MAX_ENTRY_BYTES);
+        files.set(e.name, comp.slice());
+      } else if (e.method === 8) {
+        // Capped at the listing's size, which is what the total was checked against: an
+        // entry that inflates past it is refused as the desktop's zip reader refuses it,
+        // and never inflated further than its header admitted.
+        files.set(e.name, await inflateRawCapped(comp, e.name, e.size));
+      } else {
+        throw new Error(`unsupported ZIP compression method ${e.method} for ${e.name}`);
+      }
+    } catch (err) {
+      // Dropped by name, never kept cut short: a chapter cut mid-tag would read as a
+      // complete book.
+      if (!(err instanceof InputLimitError)) throw err;
+      console.warn(`EPUB: skipped ${err.message}`);
     }
-
-    p += 46 + nameLen + extraLen + commentLen;
   }
   return files;
 }

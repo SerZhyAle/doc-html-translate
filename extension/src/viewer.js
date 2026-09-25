@@ -21,6 +21,7 @@ import { parseMarkdown } from "./md.js";
 import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
 import { parseComic, DesktopOnlyError } from "./comic.js";
+import { InputLimitError } from "./limits.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
@@ -964,7 +965,9 @@ async function loadComicData(data, title) {
   try {
     pages = await parseComic(data);
   } catch (err) {
-    if (err instanceof DesktopOnlyError) {
+    if (err instanceof InputLimitError) {
+      showLimitNotice(err);
+    } else if (err instanceof DesktopOnlyError) {
       showNotice(t("vComicAppTitle", "This comic needs the desktop app"), [
         para(err.message),
         para(t("vComicAppBody", "Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed).")),
@@ -979,6 +982,15 @@ async function loadComicData(data, title) {
     return;
   }
   renderComic(pages);
+}
+
+// showLimitNotice refuses a file that is over the published input limits (limits.js), naming
+// the limit in the reader's language rather than reporting a corrupt file.
+function showLimitNotice(err) {
+  showNotice(t("vLimitTitle", "This file is over the size limits"), [
+    para(t(err.key, err.fallback, ...err.args)),
+    filePickerButton(),
+  ]);
 }
 
 // renderComic lays out one placeholder section per page up front (so the scrollbar
@@ -1384,6 +1396,10 @@ async function loadEpubData(data, title) {
   try {
     book = await loadEpub(data);
   } catch (err) {
+    if (err instanceof InputLimitError) {
+      showLimitNotice(err);
+      return;
+    }
     showNotice(t("vEpubFailTitle", "Couldn't open this EPUB"), [
       para(t("vEpubFailBody", "The file may be corrupt or not a valid EPUB.")),
       para(err && err.message ? t("vDetails", "Details: {1}", err.message) : ""),

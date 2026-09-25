@@ -22,7 +22,7 @@ func tempImageFile(t *testing.T, w, h int) string {
 }
 
 func TestUpscaleForOCR(t *testing.T) {
-	p, cleanup, ok := stageForOCR(tempImageFile(t, 40, 30), orientNormal, true)
+	p, staged, cleanup, ok := stageForOCR(tempImageFile(t, 40, 30), orientNormal, true)
 	if !ok {
 		t.Fatal("image should upscale")
 	}
@@ -30,6 +30,9 @@ func TestUpscaleForOCR(t *testing.T) {
 	im := decodeImage(p)
 	if im == nil {
 		t.Fatal("upscaled temp not decodable")
+	}
+	if staged == nil || staged.Bounds() != im.Bounds() {
+		t.Errorf("the in-memory frame does not match the staged file")
 	}
 	if w := im.Bounds().Dx(); w != 40*ocrUpscaleFactor {
 		t.Errorf("width = %d, want %d", w, 40*ocrUpscaleFactor)
@@ -57,7 +60,7 @@ func TestEstimateDPI(t *testing.T) {
 // declared. The gate keys on estimated DPI, not raw pixel count.
 func TestPrepareForOCRGate(t *testing.T) {
 	// long side 660 -> estDPI 60 (< floor 120) -> upscale
-	path, scale, dpi, cleanup := prepareForOCR(tempImageFile(t, 660, 400))
+	frame, scale, dpi, cleanup := prepareForOCR(tempImageFile(t, 660, 400))
 	defer cleanup()
 	if scale != ocrUpscaleFactor {
 		t.Errorf("low-DPI image: scale = %d, want %d", scale, ocrUpscaleFactor)
@@ -65,13 +68,13 @@ func TestPrepareForOCRGate(t *testing.T) {
 	if want := clampDeclaredDPI(estimateDPI(660) * ocrUpscaleFactor); dpi != want {
 		t.Errorf("low-DPI image: declared dpi = %d, want %d", dpi, want)
 	}
-	if im := decodeImage(path); im == nil || im.Bounds().Dx() != 660*ocrUpscaleFactor {
+	if im := decodeImage(frame.path); im == nil || im.Bounds().Dx() != 660*ocrUpscaleFactor {
 		t.Errorf("low-DPI image was not upscaled")
 	}
 
 	// long side 2200 -> estDPI 200 (>= floor 120) -> no upscale, DPI declared as-is
 	src := tempImageFile(t, 2200, 1600)
-	path2, scale2, dpi2, cleanup2 := prepareForOCR(src)
+	frame2, scale2, dpi2, cleanup2 := prepareForOCR(src)
 	defer cleanup2()
 	if scale2 != 1 {
 		t.Errorf("mid-DPI image: scale = %d, want 1", scale2)
@@ -79,8 +82,8 @@ func TestPrepareForOCRGate(t *testing.T) {
 	if dpi2 != estimateDPI(2200) {
 		t.Errorf("mid-DPI image: declared dpi = %d, want %d", dpi2, estimateDPI(2200))
 	}
-	if path2 != src {
-		t.Errorf("ASCII path should be handed to tesseract unchanged, got %q", path2)
+	if frame2.path != src {
+		t.Errorf("ASCII path should be handed to tesseract unchanged, got %q", frame2.path)
 	}
 }
 

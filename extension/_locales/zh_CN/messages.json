@@ -366,6 +366,18 @@
   "vComicFailBody": {
     "message": "压缩包可能已损坏，或不含页面图片。"
   },
+  "vLimitTitle": {
+    "message": "此文件超出了大小上限"
+  },
+  "vLimitEntries": {
+    "message": "归档包含 {1} 个条目，超过了 {2} 的上限"
+  },
+  "vLimitTotal": {
+    "message": "归档解压后为 {1}，超过了 {2} 的上限"
+  },
+  "vLimitEntry": {
+    "message": "{1} 解压后超过 {2}，即单个文件的上限"
+  },
   "vComicReady": {
     "message": "就绪 - 共 {1} 页，滚动时会识别文字"
   },

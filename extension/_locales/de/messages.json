@@ -366,6 +366,18 @@
   "vComicFailBody": {
     "message": "Das Archiv ist möglicherweise beschädigt oder enthält keine Seitenbilder."
   },
+  "vLimitTitle": {
+    "message": "Diese Datei überschreitet die Größengrenzen"
+  },
+  "vLimitEntries": {
+    "message": "Das Archiv enthält {1} Einträge und liegt über der Grenze von {2}"
+  },
+  "vLimitTotal": {
+    "message": "Das Archiv wird entpackt {1} groß und liegt über der Grenze von {2}"
+  },
+  "vLimitEntry": {
+    "message": "{1} wird entpackt größer als {2}, die Grenze für eine Datei"
+  },
   "vComicReady": {
     "message": "Fertig - {1} Seiten, der Text wird beim Scrollen erkannt"
   },
