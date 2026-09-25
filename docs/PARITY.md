@@ -261,10 +261,14 @@ most cheaply by running one fixture EPUB through both parsers and comparing the 
 
 Sources: [`internal/epub/toc.go`](../internal/epub/toc.go), [`extension/src/epub.js`](../extension/src/epub.js).
 Title whitespace normalization (Go NCX now uses `collapseWS`, matching the nav path and the extension)
-and the external-href definition (extension `isExternalHref` now mirrors `toc.go`: any `://` scheme, or
-`mailto:`/`tel:`/`data:`) were aligned in the 2026-07-01 parity pass. The remaining intentional
-difference - Go keeps external TOC entries, the extension drops them (single in-memory DOM) - is listed
-under [Intentional divergences](#intentional-divergences-do-not-fix).
+was aligned in the 2026-07-01 parity pass. External TOC links (ticket
+`bugfix-reader-layer-and-single-page`, 2026-09-25): Go's `ExternalHref` ([`links.go`](../internal/epub/links.go))
+counts any scheme or `//` prefix as external, keeps `http`/`https`/`mailto` entries as written (never under
+the base folder) and turns any other scheme (`javascript:`, `data:`, `vbscript:`, `tel:`, ..) into a
+label-only entry. The extension's `isExternalHref` (any `://`, or `mailto:`/`tel:`/`data:`) drops every
+external entry, and a `javascript:` value fails `resolveBookPath` (colon), so neither edition ever renders a
+script link. The remaining intentional difference - Go keeps web/mail TOC entries, the extension drops them
+(single in-memory DOM) - is listed under [Intentional divergences](#intentional-divergences-do-not-fix).
 
 ### EPUB href resolution
 
@@ -314,6 +318,22 @@ parsed tree and made HTML input charset-aware. Checked against the extension on 
 | Chapter / HTML-input charset | BOM, then XML declaration or meta charset, then detection ([`charset.go`](../internal/epub/charset.go), [`htmlconv`](../internal/htmlconv/extract.go)) | **open gap:** `TextDecoder("utf-8")` in `epub.js` `decodeText` and `html.js` - a windows-1251 page reads as mojibake |
 | Long-chapter splitting | [`htmlsplit`](../internal/htmlsplit/) splits through wrappers, by characters, keeping root attributes and retargeting links | none - the viewer renders one DOM, nothing to split (by construction) |
 | HTML input images / styles | copied locally ([`internal/assets`](../internal/assets/)) | the viewer cannot reach a local page's sibling files (by construction) |
+
+### Single-page merge and the reader layer (2026-09-25)
+
+**Guard:** Prose only on the cross-edition side. The desktop behaviour is pinned by
+`internal/htmlgen/merge_test.go` and `reader_key_test.go`; nothing runs the extension against it.
+
+Ticket `09_2026-09-24_bugfix-reader-layer-and-single-page` fixed the desktop merge and reader script.
+Checked against the extension on the same date:
+
+| Behaviour | Go app | Extension |
+|---|---|---|
+| Merging chapters into one page | [`merge.go`](../internal/htmlgen/merge.go) `prepareMerge`: relative `src`/`href`/`srcset` and CSS `url()` (style attributes, `<style>` blocks) rebased from the chapter folder to the merged page's folder; only **colliding** ids renamed `cN-<id>`, so book CSS aimed at ids keeps working | `renderChapter` namespaces **every** id `d<index>-<id>` in one in-memory DOM and loads images as `blob:` URLs, so there is no folder to rebase (by construction) |
+| `chapter.html#note` and bare `chapter.html` links | in-page `#<id>` / `#dht-ch-N` chapter marker; a root (`<body>`) id lands on the marker | `rewriteAnchor`: `#d<idx>-<frag>` / `#epub-sec-<idx>`; root ids re-exposed as marker anchors - same model |
+| Reading-position key | `epub.Book.ReaderKey` from source name + size + original title + page count, set once before translation | **n/a** - the viewer persists no reading position (Go-only feature, see Intentional divergences), so it has neither the old key drift nor a key to align |
+| Restore vs URL fragment | restore only when `location.hash` is empty | **n/a** - no restore; a TOC click scrolls to the anchor directly (`scrollToAnchor`) |
+| Script literals / hrefs | `jsString` (JSON) for script values, `epub.URLPath` for every generated path | links stay DOM attributes set through `setAttribute` - nothing is spliced into script text |
 
 ### Comic archive page order and entry filter
 
