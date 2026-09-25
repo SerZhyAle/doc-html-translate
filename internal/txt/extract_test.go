@@ -3,6 +3,7 @@ package txt_test
 import (
 	"encoding/binary"
 	"fmt"
+	"html"
 	"os"
 	"path/filepath"
 	"strings"
@@ -124,18 +125,21 @@ func TestExtractDecodesLegacyCyrillic(t *testing.T) {
 }
 
 // A non-Russian legacy file (French Latin-1) is not valid UTF-8 either, so it reaches the same
-// path - but none of the Cyrillic candidates is right, so it must pass through unchanged rather
-// than be Cyrillized into confident nonsense.
-func TestExtractLeavesNonCyrillicLegacyAlone(t *testing.T) {
-	raw, err := charmap.ISO8859_1.NewEncoder().Bytes([]byte("Élément très cher, à côté de l'hôtel où nous étions cet été."))
+// path - but none of the Cyrillic candidates is right, so it must not be Cyrillized into
+// confident nonsense. It used to pass through raw into a page declaring UTF-8; the Western
+// fallback now reads it as windows-1252, so the accents come out right.
+func TestExtractDecodesWesternLegacy(t *testing.T) {
+	const text = "Élément très cher, à côté de l'hôtel où nous étions cet été."
+	raw, err := charmap.ISO8859_1.NewEncoder().Bytes([]byte(text))
 	if err != nil {
 		t.Fatal(err)
 	}
 	page := extractToPage(t, raw)
-	// The bytes pass through as-is; what matters is that we did not invent Cyrillic. The word
-	// "hôtel" survives at least as "h" + something, never as Russian letters.
 	if strings.ContainsAny(page, "абвгдежзийклмнопрстуфхцчшщъыьэюяАБВГДЕЖЗ") {
 		t.Errorf("non-Russian legacy text was wrongly decoded into Cyrillic:\n%s", firstParagraph(page))
+	}
+	if !strings.Contains(page, html.EscapeString(text)) {
+		t.Errorf("Latin-1 text not decoded as windows-1252:\n%s", firstParagraph(page))
 	}
 }
 
