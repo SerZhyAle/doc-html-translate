@@ -60,7 +60,7 @@ current-next-release: 1 (rebuilt 2026-09-25)
 ```
 #   ticket                                              changed     status
 01  01_2026-09-24_hotfix-epub-href-containment          2026-09-25  BlockNeedUserTest - sign-off, Windows
-02  02_2026-09-24_bugfix-shell-open-injection           2026-09-24  Draft (P90)
+02  02_2026-09-24_bugfix-shell-open-injection           2026-09-25  BlockNeedUserTest - Windows hands-on
 03  03_2026-09-24_bugfix-gui-local-api-hardening        2026-09-24  Draft (P90)
 04  04_2026-08-13_ocr-rescue-floor-drops-genuine-       2026-08-15  Partial - rule measured and refused
     lettering
@@ -72,8 +72,8 @@ the output folder. `href-containment` goes first: it reuses the DOM link rewrite
 landed ([`done/2026-09-24_bugfix-epub-html-content-fidelity`](done/2026-09-24_bugfix-epub-html-content-fidelity.md)), so it is the cheapest of the three.
 
 **01 is implemented** and covered by tests on Linux; it waits on the owner's sign-off and a Windows pass.
-Rule 7 would sink it below 05. It keeps its number for now, a stated deviation: 02 is being implemented
-under its current file name, and the renumbering of 01-05 is one commit after that lands.
+Rule 7 would sink it below 05. 02 is in the same state (a Windows open check). Both keep their numbers for now, a stated deviation:
+renumbering 01-05 is one commit of its own, so the implementation commits stay reviewable.
 
 **04 sits below them for a stated reason, against rule 3** (Partial before Draft): its next step is not
 ready to build. The corpus refused the length rule and a third separating axis has to be found first -

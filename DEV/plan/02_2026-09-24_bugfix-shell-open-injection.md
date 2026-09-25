@@ -1,7 +1,7 @@
 # Strategic spec: 02_2026-09-24_bugfix-shell-open-injection - Open files and pass paths without a shell interpreting them
 
 **Ticket:** 02_2026-09-24_bugfix-shell-open-injection
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests (the Windows open test compiles on Linux, runs only on Windows); needs the manual open check on Windows with Chrome and with Edge as the default browser, and a paste of the GUI command into PowerShell 5.1 and 7.
 **Priority:** 90
 **Date:** 2026-09-24
 **Tier:** Security/Compliance (urgent)
@@ -61,7 +61,7 @@ Pipeline or GUI -> open request (a path as data) -> OS shell -> default browser.
 1. **Shell API choice**
    - **Question:** ShellExecute via the system library, or the URL file protocol handler?
    - **To find out:** check MSIX behaviour and the behaviour of a file URL with a fragment.
-   - **Status:** Open.
+   - **Status:** Resolved (2026-09-25). `ShellExecute` from `golang.org/x/sys/windows`, verb `open`, the path as the file argument and no parameters. The opener never passes a fragment, so the file-URL question does not arise; full-trust MSIX apps may call it.
 
 ## 7. Risks
 - **Some browsers ignore the default-app association when opened via ShellExecute.** Likelihood: low. Impact: the wrong browser opens. Mitigation: a manual check with Chrome as default and with Edge as default.
@@ -81,5 +81,11 @@ No changes to user docs.
 3. A GUI input path starting with `-` is converted as a file.
 4. The command line copied from the GUI runs unchanged in PowerShell.
 
+## Implementation notes (2026-09-25)
+- `internal/browser` opens through `ShellExecute`; no `cmd.exe`, and no child process to wait on or release. The GUI's default-browser fallback goes through the same call. `internal/browser/browser_windows_test.go` stubs the shell and checks that `& ^ % ! ( ) , ;`, a space, Cyrillic and a trailing backslash reach it verbatim.
+- The GUI puts `--` before the input and drops a trailing `\` from the input and output folder (a root like `C:\` keeps it), so the argument means the same and no trailing backslash sits inside quotes. Covered by `cmd/doc-html-ui/cmdline_test.go`, which parses the GUI's own arguments.
+- The displayed command is PowerShell: `& ` first, single quotes around anything PowerShell would interpret, a quote (including typographic ones) doubled, and `--` quoted because some PowerShell versions drop a bare one. It is no longer valid for cmd.exe, which the spec does not ask for.
+- The GUI's Edge/Chrome app window, the macOS/Linux opener and the Explorer reveal release their process handle right after start (`startDetached`).
+
 ## 12. Next step
-`/spec-tech 02_2026-09-24_bugfix-shell-open-injection`
+Manual check on Windows: done criteria 1 and 2 with Chrome and with Edge as default, and criterion 4 in PowerShell 5.1 and 7.

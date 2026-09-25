@@ -21,6 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode"
 	"unicode/utf16"
 
 	"doc-html-translate/internal/browser"
@@ -896,35 +897,71 @@ func assembleArgs(req runRequest) []string {
 		a = append(a, "-ui-lang", req.UILang)
 	}
 	if req.Output != "" {
-		a = append(a, "-folder", req.Output)
+		a = append(a, "-folder", trimTrailingSeparators(req.Output))
 	}
 	if req.Input != "" {
-		a = append(a, req.Input)
+		// "--" ends flag parsing, so an input named "-force.epub" is converted, not obeyed.
+		a = append(a, "--", trimTrailingSeparators(req.Input))
 	}
 	return a
 }
 
-// formatCommandLine joins a binary and its args into a single copy-pasteable command
-// line, quoting any token that contains spaces (Windows paths routinely do) so the
-// result stays runnable in a terminal. This is also what the run log's header shows,
-// so the live preview matches the command that actually executes.
+// trimTrailingSeparators drops a trailing "\" or "/" from a folder path (keeping a
+// root such as `C:\`). The path means the same without it, and inside quotes a
+// trailing backslash escapes the closing quote when Windows PowerShell hands the
+// argument to a native program, so the copied command would not run as shown.
+func trimTrailingSeparators(p string) string {
+	t := strings.TrimRight(p, `\/`)
+	if t == "" || (len(t) == 2 && t[1] == ':') {
+		return p
+	}
+	return t
+}
+
+// formatCommandLine joins a binary and its args into a single command line that pastes
+// into PowerShell and runs as shown. It starts with the call operator "& ", which
+// PowerShell needs before a quoted program path and accepts before a bare one. This is
+// also what the run log's header shows, so the live preview matches the command that
+// actually executes.
 func formatCommandLine(bin string, args []string) string {
-	parts := make([]string, 0, len(args)+1)
-	parts = append(parts, quoteArg(bin))
+	parts := make([]string, 0, len(args)+2)
+	parts = append(parts, "&", quoteArg(bin))
 	for _, a := range args {
 		parts = append(parts, quoteArg(a))
 	}
 	return strings.Join(parts, " ")
 }
 
+// quoteArg renders one argument for PowerShell. A token made only of characters that
+// PowerShell reads literally stays bare; anything else goes in single quotes, where
+// nothing (no $, `, &, %, ;) is expanded. Inside them a quote is escaped by doubling,
+// and PowerShell also treats the typographic quotes as single quotes. "--" is quoted
+// because some PowerShell versions swallow a bare "--" instead of passing it on.
 func quoteArg(s string) string {
-	if s == "" {
-		return `""`
+	if s != "" && s != "--" && !strings.ContainsFunc(s, needsPSQuote) {
+		return s
 	}
-	if strings.ContainsAny(s, " \t\"") {
-		return `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
+	var b strings.Builder
+	b.WriteByte('\'')
+	for _, r := range s {
+		if isPSSingleQuote(r) {
+			b.WriteRune(r)
+		}
+		b.WriteRune(r)
 	}
-	return s
+	b.WriteByte('\'')
+	return b.String()
+}
+
+func needsPSQuote(r rune) bool {
+	if unicode.IsLetter(r) || unicode.IsDigit(r) {
+		return false
+	}
+	return !strings.ContainsRune(`-_.:\/=`, r)
+}
+
+func isPSSingleQuote(r rune) bool {
+	return r == '\'' || r == '\u2018' || r == '\u2019' || r == '\u201A' || r == '\u201B'
 }
 
 // ── find CLI binary ─────────────────────────────────────────
@@ -1072,7 +1109,7 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("ProgramFiles"), `Microsoft\Edge\Application\msedge.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=1160,760").Start()
+				_ = startDetached(exec.Command(p, "--app="+url, "--window-size=1160,760"))
 				return
 			}
 		}
@@ -1083,22 +1120,31 @@ func openAppWindow(url string) {
 			filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 		} {
 			if _, err := os.Stat(p); err == nil {
-				_ = exec.Command(p, "--app="+url, "--window-size=1160,760").Start()
+				_ = startDetached(exec.Command(p, "--app="+url, "--window-size=1160,760"))
 				return
 			}
 		}
-		// Fallback: default browser
-		_ = exec.Command("cmd", "/c", "start", "", url).Start()
+		// Fallback: default browser, through the shell API rather than cmd.exe.
+		_ = openTarget(url)
 		return
 	}
 
 	// Non-Windows fallback
 	switch runtime.GOOS {
 	case "darwin":
-		_ = exec.Command("open", url).Start()
+		_ = startDetached(exec.Command("open", url))
 	default:
-		_ = exec.Command("xdg-open", url).Start()
+		_ = startDetached(exec.Command("xdg-open", url))
 	}
+}
+
+// startDetached starts a program the GUI never waits for and releases its process
+// handle at once, so a long-lived GUI does not collect one per window it opened.
+func startDetached(cmd *exec.Cmd) error {
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
 }
 
 // ── heartbeat auto-shutdown ─────────────────────────────────

@@ -50,10 +50,9 @@ func handleReport(w http.ResponseWriter, r *http.Request) {
 // revealInExplorer selects a file in a new Explorer window. Indirected so the containment
 // guard can be tested without a test run opening file-manager windows.
 var revealInExplorer = func(path string) error {
-	cmd := exec.Command("explorer.exe", "/select,"+path)
 	// Explorer reports a non-zero exit code even when it did open the window, so the only
 	// honest signal available is whether the process started at all.
-	return cmd.Start()
+	return startDetached(exec.Command("explorer.exe", "/select,"+path))
 }
 
 // insideReportDir reports whether path is a file the app itself wrote under report.Dir().
