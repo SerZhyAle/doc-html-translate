@@ -64,7 +64,8 @@ match and the intentional differences live in [docs/PARITY.md](docs/PARITY.md), 
 ## High-value invariants (full list in AGENTS.md)
 
 - No-arg CLI enters the **registration** flow, not conversion.
-- Existing output is reused when `index.html` exists, unless `-force` is passed.
+- Existing output is reused only when its completion record says it finished, from the same source, with the
+  same result-affecting options; otherwise it is rebuilt. `-force` always rebuilds.
 - Don't change public CLI flag semantics unless explicitly asked.
 
 ## Skill routing (slash commands)

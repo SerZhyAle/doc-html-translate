@@ -25,6 +25,7 @@ import (
 	"unicode/utf16"
 
 	"doc-html-translate/internal/browser"
+	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
@@ -447,83 +448,11 @@ func previousResult(input, folder string) (string, error) {
 
 var errNoPreviousResult = errors.New("no previous result found")
 
-// outputFingerprint captures the runRequest fields that change what actually gets
-// written to the output directory - as opposed to execution-only flags like Force,
-// Verbose, NoOpen, or OllamaParallel - so paramsHistory can detect "this result was
-// built with different options than what's selected now".
-type outputFingerprint struct {
-	SinglePage  bool
-	SplitSize   string
-	TOCDepth    string
-	MaxCost     string
-	SrcLang     string
-	DstLang     string
-	NoTranslate bool
-	Google      bool
-	Ollama      bool
-	OllamaModel string
-	OllamaCtx   string
-	OCR         bool
-	OCRLang     string
-}
-
-func fingerprintFor(req runRequest) string {
-	data, _ := json.Marshal(outputFingerprint{
-		SinglePage:  req.SinglePage,
-		SplitSize:   req.SplitSize,
-		TOCDepth:    req.TOCDepth,
-		MaxCost:     req.MaxCost,
-		SrcLang:     req.SrcLang,
-		DstLang:     req.DstLang,
-		NoTranslate: req.NoTranslate,
-		Google:      req.Google,
-		Ollama:      req.Ollama,
-		OllamaModel: req.OllamaModel,
-		OllamaCtx:   req.OllamaCtx,
-		OCR:         req.OCR,
-		OCRLang:     req.OCRLang,
-	})
-	return string(data)
-}
-
-// paramsHistoryPath is the writable, per-user location of the fingerprint each output
-// directory was last built with, so a later run with different options can be told
-// apart from a plain re-run of the same settings.
-func paramsHistoryPath() string {
-	if appData := os.Getenv("LOCALAPPDATA"); appData != "" {
-		return filepath.Join(appData, "doc-html-translate", "output-params.json")
-	}
-	return filepath.Join(os.TempDir(), "doc-html-translate-output-params.json")
-}
-
-func loadParamsHistory() map[string]string {
-	data, err := os.ReadFile(paramsHistoryPath())
-	if err != nil {
-		return map[string]string{}
-	}
-	var m map[string]string
-	if json.Unmarshal(data, &m) != nil || m == nil {
-		return map[string]string{}
-	}
-	return m
-}
-
-func saveParamsHistory(m map[string]string) error {
-	data, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	p := paramsHistoryPath()
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return err
-	}
-	return os.WriteFile(p, data, 0o600)
-}
-
 // handleOutputStatus reports whether a previous conversion result exists for the
 // request's input/output, and whether it was built with different options than the
 // request currently describes - so the GUI can offer to delete and rebuild instead of
-// silently reopening a stale result (mirrors the CLI's reuse-unless--force rule).
+// silently reopening a stale result. The answer comes from the completion record the CLI
+// writes into the output itself, so the GUI and a run from the command line agree on it.
 func handleOutputStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -548,10 +477,25 @@ func handleOutputStatus(w http.ResponseWriter, r *http.Request) {
 
 	resp["exists"] = true
 	resp["outputDir"] = outputDir
-	if prev, ok := loadParamsHistory()[outputDir]; ok && prev != fingerprintFor(req) {
-		resp["paramsChanged"] = true
-	}
+	resp["paramsChanged"] = optionsChanged(req, outputDir)
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// optionsChanged reports whether the finished output in outputDir was built with other
+// result-affecting options than req asks for. The options are derived by parsing the very
+// command line the run would execute, so CLI defaults apply exactly as they will in the run.
+// An unfinished output is not "changed": the CLI rebuilds it on its own, without asking.
+func optionsChanged(req runRequest, outputDir string) bool {
+	cfg, err := config.ParseArgs(assembleArgs(req))
+	if err != nil {
+		return false
+	}
+	abs, err := filepath.Abs(cfg.InputFile)
+	if err != nil {
+		return false
+	}
+	reason, _ := outputpath.CheckReuse(outputDir, abs, outputpath.OptionsFor(cfg))
+	return reason == outputpath.ReuseOptionsChanged
 }
 
 // openTarget hands a path to the OS. Indirected so the guard below can be tested without
@@ -625,12 +569,6 @@ func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	if hist := loadParamsHistory(); len(hist) > 0 {
-		if _, ok := hist[outputDir]; ok {
-			delete(hist, outputDir)
-			_ = saveParamsHistory(hist)
-		}
-	}
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
@@ -697,11 +635,6 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "\nExit: %v\n", err)
 	} else {
 		fmt.Fprintf(w, "\nDone.\n")
-		if outputDir, err := previousResult(req.Input, req.Output); err == nil {
-			hist := loadParamsHistory()
-			hist[outputDir] = fingerprintFor(req)
-			_ = saveParamsHistory(hist)
-		}
 	}
 	flusher.Flush()
 }

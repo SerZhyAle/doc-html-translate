@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/i18n"
 
 	gohtml "golang.org/x/net/html"
@@ -110,7 +111,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")
 
-	if err := os.WriteFile(indexPath, []byte(sb.String()), 0o644); err != nil {
+	if err := fsutil.WriteFile(indexPath, []byte(sb.String()), 0o644); err != nil {
 		return "", fmt.Errorf("write index.html: %w", err)
 	}
 
@@ -418,7 +419,7 @@ func GenerateSinglePageIndex(book *epub.Book, outputDir string) (string, error) 
 </html>
 `, jsString(epub.URLPath(target)))
 
-	if err := os.WriteFile(indexPath, []byte(html), 0o644); err != nil {
+	if err := fsutil.WriteFile(indexPath, []byte(html), 0o644); err != nil {
 		return "", fmt.Errorf("write single-page index: %w", err)
 	}
 	return indexPath, nil

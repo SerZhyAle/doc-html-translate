@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 
 	gohtml "golang.org/x/net/html"
 )
@@ -116,7 +117,7 @@ func scanAndAnchorHeadings(pagePath string) []flatHeading {
 	if injected {
 		var buf bytes.Buffer
 		if err := gohtml.Render(&buf, doc); err == nil {
-			_ = os.WriteFile(pagePath, buf.Bytes(), 0o644)
+			_ = fsutil.WriteFile(pagePath, buf.Bytes(), 0o644)
 		}
 	}
 

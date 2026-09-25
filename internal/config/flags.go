@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -102,6 +103,12 @@ func ParseArgs(args []string) (Config, error) {
 
 	if *version {
 		return Config{}, errors.New("version")
+	}
+
+	// A negative, NaN or infinite limit used to fail every "estimate > limit" comparison and so
+	// meant "no limit" - the opposite of what whoever typed it wanted from a spending guard.
+	if m := *maxCost; m < 0 || math.IsNaN(m) || math.IsInf(m, 0) {
+		return Config{}, fmt.Errorf("invalid -max-cost %v: give a USD amount of 0 or more (0 = no limit)", m)
 	}
 
 	// An unknown -ui-lang is refused rather than silently ignored: the screenshot tooling and the

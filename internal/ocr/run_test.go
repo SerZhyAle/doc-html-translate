@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -19,7 +20,7 @@ func TestRecognizePathsContainsAPanickingImage(t *testing.T) {
 	}
 
 	paths := []string{"p1.png", "bad.png", "p3.png", "p4.png"}
-	got := recognizePaths("tesseract", "eng", "", paths, nil)
+	got := recognizePaths(context.Background(), "tesseract", "eng", "", paths, nil)
 
 	if len(got) != len(paths) {
 		t.Fatalf("got %d outcomes, want %d", len(got), len(paths))

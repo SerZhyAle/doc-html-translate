@@ -55,6 +55,25 @@ func TestStartRunLogTeesEveryLevel(t *testing.T) {
 	}
 }
 
+// The run log stays on disk, so a credential printed by any caller is rewritten on its way in;
+// the console is left as it was.
+func TestRunLogFilterRewritesLogOnly(t *testing.T) {
+	var sink bytes.Buffer
+	SetRunLogFilter(func(s string) string { return strings.ReplaceAll(s, "SECRET", "<redacted>") })
+	defer SetRunLogFilter(nil)
+	StartRunLog(&sink)
+	defer StopRunLog()
+
+	console := captureStdout(t, func() { Println("key=SECRET") })
+
+	if strings.Contains(sink.String(), "SECRET") || !strings.Contains(sink.String(), "key=<redacted>") {
+		t.Fatalf("run log = %q", sink.String())
+	}
+	if !strings.Contains(console, "key=SECRET") {
+		t.Fatalf("console = %q", console)
+	}
+}
+
 func TestStopRunLogStopsWriting(t *testing.T) {
 	var sink bytes.Buffer
 	StartRunLog(&sink)

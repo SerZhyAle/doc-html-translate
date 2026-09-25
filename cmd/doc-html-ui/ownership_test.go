@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/outputpath"
 )
 
@@ -130,4 +131,60 @@ func TestHandleDropRejectsDotDot(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400", rec.Code)
 	}
+}
+
+// The GUI asks the output's own completion record, which the CLI wrote, whether the result was
+// built with the settings now selected - not a history file of its own that a command-line run
+// never updated.
+func TestOutputStatusReadsCompletionRecord(t *testing.T) {
+	dir := t.TempDir()
+	input := filepath.Join(dir, "book.epub")
+	if err := os.WriteFile(input, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(dir, "book")
+	if err := os.MkdirAll(out, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(out, "index.html"), []byte("<html></html>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := outputpath.WriteMarker(out, input); err != nil {
+		t.Fatal(err)
+	}
+	req := map[string]any{
+		"input": input, "noTranslate": true, "singlePage": true, "srcLang": "en", "dstLang": "ru",
+		"ollamaModel": "gemma3:12b", "ollamaParallel": "1", "ollamaCtx": "8192",
+	}
+	// Unfinished: the CLI rebuilds it on its own, so the GUI does not ask.
+	if resp := postJSON(t, handleOutputStatus, req); resp["exists"] != true || resp["paramsChanged"] != false {
+		t.Fatalf("incomplete output: %v", resp)
+	}
+
+	cfg, err := config.ParseArgs(assembleArgs(runRequestFrom(t, req)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := outputpath.MarkComplete(out, input, outputpath.Completion{
+		Options: outputpath.OptionsFor(cfg), Translation: outputpath.TranslationNone,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if resp := postJSON(t, handleOutputStatus, req); resp["paramsChanged"] != false {
+		t.Fatalf("same settings reported as changed: %v", resp)
+	}
+	req["singlePage"] = false
+	if resp := postJSON(t, handleOutputStatus, req); resp["paramsChanged"] != true {
+		t.Fatalf("multipage after a single-page build not reported: %v", resp)
+	}
+}
+
+func runRequestFrom(t *testing.T, m map[string]any) runRequest {
+	t.Helper()
+	data, _ := json.Marshal(m)
+	var r runRequest
+	if err := json.Unmarshal(data, &r); err != nil {
+		t.Fatal(err)
+	}
+	return r
 }

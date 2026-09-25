@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"errors"
 	"runtime/debug"
 
@@ -16,28 +17,33 @@ import (
 // the parse code already tells a caller: this input could not be converted.
 const ExitInternal = ExitParse
 
-// Run executes the pipeline behind a last-resort panic guard, so a bug or a library panic ends
+// Run is RunContext without cancellation.
+func (r Runner) Run() (int, error) {
+	return r.RunContext(context.Background())
+}
+
+// RunContext executes the pipeline behind a last-resort panic guard, so a bug or a library panic ends
 // as a logged internal error and a clean exit code instead of a Go crash dump on the console.
 // The stack still goes to the run log: a recovered panic must stay diagnosable.
-func (r Runner) Run() (code int, err error) {
+func (r Runner) RunContext(ctx context.Context) (code int, err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			logging.RunLogf("internal error: %v\n%s\n", p, debug.Stack())
 			code, err = ExitInternal, errors.New(i18n.S("internal error while converting (details in the run log): %v", p))
 		}
 	}()
-	return r.run()
+	return r.run(ctx)
 }
 
 // overlayImagesSafe keeps the OCR stage best-effort even against a panic outside the per-image
 // guard (the page rewriting, the colour sampling): the pages keep whatever overlay was written
 // and the conversion goes on without the rest.
-func (r Runner) overlayImagesSafe(book *epub.Book, outputDir string) {
+func (r Runner) overlayImagesSafe(ctx context.Context, book *epub.Book, outputDir string) {
 	defer func() {
 		if p := recover(); p != nil {
 			logging.Printf("  WARNING: OCR overlay stopped by an internal error: %v\n", p)
 			logging.RunLogf("%s\n", debug.Stack())
 		}
 	}()
-	r.overlayImages(book, outputDir)
+	r.overlayImages(ctx, book, outputDir)
 }

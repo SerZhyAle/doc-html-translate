@@ -30,6 +30,8 @@ type Marker struct {
 	SourceSize    int64     `json:"sourceSize"`
 	SourceModTime time.Time `json:"sourceModTime"`
 	Created       time.Time `json:"created"`
+	// Complete is nil until the run that claimed the directory finishes; see completion.go.
+	Complete *Completion `json:"complete,omitempty"`
 }
 
 // State is what an existing path means for a conversion of a given source.
@@ -184,23 +186,18 @@ func readHead(path string) string {
 	return string(buf)
 }
 
-// WriteMarker records that dir is the output of source.
+// WriteMarker records that dir is the output of source, not yet complete.
 func WriteMarker(dir, source string) error {
+	return writeMarker(dir, newMarker(source))
+}
+
+func newMarker(source string) Marker {
 	m := Marker{Tool: markerTool, Source: source, Created: time.Now().UTC()}
 	if fi, err := os.Stat(source); err == nil {
 		m.SourceSize = fi.Size()
 		m.SourceModTime = fi.ModTime().UTC()
 	}
-	data, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		return err
-	}
-	p := filepath.Join(dir, MarkerName)
-	if err := os.WriteFile(p, data, 0o644); err != nil {
-		return err
-	}
-	hideFile(p)
-	return nil
+	return m
 }
 
 // ClearContents empties dir while keeping the directory itself and the named entries

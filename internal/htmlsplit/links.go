@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/fsutil"
 
 	gohtml "golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -117,7 +118,7 @@ func rewriteContentLinks(manifest []epub.ManifestItem, outputDir, basePath strin
 		if err := gohtml.Render(&buf, doc); err != nil {
 			return fmt.Errorf("render %s: %w", item.Href, err)
 		}
-		if err := os.WriteFile(p, buf.Bytes(), 0o644); err != nil {
+		if err := fsutil.WriteFile(p, buf.Bytes(), 0o644); err != nil {
 			return err
 		}
 	}
