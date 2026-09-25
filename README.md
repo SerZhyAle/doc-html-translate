@@ -215,6 +215,8 @@ and PDF); other formats are unaffected.
 
 - Output directory name is derived from input filename and sanitized for Windows compatibility.
 - Existing extracted output with `index.html` is reused unless `-force` is set.
+- Every output folder carries a small hidden ownership record (`.doc-html-translate.json`). The converter only reuses, rebuilds (`-force`) or cleans up after a failure a folder that it created for that same document. A folder of your own that happens to share the book's name is never touched: the output then goes to a sibling such as `book (pdf)`. The same happens when `book.epub` and `book.pdf` sit side by side, so each gets its own output.
+- The input must be a document file: a folder or a 0-byte file is refused before anything is written. A second conversion of the same output while one is running is refused rather than interleaved.
 - Plain-text (`.txt`) input is decoded by sniffing its leading bytes: a UTF-8/UTF-16 byte-order mark first, then valid UTF-8, then a legacy Cyrillic code page (Windows-1251, KOI8-R, CP866) by detection - so a DOS-era or Notepad "Unicode" `.txt` reads as text, not mojibake.
 - An unreadable binary (a `.docx`, `.djvu`, or a comic archive with no 7-Zip) is refused with a named format instead of being converted into a garbage document.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.

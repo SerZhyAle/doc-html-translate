@@ -70,43 +70,71 @@ func (r Runner) Run() (int, error) {
 		return ExitIOError, fmt.Errorf("resolve input path: %w", err)
 	}
 
-	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+	info, err := os.Stat(inputPath)
+	switch {
+	case os.IsNotExist(err):
 		return ExitArgsError, fmt.Errorf("file not found: %s", inputPath)
+	case err != nil:
+		return ExitIOError, fmt.Errorf("cannot read input: %w", err)
+	case info.IsDir():
+		// A folder maps its output onto itself (no extension to strip), and a failed
+		// "plain text" read of it then deleted the folder with everything in it.
+		return ExitArgsError, fmt.Errorf("%s is a folder, not a document - pass a file", inputPath)
+	case !info.Mode().IsRegular():
+		return ExitArgsError, fmt.Errorf("%s is not a regular file", inputPath)
+	case info.Size() == 0:
+		return ExitArgsError, fmt.Errorf("%s is empty (0 bytes)", inputPath)
+	}
+	if f, err := os.Open(inputPath); err != nil {
+		return ExitIOError, fmt.Errorf("cannot read input: %w", err)
+	} else {
+		_ = f.Close()
 	}
 
 	ext := strings.ToLower(filepath.Ext(inputPath))
 
-	// Output directory: same location as file (or -folder path), named after the file (without extension)
-	outputDir := outputpath.OutputDirFor(inputPath, r.cfg.OutputFolder)
+	// Output directory: same location as file (or -folder path), named after the file
+	// (without extension) - unless that name is taken by another document or by a
+	// folder that is not ours, in which case a suffixed sibling is used.
+	target, err := outputpath.Resolve(inputPath, r.cfg.OutputFolder)
+	if err != nil {
+		return ExitIOError, err
+	}
+	outputDir := target.Dir
+	if outputDir != target.Preferred {
+		logging.Printf("  %s is taken by other content - using %s\n", target.Preferred, outputDir)
+	}
 	indexPath := filepath.Join(outputDir, "index.html")
 
 	// R4: if output dir + index.html already exist → open browser immediately
-	if _, err := os.Stat(indexPath); err == nil {
-		if r.cfg.Force {
-			logging.Printf("Book already extracted, forcing rebuild: %s\n", outputDir)
-			if err := os.RemoveAll(outputDir); err != nil {
-				return ExitIOError, fmt.Errorf("force cleanup output dir: %w", err)
-			}
-		} else {
-			logging.Printf("Book already extracted: %s\n", outputDir)
-			if r.cfg.NoOpen {
-				logging.Println("[4/4] Browser open skipped (-noopen)")
-				logging.Println("Done.")
-				return ExitOK, nil
-			}
-			logging.Println("[4/4] Opening in browser..")
-			if err := browser.Open(indexPath); err != nil {
-				return ExitIOError, fmt.Errorf("open browser: %w", err)
-			}
+	if _, err := os.Stat(indexPath); err == nil && target.State.Ours() && !r.cfg.Force {
+		if outputpath.Locked(outputDir) {
+			return ExitIOError, fmt.Errorf("%s: %w", outputDir, outputpath.ErrLocked)
+		}
+		logging.Printf("Book already extracted: %s\n", outputDir)
+		if r.cfg.NoOpen {
+			logging.Println("[4/4] Browser open skipped (-noopen)")
 			logging.Println("Done.")
 			return ExitOK, nil
 		}
+		logging.Println("[4/4] Opening in browser..")
+		if err := browser.Open(indexPath); err != nil {
+			return ExitIOError, fmt.Errorf("open browser: %w", err)
+		}
+		logging.Println("Done.")
+		return ExitOK, nil
 	}
 
 	// Step 1: Extract (format-specific)
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
-		return ExitIOError, fmt.Errorf("create output dir: %w", err)
+	claim, err := claimOutputDir(target, inputPath)
+	if err != nil {
+		return ExitIOError, err
 	}
+	defer claim.release()
+	if target.State.Ours() && r.cfg.Force {
+		logging.Printf("Book already extracted, forcing rebuild: %s\n", outputDir)
+	}
+	cleanup := claim.cleanup
 
 	var book *epub.Book
 	// A standalone image has no text to extract: wrap it in a one-page HTML doc and
@@ -117,7 +145,7 @@ func (r Runner) Run() (int, error) {
 		logging.Println("[1/4] Preparing image..")
 		book, err = img.Extract(inputPath, outputDir)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			cleanup()
 			return ExitParse, fmt.Errorf("prepare image: %w", err)
 		}
 		forceOCR = true
@@ -130,7 +158,7 @@ func (r Runner) Run() (int, error) {
 		logging.Println("[1/4] Extracting comic archive..")
 		book, err = comic.Extract(inputPath, outputDir)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			cleanup()
 			return ExitParse, fmt.Errorf("extract comic: %w", err)
 		}
 		forceOCR = true
@@ -140,7 +168,7 @@ func (r Runner) Run() (int, error) {
 			logging.Println("[1/4] Extracting EPUB..")
 			book, err = epub.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitEPUB, fmt.Errorf("extract epub: %w", err)
 			}
 			logging.Printf("  Title: %s\n", book.Title)
@@ -149,49 +177,49 @@ func (r Runner) Run() (int, error) {
 			logging.Println("[1/4] Extracting PDF..")
 			book, err = pdf.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract pdf: %w", err)
 			}
 		case ".txt":
 			logging.Println("[1/4] Extracting TXT..")
 			book, err = txt.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract txt: %w", err)
 			}
 		case ".md":
 			logging.Println("[1/4] Extracting Markdown..")
 			book, err = md.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract markdown: %w", err)
 			}
 		case ".fb2":
 			logging.Println("[1/4] Extracting FB2..")
 			book, err = fb2.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract fb2: %w", err)
 			}
 		case ".rtf":
 			logging.Println("[1/4] Extracting RTF..")
 			book, err = rtf.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract rtf: %w", err)
 			}
 		case ".html", ".htm":
 			logging.Println("[1/4] Extracting HTML..")
 			book, err = htmlconv.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract html: %w", err)
 			}
 		case ".mobi", ".azw3":
 			logging.Println("[1/4] Extracting MOBI..")
 			book, err = mobi.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract mobi: %w", err)
 			}
 		default:
@@ -201,7 +229,7 @@ func (r Runner) Run() (int, error) {
 			// browser extension routes on the byte signature and refuses these; this matches it.
 			if head, herr := readHead(inputPath, 4096); herr == nil {
 				if desc := txt.LooksBinary(head); desc != "" {
-					_ = os.RemoveAll(outputDir)
+					cleanup()
 					return ExitParse, fmt.Errorf("%s looks like %s, not a text document - refusing to convert it into garbage",
 						filepath.Base(inputPath), desc)
 				}
@@ -209,7 +237,7 @@ func (r Runner) Run() (int, error) {
 			logging.Printf("[1/4] Unknown extension %q - reading as plain text..\n", ext)
 			book, err = txt.Extract(inputPath, outputDir)
 			if err != nil {
-				_ = os.RemoveAll(outputDir)
+				cleanup()
 				return ExitParse, fmt.Errorf("extract as txt: %w", err)
 			}
 		}
@@ -221,7 +249,7 @@ func (r Runner) Run() (int, error) {
 	if r.cfg.SplitSize > 0 && !r.cfg.SinglePage {
 		n, err := htmlsplit.SplitIfNeeded(book, outputDir, r.cfg.SplitSize)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			cleanup()
 			return ExitIOError, fmt.Errorf("split pages: %w", err)
 		}
 		if n > 0 {

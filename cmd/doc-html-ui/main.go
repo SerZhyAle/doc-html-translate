@@ -3,9 +3,12 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
 	_ "embed"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -189,32 +192,56 @@ func handleDrop(w http.ResponseWriter, r *http.Request) {
 	// The browser only ever sends a bare file name; Base strips any stray path
 	// components or traversal so we cannot be steered outside the drop folder.
 	name := filepath.Base(filepath.FromSlash(strings.TrimSpace(r.URL.Query().Get("name"))))
-	if name == "" || name == "." || name == string(os.PathSeparator) {
+	if name == "" || name == "." || name == ".." || name == string(os.PathSeparator) {
 		http.Error(w, "missing or invalid filename", http.StatusBadRequest)
 		return
 	}
 
-	dir := droppedFilesDir()
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	dest := filepath.Join(dir, name)
-	f, err := os.Create(dest)
+	dest, err := saveDropped(http.MaxBytesReader(w, r.Body, maxDropBytes), name)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if _, err := io.Copy(f, http.MaxBytesReader(w, r.Body, maxDropBytes)); err != nil {
-		_ = f.Close()
 		http.Error(w, "upload failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := f.Close(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	_ = json.NewEncoder(w).Encode(map[string]string{"path": dest})
+}
+
+// saveDropped stores an upload as <drop dir>/<content hash>/<name>. Keying the folder by
+// content means two different files both called "download.pdf" no longer overwrite each
+// other (and the second one no longer reopens the first one's conversion), while
+// re-dropping the same file lands on the same path and reuses its result. The bytes go
+// to a temporary file first, so a failed upload never replaces a complete copy.
+func saveDropped(body io.Reader, name string) (string, error) {
+	root := droppedFilesDir()
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		return "", err
+	}
+	tmp, err := os.CreateTemp(root, "upload-*.part")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(tmp.Name()) // no-op once renamed
+	h := sha256.New()
+	if _, err := io.Copy(io.MultiWriter(tmp, h), body); err != nil {
+		_ = tmp.Close()
+		return "", err
+	}
+	if err := tmp.Close(); err != nil {
+		return "", err
+	}
+
+	dir := filepath.Join(root, hex.EncodeToString(h.Sum(nil))[:16])
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	dest := filepath.Join(dir, name)
+	if fi, err := os.Stat(dest); err == nil && fi.Mode().IsRegular() {
+		// Same content already dropped under this name: keep it, and its output.
+		return dest, nil
+	}
+	if err := os.Rename(tmp.Name(), dest); err != nil {
+		return "", err
+	}
+	return dest, nil
 }
 
 // droppedFilesDir is the writable, per-user folder where files dropped onto the
@@ -388,15 +415,36 @@ func handlePreview(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"cmd": cmd})
 }
 
-// resolveOutputDir mirrors internal/pipeline's reuse-check target directory so the
-// GUI can look at (and clear) a previous result without shelling out to the CLI.
-func resolveOutputDir(input, folder string) (string, error) {
+// resolveOutputDir mirrors internal/pipeline's choice of output directory so the GUI can
+// look at (and clear) a previous result without shelling out to the CLI. It shares the
+// resolver itself, not a copy of its rules: the directory for "book.pdf" may be
+// "book (pdf)" when "book" belongs to another document, and the GUI must agree.
+func resolveOutputDir(input, folder string) (outputpath.Target, error) {
 	abs, err := filepath.Abs(input)
+	if err != nil {
+		return outputpath.Target{}, err
+	}
+	return outputpath.Resolve(abs, folder)
+}
+
+// previousResult returns the output directory of an earlier conversion of input, if one
+// exists that the converter owns. A folder that merely contains an index.html - a saved
+// website, a user's own folder - is never reported, opened or deleted as a result.
+func previousResult(input, folder string) (string, error) {
+	target, err := resolveOutputDir(input, folder)
 	if err != nil {
 		return "", err
 	}
-	return outputpath.OutputDirFor(abs, folder), nil
+	if !target.State.Ours() {
+		return "", errNoPreviousResult
+	}
+	if _, err := os.Stat(filepath.Join(target.Dir, "index.html")); err != nil {
+		return "", errNoPreviousResult
+	}
+	return target.Dir, nil
 }
+
+var errNoPreviousResult = errors.New("no previous result found")
 
 // outputFingerprint captures the runRequest fields that change what actually gets
 // written to the output directory - as opposed to execution-only flags like Force,
@@ -491,12 +539,8 @@ func handleOutputStatus(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
-	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	outputDir, err := previousResult(req.Input, req.Output)
 	if err != nil {
-		_ = json.NewEncoder(w).Encode(resp)
-		return
-	}
-	if _, err := os.Stat(filepath.Join(outputDir, "index.html")); err != nil {
 		_ = json.NewEncoder(w).Encode(resp)
 		return
 	}
@@ -517,7 +561,7 @@ var openTarget = browser.Open
 // holding it when the caller asks for that. A dropped file is copied into the app's own
 // data folder and the result lands beside it, so without this the reader is left with a
 // result they cannot find again once the browser tab is gone. Like handleDeleteOutput it
-// only ever acts on a directory that actually contains index.html, so a stray
+// only ever acts on a result the converter owns (previousResult), so a stray
 // output-folder value can't steer it into opening something unrelated.
 func handleOpenOutput(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -533,17 +577,12 @@ func handleOpenOutput(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	outputDir, err := previousResult(req.Input, req.Output)
 	if err != nil {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	index := filepath.Join(outputDir, "index.html")
-	if _, err := os.Stat(index); err != nil {
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": "no result found"})
-		return
-	}
-	target := index
+	target := filepath.Join(outputDir, "index.html")
 	if req.Folder {
 		target = outputDir
 	}
@@ -555,9 +594,10 @@ func handleOpenOutput(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDeleteOutput removes a previous conversion result so the next run starts
-// clean. It only ever deletes a directory that actually contains index.html - the
-// same marker the CLI's reuse check uses - so a stray output-folder value can't steer
-// it into deleting something unrelated.
+// clean. It only ever deletes a directory carrying the converter's ownership marker (or a
+// recognised pre-marker output) for this very input - a folder that merely holds an
+// index.html, a saved website or the user's own, is refused - and never one a
+// conversion is still writing.
 func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -571,13 +611,13 @@ func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	outputDir, err := resolveOutputDir(req.Input, req.Output)
+	outputDir, err := previousResult(req.Input, req.Output)
 	if err != nil {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	if _, err := os.Stat(filepath.Join(outputDir, "index.html")); err != nil {
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": "no previous result found"})
+	if outputpath.Locked(outputDir) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": outputpath.ErrLocked.Error()})
 		return
 	}
 	if err := os.RemoveAll(outputDir); err != nil {
@@ -656,7 +696,7 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "\nExit: %v\n", err)
 	} else {
 		fmt.Fprintf(w, "\nDone.\n")
-		if outputDir, err := resolveOutputDir(req.Input, req.Output); err == nil && outputDir != "" {
+		if outputDir, err := previousResult(req.Input, req.Output); err == nil {
 			hist := loadParamsHistory()
 			hist[outputDir] = fingerprintFor(req)
 			_ = saveParamsHistory(hist)

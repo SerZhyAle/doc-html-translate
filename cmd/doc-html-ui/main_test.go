@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/translator"
 )
 
@@ -316,6 +317,10 @@ func TestOpenOutputOpensExistingResult(t *testing.T) {
 	if err := os.WriteFile(index, []byte("<html></html>"), 0o644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
+	// Only an output the converter owns counts as a result.
+	if err := outputpath.WriteMarker(outDir, filepath.Join(dir, "book.pdf")); err != nil {
+		t.Fatalf("marker: %v", err)
+	}
 
 	var opened string
 	prev := openTarget
@@ -387,11 +392,11 @@ func TestHandleDropSavesUploadedFile(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	want := filepath.Join(tmp, "doc-html-translate", "dropped", "Книга.epub")
-	if resp.Path != want {
-		t.Fatalf("saved path = %q, want %q", resp.Path, want)
+	root := filepath.Join(tmp, "doc-html-translate", "dropped")
+	if filepath.Base(resp.Path) != "Книга.epub" || filepath.Dir(filepath.Dir(resp.Path)) != root {
+		t.Fatalf("saved path = %q, want %s/<hash>/Книга.epub", resp.Path, root)
 	}
-	data, err := os.ReadFile(want)
+	data, err := os.ReadFile(resp.Path)
 	if err != nil {
 		t.Fatalf("read saved file: %v", err)
 	}
@@ -415,9 +420,9 @@ func TestHandleDropStripsPathTraversal(t *testing.T) {
 		Path string `json:"path"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &resp)
-	want := filepath.Join(tmp, "doc-html-translate", "dropped", "evil.epub")
-	if resp.Path != want {
-		t.Fatalf("path = %q, want %q (traversal must be stripped to a base name)", resp.Path, want)
+	root := filepath.Join(tmp, "doc-html-translate", "dropped")
+	if filepath.Base(resp.Path) != "evil.epub" || filepath.Dir(filepath.Dir(resp.Path)) != root {
+		t.Fatalf("path = %q, want %s/<hash>/evil.epub (traversal must be stripped to a base name)", resp.Path, root)
 	}
 }
 
