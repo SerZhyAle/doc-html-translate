@@ -1332,9 +1332,11 @@ func parseImagePageNum(filename string, totalPages int) int {
 	return 0
 }
 
-// pdfTitle extracts a human-readable title from the PDF file path.
+// pdfTitle is the file name without its extension. Both separators count, as they
+// do on Windows, so the result does not depend on the OS the code runs on
+// (filepath.Base on Linux keeps `C:\Books\` as part of the name).
 func pdfTitle(pdfPath string) string {
-	base := filepath.Base(pdfPath)
+	base := pdfPath[strings.LastIndexAny(pdfPath, `/\`)+1:]
 	ext := filepath.Ext(base)
 	return strings.TrimSuffix(base, ext)
 }
