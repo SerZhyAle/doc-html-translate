@@ -9,9 +9,9 @@
 > the reference implementation), `OCR-INVOCATION` 1.0 (owned by this product). Domain `ocr-overlay/`.
 > Pointers: [`OCR-PIPELINE`](../../docs/contracts/OCR-PIPELINE.md),
 > [`OCR-OVERLAY`](../../docs/contracts/OCR-OVERLAY.md), [`OCR-INVOCATION`](../../docs/contracts/OCR-INVOCATION.md).
-> Related open tickets, not duplicated here:
+> Related tickets, not duplicated here:
 > [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md),
-> [`17_2026-09-22_tsv-columns-read-by-position`](17_2026-09-22_tsv-columns-read-by-position.md).
+> [`17_2026-09-22_tsv-columns-read-by-position`](done/17_2026-09-22_tsv-columns-read-by-position.md) (done).
 
 > **Remote execution (2026-09-25):** the contract text this ticket needs is quoted in "Contract snapshot" below, so every step not marked ⛔ runs in a cloud session from this repository alone. Steps marked **⛔ Local only** edit the shared contracts catalog (or another repository) and can run only on the owner's machine, where the catalog is mounted.
 

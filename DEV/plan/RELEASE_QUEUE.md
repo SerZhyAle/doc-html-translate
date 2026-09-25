@@ -69,16 +69,15 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
 15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-25  In Progress (repo done; catalog
     blank-images                                                    step ⛔ owner machine)
-17  17_2026-09-22_tsv-columns-read-by-position          2026-09-22  Draft
 ```
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
-25 (`hygiene`) leads although its priority is the lowest of the six: its own text asks to land early,
+25 (`hygiene`) leads although its priority is the lowest of the five: its own text asks to land early,
 because the pipeline tests it adds make every later change safer (rule 2). The two extension tickets
 follow, content security (19) first - an untrusted document that stays live is the more serious defect, and
 `lifecycle-leaks` (18) touches the same viewer code right after it. 20 (`registration`) is Windows-only and
-independent. 15 and 17 are the two OCR defects from the 2026-09-22 alignment run; 15 goes first because
-it is the instrument 29 is measured with (rule 4).
+independent. 15 is the remaining OCR defect from the 2026-09-22 alignment run (17, its sibling, is done); it is the
+instrument 29 is measured with (rule 4).
 
 [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
 is first among the OCR lines by rule 2: it is the instrument the rest is measured with. Opened by the contract
@@ -87,11 +86,6 @@ was preserved as far as `applyOverlays` and is then not written, so an image tha
 still leaves nothing behind, which is the one case the record exists for. Proven with a throwaway probe in
 package `ocr` (`applyOverlays: changed=false NoText=1`, no diagnostics file). Nothing a reader sees changes
 when it lands; what changes is that a blank scene can be told from a discarded one.
-
-[`17_2026-09-22_tsv-columns-read-by-position`](17_2026-09-22_tsv-columns-read-by-position.md) is the other
-finding of the alignment run: `parseTSV` skips the header row that names the columns and then reads fixed
-indices, so a Tesseract build that inserts a column would not fail - it would put plates in the wrong place
-with the wrong confidences. No build in use today does, so nothing is misplaced yet.
 
 ## release 2 - OCR quality
 

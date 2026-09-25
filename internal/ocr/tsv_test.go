@@ -247,3 +247,56 @@ func TestIsExternal(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTSVReadsColumnsByName(t *testing.T) {
+	// A build that inserts a column before `left` must not shift the box, the confidence or the
+	// text: the header names where each field went.
+	tsv := "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tangle\tleft\ttop\twidth\theight\tconf\ttext\n" +
+		"1\t1\t0\t0\t0\t0\t0\t0\t0\t200\t100\t-1\t\n" +
+		"4\t1\t1\t1\t1\t0\t0\t10\t20\t120\t18\t-1\t\n" +
+		"5\t1\t1\t1\t1\t1\t0\t10\t20\t50\t18\t90\tHello\n" +
+		"5\t1\t1\t1\t1\t2\t0\t65\t20\t60\t18\t88\tworld\n"
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Width != 200 || res.Height != 100 {
+		t.Fatalf("dims = %dx%d, want 200x100", res.Width, res.Height)
+	}
+	if len(res.Blocks) != 1 {
+		t.Fatalf("blocks = %d, want 1", len(res.Blocks))
+	}
+	b := res.Blocks[0]
+	if b.Text != "Hello world" {
+		t.Errorf("text = %q, want %q", b.Text, "Hello world")
+	}
+	if b.X0 != 10 || b.Y0 != 20 || b.X1 != 130 || b.Y1 != 38 {
+		t.Errorf("bbox = (%d,%d,%d,%d), want (10,20,130,38)", b.X0, b.Y0, b.X1, b.Y1)
+	}
+}
+
+func TestParseTSVFallsBackToFixedColumns(t *testing.T) {
+	// No header at all, and a header that lacks a needed column: both keep reading the fixed
+	// layout instead of producing nothing.
+	body := "1\t1\t0\t0\t0\t0\t0\t0\t200\t100\t-1\t\n" +
+		"4\t1\t1\t1\t1\t0\t10\t20\t120\t18\t-1\t\n" +
+		"5\t1\t1\t1\t1\t1\t10\t20\t50\t18\t90\tHello\n"
+	for name, tsv := range map[string]string{
+		"no header":      body,
+		"partial header": "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tx\ty\tw\th\tconf\ttext\n" + body,
+	} {
+		res, err := parseTSV([]byte(tsv), ocrMinLineConf)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if res.Width != 200 || res.Height != 100 {
+			t.Errorf("%s: dims = %dx%d, want 200x100", name, res.Width, res.Height)
+		}
+		if len(res.Blocks) != 1 || res.Blocks[0].Text != "Hello" {
+			t.Fatalf("%s: blocks = %+v, want one plate \"Hello\"", name, res.Blocks)
+		}
+		if b := res.Blocks[0]; b.X0 != 10 || b.Y0 != 20 || b.X1 != 130 || b.Y1 != 38 {
+			t.Errorf("%s: bbox = (%d,%d,%d,%d), want (10,20,130,38)", name, b.X0, b.Y0, b.X1, b.Y1)
+		}
+	}
+}

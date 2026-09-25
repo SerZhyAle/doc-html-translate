@@ -1084,8 +1084,61 @@ func (l *ocrLine) meanConf() float64 {
 	return l.confSum / float64(l.confN)
 }
 
-// parseTSV turns tesseract's TSV output into a Result. Columns are:
+// tsvCols says where each field parseTSV reads sits in a TSV row. need is one past the highest index,
+// so a row shorter than that is skipped rather than read out of range.
+type tsvCols struct {
+	level, left, top, width, height, conf, text, need int
+}
+
+// tsvFixedCols is the layout every Tesseract build to date writes. It is the fallback, not the
+// primary read: a row is located through the header whenever the header names every field.
+var tsvFixedCols = tsvCols{level: 0, left: 6, top: 7, width: 8, height: 9, conf: 10, text: 11, need: 12}
+
+// tsvColsFromHeader maps the header's column names to indices. It reports false when any field is
+// missing, and the caller keeps the fixed layout - a recognizer that reads a stable layout beats one
+// that stops working because a header was renamed.
+func tsvColsFromHeader(row string) (tsvCols, bool) {
+	idx := map[string]int{}
+	for i, name := range strings.Split(row, "\t") {
+		name = strings.ToLower(strings.TrimSpace(name))
+		if _, dup := idx[name]; !dup {
+			idx[name] = i
+		}
+	}
+	var c tsvCols
+	for _, f := range []struct {
+		name string
+		dst  *int
+	}{
+		{"level", &c.level}, {"left", &c.left}, {"top", &c.top}, {"width", &c.width},
+		{"height", &c.height}, {"conf", &c.conf}, {"text", &c.text},
+	} {
+		i, ok := idx[f.name]
+		if !ok {
+			return tsvCols{}, false
+		}
+		*f.dst = i
+		c.need = max(c.need, i+1)
+	}
+	return c, true
+}
+
+// isTSVHeader tells the header row from a data row: every data row starts with a numeric level, so
+// a first field that is not a number is a header, whatever column an engine build put first.
+func isTSVHeader(row string) bool {
+	first, _, _ := strings.Cut(row, "\t")
+	first = strings.TrimSpace(first)
+	if first == "" {
+		return false
+	}
+	_, err := strconv.Atoi(first)
+	return err != nil
+}
+
+// parseTSV turns tesseract's TSV output into a Result. Columns are, in every build to date:
 // level page block par line word left top width height conf text
+// They are read by the names in the header row (see tsvColsFromHeader), so an inserted column
+// does not shift every field; without a usable header the layout above is assumed.
 // level 1 = page (its size is the image size), 2 = block, 3 = paragraph, 4 = line, 5 = word.
 //
 // We read only the page size (level 1), the line boxes (level 4) and the words (level 5): the
@@ -1116,24 +1169,29 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		cur = nil
 	}
 
+	col := tsvFixedCols
 	firstLine := true
 	for sc.Scan() {
 		row := sc.Text()
 		if firstLine {
 			firstLine = false
-			if strings.HasPrefix(row, "level\t") || strings.HasPrefix(row, "level ") {
-				continue // header row
+			if isTSVHeader(row) {
+				if c, ok := tsvColsFromHeader(row); ok {
+					col = c
+				}
+				continue
 			}
 		}
 		cols := strings.Split(row, "\t")
-		if len(cols) < 12 {
+		if len(cols) < col.need {
 			continue
 		}
-		level, _ := strconv.Atoi(cols[0])
-		left, _ := strconv.Atoi(cols[6])
-		top, _ := strconv.Atoi(cols[7])
-		w, _ := strconv.Atoi(cols[8])
-		h, _ := strconv.Atoi(cols[9])
+		level, _ := strconv.Atoi(cols[col.level])
+		left, _ := strconv.Atoi(cols[col.left])
+		top, _ := strconv.Atoi(cols[col.top])
+		w, _ := strconv.Atoi(cols[col.width])
+		h, _ := strconv.Atoi(cols[col.height])
+		text := cols[col.text]
 
 		switch level {
 		case 1: // page: the image dimensions
@@ -1142,18 +1200,18 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 			closeLine()
 			cur = &ocrLine{x0: left, y0: top, x1: left + w, y1: top + h}
 		case 5: // word: fold text + confidence into the current line
-			if cur == nil || strings.TrimSpace(cols[11]) == "" {
+			if cur == nil || strings.TrimSpace(text) == "" {
 				continue
 			}
 			if cur.text.Len() > 0 {
 				cur.text.WriteByte(' ')
 			}
-			cur.text.WriteString(cols[11])
+			cur.text.WriteString(text)
 			if h > 0 {
 				cur.wordH = append(cur.wordH, h)
 			}
-			word := ocrWord{x0: left, y0: top, x1: left + w, y1: top + h, text: cols[11]}
-			if conf, err := strconv.ParseFloat(cols[10], 64); err == nil {
+			word := ocrWord{x0: left, y0: top, x1: left + w, y1: top + h, text: text}
+			if conf, err := strconv.ParseFloat(cols[col.conf], 64); err == nil {
 				word.conf, word.hasConf = conf, true
 				cur.confSum += conf
 				cur.confN++
