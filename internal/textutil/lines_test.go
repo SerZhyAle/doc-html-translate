@@ -11,6 +11,13 @@ func TestNormalizeLineSeparators(t *testing.T) {
 	}
 }
 
+func TestNormalizeLineSeparatorsKeepsDamageVisible(t *testing.T) {
+	got := NormalizeLineSeparators("ab\xffcd\r\n")
+	if want := "ab\U0000FFFDcd\n"; got != want {
+		t.Fatalf("NormalizeLineSeparators() = %q, want %q", got, want)
+	}
+}
+
 func TestNormalizeLineSeparatorsPreserveFormFeed(t *testing.T) {
 	input := "A\r\nB\fC\u2028D"
 	got := NormalizeLineSeparatorsPreserveFormFeed(input)
