@@ -366,6 +366,18 @@
   "vComicFailBody": {
     "message": "O arquivo pode estar danificado ou não conter imagens de páginas."
   },
+  "vLimitTitle": {
+    "message": "Este arquivo excede os limites de tamanho"
+  },
+  "vLimitEntries": {
+    "message": "O arquivo compactado tem {1} entradas, acima do limite de {2}"
+  },
+  "vLimitTotal": {
+    "message": "O arquivo compactado ocupa {1} descompactado, acima do limite de {2}"
+  },
+  "vLimitEntry": {
+    "message": "{1} descompactado passa de {2}, o limite para um arquivo"
+  },
   "vComicReady": {
     "message": "Pronto - {1} páginas, o texto é reconhecido à medida que percorre"
   },

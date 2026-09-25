@@ -366,6 +366,18 @@
   "vComicFailBody": {
     "message": "L'archive est peut-être endommagée ou ne contient aucune image de page."
   },
+  "vLimitTitle": {
+    "message": "Ce fichier dépasse les limites de taille"
+  },
+  "vLimitEntries": {
+    "message": "L'archive contient {1} entrées, au-delà de la limite de {2}"
+  },
+  "vLimitTotal": {
+    "message": "L'archive décompressée occupe {1}, au-delà de la limite de {2}"
+  },
+  "vLimitEntry": {
+    "message": "{1} décompressé dépasse {2}, la limite pour un fichier"
+  },
   "vComicReady": {
     "message": "Prêt - {1} pages, le texte est reconnu au fil du défilement"
   },

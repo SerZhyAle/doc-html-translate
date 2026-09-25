@@ -366,6 +366,18 @@
   "vComicFailBody": {
     "message": "L'archivio potrebbe essere danneggiato o non contenere immagini di pagina."
   },
+  "vLimitTitle": {
+    "message": "Questo file supera i limiti di dimensione"
+  },
+  "vLimitEntries": {
+    "message": "L'archivio contiene {1} voci, oltre il limite di {2}"
+  },
+  "vLimitTotal": {
+    "message": "L'archivio decompresso occupa {1}, oltre il limite di {2}"
+  },
+  "vLimitEntry": {
+    "message": "{1} decompresso supera {2}, il limite per un singolo file"
+  },
   "vComicReady": {
     "message": "Pronto - {1} pagine, il testo viene riconosciuto mentre scorri"
   },

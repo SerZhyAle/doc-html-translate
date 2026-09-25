@@ -427,6 +427,22 @@
     "message": "The archive may be corrupt or hold no page images.",
     "description": "Viewer runtime string."
   },
+  "vLimitTitle": {
+    "message": "This file is over the size limits",
+    "description": "Viewer runtime string."
+  },
+  "vLimitEntries": {
+    "message": "The archive has {1} entries, above the limit of {2}",
+    "description": "Viewer runtime string."
+  },
+  "vLimitTotal": {
+    "message": "The archive unpacks to {1}, above the limit of {2}",
+    "description": "Viewer runtime string."
+  },
+  "vLimitEntry": {
+    "message": "{1} unpacks to more than {2}, the limit for one file",
+    "description": "Viewer runtime string."
+  },
   "vComicReady": {
     "message": "Ready - {1} pages, text is recognized as you scroll",
     "description": "Viewer runtime string."
