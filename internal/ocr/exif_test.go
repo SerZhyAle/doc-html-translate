@@ -80,12 +80,12 @@ func TestPrepareForOCRAppliesEXIFRotation(t *testing.T) {
 	if err := os.WriteFile(path, exifJPEG(t, src, orientRotate90), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	staged, scale, _, cleanup := prepareForOCR(path)
+	frame, scale, _, cleanup := prepareForOCR(path)
 	defer cleanup()
-	if staged == path {
+	if frame.path == path {
 		t.Fatal("a rotated photo was handed to tesseract unchanged")
 	}
-	im := decodeImage(staged)
+	im := decodeImage(frame.path)
 	if im == nil {
 		t.Fatal("staged copy is not decodable")
 	}
@@ -99,10 +99,10 @@ func TestPrepareForOCRAppliesEXIFRotation(t *testing.T) {
 // This is every image in an ordinary book, and the cost of the rotation path must not land on it.
 func TestPrepareForOCRLeavesUnrotatedFilesAlone(t *testing.T) {
 	path := tempImageFile(t, 2200, 1600) // above the upscale floor
-	staged, scale, _, cleanup := prepareForOCR(path)
+	frame, scale, _, cleanup := prepareForOCR(path)
 	defer cleanup()
-	if staged != path || scale != 1 {
-		t.Errorf("unrotated image staged to %q at scale %d, want the original at scale 1", staged, scale)
+	if frame.path != path || scale != 1 || frame.tried {
+		t.Errorf("unrotated image staged to %q at scale %d (decoded %v), want the original at scale 1, undecoded", frame.path, scale, frame.tried)
 	}
 }
 

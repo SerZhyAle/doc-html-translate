@@ -18,6 +18,7 @@ import (
 
 	"doc-html-translate/internal/appearance"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 
 	_ "golang.org/x/image/tiff" // extracted PDF images may be TIFF
 	_ "golang.org/x/image/webp" // EPUB images may be WebP
@@ -380,7 +381,7 @@ func classifyRecognition(res Result, err error) (ok bool, reason error) {
 	}
 }
 
-// recognizePaths OCRs every image path across ocrWorkers() Tesseract processes and returns a
+// recognizePaths OCRs every image path across poolWorkers(paths) Tesseract processes and returns a
 // map from path to its outcome. The pool spans the whole slice it is given, so a book's worth
 // of pages is recognized at full width rather than one file's images at a time. One process
 // pins about one core, so this is what actually uses a multi-core machine; a scanned book that
@@ -396,7 +397,7 @@ func recognizePaths(ctx context.Context, bin, lang, dataDir string, paths []stri
 	var mu sync.Mutex
 	done := 0
 
-	for w := 0; w < ocrWorkers(); w++ {
+	for w := 0; w < poolWorkers(paths); w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -555,13 +556,22 @@ func pct(v, total int) float64 {
 
 // ---- Adaptive plate colours ------------------------------------------------
 // decodeImage decodes an image file for colour sampling; nil on any failure (plates then
-// keep the default white/dark CSS).
+// keep the default white/dark CSS). nil too for an image whose header declares more than the
+// pixel budget (internal/limits): every in-process pass is best-effort and keeps its default
+// without the picture, while one such image decoded in full can exhaust the 386 build.
 func decodeImage(path string) image.Image {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil || limits.CheckPixels(int64(cfg.Width), int64(cfg.Height)) != nil {
+		return nil
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil
+	}
 	im, _, err := image.Decode(f)
 	if err != nil {
 		return nil
