@@ -2,7 +2,6 @@ package htmlgen
 
 import (
 	"fmt"
-	"hash/fnv"
 	"html"
 	"os"
 	"path" // hrefs are URLs, not OS paths
@@ -395,6 +394,9 @@ var readerCSS = `
 </style>
 `
 
+// readerMarker opens the reader script; its presence marks a page as already injected.
+const readerMarker = `<script id="dht-reader">`
+
 // readerScript emits the theme + reading-position controller injected into
 // every page. On chapter pages (self != "") it restores and tracks scroll
 // position and drives the progress bar; on index.html (self == "") it wires up
@@ -402,10 +404,10 @@ var readerCSS = `
 // localStorage so it survives across sessions (unlike the zoom sessionStorage).
 func readerScript(bookKey, self string, idx, total int) string {
 	return fmt.Sprintf(`
-<script id="dht-reader">//<![CDATA[
+`+readerMarker+`//<![CDATA[
 (function(){
-	var BOOK = %q;
-	var SELF = %q;
+	var BOOK = %s;
+	var SELF = %s;
 	var IDX = %d;
 	var TOTAL = %d;
 
@@ -532,7 +534,9 @@ func readerScript(bookKey, self string, idx, total int) string {
 
 	if (SELF) {
 		var saved = readPos();
-		if (saved && saved.href === SELF && typeof saved.frac === "number") {
+		// A URL fragment is an explicit destination (a TOC entry, a footnote, a shared
+		// link); the saved position only applies to a plain open of the page.
+		if (!location.hash && saved && saved.href === SELF && typeof saved.frac === "number") {
 			window.addEventListener("load", function(){
 				var h = document.documentElement.scrollHeight - window.innerHeight;
 				if (h > 0) window.scrollTo(0, saved.frac * h);
@@ -553,23 +557,15 @@ func readerScript(bookKey, self string, idx, total int) string {
 	} else {
 		var p = readPos();
 		var cont = document.getElementById("dht-continue");
-		if (cont && p && p.href) {
+		// file:// pages share one storage origin, so only a relative href is trusted here.
+		if (cont && p && typeof p.href === "string" && p.href && !/^[a-z][a-z0-9+.-]*:|^[\/\\]/i.test(p.href)) {
 			cont.setAttribute("href", p.href);
 			cont.style.display = "inline-block";
 		}
 	}
 })();
 //]]></script>
-`, bookKey, self, idx, total)
-}
-
-// bookStorageKey derives a stable per-book id used to namespace reading-position
-// localStorage. It must be identical on chapter pages and index.html, so it is
-// computed from the same (raw title, page count) on both paths.
-func bookStorageKey(title string, total int) string {
-	h := fnv.New32a()
-	fmt.Fprintf(h, "%s|%d", title, total)
-	return fmt.Sprintf("%08x", h.Sum32())
+`, jsString(bookKey), jsString(self), idx, total)
 }
 
 // buildNavBarHTML generates the HTML for the navigation bar.
@@ -675,7 +671,7 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 		return nil
 	}
 	WriteFavicon(outputDir)
-	bookKey := bookStorageKey(book.Title, total)
+	bookKey := readerKey(book)
 
 	// Build full href paths (with BasePath prefix)
 	fullHrefs := make([]string, total)
@@ -716,7 +712,7 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 
 		if err := injectNavIntoFile(filePath, nav); err != nil {
 			// Best-effort: warn and continue
-			fmt.Fprintf(os.Stderr, "WARNING: navbar inject skip %s: %v\n", href, err)
+			logging.Errorf("WARNING: navbar inject skip %s: %v\n", href, err)
 		}
 	}
 
@@ -731,6 +727,11 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 	}
 
 	content := string(data)
+	// A spine may list one file twice. A second pass would stack a second bar and run the
+	// zoom and reader scripts twice, so a page that already carries the reader is done.
+	if strings.Contains(content, readerMarker) {
+		return nil
+	}
 	navHTML := buildNavBarHTML(nav)
 
 	// Inject the tab icon + CSS before </head>. The icon lives at the output root, so the

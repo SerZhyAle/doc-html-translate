@@ -137,7 +137,7 @@ func nestHeadings(flat []flatHeading, href string) []epub.TOCEntry {
 
 	for _, h := range flat {
 		n := &node{
-			entry: epub.TOCEntry{Title: h.title, Href: href + "#" + h.id},
+			entry: epub.TOCEntry{Title: h.title, Href: href + "#" + epub.URLPath(h.id)},
 			level: h.level,
 		}
 		for len(stack) > 0 && stack[len(stack)-1].level >= h.level {

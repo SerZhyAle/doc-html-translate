@@ -106,7 +106,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("  <nav>\n")
 	sb.WriteString(navBody)
 	sb.WriteString("  </nav>\n")
-	sb.WriteString(readerScript(bookStorageKey(book.Title, len(spineHrefs)), "", 0, len(spineHrefs)))
+	sb.WriteString(readerScript(readerKey(book), "", 0, len(spineHrefs)))
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")
 
@@ -229,11 +229,16 @@ func renderTOCEntry(sb *strings.Builder, e epub.TOCEntry, basePath string, depth
 		label = "&#8230;" // ellipsis placeholder for an untitled grouping node
 	}
 
-	var labelHTML string
+	// An external entry is the author's own URL, so it is kept as written and never put
+	// under the book's base folder; a scheme outside the allow-list leaves only the label.
+	labelHTML := fmt.Sprintf(`<span class="toc-section">%s</span>`, label)
 	if e.Href != "" {
-		labelHTML = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(prefixBase(basePath, e.Href)), label)
-	} else {
-		labelHTML = fmt.Sprintf(`<span class="toc-section">%s</span>`, label)
+		switch external, clickable := epub.ExternalHref(e.Href); {
+		case !external:
+			labelHTML = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(prefixBase(basePath, e.Href)), label)
+		case clickable:
+			labelHTML = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(strings.TrimSpace(e.Href)), label)
+		}
 	}
 
 	showChildren := len(e.Children) > 0 && (depth <= 0 || level < depth)
@@ -407,11 +412,11 @@ func GenerateSinglePageIndex(book *epub.Book, outputDir string) (string, error) 
 <html>
 <head>
   <meta charset="UTF-8">
-  <script>location.replace(%q);</script>
+  <script>location.replace(%s);</script>
 </head>
 <body></body>
 </html>
-`, epub.URLPath(target))
+`, jsString(epub.URLPath(target)))
 
 	if err := os.WriteFile(indexPath, []byte(html), 0o644); err != nil {
 		return "", fmt.Errorf("write single-page index: %w", err)

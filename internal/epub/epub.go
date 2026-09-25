@@ -24,6 +24,10 @@ type Book struct {
 	BasePath string     // directory within EPUB where content.opf resides (slash path, "." at the root)
 	TOC      []TOCEntry // authored table of contents (NCX navMap / nav.xhtml), nil if none
 
+	// ReaderKey namespaces the reader's saved position (htmlgen.ReaderKey). It is
+	// set once, before translation rewrites Title, and never recomputed.
+	ReaderKey string
+
 	// hrefRewrites maps an original content href to its final href after
 	// normalization (e.g. "chapter1.xhtml" -> "chapter1.html", or an
 	// index.* -> "_content_index.html" reserved-name rename). It lets TOC

@@ -32,8 +32,9 @@ const singlePageCSS = `
 // GenerateSinglePage merges every spine content file, in reading order, into a single
 // index.html carrying the unified reader header (theme/font controls, progress bar) but no
 // per-chapter navigation and no separate table-of-contents page. The merged file is written
-// inside the book's base directory so relative image/CSS references resolve unchanged; when
-// that base directory is nested, a redirecting index.html is also written at the output root.
+// inside the book's base directory, each chapter's references rebased from its own folder and
+// its in-book links turned into in-page anchors (prepareMerge); when that base directory is
+// nested, a redirecting index.html is also written at the output root.
 // On success the book is collapsed to a single merged spine entry so the downstream OCR and
 // translation steps operate on the one file (and the post-translation TOC step, keyed off
 // len(Spine) > 1, is skipped). Returns the entry-point path to open in the browser.
@@ -47,7 +48,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	// first page. Dropping dir turned an RTL book LTR in the default single-page flow.
 	var body strings.Builder
 	lang, dir := "en", ""
-	var inners []string
+	chapters := make([]*mergeChapter, 0, len(spineHrefs))
 	for i, href := range spineHrefs {
 		pagePath := bookPath(outputDir, book.BasePath, href)
 		data, err := os.ReadFile(pagePath)
@@ -64,9 +65,14 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 			}
 			dir = htmlDir(doc)
 		}
-		inner, err := bodyInnerHTML(doc)
+		chapters = append(chapters, &mergeChapter{href: path.Clean(href), doc: doc})
+	}
+	prepareMerge(chapters)
+	inners := make([]string, 0, len(chapters))
+	for _, ch := range chapters {
+		inner, err := bodyInnerHTML(ch.doc)
 		if err != nil {
-			return "", fmt.Errorf("extract body %s: %w", href, err)
+			return "", fmt.Errorf("extract body %s: %w", ch.href, err)
 		}
 		inners = append(inners, inner)
 	}
@@ -102,10 +108,11 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
+	// The book's language stays on <html>: it is what makes Chrome offer "Translate page".
 	if dir == "rtl" || dir == "ltr" || dir == "auto" {
-		sb.WriteString(fmt.Sprintf("<html lang=%q dir=%q>\n", lang, dir))
+		sb.WriteString(fmt.Sprintf("<html lang=\"%s\" dir=\"%s\">\n", html.EscapeString(lang), dir))
 	} else {
-		sb.WriteString(fmt.Sprintf("<html lang=%q>\n", lang))
+		sb.WriteString(fmt.Sprintf("<html lang=\"%s\">\n", html.EscapeString(lang)))
 	}
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
@@ -131,7 +138,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString(body.String())
 	sb.WriteString("\n</main>\n")
 	sb.WriteString(navBarScript)
-	sb.WriteString(readerScript(bookStorageKey(book.Title, 1), "index.html", 1, 1))
+	sb.WriteString(readerScript(readerKey(book), "index.html", 1, 1))
 	sb.WriteString("</body>\n</html>\n")
 
 	WriteFavicon(outputDir)
@@ -146,7 +153,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	}
 
 	// The merged file has absorbed every spine page, so the originals are dead weight: they
-	// are unreachable (nothing links to them), they carry no navbar, no theme and no OCR
+	// are unreachable (prepareMerge pointed every in-book link into the merged page), they carry no navbar, no theme and no OCR
 	// plates - the overlay step runs on the merged file only - so anyone who does reach one
 	// by guessing a filename gets a worse page than the book they asked for. Removal is
 	// best-effort and happens only after the merge is safely on disk; a file we cannot
@@ -168,11 +175,11 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 <html>
 <head>
   <meta charset="UTF-8">
-  <script>location.replace(%q);</script>
+  <script>location.replace(%s);</script>
 </head>
 <body></body>
 </html>
-`, target)
+`, jsString(target))
 		if err := os.WriteFile(entry, []byte(redirect), 0o644); err != nil {
 			return "", fmt.Errorf("write redirect index: %w", err)
 		}
@@ -240,12 +247,16 @@ func isPagedBook(inners []string) bool {
 	return true
 }
 
-// htmlLang returns the lang attribute of the document's <html> element, or "".
+// htmlLang returns the language of the document's <html> element: lang, or xml:lang when
+// lang is absent (XHTML-born pages often carry only that), or "".
 func htmlLang(doc *gohtml.Node) string {
 	var find func(*gohtml.Node) string
 	find = func(n *gohtml.Node) string {
 		if n.Type == gohtml.ElementNode && n.Data == "html" {
-			return nodeAttr(n, "lang")
+			if l := strings.TrimSpace(nodeAttr(n, "lang")); l != "" {
+				return l
+			}
+			return strings.TrimSpace(nodeAttr(n, "xml:lang"))
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if v := find(c); v != "" {

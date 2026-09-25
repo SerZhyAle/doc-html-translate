@@ -258,6 +258,11 @@ func (r Runner) Run() (int, error) {
 		}
 	}
 
+	// Fixed here, before translation rewrites the title: every page and index.html must
+	// namespace the saved reading position under this one key. The page count is taken
+	// after the split, so a layout change does not offer a position in a page that is gone.
+	book.ReaderKey = htmlgen.ReaderKey(filepath.Base(inputPath), info.Size(), book.Title, len(book.Spine))
+
 	// Step 2: Inject navigation bars (must happen before translation).
 	logging.Println("[2/4] Building HTML structure..")
 	var generatedIndex string
