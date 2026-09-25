@@ -6,7 +6,7 @@
 **Date:** 2026-09-24
 **Tier:** Moderate
 **Tactical plan:** `DEV/plan/09_2026-09-24_bugfix-reader-layer-and-single-page/` (created by /spec-tech)
-**Findings:** E2 E3 E4 E13 E17 E18 E19 E23 E24 X23 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Findings:** E2 E3 E4 E13 E17 E18 E19 E23 E24 X23 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 

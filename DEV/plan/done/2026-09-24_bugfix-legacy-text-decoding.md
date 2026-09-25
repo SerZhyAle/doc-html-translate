@@ -6,7 +6,7 @@
 **Date:** 2026-09-24
 **Tier:** Moderate
 **Tactical plan:** `DEV/plan/10_2026-09-24_bugfix-legacy-text-decoding/` (created by /spec-tech)
-**Findings:** X1 X2 X3 X4 X5 X18 X19 X21 X22 P23 B21 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Findings:** X1 X2 X3 X4 X5 X18 X19 X21 X22 P23 B21 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 

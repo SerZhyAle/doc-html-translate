@@ -6,7 +6,7 @@
 **Date:** 2026-09-24
 **Tier:** Easy
 **Tactical plan:** `DEV/plan/14_2026-09-24_bugfix-pdf-extraction-accuracy/` (created by /spec-tech)
-**Findings:** X6 X8 Q6 Q7 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Findings:** X6 X8 Q6 Q7 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 

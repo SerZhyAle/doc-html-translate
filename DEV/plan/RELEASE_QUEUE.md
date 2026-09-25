@@ -87,26 +87,34 @@ process and the GUI drop/delete need a pass on Windows. Rule 7 puts it at the bo
 
 ```
 #   ticket                                              changed     status
-07  07_2026-09-24_bugfix-output-completeness            2026-09-24  Draft (P90)
-08  08_2026-09-24_bugfix-translation-engine-correctness 2026-09-24  Draft (P85)
-09  09_2026-09-24_bugfix-reader-layer-and-single-page   2026-09-24  Draft (P80)
-10  10_2026-09-24_bugfix-legacy-text-decoding           2026-09-24  Draft (P80)
+07  07_2026-09-24_bugfix-output-completeness            2026-09-25  BlockNeedUserTest - Windows hands-on
+08  08_2026-09-24_bugfix-translation-engine-correctness 2026-09-25  BlockNeedUserTest - real Google/Ollama
 ```
 
 06 was in the audit's fourth package and led here by rule 1; it reached Implemented on 2026-09-25 (c1e9ec7,
-274fdb8, 8810164) and moved to [`done/`](done/2026-09-24_bugfix-epub-html-content-fidelity.md). 09 builds on its
+274fdb8, 8810164) and moved to [`done/`](done/2026-09-24_bugfix-epub-html-content-fidelity.md). 09 built on its
 link-rewrite machinery.
+
+**2026-09-25:** 09 and 10 reached Implemented and moved to `done/`
+([09](done/2026-09-24_bugfix-reader-layer-and-single-page.md),
+[10](done/2026-09-24_bugfix-legacy-text-decoding.md)). 07 and 08 are implemented and covered by tests on
+Linux; they wait on a Windows console (07) and on the real Google API and an Ollama model (08).
 
 ## release 3 - robustness
 
 ```
 #   ticket                                              changed     status
-11  11_2026-09-24_bugfix-external-process-bounds        2026-09-24  Draft (P75)
-12  12_2026-09-24_bugfix-resource-budgets               2026-09-24  Draft (P75)
-13  13_2026-09-24_bugfix-ocr-language-data-and-         2026-09-24  Draft (P70)
+11  11_2026-09-24_bugfix-external-process-bounds        2026-09-25  BlockNeedUserTest - Windows hands-on
+12  12_2026-09-24_bugfix-resource-budgets               2026-09-25  BlockNeedUserTest - 386 build, real 7-Zip
+13  13_2026-09-24_bugfix-ocr-language-data-and-         2026-09-25  BlockNeedUserTest - MSIX download
     detection
-14  14_2026-09-24_bugfix-pdf-extraction-accuracy        2026-09-24  Draft (P65)
 ```
+
+**2026-09-25:** 14 reached Implemented and moved to
+[`done/`](done/2026-09-24_bugfix-pdf-extraction-accuracy.md). 11, 12 and 13 are implemented and covered
+by tests on Linux; each waits on a Windows-only check named in its status line (process-tree kill and
+the upgraded pdftotext cache; peak memory on the 386 build and CBR/CB7 through a real 7-Zip; a language
+download in the Store build).
 
 ## release 4 - can slip one release, with the reason stated
 
