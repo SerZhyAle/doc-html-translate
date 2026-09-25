@@ -1,7 +1,7 @@
 # Strategic spec: 03_2026-09-24_bugfix-gui-local-api-hardening - GUI local server: authenticated, cancellable, leak-free
 
 **Ticket:** 03_2026-09-24_bugfix-gui-local-api-hardening
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests on Linux (`-race`, a fake converter, a headless Chromium pass over the real page); the Windows job object compiles and vets but runs only on Windows. Needs the owner's security sign-off and the manual Windows checks: no console window during a run, Cancel leaves no converter process, the GUI still responds after 10 minutes minimized.
 **Priority:** 90
 **Date:** 2026-09-24
 **Tier:** Security/Compliance (urgent)
@@ -81,10 +81,10 @@ single-writer relay -> page. Cancel / close -> run manager -> process-tree kill.
 1. **Liveness mechanism**
    - **Question:** a long-lived connection close, or a longer grace period?
    - **To find out:** check Chrome's intensive throttling behaviour against the chosen approach.
-   - **Status:** Open.
+   - **Status:** Resolved (2026-09-25). Both. The page holds a long-lived request open; throttling slows a hidden page's timers, not its open connections, so the stream stays up while minimized and drops when the page closes or reloads. The ping stays as a second signal, and the grace grew from 15 s to 90 s, above the one-a-minute throttled timer.
 2. **Process-tree kill on Windows**
    - **Question:** use a job object, or kill the child recursively?
-   - **Status:** Open.
+   - **Status:** Resolved (2026-09-25). A job object with kill-on-close: it also covers a GUI that dies without running any code (Task Manager, a crash), which a recursive kill cannot. A run that ends on its own lifts kill-on-close before the handle is closed, so the browser the converter opened for the result survives.
 
 ## 7. Risks
 - **The token breaks the GUI when the page is reloaded from history.** Likelihood: medium. Impact: the GUI stops working until restart. Mitigation: the page fetches the token from a same-origin bootstrap that checks Host and Origin.
@@ -107,5 +107,17 @@ README (GUI section): a Cancel button, and a note that multi-file drop uses the 
 5. The GUI still responds after being minimized for 10 minutes.
 6. Clearing the Ollama fields or the Split field and converting with Google works.
 
+## Implementation notes (2026-09-25)
+- **Authentication (G3):** a guard in front of the whole mux checks Host (the loopback address or `localhost` with this port), Origin when sent, `Sec-Fetch-Site` when sent, and on every `/api/` call a per-launch 32-byte token. The token is written into the served page only; the page is `no-store` and refuses framing. Each route is pinned to its method, and JSON endpoints require `application/json`, so `/api/register` no longer runs on a GET and a `text/plain` post is refused. The history-reload risk in section 7 needs no bootstrap endpoint: the page is always fetched fresh from the live server, and a page from an earlier launch points at a dead port anyway.
+- **Log relay (G1, G7):** each child stream is read into whole lines with no scanner limit (a line over 8 MiB is passed on in pieces) and fed into one channel; the handler is the only writer. A failed write or read keeps draining, and the relay stops waiting 3 s after the converter exits, so a grandchild holding the pipe cannot hang the run.
+- **Run lifecycle (G6, G14):** the child is tied to the request. Cancel (`/api/cancel`), a dropped request and the watchdog's shutdown all kill the tree; the log ends with `Cancelled.`. A second run into the same output location gets 409. `-register` has a 2-minute timeout; it and the file dialogs count as busy for the watchdog, and a dialog ends with the page that opened it.
+- **No console (G8):** the converter is created with `CREATE_NO_WINDOW`.
+- **Durable state (G12):** settings, output history and the Google key are written to a temporary file and renamed over the target; history updates are one read-modify-write under a lock file honoured by other instances. An unreadable settings or history file is moved aside as `<name>.corrupt-<time>`, and the page reports the settings case in the log area.
+- **Argument hygiene (G5, G16):** each field is checked before it is forwarded; an empty or malformed value means the GUI default. `-split` is always sent (GUI default 0), Ollama fields only for Ollama, `-max-cost` only for Google, and an unknown `-ui-lang` or malformed language code is dropped.
+- **Page (G15, G17, G18):** a multi-file drop says which file was used; the saved engine is matched by value; a refused run request is shown in the log; the log follows new output only when already at the bottom; a Cancel button replaces Convert while a run is active.
+- **Parity test depth (G19):** `TestAssembledArgsSurviveGarbageFields` feeds empty, non-numeric, negative and flag-like values for every field and every engine through the real CLI parser.
+- Tests: `cmd/doc-html-ui/hardening_test.go` (guard, relay with interleaved streams and a 1 MiB line, cancel and dropped request with a grandchild, a leftover process holding the pipe, one run per output, settings and history durability, liveness).
+- The partial-output risk on cancel stays with `bugfix-output-completeness`.
+
 ## 12. Next step
-`/spec-tech 03_2026-09-24_bugfix-gui-local-api-hardening`
+Owner sign-off, then the manual Windows checks: done criteria 3 (no converter process in Task Manager after Cancel, and after closing the GUI mid-run), 4 and 5.

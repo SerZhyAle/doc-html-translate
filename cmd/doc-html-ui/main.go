@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"crypto/sha256"
 	_ "embed"
@@ -11,15 +10,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf16"
@@ -67,41 +68,51 @@ func main() {
 	}
 	addr := ln.Addr().String()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleUI)
-	mux.HandleFunc("/i18n.js", handleI18nJS)
-	mux.HandleFunc("/favicon.ico", handleFavicon)
-	mux.HandleFunc("/api/version", handleVersion)
-	mux.HandleFunc("/api/initial", handleInitial)
-	mux.HandleFunc("/api/ping", handlePing)
-	mux.HandleFunc("/api/browse-file", handleBrowseFile)
-	mux.HandleFunc("/api/browse-folder", handleBrowseFolder)
-	mux.HandleFunc("/api/drop", handleDrop)
-	mux.HandleFunc("/api/settings", handleSettings)
-	mux.HandleFunc("/api/google-key", handleGoogleKey)
-	mux.HandleFunc("/api/preview", handlePreview)
-	mux.HandleFunc("/api/output-status", handleOutputStatus)
-	mux.HandleFunc("/api/open-output", handleOpenOutput)
-	mux.HandleFunc("/api/delete-output", handleDeleteOutput)
-	mux.HandleFunc("/api/run", handleRun)
-	mux.HandleFunc("/api/register", handleRegister)
-	mux.HandleFunc("/api/unregister", handleUnregister)
-	mux.HandleFunc("/api/assoc-status", handleAssocStatus)
-	mux.HandleFunc("/api/env", handleEnv)
-	mux.HandleFunc("/api/ocr-langs", handleOCRLangs)
-	mux.HandleFunc("/api/ocr-download", handleOCRDownload)
-	mux.HandleFunc("/api/report", handleReport)
-	mux.HandleFunc("/api/report-reveal", handleReportReveal)
-	mux.HandleFunc("/api/report-open", handleReportOpen)
-	mux.HandleFunc("/api/logs-clear", handleLogsClear)
-
-	srv := &http.Server{Handler: mux}
+	srv := &http.Server{Handler: newAPIGuard(newMux(), addr, uiToken)}
 
 	go watchHeartbeat(srv)
 	go openAppWindow("http://" + addr)
 	go ensureRightClickRegistered()
 
 	_ = srv.Serve(ln)
+}
+
+// uiToken is this launch's API secret. It is baked into the served page and nowhere else.
+var uiToken = newToken()
+
+// newMux wires every route to its handler and pins each one to the method (and, for a
+// JSON body, the content type) it is meant for. See guard.go for why.
+func newMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", getOnly(handleUI))
+	mux.HandleFunc("/i18n.js", getOnly(handleI18nJS))
+	mux.HandleFunc("/favicon.ico", getOnly(handleFavicon))
+	mux.HandleFunc("/api/version", getOnly(handleVersion))
+	mux.HandleFunc("/api/initial", getOnly(handleInitial))
+	mux.HandleFunc("/api/env", getOnly(handleEnv))
+	mux.HandleFunc("/api/assoc-status", getOnly(handleAssocStatus))
+	mux.HandleFunc("/api/ocr-langs", getOnly(handleOCRLangs))
+	mux.HandleFunc("/api/alive", getOnly(handleAlive))
+	mux.HandleFunc("/api/ping", postAction(handlePing))
+	mux.HandleFunc("/api/browse-file", postAction(handleBrowseFile))
+	mux.HandleFunc("/api/browse-folder", postAction(handleBrowseFolder))
+	mux.HandleFunc("/api/drop", postAction(handleDrop))
+	mux.HandleFunc("/api/register", postAction(handleRegister))
+	mux.HandleFunc("/api/unregister", postAction(handleUnregister))
+	mux.HandleFunc("/api/report", postAction(handleReport))
+	mux.HandleFunc("/api/logs-clear", postAction(handleLogsClear))
+	mux.HandleFunc("/api/settings", getOrPostJSON(handleSettings))
+	mux.HandleFunc("/api/google-key", getOrPostJSON(handleGoogleKey))
+	mux.HandleFunc("/api/preview", jsonPost(handlePreview))
+	mux.HandleFunc("/api/output-status", jsonPost(handleOutputStatus))
+	mux.HandleFunc("/api/open-output", jsonPost(handleOpenOutput))
+	mux.HandleFunc("/api/delete-output", jsonPost(handleDeleteOutput))
+	mux.HandleFunc("/api/run", jsonPost(handleRun))
+	mux.HandleFunc("/api/cancel", jsonPost(handleCancel))
+	mux.HandleFunc("/api/ocr-download", jsonPost(handleOCRDownload))
+	mux.HandleFunc("/api/report-reveal", jsonPost(handleReportReveal))
+	mux.HandleFunc("/api/report-open", jsonPost(handleReportOpen))
+	return mux
 }
 
 // ensureRightClickRegistered advertises the app in Windows' "Open with" list AND adds
@@ -121,17 +132,18 @@ func ensureRightClickRegistered() {
 
 // ── HTTP handlers ───────────────────────────────────────────
 
-var lastPing atomic.Int64
-
-// activeRuns counts in-flight conversions. The heartbeat watchdog must not shut the
-// server down while one is running, even if the browser's ping lapses (its main
-// thread can stall while rendering a long log), or a long conversion gets cut off
-// mid-stream - which surfaces in the UI as a bare "network error".
-var activeRuns atomic.Int64
-
-func handleUI(w http.ResponseWriter, _ *http.Request) {
+// handleUI serves the page with this launch's token in it. The page must not be cached:
+// a copy from an earlier launch would carry a dead token.
+func handleUI(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = io.WriteString(w, uiHTML)
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("Content-Security-Policy", "frame-ancestors 'none'")
+	_, _ = io.WriteString(w, strings.Replace(uiHTML, tokenPlaceholder, uiToken, 1))
 }
 
 // handleI18nJS serves the GUI dictionary. It is a separate file rather than an inline block
@@ -156,13 +168,15 @@ func handleInitial(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"file": initialFile})
 }
 
-func handlePing(w http.ResponseWriter, _ *http.Request) {
-	lastPing.Store(time.Now().Unix())
-	w.WriteHeader(http.StatusOK)
+// busy marks a request that the watchdog must outlive, such as an open dialog.
+func busy() func() {
+	activeRuns.Add(1)
+	return func() { activeRuns.Add(-1) }
 }
 
-func handleBrowseFile(w http.ResponseWriter, _ *http.Request) {
-	path, err := browseFile()
+func handleBrowseFile(w http.ResponseWriter, r *http.Request) {
+	defer busy()()
+	path, err := browseFile(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -170,8 +184,9 @@ func handleBrowseFile(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"path": path})
 }
 
-func handleBrowseFolder(w http.ResponseWriter, _ *http.Request) {
-	path, err := browseFolder()
+func handleBrowseFolder(w http.ResponseWriter, r *http.Request) {
+	defer busy()()
+	path, err := browseFolder(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -261,14 +276,18 @@ func droppedFilesDir() string {
 // its shape is the page's business - under %LOCALAPPDATA% so it survives restarts and
 // the read-only MSIX/Store install.
 //
-//	GET  → the saved JSON (or {} if none yet)
+//	GET  → the saved JSON (or {} if none yet). An unreadable file is set aside, and the
+//	       X-Settings-Corrupt header says where, so the page can tell the user.
 //	POST → save the request body (must be valid JSON, capped at 64 KiB)
 func handleSettings(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		data, err := os.ReadFile(settingsPath())
-		if err != nil || !json.Valid(data) {
+		data, corruptAt := readSettings()
+		if corruptAt != "" {
+			w.Header().Set("X-Settings-Corrupt", corruptAt)
+		}
+		if data == nil {
 			_, _ = io.WriteString(w, "{}")
 			return
 		}
@@ -283,12 +302,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid json", http.StatusBadRequest)
 			return
 		}
-		p := settingsPath()
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := os.WriteFile(p, data, 0o600); err != nil {
+		if err := writeSettings(data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -367,10 +381,7 @@ func saveGoogleAPIKey(key string) error {
 	if path == "" {
 		return fmt.Errorf("cannot determine a writable key location")
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("create key folder: %w", err)
-	}
-	if err := os.WriteFile(path, []byte(key), 0o600); err != nil {
+	if err := writeFileAtomic(path, []byte(key), 0o600); err != nil {
 		return fmt.Errorf("write key file: %w", err)
 	}
 	return nil
@@ -496,30 +507,6 @@ func paramsHistoryPath() string {
 	return filepath.Join(os.TempDir(), "doc-html-translate-output-params.json")
 }
 
-func loadParamsHistory() map[string]string {
-	data, err := os.ReadFile(paramsHistoryPath())
-	if err != nil {
-		return map[string]string{}
-	}
-	var m map[string]string
-	if json.Unmarshal(data, &m) != nil || m == nil {
-		return map[string]string{}
-	}
-	return m
-}
-
-func saveParamsHistory(m map[string]string) error {
-	data, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	p := paramsHistoryPath()
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return err
-	}
-	return os.WriteFile(p, data, 0o600)
-}
-
 // handleOutputStatus reports whether a previous conversion result exists for the
 // request's input/output, and whether it was built with different options than the
 // request currently describes - so the GUI can offer to delete and rebuild instead of
@@ -625,85 +612,8 @@ func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	if hist := loadParamsHistory(); len(hist) > 0 {
-		if _, ok := hist[outputDir]; ok {
-			delete(hist, outputDir)
-			_ = saveParamsHistory(hist)
-		}
-	}
+	_ = updateParamsHistory(func(m map[string]string) { delete(m, outputDir) })
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
-}
-
-func handleRun(w http.ResponseWriter, r *http.Request) {
-	activeRuns.Add(1)
-	defer activeRuns.Add(-1)
-
-	var req runRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "streaming not supported", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-
-	args := assembleArgs(req)
-	bin := findCLI()
-
-	fmt.Fprintf(w, "> %s\n\n", formatCommandLine(bin, args))
-	flusher.Flush()
-
-	cmd := exec.Command(bin, args...)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		fmt.Fprintf(w, "[ERROR] stdout pipe: %v\n", err)
-		flusher.Flush()
-		return
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		fmt.Fprintf(w, "[ERROR] stderr pipe: %v\n", err)
-		flusher.Flush()
-		return
-	}
-
-	if err := cmd.Start(); err != nil {
-		fmt.Fprintf(w, "[ERROR] start: %v\n", err)
-		flusher.Flush()
-		return
-	}
-
-	var wg sync.WaitGroup
-	stream := func(rd io.Reader, prefix string) {
-		defer wg.Done()
-		sc := bufio.NewScanner(rd)
-		for sc.Scan() {
-			fmt.Fprintf(w, "%s%s\n", prefix, sc.Text())
-			flusher.Flush()
-		}
-	}
-	wg.Add(2)
-	go stream(stdout, "")
-	go stream(stderr, "[err] ")
-	wg.Wait()
-
-	if err := cmd.Wait(); err != nil {
-		fmt.Fprintf(w, "\nExit: %v\n", err)
-	} else {
-		fmt.Fprintf(w, "\nDone.\n")
-		if outputDir, err := previousResult(req.Input, req.Output); err == nil {
-			hist := loadParamsHistory()
-			hist[outputDir] = fingerprintFor(req)
-			_ = saveParamsHistory(hist)
-		}
-	}
-	flusher.Flush()
 }
 
 // handleRegister sets this app as the default Windows handler for the supported
@@ -712,9 +622,12 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 // headless converter) rather than at the GUI - matching the unpackaged double-click
 // behavior. Under an MSIX/Store install this is a no-op (HKCU is virtualized); the GUI
 // hides the association toggle there.
-func handleRegister(w http.ResponseWriter, _ *http.Request) {
+func handleRegister(w http.ResponseWriter, r *http.Request) {
+	defer busy()()
+	ctx, cancel := context.WithTimeout(r.Context(), registerTimeout)
+	defer cancel()
 	bin := findCLI()
-	cmd := exec.Command(bin, "-register")
+	cmd := exec.CommandContext(ctx, bin, "-register")
 	// The CLI's -register flow prints a splash and waits on Scanln; feed a newline
 	// so it returns immediately instead of blocking this request.
 	cmd.Stdin = strings.NewReader("\n")
@@ -730,6 +643,10 @@ func handleRegister(w http.ResponseWriter, _ *http.Request) {
 	}
 	_ = json.NewEncoder(w).Encode(resp)
 }
+
+// registerTimeout bounds the -register child. Registration is a handful of registry writes;
+// a child still running after this is stuck, not slow.
+const registerTimeout = 2 * time.Minute
 
 // handleUnregister releases the default-handler association (the "off" side of the
 // association toggle), leaving the non-destructive "Convert to HTML" right-click verb and
@@ -840,6 +757,11 @@ func handleOCRDownload(w http.ResponseWriter, r *http.Request) {
 
 // ── args assembly ───────────────────────────────────────────
 
+// assembleArgs turns the form into the converter's command line. Every field is checked
+// before it is forwarded: the CLI rejects a malformed value outright, so one stray character
+// in a box the user is not even using used to break every run. An empty or malformed field
+// means the GUI's documented default, and a field that belongs to one engine is sent only
+// when that engine is selected.
 func assembleArgs(req runRequest) []string {
 	var a []string
 	if req.NoTranslate {
@@ -853,34 +775,46 @@ func assembleArgs(req runRequest) []string {
 	}
 	if req.Ollama {
 		a = append(a, "-ollama")
+		if m := strings.TrimSpace(req.OllamaModel); m != "" && m != "gemma3:12b" && !strings.HasPrefix(m, "-") {
+			a = append(a, "-ollama-model", m)
+		}
+		if n, ok := intField(req.OllamaParallel, 1); ok && n != 1 {
+			a = append(a, "-ollama-parallel", strconv.Itoa(n))
+		}
+		if n, ok := intField(req.OllamaCtx, 1); ok && n != 8192 {
+			a = append(a, "-ollama-ctx", strconv.Itoa(n))
+		}
 	}
-	if req.OllamaModel != "gemma3:12b" {
-		a = append(a, "-ollama-model", req.OllamaModel)
+	// The GUI's split default is 0 (off) while the CLI's is 5000, so the value is always
+	// sent: leaving it out would silently switch splitting on.
+	split, ok := intField(req.SplitSize, 0)
+	if !ok {
+		split = 0
 	}
-	if req.OllamaParallel != "1" {
-		a = append(a, "-ollama-parallel", req.OllamaParallel)
-	}
-	if req.OllamaCtx != "8192" {
-		a = append(a, "-ollama-ctx", req.OllamaCtx)
-	}
-	if req.SplitSize != "" {
-		a = append(a, "-split", req.SplitSize)
-	}
+	a = append(a, "-split", strconv.Itoa(split))
 	// toc-depth/max-cost default to 0 (unlimited / no limit) in the CLI, so only
 	// forward them when the user picked a non-default value - keeps the command line clean.
-	if req.TOCDepth != "" && req.TOCDepth != "0" {
-		a = append(a, "-toc-depth", req.TOCDepth)
+	if n, ok := intField(req.TOCDepth, 0); ok && n != 0 {
+		a = append(a, "-toc-depth", strconv.Itoa(n))
 	}
 	if !req.SinglePage {
 		a = append(a, "-multipage")
 	}
-	if req.MaxCost != "" && req.MaxCost != "0" {
-		a = append(a, "-max-cost", req.MaxCost)
+	// Max cost guards the paid engine only.
+	if req.Google {
+		if f, err := strconv.ParseFloat(strings.TrimSpace(req.MaxCost), 64); err == nil && f > 0 && !math.IsInf(f, 0) {
+			a = append(a, "-max-cost", strconv.FormatFloat(f, 'f', -1, 64))
+		}
 	}
-	a = append(a, "-src", req.SrcLang, "-dst", req.DstLang)
+	if isLangCode(req.SrcLang) {
+		a = append(a, "-src", req.SrcLang)
+	}
+	if isLangCode(req.DstLang) {
+		a = append(a, "-dst", req.DstLang)
+	}
 	if req.OCR {
 		a = append(a, "-ocr")
-		if req.OCRLang != "" {
+		if ocrLangPattern.MatchString(req.OCRLang) {
 			a = append(a, "-ocr-lang", req.OCRLang)
 		}
 	}
@@ -892,8 +826,9 @@ func assembleArgs(req runRequest) []string {
 	}
 	// The window's own language selector is the control here, so the converted page's
 	// navigation speaks the language the user just read the GUI in. Empty means "whatever
-	// the OS says", which is the CLI's own default.
-	if req.UILang != "" {
+	// the OS says", which is the CLI's own default; a code the CLI does not know is dropped
+	// rather than failing the run.
+	if req.UILang != "" && slices.Contains(i18n.Codes, req.UILang) {
 		a = append(a, "-ui-lang", req.UILang)
 	}
 	if req.Output != "" {
@@ -905,6 +840,25 @@ func assembleArgs(req runRequest) []string {
 	}
 	return a
 }
+
+// intField parses a numeric form field. ok is false for an empty, non-integer or
+// below-minimum value, which the caller treats as "use the default".
+func intField(s string, minimum int) (int, bool) {
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil || n < minimum {
+		return 0, false
+	}
+	return n, true
+}
+
+// isLangCode accepts the shape of a translation language code ("en", "zh-CN", "auto").
+func isLangCode(s string) bool { return langCodePattern.MatchString(s) }
+
+var (
+	langCodePattern = regexp.MustCompile(`^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})?$`)
+	// Tesseract data names: "eng", "chi_sim", "eng+rus".
+	ocrLangPattern = regexp.MustCompile(`^[A-Za-z0-9_]{1,32}(\+[A-Za-z0-9_]{1,32}){0,7}$`)
+)
 
 // trimTrailingSeparators drops a trailing "\" or "/" from a folder path (keeping a
 // root such as `C:\`). The path means the same without it, and inside quotes a
@@ -1025,7 +979,7 @@ public class Fg : IWin32Window {
 '@
 $owner = [Fg]::Current()`
 
-func browseFile() (string, error) {
+func browseFile(ctx context.Context) (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
@@ -1033,32 +987,35 @@ $f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*
 $f.Title = "Select input file"
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.FileName)) }`
-	out, err := runPowershell(script)
+	out, err := runPowershell(ctx, script)
 	if err != nil {
 		return "", err
 	}
 	return decodeDialogPath(out)
 }
 
-func browseFolder() (string, error) {
+func browseFolder(ctx context.Context) (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.FolderBrowserDialog
 $f.Description = "Select output folder"
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.SelectedPath)) }`
-	out, err := runPowershell(script)
+	out, err := runPowershell(ctx, script)
 	if err != nil {
 		return "", err
 	}
 	return decodeDialogPath(out)
 }
 
-func runPowershell(script string) (string, error) {
+// runPowershell runs a dialog script for as long as the page that asked for it is there:
+// the dialog waits on the user, so it has no timeout of its own, but a page that went away
+// takes its dialog with it.
+func runPowershell(ctx context.Context, script string) (string, error) {
 	// -EncodedCommand (base64 of UTF-16LE) sidesteps every -Command quoting pitfall
 	// for multi-line scripts that embed here-strings, inline C# (Add-Type), and double
 	// quotes - which the dialog scripts now do.
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encodePSCommand(script))
+	cmd := exec.CommandContext(ctx, "powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encodePSCommand(script))
 	hideWindow(cmd)
 	out, err := cmd.Output()
 	if err != nil {
@@ -1145,24 +1102,4 @@ func startDetached(cmd *exec.Cmd) error {
 		return err
 	}
 	return cmd.Process.Release()
-}
-
-// ── heartbeat auto-shutdown ─────────────────────────────────
-
-func watchHeartbeat(srv *http.Server) {
-	lastPing.Store(time.Now().Unix())
-	for {
-		time.Sleep(5 * time.Second)
-		// A running conversion counts as alive: keep the timer fresh so we neither
-		// abort it nor shut down the instant a long one finishes (the browser needs
-		// a moment to resume pinging).
-		if activeRuns.Load() > 0 {
-			lastPing.Store(time.Now().Unix())
-			continue
-		}
-		if time.Now().Unix()-lastPing.Load() > 15 {
-			_ = srv.Shutdown(context.Background())
-			os.Exit(0)
-		}
-	}
 }

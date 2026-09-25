@@ -692,6 +692,11 @@ Invariant: **the GUI must expose every CLI flag** (see [`ui-cli-parity`](../CLAU
 default mismatches (GUI split=0, extension source-lang=auto, extension OCR-lang fixed `eng`) are tracked
 in the parity ticket.
 
+The GUI always forwards `-split` (its default 0 differs from the CLI's 5000, so leaving it out would
+turn splitting on), forwards the Ollama fields only with `-ollama` and `-max-cost` only with `-google`,
+and treats an empty or malformed box as its own default. `TestAssembledArgsSurviveGarbageFields`
+([`hardening_test.go`](../cmd/doc-html-ui/hardening_test.go)) feeds such values through the real CLI parser.
+
 **File-type association is opt-in, off by default, on every edition** (2026-07-15). No edition makes
 itself the default handler / auto-interceptor without an explicit user action; instead each always
 offers a right-click "convert" entry. Desktop: the no-arg first run and GUI launch register only the

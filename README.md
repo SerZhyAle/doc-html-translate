@@ -227,6 +227,8 @@ and PDF); other formats are unaffected.
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required) and CBZ/CBR/CB7/CBT comics (CBR/CB7 need 7-Zip).
 - In `doc-html-ui`, Google Translate and Ollama are mutually exclusive, and a Google key can be saved directly from the GUI.
+- A running `doc-html-ui` conversion can be stopped with **Cancel**, which also stops everything the converter started; closing the GUI stops it too. Dropping several files converts only the first, and the window says which one.
+- The `doc-html-ui` window talks to a local server that answers only that window: every call carries a secret issued for this launch, and requests from other sites or host names are refused.
 - `doc-html-ui` exposes the full CLI surface, including `-toc-depth` and `-max-cost`, plus a **default-handler toggle** (the GUI equivalent of `-register` / `-unregister`; opt-in, off by default) and a one-time first-run prompt offering it. The toggle and prompt are hidden under the Microsoft Store (MSIX) build, where file associations come from the package manifest instead. The GUI always registers the non-destructive "Convert to HTML" right-click entry + "Open with" on launch. If the converter exe is missing next to the GUI, it shows a warning rather than failing silently on Convert.
 
 ## Development
