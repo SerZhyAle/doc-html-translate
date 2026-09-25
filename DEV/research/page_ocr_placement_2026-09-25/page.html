@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="/src/ocr-overlay.css"><link rel="stylesheet" href="/src/page-overlay.css">
+<style>
+ body{margin:0;background:#fff} .cell{margin:30px 40px;display:inline-block;vertical-align:top}
+ .ocr-plate{border-radius:0!important} #dht-ocr-bar{display:none!important}
+</style>
+<script>
+window.__listeners=[];
+window.chrome={runtime:{getURL:p=>location.origin+"/"+p,sendMessage:()=>Promise.resolve(),onMessage:{addListener:f=>__listeners.push(f)}},i18n:{getMessage:()=>""}};
+</script></head><body>
+<div class="cell"><img id="plain" style="width:400px;height:200px"></div>
+<div class="cell"><img id="padded" style="width:400px;height:200px;padding:12px 30px 6px 18px;border:7px solid #fff;background:#fff"></div>
+<div class="cell"><img id="contain" style="width:300px;height:300px;object-fit:contain;background:#fff"></div>
+<div class="cell"><img id="cover" style="width:150px;height:150px;object-fit:cover;object-position:0% 50%"></div>
+<div class="cell"><img id="coverpx" style="width:260px;height:180px;object-fit:cover;object-position:-40px 30%"></div>
+<div class="cell" style="transform:scale(0.5);transform-origin:0 0"><img id="scaled" style="width:400px;height:200px;padding:20px;background:#fff"></div>
+<div class="cell"><img id="rotated" style="width:400px;height:200px;transform:rotate(10deg)"></div>
+<div class="cell" style="rotate:5deg"><img id="rotparent" style="width:400px;height:200px"></div>
+<div class="cell"><img id="mirrorprop" style="width:400px;height:200px;scale:-1 1"></div>
+<div class="cell"><img id="mirrored" style="width:400px;height:200px;transform:scaleX(-1)"></div>
+</body></html>

@@ -58,6 +58,7 @@
     nextId: 1,
     ids: new WeakMap(), // img -> picture id, so a rescan never offers the same picture twice
     root: null,
+    plates: null, // ocr-plates.js, once loaded - a layer exists only after it is
     bar: null,
     els: {},
     raf: 0,
@@ -149,14 +150,51 @@
   function place(a) {
     const r = a.img.getBoundingClientRect();
     if (a.badgeLayer) put(a.badgeLayer, r);
-    if (a.layer) put(a.layer, r);
+    if (a.layer) putPlates(a.layer, a.img, r);
+  }
+
+  // rotatedChain asks the picture and every ancestor whether it turns, skews or mirrors it: a
+  // rotated container carries the picture with it as surely as a rotated <img>.
+  function rotatedChain(el, transformRotates) {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (transformRotates(cs.transform, cs.rotate, cs.scale)) return true;
+    }
+    return false;
+  }
+
+  // putPlates lays the plate layer over the picture as drawn (ocr-plates.js pictureBox), cut to
+  // what the element shows. A picture it cannot place truthfully - rotated, skewed, mirrored, or
+  // positioned in a way the arithmetic does not know - gets no plates until it can be placed again:
+  // OCR-OVERLAY rule 4, clear rather than draw in the wrong place.
+  function putPlates(layer, img, r) {
+    const { pictureBox, transformRotates } = state.plates;
+    const cs = getComputedStyle(img);
+    const pb = pictureBox({
+      rect: r, style: cs, naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight,
+      offsetWidth: img.offsetWidth, offsetHeight: img.offsetHeight,
+      rotated: rotatedChain(img, transformRotates),
+    });
+    if (!pb) {
+      layer.style.display = "none";
+      layer.dataset.unplaced = "1";
+      layer.dataset.l = "";
+      return;
+    }
+    delete layer.dataset.unplaced;
+    const { box, clip } = pb;
+    const inset = [clip.top - box.top, box.left + box.width - clip.left - clip.width,
+      box.top + box.height - clip.top - clip.height, clip.left - box.left];
+    const cut = inset.some((v) => v > 0.5) ? `inset(${inset.map((v) => `${Math.max(0, v)}px`).join(" ")})` : "";
+    put(layer, { left: box.left, top: box.top, width: box.width, height: box.height });
+    if (layer.style.clipPath !== cut) layer.style.clipPath = cut;
   }
 
   function put(layer, r) {
     if (r.width < 1 || r.height < 1) { layer.style.display = "none"; return; }
     const left = r.left + window.scrollX;
     const top = r.top + window.scrollY;
-    if (layer.dataset.l !== String(left) || layer.dataset.t !== String(top)
+    if (layer.style.display === "none" || layer.dataset.l !== String(left) || layer.dataset.t !== String(top)
       || layer.dataset.w !== String(r.width) || layer.dataset.h !== String(r.height)) {
       layer.dataset.l = String(left); layer.dataset.t = String(top);
       layer.dataset.w = String(r.width); layer.dataset.h = String(r.height);
@@ -235,7 +273,9 @@
   async function drawPlates(id, specs, htmlLang) {
     const a = state.anchors.get(id);
     if (!a || !a.img.isConnected) return;
-    const { renderPlates, scheduleFit } = await platesReady;
+    const plates = await platesReady;
+    const { renderPlates, scheduleFit } = plates;
+    state.plates = plates;
     if (!state.anchors.has(id)) return; // removed while the module was loading
     clearLayer(a);
     if (!specs || !specs.length) return;

@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,6 +48,9 @@ type Block struct {
 	X0, Y0, X1, Y1 int
 	LineH          int
 	Lines          []LineBox
+	// Conf is the mean confidence of the block's lines. Only the discard record reads it: a plate
+	// the screen merge rejects has no line left to take a confidence from.
+	Conf float64
 }
 
 // LineBox is one recognized line's rectangle in image pixels.
@@ -54,10 +58,10 @@ type LineBox struct {
 	X0, Y0, X1, Y1 int
 }
 
-// DroppedLine is a line the recognizer read and the confidence floor threw away. It never reaches
-// the page - it exists so the decision can be looked at.
+// DroppedLine is a line the recognizer read and a gate threw away. It never reaches the page - it
+// exists so the decision can be looked at.
 //
-// The floor is the one place in the overlay where the app silently decides a reader does not get
+// The gates are the places in the overlay where the app silently decides a reader does not get
 // words the engine did read, and until this existed nothing said so: a scene where the poster's
 // first word came back correctly at 69.2 and was discarded at a floor of 80 looked, from every
 // output the app or the lab produced, exactly like a scene where the recognizer found nothing.
@@ -65,13 +69,24 @@ type LineBox struct {
 type DroppedLine struct {
 	Text string
 	Conf float64
-	// Floor is the confidence gate this line failed. The record is self-describing because one
-	// image can be read twice at two floors - the ordinary pass at ocrMinLineConf and then the
-	// rescue ladder at ocrRescueLineConf - and a distribution derived from the two mixed together
-	// would be a distribution of nothing.
-	Floor          float64
+	// Floor is the confidence floor of the pass that read the line. One image can be read several
+	// times at two floors - the ordinary pass at ocrMinLineConf, the rescue ladder and the screen
+	// sweep at ocrRescueLineConf - and a distribution derived from them mixed together would be a
+	// distribution of nothing.
+	Floor float64
+	// Gate names the test that dropped it (gateConfidence, gateTranslatable, gateScreenMerge):
+	// OCR-OVERLAY rule 12 asks which threshold failed, and three gates can drop a line that
+	// cleared the same floor.
+	Gate           string
 	X0, Y0, X1, Y1 int
 }
+
+// The gates a DroppedLine names.
+const (
+	gateConfidence   = "confidence"   // the line's mean confidence is under the pass's floor (keepLine)
+	gateTranslatable = "translatable" // its cluster has nothing to translate (isTranslatable)
+	gateScreenMerge  = "screen-merge" // a screen-sweep plate over lettering already plated (mergeScreenBlocks)
+)
 
 // Result is the OCR output for a single image.
 type Result struct {
@@ -216,19 +231,21 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 		return Result{}, err
 	}
 	if len(res.Blocks) == 0 {
+		// The record is the ordinary pass's drops followed by the ladder's, whether or not the
+		// ladder placed anything: the ordinary pass ran and its rejections are the reader's loss
+		// either way, and the two stay separable because each line names its floor. When the
+		// ladder read text and rejected all of it, that record is the only thing telling "the
+		// floor rejected everything" from "there was nothing here".
+		primary := res.Dropped
 		alt, ok := greyRescue(bin, frame, lang, dataDir, dpi)
-		switch {
-		case ok:
+		if ok {
 			res = alt
-		case len(alt.Dropped) > 0:
-			// The ladder read text and its floor rejected all of it. That is a different outcome
-			// from "the ladder read nothing", and the record is the only thing that can tell the
-			// two apart - so it is carried even though no plate is. The two passes' records sit
-			// side by side and stay distinguishable, because each line names the floor it failed.
-			res.Dropped = append(res.Dropped, alt.Dropped...)
 		}
+		res.Dropped = append(primary, alt.Dropped...)
 	} else {
-		res.Blocks = screenSweep(bin, frame, lang, dataDir, dpi, res.Blocks)
+		var swept []DroppedLine
+		res.Blocks, swept = screenSweep(bin, frame, lang, dataDir, dpi, res.Blocks)
+		res.Dropped = append(res.Dropped, swept...)
 	}
 	if scale > 1 {
 		scaleDown(&res, scale)
@@ -444,27 +461,44 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 // inherited rather than excluded because excluding it would be an unmeasured decision too, and the
 // corpus run over all 46 scenes is what checks it - precision, cross-group and protected-area
 // damage are exactly what a wrong plate on a good page moves.
-func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block) []Block {
+//
+// The second result is the sweep's own discard record: the lines its floor and its translatability
+// test rejected, and the plates the merge refused as duplicates.
+func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block) ([]Block, []DroppedLine) {
 	grey := frame.grey()
 	if grey == nil {
-		return kept
+		return kept, nil
 	}
 	// Both this and the ladder run before scaleDown, so every rectangle here is already in
 	// prepared-image coordinates and nothing needs rescaling.
 	pitch := screenPitchOutside(grey, blockRects(kept))
 	if pitch == 0 {
-		return kept
+		return kept, nil
 	}
 	path, cleanup, ok := writeTempPNG(gaussBlurGray(grey, float64(pitch)/ocrScreenSigmaDivisor))
 	if !ok {
-		return kept
+		return kept, nil
 	}
 	defer cleanup()
 	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
 	if err != nil {
-		return kept
+		return kept, nil
 	}
-	return mergeScreenBlocks(kept, res.Blocks)
+	merged, rejected := mergeScreenBlocks(kept, res.Blocks)
+	return merged, append(res.Dropped, blockDrops(rejected, ocrRescueLineConf, gateScreenMerge)...)
+}
+
+// blockDrops records whole plates a gate refused, one entry per plate: by then the lines are
+// merged into it and the plate is what was lost.
+func blockDrops(blocks []Block, floor float64, gate string) []DroppedLine {
+	out := make([]DroppedLine, 0, len(blocks))
+	for _, b := range blocks {
+		out = append(out, DroppedLine{
+			Text: b.Text, Conf: b.Conf, Floor: floor, Gate: gate,
+			X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1,
+		})
+	}
+	return out
 }
 
 // ocrRescueLineConf is the line-confidence floor for a rescue pass, higher than ocrMinLineConf
@@ -698,6 +732,12 @@ func scaleDown(res *Result, s int) {
 			ln := &bl.Lines[j]
 			ln.X0, ln.Y0, ln.X1, ln.Y1 = div(ln.X0), div(ln.Y0), div(ln.X1), div(ln.Y1)
 		}
+	}
+	// The discard record is in the same prepared-image space, and a box left there would put a
+	// rejected line at twice its place on the picture it is reported against (OCR-OVERLAY rule 2).
+	for i := range res.Dropped {
+		d := &res.Dropped[i]
+		d.X0, d.Y0, d.X1, d.Y1 = div(d.X0), div(d.Y0), div(d.X1), div(d.Y1)
 	}
 }
 
@@ -1230,18 +1270,22 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		l.trimOutlierWords()
 	}
 
-	res.Blocks = clusterLines(lines, minConf, res.Width, res.Height)
 	// Same predicate clusterLines uses, so the record cannot drift away from the decision: a line
 	// that carried text and did not clear the floor is one the reader lost.
 	for _, l := range lines {
 		if l.text.Len() > 0 && !keepLine(l, minConf) {
-			res.Dropped = append(res.Dropped, DroppedLine{
-				Text: strings.TrimSpace(l.text.String()), Conf: l.meanConf(), Floor: minConf,
-				X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1,
-			})
+			res.Dropped = append(res.Dropped, lineDrop(l, minConf, gateConfidence))
 		}
 	}
+	res.Blocks = clusterLinesRecording(lines, minConf, res.Width, res.Height, &res.Dropped)
 	return res, nil
+}
+
+func lineDrop(l *ocrLine, floor float64, gate string) DroppedLine {
+	return DroppedLine{
+		Text: strings.TrimSpace(l.text.String()), Conf: l.meanConf(), Floor: floor, Gate: gate,
+		X0: l.x0, Y0: l.y0, X1: l.x1, Y1: l.y1,
+	}
 }
 
 // keepLine is the confidence floor, in one place. clusterLines applies it and parseTSV records
@@ -1270,6 +1314,13 @@ func keepLine(l *ocrLine, minConf float64) bool {
 // plausibly can is released into its own lines. Zero on either means the page size is unknown and
 // the rule does not run.
 func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
+	return clusterLinesRecording(lines, minConf, imgW, imgH, nil)
+}
+
+// clusterLinesRecording is clusterLines that also appends to *dropped, when given, every line of a
+// cluster the translatability test refused - recorded where the decision is taken, so the record
+// is the decision and not a second copy of it.
+func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dropped *[]DroppedLine) []Block {
 	var kept []*ocrLine
 	var heights []int
 	for _, l := range lines {
@@ -1302,6 +1353,7 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 		cheights           []int
 		cink               []int // the same lines' ink heights, for the type-size test only
 		clines             []LineBox
+		cmembers           []*ocrLine // the lines themselves, for their confidences
 		open               bool
 	)
 	flush := func() {
@@ -1310,13 +1362,29 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 		}
 		if txt := strings.TrimSpace(ctext.String()); isTranslatable(txt) {
 			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, imgW, imgH); over != nil {
+				// A released plate is one member line; its box finds which (releaseOversized skips
+				// textless lines, so the positions do not line up).
+				for i := range over {
+					if j := slices.Index(clines, over[i].Lines[0]); j >= 0 {
+						over[i].Conf = cmembers[j].meanConf()
+					}
+				}
 				blocks = append(blocks, over...)
 			} else {
+				conf := 0.0
+				for _, m := range cmembers {
+					conf += m.meanConf()
+				}
 				blocks = append(blocks, Block{
 					Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
 					LineH: median(cheights, cy1-cy0),
 					Lines: append([]LineBox(nil), clines...),
+					Conf:  conf / float64(len(cmembers)),
 				})
+			}
+		} else if dropped != nil {
+			for _, m := range cmembers {
+				*dropped = append(*dropped, lineDrop(m, minConf, gateTranslatable))
 			}
 		}
 		ctext.Reset()
@@ -1324,6 +1392,7 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 		cheights = cheights[:0]
 		cink = cink[:0]
 		clines = clines[:0]
+		cmembers = cmembers[:0]
 		open = false
 	}
 	for _, l := range kept {
@@ -1354,6 +1423,7 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 				cheights = append(cheights, l.y1-l.y0)
 				cink = append(cink, l.inkHeight())
 				clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
+				cmembers = append(cmembers, l)
 				continue
 			}
 			flush()
@@ -1366,6 +1436,7 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 		cheights = append(cheights, l.y1-l.y0)
 		cink = append(cink, l.inkHeight())
 		clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
+		cmembers = append(cmembers, l)
 		open = true
 	}
 	flush()

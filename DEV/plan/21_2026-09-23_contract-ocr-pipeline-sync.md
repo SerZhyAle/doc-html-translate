@@ -1,6 +1,6 @@
 # The OCR contracts describe the mechanism that ships, and the mechanism holds them
 
-**Status:** Draft
+**Status:** In Progress - Direction A items 1, 2, 4, 6 (code), 8, 9, 10 and the browser half of 5 done on 2026-09-25 (see "Implementation record"); every Direction B step, items 3, 5 (first half), 7, 11 and the registry half of 6 wait on the owner's machine.
 **Priority:** 49
 **Date:** 2026-09-23
 
@@ -584,3 +584,22 @@ B decision or amendment first, because the pointers' "catalog first, then code" 
 `tesseract.go` (1407 lines), `overlay.go` (828) and `ocr-overlay.js` (611) are over the file budget and
 most code items touch them. The 386 toolchain's memory ceiling can kill `go test ./tests/` on a first run;
 a rerun that passes is not a regression.
+
+## Implementation record (2026-09-25, cloud session)
+
+| Item | Result |
+|---|---|
+| A1 | `scaleDown` scales `Result.Dropped` with the plates; `TestScaleDownScalesTheDiscardRecord`. |
+| A2 | Every gate is recorded with a `gate` field in both editions: `confidence` (`keepLine`), `translatable` (each line of a cluster `isTranslatable` refused, recorded inside `clusterLinesRecording` / `clusterLines(.., dropped)` where the decision is taken), `screen-merge` (a sweep plate `mergeScreenBlocks` refused, with its lines' mean confidence - new `Block.Conf` / block `conf`). The sweep's own floor drops are recorded too. Merge semantic (open question 4), decided and written into `docs/PARITY.md`: the ordinary pass's drops, then the ladder's or the sweep's - the extension used to replace the ordinary pass's drops with the ladder's. The diag line gains `"gate"`; both pinned literals moved. Guarded by `TestParityOCRDiscardGates`. |
+| A4 | Already done before this session (commit `c2cfa21`, `stageForDetection`, `detect_stage_test.go`). |
+| A5 (browser half) | The "JS disabled -> clipped" claim of `OCR-PIPELINE` §3.4 is **false in the reassuring direction**: nothing clips, the plate carries only `min-height` so `overflow:hidden` never engages, and the box grows at the unfitted size - 244 px over a 39 px source region. Evidence: [`DEV/research/page_ocr_placement_2026-09-25`](../research/page_ocr_placement_2026-09-25/README.md) §2. The catalog correction joins step B1 (local); the code comment in `overlay.go` and `docs/PARITY.md` are corrected. |
+| A6 (code) | The page agent places the layer over the picture as drawn (`ocr-plates.js` `pictureBox`: border, padding, `object-fit`, `object-position`, a scaled ancestor, `clip-path` to what the element shows) and clears it for a picture rotated, skewed or mirrored by itself or an ancestor (`transformRotates`). Measured in Chromium against the real agent: every placeable case clean, where HEAD left half a `cover` picture's text uncovered and put a mirrored picture's plate on the other half (evidence §1). The registry half - "says so in its registry row" - stays local. |
+| A8 | Colour numbers are named constants on both sides and pinned by `TestParityOCRPlateColourNumbers`; the fit ladder by `TestParityOCRFitLadder`; the column test by `TestParityOCRColumnTest`. Two real drifts fixed in the extension to the desktop's integer arithmetic: the ring band and the ink strip were rounded (now floored), and `luma` was fractional against `140` / `55` (now truncated). The extension also clamped the line height to the box, which the desktop does not. |
+| A9 | `extension/test/ocr-plates.test.mjs`: `plateSpecs`, `renderPlates`, `fitPlate` (grow to the cap, stop a step before overflow, shrink above the floor, release instead of clip, re-fit from the base), `pictureBox`, `transformRotates`. |
+| A10 | The `overlay.go` comment says median; `samplePixels`' "fully transparent" comment now says alpha < 128. |
+
+Checks (Linux): `go vet ./...` (also `GOOS=windows`), `go test ./...`, extension `npm test` 262 pass / 0
+fail. Mutation check of the new parity pins: a changed `INK_MIN_SAMPLES`, fit iteration bound and
+column multiplier each fail their test.
+
+For step B1, found by this session: the §3.4 JS-off sentence above.

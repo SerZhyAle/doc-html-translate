@@ -155,3 +155,17 @@ func TestScaleDown(t *testing.T) {
 		t.Errorf("block = (%d,%d,%d,%d) lineH=%d, want (5,10,55,30) lineH=9", b.X0, b.Y0, b.X1, b.Y1, b.LineH)
 	}
 }
+
+// The discard record is reported against the picture the reader sees, so an upscaled read must
+// bring its boxes back exactly as it brings the plates back (OCR-OVERLAY rule 2).
+func TestScaleDownScalesTheDiscardRecord(t *testing.T) {
+	res := Result{Width: 200, Height: 100, Dropped: []DroppedLine{{Text: "lost", Conf: 40, Floor: 50, Gate: gateConfidence, X0: 10, Y0: 20, X1: 110, Y1: 60}}}
+	scaleDown(&res, 2)
+	d := res.Dropped[0]
+	if d.X0 != 5 || d.Y0 != 10 || d.X1 != 55 || d.Y1 != 30 {
+		t.Errorf("dropped box = (%d,%d,%d,%d), want (5,10,55,30)", d.X0, d.Y0, d.X1, d.Y1)
+	}
+	if d.Conf != 40 || d.Floor != 50 || d.Gate != gateConfidence {
+		t.Errorf("scaling touched more than the box: %+v", d)
+	}
+}

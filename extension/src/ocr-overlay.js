@@ -8,7 +8,7 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
@@ -189,7 +189,9 @@ function clampDeclaredDpi(d) {
 // colour of the original's first letter"), with a near-black/near-white fallback that
 // guarantees contrast. Best-effort: any failure leaves the CSS defaults. Mirrors the
 // desktop app's overlay.go blockColors (see docs/PARITY.md - keep the two in sync).
-const luma = (r, g, b) => (299 * r + 587 * g + 114 * b) / 1000;
+// Truncated like the desktop's integer division: a fractional luma crosses FALLBACK_LUMA_SPLIT and
+// PLATE_MIN_CONTRAST where the desktop's does not. Channels are non-negative, so floor is truncation.
+const luma = (r, g, b) => Math.floor((299 * r + 587 * g + 114 * b) / 1000);
 
 function pixelsIn(ctx, x0, y0, w, h) {
   const data = ctx.getImageData(x0, y0, w, h).data;
@@ -207,6 +209,20 @@ function pixelsIn(ctx, x0, y0, w, h) {
 // invariant - see docs/PARITY.md and overlay.go ringMinSamples.
 const RING_MIN_SAMPLES = 40;
 
+// Plate colour sampling, shared verbatim with overlay.go and held equal by
+// TestParityOCRPlateColourNumbers. Every derived count is floored, matching the desktop's integer
+// arithmetic: the ring band used to be rounded here and floored there.
+const INK_DEVIATION_MIN = 90;   // sum of channel distances from the paper above which a pixel counts as ink
+const INK_STRIP_LINES = 1.3;    // ink is sampled in the first this-many line heights of the block
+const INK_MIN_PER_MILLE = 15;   // share of that strip, per mille, that must be ink to trust the sample..
+const INK_MIN_SAMPLES = 6;      // ..and never fewer pixels than this
+const PLATE_MIN_CONTRAST = 55;  // luma distance under which the fallback ink replaces the sampled one
+const RING_PAD_DIVISOR = 3;     // the ring band is the line height over this, on each side..
+const RING_MIN_PAD = 2;         // ..and never thinner than this many pixels
+const FALLBACK_LUMA_SPLIT = 140; // paper lighter than this gets the dark fallback ink, else the light one
+const FALLBACK_DARK_INK = 17;
+const FALLBACK_LIGHT_INK = 240;
+
 // ringNearerInk reports whether the band just outside the block sits nearer the ink colour than the
 // paper colour - which means the two were assigned the wrong way round. The band is a third of a
 // line on each side, so it is the text's own surroundings rather than the next thing on the page,
@@ -215,7 +231,7 @@ const RING_MIN_SAMPLES = 40;
 // - see blockColors. Mirrors overlay.go ringNearerInk (docs/PARITY.md).
 function ringNearerInk(ctx, x0, y0, w, h, lh, bg, ink) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
-  const pad = Math.max(2, Math.round(lh / 3));
+  const pad = Math.max(RING_MIN_PAD, Math.floor(lh / RING_PAD_DIVISOR));
   const ox0 = Math.max(0, x0 - pad), oy0 = Math.max(0, y0 - pad);
   const ox1 = Math.min(W, x0 + w + pad), oy1 = Math.min(H, y0 + h + pad);
   let nearInk = 0, nearBg = 0;
@@ -248,18 +264,22 @@ function blockColors(ctx, bbox, lineHeight) {
   // Two different heights, and they were one variable until the ring came out 30 % wider here than
   // on the desktop side: `lh` is the line itself (what the ring is derived from), `firstBand` is the
   // 1.3-line strip the ink is sampled in. Mirrors overlay.go blockColors (docs/PARITY.md).
-  const lh = Math.max(1, Math.min(h, Math.round(lineHeight || h)));
-  const firstBand = Math.max(1, Math.min(h, Math.round(lh * 1.3)));
+  // The line height is not clamped to the box, as on the desktop: a single trimmed line's box can be
+  // shorter than the line it was cut from, and the ring is derived from the line.
+  const lh = Math.round(lineHeight) >= 1 ? Math.round(lineHeight) : h;
+  const firstBand = Math.max(1, Math.min(h, Math.floor(lh * INK_STRIP_LINES)));
   const first = pixelsIn(ctx, x0, y0, w, firstBand);
   const ir = [], ig = [], ib = [];
   for (let i = 0; i < first.rs.length; i++) {
-    if (Math.abs(first.rs[i] - bg[0]) + Math.abs(first.gs[i] - bg[1]) + Math.abs(first.bs[i] - bg[2]) > 90) {
+    if (Math.abs(first.rs[i] - bg[0]) + Math.abs(first.gs[i] - bg[1]) + Math.abs(first.bs[i] - bg[2]) > INK_DEVIATION_MIN) {
       ir.push(first.rs[i]); ig.push(first.gs[i]); ib.push(first.bs[i]);
     }
   }
   const c = ir.length;
-  const fallback = () => (luma(...bg) > 140 ? [17, 17, 17] : [240, 240, 240]);
-  const measured = c >= Math.max(6, first.rs.length * 0.015);
+  const fallback = () => (luma(...bg) > FALLBACK_LUMA_SPLIT
+    ? [FALLBACK_DARK_INK, FALLBACK_DARK_INK, FALLBACK_DARK_INK]
+    : [FALLBACK_LIGHT_INK, FALLBACK_LIGHT_INK, FALLBACK_LIGHT_INK]);
+  const measured = c >= Math.max(INK_MIN_SAMPLES, Math.floor(first.rs.length * INK_MIN_PER_MILLE / 1000));
   // Median, not mean, for the same reason bg is a median: a glyph edge is a ramp of antialiased
   // pixels between ink and paper and the deviation test admits most of it, so averaging drags the
   // answer toward the paper. Measured on a screenshot caption of rgb(17,17,17) on rgb(253,253,253):
@@ -271,7 +291,7 @@ function blockColors(ctx, bbox, lineHeight) {
   if (measured && ringNearerInk(ctx, x0, y0, w, h, lh, bg, ink)) {
     const swap = bg.slice(); bg[0] = ink[0]; bg[1] = ink[1]; bg[2] = ink[2]; ink = swap;
   }
-  if (Math.abs(luma(...ink) - luma(...bg)) < 55) ink = fallback();
+  if (Math.abs(luma(...ink) - luma(...bg)) < PLATE_MIN_CONTRAST) ink = fallback();
   return { bg: `rgb(${bg[0]},${bg[1]},${bg[2]})`, ink: `rgb(${ink[0]},${ink[1]},${ink[2]})` };
 }
 
@@ -468,12 +488,19 @@ export async function recognize(imageSource, { lang = "eng", onProgress, isCance
       if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
       const lines = collectLines(data, scale);
-      let blocks = clusterLines(lines, OCR_MIN_LINE_CONF, bitmap.width, bitmap.height);
-      let dropped = droppedLines(lines, OCR_MIN_LINE_CONF);
+      const dropped = droppedLines(lines, OCR_MIN_LINE_CONF);
+      let blocks = clusterLines(lines, OCR_MIN_LINE_CONF, bitmap.width, bitmap.height, dropped);
+      // The record is the ordinary pass's drops followed by the ladder's or the sweep's, whether or
+      // not the ladder placed anything: the ordinary pass ran and its rejections are the reader's
+      // loss either way, and each entry names its floor and gate. Mirrors tesseract.go Recognize.
       if (!blocks.length) {
-        ({ blocks, dropped } = await greyRescue(worker, image, scale, bitmap.width, bitmap.height));
+        const rescued = await greyRescue(worker, image, scale, bitmap.width, bitmap.height);
+        blocks = rescued.blocks;
+        dropped.push(...rescued.dropped);
       } else {
-        blocks = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
+        const swept = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
+        blocks = swept.blocks;
+        dropped.push(...swept.dropped);
       }
       await sampleColors(bitmap.source, blocks);
       return { blocks, dropped, width: bitmap.width, height: bitmap.height };
@@ -492,7 +519,7 @@ export async function recognize(imageSource, { lang = "eng", onProgress, isCance
 // Strongest, not first-non-empty: the ladder used to stop at the first rung that returned any plate
 // at all, so a rung that recovered one word ended the search before a later rung could recover six.
 // Mirrors tesseract.go greyRescue (docs/PARITY.md).
-// The lines the floor rejected travel with the rung that won, exactly as Result.Dropped does in
+// The lines the rung rejected travel with the rung that won, exactly as Result.Dropped does in
 // tesseract.go: they are the reader's loss on the attempt that was actually kept, and a set merged
 // across rungs would describe no single decision.
 async function greyRescue(worker, image, scale, imgW, imgH) {
@@ -505,8 +532,8 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
         const lines = collectLines(data, scale);
-        const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH);
         const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+        const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped);
         if (strictlyBetter(blocks, best)) {
           best = blocks;
           bestDropped = dropped; // blocks and drops together, from the rung that won
@@ -549,10 +576,8 @@ async function screenRescue(worker, image, scale, imgW, imgH) {
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
     const lines = collectLines(data, scale);
-    return {
-      blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH),
-      dropped: droppedLines(lines, OCR_RESCUE_LINE_CONF),
-    };
+    const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+    return { blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), dropped };
   } catch {
     return { blocks: [], dropped: [] };
   }
@@ -574,20 +599,31 @@ async function screenRescue(worker, image, scale, imgW, imgH) {
 // by `scale` while the prepared image the detector reads has not been downscaled, so the covered
 // rectangles are multiplied back up. It follows from where each edition puts its downscale - the Go
 // app does it after the sweep, so there it needs nothing.
+//
+// Returns { blocks, dropped }: the sweep's own discard record is the lines its floor and its
+// translatability test rejected, and the plates the merge refused as duplicates.
 async function screenSweep(worker, image, scale, kept, imgW, imgH) {
+  const untouched = { blocks: kept, dropped: [] };
   const covered = kept.map(({ bbox: b }) => (scale === 1 ? b : {
     x0: Math.round(b.x0 * scale), y0: Math.round(b.y0 * scale),
     x1: Math.round(b.x1 * scale), y1: Math.round(b.y1 * scale),
   }));
   const pitch = await measureScreenPitch(image, covered);
-  if (!pitch) return kept;
+  if (!pitch) return untouched;
   const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
-  if (!blurred) return kept;
+  if (!blurred) return untouched;
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    return mergeScreenBlocks(kept, clusterLines(collectLines(data, scale), OCR_RESCUE_LINE_CONF, imgW, imgH));
+    const lines = collectLines(data, scale);
+    const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+    const rejected = [];
+    const blocks = mergeScreenBlocks(kept, clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), rejected);
+    for (const b of rejected) {
+      dropped.push({ text: b.text, conf: b.conf, floor: OCR_RESCUE_LINE_CONF, gate: GATE_SCREEN_MERGE, bbox: { ...b.bbox } });
+    }
+    return { blocks, dropped };
   } catch {
-    return kept;
+    return untouched;
   }
 }
 

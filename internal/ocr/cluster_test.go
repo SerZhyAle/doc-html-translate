@@ -595,3 +595,29 @@ func TestDroppedLinesRecordTheFloor(t *testing.T) {
 		t.Errorf("kept=%d empty=%d dropped=%d over %d lines", kept, empty, len(dropped), len(lines))
 	}
 }
+
+// A cluster the translatability test refuses is recorded line by line, under its own gate, while a
+// confident translatable neighbour becomes a plate carrying its lines' mean confidence. Mirrors
+// extension/test/ocr-cluster.test.mjs "clusterLines records the lines a refused cluster held".
+func TestClusterLinesRecordsTheTranslatabilityGate(t *testing.T) {
+	lines := fixtureLines([]fixtureLine{
+		{10, 10, 300, 40, 90, "Where are you going"},
+		{10, 50, 300, 80, 94, "tonight, my friend?"},
+		{10, 400, 120, 430, 88, "www.example.com"},
+	})
+	var dropped []DroppedLine
+	blocks := clusterLinesRecording(lines, ocrMinLineConf, 0, 0, &dropped)
+	if len(blocks) != 1 || blocks[0].Conf != 92 {
+		t.Fatalf("blocks = %+v, want one plate with conf 92", blocks)
+	}
+	if len(dropped) != 1 {
+		t.Fatalf("dropped = %+v, want the URL line only", dropped)
+	}
+	d := dropped[0]
+	if d.Text != "www.example.com" || d.Gate != gateTranslatable || d.Floor != ocrMinLineConf || d.Conf != 88 || d.Y0 != 400 {
+		t.Errorf("record = %+v, want the URL line under the translatable gate", d)
+	}
+	if got := clusterLines(lines, ocrMinLineConf, 0, 0); len(got) != 1 {
+		t.Errorf("clusterLines without a record decides differently: %+v", got)
+	}
+}

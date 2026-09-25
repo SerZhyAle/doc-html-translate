@@ -8,6 +8,7 @@ package tests
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -284,17 +285,23 @@ func TestParityOCRPlateColourOrientation(t *testing.T) {
 	// folded the line height and the 1.3-line ink strip into one variable and handed the strip to
 	// the ring, so the extension sampled a band 30 % wider than the desktop app on the same block.
 	// Both sides derive the pad from the raw line height, and this is what says so.
-	if gv, jv := num(t, "ring band divisor (overlay.go)", `pad := lh / (\d+)`, goSrc),
-		num(t, "ring band divisor (ocr-overlay.js)", `const pad = Math\.max\(2, Math\.round\(lh / (\d+)\)\)`, jsSrc); gv != jv {
-		t.Errorf("ring band drift: overlay.go=lh/%v ocr-overlay.js=lh/%v (must match - see docs/PARITY.md OCR)", gv, jv)
+	// Its value is pinned with the other colour numbers in TestParityOCRPlateColourNumbers; what is
+	// pinned here is the shape - derived from lh and floored on both sides.
+	for _, c := range []struct{ file, src, re string }{
+		{"overlay.go", goSrc, `pad := max\(lh/ringPadDivisor, ringMinPad\)`},
+		{"ocr-overlay.js", jsSrc, `const pad = Math\.max\(RING_MIN_PAD, Math\.floor\(lh / RING_PAD_DIVISOR\)\)`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: the ring band is no longer the floored line height over the divisor (%q) - see docs/PARITY.md OCR", c.file, c.re)
+		}
 	}
 	for _, c := range []struct{ name, file, src, re string }{
 		{"the ring decides which colour is paper", "overlay.go", goSrc, `if ringNearerInk\(img, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, inkG, inkB\)`},
 		{"the ring decides which colour is paper", "ocr-overlay.js", jsSrc, `ringNearerInk\(ctx, x0, y0, w, h, lh, bg, ink\)`},
 		// The ring is derived from the line, the ink from the 1.3-line strip; one variable for both
 		// is the drift above, so each edition has to keep them apart by name.
-		{"the ink strip is not the ring's line height", "overlay.go", goSrc, `yFirst := y0 \+ int\(float64\(lh\)\*1\.3\)`},
-		{"the ink strip is not the ring's line height", "ocr-overlay.js", jsSrc, `const firstBand = .*Math\.round\(lh \* 1\.3\)`},
+		{"the ink strip is not the ring's line height", "overlay.go", goSrc, `yFirst := y0 \+ int\(float64\(lh\)\*inkStripLines\)`},
+		{"the ink strip is not the ring's line height", "ocr-overlay.js", jsSrc, `const firstBand = .*Math\.floor\(lh \* INK_STRIP_LINES\)`},
 		// Ink is a median on both sides. A mean lands between the ink and the paper by construction.
 		{"ink is a median", "overlay.go", goSrc, `inkR, inkG, inkB = medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)`},
 		{"ink is a median", "ocr-overlay.js", jsSrc, `\[medianOf\(ir\), medianOf\(ig\), medianOf\(ib\)\]`},
@@ -303,6 +310,91 @@ func TestParityOCRPlateColourOrientation(t *testing.T) {
 			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR (plate colours)", c.file, c.name, c.re)
 		}
 	}
+}
+
+// TestParityOCRPlateColourNumbers pins the colour sampling's numbers across editions: the ink
+// deviation, the strip, the minimum ink share, the contrast floor, the ring band and the fallback
+// colours. They are policy rather than measured values (OCR-OVERLAY rule 13 is ticket 21's open
+// question 5), but a one-sided change is still a visible difference in plate colour, and until
+// 2026-09-25 the ring band was rounded in the extension and floored on the desktop. The derived
+// counts are floored on both sides, and luma is truncated on both, which is pinned too.
+func TestParityOCRPlateColourNumbers(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "overlay.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	want := map[string]float64{
+		"inkDeviationMin": 90, "inkStripLines": 1.3, "inkMinPerMille": 15, "inkMinSamples": 6,
+		"plateMinContrast": 55, "ringPadDivisor": 3, "ringMinPad": 2,
+		"fallbackLumaSplit": 140, "fallbackDarkInk": 17, "fallbackLightInk": 240,
+	}
+	for name, v := range want {
+		jsName := strings.ToUpper(regexp.MustCompile(`([a-z])([A-Z])`).ReplaceAllString(name, "${1}_${2}"))
+		gv := num(t, name+" (overlay.go)", `\b`+name+`\s*=\s*([\d.]+)`, goSrc)
+		jv := num(t, jsName+" (ocr-overlay.js)", `const `+jsName+` = ([\d.]+);`, jsSrc)
+		if gv != jv || gv != v {
+			t.Errorf("%s drift: overlay.go=%v ocr-overlay.js=%v, pinned %v (must match - see docs/PARITY.md OCR, plate colours)", name, gv, jv, v)
+		}
+	}
+	for _, c := range []struct{ file, src, re, what string }{
+		{"overlay.go", goSrc, `minInk := max\(len\(fr\)\*inkMinPerMille/1000, inkMinSamples\)`, "the ink share is an integer count"},
+		{"ocr-overlay.js", jsSrc, `Math\.max\(INK_MIN_SAMPLES, Math\.floor\(first\.rs\.length \* INK_MIN_PER_MILLE / 1000\)\)`, "the ink share is an integer count"},
+		{"overlay.go", goSrc, `func luma\(r, g, b int\) int \{ return \(299\*r \+ 587\*g \+ 114\*b\) / 1000 \}`, "luma is truncated"},
+		{"ocr-overlay.js", jsSrc, `const luma = \(r, g, b\) => Math\.floor\(\(299 \* r \+ 587 \* g \+ 114 \* b\) / 1000\);`, "luma is truncated"},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR, plate colours", c.file, c.what, c.re)
+		}
+	}
+}
+
+// TestParityOCRFitLadder pins the runtime re-fit's numbers, which live in the desktop's inlined
+// ocrScript and in ocr-plates.js fitPlate and were held by nothing but the grow cap: the shrink
+// floor, step and iteration bound, the grow step and bound, and the overflow slack. A one-sided
+// change is a one-sided change to how large translated text renders.
+func TestParityOCRFitLadder(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "overlay.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-plates.js")
+	for _, c := range []struct {
+		name string
+		want float64
+		goRe string
+		jsRe string
+	}{
+		{"shrink floor (share of base)", 0.5, `floor=base\*([\d.]+)`, `const floor = base \* ([\d.]+);`},
+		{"shrink iterations", 40, `&&g<(\d+)\)`, `&& g < (\d+)\)`},
+		{"shrink minimum step (cqw)", 0.3, `s-=Math\.max\(([\d.]+),s\*`, `s -= Math\.max\(([\d.]+), s \*`},
+		{"shrink step (share)", 0.08, `s-=Math\.max\([\d.]+,s\*([\d.]+)\)`, `s -= Math\.max\([\d.]+, s \* ([\d.]+)\)`},
+		{"grow iterations", 20, `&&gg<(\d+)\)`, `&& gg < (\d+)\)`},
+		{"grow minimum step (cqw)", 0.3, `n\+Math\.max\(([\d.]+),n\*`, `n \+ Math\.max\(([\d.]+), n \*`},
+		{"grow step (share)", 0.04, `n\+Math\.max\([\d.]+,n\*([\d.]+)\)`, `n \+ Math\.max\([\d.]+, n \* ([\d.]+)\)`},
+		{"overflow slack (px)", 1, `scrollHeight>b\.clientHeight\+(\d+)`, `scrollHeight > b\.clientHeight \+ (\d+)`},
+	} {
+		gv := num(t, c.name+" (overlay.go ocrScript)", c.goRe, goSrc)
+		jv := num(t, c.name+" (ocr-plates.js fitPlate)", c.jsRe, jsSrc)
+		if gv != jv || gv != c.want {
+			t.Errorf("fit ladder %s drift: overlay.go=%v ocr-plates.js=%v, pinned %v (see docs/PARITY.md OCR)", c.name, gv, jv, c.want)
+		}
+	}
+}
+
+// TestParityOCRColumnTest pins the column test both clustering stages share: two lines are one
+// column when their horizontal overlap is at least a tenth of the narrower one. It is written as
+// `overlap*10` in four places per edition (splitWideGaps' column check, orderColumns, clusterLines,
+// medianLinePitch), so every occurrence is read rather than the first.
+func TestParityOCRColumnTest(t *testing.T) {
+	re := regexp.MustCompile(`overlap\s*\*\s*(\d+)\s*(>=|<)\s*narrower`)
+	count := func(file, src string) {
+		ms := re.FindAllStringSubmatch(src, -1)
+		if len(ms) < 3 {
+			t.Errorf("%s: found %d column tests, want the clustering's own at least - the parse is wrong", file, len(ms))
+		}
+		for _, m := range ms {
+			if m[1] != "10" {
+				t.Errorf("%s: a column test uses overlap*%s, want overlap*10 (0.1 of the narrower line) - see docs/PARITY.md OCR", file, m[1])
+			}
+		}
+	}
+	count("tesseract.go", readRepoFile(t, "internal", "ocr", "tesseract.go"))
+	count("ocr-cluster.js", readRepoFile(t, "extension", "src", "ocr-cluster.js"))
 }
 
 // TestParityOCRDroppedLines: the confidence floor is the one place the overlay decides against
@@ -318,7 +410,7 @@ func TestParityOCRDroppedLines(t *testing.T) {
 	for _, c := range []struct{ file, src, re, what string }{
 		{"tesseract.go", goSrc, `func keepLine\(l \*ocrLine, minConf float64\) bool`,
 			"the floor is one predicate"},
-		{"tesseract.go", goSrc, `res\.Dropped = append\(res\.Dropped, DroppedLine\{`,
+		{"tesseract.go", goSrc, `res\.Dropped = append\(res\.Dropped, lineDrop\(l, minConf, gateConfidence\)\)`,
 			"the rejected lines are recorded"},
 		{"ocr-cluster.js", jsSrc, `export function keepLine\(l, minConf`,
 			"the floor is one predicate"},
@@ -337,6 +429,47 @@ func TestParityOCRDroppedLines(t *testing.T) {
 	}
 	if !regexp.MustCompile(`lines\.filter\(\(l\) => keepLine\(l, minConf\)\)`).MatchString(jsSrc) {
 		t.Error("ocr-cluster.js: clusterLines no longer asks keepLine - the record can drift from the decision")
+	}
+}
+
+// TestParityOCRDiscardGates: OCR-OVERLAY rule 12 asks every gate that drops a line to say which one
+// it was, so both editions name the same gates with the same words, record each where its decision
+// is taken, and merge the passes' records the same way - the ordinary pass's drops followed by the
+// ladder's or the sweep's. The record is in display space on both: the desktop scales it back with
+// the plates (rule 2). See docs/PARITY.md "OCR" (the confidence floor and its record).
+func TestParityOCRDiscardGates(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	goScreen := readRepoFile(t, "internal", "ocr", "screen.go")
+	jsCluster := readRepoFile(t, "extension", "src", "ocr-cluster.js")
+	jsOverlay := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	jsScreen := readRepoFile(t, "extension", "src", "ocr-screen.js")
+
+	goGates := map[string]string{}
+	for _, m := range regexp.MustCompile(`(gate\w+)\s*= "([a-z-]+)"`).FindAllStringSubmatch(goSrc, -1) {
+		goGates[strings.ToLower(m[1])] = m[2]
+	}
+	jsGates := map[string]string{}
+	for _, m := range regexp.MustCompile(`export const (GATE_\w+) = "([a-z-]+)";`).FindAllStringSubmatch(jsCluster, -1) {
+		jsGates[strings.ToLower(strings.ReplaceAll(m[1], "_", ""))] = m[2]
+	}
+	if len(goGates) != 3 || !reflect.DeepEqual(goGates, jsGates) {
+		t.Errorf("the editions name the discard gates differently:\n go %v\n js %v", goGates, jsGates)
+	}
+
+	for _, c := range []struct{ file, src, re, what string }{
+		{"tesseract.go", goSrc, `lineDrop\(m, minConf, gateTranslatable\)`, "a refused cluster's lines are recorded"},
+		{"ocr-cluster.js", jsCluster, `lineDrop\(m, minConf, GATE_TRANSLATABLE\)`, "a refused cluster's lines are recorded"},
+		{"screen.go", goScreen, `rejected = append\(rejected, b\)`, "the merge hands back what it refused"},
+		{"ocr-screen.js", jsScreen, `if \(rejected\) rejected\.push\(b\);`, "the merge hands back what it refused"},
+		{"tesseract.go", goSrc, `blockDrops\(rejected, ocrRescueLineConf, gateScreenMerge\)`, "the sweep records the merge's refusals"},
+		{"ocr-overlay.js", jsOverlay, `gate: GATE_SCREEN_MERGE`, "the sweep records the merge's refusals"},
+		{"tesseract.go", goSrc, `res\.Dropped = append\(primary, alt\.Dropped\.\.\.\)`, "primary and ladder drops are merged"},
+		{"ocr-overlay.js", jsOverlay, `dropped\.push\(\.\.\.rescued\.dropped\)`, "primary and ladder drops are merged"},
+		{"tesseract.go", goSrc, `(?s)func scaleDown\(.*?for i := range res\.Dropped \{`, "the record is scaled back with the plates"},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR", c.file, c.what, c.re)
+		}
 	}
 }
 
@@ -479,10 +612,10 @@ func TestParityOCRScreenRung(t *testing.T) {
 		// editions must run it on the branch where the ordinary pass *found* plates.
 		{"sweep runs on the branch that already read", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
-			`(?s)if len\(res\.Blocks\) == 0 \{.*?\} else \{\s*res\.Blocks = screenSweep\(`},
+			`(?s)if len\(res\.Blocks\) == 0 \{.*?\} else \{\s*var swept \[\]DroppedLine\s*res\.Blocks, swept = screenSweep\(`},
 		{"sweep runs on the branch that already read", "ocr-overlay.js",
 			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
-			`(?s)if \(!blocks\.length\) \{\s*\(\{ blocks, dropped \} = await greyRescue\(.*?\} else \{\s*blocks = await screenSweep\(`},
+			`(?s)if \(!blocks\.length\) \{\s*const rescued = await greyRescue\(.*?\} else \{\s*const swept = await screenSweep\(`},
 
 		// And its trigger: the sweep must ask the detector the narrower question - is there screened
 		// area no plate covers - or it would spend a whole recognition on a page whose screened part
@@ -498,10 +631,10 @@ func TestParityOCRScreenRung(t *testing.T) {
 		// the ordinary pass produced.
 		{"sweep merges rather than replaces", "tesseract.go",
 			readRepoFile(t, "internal", "ocr", "tesseract.go"),
-			`return mergeScreenBlocks\(kept, res\.Blocks\)`},
+			`merged, rejected := mergeScreenBlocks\(kept, res\.Blocks\)`},
 		{"sweep merges rather than replaces", "ocr-overlay.js",
 			readRepoFile(t, "extension", "src", "ocr-overlay.js"),
-			`return mergeScreenBlocks\(kept, clusterLines\(`},
+			`const blocks = mergeScreenBlocks\(kept, clusterLines\(`},
 	}
 	for _, p := range position {
 		if !regexp.MustCompile(p.re).MatchString(p.src) {

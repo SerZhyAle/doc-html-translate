@@ -278,23 +278,25 @@ const ocrScreenMergeMaxOverlap = 0.2
 
 // mergeScreenBlocks returns kept, unchanged and in order, followed by those of found that the plates
 // already accepted leave mostly uncovered. "Already accepted" includes the screen plates taken
-// earlier in the same call, so two of them cannot stack on each other either.
+// earlier in the same call, so two of them cannot stack on each other either. The second result is
+// the plates it refused, for the discard record: the same test decides both.
 //
 // Every plate the ordinary pass produced survives: the sweep is additive, and a pass that could move
 // or drop an existing plate would put a page that reads fine today at risk to help one that does not.
-func mergeScreenBlocks(kept, found []Block) []Block {
+func mergeScreenBlocks(kept, found []Block) (merged, rejected []Block) {
 	out := make([]Block, len(kept), len(kept)+len(found))
 	copy(out, kept)
 	taken := blockRects(kept)
 	for _, b := range found {
 		r := image.Rect(b.X0, b.Y0, b.X1, b.Y1)
 		if coveredFraction(r, taken) > ocrScreenMergeMaxOverlap {
+			rejected = append(rejected, b)
 			continue
 		}
 		out = append(out, b)
 		taken = append(taken, r)
 	}
-	return out
+	return out, rejected
 }
 
 // blockRects is the blocks' boxes as rectangles, which is the form both the merge and the trigger

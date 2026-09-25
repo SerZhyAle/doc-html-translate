@@ -215,6 +215,94 @@ export function scheduleFit(container) {
   return stop;
 }
 
+// ---- Placement over a picture the extension does not own --------------------------------------
+// The page agent lays one plate layer over each picture of a live page. Plates are positioned in
+// percent of the picture's natural size, so the layer has to cover the picture as drawn - not the
+// <img> element's border box, which also holds its border, its padding and, under object-fit, the
+// letterbox or the part cropped away. OCR-OVERLAY rule 4: a plate stays over its text, and where
+// that cannot be held - a rotated, skewed or mirrored picture - the layer is cleared rather than
+// drawn in the wrong place.
+
+// transformRotates reports whether a computed `transform` / `rotate` / `scale` triple turns, skews
+// or mirrors what it applies to. Translation and a positive scale keep the plates' geometry and
+// pass; the individual `scale` property mirrors with a negative factor just as a matrix does.
+export function transformRotates(transform, rotate, scale = "none") {
+  if (rotate && rotate !== "none" && !/^0(deg|rad|turn|grad)?$/.test(rotate.trim())) return true;
+  if (scale && scale !== "none" && scale.trim().split(/\s+/).some((v) => !(parseFloat(v) > 0))) return true;
+  if (!transform || transform === "none") return false;
+  const m = /^matrix(3d)?\(([^)]*)\)$/.exec(transform.trim());
+  if (!m) return true; // a form this reading does not know: not safe to place
+  const v = m[2].split(",").map(Number);
+  const zero = (x) => Math.abs(x) < 1e-6;
+  if (!m[1]) {
+    if (v.length !== 6 || v.some(Number.isNaN)) return true;
+    return !zero(v[1]) || !zero(v[2]) || v[0] <= 0 || v[3] <= 0;
+  }
+  if (v.length !== 16 || v.some(Number.isNaN)) return true;
+  // Only a 2D scale and translation survive: any rotation about any axis, skew or perspective
+  // moves the picture's pixels somewhere a rectangle cannot follow.
+  return !zero(v[1]) || !zero(v[2]) || !zero(v[3]) || !zero(v[4]) || !zero(v[6]) || !zero(v[7])
+    || !zero(v[8]) || !zero(v[9]) || !zero(v[11]) || v[0] <= 0 || v[5] <= 0;
+}
+
+const px = (v) => parseFloat(v) || 0;
+
+// positionOffset resolves one object-position component against the free space along its axis.
+// Computed values are a length or a percentage; anything else (a calc, an edge offset) returns
+// NaN, and the caller then refuses to place rather than guess.
+function positionOffset(token, free) {
+  if (/^-?[\d.]+%$/.test(token)) return (parseFloat(token) / 100) * free;
+  if (/^-?[\d.]+px$/.test(token)) return parseFloat(token);
+  return NaN;
+}
+
+// pictureBox returns where the picture itself is drawn, in the coordinates of `rect` (the
+// element's getBoundingClientRect), plus the part of that box the element actually shows, or null
+// when the picture cannot be placed truthfully.
+//
+// `style` carries the element's computed border and padding widths, objectFit and objectPosition;
+// offsetWidth/offsetHeight are its untransformed border-box size, which turns a scaled ancestor or
+// element into a factor rather than an error. The object-fit arithmetic is the CSS one: fill
+// stretches the picture to the content box, contain and scale-down fit it inside, cover fills and
+// crops, none keeps the natural size, and object-position places what does not fill.
+export function pictureBox({ rect, style, naturalWidth, naturalHeight, offsetWidth, offsetHeight, rotated }) {
+  if (rotated || !rect || rect.width < 1 || rect.height < 1) return null;
+  const sx = offsetWidth > 0 ? rect.width / offsetWidth : 1;
+  const sy = offsetHeight > 0 ? rect.height / offsetHeight : 1;
+  const l = px(style.borderLeftWidth) + px(style.paddingLeft);
+  const r = px(style.borderRightWidth) + px(style.paddingRight);
+  const t = px(style.borderTopWidth) + px(style.paddingTop);
+  const b = px(style.borderBottomWidth) + px(style.paddingBottom);
+  const cw = (rect.width / sx) - l - r;
+  const ch = (rect.height / sy) - t - b;
+  if (cw < 1 || ch < 1) return null;
+  const content = { left: rect.left + l * sx, top: rect.top + t * sy, width: cw * sx, height: ch * sy };
+
+  const fit = (style.objectFit || "fill").trim();
+  if (fit === "fill" || !(naturalWidth > 0 && naturalHeight > 0)) return { box: content, clip: content };
+  let k;
+  const containK = Math.min(cw / naturalWidth, ch / naturalHeight);
+  if (fit === "contain") k = containK;
+  else if (fit === "cover") k = Math.max(cw / naturalWidth, ch / naturalHeight);
+  else if (fit === "none") k = 1;
+  else if (fit === "scale-down") k = Math.min(1, containK);
+  else return null;
+  const iw = naturalWidth * k, ih = naturalHeight * k;
+  const pos = (style.objectPosition || "50% 50%").trim().split(/\s+/);
+  if (pos.length !== 2) return null;
+  const ox = positionOffset(pos[0], cw - iw);
+  const oy = positionOffset(pos[1], ch - ih);
+  if (Number.isNaN(ox) || Number.isNaN(oy)) return null;
+  const box = { left: content.left + ox * sx, top: content.top + oy * sy, width: iw * sx, height: ih * sy };
+  // What the element shows of the picture: the picture's box cut to the content box. A letterbox
+  // leaves it the picture; a crop leaves the content box.
+  const x0 = Math.max(box.left, content.left), y0 = Math.max(box.top, content.top);
+  const x1 = Math.min(box.left + box.width, content.left + content.width);
+  const y1 = Math.min(box.top + box.height, content.top + content.height);
+  if (x1 - x0 < 1 || y1 - y0 < 1) return null;
+  return { box, clip: { left: x0, top: y0, width: x1 - x0, height: y1 - y0 } };
+}
+
 // A progress badge (styled by .ocr-badge) callers overlay on a pending image.
 export function makeBadge(text) {
   const badge = document.createElement("div");

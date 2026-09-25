@@ -163,12 +163,12 @@ test("the default mode is the one the Go encoder writes today", () => {
 // (TestDiagnosticsRecordDiscardsForNoPlateImage's fixture); the browser record must serialize to
 // the same bytes, so one reader handles both editions' ocr-diag.jsonl.
 // TestParityOCRDiscardRecord holds this literal equal to goDiagLine in internal/ocr/diag_test.go.
-const GO_DIAG_LINE = '{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"x0":20,"y0":20,"x1":160,"y1":34}]}';
+const GO_DIAG_LINE = '{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"gate":"confidence","x0":20,"y0":20,"x1":160,"y1":34}]}';
 
 test("makeDiagRecord writes a no-plate image's discards in the desktop line's shape", () => {
   const rec = makeDiagRecord("page.png", {
     width: 200, height: 100, blocks: [],
-    dropped: [{ text: "Hello there reader", conf: 45, floor: 50, bbox: { x0: 20, y0: 20, x1: 160, y1: 34 } }],
+    dropped: [{ text: "Hello there reader", conf: 45, floor: 50, gate: "confidence", bbox: { x0: 20, y0: 20, x1: 160, y1: 34 } }],
   });
   assert.equal(JSON.stringify(rec), GO_DIAG_LINE);
 });

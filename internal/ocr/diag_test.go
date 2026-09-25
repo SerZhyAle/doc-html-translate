@@ -193,7 +193,7 @@ func TestDiagnosticsRecordDiscardsForNoPlateImage(t *testing.T) {
 	dir, imgPath, _ := diagFixture(t)
 	results := map[string]recognition{
 		imgPath: {res: Result{Width: 200, Height: 100, Dropped: []DroppedLine{
-			{Text: "Hello there reader", Conf: ocrMinLineConf - 5, Floor: ocrMinLineConf, X0: 20, Y0: 20, X1: 160, Y1: 34},
+			{Text: "Hello there reader", Conf: ocrMinLineConf - 5, Floor: ocrMinLineConf, Gate: gateConfidence, X0: 20, Y0: 20, X1: 160, Y1: 34},
 		}}},
 	}
 	recs := readDiagLines(t, dir, results)
@@ -211,7 +211,7 @@ func TestDiagnosticsRecordDiscardsForNoPlateImage(t *testing.T) {
 		t.Fatalf("want the one discarded line, got %d", len(rec.Dropped))
 	}
 	d := rec.Dropped[0]
-	if d.Text != "Hello there reader" || d.Conf != ocrMinLineConf-5 || d.Floor != ocrMinLineConf || d.X1 != 160 {
+	if d.Text != "Hello there reader" || d.Conf != ocrMinLineConf-5 || d.Floor != ocrMinLineConf || d.Gate != gateConfidence || d.X1 != 160 {
 		t.Errorf("discard record = %+v, want the dropped line as recognized", d)
 	}
 
@@ -229,7 +229,7 @@ func TestDiagnosticsRecordDiscardsForNoPlateImage(t *testing.T) {
 // goDiagLine is the line written for TestDiagnosticsRecordDiscardsForNoPlateImage's image, with the
 // path shortened. extension/test/ocrlab-evidence.test.mjs holds GO_DIAG_LINE to the same bytes and
 // TestParityOCRDiscardRecord holds the two literals equal.
-const goDiagLine = `{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"x0":20,"y0":20,"x1":160,"y1":34}]}`
+const goDiagLine = `{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"gate":"confidence","x0":20,"y0":20,"x1":160,"y1":34}]}`
 
 // "Read fine, found no text" still writes its line, with an empty dropped array, so it stays
 // distinguishable from "everything was thrown away".

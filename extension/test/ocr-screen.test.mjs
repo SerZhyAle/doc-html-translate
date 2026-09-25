@@ -106,7 +106,9 @@ test("mergeScreenBlocks drops what is already plated and keeps every plate it wa
   // they take 70, over it.
   const straddling = block("already read twice", 300, 0, 500, 100);
 
-  const got = mergeScreenBlocks(kept, [clear, duplicate, straddling]);
+  const rejected = [];
+  const got = mergeScreenBlocks(kept, [clear, duplicate, straddling], rejected);
+  assert.deepEqual(rejected, [duplicate, straddling], "what the merge refused is what the discard record gets");
   assert.equal(got[0], left, "the ordinary pass's plates come through unchanged and in order");
   assert.equal(got[1], right);
   assert.deepEqual(got.slice(2), [clear], "only the plate clear of every existing one is added");

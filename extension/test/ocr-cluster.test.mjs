@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, droppedLines, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
   sameTypeSize, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
 } from "../src/ocr-cluster.js";
@@ -448,4 +448,24 @@ test("droppedLines records the text the floor rejected, and only that", () => {
 
   // A floor of 0 loses nothing, and the empty line is still not a loss.
   assert.equal(droppedLines(lines, 0).length, 0);
+});
+
+// Mirrors internal/ocr/cluster_test.go TestClusterLinesRecordsTheTranslatabilityGate.
+test("clusterLines records the lines a refused cluster held", () => {
+  const line = (x0, y0, x1, y1, conf, text) => ({ bbox: { x0, y0, x1, y1 }, conf, text });
+  const lines = [
+    line(10, 10, 300, 40, 90, "Where are you going"),
+    line(10, 50, 300, 80, 94, "tonight, my friend?"),
+    line(10, 400, 120, 430, 88, "www.example.com"),
+  ];
+  const dropped = [];
+  const blocks = clusterLines(lines, 50, 0, 0, dropped);
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].conf, 92);
+  assert.deepEqual(dropped, [{
+    text: "www.example.com", conf: 88, floor: 50, gate: GATE_TRANSLATABLE,
+    bbox: { x0: 10, y0: 400, x1: 120, y1: 430 },
+  }]);
+  assert.equal(clusterLines(lines, 50).length, 1, "the record does not change the decision");
+  assert.deepEqual(droppedLines([line(0, 0, 9, 9, 10, "noise")], 50).map((d) => d.gate), [GATE_CONFIDENCE]);
 });

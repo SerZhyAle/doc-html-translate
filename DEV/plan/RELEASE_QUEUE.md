@@ -116,7 +116,7 @@ rung. Decide, do not leave it unwritten.
 
 ```
 #   ticket                                              changed     status
-21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-23  Draft - catalog amendment first, then code
+21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-25  In Progress (repo code done; catalog ⛔ owner machine)
 22  22_2026-09-23_contract-rule-adoption-sync           2026-09-23  Draft - no product code
 23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  Draft
 24  24_2026-09-23_contract-iconography-sync             2026-09-23  Draft - proposals before code

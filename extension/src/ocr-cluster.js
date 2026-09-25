@@ -371,21 +371,37 @@ export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
   return Boolean(l.text) && l.conf >= minConf;
 }
 
+// The gates a discard record names. Mirrors tesseract.go gateConfidence / gateTranslatable /
+// gateScreenMerge (docs/PARITY.md): OCR-OVERLAY rule 12 asks which threshold failed, and three
+// gates can drop a line that cleared the same floor.
+export const GATE_CONFIDENCE = "confidence";
+export const GATE_TRANSLATABLE = "translatable";
+export const GATE_SCREEN_MERGE = "screen-merge";
+
+// lineDrop is one discard-record entry. floor is the confidence floor of the pass that read the
+// line: one image can be read several times at two floors - the ordinary pass, then the rescue
+// ladder or the screen sweep - and a distribution derived from them mixed together would be a
+// distribution of nothing. Mirrors DroppedLine (docs/PARITY.md).
+export function lineDrop(l, floor, gate) {
+  return {
+    text: String(l.text).trim(),
+    conf: l.conf,
+    floor,
+    gate,
+    bbox: { x0: l.bbox.x0, y0: l.bbox.y0, x1: l.bbox.x1, y1: l.bbox.y1 },
+  };
+}
+
 export function droppedLines(lines, minConf = OCR_MIN_LINE_CONF) {
   return lines
     .filter((l) => l.text && !keepLine(l, minConf))
-    .map((l) => ({
-      text: String(l.text).trim(),
-      conf: l.conf,
-      // The record names the gate it failed: one image can be read twice at two floors - the
-      // ordinary pass and then the rescue ladder - and a distribution derived from the two mixed
-      // together would be a distribution of nothing. Mirrors DroppedLine.Floor (docs/PARITY.md).
-      floor: minConf,
-      bbox: { x0: l.bbox.x0, y0: l.bbox.y0, x1: l.bbox.x1, y1: l.bbox.y1 },
-    }));
+    .map((l) => lineDrop(l, minConf, GATE_CONFIDENCE));
 }
 
-export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH = 0) {
+// dropped, when given, receives every line of a cluster the translatability test refused - recorded
+// where the decision is taken, so the record is the decision and not a second copy of it. Mirrors
+// tesseract.go clusterLinesRecording.
+export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH = 0, dropped = null) {
   const kept = lines.filter((l) => keepLine(l, minConf));
   if (!kept.length) return [];
   const medianH = medianOf(kept.map((l) => l.bbox.y1 - l.bbox.y0)) || 1;
@@ -400,8 +416,15 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
     const text = cur.texts.join(" ").trim();
     if (isTranslatable(text)) {
       const released = releaseOversized(cur, imgW, imgH);
-      if (released) blocks.push(...released);
-      else {
+      if (released) {
+        // A released plate is one member line; its box finds which (releaseOversized skips
+        // textless lines, so the positions do not line up).
+        for (const b of released) {
+          const i = cur.lines.findIndex((l) => sameBox(l, b.lines[0]));
+          if (i >= 0) b.conf = cur.members[i].conf;
+        }
+        blocks.push(...released);
+      } else {
         blocks.push({
           text,
           bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
@@ -409,8 +432,13 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
           // The block's own line boxes, in reading order. Mirrors Block.Lines in the desktop app
           // (docs/PARITY.md); the coverage rule reads them, and so does the lab's geometry.
           lines: cur.lines.slice(),
+          // Mean line confidence, for the discard record only: a plate the screen merge refuses
+          // has no line left to take one from. Mirrors Block.Conf.
+          conf: cur.members.reduce((sum, m) => sum + m.conf, 0) / cur.members.length,
         });
       }
+    } else if (dropped) {
+      for (const m of cur.members) dropped.push(lineDrop(m, minConf, GATE_TRANSLATABLE));
     }
     cur = null;
   };
@@ -437,6 +465,7 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
         cur.lastY0 = y0;
         cur.texts.push(l.text); cur.heights.push(y1 - y0); cur.ink.push(lineInkHeight(l));
         cur.lines.push({ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 });
+        cur.members.push(l);
         continue;
       }
       flush();
@@ -447,10 +476,15 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
       lastY0: y0, texts: [l.text],
       heights: [y1 - y0], ink: [lineInkHeight(l)],
       lines: [{ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 }],
+      members: [l],
     };
   }
   flush();
   return blocks;
+}
+
+function sameBox(a, b) {
+  return a.x0 === b.x0 && a.y0 === b.y0 && a.x1 === b.x1 && a.y1 === b.y1;
 }
 
 // resultStrength measures how much a recognition attempt actually found: the number of words it

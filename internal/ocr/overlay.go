@@ -69,8 +69,10 @@ var ocrCSS = appearance.OverlayCSS(OverlayStyleNames)
 // visible while undershooting is not. A translated string is normally longer than its source, so on
 // a translated page this branch does not fire at all.
 //
-// Injected once per overlaid page; a no-op degrade to the CSS (overflow:hidden) if the script does
-// not run. Mirrors the extension's fitPlate + observer (see docs/PARITY.md and ocr-overlay.js).
+// Injected once per overlaid page. Without it nothing is clipped either: the plate carries only a
+// min-height, so overflow:hidden has no height to cut against and the box grows at the unfitted
+// size, over whatever lies below (measured, DEV/research/page_ocr_placement_2026-09-25). Mirrors
+// the extension's fitPlate + observer (see docs/PARITY.md and ocr-plates.js).
 const ocrScript = `(function(){
 function fit(b){
   if(!b.dataset.ocrCqw){var m=/([0-9.]+)cqw/.exec(b.style.fontSize||"");b.dataset.ocrCqw=m?m[1]:"0";}
@@ -587,7 +589,7 @@ func decodeImage(path string) image.Image {
 // blockColors samples the source image so a plate can borrow the block's background
 // ("paper") and text ("ink") colours - the overlay then blends into the document instead
 // of being a white patch. bg is the median colour over the whole block (text is the
-// minority); ink is the mean of the pixels that stand out from bg within the FIRST line
+// minority); ink is the median of the pixels that stand out from bg within the FIRST line
 // (real text lives there, not figures lower in a merged block - "the colour of the
 // original's first letter"), with a near-black/near-white fallback that guarantees
 // contrast. ok=false leaves the CSS default. Mirrors the extension's ocr-overlay.js
@@ -613,24 +615,21 @@ func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 	if lh < 1 {
 		lh = y1 - y0
 	}
-	yFirst := y0 + int(float64(lh)*1.3)
+	yFirst := y0 + int(float64(lh)*inkStripLines)
 	if yFirst > y1 {
 		yFirst = y1
 	}
 	fr, fg, fb := samplePixels(img, x0, y0, x1, yFirst)
 	var ir, ig, ib []int
 	for i := range fr {
-		if absInt(fr[i]-bgR)+absInt(fg[i]-bgG)+absInt(fb[i]-bgB) > 90 {
+		if absInt(fr[i]-bgR)+absInt(fg[i]-bgG)+absInt(fb[i]-bgB) > inkDeviationMin {
 			ir = append(ir, fr[i])
 			ig = append(ig, fg[i])
 			ib = append(ib, fb[i])
 		}
 	}
 	c := len(ir)
-	minInk := len(fr) * 15 / 1000
-	if minInk < 6 {
-		minInk = 6
-	}
+	minInk := max(len(fr)*inkMinPerMille/1000, inkMinSamples)
 	var inkR, inkG, inkB int
 	if c >= minInk {
 		// Median, not mean, and for the same reason the background is a median: a glyph's edge is
@@ -655,7 +654,7 @@ func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 	} else {
 		inkR, inkG, inkB = fallbackInk(bgR, bgG, bgB)
 	}
-	if absInt(luma(inkR, inkG, inkB)-luma(bgR, bgG, bgB)) < 55 {
+	if absInt(luma(inkR, inkG, inkB)-luma(bgR, bgG, bgB)) < plateMinContrast {
 		inkR, inkG, inkB = fallbackInk(bgR, bgG, bgB)
 	}
 	return fmt.Sprintf("rgb(%d,%d,%d)", bgR, bgG, bgB),
@@ -672,10 +671,7 @@ func blockColors(img image.Image, b Block) (bg, ink string, ok bool) {
 // is sampled in. A band that falls entirely off the image (a block against the edge) leaves too few
 // samples to decide and the caller keeps what it had.
 func ringNearerInk(img image.Image, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, inkG, inkB int) bool {
-	pad := lh / 3
-	if pad < 2 {
-		pad = 2
-	}
+	pad := max(lh/ringPadDivisor, ringMinPad)
 	bnds := img.Bounds()
 	ox0 := clampInt(x0-pad, bnds.Min.X, bnds.Max.X)
 	oy0 := clampInt(y0-pad, bnds.Min.Y, bnds.Max.Y)
@@ -713,15 +709,33 @@ func ringNearerInk(img image.Image, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, ink
 // three bands it has, large enough that a sliver is not a vote.
 const ringMinSamples = 40
 
+// Plate colour sampling, shared verbatim with ocr-overlay.js and held equal by
+// TestParityOCRPlateColourNumbers. Integer arithmetic on both sides - a truncating division here
+// and Math.floor there - because a rounding difference moves a block across a threshold: the
+// extension once rounded the ring band where this floors it.
+const (
+	inkDeviationMin   = 90  // sum of channel distances from the paper above which a pixel counts as ink
+	inkStripLines     = 1.3 // ink is sampled in the first this-many line heights of the block
+	inkMinPerMille    = 15  // share of that strip, per mille, that must be ink to trust the sample..
+	inkMinSamples     = 6   // ..and never fewer pixels than this
+	plateMinContrast  = 55  // luma distance under which the fallback ink replaces the sampled one
+	ringPadDivisor    = 3   // the ring band is the line height over this, on each side..
+	ringMinPad        = 2   // ..and never thinner than this many pixels
+	fallbackLumaSplit = 140 // paper lighter than this gets the dark fallback ink, else the light one
+	fallbackDarkInk   = 17
+	fallbackLightInk  = 240
+)
+
 func fallbackInk(r, g, b int) (int, int, int) {
-	if luma(r, g, b) > 140 {
-		return 17, 17, 17
+	if luma(r, g, b) > fallbackLumaSplit {
+		return fallbackDarkInk, fallbackDarkInk, fallbackDarkInk
 	}
-	return 240, 240, 240
+	return fallbackLightInk, fallbackLightInk, fallbackLightInk
 }
 
 // samplePixels returns sub-sampled 8-bit R,G,B channels for the rectangle, capped at
-// ~6000 samples so large blocks stay cheap. Fully transparent pixels are skipped.
+// ~6000 samples so large blocks stay cheap. Pixels with alpha under 128 are skipped: mostly
+// transparent, they show the page behind the picture, not the picture.
 func samplePixels(img image.Image, x0, y0, x1, y1 int) (rs, gs, bs []int) {
 	n := (x1 - x0) * (y1 - y0)
 	if n <= 0 {

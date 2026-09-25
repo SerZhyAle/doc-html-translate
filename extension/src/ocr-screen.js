@@ -110,12 +110,17 @@ export const OCR_SCREEN_MERGE_MAX_OVERLAP = 0.2;
 // already accepted leave mostly uncovered - including the screen plates taken earlier in the same
 // call, so two of them cannot stack on each other either. Every plate the ordinary pass produced
 // survives: the sweep is additive, and a pass that could move or drop an existing plate would put a
-// page that reads fine today at risk to help one that does not. Mirrors screen.go mergeScreenBlocks.
-export function mergeScreenBlocks(kept, found) {
+// page that reads fine today at risk to help one that does not. rejected, when given, receives the
+// plates it refused, for the discard record - the same test decides both. Mirrors screen.go
+// mergeScreenBlocks, which returns them as its second result.
+export function mergeScreenBlocks(kept, found, rejected = null) {
   const out = kept.slice();
   const taken = kept.map((b) => b.bbox);
   for (const b of found) {
-    if (coveredFraction(b.bbox, taken) > OCR_SCREEN_MERGE_MAX_OVERLAP) continue;
+    if (coveredFraction(b.bbox, taken) > OCR_SCREEN_MERGE_MAX_OVERLAP) {
+      if (rejected) rejected.push(b);
+      continue;
+    }
     out.push(b);
     taken.push(b.bbox);
   }

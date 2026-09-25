@@ -127,13 +127,17 @@ func TestMergeScreenBlocksDropsWhatIsAlreadyPlated(t *testing.T) {
 	// they take 70, over it.
 	straddling := Block{Text: "already read twice", X0: 300, Y0: 0, X1: 500, Y1: 100}
 
-	got := mergeScreenBlocks(kept, []Block{clear, duplicate, straddling})
+	got, rejected := mergeScreenBlocks(kept, []Block{clear, duplicate, straddling})
 
 	if len(got) < len(kept) || !sameBlock(got[0], kept[0]) || !sameBlock(got[1], kept[1]) {
 		t.Fatalf("the ordinary pass's plates must come through unchanged and in order, got %+v", got)
 	}
 	if len(got) != len(kept)+1 || !sameBlock(got[2], clear) {
 		t.Errorf("merged %d plates (%+v), want the two kept ones plus %q only", len(got), got, clear.Text)
+	}
+	// What the merge refused is exactly what goes into the discard record (OCR-OVERLAY rule 12).
+	if len(rejected) != 2 || !sameBlock(rejected[0], duplicate) || !sameBlock(rejected[1], straddling) {
+		t.Errorf("rejected %+v, want the duplicate and the straddling candidate", rejected)
 	}
 
 	// The straddling case again, as the arithmetic rather than the outcome: neither existing plate

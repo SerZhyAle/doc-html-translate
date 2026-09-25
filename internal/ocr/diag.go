@@ -34,9 +34,9 @@ type diagBlock struct {
 	Ink        string `json:"ink,omitempty"`
 }
 
-// diagDropped is one line the confidence floor rejected: text the engine read that the reader
-// never gets. It is the discard record of OCR-OVERLAY rule 12 - the text, the confidence, the box
-// and which threshold the line failed, written through the same predicate the pipeline applies.
+// diagDropped is one line a gate rejected: text the engine read that the reader never gets. It is
+// the discard record of OCR-OVERLAY rule 12 - the text, the confidence, the box and which gate the
+// line failed at which floor, written through the same predicate the pipeline applies.
 // Recorded because the floor is otherwise an invisible decision - a scene where a
 // correctly read word was discarded looks exactly like a scene where nothing was recognized, and
 // the lab cannot score a decision it cannot see.
@@ -44,6 +44,7 @@ type diagDropped struct {
 	Text  string  `json:"text"`
 	Conf  float64 `json:"conf"`
 	Floor float64 `json:"floor"`
+	Gate  string  `json:"gate"`
 	X0    int     `json:"x0"`
 	Y0    int     `json:"y0"`
 	X1    int     `json:"x1"`

@@ -75,6 +75,7 @@ export function makeDiagRecord(file, rec = {}) {
       text: str(d.text),
       conf: num(d.conf),
       floor: num(d.floor),
+      gate: str(d.gate),
       ...makeRect(d.bbox),
     })),
   };
