@@ -298,7 +298,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 
 	var added []string
 	for _, ext := range SupportedExtensions {
-		verbPath := `Software\Classes\SystemFileAssociations\` + ext + `\shell\` + contextMenuVerb
+		verbPath := contextMenuVerbPath(ext)
 		verbKey, err := createKey(verbPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to add context menu for %s: %v\n", ext, err)
@@ -326,6 +326,90 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("failed to add any context menu entries")
 	}
 	return added, nil
+}
+
+// HasShellEntries reports whether the "Convert to HTML" right-click verb is registered for
+// at least one SupportedExtensions type. It is the on/off state of the GUI's shell-entry
+// toggle and what decides whether the first-run question is still worth asking.
+func HasShellEntries() bool {
+	for _, ext := range SupportedExtensions {
+		k, err := openKey(contextMenuVerbPath(ext)+`\command`, registry.QUERY_VALUE)
+		if err == nil {
+			k.Close()
+			return true
+		}
+	}
+	return false
+}
+
+// RemoveShellEntries takes back what RegisterOpenWithFor and RegisterContextMenuFor wrote for
+// the converter: the "Convert to HTML" verb of every type and the converter's SupportedTypes
+// list, which is what puts it under "Open with". The Applications\<exe> key itself stays,
+// because a user who picked the app with "Open with -> Always" chose that key as the handler,
+// and deleting it would break a choice that is theirs. Returns the extensions whose verb was
+// removed; the error names the ones that could not be.
+func RemoveShellEntries() ([]string, error) {
+	var w changeTracker
+	defer w.notifyIfChanged()
+
+	var removed, failed []string
+	for _, ext := range SupportedExtensions {
+		verbPath := contextMenuVerbPath(ext)
+		cmdErr := deleteKey(verbPath + `\command`)
+		verbErr := deleteKey(verbPath)
+		gone := func(err error) bool { return err == nil || errors.Is(err, registry.ErrNotExist) }
+		switch {
+		case !gone(cmdErr) || !gone(verbErr):
+			failed = append(failed, ext)
+		case cmdErr == nil || verbErr == nil:
+			w.changed = true
+			removed = append(removed, ext)
+		}
+	}
+
+	for _, exe := range openWithExeNames() {
+		k, err := openKey(`Software\Classes\Applications\`+exe+`\SupportedTypes`, registry.SET_VALUE|registry.QUERY_VALUE)
+		if errors.Is(err, registry.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			failed = append(failed, `Applications\`+exe)
+			continue
+		}
+		for _, ext := range SupportedExtensions {
+			if _, _, err := k.GetStringValue(ext); err != nil {
+				continue
+			}
+			if err := k.DeleteValue(ext); err != nil {
+				failed = append(failed, `Applications\`+exe+` `+ext)
+				continue
+			}
+			w.changed = true
+		}
+		k.Close()
+	}
+
+	if len(failed) > 0 {
+		return removed, fmt.Errorf("could not remove %s", strings.Join(failed, ", "))
+	}
+	return removed, nil
+}
+
+// contextMenuVerbPath is the HKCU key of the "Convert to HTML" verb for one extension.
+func contextMenuVerbPath(ext string) string {
+	return `Software\Classes\SystemFileAssociations\` + ext + `\shell\` + contextMenuVerb
+}
+
+// openWithExeNames are the Applications\<exe> names the converter may have advertised itself
+// under: its shipped name, and the name of this executable when it was renamed.
+func openWithExeNames() []string {
+	names := []string{cliExeName}
+	if exe, err := os.Executable(); err == nil {
+		if base := filepath.Base(exe); !strings.EqualFold(base, cliExeName) {
+			names = append(names, base)
+		}
+	}
+	return names
 }
 
 // Unregister releases the default-handler association created by RegisterHandler, leaving

@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "Mostrar ou ocultar a camada de texto reconhecido",
+    "message": "Camada de texto",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "Baixar o arquivo original",
+    "message": "Salvar o arquivo original",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "Salvar a visualização atual como um arquivo HTML independente (mantém a tradução, se você traduziu a página)",
+    "message": "Exportar a visualização atual como um arquivo HTML independente (mantém a tradução, se você traduziu a página)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ Arquivo",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "Salvar arquivo",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "Exportar HTML",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "Contato",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "Salvo - o arquivo tem {1} MB porque contém todas as imagens; alguns navegadores abrem arquivos tão grandes devagar",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "Texto menor",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "Texto maior",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "Fonte",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "Tema",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "Expandir",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "Recolher",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

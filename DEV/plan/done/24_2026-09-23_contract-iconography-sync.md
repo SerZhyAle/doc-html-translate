@@ -1,12 +1,12 @@
 # One glyph and one name per meaning - adopt the shared icon vocabulary
 
-**Status:** Draft
+**Status:** Implemented - 2026-09-25: every in-page surface on the vocabulary in both editions, the catalog decided (ICON-SET 0.15, ICON-RENDER 0.13, ICON-EXTERNAL 0.10); the rule 9 system surfaces moved to ticket 32
 **Priority:** 52
 **Date:** 2026-09-23
 
 > Contract sync ticket, both directions.
 > Contracts: `ICON-SET` 0.10, `ICON-RENDER` 0.10, `ICON-EXTERNAL` 0.9 (domain `iconography/` of the shared
-> catalog, owner FastMediaSorter Android, all drafts). No pointer in [`docs/contracts/`](../../docs/contracts/) yet.
+> catalog, owner FastMediaSorter Android, all drafts). No pointer in [`docs/contracts/`](../../../docs/contracts/) yet.
 
 > **Remote execution (2026-09-25):** the contract text this ticket needs is quoted in "Contract snapshot" below, so every step not marked ⛔ runs in a cloud session from this repository alone. Steps marked **⛔ Local only** edit the shared contracts catalog (or another repository) and can run only on the owner's machine, where the catalog is mounted.
 
@@ -19,6 +19,34 @@
 > around the prev/next labels, and `internal/htmlgen/htmlgen.go:86,89` hard-codes `#1a0dab`. Several
 > Direction B items were meanwhile raised by other products' proposals; each B item below says which.
 
+> **Progress 2026-09-25.** Done in this repo: pointers docs/contracts/ICON-SET.md / ICON-RENDER.md /
+> ICON-EXTERNAL.md; the glyph map docs/GLYPH-MAP.md (A1); paging as `media.previous` / `media.next` in all
+> 13 languages with its guard internal/htmlgen/glyphs_test.go (A2, A10); `nav.contents` and
+> `feature.continue-reading` in the reader; the theme options lost their borrowed glyphs; the index TOC
+> colours come from the theme (A2); localized accessible names on every glyph-only control of both editions
+> (A3); extension parity (A5, tests/iconography_test.go, PARITY.md "Vocabulary glyphs"); GUI disclosure,
+> drop zone (mapped to `content.document`) and swap (A6); site to-top, cross-link and disclosure (A7); glyphs
+> out of the save-button strings (A8); THIRD-PARTY-NOTICES.txt (A9). Chosen for open question 3: inline
+> `currentColor` SVG per page (145-205 bytes per glyph, about 500 bytes per chapter page); open question 4:
+> text labels stay. Done in the catalog (local): iconography/PROPOSAL-2026-09-25-doc-html-translate.md
+> (items 1-13 = B1-B13, item 14 the licence of `ref` records; B7 turned out already raised and is
+> co-signed), the registry adoption row and six dated exceptions (until 2026-12-31).
+>
+> **Decided and finished 2026-09-25.** The owner accepted the proposal where it recommended, and it was
+> folded in as `ICON-SET` 0.15, `ICON-RENDER` 0.13 and `ICON-EXTERNAL` 0.10 (the catalog README's log and the
+> proposal's "Decision" section): seven new records - `app.theme`, `action.text-smaller`,
+> `action.text-larger`, `view.text-layer`, `nav.go-to-page`, `action.convert`, `action.install` - and notes
+> for the copied state, "Оглавление" as the book-reader form, the page forms of `nav.scroll-top`, a
+> reflowing text size not being a zoom; rule 9 names the extension's action icon; `ref.source` records the
+> Material origin. The exporter reran PASS (260 meanings). The B1 half then landed in both editions (A2-A4):
+> the text-size, text-layer, theme and page-jump controls draw their new glyphs under their records' names
+> in all 13 languages; the site's store buttons draw `action.install` ("Install from ..") and the copy
+> confirmation says the word instead of `✓`; the index TOC draws `nav.expand` / `nav.collapse` over
+> `<details>` (B11 no longer blocks it). Three registry exceptions closed, two narrowed. Left, under dated
+> exceptions and elsewhere: the text layer's off form (owed by the catalog's exporter), the kit's `◐` / `▸`
+> (co-signed kit proposals), 44 px targets (co-signed), and the rule 9 system surfaces - ticket
+> [32](../32_2026-09-25_icon-system-surfaces.md). The pdftotext licence gap found on the way is ticket
+> [33](../33_2026-09-25_bundled-binaries-notices.md).
 ## What / why
 
 The catalog now carries one vocabulary for every icon in the portfolio: one glyph and one canonical name
@@ -103,7 +131,7 @@ Adopting Material-derived SVGs would bring Apache-2.0 attribution into a repo th
 4. **⛔ Waits on B1 (local).** The OCR-layer toggle shows its state - needs the text-layer meaning with its
    shown/hidden `states`.
 5. Extension viewer and popup: the same meanings, the same glyphs, the same names as the Go edition (a
-   cross-edition parity row in [`docs/PARITY.md`](../../docs/PARITY.md), guarded by a test). Remote for
+   cross-edition parity row in [`docs/PARITY.md`](../../../docs/PARITY.md), guarded by a test). Remote for
    the existing meanings; the parts that wait on B1 in items 2-4 wait here too.
 6. GUI: the four glyphs it uses take their vocabulary shapes; disclosure mirrors in RTL. Disclosure takes
    `nav.expand` / `nav.collapse` (both `rtl: fixed` - see B11 on the mirrored `▸`). **⛔ Waits on B1
@@ -176,7 +204,7 @@ Each item states the evidence above. Every item here is **⛔ Local only - chang
   touch surfaces; a pointer-first surface takes the platform's published floor). Co-sign and add the web.
 - **⛔ Local only - changes the contract catalog.** **B9 cross-contract conflict:** `PAGE-STYLE` §9 recommends the kit glyphs `◐ ⤓ → ▸`; `ICON-SET` gives
   `⤓` to `nav.scroll-bottom` and `▸` to nothing. One proposal to both owners (`iconography/` and
-  `product-web-pages/`). Linked from [`26_2026-09-23_contract-product-web-pages-sync`](26_2026-09-23_contract-product-web-pages-sync.md).
+  `product-web-pages/`). Linked from [`26_2026-09-23_contract-product-web-pages-sync`](../26_2026-09-23_contract-product-web-pages-sync.md).
   Already raised twice: `PROPOSAL-2026-09-23-filedo-scope.md` §2 (give the kit glyphs ids or declare them
   outside the vocabulary; `▸` rotating is `nav.go-to`'s shape used for `nav.expand`) and
   `PROPOSAL-2026-09-24-fms-page-style-kit-symbols.md`, whose 2026-09-24 update narrows the open part to the
@@ -198,26 +226,33 @@ Each item states the evidence above. Every item here is **⛔ Local only - chang
 
 ## Done criteria
 
-- [ ] Pointer files `docs/contracts/ICON-SET.md`, `ICON-RENDER.md`, `ICON-EXTERNAL.md` exist and are listed
-      in [`docs/contracts/README.md`](../../docs/contracts/README.md).
-- [ ] **⛔ Local only - changes the contract catalog.** Registry: this product's adoption rows for the three ids, each deviation still open recorded as a
+- [x] Pointer files `docs/contracts/ICON-SET.md`, `ICON-RENDER.md`, `ICON-EXTERNAL.md` exist and are listed
+      in [`docs/contracts/README.md`](../../../docs/contracts/README.md).
+- [x] **⛔ Local only - changes the contract catalog.** Registry: this product's adoption rows for the three ids, each deviation still open recorded as a
       dated exception with an `until` date.
-- [ ] **⛔ Local only - changes the contract catalog.** The proposals B1-B12 are filed in the catalog folder (or each is withdrawn in writing here with the
+- [x] **⛔ Local only - changes the contract catalog.** The proposals B1-B12 are filed in the catalog folder (or each is withdrawn in writing here with the
       reason), and the book chrome ships no meaning the vocabulary lacks (rule 5: the vocabulary moves
       first). The second half is checkable remotely: until B1 lands, the chrome keeps its current theme,
       text-size and text-layer controls under a registry exception rather than gaining new glyphs.
-- [ ] The glyph map (A1) exists and every row is `conforms`, `exception` or `proposal filed`.
-- [ ] Multi-page output: previous/next are `media.previous` / `media.next` in glyph and name in all 13
+- [x] The glyph map (A1) exists and every row is `conforms`, `exception` or `proposal filed`.
+- [x] Multi-page output: previous/next are `media.previous` / `media.next` in glyph and name in all 13
       languages, pinned by a test.
-- [ ] No glyph-only control on any surface takes its accessible name from the glyph character.
-      **⛔ Waits on B1 (local)** for the text-size, text-layer, theme and page-jump controls (see A3);
-      the rest is remote.
-- [ ] Index TOC text passes 3:1 on all four reader themes.
-- [ ] Both editions show the same glyph for the same meaning, guarded by a parity test.
-- [ ] Glyph sources and licences are on record.
-- [ ] Site and `README*` changes land in every authored locale in one edit (canon invariant 17).
+- [x] No glyph-only control on any surface takes its accessible name from the glyph character.
+      The text-size, text-layer, theme and page-jump controls carry their 0.15 records' names in all 13
+      languages (`internal/htmlgen/glyphs_test.go`, `tests/iconography_test.go`).
+- [x] Index TOC text passes 3:1 on all four reader themes.
+- [x] Both editions show the same glyph for the same meaning, guarded by a parity test.
+- [x] Glyph sources and licences are on record.
+- [x] Site and `README*` changes land in every authored locale in one edit (canon invariant 17).
 
 ## Open questions
+
+> **Answered 2026-09-25.** 1: rungs 2 and 3 are held and stated in the registry row; rung 4 (theme contrast)
+> was measured for the index TOC and holds on the four reader themes, the rest waits on a check that runs it.
+> 2: proposed, and decided - "Оглавление" is `nav.contents`' declared book-reader form (0.15). 3: inline
+> SVG. 4: labels stay. 5: moved to [ticket 32](../32_2026-09-25_icon-system-surfaces.md), where it is
+> that ticket's first decision. 6: the feature cards stay text pills - `ICON-RENDER` section 10 C makes the
+> decorated look available, not owed, and the cards name features, not controls.
 
 1. **⛔ Local only - changes the contract catalog.** Target conformance rung (`iconography/README.md` §6, quoted below): rung 2 (mapped) now, rung 3 (label vs glyph
    check) with this ticket, rung 4 (theme contrast) later? The decision is the owner's; the rungs held are

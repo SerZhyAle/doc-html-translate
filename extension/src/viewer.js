@@ -13,6 +13,7 @@ import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag } from "./lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
+import { glyph, applyGlyphs } from "./glyphs.js";
 import { loadEpub } from "./epub.js";
 import { parseText } from "./txt.js";
 import { parseRtf } from "./rtf.js";
@@ -727,11 +728,20 @@ function buildTocList(entries) {
     const li = el("li");
     const hasKids = e.children && e.children.length > 0;
     if (hasKids) {
-      const toggle = el("span", "toc-toggle");
-      toggle.textContent = "▾"; // down triangle
+      // The disclosure shows the action a click takes: nav.collapse while the branch is open,
+      // nav.expand while it is folded - the same chevrons as the desktop GUI (docs/PARITY.md).
+      const toggle = el("button", "toc-toggle");
+      toggle.type = "button";
+      const setToggle = () => {
+        const folded = li.classList.contains("collapsed");
+        toggle.replaceChildren(glyph(folded ? "nav.expand" : "nav.collapse"));
+        toggle.setAttribute("aria-expanded", folded ? "false" : "true");
+        toggle.setAttribute("aria-label", folded ? t("ariaExpand", "Expand") : t("ariaCollapse", "Collapse"));
+      };
+      setToggle();
       toggle.addEventListener("click", () => {
         li.classList.toggle("collapsed");
-        toggle.textContent = li.classList.contains("collapsed") ? "▸" : "▾";
+        setToggle();
       });
       li.append(toggle);
     }
@@ -801,6 +811,7 @@ const yieldToUI = () => new Promise((r) => setTimeout(r, 0));
 function applyViewerChromeI18n() {
   applyI18n(document.getElementById("toolbar"));
   applyI18n(document.getElementById("toc"));
+  applyGlyphs(document.getElementById("toolbar"));
   document.title = t("viewerTitle", document.title);
 }
 

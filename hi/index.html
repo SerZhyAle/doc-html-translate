@@ -28,14 +28,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
   <link rel="stylesheet" href="../assets/sza-kit.css">
-  <style>.langs{display:flex;flex-wrap:wrap;gap:.35rem;font-size:.8rem;opacity:.85}.langs a{text-decoration:none}.langs .cur{font-weight:700;opacity:1}</style>
+  <link rel="stylesheet" href="../assets/site.css">
   <title>doc-html-translate - Windows के लिए दस्तावेज़ से स्थानीय HTML बनाने वाला कनवर्टर</title>
   <meta name="description" content="पुस्तकों, दस्तावेज़ों, कॉमिक्स और छवियों को स्थानीय HTML में बदलता है, ताकि उन्हें पढ़ा जा सके और ब्राउज़र के पृष्ठ अनुवाद से अनुवाद किया जा सके।">
 </head>
 <body>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="doc-html-translate"><span class="brand-mark"><span>DOC<br>HTML</span></span><span dir="ltr">doc-html-translate<span class="dot">.</span></span></a>
+    <a class="brand" href="#top" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span dir="ltr">doc-html-translate<span class="dot">.</span></span></a>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="थीम बदलें">◐</button>
     <a class="btn btn-primary btn-sm" href="#get">इंस्टॉल करें</a>
   </header>
@@ -43,22 +43,29 @@
   <main class="container" id="top">
     <nav class="langs" aria-label="भाषा"><a href="../?l=en" lang="en" hreflang="en">English</a><a href="../?l=ru" lang="ru" hreflang="ru">Русский</a><a href="../?l=uk" lang="uk" hreflang="uk">Українська</a><a href="../de/" lang="de" hreflang="de">Deutsch</a><a href="../it/" lang="it" hreflang="it">Italiano</a><a href="../es/" lang="es" hreflang="es">Español</a><a href="../fr/" lang="fr" hreflang="fr">Français</a><a href="../pt/" lang="pt" hreflang="pt">Português</a><a href="../ar/" lang="ar" hreflang="ar">العربية</a><span class="cur" lang="hi">हिन्दी</span><a href="../bn/" lang="bn" hreflang="bn">বাংলা</a><a href="../ur/" lang="ur" hreflang="ur">اردو</a><a href="../zh/" lang="zh" hreflang="zh">中文</a></nav>
     <section class="hero">
-      <div class="hero-id">
-        <div class="product-icon" aria-hidden="true"><span>DOC</span><span>HTML</span></div>
-        <div class="hero-text">
-          <span class="eyebrow">Windows के लिए दस्तावेज़ कनवर्टर</span>
-          <h1 dir="ltr">doc-html-translate</h1>
-          <span class="kicker" dir="ltr">GUI · CLI · Chromium extension</span>
-        </div>
+      <span class="eyebrow">Windows के लिए दस्तावेज़ कनवर्टर · GUI · CLI · Chromium एक्सटेंशन</span>
+      <h1>कोई भी किताब, दस्तावेज़ या कॉमिक - एक स्थानीय वेब पेज में</h1>
+      <span class="tagline">उसे पढ़ें, उसमें खोजें और ब्राउज़र के अपने पृष्ठ अनुवाद से अनुवाद करें - मुफ़्त, बिना किसी कुंजी के।</span>
+      <p class="lead">उन सभी के लिए जो किताबें और दस्तावेज़ किसी दूसरी भाषा में पढ़ते हैं: EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, कॉमिक्स और छवियाँ विषय-सूची और नेविगेशन सहित स्थानीय HTML बन जाती हैं। छवियों के लिए OCR उपलब्ध है।</p>
+      <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ / ..</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>पढ़ना और अनुवाद</span></div>
+    </section>
+
+    <section class="get" id="get">
+      <h2>इंस्टॉल और उपयोग</h2>
+      <p class="whatfor">डेस्कटॉप एप्लिकेशन (विंडो + कमांड लाइन) और ब्राउज़र एक्सटेंशन अलग-अलग इंस्टॉल होते हैं। सभी विकल्प मुफ़्त हैं।</p>
+      <div class="channels">
+        <a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
+        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"></span></a>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">setup.exe इंस्टॉलर</a>
+        <a class="btn btn-ghost btn-sm" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>
+        <a class="btn btn-ghost btn-sm" href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons</a>
       </div>
-      <p class="lead">EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, कॉमिक्स और छवियों को विषय-सूची और नेविगेशन सहित स्थानीय HTML में बदलता है। परिणाम ब्राउज़र में खुलता है, जहाँ पाठ पढ़ा, खोजा और अंतर्निहित पृष्ठ अनुवाद से अनूदित किया जा सकता है। छवियों के लिए पाठ पहचान उपलब्ध है।</p>
-      <div class="pills hero-formats" dir="ltr"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">MOBI / AZW3</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">TXT / MD / HTML</span><span class="pill">CBZ / CBR / CB7 / CBT</span><span class="pill">PNG / JPG / TIFF</span></div>
-      <div class="button-group">
-        <a class="btn btn-primary btn-sm" href="#get">इंस्टॉल करें</a>
-        <a class="btn btn-ghost btn-sm" href="../extension.html">एक्सटेंशन</a>
-        <a class="btn btn-ghost btn-sm" href="#docs">दस्तावेज़ीकरण</a>
-        <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
+      <div class="install-grid">
+        <ol class="quickstart"><li>एप्लिकेशन को Microsoft Store से, winget से या इंस्टॉलर से इंस्टॉल करें - या GitHub Releases से portable zip डाउनलोड करें।</li><li>समर्थित फ़ाइल को एप्लिकेशन की विंडो में या नीचे दिए गए कमांड से खोलें।</li><li>एप्लिकेशन HTML बनाकर उसे ब्राउज़र में खोल देता है; अनुवाद ब्राउज़र के “अनुवाद करें” मेनू से करें।</li></ol>
+        <div class="commands"><div class="copybox" dir="ltr" data-copy="winget install SerZhyAle.DocHtmlTranslate"><span class="tok">winget</span> install SerZhyAle.DocHtmlTranslate<button class="copy" type="button">कॉपी करें</button></div><div class="copybox" dir="ltr" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">कॉपी करें</button></div></div>
       </div>
+      <div class="note"><div class="tag">महत्वपूर्ण</div><p>डिफ़ॉल्ट रूप से ऐप फ़ाइल को बिना सशुल्क अनुवाद के बदलता और खोलता है। Google Cloud और Ollama अलग मोड हैं।</p></div>
+      <div class="note" id="smartscreen"><div class="tag">Windows protected your PC?</div><p>सेटअप इंस्टॉलर और पोर्टेबल प्रोग्राम कोड-साइन नहीं हैं, इसलिए Windows SmartScreen पहली बार चलाने पर उन्हें रोक सकता है। <strong>More info</strong> पर क्लिक करें, फिर <strong>Run anyway</strong> पर (हिंदी Windows में ये शब्द अनुवादित दिखते हैं)। Microsoft Store वाला संस्करण Microsoft द्वारा साइन किया गया है और यह विंडो नहीं दिखाता। <a href="../install-trust.html">ऐसा क्यों होता है, और ऐप कभी क्या नहीं करता (अंग्रेज़ी में)</a>।</p></div>
     </section>
 
     <section class="section" id="use-cases">
@@ -72,27 +79,6 @@
       </div>
     </section>
 
-    <section class="section" id="how">
-      <h2 class="section-title"><span class="h">#</span> यह कैसे काम करता है</h2>
-      <p class="section-desc">एप्लिकेशन स्रोत फ़ाइल पढ़ता है, स्थानीय <code>index.html</code> बनाता है और उसे ब्राउज़र में खोलता है।</p>
-      <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>पढ़ना और अनुवाद</span></div>
-    </section>
-
-    <section class="section" id="get">
-      <h2 class="section-title"><span class="h">#</span> इंस्टॉल और उपयोग</h2>
-      <p class="section-desc">डेस्कटॉप एप्लिकेशन, portable संस्करण और एक्सटेंशन अलग-अलग इंस्टॉल होते हैं।</p>
-      <div class="channels">
-        <a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
-        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"></span></a>
-        <a class="btn btn-ghost btn-sm" href="../extension.html">एक्सटेंशन</a>
-      </div>
-      <div class="install-grid">
-        <ol class="quickstart"><li>एप्लिकेशन इंस्टॉल करें या portable संस्करण डाउनलोड करें।</li><li>समर्थित फ़ाइल को इंटरफ़ेस या कमांड लाइन से खोलें।</li><li>एप्लिकेशन HTML बनाकर उसे ब्राउज़र में खोल देता है।</li></ol>
-        <div class="commands"><div class="copybox" dir="ltr" data-copy="winget install SerZhyAle.DocHtmlTranslate">winget install SerZhyAle.DocHtmlTranslate<button class="copy" type="button">कॉपी करें</button></div><div class="copybox" dir="ltr" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">कॉपी करें</button></div></div>
-      </div>
-      <div class="note"><div class="tag">महत्वपूर्ण</div><p>डिफ़ॉल्ट रूप से ऐप फ़ाइल को बिना सशुल्क अनुवाद के बदलता और खोलता है। Google Cloud और Ollama अलग मोड हैं।</p></div>
-    </section>
-
     <section class="section" id="docs">
       <h2 class="section-title"><span class="h">#</span> दस्तावेज़ीकरण और लिंक</h2>
       <p class="section-desc">पूरी मार्गदर्शिका अंग्रेज़ी, रूसी और यूक्रेनी में उपलब्ध है।</p>
@@ -102,13 +88,9 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container"><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 Serhii Zhyhunenko</span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
-  <button class="to-top" id="toTop" type="button" aria-label="ऊपर जाएँ">↑</button>
-  <script>
-  document.getElementById('themeBtn').addEventListener('click',function(){var d=document.documentElement,t=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=t;document.querySelector('meta[name="theme-color"]').content=t==='dark'?'#0a0f0a':'#eef3ea';try{localStorage.setItem('sza-theme',t)}catch(e){}});
-  document.querySelectorAll('.copy').forEach(function(b){var label=b.textContent;b.addEventListener('click',function(){var box=b.closest('.copybox'),text=box.dataset.copy,done=function(){b.classList.add('done');b.textContent='✓';setTimeout(function(){b.classList.remove('done');b.textContent=label},1600)};if(navigator.clipboard){navigator.clipboard.writeText(text).then(done,done)}else{done()}})});
-  var top=document.getElementById('toTop');addEventListener('scroll',function(){top.classList.toggle('show',scrollY>600)});top.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'})});
-  fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest',{headers:{Accept:'application/vnd.github+json'}}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.tag_name)document.getElementById('releaseTag').textContent=' '+j.tag_name}).catch(function(){});
-  </script>
+  <footer class="site-footer"><div class="container"><h2>SZA के और टूल</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 Serhii Zhyhunenko</span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
+  <button class="to-top" id="toTop" type="button" aria-label="ऊपर स्क्रॉल करें"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
+  <script>window.SITE={strings:{page:{"title": "doc-html-translate - Windows के लिए दस्तावेज़ से स्थानीय HTML बनाने वाला कनवर्टर", "desc": "पुस्तकों, दस्तावेज़ों, कॉमिक्स और छवियों को स्थानीय HTML में बदलता है, ताकि उन्हें पढ़ा जा सके और ब्राउज़र के पृष्ठ अनुवाद से अनुवाद किया जा सके।", "copied": "कॉपी हो गया", "toLight": "हल्की थीम पर जाएँ", "toDark": "गहरी थीम पर जाएँ", "toTop": "ऊपर स्क्रॉल करें"}}};</script>
+  <script src="../assets/site.js"></script>
 </body>
 </html>

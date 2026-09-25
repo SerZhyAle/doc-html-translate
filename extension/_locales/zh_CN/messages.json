@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "显示或隐藏识别的文字层",
+    "message": "文字层",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "下载原始文档文件",
+    "message": "保存原始文档文件",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "把当前视图另存为独立的 HTML 文件（若已翻译页面，翻译也会保留）",
+    "message": "把当前视图导出为独立的 HTML 文件（若已翻译页面，翻译也会保留）",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ 文件",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "保存文件",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "导出 HTML",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "反馈",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "已保存 - 文件大小为 {1} MB，因为所有图片都在其中；部分浏览器打开这么大的文件会很慢",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "缩小文字",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "放大文字",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "字体",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "主题",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "展开",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "折叠",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

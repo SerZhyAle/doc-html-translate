@@ -29,6 +29,14 @@ func RegisterContextMenuFor(string) ([]string, error) {
 	return nil, errUnsupported
 }
 
+func HasShellEntries() bool {
+	return false
+}
+
+func RemoveShellEntries() ([]string, error) {
+	return nil, errUnsupported
+}
+
 func Unregister() ([]string, error) {
 	return nil, errUnsupported
 }

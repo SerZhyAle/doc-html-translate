@@ -8,16 +8,25 @@ package i18n
 //
 // Order of the translations is always Codes[1:]: ru uk de it es fr pt ar hi bn ur zh.
 func init() {
-	Add("Back",
-		"Назад", "Назад", "Zurück", "Indietro", "Atrás", "Retour", "Voltar",
-		"رجوع", "पिछला", "পূর্ববর্তী", "پیچھے", "上一页")
+	// Paging names are media.previous / media.next qualified with their object, as ICON-SET
+	// rule 3 allows ("Previous page"). They never borrow nav.back's word: the Russian "Назад"
+	// and the German "Zurück" these links used to read are Back, a different meaning.
+	Add("Previous page",
+		"Предыдущая страница", "Попередня сторінка", "Vorherige Seite", "Pagina precedente",
+		"Página anterior", "Page précédente", "Página anterior",
+		"الصفحة السابقة", "पिछला पृष्ठ", "পূর্ববর্তী পৃষ্ঠা", "پچھلا صفحہ", "上一页")
 
-	Add("Forward",
-		"Вперёд", "Вперед", "Weiter", "Avanti", "Adelante", "Suivant", "Avançar",
-		"التالي", "अगला", "পরবর্তী", "آگے", "下一页")
+	Add("Next page",
+		"Следующая страница", "Наступна сторінка", "Nächste Seite", "Pagina successiva",
+		"Página siguiente", "Page suivante", "Próxima página",
+		"الصفحة التالية", "अगला पृष्ठ", "পরবর্তী পৃষ্ঠা", "اگلا صفحہ", "下一页")
 
-	Add("Contents",
-		"Оглавление", "Зміст", "Inhalt", "Indice", "Índice", "Sommaire", "Sumário",
+	// nav.contents. The same words as the extension's ttToc message in every language
+	// (tests/iconography_test.go). The Russian keeps the book word "Оглавление" where the
+	// vocabulary says "Содержание" - proposed to the vocabulary, a dated exception meanwhile.
+	Add("Table of contents",
+		"Оглавление", "Зміст", "Inhaltsverzeichnis", "Indice", "Índice", "Table des matières",
+		"Sumário",
 		"المحتويات", "विषय-सूची", "সূচিপত্র", "فہرست", "目录")
 
 	Add("Smaller text",
@@ -30,24 +39,16 @@ func init() {
 		"Texte plus grand", "Texto maior",
 		"نص أكبر", "बड़ा पाठ", "বড় লেখা", "بڑا متن", "放大文字")
 
-	Add("Show or hide the recognized text layer",
-		"Показать или скрыть слой распознанного текста",
-		"Показати або сховати шар розпізнаного тексту",
-		"Erkannte Textebene ein- oder ausblenden",
-		"Mostra o nascondi il livello di testo riconosciuto",
-		"Mostrar u ocultar la capa de texto reconocido",
-		"Afficher ou masquer le calque de texte reconnu",
-		"Mostrar ou ocultar a camada de texto reconhecido",
-		"إظهار أو إخفاء طبقة النص المتعرف عليه",
-		"पहचानी गई पाठ परत दिखाएँ या छिपाएँ",
-		"শনাক্ত করা লেখার স্তর দেখান বা লুকান",
-		"شناخت شدہ متن کی تہہ دکھائیں یا چھپائیں",
-		"显示或隐藏识别的文字层")
+	// view.text-layer's name (ICON-SET 0.15): the toggle's label, tooltip and accessible name.
+	Add("Text layer",
+		"Текстовый слой", "Текстовий шар", "Textebene", "Livello di testo", "Capa de texto",
+		"Calque de texte", "Camada de texto",
+		"طبقة النص", "पाठ परत", "লেখার স্তর", "متن کی تہہ", "文字层")
 
 	Add("Go to page",
 		"Перейти к странице", "Перейти до сторінки", "Zu Seite springen",
 		"Vai alla pagina", "Ir a la página", "Aller à la page", "Ir para a página",
-		"الانتقال إلى الصفحة", "पृष्ठ पर जाएँ", "পৃষ্ঠায় যান", "صفحہ پر جائیں", "跳转到页面")
+		"الانتقال إلى صفحة", "पृष्ठ पर जाएँ", "পৃষ্ঠায় যান", "صفحے پر جائیں", "跳转到页面")
 
 	Add("Font",
 		"Шрифт", "Шрифт", "Schrift", "Carattere", "Fuente", "Police", "Fonte",

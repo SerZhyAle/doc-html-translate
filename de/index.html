@@ -28,14 +28,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
   <link rel="stylesheet" href="../assets/sza-kit.css">
-  <style>.langs{display:flex;flex-wrap:wrap;gap:.35rem;font-size:.8rem;opacity:.85}.langs a{text-decoration:none}.langs .cur{font-weight:700;opacity:1}</style>
+  <link rel="stylesheet" href="../assets/site.css">
   <title>doc-html-translate - Dokumentkonverter nach lokalem HTML für Windows</title>
   <meta name="description" content="Konvertiert Bücher, Dokumente, Comics und Bilder in lokales HTML zum Lesen und für die Seitenübersetzung im Browser.">
 </head>
 <body>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="doc-html-translate"><span class="brand-mark"><span>DOC<br>HTML</span></span><span dir="ltr">doc-html-translate<span class="dot">.</span></span></a>
+    <a class="brand" href="#top" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span dir="ltr">doc-html-translate<span class="dot">.</span></span></a>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Design wechseln">◐</button>
     <a class="btn btn-primary btn-sm" href="#get">Installation</a>
   </header>
@@ -43,22 +43,29 @@
   <main class="container" id="top">
     <nav class="langs" aria-label="Sprache"><a href="../?l=en" lang="en" hreflang="en">English</a><a href="../?l=ru" lang="ru" hreflang="ru">Русский</a><a href="../?l=uk" lang="uk" hreflang="uk">Українська</a><span class="cur" lang="de">Deutsch</span><a href="../it/" lang="it" hreflang="it">Italiano</a><a href="../es/" lang="es" hreflang="es">Español</a><a href="../fr/" lang="fr" hreflang="fr">Français</a><a href="../pt/" lang="pt" hreflang="pt">Português</a><a href="../ar/" lang="ar" hreflang="ar">العربية</a><a href="../hi/" lang="hi" hreflang="hi">हिन्दी</a><a href="../bn/" lang="bn" hreflang="bn">বাংলা</a><a href="../ur/" lang="ur" hreflang="ur">اردو</a><a href="../zh/" lang="zh" hreflang="zh">中文</a></nav>
     <section class="hero">
-      <div class="hero-id">
-        <div class="product-icon" aria-hidden="true"><span>DOC</span><span>HTML</span></div>
-        <div class="hero-text">
-          <span class="eyebrow">Dokumentkonverter für Windows</span>
-          <h1 dir="ltr">doc-html-translate</h1>
-          <span class="kicker" dir="ltr">GUI · CLI · Chromium extension</span>
-        </div>
+      <span class="eyebrow">Dokumentkonverter für Windows · GUI · CLI · Chromium-Erweiterung</span>
+      <h1>Jedes Buch, Dokument oder Comic als lokale Webseite</h1>
+      <span class="tagline">Lesen, durchsuchen und mit der Seitenübersetzung des Browsers übersetzen - kostenlos, ohne Schlüssel.</span>
+      <p class="lead">Für alle, die Bücher und Dokumente in einer anderen Sprache lesen: EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, Comics und Bilder werden zu lokalem HTML mit Inhaltsverzeichnis und Navigation. Für Bilder steht Texterkennung (OCR) bereit.</p>
+      <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ / ..</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>Lesen und Übersetzen</span></div>
+    </section>
+
+    <section class="get" id="get">
+      <h2>Installieren und starten</h2>
+      <p class="whatfor">Die Desktop-Anwendung (Fenster + Befehlszeile) und die Browser-Erweiterung werden unabhängig voneinander installiert. Alle Varianten sind kostenlos.</p>
+      <div class="channels">
+        <a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
+        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"></span></a>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Installationsprogramm setup.exe</a>
+        <a class="btn btn-ghost btn-sm" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>
+        <a class="btn btn-ghost btn-sm" href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons</a>
       </div>
-      <p class="lead">Wandelt EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, Comics und Bilder in lokales HTML mit Inhaltsverzeichnis und Navigation um. Das Ergebnis öffnet sich im Browser, wo der Text gelesen, durchsucht und mit der integrierten Seitenübersetzung übersetzt werden kann. Für Bilder steht Texterkennung bereit.</p>
-      <div class="pills hero-formats" dir="ltr"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">MOBI / AZW3</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">TXT / MD / HTML</span><span class="pill">CBZ / CBR / CB7 / CBT</span><span class="pill">PNG / JPG / TIFF</span></div>
-      <div class="button-group">
-        <a class="btn btn-primary btn-sm" href="#get">Installation</a>
-        <a class="btn btn-ghost btn-sm" href="../extension.html">Erweiterung</a>
-        <a class="btn btn-ghost btn-sm" href="#docs">Dokumentation</a>
-        <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a>
+      <div class="install-grid">
+        <ol class="quickstart"><li>Installieren Sie die Anwendung aus dem Microsoft Store, mit winget oder dem Installationsprogramm - oder laden Sie das portable ZIP-Archiv von GitHub Releases herunter.</li><li>Öffnen Sie eine unterstützte Datei im Anwendungsfenster oder mit dem Befehl unten.</li><li>Die Anwendung erzeugt das HTML und öffnet es im Browser; übersetzt wird über das Menü „Übersetzen“ des Browsers.</li></ol>
+        <div class="commands"><div class="copybox" dir="ltr" data-copy="winget install SerZhyAle.DocHtmlTranslate"><span class="tok">winget</span> install SerZhyAle.DocHtmlTranslate<button class="copy" type="button">Kopieren</button></div><div class="copybox" dir="ltr" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Kopieren</button></div></div>
       </div>
+      <div class="note"><div class="tag">Wichtig</div><p>Standardmäßig konvertiert und öffnet die App die Datei ohne kostenpflichtige Übersetzung. Google Cloud und Ollama sind separate Modi.</p></div>
+      <div class="note" id="smartscreen"><div class="tag">Windows protected your PC?</div><p>Das Installationsprogramm und die portablen Programme sind nicht codesigniert, daher kann Windows SmartScreen den ersten Start anhalten. Klicken Sie auf <strong>More info</strong> und dann auf <strong>Run anyway</strong> (in einem deutschen Windows stehen dort die deutschen Bezeichnungen). Die Version aus dem Microsoft Store ist von Microsoft signiert und zeigt dieses Fenster nicht. <a href="../install-trust.html">Warum - und was die App niemals tut (auf Englisch)</a>.</p></div>
     </section>
 
     <section class="section" id="use-cases">
@@ -72,27 +79,6 @@
       </div>
     </section>
 
-    <section class="section" id="how">
-      <h2 class="section-title"><span class="h">#</span> Wie es funktioniert</h2>
-      <p class="section-desc">Die Anwendung liest die Quelldatei, erzeugt eine lokale <code>index.html</code> und öffnet sie im Browser.</p>
-      <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>Lesen und Übersetzen</span></div>
-    </section>
-
-    <section class="section" id="get">
-      <h2 class="section-title"><span class="h">#</span> Installieren und starten</h2>
-      <p class="section-desc">Desktop-Anwendung, portable Version und Erweiterung werden unabhängig voneinander installiert.</p>
-      <div class="channels">
-        <a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
-        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"></span></a>
-        <a class="btn btn-ghost btn-sm" href="../extension.html">Erweiterung</a>
-      </div>
-      <div class="install-grid">
-        <ol class="quickstart"><li>Installieren Sie die Anwendung oder laden Sie die portable Version herunter.</li><li>Öffnen Sie eine unterstützte Datei über die Oberfläche oder die Befehlszeile.</li><li>Die Anwendung erzeugt HTML und öffnet es im Browser.</li></ol>
-        <div class="commands"><div class="copybox" dir="ltr" data-copy="winget install SerZhyAle.DocHtmlTranslate">winget install SerZhyAle.DocHtmlTranslate<button class="copy" type="button">Kopieren</button></div><div class="copybox" dir="ltr" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Kopieren</button></div></div>
-      </div>
-      <div class="note"><div class="tag">Wichtig</div><p>Standardmäßig konvertiert und öffnet die App die Datei ohne kostenpflichtige Übersetzung. Google Cloud und Ollama sind separate Modi.</p></div>
-    </section>
-
     <section class="section" id="docs">
       <h2 class="section-title"><span class="h">#</span> Dokumentation und Links</h2>
       <p class="section-desc">Die vollständige Anleitung liegt auf Englisch, Russisch und Ukrainisch vor.</p>
@@ -102,13 +88,9 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container"><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 Serhii Zhyhunenko</span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
-  <button class="to-top" id="toTop" type="button" aria-label="Nach oben">↑</button>
-  <script>
-  document.getElementById('themeBtn').addEventListener('click',function(){var d=document.documentElement,t=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=t;document.querySelector('meta[name="theme-color"]').content=t==='dark'?'#0a0f0a':'#eef3ea';try{localStorage.setItem('sza-theme',t)}catch(e){}});
-  document.querySelectorAll('.copy').forEach(function(b){var label=b.textContent;b.addEventListener('click',function(){var box=b.closest('.copybox'),text=box.dataset.copy,done=function(){b.classList.add('done');b.textContent='✓';setTimeout(function(){b.classList.remove('done');b.textContent=label},1600)};if(navigator.clipboard){navigator.clipboard.writeText(text).then(done,done)}else{done()}})});
-  var top=document.getElementById('toTop');addEventListener('scroll',function(){top.classList.toggle('show',scrollY>600)});top.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'})});
-  fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest',{headers:{Accept:'application/vnd.github+json'}}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.tag_name)document.getElementById('releaseTag').textContent=' '+j.tag_name}).catch(function(){});
-  </script>
+  <footer class="site-footer"><div class="container"><h2>Weitere Tools von SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 Serhii Zhyhunenko</span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
+  <button class="to-top" id="toTop" type="button" aria-label="Nach oben scrollen"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
+  <script>window.SITE={strings:{page:{"title": "doc-html-translate - Dokumentkonverter nach lokalem HTML für Windows", "desc": "Konvertiert Bücher, Dokumente, Comics und Bilder in lokales HTML zum Lesen und für die Seitenübersetzung im Browser.", "copied": "Kopiert", "toLight": "Zum hellen Design wechseln", "toDark": "Zum dunklen Design wechseln", "toTop": "Nach oben scrollen"}}};</script>
+  <script src="../assets/site.js"></script>
 </body>
 </html>

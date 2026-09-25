@@ -117,7 +117,7 @@ foreach ($arch in "amd64", "386") {
     Build-Exe "cmd/doc-html-ui"        (Join-Path $dest "doc-html-ui.exe")        $arch "-H windowsgui"
 }
 
-# ── shared payload: tessdata (English), LICENSE, README ──────
+# ── shared payload: tessdata (English), LICENSE, README, notices ──────
 $tessDest = Join-Path $Staging "tessdata"
 New-Item -ItemType Directory -Force -Path $tessDest | Out-Null
 $engDest = Join-Path $tessDest "eng.traineddata"
@@ -135,6 +135,8 @@ if (Test-Path $vendored) {
 }
 Copy-Item (Join-Path $RepoRoot "LICENSE")   $Staging -Force
 Copy-Item (Join-Path $RepoRoot "README.md") $Staging -Force
+# third-party material inside the binaries (the Material Icons glyphs of the reader chrome and GUI)
+Copy-Item (Join-Path $RepoRoot "THIRD-PARTY-NOTICES.txt") $Staging -Force
 
 # ── compile the installer ────────────────────────────────────
 Write-Host "== compile installer (ISCC) ==" -ForegroundColor Cyan

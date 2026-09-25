@@ -69,4 +69,4 @@ If this policy changes, the updated version will be published at the same URL wi
 date.
 
 ## Contact
-serzhyale@gmail.com
+sza@ukr.net

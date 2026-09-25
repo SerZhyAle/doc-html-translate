@@ -8,7 +8,7 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  admitBySize, clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
@@ -537,7 +537,6 @@ async function greyRescue(worker, image, scale, imgW, imgH, ink = null) {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
         const lines = collectLines(data, scale, ink);
-        admitBySize(lines, OCR_RESCUE_LINE_CONF);
         const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
         const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped);
         if (strictlyBetter(blocks, best)) {
@@ -582,7 +581,6 @@ async function screenRescue(worker, image, scale, imgW, imgH, ink = null) {
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
     const lines = collectLines(data, scale, ink);
-    admitBySize(lines, OCR_RESCUE_LINE_CONF);
     const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
     return { blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), dropped };
   } catch {

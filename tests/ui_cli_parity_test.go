@@ -20,7 +20,7 @@ func TestParityGUIExposesEveryCLIFlag(t *testing.T) {
 	guiNative := map[string]string{
 		"register":          `"Make default handler" toggle (on) + /api/register`,
 		"unregister":        `"Make default handler" toggle (off) + /api/unregister`,
-		"register-openwith": `auto-run on GUI startup via ensureRightClickRegistered (adds "Open with" + "Convert to HTML" right-click entry without setting a default)`,
+		"register-openwith": `"Right-click entry" toggle + first-run question + /api/shell-entries (adds "Open with" + "Convert to HTML" without setting a default; never on its own)`,
 		"version":           `/api/version`,
 		"ocr-langs":         `/api/ocr-langs`,
 		"ocr-download":      `/api/ocr-download`,

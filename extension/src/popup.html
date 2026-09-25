@@ -21,6 +21,8 @@
     hr { border: 0; border-top: 1px solid #eee; margin: 12px 0; }
     a { color: #2563eb; font-size: 12px; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    .glyph { width: 1.1em; height: 1.1em; vertical-align: -0.2em; }
+    [dir="rtl"] .glyph-mirror { transform: scaleX(-1); }
     .links { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
     .cta { display: block; width: 100%; margin: 4px 0 12px; padding: 9px 12px; font: inherit; font-weight: 600;
            color: #fff; background: #2563eb; border: 0; border-radius: 8px; cursor: pointer; }
@@ -60,10 +62,10 @@
   <hr>
   <div class="links">
     <a id="opts" href="#" data-i18n="popupOptions">Options</a>
-    <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener">Guide &amp; help &#8599;</a>
+    <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener">Guide &amp; help <span data-glyph="nav.open-external"></span></a>
   </div>
   <div class="links">
-    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site &#8599;</a>
+    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site <span data-glyph="nav.open-external"></span></a>
     <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>
   </div>
   <script type="module" src="popup.js"></script>

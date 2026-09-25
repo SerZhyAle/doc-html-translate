@@ -1,0 +1,39 @@
+Vendored vocabulary glyphs - ICON-SET 0.15 / ICON-RENDER 0.13 / ICON-EXTERNAL 0.10 (drafts)
+
+Source: the shared contracts catalog, iconography/glyphs/<id>.svg, copied byte for byte on
+2026-09-25. The catalog is authoritative; a file here is never edited. To refresh, copy the file
+again from the catalog and update its line below. tests/iconography_test.go holds every inline
+copy (Go reader chrome, extension, GUI, site) to the path data of these files, and - when the
+SZA_CONTRACTS_ROOT environment variable names the catalog - these files to the catalog itself.
+
+Vocabulary at copy time: vocabulary.jsonl, 238 records, sha256 378d2d4b..c62 (ICON-SET 0.13);
+re-checked against ICON-SET 0.14 (253 records, sha256 340aee58..e0ac) the same day - the 13
+drawings and their records are unchanged. Re-checked against ICON-SET 0.15 (260 records,
+sha256 b32d1a56..eba8) the same day, when the six files marked 0.15 below were added: the first
+thirteen drawings are unchanged, their records gained `ref.source`.
+
+Licence: every drawing below is a Material Icons (filled) path, (c) Google LLC, Apache License 2.0,
+named in the last column. The catalog records it - `ref.source` on the thirteen exported records,
+`glyph.source` on the six drawn ones (ICON-EXTERNAL 0.10 rule 5) - and this product ships the licence
+in THIRD-PARTY-NOTICES.txt at the repository root.
+
+sha256                                                            file                          Material Icons origin
+b03565f2324f3db4dcc713176b517233f7b0757e572e6fd985a0cf3dc8071355  media.previous.svg            skip_previous
+1efaa7fbc7696f4015a18665749d397d0bba1aae4cadce7dee5fa89b35aebd2a  media.next.svg                skip_next
+bff16ae8923ae15143d8259c56d8f5e4d16f74ae3a29efc01ea5d95ead32c987  nav.contents.svg              toc (bullets on the left)
+0f7b8bd6c5f071aa11890869d704a213cfb7f548f97313b92851c7bd1e48500e  feature.continue-reading.svg  menu_book
+69cc3c6cbb3279a510b3dac2a34924f2c913e9950217f71ed15d823c5248f1a2  nav.expand.svg                expand_more
+e71fd439b4fd58bca57c5f29bc473ddc4ffd509023475c81d993a8ef1be0311c  nav.collapse.svg              expand_less
+0860946335362deef99dce8d024c46a18db79479c247dce26770d00382f569ac  action.save.svg               save
+1b83a641113200a977e5644b297e63de05945545ad1f33d8c88dbbc7677caa54  action.export.svg             upload (arrow rising from a tray)
+182737de2ed77400472000905e4255e5ed70895462eb6e446756559326fd1cfd  nav.open-external.svg         open_in_new
+c88b1538a9ec3bec8c296f1ad6db87eb4ceb9847da64202571234390a4e421a2  action.swap.svg               swap_horiz
+cd3b21dddc09a6e4726807d6843d8b5ba490c7b98fe99030776e3c1abd711cfb  content.document.svg          description
+a6ab9fbcf6116102e7d3f6344f3c5b7ae1ba475cfb4036c8b79e377088c7f236  nav.scroll-top.svg            vertical_align_top
+963fc4ef130b0c1c322cd36e75a58c8c13f302f7ac5bcf06d4c7c0fcd5eb7c3c  nav.go-to.svg                 chevron_right
+13a28971ffbc3913c328426f1b92c03cf29067bea625f24249941cc0b6659edb  action.text-smaller.svg       text_decrease (0.15)
+efd70b5cfcd76fd3576447ece383dd62f4eb6f6d14a3b894df32a3e431fc1aec  action.text-larger.svg        text_increase (0.15)
+40a91dbcd2112c51458de727898775eedc89551681b8ee1181e7da1459ffd009  view.text-layer.svg           subtitles (0.15)
+5ca25b24022fb2de3699c12bc67ab5d91b32eb3d7bfe7347276beca5739034c4  app.theme.svg                 contrast (0.15)
+f03bbde287175a8d27e3ad1010a1bcb630108b13c0eb0c4414039b39e820c7e9  nav.go-to-page.svg            123 (0.15)
+44bc4edcfbf35c8ebf498c3cf7e46cf6c39c096861473d999c6ba42a02935297  action.install.svg            install_desktop (0.15)

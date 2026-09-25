@@ -15,7 +15,10 @@ The stamp declares canon version, core digest, adoption date, model (`reference`
   `coreDigest`, `model` (rule 3).
 - `canon.version` and `canon.coreDigest` are written by the canon's adopt-canon run, never by hand and never
   copied from another repository (rule 8). A hand edit here claims a reconciliation that did not happen.
-- Every exemption carries an `id` and a `reason`.
+  An equal digest owes no stamp write at all: a version-only re-stamp by hand is the same breach (commit
+  `e3f4301`, 2026-09-06, did exactly that).
+- Every exemption carries an `id`, a `path` and a `reason`. The gate treats `path` as a wildcard and an
+  exemption without one as covering every path, so `path` is never left out here.
 - Other fields (`site.pages`, `channels`, ..) are edited in the change that makes them true.
 
 **Conformance.** The canon plugin's compliance gate (shipped with the plugin, not in this repository),

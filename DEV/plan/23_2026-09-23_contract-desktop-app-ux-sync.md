@@ -1,6 +1,6 @@
 # The desktop window behaves and looks like the rest of the portfolio
 
-**Status:** Draft
+**Status:** In Progress - Direction A implemented and verified 2026-09-25; the catalog half (registry row, B1-B8) is open
 **Priority:** 53
 **Date:** 2026-09-23
 
@@ -135,6 +135,52 @@ Re-read against the catalog and the working tree on 2026-09-25, by reading only 
   single-instance behaviour.
 - **B8** a second data point for the open `..` vs `…` menu-ellipsis collision (`Browse..`).
 
+## Implementation (2026-09-25)
+
+Decisions taken for the open questions below: **Q2** strictly opt-in (the code half; arguing B4 stays
+catalog work). **Q3** "finished work kept" = what the converter already wrote stays in the output folder;
+a cancelled run writes no completion record, so the next run rebuilds it - the reuse invariant is untouched,
+and the page says exactly that. **Q4** every native `alert`/`confirm` is replaced by one in-page modal
+dialog; destructive and costly buttons use `--danger`. Found stale on arrival: conversion Cancel and the
+process-tree kill (`run.go`, an earlier ticket) and the Poppler auto-install (removed by ticket 11).
+
+- **Step 1** GUI launch writes nothing; first-run banner (right-click only / also default / No, thanks),
+  a right-click toggle + `/api/shell-entries`, `windowsreg.HasShellEntries` / `RemoveShellEntries` (keeps
+  `Applications\<exe>`); the CLI no-arg flow asks `[y/N]` before it writes.
+- **Step 2** OCR download streams `{done,total}` lines and cancels through the request context
+  (`ocr.DownloadContext`).
+- **Step 3** `internal/dialog.Confirm`: owned (console window) OK/Cancel, Cancel default; under the GUI
+  (`DOCHT_DIALOG_HOST=stdio`) an `ask` marker line on stdout, the answer on stdin via `/api/answer`;
+  `ShowWarning` becomes a `note` marker. Title and text localized (13).
+- **Step 4** the run ends with a data line (`\x1edht:end {state,code}`); a failure dialog offers send logs /
+  try again / close; every page failure is a named cause + action; raw errors go to
+  `run-<launch>-gui<pid>.log` in the run-log store.
+- **Step 5** clearing logs confirms; an empty store says so (`cleared`).
+- **Steps 6-8** drop zone is a `<button>`, `data-i18n-aria`, RTL gate; leaks localized (byline, OCR
+  fallback name, file-dialog captions - passed to PowerShell as base64); one `light-dark()` palette table,
+  theme select saved in settings, `.console` out-of-theme, `--fg` gone.
+- **Step 9** `cmd/doc-html-ui/contract_test.go`. **Step 10** pointers at 0.10, rule by rule.
+
+## Verification (2026-09-25)
+
+- `go test ./cmd/... ./internal/...` - ok except `internal/pdf` `TestExtract_Volume3ImagesOnTheirPages`
+  and `internal/procrun` `TestRunMissingBinaryKeepsThePathError`, which fail identically on a clean HEAD
+  worktree (pre-existing, packages not touched here); `go test ./tests/ -skip TestConvertTestDoc` - ok.
+  `TestConvertTestDoc` dies with `fatal error: out of memory` on the 386 toolchain - reproduced on a clean
+  HEAD worktree, so pre-existing and unrelated.
+- Live: the real page and API (the test binary as a converter that asks the cost question) driven in
+  headless Edge over CDP - `live: PASS`, 25/25: OS light -> dark followed without reload, pinned themes
+  override it, console stays dark, Escape = no action, Enter declines a destructive or costly question,
+  cost question in the window with "do not spend" focused, declined run -> failure dialog naming code 4 and
+  no raw error, accepted run -> localized "done", empty log store -> message, Arabic mirrors.
+- Not checked by hand: the real converter's own cost box from a console, and closing the `--app` window
+  mid-run (pinned by `TestDroppedRequestStopsTheChild` with a real child tree).
+- `scripts/lint.ps1`: three pre-existing `errcheck` findings (`windows.CloseHandle`) in files this ticket
+  did not touch.
+
+Still open: the Explorer caption of the right-click verb (`Convert to HTML`) is English - one registry
+value for all languages; and the catalog half below.
+
 ## Done criteria
 
 - [x] Pointer files `docs/contracts/APP-BEHAVIOUR.md`, `APP-STYLE.md` exist and are listed in the pointer
@@ -142,14 +188,14 @@ Re-read against the catalog and the working tree on 2026-09-25, by reading only 
 - [ ] **⛔ Local only - changes the contract catalog.** Registry: this product's consumer rows for both ids with the rule-by-rule result; every deviation
       still open is a dated exception. The 2026-09-24 row exists but claims conformance the code does not
       have; it is rewritten from the result of Direction A.
-- [ ] No registry write and no network install happens without an answer the user gave in that session.
-- [ ] A running conversion can be cancelled from the window; closing the window mid-run leaves no orphaned
+- [x] No registry write and no network install happens without an answer the user gave in that session.
+- [x] A running conversion can be cancelled from the window; closing the window mid-run leaves no orphaned
       CLI process (checked with a running window, not only by reading).
-- [ ] The paid-translation question defaults to "no" and has an Escape path.
-- [ ] No failure surface shows a raw error string.
-- [ ] The GUI offers system / light / dark and follows the OS live; `--fg` is declared.
+- [x] The paid-translation question defaults to "no" and has an Escape path.
+- [x] No failure surface shows a raw error string.
+- [x] The GUI offers system / light / dark and follows the OS live; `--fg` is declared.
 - [ ] **⛔ Local only - changes the contract catalog.** B1-B8 filed or withdrawn in writing here.
-- [ ] Every new user-visible string exists in all 13 GUI languages.
+- [x] Every new user-visible string exists in all 13 GUI languages.
 
 ## Open questions
 

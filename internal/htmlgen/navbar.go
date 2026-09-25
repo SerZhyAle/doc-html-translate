@@ -392,6 +392,9 @@ var readerCSS = `
   .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
   .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:#fff; text-decoration:none; padding:4px 10px; border-radius:6px; }
   .dht-toolbar a.dht-continue:hover { filter:brightness(1.08); }
+  .dht-glyph { width:1.15em; height:1.15em; vertical-align:-0.22em; flex:none; }
+  .dht-btn[aria-pressed="true"] { background:var(--dht-border); border-color:var(--dht-accent); }
+  .dht-sel { display:inline-flex; align-items:center; gap:3px; font-size:13px; }
 </style>
 `
 
@@ -571,19 +574,23 @@ func readerScript(bookKey, self string, idx, total int) string {
 
 // buildNavBarHTML generates the HTML for the navigation bar.
 func buildNavBarHTML(nav NavInfo) string {
-	labelPrev, labelNext, labelTOC := i18n.S("Back"), i18n.S("Forward"), i18n.S("Contents")
+	// Paging is media.previous / media.next - never nav.back / nav.forward, which leave a screen
+	// (ICON-SET rule 2, the vocabulary's founding example). Glyph and name travel together and
+	// are pinned by tests/iconography_test.go in all thirteen languages.
+	labelPrev, labelNext, labelTOC := i18n.S("Previous page"), i18n.S("Next page"), i18n.S("Table of contents")
+	glyphPrev, glyphNext := glyphSVG("media.previous"), glyphSVG("media.next")
 
-	prevLink := fmt.Sprintf(`<a class="disabled">&#9664; %s</a>`, labelPrev)
+	prevLink := fmt.Sprintf(`<a class="disabled">%s %s</a>`, glyphPrev, labelPrev)
 	if nav.PrevHref != "" {
-		prevLink = fmt.Sprintf(`<a class="dht-nav-link dht-prev" href="%s">&#9664; %s</a>`, html.EscapeString(nav.PrevHref), labelPrev)
+		prevLink = fmt.Sprintf(`<a class="dht-nav-link dht-prev" href="%s">%s %s</a>`, html.EscapeString(nav.PrevHref), glyphPrev, labelPrev)
 	}
 
-	nextLink := fmt.Sprintf(`<a class="disabled">%s &#9654;</a>`, labelNext)
+	nextLink := fmt.Sprintf(`<a class="disabled">%s %s</a>`, labelNext, glyphNext)
 	if nav.NextHref != "" {
-		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s &#9654;</a>`, html.EscapeString(nav.NextHref), labelNext)
+		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s %s</a>`, html.EscapeString(nav.NextHref), labelNext, glyphNext)
 	}
 
-	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">&#9776; %s</a>`, html.EscapeString(nav.IndexHref), labelTOC)
+	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">%s %s</a>`, html.EscapeString(nav.IndexHref), glyphSVG("nav.contents"), labelTOC)
 	info := fmt.Sprintf(`<span class="nav-info">%d / %d</span>`, nav.Current, nav.Total)
 
 	var fileEl string
@@ -639,14 +646,20 @@ func readerControlsHTML() string {
 	// The OCR toggle is rendered on every page but hides itself when the page carries no
 	// plates (see the reader script), so the chrome stays identical across editions and a
 	// text book never shows a control that would do nothing.
-	titleOCR := i18n.S("Show or hide the recognized text layer")
+	titleOCR := i18n.S("Text layer")
+	// Each glyph-only button draws its vocabulary meaning (action.text-smaller / -larger,
+	// view.text-layer) and carries that meaning's localized name as its accessible name
+	// (ICON-RENDER rule 8). The text layer has one drawing for both states until the catalog
+	// draws its off form, so aria-pressed and the pressed look carry the state. The theme select
+	// shows app.theme once; its choices are words, never the sun or the moon of other meanings.
 	return fmt.Sprintf(
-		`<button id="dht-font-dec" class="dht-btn" type="button" title="%s">A&minus;</button>`+
-			`<button id="dht-font-inc" class="dht-btn" type="button" title="%s">A+</button>`+
-			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%s">&#9636;</button>`+
-			`<select id="dht-family-sel" title="%s"><option value="serif">%s</option><option value="sans">%s</option><option value="mono">%s</option></select>`+
-			`<select id="dht-theme-sel" title="%s"><option value="light">&#9728; %s</option><option value="sepia">&#9681; %s</option><option value="dark">&#9790; %s</option><option value="night">&#9679; %s</option></select>`,
-		titleSmaller, titleLarger, titleOCR, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight)
+		`<button id="dht-font-dec" class="dht-btn" type="button" title="%[1]s" aria-label="%[1]s">%[13]s</button>`+
+			`<button id="dht-font-inc" class="dht-btn" type="button" title="%[2]s" aria-label="%[2]s">%[14]s</button>`+
+			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%[3]s" aria-label="%[3]s">%[15]s</button>`+
+			`<select id="dht-family-sel" title="%[4]s" aria-label="%[4]s"><option value="serif">%[5]s</option><option value="sans">%[6]s</option><option value="mono">%[7]s</option></select>`+
+			`<span class="dht-sel">%[16]s<select id="dht-theme-sel" title="%[8]s" aria-label="%[8]s"><option value="light">%[9]s</option><option value="sepia">%[10]s</option><option value="dark">%[11]s</option><option value="night">%[12]s</option></select></span>`,
+		titleSmaller, titleLarger, titleOCR, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight,
+		glyphSVG("action.text-smaller"), glyphSVG("action.text-larger"), glyphSVG("view.text-layer"), glyphSVG("app.theme"))
 }
 
 // versionLabel formats the running app version for display in the navbar.

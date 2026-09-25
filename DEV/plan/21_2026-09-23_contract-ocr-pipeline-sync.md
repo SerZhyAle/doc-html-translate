@@ -1,6 +1,6 @@
 # The OCR contracts describe the mechanism that ships, and the mechanism holds them
 
-**Status:** In Progress - Direction A items 1, 2, 4, 6 (code), 8, 9, 10 and the browser half of 5 done on 2026-09-25 (see "Implementation record"); every Direction B step, items 3, 5 (first half), 7, 11 and the registry half of 6 wait on the owner's machine.
+**Status:** In Progress - Direction B done on 2026-09-25 (OCR-PIPELINE 1.2, OCR-INVOCATION 1.1, OCR-OVERLAY row + proposal, registry; see "Implementation record (2026-09-25, owner machine - Direction B)"); Direction A items 3, 5 (first half), 7 and 11 remain.
 **Priority:** 49
 **Date:** 2026-09-23
 
@@ -609,3 +609,33 @@ fail. Mutation check of the new parity pins: a changed `INK_MIN_SAMPLES`, fit it
 column multiplier each fail their test.
 
 For step B1, found by this session: the §3.4 JS-off sentence above.
+
+## Implementation record (2026-09-25, owner machine - Direction B)
+
+Owner decisions taken this date: open question 1, rule 5 binds the plate font too; open question 2, the
+change is MINOR (a tightening, on `VERSIONING.md` §3's test); open question 5, a third status `policy`;
+open question 6, `translation` is optional and the lab runner emits the record. Open question 3 was
+answered from the consumers' code: FastMediaSorter_Lite `src/Ocr/OcrPlateColors.vb` `RingBandDivisor = 3`,
+and FastMediaSorter Android per `ocr-overlay-accuracy.md` §5. Both use a third of a line, so the ring band
+is a correction, not a MINOR.
+
+| Step | Result |
+|---|---|
+| B1, B2, B3 | `OCR-PIPELINE` **1.2** - one dated amendment section. Items A-H are corrections: `hasWordRun`, the leading-bound unit, alpha < 128, the 1.3-line ink strip and fallback numbers, the ring band, the no-JavaScript fallback, the module map, the "every threshold was measured" overclaim. Items I-N are additive: word-height type size, the plate font from the same median (J, a tightening), the outlier-word trim, the grow branch and page OCR, a status column over every constant, the negative results including ticket 29's. Two document-log rows. |
+| B4 | `OCR-INVOCATION` **1.1** - the script correction of an omitted `-ocr-lang` and the no-plates stop (exit 0, reason in the log); flags and exit codes unchanged. Log row. |
+| B5 | `OCR-OVERLAY` section 8, this product's row corrected. Held: rules 1-4, 6-8, 10-12, 14-17, plus rule 5 for clustering. Not held: rule 5 for the font, rule 9's written overflow rule, rule 13 without `policy`. Log row. Rule 13's third status and §7's optional `translation` are proposed in `ocr-overlay/PROPOSAL-2026-09-25-constant-status-and-exchange.md`, because the contract has a shared owner. |
+| B6 | Registry: catalog rows `OCR-PIPELINE` 1.2, `OCR-INVOCATION` 1.1; this product's three adoption rows re-verified 2026-09-25; three new exceptions (rule 5 font, rule 9, rule 13), until 2026-12-31. |
+| B7 | The notice to both consumers sits at the top of the 1.2 amendment and in this product's `OCR-PIPELINE` row, not in their rows: the registry allows an edit only to one's own rows. |
+| Pointers | `docs/contracts/OCR-PIPELINE.md` -> 1.2, `docs/contracts/OCR-INVOCATION.md` -> 1.1. |
+
+Checks: `go test ./tests/ -run TestParityOCR` 18 PASS / 0 FAIL; `go test ./internal/ocr/ ./internal/img/
+./internal/pipeline/` exit 0.
+
+**Still open (Direction A):**
+- A3 - the plate font from the word-height median in both editions, with a lab run against a named
+  baseline. Carried by the rule 5 exception.
+- A5 first half - the written overflow rule for a released plate. Carried by the rule 9 exception.
+- A7 - the status markers in code, now that the vocabulary is decided.
+- A11 - emit the §7 record from `tools/ocrlab`. This waits on the proposal's fate, but the owner's answer
+  already names the emitter.
+- The FastMediaSorter_Lite spec sync, which is another repository.

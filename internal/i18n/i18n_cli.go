@@ -48,6 +48,49 @@ func init() {
 		"  اب فائل پر ڈبل کلک کرنے سے وہ اسی پروگرام میں کھلے گی۔",
 		"  现在双击文件就会用本程序打开。")
 
+	// First run asks before it writes (APP-BEHAVIOUR rules 4 and 11).
+	Add("  Supported file types: %s",
+		"  Поддерживаемые типы файлов: %s",
+		"  Підтримувані типи файлів: %s",
+		"  Unterstützte Dateitypen: %s",
+		"  Tipi di file supportati: %s",
+		"  Tipos de archivo compatibles: %s",
+		"  Types de fichiers pris en charge : %s",
+		"  Tipos de arquivo compatíveis: %s",
+		"  أنواع الملفات المدعومة: %s",
+		"  समर्थित फ़ाइल प्रकार: %s",
+		"  সমর্থিত ফাইলের ধরন: %s",
+		"  معاون فائل اقسام: %s",
+		"  支持的文件类型：%s")
+
+	Add(`  Add a right-click "Convert to HTML" entry and "Open with" for these file types? [y/N]: `,
+		"  Добавить пункт правого клика «Convert to HTML» и «Открыть с помощью» для этих типов? [y/N]: ",
+		"  Додати пункт правого кліку «Convert to HTML» та «Відкрити за допомогою» для цих типів? [y/N]: ",
+		`  Kontextmenüeintrag "Convert to HTML" und "Öffnen mit" für diese Dateitypen hinzufügen? [j/N]: `,
+		`  Aggiungere la voce "Convert to HTML" nel menu contestuale e "Apri con" per questi tipi? [s/N]: `,
+		`  ¿Añadir la entrada "Convert to HTML" del menú contextual y "Abrir con" para estos tipos? [s/N]: `,
+		`  Ajouter l'entrée "Convert to HTML" du menu contextuel et "Ouvrir avec" pour ces types ? [o/N] : `,
+		`  Adicionar o item "Convert to HTML" do menu de contexto e "Abrir com" para esses tipos? [s/N]: `,
+		"  هل تريد إضافة أمر «Convert to HTML» في قائمة الزر الأيمن و«فتح باستخدام» لهذه الأنواع؟ [y/N]: ",
+		`  क्या इन फ़ाइल प्रकारों के लिए दायाँ-क्लिक "Convert to HTML" और "इसके साथ खोलें" जोड़ें? [y/N]: `,
+		`  এই ফাইল ধরনের জন্য ডান-ক্লিক "Convert to HTML" এবং "দিয়ে খুলুন" যোগ করবেন? [y/N]: `,
+		`  کیا ان فائل اقسام کے لیے دائیں کلک "Convert to HTML" اور "کے ساتھ کھولیں" شامل کریں؟ [y/N]: `,
+		"  为这些文件类型添加右键菜单项「Convert to HTML」和「打开方式」吗？[y/N]: ")
+
+	Add(`  Nothing was added. You can add it later with -register-openwith, or under "Windows integration" in the app.`,
+		"  Ничего не добавлено. Это можно сделать позже флагом -register-openwith или в разделе «Интеграция с Windows» приложения.",
+		"  Нічого не додано. Це можна зробити пізніше прапорцем -register-openwith або в розділі «Інтеграція з Windows» застосунку.",
+		`  Es wurde nichts hinzugefügt. Das geht später mit -register-openwith oder in der App unter "Windows-Integration".`,
+		`  Non è stato aggiunto nulla. Puoi farlo in seguito con -register-openwith o nella sezione "Integrazione con Windows" dell'app.`,
+		`  No se ha añadido nada. Puedes hacerlo más tarde con -register-openwith o en la sección "Integración con Windows" de la app.`,
+		`  Rien n'a été ajouté. Vous pourrez le faire plus tard avec -register-openwith ou dans la section "Intégration Windows" de l'application.`,
+		`  Nada foi adicionado. Você pode fazer isso depois com -register-openwith ou na seção "Integração com o Windows" do aplicativo.`,
+		"  لم تتم إضافة أي شيء. يمكنك فعل ذلك لاحقًا باستخدام -register-openwith أو من قسم «التكامل مع Windows» في التطبيق.",
+		`  कुछ भी नहीं जोड़ा गया। आप इसे बाद में -register-openwith से या ऐप के "Windows एकीकरण" अनुभाग में जोड़ सकते हैं।`,
+		`  কিছুই যোগ করা হয়নি। পরে -register-openwith দিয়ে বা অ্যাপের "Windows সংযুক্তি" অংশে যোগ করতে পারেন।`,
+		`  کچھ شامل نہیں کیا گیا۔ آپ اسے بعد میں -register-openwith سے یا ایپ کے "Windows انضمام" حصے میں شامل کر سکتے ہیں۔`,
+		"  未添加任何内容。之后可以用 -register-openwith，或在应用的「Windows 集成」部分添加。")
+
 	Add(`  Added a right-click "Convert to HTML" entry and "Open with" for:`,
 		"  Добавлен пункт правого клика «Convert to HTML» и «Открыть с помощью» для:",
 		"  Додано пункт правого кліку «Convert to HTML» та «Відкрити за допомогою» для:",

@@ -1,8 +1,25 @@
 # The rescue ladder needs a third axis to keep real lettering it now drops
 
-**Status:** Draft
+**Status:** Partial
 **Priority:** 49
 **Date:** 2026-09-25
+
+> **Measured 2026-09-25, nothing shipped.** Evidence:
+> [`DEV/research/ocr_rescue_third_axis_2026-09-25.md`](../research/ocr_rescue_third_axis_2026-09-25.md).
+>
+> - The OSD axis and the rung-agreement axis were rejected on the probe.
+> - The **type-size anchor** was implemented in both editions. It keeps a sub-floor word only when a
+>   line of the same pass cleared the floor at the same size. Under `eng` it left all 47 scenes
+>   byte-identical, and under `rus` it brought the poster to recall 1.00. It still failed the lab's
+>   hard gates under `rus`, for two reasons:
+>   - `ОБ ЗЛОМ` arrives out of order from PSM 11 and splits the body into two overlapping plates;
+>   - on an English scene read with the wrong `rus`, the anchor is itself debris, and the rule
+>     extended that debris onto a protected outline (984 px).
+> - Both were reverted. Reordering the sparse rung by column was tried as a fix and made the poster
+>   worse.
+>
+> **Next step:** keep the anchor, and first make the sparse rung's row order safe for
+> `clusterLines`. Then look for a guard against an anchor that is itself debris.
 
 > Cross-edition ticket. One feature = one ticket covering every edition.
 > Read [`docs/PARITY.md`](../../docs/PARITY.md) before starting; update it when a shared invariant moves.
@@ -68,8 +85,9 @@ default one. Whatever keeps `ЗАЧЕМ` has to know which of those two situatio
 
 ## Done criteria
 
-- [ ] At least one candidate axis measured over the corpus under both `eng` and the declared language,
-      in a dated note under `DEV/research/`, with the rejected candidates recorded as such.
+- [x] At least one candidate axis measured over the corpus under both `eng` and the declared language,
+      in a dated note under `DEV/research/`, with the rejected candidates recorded as such
+      ([`ocr_rescue_third_axis_2026-09-25.md`](../research/ocr_rescue_third_axis_2026-09-25.md)).
 - [ ] `poster-display-type-on-flat-colour` reaches recall 1.00 under `rus`, and gains no plate under
       `eng` - or the reason it cannot is stated as a measurement.
 - [ ] No scene gains a plate over artwork that holds no text: precision and the concealment/damage

@@ -1,7 +1,7 @@
 {
   "canon": {
-    "version": "2026.09.06.1",
-    "coreDigest": "sha256:cdf49be6d22723aaaed939965af4aea5568c4159f69fe61c49e2e7774d8b942a",
+    "version": "2026.09.24.1",
+    "coreDigest": "sha256:79ee333369303df6fc85335bd67c08029f28356497c63b91e257d7e7b3f14d68",
     "adoptedOn": "2026-08-18",
     "model": "reference",
     "contribRecord": "contrib/epub_2_html.md"
@@ -26,7 +26,9 @@
   "site": {
     "kind": "product",
     "root": ".",
-    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "extension.html", "extension-privacy.html"]
+    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "install-trust.html", "extension.html", "extension-privacy.html",
+              "ar/index.html", "bn/index.html", "de/index.html", "es/index.html", "fr/index.html",
+              "hi/index.html", "it/index.html", "pt/index.html", "ur/index.html", "zh/index.html"]
   },
 
   "privacy": {
@@ -47,6 +49,11 @@
       "id": "SZA-SEC04",
       "path": "internal/report/redact_test.go",
       "reason": "Same fixture, same reason: this is the table of shapes TestRedactRemovesGoogleAPIKeyShapes asserts are stripped. Removing it would delete the test, not the risk."
+    },
+    {
+      "id": "SZA-SEC04",
+      "path": "internal/translator/translator_test.go",
+      "reason": "testKey is AIzaTESTKEY- followed by 0123456789 and the alphabet: a made-up value in the shape a user's key has, used by the tests proving the key travels only in the X-Goog-Api-Key header and never survives into a transport error or an echoed error body. No real key exists; nothing to rotate."
     }
   ]
 }

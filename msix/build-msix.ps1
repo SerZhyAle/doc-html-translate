@@ -114,6 +114,9 @@ try {
     Build-Exe "cmd/doc-html-ui"        "doc-html-ui.exe"        "-H windowsgui"
 } finally { Pop-Location }
 
+# third-party material inside the binaries (the Material Icons glyphs of the reader chrome and GUI)
+Copy-Item (Join-Path $RepoRoot "THIRD-PARTY-NOTICES.txt") $Staging -Force
+
 # ── generate logo PNGs (brand color #1E3A8A, white DOC/HTML) ──
 Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase
 function New-LogoPng([string]$Path, [int]$W, [int]$H, [string[]]$Lines, [double]$FontFrac) {

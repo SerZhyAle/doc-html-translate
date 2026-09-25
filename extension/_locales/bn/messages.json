@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "শনাক্ত করা লেখার স্তর দেখান বা লুকান",
+    "message": "লেখার স্তর",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "মূল নথির ফাইল ডাউনলোড করুন",
+    "message": "মূল নথির ফাইল সংরক্ষণ করুন",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "বর্তমান দৃশ্য স্বতন্ত্র HTML ফাইল হিসেবে সংরক্ষণ করুন (পৃষ্ঠা অনুবাদ করে থাকলে অনুবাদও থাকবে)",
+    "message": "বর্তমান দৃশ্য স্বতন্ত্র HTML ফাইল হিসেবে রপ্তানি করুন (পৃষ্ঠা অনুবাদ করে থাকলে অনুবাদও থাকবে)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ ফাইল",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "ফাইল সংরক্ষণ করুন",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "HTML রপ্তানি করুন",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "মতামত",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "সংরক্ষিত - ফাইলটি {1} MB কারণ সব ছবি এর ভেতরে আছে; কিছু ব্রাউজার এত বড় ফাইল ধীরে খোলে",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "ছোট লেখা",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "বড় লেখা",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "ফন্ট",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "থিম",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "প্রসারিত করুন",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "সংকুচিত করুন",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

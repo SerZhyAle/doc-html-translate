@@ -1,0 +1,88 @@
+/* doc-html-translate site - page-local rules, linked AFTER assets/sza-kit.css.
+   The kit is a byte copy of the PAGE-STYLE reference and is never edited; everything this site
+   adds or overrides lives here. Deviation on record: --wide is widened for PAGE-CONTENT's
+   "use the full available width" (PAGE-STYLE sets 1100px; ticket 26, B3). */
+
+/* ---------- LANGUAGE (pure-CSS toggle, PAGE-STYLE 6) ---------- */
+html[data-lang="ru"] [data-l]:not([data-l="ru"]),
+html[data-lang="en"] [data-l]:not([data-l="en"]),
+html[data-lang="ua"] [data-l]:not([data-l="ua"]){display:none}
+
+/* ---------- WIDTH ---------- */
+:root{--wide:min(1760px,94vw)}
+.container{width:var(--wide);max-width:none;padding:0}
+.section{scroll-margin-top:90px}
+.site-header{top:14px;padding:10px 12px 10px 16px;width:var(--wide);max-width:none}
+
+/* ---------- BRAND (monochrome mark, shown once - PAGE-CONTENT layout) ---------- */
+.brand{display:flex;align-items:center;gap:.65rem}
+.brand-mark{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+  border:1.5px solid currentColor;color:var(--text);font-family:var(--font-heading);
+  font-size:7px;font-weight:800;line-height:.88;letter-spacing:.03em;text-align:center}
+
+/* ---------- HERO ---------- */
+.hero{padding:1.2rem 0 1rem}
+.hero .eyebrow{display:block;color:var(--muted);font-family:var(--font-heading);font-size:.72rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;margin:0 0 .35rem}
+.hero h1{font-size:clamp(1.7rem,4vw,2.3rem);line-height:1.1;margin:0 0 .5rem}
+.hero .tagline{display:block;color:var(--acc);font-size:.95rem;font-weight:600;margin:0 0 .8rem}
+.hero .lead{color:var(--text-2);margin:0 0 .8rem;font-size:.96rem;line-height:1.58}
+.hero-formats{margin-bottom:.9rem}
+.button-group,.channels{display:flex;flex-wrap:wrap;gap:.6rem}
+
+/* ---------- GET IT (full width, not the kit's 760px card) ---------- */
+.get{max-width:none;margin:1rem 0 1.5rem}
+.get h2{font-size:1.2rem}
+.get .install-grid{margin-top:0}
+.install-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr);gap:1.25rem;margin-top:1rem}
+.commands{display:grid;gap:.65rem;align-content:start;min-width:0}
+/* the copy button sits over a scrolling command: keep it opaque so the text never shows through */
+.copybox .copy{background:var(--code-bg)}
+@media(max-width:1024px){.install-grid{grid-template-columns:1fr}}
+/* the kit draws .demo text in --text on the always-dark --code-bg, which vanishes in the light theme (ticket 26, B14) */
+.demo,.demo code{color:var(--code-ink)}
+
+/* ---------- SECTIONS / CARDS ---------- */
+.section-title{display:flex;align-items:center;gap:.7rem;font-size:1.55rem;font-weight:700;margin-bottom:.35rem}
+.section-title .h{color:var(--acc)}
+.section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-desc{color:var(--muted);font-size:.92rem;margin-bottom:1.2rem}
+.card{padding:1.25rem}
+.info-card{display:flex;flex-direction:column;align-items:flex-start}
+.info-card h3{font-size:1.05rem;margin:.8rem 0 .35rem}
+.info-card p{color:var(--muted);font-size:.86rem}
+@media(min-width:1360px){#use-cases .grid{grid-template-columns:repeat(4,1fr)}}
+.sec-tools{display:flex;gap:.5rem;justify-content:flex-end;margin:0 0 .8rem}
+details.sec p+p,details.sec ul,details.sec ol,details.sec pre,details.sec table{margin-top:.6rem}
+details.sec ul,details.sec ol{padding-left:1.3rem}
+
+/* ---------- PROSE (docs and privacy pages) ---------- */
+.prose h2{font-size:1.3rem;margin:1.8rem 0 .6rem}
+.prose h3{font-size:1.05rem;margin:1.2rem 0 .4rem}
+.prose p,.prose li{color:var(--text-2)}
+.prose p+p{margin-top:.6rem}
+.prose ul,.prose ol{padding-left:1.3rem;margin:.5rem 0}
+.prose li+li{margin-top:.25rem}
+.prose code{background:var(--bg-3);border:1px solid var(--border);border-radius:5px;padding:.05em .35em;font-size:.88em}
+.prose pre{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.85rem 1rem;overflow-x:auto;margin:.6rem 0}
+.prose pre code{background:none;border:0;padding:0;color:inherit}
+.prose table{border-collapse:collapse;width:100%;margin:.6rem 0;font-size:.9rem}
+.prose th,.prose td{border:1px solid var(--border);padding:.45rem .6rem;text-align:left;vertical-align:top}
+.prose th{font-family:var(--font-heading);color:var(--text)}
+.table-wrap{overflow-x:auto}
+.meta{color:var(--muted);font-size:.85rem;margin-bottom:1rem}
+
+/* ---------- OTHER LANGUAGES / FOOTER ---------- */
+.langs{display:flex;flex-wrap:wrap;gap:.35rem .6rem;font-size:.8rem;opacity:.85;margin:0 0 1rem}
+.langs .cur{font-weight:700;opacity:1}
+.site-footer h2{font-size:1rem;margin-bottom:.8rem;color:var(--text-2)}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:760px){
+  :root{--wide:94vw}
+  .site-header{top:8px;margin:8px auto}.brand>span:last-child{display:none}
+  .install-grid{grid-template-columns:1fr}
+  .workflow{align-items:flex-start}
+}
+@media(max-width:480px){.seg button{padding:5px 7px}}

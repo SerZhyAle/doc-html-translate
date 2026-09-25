@@ -37,11 +37,9 @@ func (r Runner) approveGoogleCost(book *epub.Book, pages []contentPage) bool {
 	if chars <= confirmThreshold {
 		return true
 	}
-	msg := fmt.Sprintf(
-		"Characters to send: %s\nEstimated cost: $%s USD\n\nProceed with Google Translate?",
-		formatInt(chars), formatUSD(estCost),
-	)
-	if !r.engines.confirm("Google Translate - Cost Warning", msg) {
+	msg := i18n.S("Characters to send: %s\nEstimated cost: $%s USD\n\nSend the text to Google Translate and pay for it? Declining still converts the book, untranslated.",
+		formatInt(chars), formatUSD(estCost))
+	if !r.engines.confirm(i18n.S("Google Translate - cost"), msg) {
 		logging.Println("[3/4] Translation cancelled by user")
 		return false
 	}

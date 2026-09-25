@@ -1,6 +1,6 @@
 # The product site follows the portfolio page contracts
 
-**Status:** Draft
+**Status:** In Progress
 **Priority:** 50
 **Date:** 2026-09-23
 
@@ -112,6 +112,55 @@ Re-read against the catalog and the working tree on 2026-09-25, by reading only 
   universal-agent-kit (`PROPOSAL-2026-09-23-universal-agent-kit-page-style.md` items 3 and 2); B13 by
   the same proposal item 7.
 
+### Implemented 2026-09-25 (repository side of Direction A)
+
+Owner's answers to the open questions, 2026-09-25: Q2 H1 = EN "Turn any book, document or comic into a local
+web page" / RU "Любая книга, документ или комикс - в локальную веб-страницу" / UA "Будь-яка книжка, документ чи
+комікс - у локальну вебсторінку"; Q4 locale landings keep the link list; Q5 privacy pages in RU / EN / UA; Q6 docs
+restyled in place. Q3 by the standing preference: the "New: 13 languages" paragraph stays in the hero, after
+what/for-whom. Q7 (store listings' own contact fields) is left to the next release flow.
+
+- **1 Language value:** one space `ru|en|ua` on every page; each pre-paint maps a stored `uk` (and `?l=uk`) to
+  `ua`; `assets/site.js` does the same. `extension.html` now writes `ua`.
+- **2 Kit:** `assets/sza-kit.css` = the reference (SHA-256 `72bd903e..0332593f`, LF, `-text` in `.gitattributes`).
+  Every former diff line lives in `assets/site.css`, linked after the kit; the `--wide` override stays there
+  (exception to record - catalog, local only). The mark is monochrome (`currentColor`), `#22368a` is gone.
+  Shared body scripts in `assets/site.js` (theme-color + `aria-label` on toggle, copy with `execCommand`
+  fallback, `openFromHash`, expand/collapse-all, back-to-top, release tag).
+- **3 Footer:** the headed full grid (7 siblings + hub) on all 17 pages, the ten locale headings in their own
+  language; `sza@ukr.net` in `extension-privacy.html` and `extension/store/PRIVACY.md`.
+- **4 Landing order** (`index.html` + ten locales): eyebrow -> outcome H1 -> tagline -> what/for-whom -> one proof
+  strip -> `section.get#get` (Microsoft Store, GitHub Releases with the live tag, setup installer, Chrome Web
+  Store, Edge Add-ons, winget copy box, three-step quickstart) -> scenarios -> details (Expand all / Collapse
+  all). Mark once in the header; hero icon and the three Install buttons removed. Em dashes gone from prose and
+  the JS title map.
+- **5 Extension page:** kit tokens, header/footer/back-to-top, self-referencing `hreflang`, page JS replaced by
+  `site.js`, quickstart leads with the stores instead of Load unpacked.
+- **6 Docs pages:** kit fonts/tokens, light/dark, header with RU EN UA (`data-href` to the sibling page),
+  binaries -> `/releases/latest`, the Fast Media Sorter section -> one contextual note.
+- **7 Privacy pages:** kit, RU / EN / UA in-page (the English text word for word as before), self-referencing
+  `hreflang`, footer grid. Not a generated page: `PRIVACY.md` is copied by hand.
+- **8 Guard:** `tests/site_test.go` - kit hash, kit-then-site.css on every page, `site.pages` = served pages,
+  footer URLs + contact, `ru|en|ua` value space, no branch links for binaries, author-page typography.
+- `sitemap.xml`: child pages carry their own `hreflang` clusters; `.sza-canon.json` `site.pages` lists all 17;
+  `DEV/DOCS_SURFACES.md` rows updated; pointer files rewritten as contract summaries, `PAGE-STYLE` 1.1, README
+  records `WAVE-PARTICLES` as read and not applicable.
+
+Evidence: `go test ./tests/ -count=1` -> `ok doc-html-translate/tests 156.550s`, exit 0 (the first run died
+with the known GOARCH=386 out-of-memory; the rerun passed). `TestSite*` 8/8 PASS.
+
+Left open, found while implementing:
+- `extension/store/PRIVACY.md` and `extension-privacy.html` already disagreed in substance before this ticket
+  (remote images blocked until loaded; OCR languages stored; "PDF opens" vs "document opens") - owner to pick,
+  then sync both and move "last updated" (still 2026-08-11 although the contact changed).
+- The ten locale pages' `<title>` / description still read "document converter .."; only the root's follow the H1.
+- Rendered spot check 2026-09-25 (headless Chrome, iframes at 360 / 768 and a 1280 window; dark for index,
+  extension, docs.ru, privacy, ar; light for index, privacy, ar). Found and fixed: the Copy button let a long
+  winget command show through (now opaque; `.install-grid` single-column below 1024px); the ar/ur demo strip
+  ran right-to-left against its arrows (`dir="ltr"`); the kit's `.demo` text was invisible in the light theme
+  (B14). Not yet done: the full section 11 checklist per page (touch targets, focus, reduced motion, 768 light,
+  extension/docs light), so done criterion 6 stays open.
+
 ## Direction A - the site conforms
 
 Phase order matters: the bug first, the kit before the pages that depend on it.
@@ -174,32 +223,37 @@ of opening a second one.
 - **B12** **⛔ Local only - changes the hub repository.** Hub side: this product's card on the hub is stale (no comics, images, OCR, extension). Offer
   corrected copy to the hub owner.
 - **B13** the `PAGE-STYLE` §9 glyph list conflicts with `ICON-SET` - joint proposal, see
-  [`24_2026-09-23_contract-iconography-sync`](24_2026-09-23_contract-iconography-sync.md) B9.
+  [`24_2026-09-23_contract-iconography-sync`](done/24_2026-09-23_contract-iconography-sync.md) B9.
   Site default until it is answered: the `PAGE-STYLE` §9 kit glyphs (`◐ ⤓ → ▸`) as the kit draws them, each
   with a text label or `aria-label`; a swap to `ICON-SET` ids follows the answer, not this ticket.
 
+- **B14** (found 2026-09-25) reference kit: `.demo code{color:var(--text)}` sits on `--code-bg`, which stays
+  dark in the light theme, so the demo strip's text disappears there. Ask: `.demo` text in `--code-ink`.
+  Site default until answered: the override in `assets/site.css`.
+
 ## Done criteria
 
-- [ ] Pointer files `docs/contracts/PAGE-CONTENT.md`, `PAGE-STYLE.md`, `SITE-FAMILY-MAP.md` exist and are
+- [x] Pointer files `docs/contracts/PAGE-CONTENT.md`, `PAGE-STYLE.md`, `SITE-FAMILY-MAP.md` exist and are
       listed in [`docs/contracts/README.md`](../../docs/contracts/README.md), which also records that
       `WAVE-PARTICLES` was read and does not apply. (Files and listing done; the `PAGE-STYLE` version,
-      the `WAVE-PARTICLES` note and the pointer bodies still to fix - see "Re-verified 2026-09-25".)
+      the `WAVE-PARTICLES` note and the pointer bodies fixed 2026-09-25.)
 - [ ] **⛔ Local only - changes the contract catalog.** Registry: this product's consumer row for the three ids (reads 1.1 / 1.0 / 1.1) replaces the
       "eight product pages" placeholder for this product; every remaining deviation is a dated exception.
       (A row dated 2026-09-24 exists but overstates conformance and covers `index.html` only - correct it
       against the finished site, and read 1.1 for `PAGE-STYLE` once the pages are checked against it.)
-- [ ] Choosing a language on any page of this site shows exactly one language on every other page.
-- [ ] `cmp` of the vendored kit against the reference is clean, or its exception is recorded. (Remote:
+- [x] Choosing a language on any page of this site shows exactly one language on every other page.
+- [x] `cmp` of the vendored kit against the reference is clean, or its exception is recorded. (Remote:
       `sha256sum assets/sza-kit.css` equals the snapshot hash; recording an exception is
       **⛔ Local only - changes the contract catalog.**)
-- [ ] The `SITE-FAMILY-MAP` §5 URL check passes for every footer on every page; one contact everywhere.
+- [x] The `SITE-FAMILY-MAP` §5 URL check passes for every footer on every page; one contact everywhere.
+      (2026-09-25: all nine URLs 200; footers and contact guarded by `tests/site_test.go`.)
 - [ ] The `PAGE-STYLE` §11 checklist is run on a rendered page at 360 / 768 / 1280 px for the landing,
       extension, docs and privacy pages, light and dark, and the result is recorded.
-- [ ] No docs link points at a branch file for a binary.
+- [x] No docs link points at a branch file for a binary.
 - [ ] **⛔ Local only - changes the contract catalog** (B12: **the hub repository**). B1-B12 filed or
       withdrawn in writing here.
-- [ ] `.sza-canon.json` `site.pages` lists every page this site serves, locale landings included.
-- [ ] Every surface changed in every authored locale in one edit.
+- [x] `.sza-canon.json` `site.pages` lists every page this site serves, locale landings included.
+- [x] Every surface changed in every authored locale in one edit.
 
 ## Open questions
 

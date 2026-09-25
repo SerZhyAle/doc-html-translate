@@ -5,6 +5,36 @@ package i18n
 //
 // Order of the translations is always Codes[1:]: ru uk de it es fr pt ar hi bn ur zh.
 func init() {
+	// The paid-translation question (APP-BEHAVIOUR rule 1). The CLI shows it in an OK/Cancel box,
+	// the GUI in its own window with its own button captions, so the text names no button.
+	Add("Google Translate - cost",
+		"Google Translate - стоимость",
+		"Google Translate - вартість",
+		"Google Translate - Kosten",
+		"Google Translate - costo",
+		"Google Translate - coste",
+		"Google Translate - coût",
+		"Google Translate - custo",
+		"Google Translate - التكلفة",
+		"Google Translate - लागत",
+		"Google Translate - খরচ",
+		"Google Translate - لاگت",
+		"Google Translate - 费用")
+
+	Add("Characters to send: %s\nEstimated cost: $%s USD\n\nSend the text to Google Translate and pay for it? Declining still converts the book, untranslated.",
+		"Символов к отправке: %s\nОценка стоимости: $%s USD\n\nОтправить текст в Google Translate и оплатить перевод? При отказе книга всё равно будет сконвертирована, без перевода.",
+		"Символів до надсилання: %s\nОцінка вартості: $%s USD\n\nНадіслати текст до Google Translate і оплатити переклад? У разі відмови книгу все одно буде сконвертовано, без перекладу.",
+		"Zu sendende Zeichen: %s\nGeschätzte Kosten: $%s USD\n\nDen Text an Google Translate senden und dafür bezahlen? Bei Ablehnung wird das Buch trotzdem konvertiert, unübersetzt.",
+		"Caratteri da inviare: %s\nCosto stimato: $%s USD\n\nInviare il testo a Google Translate e pagare la traduzione? Rifiutando, il libro viene comunque convertito, senza traduzione.",
+		"Caracteres a enviar: %s\nCoste estimado: $%s USD\n\n¿Enviar el texto a Google Translate y pagar la traducción? Si lo rechazas, el libro se convierte igualmente, sin traducir.",
+		"Caractères à envoyer : %s\nCoût estimé : $%s USD\n\nEnvoyer le texte à Google Translate et payer la traduction ? En refusant, le livre est tout de même converti, sans traduction.",
+		"Caracteres a enviar: %s\nCusto estimado: $%s USD\n\nEnviar o texto ao Google Translate e pagar pela tradução? Ao recusar, o livro é convertido mesmo assim, sem tradução.",
+		"عدد الأحرف المرسلة: %s\nالتكلفة التقديرية: $%s USD\n\nهل تريد إرسال النص إلى Google Translate والدفع مقابل الترجمة؟ عند الرفض يُحوَّل الكتاب مع ذلك دون ترجمة.",
+		"भेजे जाने वाले वर्ण: %s\nअनुमानित लागत: $%s USD\n\nक्या टेक्स्ट Google Translate को भेजें और अनुवाद का भुगतान करें? मना करने पर भी पुस्तक बिना अनुवाद के रूपांतरित होगी।",
+		"পাঠানোর অক্ষর: %s\nআনুমানিক খরচ: $%s USD\n\nটেক্সট Google Translate-এ পাঠিয়ে অনুবাদের জন্য অর্থ দেবেন? না বললেও বইটি অনুবাদ ছাড়াই রূপান্তরিত হবে।",
+		"بھیجے جانے والے حروف: %s\nتخمینی لاگت: $%s USD\n\nکیا متن Google Translate کو بھیج کر ترجمے کی ادائیگی کریں؟ انکار پر بھی کتاب ترجمے کے بغیر تبدیل ہو جائے گی۔",
+		"待发送字符：%s\n预计费用：$%s USD\n\n是否将文本发送到 Google Translate 并支付翻译费用？拒绝后仍会转换本书，但不翻译。")
+
 	Add("The document changed since it was converted - rebuilding the output.",
 		"Документ изменился после конвертации - результат собирается заново.",
 		"Документ змінився після конвертації - результат збирається заново.",

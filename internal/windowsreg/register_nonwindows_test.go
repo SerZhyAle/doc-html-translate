@@ -13,6 +13,10 @@ func TestRegistrationUnsupportedOffWindows(t *testing.T) {
 		"RegisterContextMenu":    RegisterContextMenu,
 		"RegisterContextMenuFor": func() ([]string, error) { return RegisterContextMenuFor("/usr/bin/app") },
 		"Unregister":             Unregister,
+		"RemoveShellEntries":     RemoveShellEntries,
+	}
+	if HasShellEntries() {
+		t.Error("HasShellEntries = true off Windows")
 	}
 	for name, call := range calls {
 		if got, err := call(); err == nil || got != nil {

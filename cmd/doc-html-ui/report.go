@@ -32,6 +32,7 @@ func handleReport(w http.ResponseWriter, r *http.Request) {
 		At:           time.Now(),
 	})
 	if err != nil {
+		logFailure("build report", err)
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
@@ -125,14 +126,24 @@ func handleReportOpen(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleLogsClear empties the run-log store for a user who would rather not keep a history.
+// The page confirms first (APP-BEHAVIOUR rule 5); "cleared" says how many logs there were, so an
+// empty store is reported as nothing to clear rather than as a success.
+//
+//	POST → {"ok":true,"cleared":N} | {"ok":false,"error":".."}
 func handleLogsClear(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	count, _ := logStoreSize()
+	if count == 0 {
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "cleared": 0})
+		return
+	}
 	if err := report.ClearLogs(); err != nil {
+		logFailure("clear logs", err)
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "cleared": count})
 }

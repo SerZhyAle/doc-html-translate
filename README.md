@@ -44,7 +44,7 @@ The desktop app and the extension are independent and complementary: the app con
 - Interface in 13 languages: `en ru uk de it es fr pt ar hi bn ur zh` - the `-ui-lang <code>` flag in the CLI, a language selector in the GUI and in the extension. The default follows the system language (the browser's language in the extension). The interface language never changes the document's language: the generated page keeps the book's own `<html lang>`, because otherwise Chrome would stop offering to translate the page
 - Send logs to the author when something breaks: the app keeps its recent run logs on disk, and the GUI's **About the program** section (or `-report` on the command line) packs them with an environment summary and the last run's settings into one archive, opens the archive's folder with the file selected and puts its path on the clipboard, and opens a pre-addressed message in your own mail program. **Nothing is ever sent automatically** - you attach the archive and press Send yourself, and you can open the archive first to see exactly what it holds. The Google API key is never in it. The browser extension, which has no log store, offers the same intent as a **Copy diagnostics** button on its options page
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
-- File-type association is **optional and off by default**: the app always adds a **"Convert to HTML" right-click entry** (and an "Open with" entry) for all supported types, and becoming the default handler is a separate opt-in (`-register` / the GUI toggle / a one-time first-run prompt; `-unregister` reverses it)
+- Windows integration is **asked for, never assumed**: nothing is written to Windows until you say yes. The one-time first-run question (in the GUI, and in the CLI started with no arguments) offers a **"Convert to HTML" right-click entry** plus "Open with" for all supported types, and - separately - becoming the default handler; "No, thanks" leaves a working app. Both can be changed later under "Windows integration" (`-register-openwith`, `-register`, `-unregister`)
   - On Windows 10/11 the choice you once made yourself ("Always use this app", or Settings > Default apps) wins over any program's registration, and no program may overwrite it. If such a choice exists, `-register` and the GUI toggle say so, list the types it holds, and point you to **Settings > Apps > Default apps** (the GUI has an "Open Default apps" button) instead of claiming success. `-unregister` puts back the per-user handler that was there before registering; a registration made by an older version, which kept no record of it, can only be removed
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 - CBR/CB7 comics: require [7-Zip](https://www.7-zip.org) installed (CBZ and CBT need nothing extra)
@@ -83,6 +83,11 @@ Install via winget (portable build):
 ```powershell
 winget install SerZhyAle.DocHtmlTranslate
 ```
+
+**"Windows protected your PC"?** The installer and the portable programs are not code-signed, so Windows
+SmartScreen may stop the first launch: click **More info**, then **Run anyway**. The Microsoft Store version
+is signed by Microsoft and shows no such window. Why it happens, and what the app never does:
+[install-trust.html](https://serzhyale.github.io/doc-html-translate/install-trust.html).
 
 ## Quick Usage
 
@@ -146,9 +151,9 @@ Why this workflow is popular (besides the obvious):
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-register` | `false` | Opt in to becoming the default handler in HKCU for all supported types (off by default - the first run only adds the right-click entry and offers this) |
+| `-register` | `false` | Opt in to becoming the default handler in HKCU for all supported types (off by default - the first run asks, and only writes on a yes) |
 | `-unregister` | `false` | Release the default-handler association (leaves the "Convert to HTML" right-click entry and "Open with") |
-| `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI does this automatically on launch) |
+| `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI offers the same as a toggle under "Windows integration"; it never adds it on its own) |
 | `-notranslate` | `false` | Convert only, skip translation |
 | `-noopen` | `false` | Do not open browser after conversion |
 | `-google` | `false` | Translate via Google Cloud Translation API |
@@ -226,7 +231,7 @@ and PDF); other formats are unaffected.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`-`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
-- For paid engines the estimated cost is `characters / 1e6 * $20`, counted in characters (not bytes) over everything that is sent: the pages, the book title and the table-of-contents labels. `-max-cost N` is a hard pre-flight guard at any document size: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated. A set limit is also the approval: an estimate within `N` translates without the cost dialog, so an unattended or scripted run (`-google -max-cost 2 -noopen book.epub`) never stops to ask. Without `-max-cost` the dialog asks as before for anything over 1000 characters. A negative, `NaN` or infinite `-max-cost` is refused at startup (exit code `1`).
+- For paid engines the estimated cost is `characters / 1e6 * $20`, counted in characters (not bytes) over everything that is sent: the pages, the book title and the table-of-contents labels. `-max-cost N` is a hard pre-flight guard at any document size: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated. A set limit is also the approval: an estimate within `N` translates without the cost dialog, so an unattended or scripted run (`-google -max-cost 2 -noopen book.epub`) never stops to ask. Without `-max-cost` the dialog asks for anything over 1000 characters, and "do not spend" is its default: Enter and Escape both decline. Started from the GUI, the question is asked in the GUI's own window. A negative, `NaN` or infinite `-max-cost` is refused at startup (exit code `1`).
 - The Google API key is sent in a request header, never in the URL, and it is removed from any error text and from the run log.
 - PDF extraction is best-effort and includes fallback flows for difficult files (PDFs have opinions, and they are rarely kind).
 - PDF text comes from `pdftotext` (Poppler), bundled with the Windows app. **Nothing is ever installed automatically.** If antivirus blocks the bundled copy, the converter uses a Poppler you installed yourself; otherwise it falls back to its built-in reader and says how to install Poppler manually: `winget install ossia.poppler` on Windows, the `poppler-utils` package on Linux, `brew install poppler` on macOS. The bundled copy is unpacked per app version into `%LOCALAPPDATA%\doc-html-translate\pdftotext-<hash>\`, so an upgrade always uses the new one; older folders are removed.

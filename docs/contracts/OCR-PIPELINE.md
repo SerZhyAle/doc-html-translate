@@ -1,8 +1,9 @@
 # Pointer: OCR-PIPELINE
 
 - **Id:** `OCR-PIPELINE`
-- **Version:** 1.1 (2026-09-25: the amendment for the line split - word-gap ratio, column regrouping, the
-  stroke test between two words, orphans)
+- **Version:** 1.2 (2026-09-25: 1.1 added the line split - word-gap ratio, column regrouping, the stroke test
+  between two words, orphans; 1.2 brought the document up to the code - eight corrections, the trim stage,
+  the word-height type size and plate font, the grow branch, page OCR, a status column, negative results)
 - **Home:** the shared contracts catalog, `ocr-overlay/ocr-pipeline.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - the document describes this product's own mechanism, end to end
 - **Read by:** FastMediaSorter Android and FastMediaSorter_Lite, which port parts of it

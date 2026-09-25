@@ -53,71 +53,108 @@
   </url>
   <url>
     <loc>https://serzhyale.github.io/doc-html-translate/docs.html</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?l=ru"/>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?l=uk"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/"/>
-    <xhtml:link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://serzhyale.github.io/doc-html-translate/fr/"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://serzhyale.github.io/doc-html-translate/pt/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://serzhyale.github.io/doc-html-translate/ar/"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://serzhyale.github.io/doc-html-translate/hi/"/>
-    <xhtml:link rel="alternate" hreflang="bn" href="https://serzhyale.github.io/doc-html-translate/bn/"/>
-    <xhtml:link rel="alternate" hreflang="ur" href="https://serzhyale.github.io/doc-html-translate/ur/"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://serzhyale.github.io/doc-html-translate/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/docs.ru.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/docs.uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/docs.ru.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/docs.ru.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/docs.uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/docs.uk.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/docs.ru.html"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/docs.uk.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/docs.html"/>
   </url>
   <url>
     <loc>https://serzhyale.github.io/doc-html-translate/extension.html</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?l=ru"/>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?l=uk"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/"/>
-    <xhtml:link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://serzhyale.github.io/doc-html-translate/fr/"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://serzhyale.github.io/doc-html-translate/pt/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://serzhyale.github.io/doc-html-translate/ar/"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://serzhyale.github.io/doc-html-translate/hi/"/>
-    <xhtml:link rel="alternate" hreflang="bn" href="https://serzhyale.github.io/doc-html-translate/bn/"/>
-    <xhtml:link rel="alternate" hreflang="ur" href="https://serzhyale.github.io/doc-html-translate/ur/"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://serzhyale.github.io/doc-html-translate/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/extension.html?l=ru</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/extension.html?l=uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension.html"/>
   </url>
   <url>
     <loc>https://serzhyale.github.io/doc-html-translate/privacy.html</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?l=ru"/>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?l=uk"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/"/>
-    <xhtml:link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://serzhyale.github.io/doc-html-translate/fr/"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://serzhyale.github.io/doc-html-translate/pt/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://serzhyale.github.io/doc-html-translate/ar/"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://serzhyale.github.io/doc-html-translate/hi/"/>
-    <xhtml:link rel="alternate" hreflang="bn" href="https://serzhyale.github.io/doc-html-translate/bn/"/>
-    <xhtml:link rel="alternate" hreflang="ur" href="https://serzhyale.github.io/doc-html-translate/ur/"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://serzhyale.github.io/doc-html-translate/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/privacy.html?l=ru</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/privacy.html?l=uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/install-trust.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/install-trust.html?l=ru</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
   </url>
   <url>
     <loc>https://serzhyale.github.io/doc-html-translate/extension-privacy.html</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?l=ru"/>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?l=uk"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/"/>
-    <xhtml:link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://serzhyale.github.io/doc-html-translate/fr/"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://serzhyale.github.io/doc-html-translate/pt/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://serzhyale.github.io/doc-html-translate/ar/"/>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://serzhyale.github.io/doc-html-translate/hi/"/>
-    <xhtml:link rel="alternate" hreflang="bn" href="https://serzhyale.github.io/doc-html-translate/bn/"/>
-    <xhtml:link rel="alternate" hreflang="ur" href="https://serzhyale.github.io/doc-html-translate/ur/"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://serzhyale.github.io/doc-html-translate/zh/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=ru</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
   </url>
   <url>
     <loc>https://serzhyale.github.io/doc-html-translate/de/</loc>

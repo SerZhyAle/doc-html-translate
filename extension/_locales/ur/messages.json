@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "شناخت شدہ متن کی تہہ دکھائیں یا چھپائیں",
+    "message": "متن کی تہہ",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "اصل دستاویز فائل ڈاؤن لوڈ کریں",
+    "message": "اصل دستاویز فائل محفوظ کریں",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "موجودہ منظر کو الگ HTML فائل کے طور پر محفوظ کریں (اگر صفحہ ترجمہ کیا ہے تو ترجمہ بھی رہے گا)",
+    "message": "موجودہ منظر کو الگ HTML فائل کے طور پر برآمد کریں (اگر صفحہ ترجمہ کیا ہے تو ترجمہ بھی رہے گا)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ فائل",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "فائل محفوظ کریں",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "HTML برآمد کریں",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "رابطہ",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "محفوظ ہو گیا - فائل {1} MB کی ہے کیونکہ تمام تصاویر اس کے اندر ہیں؛ کچھ براؤزر اتنی بڑی فائلیں آہستہ کھولتے ہیں",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "چھوٹا متن",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "بڑا متن",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "فونٹ",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "تھیم",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "پھیلائیں",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "سمیٹیں",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

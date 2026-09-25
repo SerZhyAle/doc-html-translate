@@ -50,7 +50,7 @@ func defaultEngines() engines {
 			c.SetNumCtx(cfg.OllamaNumCtx)
 			return c
 		},
-		confirm: dialog.ConfirmYesNo,
+		confirm: dialog.Confirm,
 	}
 }
 

@@ -48,15 +48,23 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
-	// First run (no args): register the non-destructive right-click "Convert to HTML"
-	// entry + "Open with" for every supported type, then OFFER to become the default
-	// handler. It never grabs defaults silently.
+	// First run (no args): OFFER the non-destructive right-click "Convert to HTML" entry +
+	// "Open with" for every supported type, then OFFER to become the default handler.
+	// Nothing is written before the user says yes, and "no" to both leaves a working app
+	// (APP-BEHAVIOUR rules 4 and 11).
 	if a.cfg.FirstRun {
-		_, openWithErr := windowsreg.RegisterOpenWith()
-		ctx, menuErr := windowsreg.RegisterContextMenu()
 		printSplash()
-		printFirstRunRegistered(ctx)
-		printIntegrationErrors(openWithErr, menuErr)
+		fmt.Println(i18n.S("  Supported file types: %s", strings.Join(windowsreg.SupportedExtensions, " ")))
+		fmt.Println()
+		if promptAddShellEntries() {
+			_, openWithErr := windowsreg.RegisterOpenWith()
+			added, menuErr := windowsreg.RegisterContextMenu()
+			printFirstRunRegistered(added)
+			printIntegrationErrors(openWithErr, menuErr)
+		} else {
+			fmt.Println(i18n.S(`  Nothing was added. You can add it later with -register-openwith, or under "Windows integration" in the app.`))
+			fmt.Println()
+		}
 		if promptSetDefault() {
 			reg, err := windowsreg.RegisterHandler()
 			if err != nil {
@@ -270,6 +278,11 @@ func printStillDefault(exts []string) {
 		fmt.Printf("  * %s\n", ext)
 	}
 	fmt.Println(i18n.S("Change them in Settings > Apps > Default apps."))
+}
+
+// promptAddShellEntries asks whether to add the right-click entry and "Open with".
+func promptAddShellEntries() bool {
+	return askYes(i18n.S(`  Add a right-click "Convert to HTML" entry and "Open with" for these file types? [y/N]: `))
 }
 
 // promptSetDefault asks whether to become the default handler and returns the answer.

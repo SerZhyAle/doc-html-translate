@@ -14,7 +14,10 @@
 - A warning is cleared by reconciling the changed rule documents through the adopt-canon flow, which
   rewrites the stamp (rule 7 and `REPO-STAMP` rule 8).
 
-**Known state.** Stale - the stamp is at canon `2026.09.06.1`; ticket
-`DEV/plan/22_2026-09-23_contract-rule-adoption-sync.md` owns the reconciliation.
+**Known state (2026-09-25).** Current - the stamp declares canon `2026.09.24.1` and its digest, written by
+the adopt-canon run that reconciled the 13 rule documents changed since `2026.09.06.1`. `canon.adoptedOn`
+stays `2026-08-18`, as the skill directs, so from 2027-02-14 the first drift reads as an error however
+recent the last reconciliation; which run should move that date is an open proposal in the catalog
+(`PROPOSAL-2026-09-23-adoption-date.md`, seconded by this repo).
 
 **Conformance.** The canon plugin's compliance gate, finding `SZA-CANON03`.

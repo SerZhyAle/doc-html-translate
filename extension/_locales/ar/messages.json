@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "إظهار أو إخفاء طبقة النص المتعرف عليه",
+    "message": "طبقة النص",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "تنزيل ملف المستند الأصلي",
+    "message": "حفظ ملف المستند الأصلي",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "حفظ العرض الحالي كملف HTML مستقل (يحتفظ بالترجمة إن كنت قد ترجمت الصفحة)",
+    "message": "تصدير العرض الحالي كملف HTML مستقل (يحتفظ بالترجمة إن كنت قد ترجمت الصفحة)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ ملف",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "حفظ الملف",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "تصدير HTML",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "للتواصل",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "تم الحفظ - حجم الملف {1} ميغابايت لأن كل الصور بداخله؛ بعض المتصفحات تفتح الملفات بهذا الحجم ببطء",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "نص أصغر",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "نص أكبر",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "الخط",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "المظهر",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "توسيع",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "طي",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

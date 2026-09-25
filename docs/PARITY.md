@@ -53,6 +53,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
+| Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
 | Source-language detection | (none - Go copies the source `<html lang>`) | [`extension/src/lang.js`](../extension/src/lang.js) |
 | Settings / options surface | [`internal/config/flags.go`](../internal/config/flags.go), [`ui.html`](../cmd/doc-html-ui/ui.html) | [`popup.js`](../extension/src/popup.js), [`options.js`](../extension/src/options.js), [`background.js`](../extension/src/background.js) |
 
@@ -283,6 +284,31 @@ Serif / sans / mono families, identical strings both sides:
 `mono` = `"Cascadia Code",Consolas,monospace`. Sources:
 [`navbar.go:404-408`](../internal/htmlgen/navbar.go#L404-L408),
 [`viewer.js:91-95`](../extension/src/viewer.js#L91-L95).
+
+### Vocabulary glyphs (2026-09-25)
+
+**Guard:** `tests/iconography_test.go` - both tables hold the vendored drawings of `assets/glyphs/` verbatim,
+every glyph the extension names is in its table, and the two editions call a shared control by the same
+words in all thirteen languages. `internal/htmlgen/glyphs_test.go` pins the paging pair and the reader's
+glyph-only controls.
+
+One meaning, one picture, one name in both editions (`ICON-SET` rules 1-3; the inventory is
+[`GLYPH-MAP.md`](GLYPH-MAP.md)). Where both editions show the same control they draw the same vocabulary
+glyph: the table of contents is `nav.contents` under the words "Table of contents" (Go `i18n` key = the
+extension's `ttToc`, per language). Text size is `action.text-smaller` / `action.text-larger`, the text
+layer `view.text-layer`, the theme select `app.theme` and the page jump `nav.go-to-page` (`ICON-SET` 0.15),
+each named alike on both sides (Go "Smaller text" / "Larger text" / "Text layer" / "Theme" / "Go to page" = the
+extension's `ariaSmallerText` / `ariaLargerText` / `ttOcrLayer` / `ariaTheme` / `ttGoToPage`). The text
+layer shows its state the same way in both - `aria-pressed` and a pressed look, since the record has no off
+form yet. The theme options are words on either side. Colour is `currentColor`, never a literal
+(`ICON-RENDER` rule 2).
+
+Glyphs one edition has and the other does not, by surface rather than by drift: the paging pair
+(`media.previous` / `media.next`) and `feature.continue-reading` exist only in the desktop book, which pages
+and has an index page; the extension's viewer is one scrolling document. `action.save`, `action.export`
+and `nav.open-external` exist only in the extension's viewer and popup. `nav.expand` / `nav.collapse` are
+in both, drawn differently by surface: a button in the extension's table of contents, a CSS mask over the
+`<details>` marker in the desktop index. The GUI launcher and the site carry their own inline copies, held to the same vendored files.
 
 ### PDF reflow heuristics
 
@@ -899,10 +925,12 @@ and treats an empty or malformed box as its own default. `TestAssembledArgsSurvi
 ([`hardening_test.go`](../cmd/doc-html-ui/hardening_test.go)) feeds such values through the real CLI parser.
 
 **File-type association is opt-in, off by default, on every edition** (2026-07-15). No edition makes
-itself the default handler / auto-interceptor without an explicit user action; instead each always
-offers a right-click "convert" entry. Desktop: the no-arg first run and GUI launch register only the
-non-destructive "Convert to HTML" verb + "Open with" ([`windowsreg`](../internal/windowsreg/register_windows.go)
-`RegisterContextMenu`/`RegisterOpenWith`); becoming the default handler is a separate opt-in (CLI
+itself the default handler / auto-interceptor without an explicit user action; instead each offers a
+right-click "convert" entry. Desktop: nothing is registered without a yes (APP-BEHAVIOUR rules 4 and 11,
+2026-09-25) - the no-arg first run and the GUI's first-run question offer the non-destructive "Convert to
+HTML" verb + "Open with" ([`windowsreg`](../internal/windowsreg/register_windows.go)
+`RegisterContextMenu`/`RegisterOpenWith`, removable from the GUI via `RemoveShellEntries`), and the
+GUI no longer re-adds them on every launch; becoming the default handler is a separate opt-in (CLI
 `-register`, GUI association toggle, one-time first-run prompt) and `-unregister` reverses it. Both report what Windows actually uses (the user's own `UserChoice` wins over the class key) and `-unregister` restores the handler saved at registration (2026-09-25, desktop-only). Extension:
 [`defaults.js`](../extension/src/defaults.js) `enabledByDefault` is **`false`** (no DNR interception until
 the popup toggle is on); the "Convert with doc-html-translate" right-click item

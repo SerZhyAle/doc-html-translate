@@ -317,6 +317,53 @@ func TestRegisterContextMenuForFailsWhenNothingIsAdded(t *testing.T) {
 	}
 }
 
+// The GUI's shell-entry toggle is a yes the user can take back: removal undoes exactly what
+// registration wrote and leaves the Applications key a user's "Always" choice may point at.
+func TestRemoveShellEntriesUndoesRegistration(t *testing.T) {
+	h := useFakeHKCU(t)
+	exe := `D:\portable\doc-html-translate.exe`
+	if HasShellEntries() {
+		t.Fatal("an empty hive reports shell entries")
+	}
+	if _, err := RegisterOpenWithFor(exe); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RegisterContextMenuFor(exe); err != nil {
+		t.Fatal(err)
+	}
+	if !HasShellEntries() {
+		t.Fatal("HasShellEntries = false right after registering")
+	}
+	h.notified = 0
+
+	removed, err := RemoveShellEntries()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(removed) != len(SupportedExtensions) {
+		t.Errorf("removed %v, want every extension", removed)
+	}
+	if HasShellEntries() {
+		t.Error("HasShellEntries = true after removal")
+	}
+	app := `Software\Classes\Applications\doc-html-translate.exe`
+	if _, ok := h.value(app+`\SupportedTypes`, ".epub"); ok {
+		t.Error(".epub is still advertised under Open with")
+	}
+	if v, _ := h.value(app+`\shell\open\command`, ""); v == "" {
+		t.Error("the Applications command was deleted; an Always choice pointing at it would break")
+	}
+	if h.notified != 1 {
+		t.Errorf("Explorer notified %d times, want 1", h.notified)
+	}
+
+	// Nothing left to remove is not an error and changes nothing.
+	h.notified = 0
+	if removed, err := RemoveShellEntries(); err != nil || len(removed) != 0 || h.notified != 0 {
+		t.Errorf("second removal = %v, %v, notified %d; want nothing", removed, err, h.notified)
+	}
+}
+
 func userChoiceKey(ext string) string { return fileExtsPath + ext + `\UserChoice` }
 
 // Since Windows 8 the user's own choice wins over the class key: writing it must not be

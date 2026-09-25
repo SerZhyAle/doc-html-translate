@@ -80,19 +80,29 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	}
 	sb.WriteString("  <style>\n")
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; }\n")
-	sb.WriteString("    h1 { border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }\n")
+	// Every colour comes from the reading theme (readerCSS): a literal here holds on the light
+	// theme only - the old literal link blue measured 1.4:1 on the dark theme and 1.59:1 on night,
+	// under the 3:1 floor of ICON-RENDER rule 3. --dht-link reads at least 6.3:1 on all four.
+	sb.WriteString("    h1 { border-bottom: 1px solid var(--dht-border); padding-bottom: 0.3em; }\n")
 	sb.WriteString("    nav ul { list-style: none; padding-left: 1.3em; }\n")
 	sb.WriteString("    nav > ul { padding-left: 0; }\n")
 	sb.WriteString("    nav li { margin: 0.4em 0; }\n")
-	sb.WriteString("    nav a { text-decoration: none; color: #1a0dab; }\n")
+	sb.WriteString("    nav a { text-decoration: none; color: var(--dht-link); }\n")
 	sb.WriteString("    nav a:hover { text-decoration: underline; }\n")
 	sb.WriteString("    nav details { margin: 0.2em 0; }\n")
-	sb.WriteString("    nav summary { cursor: pointer; padding: 0.2em 0; color: #1a0dab; }\n")
+	sb.WriteString("    nav summary { cursor: pointer; padding: 0.2em 0; color: var(--dht-link); }\n")
 	sb.WriteString("    nav summary a { display: inline; }\n")
+	// The branch marker is nav.expand / nav.collapse, not the browser's own triangle, which
+	// the vocabulary does not name (ICON-SET rule 1). Both are rtl: fixed and symmetric.
+	sb.WriteString("    nav summary { list-style: none; }\n")
+	sb.WriteString("    nav summary::-webkit-details-marker { display: none; }\n")
+	sb.WriteString("    nav summary::before { content: \"\"; display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.22em; margin-inline-end: 0.2em; background-color: currentColor; -webkit-mask: " +
+		glyphMaskURL("nav.expand") + " center / contain no-repeat; mask: " + glyphMaskURL("nav.expand") + " center / contain no-repeat; }\n")
+	sb.WriteString("    nav details[open] > summary::before { -webkit-mask-image: " + glyphMaskURL("nav.collapse") + "; mask-image: " + glyphMaskURL("nav.collapse") + "; }\n")
 	sb.WriteString("    .toc-label { font-weight: bold; margin-right: 0.4em; }\n")
-	sb.WriteString("    .toc-snippet { font-size: 0.9em; color: #333; font-style: italic; }\n")
-	sb.WriteString("    .toc-section { color: #333; }\n")
-	sb.WriteString("    .meta { color: #666; font-size: 0.9em; margin-bottom: 2em; }\n")
+	sb.WriteString("    .toc-snippet { font-size: 0.9em; color: var(--dht-fg); font-style: italic; }\n")
+	sb.WriteString("    .toc-section { color: var(--dht-fg); }\n")
+	sb.WriteString("    .meta { color: var(--dht-muted); font-size: 0.9em; margin-bottom: 2em; }\n")
 	sb.WriteString("  </style>\n")
 	sb.WriteString(readerCSS)
 	sb.WriteString("</head>\n")
@@ -102,7 +112,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	continueLabel := i18n.S("Continue reading")
 	sb.WriteString(fmt.Sprintf("  <div class=\"dht-toolbar\" lang=\"%s\"%s>", i18n.Language(), chromeDirAttr()))
 	sb.WriteString(readerControlsHTML())
-	sb.WriteString(fmt.Sprintf(`<a id="dht-continue" class="dht-continue" href="#">&#9656; %s</a>`, continueLabel))
+	sb.WriteString(fmt.Sprintf(`<a id="dht-continue" class="dht-continue" href="#">%s %s</a>`, glyphSVG("feature.continue-reading"), continueLabel))
 	sb.WriteString("</div>\n")
 	sb.WriteString("  <nav>\n")
 	sb.WriteString(navBody)

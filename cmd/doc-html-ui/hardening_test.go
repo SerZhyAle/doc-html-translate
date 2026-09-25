@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/dialog"
 )
 
 // fakeCLIEnv switches the test binary into a stand-in converter, so the run tests drive the
@@ -71,6 +72,17 @@ func TestMain(m *testing.M) {
 	case "grandchild":
 		time.Sleep(60 * time.Second)
 		os.Exit(0)
+	case "ask":
+		// The paid-translation question, through the real dialog package: the answer decides
+		// the exit code, so the test sees which answer arrived.
+		if os.Getenv(dialog.HostEnv) != dialog.HostStdio {
+			fmt.Println("not hosted")
+			os.Exit(3)
+		}
+		if dialog.Confirm("Cost", "Spend $3?") {
+			os.Exit(0)
+		}
+		os.Exit(4)
 	}
 	os.Exit(2)
 }
@@ -248,7 +260,7 @@ func TestRunRelaysInterleavedStreamsAndALongLine(t *testing.T) {
 	if !lines[strings.Repeat("L", longLineLen)] {
 		t.Fatal("the 1 MiB line did not arrive whole")
 	}
-	if !strings.HasSuffix(string(data), "\nDone.\n") {
+	if !strings.HasSuffix(string(data), endLine(runEnd{State: "done"})) {
 		t.Fatalf("the run did not finish: tail %q", tail(string(data)))
 	}
 }
@@ -311,7 +323,7 @@ func TestCancelStopsTheWholeTree(t *testing.T) {
 	go func() { rest, _ := io.ReadAll(br); done <- string(rest) }()
 	select {
 	case rest := <-done:
-		if !strings.Contains(rest, "Cancelled.") {
+		if !strings.Contains(rest, endLine(runEnd{State: "cancelled"})) {
 			t.Errorf("the log does not say the run was cancelled: %q", tail(rest))
 		}
 	case <-time.After(10 * time.Second):
@@ -347,7 +359,7 @@ func TestRunEndsWhenALeftoverProcessHoldsThePipe(t *testing.T) {
 	go func() { rest, _ := io.ReadAll(br); done <- string(rest) }()
 	select {
 	case rest := <-done:
-		if !strings.Contains(rest, "Done.") {
+		if !strings.Contains(rest, endLine(runEnd{State: "done"})) {
 			t.Errorf("the run did not finish cleanly: %q", tail(rest))
 		}
 	case <-time.After(pipeGrace + 10*time.Second):
@@ -371,6 +383,42 @@ func TestSecondRunOnTheSameOutputIsRefused(t *testing.T) {
 	call(t, srv, http.MethodPost, "/api/cancel", body, withToken(tok), withJSON())
 	_, _ = io.ReadAll(br)
 	waitGone(t, pid, gpid)
+}
+
+// The converter asks the cost question in the window, not in a native box behind it: the question
+// arrives as a marker line, the answer goes back through /api/answer, and the run ends with the
+// outcome as data. A no ends in the "failed" state with the converter's own exit code.
+func TestQuestionIsAskedInTheWindow(t *testing.T) {
+	for _, tc := range []struct {
+		yes  bool
+		want runEnd
+	}{{true, runEnd{State: "done"}}, {false, runEnd{State: "failed", Code: 4}}} {
+		srv, tok, body := fakeRun(t, "ask")
+		resp := startRun(context.Background(), t, srv, tok, body)
+		br := bufio.NewReader(resp.Body)
+		for {
+			line, err := br.ReadString('\n')
+			if err != nil {
+				t.Fatalf("the stream ended before the question: %v", err)
+			}
+			if strings.HasPrefix(line, dialog.AskPrefix) {
+				if !strings.Contains(line, "Spend $3?") {
+					t.Errorf("question line = %q", line)
+				}
+				break
+			}
+		}
+		answer := strings.TrimSuffix(body, "}") + fmt.Sprintf(`,"yes":%v}`, tc.yes)
+		a := call(t, srv, http.MethodPost, "/api/answer", answer, withToken(tok), withJSON())
+		if a.StatusCode != http.StatusOK {
+			t.Fatalf("answer = %d", a.StatusCode)
+		}
+		rest, _ := io.ReadAll(br)
+		resp.Body.Close()
+		if !strings.HasSuffix(string(rest), endLine(tc.want)) {
+			t.Errorf("yes=%v: run ended %q, want %q", tc.yes, tail(string(rest)), endLine(tc.want))
+		}
+	}
 }
 
 // ── argument hygiene: garbage in a form box never breaks the CLI parse ──

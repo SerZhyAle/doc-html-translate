@@ -73,7 +73,6 @@ func main() {
 
 	go watchHeartbeat(srv)
 	go openAppWindow("http://" + addr)
-	go ensureRightClickRegistered()
 
 	_ = srv.Serve(ln)
 }
@@ -111,26 +110,19 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/delete-output", jsonPost(handleDeleteOutput))
 	mux.HandleFunc("/api/run", jsonPost(handleRun))
 	mux.HandleFunc("/api/cancel", jsonPost(handleCancel))
+	mux.HandleFunc("/api/answer", jsonPost(handleAnswer))
+	mux.HandleFunc("/api/shell-entries", jsonPost(handleShellEntries))
 	mux.HandleFunc("/api/ocr-download", jsonPost(handleOCRDownload))
 	mux.HandleFunc("/api/report-reveal", jsonPost(handleReportReveal))
 	mux.HandleFunc("/api/report-open", jsonPost(handleReportOpen))
 	return mux
 }
 
-// ensureRightClickRegistered advertises the app in Windows' "Open with" list AND adds
-// the "Convert to HTML" right-click verb on every launch, so users find it there without
-// making it the default handler. Both are non-destructive - they never change the default
-// handler - and a no-op under MSIX (the package manifest already declares the associations)
-// or when the bundled CLI cannot be located. The associations point at the CLI so the
-// right-click entry converts and opens the result, matching double-click behavior.
-func ensureRightClickRegistered() {
-	if isPackaged() || !cliAvailable() {
-		return
-	}
-	cli := findCLI()
-	_, _ = windowsreg.RegisterOpenWithFor(cli)
-	_, _ = windowsreg.RegisterContextMenuFor(cli)
-}
+// The GUI writes nothing to the registry on its own. The right-click "Convert to HTML" entry and
+// the "Open with" advertisement are added only when the user says yes - the installer's
+// "openwith" task, the first-run question in the window, or the toggle under "Windows
+// integration" - so a user who unticked the installer task is not overridden by the next launch
+// (APP-BEHAVIOUR rules 4 and 11).
 
 // ── HTTP handlers ───────────────────────────────────────────
 
@@ -178,8 +170,9 @@ func busy() func() {
 
 func handleBrowseFile(w http.ResponseWriter, r *http.Request) {
 	defer busy()()
-	path, err := browseFile(r.Context())
+	path, err := browseFile(r.Context(), dialogTitle(r, "Select input file"))
 	if err != nil {
+		logFailure("browse file", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -188,8 +181,9 @@ func handleBrowseFile(w http.ResponseWriter, r *http.Request) {
 
 func handleBrowseFolder(w http.ResponseWriter, r *http.Request) {
 	defer busy()()
-	path, err := browseFolder(r.Context())
+	path, err := browseFolder(r.Context(), dialogTitle(r, "Select output folder"))
 	if err != nil {
+		logFailure("browse folder", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -217,6 +211,7 @@ func handleDrop(w http.ResponseWriter, r *http.Request) {
 
 	dest, err := saveDropped(http.MaxBytesReader(w, r.Body, maxDropBytes), name)
 	if err != nil {
+		logFailure("drop", err)
 		http.Error(w, "upload failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -305,6 +300,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := writeSettings(data); err != nil {
+			logFailure("save settings", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -341,6 +337,7 @@ func handleGoogleKey(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := saveGoogleAPIKey(req.Key); err != nil {
+			logFailure("save google key", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -544,6 +541,7 @@ func handleOpenOutput(w http.ResponseWriter, r *http.Request) {
 		target = outputDir
 	}
 	if err := openTarget(target); err != nil {
+		logFailure("open result", err)
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
@@ -574,10 +572,11 @@ func handleDeleteOutput(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if outputpath.Locked(outputDir) {
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": outputpath.ErrLocked.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "cause": "locked", "error": outputpath.ErrLocked.Error()})
 		return
 	}
 	if err := os.RemoveAll(outputDir); err != nil {
+		logFailure("delete result", err)
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
@@ -601,6 +600,9 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	cmd.Stdin = strings.NewReader("\n")
 	hideWindow(cmd)
 	out, err := cmd.CombinedOutput()
+	if err != nil {
+		logFailure("register", fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out))))
+	}
 	// The child's exit code says only that something was written. Whether Windows now uses
 	// it is read back from the registry, the same way the status endpoint does.
 	resp := assocStatus()
@@ -615,6 +617,39 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// handleShellEntries adds or removes the right-click "Convert to HTML" entry and the "Open
+// with" advertisement - the first-run question's yes, and the toggle under "Windows
+// integration". Both point at the CLI, so the right-click entry converts and opens the
+// result, like a double-click on an associated file. Hidden under MSIX, where the package
+// manifest declares the associations and HKCU is virtualized.
+//
+//	POST {"on":bool} → assocStatus() + {"ok":bool}
+func handleShellEntries(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		On bool `json:"on"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	var err error
+	switch {
+	case !req.On:
+		_, err = windowsreg.RemoveShellEntries()
+	case !cliAvailable():
+		err = errors.New("the converter is not next to the app or on PATH")
+	default:
+		cli := findCLI()
+		_, openWithErr := windowsreg.RegisterOpenWithFor(cli)
+		_, menuErr := windowsreg.RegisterContextMenuFor(cli)
+		err = errors.Join(openWithErr, menuErr)
+	}
+	logFailure("shell entries", err)
+	resp := assocStatus()
+	resp["ok"] = err == nil
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 // registerTimeout bounds the -register child. Registration is a handful of registry writes;
 // a child still running after this is stuck, not slow.
 const registerTimeout = 2 * time.Minute
@@ -625,6 +660,7 @@ const registerTimeout = 2 * time.Minute
 // so it needs no CLI round-trip and does not depend on which exe wrote them.
 func handleUnregister(w http.ResponseWriter, _ *http.Request) {
 	_, err := windowsreg.Unregister()
+	logFailure("unregister", err)
 	resp := assocStatus()
 	resp["ok"] = err == nil
 	if err != nil {
@@ -637,6 +673,7 @@ func handleUnregister(w http.ResponseWriter, _ *http.Request) {
 // can be changed. It runs only on a click: popping Settings unasked would be a surprise.
 func handleOpenDefaultApps(w http.ResponseWriter, _ *http.Request) {
 	err := windowsreg.OpenDefaultAppsSettings()
+	logFailure("open default apps", err)
 	resp := map[string]any{"ok": err == nil}
 	if err != nil {
 		resp["error"] = err.Error()
@@ -659,9 +696,11 @@ func handleAssocStatus(w http.ResponseWriter, _ *http.Request) {
 //	blocked → registered, but the user's own choice in Windows wins
 //	unknown → the user's choice could not be read
 //	other   → types that open with something else
+//	shell   → the right-click "Convert to HTML" entry is registered
 func assocStatus() map[string]any {
 	st := windowsreg.HandlerStatus()
 	return map[string]any{
+		"shell":    windowsreg.HasShellEntries(),
 		"default":  st.IsDefault(),
 		"state":    st.Summary(),
 		"defaults": nonNil(st.Default),
@@ -749,8 +788,13 @@ func handleOCRLangs(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(out)
 }
 
-// handleOCRDownload downloads a single OCR language pack on request from the GUI.
+// handleOCRDownload downloads a single OCR language pack on request from the GUI. The answer is
+// a stream of JSON lines: {"done":N,"total":N} as the pack arrives, then one final
+// {"ok":bool,...}. Closing the request cancels the download, which leaves nothing behind
+// (APP-BEHAVIOUR rule 3). A failure carries a cause code the page words itself; the raw error
+// goes to the GUI log, and "error" keeps the localized text for callers that want it.
 func handleOCRDownload(w http.ResponseWriter, r *http.Request) {
+	defer busy()()
 	var req struct {
 		Lang   string `json:"lang"`
 		UILang string `json:"uiLang"` // the page's language, for the error text
@@ -759,16 +803,55 @@ func handleOCRDownload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	resp := map[string]any{"ok": true}
+	w.Header().Set("Content-Type", "application/x-ndjson; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	enc := json.NewEncoder(w)
+	flush := func() {
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+	}
+
 	err := ocr.CheckLang(req.Lang)
 	if err == nil {
-		err = ocr.Download(req.Lang)
+		var last time.Time
+		err = ocr.DownloadContext(r.Context(), req.Lang, func(done, total int64) {
+			// A line per network read would be thousands; a few a second is what a bar needs.
+			if done < total && time.Since(last) < 150*time.Millisecond {
+				return
+			}
+			last = time.Now()
+			_ = enc.Encode(map[string]int64{"done": done, "total": total})
+			flush()
+		})
 	}
+	resp := map[string]any{"ok": err == nil}
 	if err != nil {
-		resp["ok"] = false
+		cause := ocrFailureCause(err)
+		// A refused code and a cancel are answers, not failures; only a real failure is logged.
+		if cause == "network" || cause == "mismatch" {
+			logFailure("ocr download "+req.Lang, err)
+		}
+		resp["cause"] = cause
 		resp["error"] = ocr.ErrorText(err, req.UILang)
 	}
-	_ = json.NewEncoder(w).Encode(resp)
+	_ = enc.Encode(resp)
+	flush()
+}
+
+// ocrFailureCause names why a download failed, for the page to word: the user cancelled, the
+// pack did not match its pinned digest, the code is not in the catalogue, or the transfer or the
+// disk failed.
+func ocrFailureCause(err error) string {
+	switch {
+	case errors.Is(err, context.Canceled):
+		return "cancelled"
+	case errors.Is(err, ocr.ErrPackMismatch):
+		return "mismatch"
+	case errors.Is(err, ocr.ErrUnknownLang):
+		return "lang"
+	}
+	return "network"
 }
 
 // ── args assembly ───────────────────────────────────────────
@@ -995,12 +1078,31 @@ public class Fg : IWin32Window {
 '@
 $owner = [Fg]::Current()`
 
-func browseFile(ctx context.Context) (string, error) {
+// dialogTitle is the caption the page asked for, in the window's language, or fallback. It is
+// capped, and it reaches the script only as base64 (psString), so no caption can be code.
+func dialogTitle(r *http.Request, fallback string) string {
+	t := strings.TrimSpace(r.URL.Query().Get("title"))
+	if t == "" {
+		return fallback
+	}
+	if rs := []rune(t); len(rs) > 120 {
+		t = string(rs[:120])
+	}
+	return t
+}
+
+// psString renders s as a PowerShell expression that evaluates to s. The text travels as base64
+// of its UTF-8 bytes, so neither a quote nor a $ in it can end the string or run anything.
+func psString(s string) string {
+	return "[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + base64.StdEncoding.EncodeToString([]byte(s)) + "'))"
+}
+
+func browseFile(ctx context.Context, title string) (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
 $f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.cbz;*.cbr;*.cb7;*.cbt|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Comics|*.cbz;*.cbr;*.cb7;*.cbt|All files|*.*"
-$f.Title = "Select input file"
+$f.Title = ` + psString(title) + `
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.FileName)) }`
 	out, err := runPowershell(ctx, script)
@@ -1010,11 +1112,11 @@ if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetB
 	return decodeDialogPath(out)
 }
 
-func browseFolder(ctx context.Context) (string, error) {
+func browseFolder(ctx context.Context, title string) (string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.FolderBrowserDialog
-$f.Description = "Select output folder"
+$f.Description = ` + psString(title) + `
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.SelectedPath)) }`
 	out, err := runPowershell(ctx, script)

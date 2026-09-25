@@ -114,6 +114,7 @@ Source: "{#Staging}\x86\{#CliExe}"; DestDir: "{app}"; Flags: ignoreversion; Chec
 Source: "{#Staging}\tessdata\*"; DestDir: "{app}\tessdata"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#Staging}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Staging}\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Staging}\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"

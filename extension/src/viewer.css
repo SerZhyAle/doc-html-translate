@@ -146,8 +146,16 @@ body {
 #toc a:hover { background: rgba(127, 127, 127, 0.12); }
 #toc .toc-toggle {
   cursor: pointer; user-select: none; color: var(--muted);
-  display: inline-block; width: 1em; text-align: center;
+  display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em;
+  padding: 0; margin: 0; border: 0; background: none; font: inherit; vertical-align: middle;
 }
+/* Vocabulary glyphs (glyphs.js): colour from the text around them, 1.15em in the chrome's font. */
+#toolbar .glyph, #toc .glyph { width: 1.15em; height: 1.15em; vertical-align: -0.22em; flex: none; }
+#toolbar button .glyph { margin-inline-end: 0.15em; }
+#toolbar button > span:only-child > .glyph { margin: 0; }
+/* The text layer has one drawing for both states (view.text-layer, off form owed): the state is
+   aria-pressed and this pressed look, as in the desktop reader. */
+#toolbar button[aria-pressed="true"] { background: var(--border); border-color: var(--accent); }
 #toc .collapsed > ul { display: none; }
 
 #content {

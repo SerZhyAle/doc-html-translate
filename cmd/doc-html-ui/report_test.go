@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -112,8 +113,12 @@ func TestHandleLogsClearEmptiesTheStore(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	handleLogsClear(rec, httptest.NewRequest(http.MethodPost, "/api/logs-clear", nil))
-	if got := decodeResp(t, rec); got["ok"] != true {
+	got := decodeResp(t, rec)
+	if got["ok"] != true {
 		t.Fatalf("ok = %v, error = %v", got["ok"], got["error"])
+	}
+	if got["cleared"] != float64(1) {
+		t.Errorf("cleared = %v, want 1", got["cleared"])
 	}
 	left, err := os.ReadDir(report.LogsDir())
 	if err != nil {
@@ -121,6 +126,31 @@ func TestHandleLogsClearEmptiesTheStore(t *testing.T) {
 	}
 	if len(left) != 0 {
 		t.Fatalf("%d logs left after /api/logs-clear, want 0", len(left))
+	}
+}
+
+// APP-BEHAVIOUR rule 5: nothing to clear is reported as such, not as a success.
+func TestHandleLogsClearOnAnEmptyStoreSaysSo(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	rec := httptest.NewRecorder()
+	handleLogsClear(rec, httptest.NewRequest(http.MethodPost, "/api/logs-clear", nil))
+	if got := decodeResp(t, rec); got["ok"] != true || got["cleared"] != float64(0) {
+		t.Errorf("response = %v, want ok with cleared 0", got)
+	}
+}
+
+// APP-BEHAVIOUR rule 6: the raw error of a failed action lands in the run-log store, where "Send
+// logs to the author" finds it - under the %LOCALAPPDATA% in force when it happens.
+func TestLogFailureWritesToTheLogStore(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	logFailure("test action", errors.New("raw detail"))
+	entries, err := os.ReadDir(report.LogsDir())
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("log store = %v, %v; want one GUI log", entries, err)
+	}
+	data, _ := os.ReadFile(filepath.Join(report.LogsDir(), entries[0].Name()))
+	if !strings.Contains(string(data), "test action: raw detail") {
+		t.Errorf("GUI log = %q", data)
 	}
 }
 

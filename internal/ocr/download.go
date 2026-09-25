@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -110,6 +111,15 @@ func CheckLang(code string) error {
 // SHA-256 and only then renamed into place, so a partial, oversized or altered file is never
 // visible as installed and a failure leaves nothing behind.
 func Download(code string) error {
+	return DownloadContext(context.Background(), code, nil)
+}
+
+// Progress is told how many bytes of a pack have arrived and how many the pack has in all.
+type Progress func(done, total int64)
+
+// DownloadContext is Download that stops when ctx ends and reports its progress. A cancelled
+// download leaves nothing behind, like any other failed one, and its error wraps ctx.Err().
+func DownloadContext(ctx context.Context, code string, progress Progress) error {
 	code = strings.TrimSpace(code)
 	if err := CheckLang(code); err != nil {
 		return err
@@ -132,11 +142,11 @@ func Download(code string) error {
 		return nil
 	}
 	removeStaleTemps(dir)
-	return fetchPack(code, dir, want)
+	return fetchPack(ctx, code, dir, want, progress)
 }
 
 // fetchPack downloads one pack into dir through a verified temp file.
-func fetchPack(code, dir string, want packDigest) error {
+func fetchPack(ctx context.Context, code, dir string, want packDigest, progress Progress) error {
 	label := LangLabel(code)
 	failed := func(err error) error {
 		return &downloadError{kind: err, format: "Could not download the %s language data: %v", args: []any{label, err}}
@@ -145,7 +155,11 @@ func fetchPack(code, dir string, want packDigest) error {
 		format: "The downloaded %s language data does not match the published file, so it was not installed. Try again later.",
 		args:   []any{label}}
 
-	resp, err := downloadClient.Get(downloadBase + "/" + code + ".traineddata")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadBase+"/"+code+".traineddata", nil)
+	if err != nil {
+		return failed(err)
+	}
+	resp, err := downloadClient.Do(req)
 	if err != nil {
 		return failed(err)
 	}
@@ -169,7 +183,11 @@ func fetchPack(code, dir string, want packDigest) error {
 	}()
 	h := sha256.New()
 	// One byte past the pinned size is enough to know the body is too long without reading it all.
-	n, err := io.Copy(io.MultiWriter(tmp, h), io.LimitReader(resp.Body, want.size+1))
+	var sink io.Writer = io.MultiWriter(tmp, h)
+	if progress != nil {
+		sink = io.MultiWriter(sink, &progressWriter{total: want.size, report: progress})
+	}
+	n, err := io.Copy(sink, io.LimitReader(resp.Body, want.size+1))
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}
@@ -190,6 +208,18 @@ func fetchPack(code, dir string, want packDigest) error {
 	}
 	keep = true
 	return nil
+}
+
+// progressWriter counts the bytes that pass through it and reports each step.
+type progressWriter struct {
+	done, total int64
+	report      Progress
+}
+
+func (p *progressWriter) Write(b []byte) (int, error) {
+	p.done += int64(len(b))
+	p.report(p.done, p.total)
+	return len(b), nil
 }
 
 // verifyPack reports whether path holds exactly the pinned pack.

@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -129,6 +130,41 @@ func TestConcurrentDownloadsInstallOnePack(t *testing.T) {
 	if hits.Load() != 1 {
 		t.Errorf("server hit %d times, want 1 - the second request should find the pack installed", hits.Load())
 	}
+}
+
+// APP-BEHAVIOUR rule 3: the GUI shows real progress and can cancel. Progress ends at the pack's
+// size, and a cancel mid-transfer returns the context's error and leaves nothing behind.
+func TestDownloadContextReportsProgressAndCancels(t *testing.T) {
+	t.Run("progress", func(t *testing.T) {
+		dataDirs(t)
+		packServer(t, packFixture, nil)
+		var last, total int64
+		err := DownloadContext(context.Background(), "rus", func(done, all int64) { last, total = done, all })
+		if err != nil {
+			t.Fatal(err)
+		}
+		if last != int64(len(packFixture)) || total != int64(len(packFixture)) {
+			t.Errorf("last progress = %d of %d, want %d of %d", last, total, len(packFixture), len(packFixture))
+		}
+	})
+	t.Run("cancel", func(t *testing.T) {
+		user, _ := dataDirs(t)
+		ctx, cancel := context.WithCancel(context.Background())
+		packServer(t, nil, func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write(packFixture[:1024])
+			w.(http.Flusher).Flush()
+			cancel()
+			time.Sleep(200 * time.Millisecond)
+			_, _ = w.Write(packFixture[1024:])
+		})
+		err := DownloadContext(ctx, "rus", nil)
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("DownloadContext = %v, want context.Canceled", err)
+		}
+		if files := listTree(t, user); len(files) != 0 {
+			t.Errorf("a cancelled download left files behind: %v", files)
+		}
+	})
 }
 
 func TestDownloadRefusesChecksumMismatch(t *testing.T) {

@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  admitBySize, clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
   sameTypeSize, splitWideGaps, strictlyBetter, strokeBetween, trimOutlierWords,
-  longestLetterRun, OCR_BOUNDARY_REACH, OCR_RESCUE_LINE_CONF, OCR_RESCUE_WORD_RUN, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
+  OCR_BOUNDARY_REACH, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
 } from "../src/ocr-cluster.js";
 
 // The line boxes below are not invented: they are what tesseract returned for the lab's two
@@ -610,57 +610,4 @@ test("clusterLines records the lines a refused cluster held", () => {
   }]);
   assert.equal(clusterLines(lines, 50).length, 1, "the record does not change the decision");
   assert.deepEqual(droppedLines([line(0, 0, 9, 9, 10, "noise")], 50).map((d) => d.gate), [GATE_CONFIDENCE]);
-});
-
-// The poster's sparse rung as the 2026-09-25 probe recorded it (conf, ink height), read with `rus`
-// and with the default `eng`. Mirrors rescue_test.go posterRungRus / posterRungEng.
-const posterRung = (rows) => {
-  let y = 0;
-  return rows.map(([h, conf, text]) => {
-    const l = { text, conf, bbox: { x0: 40, y0: y, x1: 600, y1: y + h } };
-    y += h + 20;
-    return l;
-  });
-};
-const posterRus = [
-  [287, 69.2, "ЗАЧЕМ"], [281, 80.7, "ТРАХАТЬСЯ:"], [155, 96.1, "МЫ ЖЕ"], [154, 41.2, "ВЗРОСЛЫЕ"],
-  [171, 92.6, "ЛЮДИ,"], [153, 95.9, "МОЖЕМ"], [142, 73.9, "ОБ ЗЛОМ"], [149, 87.2, "ПРОСТО"], [137, 95.0, "ПОГОВОРИТЬ"],
-];
-const posterEng = [
-  [287, 0.0, "SAuEM"], [281, 17.7, "TPAXATbGR:"], [155, 34.8, "Mbl KE"], [153, 34.1, "MODKEM"],
-  [142, 47.0, "Ob STOM"], [149, 63.4, "NPOCTO"], [137, 0.0, "NOTOBOPHTE"],
-];
-const admitted = (lines) => lines.filter((l) => l.admitted).map((l) => l.text);
-
-test("the size rule keeps the headline under the right language", () => {
-  const lines = posterRung(posterRus);
-  admitBySize(lines, OCR_RESCUE_LINE_CONF);
-  assert.deepEqual(admitted(lines), ["ЗАЧЕМ", "ОБ ЗЛОМ"]);
-  assert.ok(keepLine(lines[0], OCR_RESCUE_LINE_CONF), "keepLine must honour an admitted line");
-  assert.ok(!droppedLines(lines, OCR_RESCUE_LINE_CONF).some((d) => d.text === "ЗАЧЕМ"));
-});
-
-test("the size rule admits nothing under the wrong alphabet", () => {
-  const lines = posterRung(posterEng);
-  admitBySize(lines, OCR_RESCUE_LINE_CONF);
-  assert.deepEqual(admitted(lines), []);
-  assert.equal(clusterLines(lines, OCR_RESCUE_LINE_CONF, 1920, 2560).length, 0);
-});
-
-test("the size rule needs a word anchor, the same size, and a word", () => {
-  const glyph = posterRung([[150, 81.7, "\\"], [149, 63.4, "NPOCTO"]]);
-  admitBySize(glyph, OCR_RESCUE_LINE_CONF);
-  assert.deepEqual(admitted(glyph), [], "a stray glyph is no anchor");
-  const sizes = posterRung([[281, 80.7, "ТРАХАТЬСЯ:"], [142, 73.9, "ОБ ЗЛОМ"]]);
-  admitBySize(sizes, OCR_RESCUE_LINE_CONF);
-  assert.deepEqual(admitted(sizes), [], "a heading does not vouch for body type");
-  const short = posterRung([[150, 95.9, "МОЖЕМ"], [150, 69.0, "Cor"]]);
-  admitBySize(short, OCR_RESCUE_LINE_CONF);
-  assert.deepEqual(admitted(short), [], `a run under ${OCR_RESCUE_WORD_RUN} letters is debris`);
-});
-
-test("longestLetterRun counts letters in any script", () => {
-  for (const [s, want] of [["", 0], ["4 y", 1], ["TPAXATBCR: 4 y", 9], ["ОБ ЗЛОМ", 4], ["Cor!", 3], ["$ЫСНТЕУ.", 6]]) {
-    assert.equal(longestLetterRun(s), want, s);
-  }
 });

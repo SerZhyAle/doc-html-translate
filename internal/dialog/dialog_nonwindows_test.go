@@ -36,7 +36,8 @@ func withStdio(t *testing.T, input string, run func()) (stdout, stderr string) {
 	return string(o), string(e)
 }
 
-func TestConfirmYesNo(t *testing.T) {
+func TestConfirm(t *testing.T) {
+	t.Setenv(HostEnv, "")
 	for input, want := range map[string]bool{
 		"y\n":       true,
 		" YES \n":   true,
@@ -48,9 +49,9 @@ func TestConfirmYesNo(t *testing.T) {
 		"sure\ny\n": false,
 	} {
 		var got bool
-		stdout, _ := withStdio(t, input, func() { got = ConfirmYesNo("Register", "Make this app the default?") })
+		stdout, _ := withStdio(t, input, func() { got = Confirm("Register", "Make this app the default?") })
 		if got != want {
-			t.Errorf("answer %q: ConfirmYesNo = %v, want %v", input, got, want)
+			t.Errorf("answer %q: Confirm = %v, want %v", input, got, want)
 		}
 		if !strings.Contains(stdout, "Register") || !strings.Contains(stdout, "Make this app the default?") {
 			t.Errorf("prompt %q does not show the title and message", stdout)

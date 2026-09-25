@@ -3,3 +3,11 @@
 # checkout (autocrlf=true on Windows) makes `gofmt -l` flag every file even though
 # the committed source is clean. Other paths keep git's default handling.
 *.go text eol=lf
+
+# Vendored vocabulary glyphs are byte copies of the contracts catalog, pinned by SHA-256 in
+# assets/glyphs/PROVENANCE.txt - never let a checkout rewrite their line endings.
+assets/glyphs/*.svg -text
+
+# The SZA web kit is a byte copy of the contracts catalog reference (PAGE-STYLE), pinned by SHA-256
+# in tests/site_test.go - page-local rules live in assets/site.css, never in the kit.
+assets/sza-kit.css -text

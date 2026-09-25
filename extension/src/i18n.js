@@ -66,6 +66,11 @@ function applyI18n(root) {
   scope.querySelectorAll("[data-i18n-ph]").forEach((el) => {
     el.placeholder = t(el.dataset.i18nPh, el.placeholder);
   });
+  // A glyph-only control's accessible name is its meaning's name in the interface language,
+  // never the glyph character and never English left behind (ICON-RENDER rule 8).
+  scope.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+    el.setAttribute("aria-label", t(el.dataset.i18nAria, el.getAttribute("aria-label") || ""));
+  });
   const rtl = RTL_UI_LANGS.includes(uiLang());
   if (scope === document) {
     document.documentElement.lang = uiLang();

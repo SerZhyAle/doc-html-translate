@@ -1,7 +1,7 @@
 # Pointer: OCR-INVOCATION
 
 - **Id:** `OCR-INVOCATION`
-- **Version:** 1.0
+- **Version:** 1.1 (2026-09-25: the script correction of an omitted `-ocr-lang` and the no-plates stop, written down)
 - **Home:** the shared contracts catalog, `ocr-overlay/integration-image-translate.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - this repo ships the executable the contract describes
 - **Declared consumer:** FastMediaSorter_Lite ("Translate image" button)

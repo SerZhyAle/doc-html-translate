@@ -86,56 +86,8 @@ import { isTranslatable } from "./ocr-text.js";
 // invented lettering 8.4-73.9 - they **overlap**, so no single floor separates them. The rule the
 // distribution did support (a lower gate for a line carrying a run of four letters) was implemented,
 // run over the corpus and **rejected by it**: under the default `eng` a Cyrillic poster then gets a
-// 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80;
-// the third axis that closes the gap is admitBySize below.
+// 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80.
 export const OCR_RESCUE_LINE_CONF = 80;
-
-// The word rule's two numbers, inherited from the 2026-08-15 measurement: a line under the rescue
-// floor is a candidate only with an unbroken run of OCR_RESCUE_WORD_RUN letters and a confidence of
-// at least OCR_RESCUE_WORD_CONF, the middle of the empty band 36.1 / 58.3. Neither is enough on its
-// own - admitBySize is what makes them safe. Mirrors tesseract.go ocrRescueWordConf /
-// ocrRescueWordRun (docs/PARITY.md).
-export const OCR_RESCUE_WORD_CONF = 47;
-export const OCR_RESCUE_WORD_RUN = 4;
-
-// longestLetterRun is the longest unbroken run of letters in s, in any script. Mirrors tesseract.go
-// longestLetterRun.
-export function longestLetterRun(s) {
-  let best = 0, cur = 0;
-  for (const ch of String(s)) {
-    if (/\p{L}/u.test(ch)) {
-      cur++;
-      if (cur > best) best = cur;
-    } else {
-      cur = 0;
-    }
-  }
-  return best;
-}
-
-// admitBySize keeps a rescued line the floor would drop when it looks like the lettering the same
-// pass already trusts: a candidate under the word rule whose ink height is the same type size
-// (sameTypeSize) as a line of the same pass that cleared the floor on its own and carries a word
-// itself. It sets l.admitted and changes nothing else; keepLine honours the mark.
-//
-// The anchor is why this is safe where the 2026-08-15 word rule was not: under the wrong alphabet
-// the recognizer trusts none of a picture's lettering, so there is no anchor and nothing is
-// admitted - the rule can never produce a pass's first plate, only extend what the floor already
-// accepted. Called on the rescue ladder's rungs only, never on the ordinary pass or the screen sweep.
-// Mirrors tesseract.go admitBySize (docs/PARITY.md); measured in
-// DEV/research/ocr_rescue_third_axis_2026-09-25.md.
-export function admitBySize(lines, floor = OCR_RESCUE_LINE_CONF) {
-  const anchors = lines
-    .filter((l) => l.text && l.conf >= floor && longestLetterRun(l.text) >= OCR_RESCUE_WORD_RUN)
-    .map(lineInkHeight);
-  if (!anchors.length) return;
-  for (const l of lines) {
-    if (!l.text || l.conf >= floor || l.conf < OCR_RESCUE_WORD_CONF) continue;
-    if (longestLetterRun(l.text) < OCR_RESCUE_WORD_RUN) continue;
-    const h = lineInkHeight(l);
-    if (anchors.some((a) => h > 0 && a > 0 && sameTypeSize(h, a))) l.admitted = true;
-  }
-}
 
 // OCR_MAX_WORD_GAP_RATIO is the one rule that runs before any of the others, because it repairs
 // their input rather than their output: a *line* the recognizer handed us that is not one line.
@@ -513,10 +465,9 @@ export function releaseOversized(cur, imgW, imgH) {
 // those lines. Zero on either means the page size is unknown and the rule does not run.
 // keepLine is the confidence floor, in one place. clusterLines applies it and droppedLines records
 // what it rejected; stated separately, the record would stop describing the decision the first time
-// either moved. A line admitBySize admitted is kept whatever its confidence. Mirrors tesseract.go
-// keepLine (docs/PARITY.md).
+// either moved. Mirrors tesseract.go keepLine (docs/PARITY.md).
 export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
-  return Boolean(l.text) && (l.admitted === true || l.conf >= minConf);
+  return Boolean(l.text) && l.conf >= minConf;
 }
 
 // The gates a discard record names. Mirrors tesseract.go gateConfidence / gateTranslatable /

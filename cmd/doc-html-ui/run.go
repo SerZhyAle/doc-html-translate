@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"doc-html-translate/internal/dialog"
 )
 
 // procTree is a started converter and everything it spawned.
@@ -39,6 +41,9 @@ const maxLogLine = 8 << 20
 type activeRun struct {
 	cancel    context.CancelFunc
 	cancelled bool
+	// stdin is the converter's standard input while it runs: the answer to a question it asked
+	// the GUI goes there (see internal/dialog, HostStdio).
+	stdin io.Writer
 }
 
 var runs = struct {
@@ -93,6 +98,31 @@ func cancelRun(key string) bool {
 	return ok
 }
 
+// setRunStdin records (or, with nil, forgets) where the answers of the run writing to key go.
+func setRunStdin(key string, w io.Writer) {
+	runs.Lock()
+	defer runs.Unlock()
+	if r, ok := runs.m[key]; ok {
+		r.stdin = w
+	}
+}
+
+// answerRun hands the converter writing to key the user's answer to the question it asked.
+func answerRun(key string, yes bool) bool {
+	runs.Lock()
+	defer runs.Unlock()
+	r, ok := runs.m[key]
+	if !ok || r.stdin == nil {
+		return false
+	}
+	line := "no\n"
+	if yes {
+		line = dialog.AnswerYes + "\n"
+	}
+	_, err := io.WriteString(r.stdin, line)
+	return err == nil
+}
+
 // cancelAllRuns stops every run; the GUI is going away.
 func cancelAllRuns() {
 	runs.Lock()
@@ -125,7 +155,57 @@ func handleCancel(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "cancelled": cancelRun(runKey(req.Input, req.Output))})
 }
 
+// handleAnswer delivers the user's answer to a question the converter asked in the window,
+// such as the paid-translation cost question.
+//
+//	POST {"input":"..","output":"..","yes":bool} → {"ok":bool}
+func handleAnswer(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Input  string `json:"input"`
+		Output string `json:"output"`
+		Yes    bool   `json:"yes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": answerRun(runKey(req.Input, req.Output), req.Yes)})
+}
+
 // ── the run itself ──────────────────────────────────────────
+
+// endPrefix starts the last line of every run stream. It carries the outcome as data, so the
+// page words it in the window's language and offers the actions that fit it, instead of the
+// server writing "Done." or "Exit: exit status 1" in English (APP-BEHAVIOUR rules 3 and 6).
+const endPrefix = "\x1edht:end "
+
+// runEnd is the payload of the end line.
+type runEnd struct {
+	State string `json:"state"`          // done, cancelled or failed
+	Code  int    `json:"code,omitempty"` // the converter's exit code, when it failed with one
+}
+
+func endLine(e runEnd) string {
+	b, _ := json.Marshal(e)
+	return "\n" + endPrefix + string(b) + "\n"
+}
+
+// outcome turns how the converter ended into the end line's payload. The raw error goes to the
+// GUI's own log, never to the page.
+func outcome(cancelled bool, err error) runEnd {
+	switch {
+	case cancelled:
+		return runEnd{State: "cancelled"}
+	case err == nil:
+		return runEnd{State: "done"}
+	}
+	logFailure("conversion", err)
+	var exit *exec.ExitError
+	if errors.As(err, &exit) {
+		return runEnd{State: "failed", Code: exit.ExitCode()}
+	}
+	return runEnd{State: "failed"}
+}
 
 func handleRun(w http.ResponseWriter, r *http.Request) {
 	activeRuns.Add(1)
@@ -161,21 +241,21 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "> %s\n\n", formatCommandLine(bin, args))
 	flusher.Flush()
 
-	err := runConverter(ctx, bin, args, w, flusher)
-	switch {
-	case wasCancelled(key):
-		fmt.Fprintf(w, "\nCancelled.\n")
-	case err != nil:
-		fmt.Fprintf(w, "\nExit: %v\n", err)
-	default:
-		fmt.Fprintf(w, "\nDone.\n")
-	}
+	err := runConverter(ctx, bin, args, w, flusher, func(in io.Writer) { setRunStdin(key, in) })
+	_, _ = io.WriteString(w, endLine(outcome(wasCancelled(key), err)))
 	flusher.Flush()
 }
 
 // runConverter starts the converter, relays its output to w until it exits, and stops its
-// whole process tree if ctx ends first.
-func runConverter(ctx context.Context, bin string, args []string, w io.Writer, flusher http.Flusher) error {
+// whole process tree if ctx ends first. The converter asks its questions in the GUI's window
+// rather than in native boxes of its own, so it gets a stdin pipe for the answers; stdin is
+// told where that pipe is once the converter runs, and told nil when it is gone.
+func runConverter(ctx context.Context, bin string, args []string, w io.Writer, flusher http.Flusher, stdin func(io.Writer)) error {
+	inR, inW, err := os.Pipe()
+	if err != nil {
+		return fmt.Errorf("stdin pipe: %w", err)
+	}
+	defer inW.Close()
 	outR, outW, err := os.Pipe()
 	if err != nil {
 		return fmt.Errorf("stdout pipe: %w", err)
@@ -190,17 +270,22 @@ func runConverter(ctx context.Context, bin string, args []string, w io.Writer, f
 	defer errR.Close()
 
 	cmd := exec.Command(bin, args...)
+	cmd.Stdin = inR
 	cmd.Stdout = outW
 	cmd.Stderr = errW
+	cmd.Env = append(os.Environ(), dialog.HostEnv+"="+dialog.HostStdio)
 	prepareTree(cmd)
 	startErr := cmd.Start()
-	// The child holds its own copies of the write ends; ours must go, or the readers never
-	// see EOF.
+	// The child holds its own copies of the pipe ends it uses; ours must go, or the readers
+	// never see EOF.
+	_ = inR.Close()
 	_ = outW.Close()
 	_ = errW.Close()
 	if startErr != nil {
 		return fmt.Errorf("start: %w", startErr)
 	}
+	stdin(inW)
+	defer stdin(nil)
 
 	tree, err := attachTree(cmd)
 	if err != nil {

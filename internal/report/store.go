@@ -53,6 +53,13 @@ func RunLogPath(at time.Time, pid int) string {
 	return filepath.Join(LogsDir(), fmt.Sprintf("run-%s-%d.log", at.Format("20060102-150405"), pid))
 }
 
+// GUILogPath names the log of one GUI launch started at `at` by process pid. It sits in the run
+// log store under a run- name, so it is sent, trimmed and cleared with the run logs, in the same
+// chronological order.
+func GUILogPath(at time.Time, pid int) string {
+	return filepath.Join(LogsDir(), fmt.Sprintf("run-%s-gui%d.log", at.Format("20060102-150405"), pid))
+}
+
 // CapRunLog wraps a run log so it stops growing at MaxRunLogBytes. The line that would cross
 // the cap is replaced by one marker line, so a reader of the report sees the log was cut rather
 // than guessing the run stopped there. Every write reports success: the run log is a side

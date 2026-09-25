@@ -81,7 +81,7 @@ func TestGUIMarkupKeysExist(t *testing.T) {
 		t.Fatal("no English dictionary parsed")
 	}
 
-	attr := regexp.MustCompile(`data-i18n(?:-html|-ph|-title)?="([A-Za-z0-9_]+)"`)
+	attr := regexp.MustCompile(`data-i18n(?:-html|-ph|-title|-aria)?="([A-Za-z0-9_]+)"`)
 	found := 0
 	for _, m := range attr.FindAllStringSubmatch(uiHTML, -1) {
 		found++

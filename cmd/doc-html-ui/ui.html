@@ -7,19 +7,47 @@
 <link rel="icon" href="/favicon.ico">
 <title>DOC-HTML-UI</title>
 <style>
+/* APP-STYLE rules 3-4: the one palette table. Every themed colour is a pair - light, dark - in
+   light-dark(), resolved against color-scheme on every paint, so switching the theme reaches
+   every element already on screen. "system" is color-scheme: light dark, which follows the OS
+   live through prefers-color-scheme; data-theme pins one side. Names follow the role vocabulary
+   (surface.window -> --surface-window, ..); the values are this product's own. */
 :root {
-    --bg: #1e1e2e;
-    --surface: #2b2b3d;
-    --surface2: #232334;
-    --text: #cdd6f4;
-    --muted: #6c7086;
-    --accent: #89b4fa;
-    --accent-hover: #74c7ec;
-    --accent-soft: rgba(137, 180, 250, 0.10);
-    --border: #45475a;
-    --green: #a6e3a1;
-    --red: #f38ba8;
-    --log-bg: #11111b;
+    color-scheme: light dark;
+    --surface-window:  light-dark(#eff1f5, #1e1e2e);
+    --surface-raised:  light-dark(#ffffff, #2b2b3d);
+    --surface-sunken:  light-dark(#e6e9ef, #232334);
+    --control:         light-dark(#ffffff, #2b2b3d);
+    --control-hover:   light-dark(#dce0e8, #45475a);
+    --control-pressed: light-dark(#ccd0da, #585b70);
+    --border:          light-dark(#bcc0cc, #45475a);
+    --text-primary:    light-dark(#4c4f69, #cdd6f4);
+    --text-muted:      light-dark(#5c5f77, #6c7086);
+    --text-disabled:   light-dark(#9ca0b0, #585b70);
+    --accent:          light-dark(#1e66f5, #89b4fa);
+    --accent-hover:    light-dark(#1753d6, #74c7ec);
+    --accent-ink:      light-dark(#ffffff, #11111b);
+    --accent-soft:     light-dark(rgba(30, 102, 245, 0.10), rgba(137, 180, 250, 0.10));
+    --link:            light-dark(#1e66f5, #89b4fa);
+    --info:            light-dark(#1e66f5, #89b4fa);
+    --success:         light-dark(#2d7d1a, #a6e3a1);
+    --danger:          light-dark(#d20f39, #f38ba8);
+    --danger-ink:      light-dark(#ffffff, #11111b);
+    --warning:         light-dark(#b0650b, #f9e2af);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+/* APP-STYLE rule 5: the log and the command line are deliberately OUT of the theme. They are a
+   console - light text on a dark field in every theme - and carry their own colours with them
+   instead of inheriting the window's, so a light theme cannot turn them into light-on-light. */
+.console {
+    --console-bg: #11111b;
+    --console-text: #a6e3a1;
+    --console-command: #89b4fa;
+    --console-muted: #7f849c;
+    --console-danger: #f38ba8;
+    background: var(--console-bg);
+    color: var(--console-text);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 /* The window is the frame: the page itself never scrolls or grows. Content is pinned
@@ -28,8 +56,8 @@
    with thousands of lines. */
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    background: var(--surface-window);
+    color: var(--text-primary);
     padding: 16px 22px 20px;
     margin: 0;
     height: 100vh;
@@ -63,9 +91,9 @@ body {
     font-size: 12px;
     line-height: 1.45;
 }
-.assoc-prompt-actions { display: flex; gap: 8px; margin-top: 8px; }
+.assoc-prompt-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .assoc-prompt-actions button { padding: 5px 12px; font-size: 12px; }
-.assoc-prompt-actions button.primary { background: var(--accent); color: #11111b; border-color: var(--accent); }
+.assoc-prompt-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .assoc-prompt-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 /* Stacked on a narrow window: the log sits under the controls, so pinning everything
    into one viewport would squeeze it to nothing. Hand scrolling back to the page and
@@ -78,18 +106,19 @@ body {
 }
 .head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; }
 h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
-.ver { font-size: 11px; color: var(--muted); }
-.byline { font-size: 11px; color: var(--muted); }
-.byline a { color: var(--accent); text-decoration: none; }
+.ver { font-size: 11px; color: var(--text-muted); }
+.byline { font-size: 11px; color: var(--text-muted); }
+.byline a { color: var(--link); text-decoration: none; }
 .byline a:hover { text-decoration: underline; }
-.byline .dot { color: var(--muted); margin: 0 3px; }
-/* language switch, pushed to the far right of the header row */
+.byline .dot { color: var(--text-muted); margin: 0 3px; }
+/* theme and language switches, pushed to the far right of the header row */
 /* 13 endonyms do not fit a button row, so the switcher is a select */
-.langsw { margin-left: auto; align-self: center; padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; }
-.hint { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-.hint.ok { color: var(--green); }
-.hint.warn { color: var(--red); }
-code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; background: var(--surface); padding: 1px 4px; border-radius: 3px; }
+.switches { margin-left: auto; align-self: center; display: flex; gap: 6px; }
+.langsw { padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; }
+.hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.hint.ok { color: var(--success); }
+.hint.warn { color: var(--danger); }
+code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; background: var(--surface-raised); padding: 1px 4px; border-radius: 3px; }
 
 .stitle {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -98,9 +127,9 @@ code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; bac
 
 /* inputs / selects / buttons */
 input[type="text"], input[type="number"], input[type="password"], select {
-    background: var(--surface);
+    background: var(--control);
     border: 1px solid var(--border);
-    color: var(--text);
+    color: var(--text-primary);
     padding: 7px 10px;
     border-radius: 5px;
     font-size: 13px;
@@ -110,10 +139,10 @@ input[type="text"], input[type="number"], input[type="password"], select {
 }
 select { cursor: pointer; }
 input:focus, select:focus { border-color: var(--accent); }
-input::placeholder { color: var(--muted); }
+input::placeholder { color: var(--text-muted); }
 button {
-    background: var(--surface);
-    color: var(--text);
+    background: var(--control);
+    color: var(--text-primary);
     border: 1px solid var(--border);
     padding: 7px 14px;
     border-radius: 5px;
@@ -123,10 +152,20 @@ button {
     white-space: nowrap;
     transition: background .15s;
 }
-button:hover { background: var(--border); }
+button:hover { background: var(--control-hover); }
+button:active { background: var(--control-pressed); }
+button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allowed; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* drop zone */
+/* drop zone: a real button, so "choose a file" is reachable from the keyboard (APP-BEHAVIOUR
+   rule 9); the button look is reset to the zone's own. */
 .drop {
+    display: block;
+    width: 100%;
+    background: none;
+    color: inherit;
+    font: inherit;
+    white-space: normal;
     border: 2px dashed var(--border);
     border-radius: 9px;
     padding: 16px 14px;
@@ -135,17 +174,20 @@ button:hover { background: var(--border); }
     user-select: none;
     transition: border-color .15s, background .15s;
 }
-.drop:hover { border-color: var(--accent); }
+.drop:hover { border-color: var(--accent); background: none; }
+.drop > span { display: block; }
 .drop.dragover { border-color: var(--accent); background: var(--accent-soft); }
 .drop.has-file { border-style: solid; border-color: var(--accent); text-align: left; }
 .drop .ico { font-size: 20px; color: var(--accent); display: block; margin-bottom: 2px; }
-.drop .ph { font-size: 13px; color: var(--muted); }
-.drop .fname { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-all; }
-.drop .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.drop .ico .glyph { margin: 0 auto; }
+.drop .ph, .drop .fname, .drop .sub { display: block; }
+.drop .ph { font-size: 13px; color: var(--text-muted); }
+.drop .fname { font-size: 13px; color: var(--text-primary); font-weight: 600; word-break: break-all; }
+.drop .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
 /* generic field row: inline label + control */
 .field { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
-.field > label { font-size: 12px; color: var(--muted); min-width: 84px; }
+.field > label { font-size: 12px; color: var(--text-muted); min-width: 84px; }
 .field > input, .field > select { flex: 1; min-width: 0; }
 .field.num > input { max-width: 130px; flex: 0 0 auto; }
 .field.num > .gap { flex: 1; }
@@ -158,7 +200,9 @@ button:hover { background: var(--border); }
 /* languages */
 .langs { display: flex; align-items: center; gap: 8px; }
 .langs select { flex: 1; min-width: 0; }
-.swap { padding: 7px 11px; font-size: 14px; line-height: 1; }
+.swap { padding: 7px 11px; font-size: 14px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+/* Vocabulary glyphs (content.document, action.swap; tests/iconography_test.go): colour from the text. */
+.glyph { display: block; flex: none; }
 
 /* checkbox toggles */
 .toggles { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 4px 0; }
@@ -167,7 +211,7 @@ button:hover { background: var(--border); }
 
 /* collapsibles */
 details {
-    background: var(--surface2);
+    background: var(--surface-sunken);
     border: 1px solid var(--border);
     border-radius: 7px;
     margin: 8px 0;
@@ -184,8 +228,20 @@ details > summary {
     user-select: none;
 }
 details > summary::-webkit-details-marker { display: none; }
-details > summary::before { content: '\25B8\00A0\00A0'; color: var(--muted); font-weight: 400; }
-details[open] > summary::before { content: '\25BE\00A0\00A0'; }
+/* Disclosure chevrons are the vocabulary's nav.expand (folded: a click shows the section) and
+   nav.collapse (open), drawn from the catalog's path data (assets/glyphs, tests/iconography_test.go).
+   Both are rtl: fixed and symmetric, so a right-to-left layout needs no mirroring - the old
+   right-pointing triangle pointed into the text there. */
+details > summary { display: flex; align-items: center; gap: 6px; }
+details > summary::before {
+    content: ''; flex: none; width: 16px; height: 16px; background-color: var(--text-muted);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M16.59%208.59L12%2013.17%207.41%208.59%206%2010l6%206%206-6z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M16.59%208.59L12%2013.17%207.41%208.59%206%2010l6%206%206-6z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+}
+details[open] > summary::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
+}
 details > .body { padding: 2px 12px 12px; }
 
 /* primary row: document picker + run button on one line */
@@ -195,7 +251,7 @@ details > .body { padding: 2px 12px 12px; }
     flex: 0 0 auto;
     align-self: stretch;
     background: var(--accent);
-    color: #11111b;
+    color: var(--accent-ink);
     border: none;
     font-weight: 700;
     padding: 0 32px;
@@ -204,11 +260,10 @@ details > .body { padding: 2px 12px 12px; }
 }
 .btn-run:hover { background: var(--accent-hover); }
 .btn-run:disabled { opacity: .45; cursor: not-allowed; }
-.btn-cancel { background: var(--surface2); }
-.btn-cancel:hover { background: var(--surface); }
+.btn-cancel { background: var(--control); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-cancel:hover { background: var(--control-hover); }
 
 .log {
-    background: var(--log-bg);
     border: 1px solid var(--border);
     border-radius: 5px;
     padding: 10px 12px;
@@ -220,8 +275,9 @@ details > .body { padding: 2px 12px 12px; }
     overflow: auto;
     white-space: pre;
     word-break: normal;
-    color: var(--green);
 }
+.log .end { color: var(--console-command); }
+.log .end.failed { color: var(--console-danger); }
 
 /* live command-line preview: shows the exact command the current settings will run,
    with a Copy button to grab it for a terminal. */
@@ -229,22 +285,21 @@ details > .body { padding: 2px 12px 12px; }
 .cmdline {
     flex: 1 1 auto;
     min-width: 0;
-    background: var(--log-bg);
     border: 1px solid var(--border);
     border-radius: 5px;
     padding: 8px 10px;
     font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
     font-size: 11px;
     line-height: 1.4;
-    color: var(--accent);
+    color: var(--console-command);
     white-space: pre-wrap;
     word-break: break-all;
     max-height: 92px;
     overflow-y: auto;
 }
-.cmdline .ph { color: var(--muted); }
+.cmdline .ph { color: var(--console-muted); }
 .cmdcopy { flex: 0 0 auto; align-self: stretch; }
-.cmdcopy.done { color: var(--green); border-color: var(--green); }
+.cmdcopy.done { color: var(--success); border-color: var(--success); }
 hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
 /* "previous result" hint: appears under the drop zone when the current input already
@@ -257,15 +312,37 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     background: none; border: none; padding: 0; min-width: 0; cursor: pointer;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.hint .path-btn code { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.hint .path-btn code { color: var(--link); text-decoration: underline; cursor: pointer; }
 .hint .path-btn:hover code { color: var(--accent-hover); }
 
 /* About section: label/value lines and the report controls. */
-.about-row { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
-.about-row code { color: var(--fg); }
-.about-row a { color: var(--accent); text-decoration: none; }
+.about-row { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+.about-row code { color: var(--text-primary); }
+.about-row a { color: var(--link); text-decoration: none; }
 .about-row a:hover { text-decoration: underline; }
 .about-row .inline-btn { padding: 2px 9px; font-size: 11px; }
+
+/* The one secondary window (APP-BEHAVIOUR rule 1): modal, centred on the window that owns it,
+   sized by its text rather than a fixed box (rule 2). Escape, the Cancel button and closing it
+   are one path - see openDialog. A destructive or costly choice is drawn in --danger. */
+dialog.dlg {
+    margin: auto;
+    max-width: min(560px, calc(100vw - 32px));
+    min-width: min(340px, calc(100vw - 32px));
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 18px 20px 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dlg h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.dlg p { font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.dlg-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.dlg-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.dlg-actions button.danger { background: var(--danger); color: var(--danger-ink); border-color: var(--danger); }
 </style>
 </head>
 <body>
@@ -275,44 +352,54 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <span class="ver" id="ver">loading..</span>
     <span class="byline">
         <a href="https://sza.od.ua" target="_blank" rel="noopener">SZA.od.ua</a>
-        <span class="dot">&#183;</span>
-        <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site</a>
-        <span class="dot">&#183;</span>
-        <a href="mailto:sza@ukr.net">Feedback</a>
+        <span class="dot" aria-hidden="true">&#183;</span>
+        <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="aboutSite">Product site</a>
+        <span class="dot" aria-hidden="true">&#183;</span>
+        <a href="mailto:sza@ukr.net" data-i18n="aboutFeedback">Feedback</a>
     </span>
-    <select class="langsw" id="langSwitch" data-i18n-title="titleUiLang" title="Interface language"></select>
+    <span class="switches">
+        <!-- APP-STYLE rule 2: system, light and dark, defaulting to system -->
+        <select class="langsw" id="themeSwitch" data-i18n-title="titleTheme" data-i18n-aria="titleTheme" title="Theme" aria-label="Theme">
+            <option value="system" data-i18n="themeSystem">System theme</option>
+            <option value="light" data-i18n="themeLight">Light</option>
+            <option value="dark" data-i18n="themeDark">Dark</option>
+        </select>
+        <select class="langsw" id="langSwitch" data-i18n-title="titleUiLang" data-i18n-aria="titleUiLang" title="Interface language" aria-label="Interface language"></select>
+    </span>
 </div>
 <div class="hint warn" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
 <div class="app">
 <div class="col-main">
 
-<!-- one-time opt-in: association is off by default; the right-click entry is always added -->
-<div id="assocPrompt" class="assoc-prompt" style="display:none">
-    <span data-i18n="assocPromptText">Make this app the default handler for EPUB, PDF and the other supported files? It is optional and off by default - the "Convert to HTML" right-click entry is always available. You can change this anytime under "Windows integration".</span>
+<!-- First run asks before anything is written to Windows, and "No, thanks" is a real answer
+     that leaves a working app (APP-BEHAVIOUR rules 4 and 11). -->
+<div id="assocPrompt" class="assoc-prompt" role="region" aria-labelledby="assocPromptText" style="display:none">
+    <span id="assocPromptText" data-i18n="assocPromptText">Add this app to Windows? You can get a "Convert to HTML" entry in the right-click menu of supported files and a place under "Open with", or also make it the default app for them. Nothing changes unless you pick it here or later under "Windows integration".</span>
     <div class="assoc-prompt-actions">
-        <button class="primary" id="assocPromptYes" onclick="assocPromptAccept()" data-i18n="assocPromptYes">Yes, make default</button>
-        <button id="assocPromptNo" onclick="assocPromptDismiss()" data-i18n="assocPromptNo">No, thanks</button>
+        <button class="primary" id="assocPromptShell" onclick="assocPromptAnswer('shell')" data-i18n="assocPromptShell">Add the right-click entry</button>
+        <button id="assocPromptBoth" onclick="assocPromptAnswer('both')" data-i18n="assocPromptBoth">Add it and make this app the default</button>
+        <button id="assocPromptNo" onclick="assocPromptAnswer('none')" data-i18n="assocPromptNo">No, thanks</button>
     </div>
 </div>
 
 <!-- primary flow: pick a document (left) and run (right), on one line -->
 <div class="toprow">
-    <div class="drop" id="dropZone" onclick="browseFile()">
-        <div id="dropEmpty">
-            <span class="ico">&#x2913;</span>
+    <button type="button" class="drop" id="dropZone" onclick="browseFile()">
+        <span id="dropEmpty">
+            <span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M14,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8L14,2zM16,18H8v-2h8v2zM16,14H8v-2h8v2zM13,9V3.5L18.5,9H13z"/></svg></span>
             <span class="ph" data-i18n="dropPlaceholder">Drag a document here, or click to choose one</span>
-        </div>
-        <div id="dropFilled" style="display:none">
+        </span>
+        <span id="dropFilled" style="display:none">
             <span class="fname" id="dropName"></span>
-            <div class="sub" data-i18n="dropChooseAnother">click to choose another file</div>
-        </div>
-    </div>
+            <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
+        </span>
+    </button>
     <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
     <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelConvert()" style="display:none" data-i18n="btnCancel">Cancel</button>
 </div>
 <input type="hidden" id="inputFile">
-<div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
+<div class="hint" id="dropStatus" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
     <button type="button" class="inline-btn" id="btnOpenPrev" data-i18n="btnOpenPrev">Open result</button>
@@ -322,7 +409,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <div class="prev-dir" id="prevDirRow">
         <span data-i18n="prevResultIn">Saved in:</span>
         <button type="button" class="path-btn" id="btnOpenPrevFolder"
-                data-i18n-title="ttOpenFolder" title="Open the containing folder"><code id="prevResultDir"></code></button>
+                data-i18n-title="ttOpenFolder" data-i18n-aria="ttOpenFolder" title="Open the containing folder" aria-label="Open the containing folder"><code id="prevResultDir"></code></button>
     </div>
 </div>
 
@@ -344,9 +431,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
 <div class="field langs" style="margin-top:8px">
     <label data-i18n="lblLanguages">Languages:</label>
-    <select id="srcLang"></select>
-    <button class="swap" id="btnSwap" data-i18n-title="titleSwap" title="Swap source and target">&#x21C4;</button>
-    <select id="dstLang"></select>
+    <select id="srcLang" data-i18n-aria="ariaSrcLang" aria-label="Source language"></select>
+    <button class="swap" id="btnSwap" data-i18n-title="titleSwap" data-i18n-aria="titleSwap" title="Swap source and target" aria-label="Swap source and target"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z"/></svg></button>
+    <select id="dstLang" data-i18n-aria="ariaDstLang" aria-label="Target language"></select>
 </div>
 
 <!-- Google API key (only when Google is selected) -->
@@ -386,7 +473,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
         <div class="hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
         <div class="field" style="margin-top:8px"><label data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
         <div class="field"><label data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
-        <div class="hint" id="ocrStatus" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
+        <div class="hint" id="ocrStatus" role="status" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
     </div>
 </details>
 
@@ -400,9 +487,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <details id="integrationSection">
     <summary data-i18n="secIntegration">Windows integration</summary>
     <div class="body">
-        <label class="chk"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
+        <label class="chk"><input type="checkbox" id="chkShellEntries" onchange="toggleShellEntries()"> <span data-i18n="chkShellEntries">Right-click "Convert to HTML" and "Open with"</span></label>
+        <div class="hint" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
         <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()" data-i18n="btnOpenDefaultApps">Open Default apps</button>
-        <div class="hint" id="registerStatus" data-i18n="registerHint">Optional and off by default. The "Convert to HTML" right-click entry is always added - this only makes double-clicking a document open it with this app (per-user file associations).</div>
+        <div class="hint" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</div>
     </div>
 </details>
 
@@ -435,14 +524,22 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 <div class="col-log">
     <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
     <div class="cmdbar">
-        <div class="cmdline" id="cmdLine"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
+        <div class="cmdline console" id="cmdLine"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
         <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
     </div>
     <div class="stitle" data-i18n="secLog">Log</div>
-    <div class="log" id="logArea"></div>
+    <div class="log console" id="logArea" role="log"></div>
 </div><!-- /col-log -->
 
 </div><!-- /app -->
+
+<dialog class="dlg" id="dlg" aria-labelledby="dlgTitle" aria-describedby="dlgMsg">
+    <form method="dialog">
+        <h2 id="dlgTitle"></h2>
+        <p id="dlgMsg"></p>
+        <div class="dlg-actions" id="dlgActions"></div>
+    </form>
+</dialog>
 
 <script src="/i18n.js"></script>
 <script>
@@ -500,6 +597,8 @@ function applyLang(lang) {
     document.querySelectorAll('[data-i18n-html]').forEach(e => { e.innerHTML = t(e.dataset.i18nHtml); });
     document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
     document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+    // A glyph-only control's accessible name follows the language (APP-BEHAVIOUR rule 9).
+    document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
     for (const id in liveStatus) renderStatus(id);
     renderAbout();
     document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
@@ -533,6 +632,77 @@ function resolveLang() { applyLang(urlLang || userLang || systemLang || 'en'); }
         updateCmdPreview();
     });
 })();
+
+// ── theme ───────────────────────────────────────────────
+// APP-STYLE rule 2: system, light or dark, applied at once. "system" leaves the palette to
+// prefers-color-scheme, so the window follows the OS while it runs; see the palette table.
+let themePref = 'system';
+function applyTheme(pref) {
+    themePref = (pref === 'light' || pref === 'dark') ? pref : 'system';
+    if (themePref === 'system') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = themePref;
+    el('themeSwitch').value = themePref;
+}
+document.getElementById('themeSwitch').addEventListener('change', e => {
+    applyTheme(e.target.value);
+    saveSettings();
+});
+
+// ── dialog ──────────────────────────────────────────────
+// Every question and notice the window shows goes through this one modal dialog, never through
+// alert/confirm (APP-BEHAVIOUR rule 1). It is centred on the window that owns it; Escape, the
+// cancel button and closing it are the same no-action path - the dialog's close event - and the
+// recommended answer has the focus, so Enter picks it. Requests queue: a second one waits for
+// the first to be answered.
+//
+//   buttons: [{id, key, kind: 'primary'|'danger'|'', focus: true}]; cancel: the no-action id
+let dlgQueue = Promise.resolve();
+let dlgOpen = null; // {close()} of the dialog on screen, so a run that ends can withdraw its question
+function openDialog(opts) {
+    const next = dlgQueue.then(() => new Promise(resolve => {
+        const dlg = el('dlg'), actions = el('dlgActions');
+        el('dlgTitle').textContent = opts.title || '';
+        el('dlgMsg').textContent = opts.message || '';
+        actions.innerHTML = '';
+        let focus = null;
+        for (const b of opts.buttons) {
+            const btn = document.createElement('button');
+            btn.value = b.id;
+            btn.textContent = t(b.key);
+            if (b.kind) btn.className = b.kind;
+            actions.appendChild(btn);
+            if (b.focus) focus = btn;
+        }
+        dlg.returnValue = '';
+        dlg.addEventListener('close', () => {
+            dlgOpen = null;
+            resolve(dlg.returnValue || opts.cancel);
+        }, {once: true});
+        dlgOpen = {tag: opts.tag, close: () => dlg.close()};
+        dlg.showModal();
+        (focus || actions.lastChild).focus();
+    }));
+    dlgQueue = next.catch(() => {});
+    return next;
+}
+// informDialog shows a notice with one button.
+function informDialog(title, message) {
+    return openDialog({title, message, buttons: [{id: 'ok', key: 'dlgOK', kind: 'primary', focus: true}], cancel: 'ok'});
+}
+// confirmDialog asks a yes/no question; safe says whether "no" is the recommended answer.
+async function confirmDialog(message, yesKey, kind, safe) {
+    const choice = await openDialog({
+        title: t('dlgConfirmTitle'), message,
+        buttons: [{id: 'yes', key: yesKey, kind: kind || 'primary', focus: !safe}, {id: 'no', key: 'btnCancel', focus: !!safe}],
+        cancel: 'no',
+    });
+    return choice === 'yes';
+}
+// serviceGone is the one cause every request shares: the local server behind the window stopped.
+function serviceGone(e) {
+    console.error(e);
+    informDialog(t('serviceGoneTitle'), t('serviceGone'));
+}
 
 // ── languages ───────────────────────────────────────────
 // Codes the converter/translator already recognise (see internal/translator),
@@ -638,7 +808,7 @@ async function uploadDropped(file, count) {
     setStatus('dropStatus', 'statusLoading', {name: file.name});
     try {
         const r = await api('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
-        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', {msg: (await r.text()).trim()}, 'warn'); return; }
+        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', null, 'warn'); return; }
         const d = await r.json();
         if (d.path) {
             setInputPath(d.path);
@@ -646,7 +816,7 @@ async function uploadDropped(file, count) {
             noteFirstOnly(count, d.path);
         }
     } catch(e) {
-        setStatus('dropStatus', 'statusLoadFail', {msg: e.message}, 'warn');
+        serviceGone(e);
     }
 }
 async function handleDrop(ev) {
@@ -722,17 +892,19 @@ api('/api/env').then(r=>r.json()).then(d=>{
 // ── browse buttons ──────────────────────────────────────
 async function browseFile() {
     try {
-        const r = await api('/api/browse-file', {method:'POST'});
+        const r = await api('/api/browse-file?title=' + encodeURIComponent(t('dlgPickFile')), {method:'POST'});
+        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'warn'); return; }
         const d = await r.json();
         if (d.path) { setInputPath(d.path); setStatus('dropStatus', ''); }
-    } catch(e) { console.error('browseFile', e); }
+    } catch(e) { serviceGone(e); }
 }
 async function browseFolder() {
     try {
-        const r = await api('/api/browse-folder', {method:'POST'});
+        const r = await api('/api/browse-folder?title=' + encodeURIComponent(t('dlgPickFolder')), {method:'POST'});
+        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'warn'); return; }
         const d = await r.json();
         if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); updateCmdPreview(); }
-    } catch(e) { console.error('browseFolder', e); }
+    } catch(e) { serviceGone(e); }
 }
 
 // ── translation engine ──────────────────────────────────
@@ -761,7 +933,8 @@ async function refreshGoogleKeyStatus() {
             setStatus('googleKeyStatus', 'googleKeyNone', {path: d.path || t('googleKeyPathFallback')}, 'warn');
         }
     } catch(e) {
-        setStatus('googleKeyStatus', 'googleKeyCheckFail', {msg: e.message}, 'warn');
+        console.error(e);
+        setStatus('googleKeyStatus', 'googleKeyCheckFail', null, 'warn');
     }
 }
 async function saveGoogleKey() {
@@ -773,19 +946,20 @@ async function saveGoogleKey() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({key}),
         });
-        if (!r.ok) { setStatus('googleKeyStatus', 'googleKeySaveFail', {msg: (await r.text()).trim()}, 'warn'); return; }
+        if (!r.ok) { setStatus('googleKeyStatus', 'googleKeySaveFail', null, 'warn'); return; }
         document.getElementById('googleKey').value = '';
         const d = await r.json();
         if (d.exists) setStatus('googleKeyStatus', 'googleKeySaved', null, 'ok');
         else setStatus('googleKeyStatus', 'googleKeySavedUnverified', null, 'warn');
     } catch(e) {
-        setStatus('googleKeyStatus', 'googleKeySaveFail', {msg: e.message}, 'warn');
+        serviceGone(e);
     }
 }
 
-// ── default-handler association (opt-in, off by default) ──
-// The "Convert to HTML" right-click entry + "Open with" are registered on every launch
-// (ensureRightClickRegistered, Go side); this toggle only controls the *default* handler.
+// ── Windows integration (opt-in, nothing on its own) ────
+// Two independent choices, both off until the user makes them: the right-click "Convert to
+// HTML" entry + "Open with" (the shell-entries toggle), and the default handler. The app never
+// writes either on its own (APP-BEHAVIOUR rules 4 and 11); the first-run banner only asks.
 let assocPrompted = false;   // persisted in settings: has the one-time prompt been answered?
 let envReady = false, statusReady = false, integrationHidden = false;
 
@@ -802,6 +976,7 @@ async function loadAssocStatus() {
 // states. action is 'register', 'unregister' or null for the load-time read.
 function applyAssocState(d, action) {
     const list = a => (a || []).join(', ');
+    el('chkShellEntries').checked = !!d.shell;
     // The toggle means "the app is registered or chosen", so a blocked registration stays on.
     el('chkDefaultHandler').checked = d.state !== 'none';
     let msg = null, needSettings = false;
@@ -822,7 +997,7 @@ function applyAssocState(d, action) {
         break;
     default: // none
         if (action === 'unregister') msg = ['unregisterDone', null, 'ok'];
-        if (action === 'register') msg = ['registerFail', {msg: t('unknownError')}, 'warn'];
+        if (action === 'register') msg = ['registerFail', null, 'warn'];
     }
     el('btnDefaultApps').style.display = needSettings ? '' : 'none';
     if (msg) setStatus('registerStatus', msg[0], msg[1], msg[2]);
@@ -837,40 +1012,58 @@ async function toggleDefaultHandler() {
         if (d.ok) {
             applyAssocState(d, on ? 'register' : 'unregister');
         } else {
-            setStatus('registerStatus', 'registerFail', {msg: d.error || t('unknownError')}, 'warn');
+            setStatus('registerStatus', 'registerFail', null, 'warn');
             el('chkDefaultHandler').checked = !on; // revert the toggle on failure
         }
     } catch(e) {
-        setStatus('registerStatus', 'registerFail', {msg: e.message}, 'warn');
         el('chkDefaultHandler').checked = !on;
+        serviceGone(e);
+    }
+}
+
+async function toggleShellEntries() {
+    const on = el('chkShellEntries').checked;
+    try {
+        const d = await (await api('/api/shell-entries', {method: 'POST', body: JSON.stringify({on})})).json();
+        el('chkShellEntries').checked = !!d.shell;
+        if (d.ok) setStatus('shellStatus', on ? 'shellAdded' : 'shellRemoved', null, 'ok');
+        else setStatus('shellStatus', 'shellFail', null, 'warn');
+    } catch(e) {
+        el('chkShellEntries').checked = !on;
+        serviceGone(e);
     }
 }
 
 async function openDefaultApps() {
     try {
         const d = await (await api('/api/open-default-apps', {method:'POST'})).json();
-        if (!d.ok) setStatus('registerStatus', 'openDefaultAppsFail', {msg: d.error || t('unknownError')}, 'warn');
+        if (!d.ok) setStatus('registerStatus', 'openDefaultAppsFail', null, 'warn');
     } catch(e) {
-        setStatus('registerStatus', 'openDefaultAppsFail', {msg: e.message}, 'warn');
+        serviceGone(e);
     }
 }
 
-// One-time first-run prompt: shown only when the integration section is available
-// (unpackaged), the app is not already the default, and the user has not answered before.
+// One-time first-run question: shown only when the integration section is available
+// (unpackaged, converter present), nothing is registered yet, and it has not been answered.
+// "No, thanks" writes nothing and is remembered like any other answer.
 function maybeShowAssocPrompt() {
     if (!envReady || !statusReady || !settingsLoaded) return;
-    if (integrationHidden || assocPrompted || el('chkDefaultHandler').checked) return;
+    if (integrationHidden || !aboutFacts.cli || assocPrompted) return;
+    if (el('chkShellEntries').checked || el('chkDefaultHandler').checked) return;
     el('assocPrompt').style.display = '';
 }
-function assocPromptAccept() {
-    el('chkDefaultHandler').checked = true;
-    toggleDefaultHandler();
-    assocPromptDismiss();
-}
-function assocPromptDismiss() {
+async function assocPromptAnswer(answer) {
     el('assocPrompt').style.display = 'none';
     assocPrompted = true;
     saveSettings();
+    if (answer === 'none') return;
+    el('integrationSection').open = true;
+    el('chkShellEntries').checked = true;
+    await toggleShellEntries();
+    if (answer === 'both') {
+        el('chkDefaultHandler').checked = true;
+        await toggleDefaultHandler();
+    }
 }
 
 // ── persist form state across sessions ─────────────────
@@ -900,6 +1093,7 @@ function collectSettings() {
         ocr:            el('chkOCR').checked,
         ocrLang:        el('ocrLang').value,
         assocPrompted:  assocPrompted,
+        theme:          themePref,
     };
 }
 function applySettings(s) {
@@ -922,6 +1116,7 @@ function applySettings(s) {
     if (s.ocr     != null) el('chkOCR').checked     = !!s.ocr;
     if (s.ocrLang != null) el('ocrLang').dataset.want = s.ocrLang;
     if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
+    if (typeof s.theme === 'string') applyTheme(s.theme);
     syncEngineUI();
 }
 
@@ -968,7 +1163,7 @@ async function loadOcrLangs() {
         }
         if (!sel.options.length) {
             const o = document.createElement('option');
-            o.value = 'eng'; o.textContent = 'English (default)';
+            o.value = 'eng'; o.textContent = t('ocrEngDefault');
             sel.appendChild(o);
         }
         if ([...sel.options].some(o => o.value === want)) sel.value = want;
@@ -994,20 +1189,61 @@ function syncOcrLangToSource() {
         setStatus('ocrStatus', 'ocrLangMissing', {lang: row.name});
     }
 }
+// The download reports real progress and can be cancelled (APP-BEHAVIOUR rule 3): while it runs
+// the button is its Cancel, and the language list is locked so it cannot be started twice.
+let ocrAbort = null;
 el('btnOcrDownload').addEventListener('click', async () => {
+    if (ocrAbort) { ocrAbort.abort(); return; }
     const sel = el('ocrDownloadSel'), btn = el('btnOcrDownload');
     const lang = sel.value;
     if (!lang) return;
-    btn.disabled = true;
-    setStatus('ocrStatus', 'ocrDownloading', {lang});
+    const name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : lang;
+    ocrAbort = new AbortController();
+    btn.dataset.i18n = 'btnCancel';
+    btn.textContent = t('btnCancel');
+    sel.disabled = true;
+    setStatus('ocrStatus', 'ocrDownloading', {lang: name});
+    let result = null;
     try {
-        const r = await (await api('/api/ocr-download', {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang, uiLang: currentLang}),
-        })).json();
-        if (r.ok) { setStatus('ocrStatus', 'ocrInstalledMsg', {lang}); el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
-        else { setStatus('ocrStatus', 'ocrDownloadFail', {err: r.error || t('unknown')}); }
-    } catch (e) { setStatus('ocrStatus', 'ocrDownloadFailGeneric'); }
-    btn.disabled = false;
+        const r = await api('/api/ocr-download', {
+            method: 'POST', body: JSON.stringify({lang, uiLang: currentLang}), signal: ocrAbort.signal,
+        });
+        const reader = r.body.getReader(), dec = new TextDecoder();
+        let buf = '';
+        for (;;) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, {stream: true});
+            let nl;
+            while ((nl = buf.indexOf('\n')) >= 0) {
+                const line = buf.slice(0, nl).trim();
+                buf = buf.slice(nl + 1);
+                if (!line) continue;
+                const m = JSON.parse(line);
+                if ('ok' in m) result = m;
+                else if (m.total) setStatus('ocrStatus', 'ocrDownloadingPct', {lang: name, pct: Math.floor(m.done * 100 / m.total)});
+            }
+        }
+    } catch (e) {
+        result = e.name === 'AbortError' ? {ok: false, cause: 'cancelled'} : null;
+        if (!result) console.error(e);
+    }
+    ocrAbort = null;
+    btn.dataset.i18n = 'btnDownload';
+    btn.textContent = t('btnDownload');
+    sel.disabled = false;
+    if (result && result.ok) {
+        setStatus('ocrStatus', 'ocrInstalledMsg', {lang: name}, 'ok');
+        el('ocrLang').dataset.want = lang;
+        await loadOcrLangs();
+        saveSettings();
+        return;
+    }
+    const cause = result ? result.cause : '';
+    if (cause === 'cancelled') setStatus('ocrStatus', 'ocrDownloadCancelled');
+    else if (cause === 'mismatch') setStatus('ocrStatus', 'ocrDownloadMismatch', {lang: name}, 'warn');
+    else if (cause === 'network') setStatus('ocrStatus', 'ocrDownloadFail', {lang: name}, 'warn');
+    else setStatus('ocrStatus', 'ocrDownloadFailGeneric', null, 'warn');
 });
 loadOcrLangs();
 
@@ -1134,16 +1370,16 @@ async function openPrevResult(folder) {
                 folder,
             }),
         })).json();
-        if (!r.ok) alert(t('openPrevFail', {msg: r.error || t('unknownError')}));
+        if (!r.ok) informDialog(t('dlgFailTitle'), t('openPrevFail'));
     } catch (e) {
-        alert(t('openPrevFail', {msg: e.message}));
+        serviceGone(e);
     }
 }
 el('btnOpenPrev').addEventListener('click', () => openPrevResult(false));
 el('btnOpenPrevFolder').addEventListener('click', () => openPrevResult(true));
 
 el('btnDeletePrev').addEventListener('click', async () => {
-    if (!confirm(t('confirmDeletePrev'))) return;
+    if (!await confirmDialog(t('confirmDeletePrev'), 'btnDelete', 'danger', true)) return;
     try {
         const r = await (await api('/api/delete-output', {
             method: 'POST',
@@ -1151,9 +1387,9 @@ el('btnDeletePrev').addEventListener('click', async () => {
             body: JSON.stringify({input: el('inputFile').value.trim(), output: el('outputFolder').value.trim()}),
         })).json();
         if (r.ok) await checkOutputStatus();
-        else alert(t('deletePrevFail', {msg: r.error || t('unknownError')}));
+        else informDialog(t('dlgFailTitle'), t(r.cause === 'locked' ? 'deletePrevLocked' : 'deletePrevFail'));
     } catch (e) {
-        alert(t('deletePrevFail', {msg: e.message}));
+        serviceGone(e);
     }
 });
 
@@ -1203,14 +1439,15 @@ function renderReportMsg() {
     el('sendLogsMsg').textContent = msg;
 }
 
-el('btnSendLogs').addEventListener('click', async () => {
+async function sendLogs() {
     const btn = el('btnSendLogs');
+    el('aboutSection').open = true;
     btn.disabled = true;
     lastReport = null;
     setStatus('sendLogsMsg', 'sendLogsBuilding');
     try {
         const r = await (await api('/api/report', {method:'POST'})).json();
-        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
+        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', null, 'warn'); return; }
         reportPath = r.path;
         await copyToClipboard(reportPath);
         await api('/api/report-reveal', {method:'POST', body: JSON.stringify({path: reportPath})});
@@ -1225,51 +1462,61 @@ el('btnSendLogs').addEventListener('click', async () => {
         renderReportMsg();
         el('btnOpenArchive').style.display = '';
     } catch (e) {
-        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+        serviceGone(e);
     } finally {
         btn.disabled = false;
     }
-});
+}
+el('btnSendLogs').addEventListener('click', sendLogs);
 
 el('btnOpenArchive').addEventListener('click', async () => {
     if (!reportPath) return;
     try {
         const r = await (await api('/api/report-open', {method:'POST', body: JSON.stringify({path: reportPath})})).json();
-        if (!r.ok) setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')});
+        if (!r.ok) setStatus('sendLogsMsg', 'openArchiveFail', null, 'warn');
     } catch (e) {
-        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+        serviceGone(e);
     }
 });
 
+// Deleting the logs cannot be undone, so it is confirmed; an empty store is reported, not
+// confirmed (APP-BEHAVIOUR rule 5). The count is re-read first: runs since the window opened
+// have added logs the About line has not seen.
 el('btnClearLogs').addEventListener('click', async () => {
     try {
+        const env = await (await api('/api/env')).json();
+        aboutFacts.logs = env.logs || {count: 0, bytes: 0};
+        renderAbout();
+        const n = aboutFacts.logs.count;
+        if (!n) { setStatus('sendLogsMsg', 'logsNothing'); return; }
+        if (!await confirmDialog(t('confirmClearLogs', {1: n}), 'btnClearConfirm', 'danger', true)) return;
         const r = await (await api('/api/logs-clear', {method:'POST'})).json();
-        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
+        if (!r.ok) { setStatus('sendLogsMsg', 'clearLogsFail', null, 'warn'); return; }
         lastReport = null;
         aboutFacts.logs = {count: 0, bytes: 0};
         renderAbout();
-        setStatus('sendLogsMsg', 'logsCleared');
+        setStatus('sendLogsMsg', r.cleared ? 'logsCleared' : 'logsNothing');
     } catch (e) {
-        setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
+        serviceGone(e);
     }
 });
 
 // ── run ─────────────────────────────────────────────────
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
-    if (!input) { alert(t('alertChooseFirst')); return; }
+    if (!input) { setStatus('dropStatus', 'alertChooseFirst', null, 'warn'); el('dropZone').focus(); return; }
 
     const engine = currentEngine();
     if (engine === 'google') {
         try {
             const d = await (await api('/api/google-key')).json();
-            if (!d.exists && !confirm(t('confirmNoKey'))) return;
+            if (!d.exists && !await confirmDialog(t('confirmNoKey'), 'btnConvertAnyway', 'primary', true)) return;
         } catch(e) { /* let the CLI report it */ }
     }
 
     await checkOutputStatus();
     if (outputStatus.exists && outputStatus.paramsChanged) {
-        if (!confirm(t('confirmParamsChanged'))) return;
+        if (!await confirmDialog(t('confirmParamsChanged'), 'btnRebuild', 'danger', false)) return;
     }
 
     const cfg = collectRunConfig();
@@ -1290,14 +1537,52 @@ async function runConvert() {
 
     // Follow new output only while the reader is already at the bottom, so scrolling up to
     // read an earlier line is not undone by the next chunk.
-    const append = text => {
+    const append = (text, cls) => {
         const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
         // appendChild is O(chunk); "textContent +=" re-reads the whole log each
         // time (O(n^2)) and can freeze the page on a long conversion.
-        log.appendChild(document.createTextNode(text));
+        if (cls) {
+            const s = document.createElement('span');
+            s.className = cls;
+            s.textContent = text;
+            log.appendChild(s);
+        } else {
+            log.appendChild(document.createTextNode(text));
+        }
         if (atBottom) log.scrollTop = log.scrollHeight;
     };
 
+    // The stream is the converter's log plus marker lines (see handleRun and internal/dialog):
+    // a question to ask in this window, a notice to show, and the run's outcome. Markers never
+    // reach the log; text before one on the same line does.
+    let pending = '', end = null;
+    const handleMarker = (line) => {
+        const sp = line.indexOf(' ');
+        const kind = line.slice(MARK.length, sp);
+        let data = {};
+        try { data = JSON.parse(line.slice(sp + 1)); } catch (e) { return; }
+        if (kind === 'end') { end = data; return; }
+        if (kind === 'note') { informDialog(data.title, data.message); return; }
+        if (kind === 'ask') askForTheRun(cfg, data);
+    };
+    const feed = (text) => {
+        pending += text;
+        let nl;
+        while ((nl = pending.indexOf('\n')) >= 0) {
+            const line = pending.slice(0, nl + 1);
+            pending = pending.slice(nl + 1);
+            const m = line.indexOf(MARK);
+            if (m < 0) { append(line); continue; }
+            if (m > 0) append(line.slice(0, m) + '\n');
+            handleMarker(line.slice(m).trimEnd());
+        }
+        // A partial line shows at once, unless it may be the start of a marker.
+        const cut = pending.indexOf('\x1e');
+        if (cut < 0) { append(pending); pending = ''; }
+        else if (cut > 0) { append(pending.slice(0, cut)); pending = pending.slice(cut); }
+    };
+
+    let refused = false;
     try {
         runAbort = new AbortController();
         const resp = await api('/api/run', {
@@ -1306,7 +1591,8 @@ async function runConvert() {
             signal: runAbort.signal,
         });
         if (!resp.ok) {
-            append(t('runRequestFailed', {msg: (await resp.text()).trim() || resp.status}) + '\n');
+            refused = true;
+            informDialog(t('dlgFailTitle'), t(resp.status === 409 ? 'runBusy' : 'runRefused'));
             return;
         }
         const reader = resp.body.getReader();
@@ -1314,16 +1600,20 @@ async function runConvert() {
         while (true) {
             const {value, done} = await reader.read();
             if (done) break;
-            append(dec.decode(value, {stream: true}));
+            feed(dec.decode(value, {stream: true}));
         }
+        if (pending) feed('\n');
     } catch(e) {
-        if (e.name !== 'AbortError') append('\n' + t('runRequestFailed', {msg: e.message}) + '\n');
+        if (e.name !== 'AbortError') console.error(e);
     } finally {
         runAbort = null;
         runTarget = null;
+        // A question the run asked and nobody answered goes with the run.
+        if (dlgOpen && dlgOpen.tag === 'run') dlgOpen.close();
         btn.disabled = false;
         btn.style.display = '';
         cancelBtn.style.display = 'none';
+        if (!refused) reportRunEnd(end, append);
         // The run just created (or replaced) the result, so re-read its status: this is
         // what puts "Open result" and the output path on screen the moment it is ready,
         // rather than leaving the reader to hunt for where it landed.
@@ -1331,9 +1621,49 @@ async function runConvert() {
     }
 }
 
+const MARK = '\x1edht:';
+
+// askForTheRun puts the converter's question - the paid-translation cost - in this window, owned
+// by it, and sends the answer back. Not spending is the recommended answer: it has the focus, so
+// Enter declines, and Escape and closing the dialog decline too (APP-BEHAVIOUR rule 1).
+async function askForTheRun(cfg, q) {
+    const choice = await openDialog({
+        title: q.title, message: q.message, tag: 'run',
+        buttons: [{id: 'yes', key: 'costYes', kind: 'danger'}, {id: 'no', key: 'costNo', focus: true}],
+        cancel: 'no',
+    });
+    try {
+        await api('/api/answer', {method: 'POST', body: JSON.stringify({input: cfg.input, output: cfg.output, yes: choice === 'yes'})});
+    } catch (e) { /* the run is gone; so is the question */ }
+}
+
+// reportRunEnd words the outcome in the window's language. Done and cancelled are outcomes with
+// their own line (APP-BEHAVIOUR rule 3); a failure is a set of actions - send the log, try again,
+// leave - not an exit status (rule 6). No end line means the service behind the window went away.
+function reportRunEnd(end, append) {
+    if (!end) {
+        append('\n' + t('runLost') + '\n', 'end failed');
+        informDialog(t('serviceGoneTitle'), t('serviceGone'));
+        return;
+    }
+    if (end.state === 'done') { append(t('runDone') + '\n', 'end'); return; }
+    if (end.state === 'cancelled') { append(t('runCancelled') + '\n', 'end'); return; }
+    const msg = end.code ? t('runFailedCode', {code: end.code}) : t('runFailed');
+    append(msg + '\n', 'end failed');
+    openDialog({
+        title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'),
+        buttons: [{id: 'send', key: 'btnSendLogs'}, {id: 'retry', key: 'btnRetry', kind: 'primary'}, {id: 'close', key: 'dlgClose', focus: true}],
+        cancel: 'close',
+    }).then(choice => {
+        if (choice === 'send') sendLogs();
+        if (choice === 'retry') runConvert();
+    });
+}
+
 // Cancel asks the server to stop the run, which kills the converter and everything it
-// started and ends the log with "Cancelled.". If the server cannot be reached, dropping the
-// request stops the run too.
+// started and ends the stream with a "cancelled" outcome. What the converter already wrote
+// stays in the output folder; without a completion record the next run rebuilds it. If the
+// server cannot be reached, dropping the request stops the run too.
 let runAbort = null, runTarget = null;
 async function cancelConvert() {
     const cancelBtn = document.getElementById('btnCancel');

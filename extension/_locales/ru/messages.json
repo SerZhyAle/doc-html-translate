@@ -144,7 +144,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "Показать или скрыть слой распознанного текста",
+    "message": "Текстовый слой",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -172,20 +172,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "Скачать исходный файл документа",
+    "message": "Сохранить исходный файл документа",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "Сохранить текущий вид как отдельный HTML-файл (перевод сохранится, если вы переводили страницу)",
+    "message": "Экспортировать текущий вид в отдельный HTML-файл (перевод сохранится, если вы переводили страницу)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ Файл",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "Сохранить файл",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "Экспорт HTML",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "Обратная связь",
@@ -580,5 +580,29 @@
   "vSavedLarge": {
     "message": "Сохранено - файл весит {1} МБ, потому что все изображения внутри него; некоторые браузеры открывают такие файлы медленно",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "Мельче",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "Крупнее",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "Шрифт",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "Тема",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "Развернуть",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "Свернуть",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

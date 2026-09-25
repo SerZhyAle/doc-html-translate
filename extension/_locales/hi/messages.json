@@ -128,7 +128,7 @@
     "description": "Reading theme option."
   },
   "ttOcrLayer": {
-    "message": "पहचानी गई पाठ परत दिखाएँ या छिपाएँ",
+    "message": "पाठ परत",
     "description": "Toolbar group tooltip for the OCR layer toggle."
   },
   "ttGoToPage": {
@@ -156,20 +156,20 @@
     "description": "Toolbar button tooltip."
   },
   "ttSaveSource": {
-    "message": "मूल दस्तावेज़ फ़ाइल डाउनलोड करें",
+    "message": "मूल दस्तावेज़ फ़ाइल सहेजें",
     "description": "Toolbar button tooltip."
   },
   "ttSaveHtml": {
-    "message": "वर्तमान दृश्य को स्वतंत्र HTML फ़ाइल के रूप में सहेजें (यदि आपने पृष्ठ का अनुवाद किया है तो वह भी रहेगा)",
+    "message": "वर्तमान दृश्य को स्वतंत्र HTML फ़ाइल के रूप में निर्यात करें (यदि आपने पृष्ठ का अनुवाद किया है तो वह भी रहेगा)",
     "description": "Toolbar button tooltip."
   },
   "btnSaveFile": {
-    "message": "↓ फ़ाइल",
-    "description": "Toolbar button label - downloads the original file."
+    "message": "फ़ाइल सहेजें",
+    "description": "Toolbar button label next to the Save glyph (action.save) - saves the original file."
   },
   "btnSaveHtml": {
-    "message": "↓ HTML",
-    "description": "Toolbar button label - saves the current view as standalone HTML. HTML is a format name and stays untranslated."
+    "message": "HTML निर्यात करें",
+    "description": "Toolbar button label next to the Export glyph (action.export) - exports the view as HTML. HTML is a format name and stays untranslated."
   },
   "linkFeedback": {
     "message": "प्रतिक्रिया",
@@ -564,5 +564,29 @@
   "vSavedLarge": {
     "message": "सहेजा गया - फ़ाइल {1} MB की है क्योंकि सभी चित्र इसके अंदर हैं; कुछ ब्राउज़र इतनी बड़ी फ़ाइलें धीरे खोलते हैं",
     "description": "Status after saving a very large HTML export. {1} is the size in MB."
+  },
+  "ariaSmallerText": {
+    "message": "छोटा पाठ",
+    "description": "Accessible name of the A- button (text size). Same words as the desktop reader."
+  },
+  "ariaLargerText": {
+    "message": "बड़ा पाठ",
+    "description": "Accessible name of the A+ button (text size). Same words as the desktop reader."
+  },
+  "ariaFont": {
+    "message": "फ़ॉन्ट",
+    "description": "Accessible name of the font family select. Same words as the desktop reader."
+  },
+  "ariaTheme": {
+    "message": "थीम",
+    "description": "Accessible name of the reading theme select. Same words as the desktop reader."
+  },
+  "ariaExpand": {
+    "message": "विस्तार करें",
+    "description": "Accessible name of a folded table-of-contents branch's chevron (nav.expand)."
+  },
+  "ariaCollapse": {
+    "message": "संक्षिप्त करें",
+    "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
   }
 }

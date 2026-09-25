@@ -16,7 +16,7 @@ when the ticket is filed - the next unused number, never one a ticket has had be
 changes: not on a reorder, not on the move to `done/`, which keeps the prefix. Execution order is the
 order of the lines below, so reordering the queue moves lines and renames nothing.
 
-next-ticket-number: 31
+next-ticket-number: 34
 
 - `#` - the ticket's id, the same number as the file's `NN_` prefix. `--` = no ticket file yet.
 - The release package is the `## release N` heading a line sits under. It is an **ordinal**, not a
@@ -63,9 +63,12 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
+33  33_2026-09-25_bundled-binaries-notices              2026-09-25  Draft - GPL pdftotext ships without its licence
 ```
 
-Empty since 2026-09-25: 15, the last line, moved to [`done/`](done/) with its catalog step closed.
+15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 joined the
+same day: the Windows executable embeds Xpdf's pdftotext and three MinGW runtime DLLs with no licence
+text, found while ticket 24 wrote the glyph notices.
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
 25 (`hygiene`) went first and is done (waiting on a Windows pass, listed below); the pipeline sandbox
@@ -119,20 +122,20 @@ rung. Decide, do not leave it unwritten.
 
 ```
 #   ticket                                              changed     status
-21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-25  In Progress (repo code done; catalog ⛔ owner machine)
-22  22_2026-09-23_contract-rule-adoption-sync           2026-09-23  Draft - no product code
-23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  Draft
-24  24_2026-09-23_contract-iconography-sync             2026-09-23  Draft - proposals before code
-26  26_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
+21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-25  In Progress (catalog done 2026-09-25; left: A3 plate font + lab, A5 overflow rule, A7, A11)
+23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  In Progress
+32  32_2026-09-25_icon-system-surfaces                  2026-09-25  Draft - the mark first (owner), then tiles, ICO, verb, extension icon
+26  26_2026-09-23_contract-product-web-pages-sync       2026-09-25  In Progress - Direction A done in the repo; rendered 360/768/1280 check, catalog row + exceptions and B1-B12 local only
 27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
+31  31_2026-09-25_canon-resync-new-duties               2026-09-25  Draft - owner decisions first
 ```
 
-**The six `2026-09-23_contract-*` tickets** (five left - `automated-checks` reached Implemented on 2026-09-24 and moved to `done/`) come out of one contract-sync pass over every catalog domain
+**The six `2026-09-23_contract-*` tickets** (three left - `automated-checks` reached Implemented on 2026-09-24, `rule-adoption` and `iconography` on 2026-09-25, all moved to `done/`; iconography's system surfaces continue as 32) come out of one contract-sync pass over every catalog domain
 that touches this product. Each has two halves: what the repo changes to conform, and what the catalog
 lacks - written as a dated amendment where this product owns the contract (`OCR-PIPELINE`,
 `OCR-INVOCATION`) and as a proposal beside the contract everywhere else. `OCR` leads because this product
-owns the document another product ports from, and it was registered stale. `rule-adoption` is next because
-its first item - committing `docs/contracts/` - is what every other pointer depends on. The web-pages
+owns the document another product ports from, and it was registered stale. `rule-adoption` closed on
+2026-09-25: the stamp is re-synced to canon `2026.09.24.1` and its catalog half is filed. The web-pages
 ticket carries one user-visible bug that should not wait for the rest of it: the shared `sza-lang` value is
 `ua` on the landing page and `uk` on the extension page, so a language chosen on one shows all three on the
 other - a `/fix` candidate on its own. `WAVE-PARTICLES` was read and does not apply (no canvas backdrop).
@@ -144,12 +147,18 @@ PC" reads nothing from us. No shipped code is wrong, but it is not `--` either: 
 unanswered warning is a user who does not come back. The contract it closes is
 `INSTALL-TRUST` 1.0, and until it lands the gap is a dated exception in the shared registry.
 
+[`31_2026-09-25_canon-resync-new-duties`](31_2026-09-25_canon-resync-new-duties.md) is what the canon
+re-sync of 2026-09-25 found owed: a documentation registry, the permission and network-surface inventories,
+a contract gate on the release path, and a name for the research notes. It sits last by rule 6 - each item
+is a new standing artifact or a naming choice, so the owner decides build-or-defer before any of it is
+scheduled.
+
 ## release 4 - waiting on the owner's machine or a human
 
 ```
 #   ticket                                              changed     status
 28  28_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
-29  29_2026-09-25_ocr-rescue-third-axis                 2026-09-25  Draft - lab corpus, owner machine
+29  29_2026-09-25_ocr-rescue-third-axis                 2026-09-25  Partial - size anchor measured + rejected 2026-09-25, next: sparse row order
 30  30_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
 ```
 

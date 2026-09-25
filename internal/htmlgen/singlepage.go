@@ -222,8 +222,9 @@ func buildSinglePageHeader(sourceName, title string, pageCount int) string {
 			opts.WriteString(fmt.Sprintf(`<option value="#page_%03d">%s</option>`,
 				i, html.EscapeString(fmt.Sprintf("%d / %d", i, pageCount))))
 		}
-		pageSel = fmt.Sprintf(`<select id="dht-page-sel" title="%s">%s</select>`,
-			html.EscapeString(i18n.S("Go to page")), opts.String())
+		// nav.go-to-page, not nav.go-to: "Go to" alone opens another screen (ICON-SET rule 3).
+		pageSel = fmt.Sprintf(`<span class="dht-sel">%[1]s<select id="dht-page-sel" title="%[2]s" aria-label="%[2]s">%[3]s</select></span>`,
+			glyphSVG("nav.go-to-page"), html.EscapeString(i18n.S("Go to page")), opts.String())
 	}
 
 	// lang/dir on the bar itself, never on <html> - see buildNavBarHTML for why.

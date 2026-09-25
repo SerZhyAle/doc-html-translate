@@ -4,6 +4,7 @@
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
+import { applyGlyphs } from "./glyphs.js";
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
@@ -108,6 +109,7 @@ async function init() {
   await initI18n();
   await loadMessages(uiLang());
   applyI18n(document);
+  applyGlyphs(document);
   const opts = await getOptions();
   const host = await activeHost();
 

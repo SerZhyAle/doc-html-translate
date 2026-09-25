@@ -260,10 +260,6 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		// The rescue floor lives in ocr-cluster.js on the JS side, beside keepLine which applies it,
 		// so this pair reads it from the combined extension source above.
 		{"rescue line confidence", `ocrRescueLineConf\s*=\s*([\d.]+)`, `OCR_RESCUE_LINE_CONF\s*=\s*([\d.]+)`},
-		// The size rule's word gate (admitBySize): the letter run and the relieved floor. A drift
-		// here keeps the poster's headline in one edition and drops it in the other.
-		{"rescue word confidence", `ocrRescueWordConf\s*=\s*([\d.]+)`, `OCR_RESCUE_WORD_CONF\s*=\s*([\d.]+)`},
-		{"rescue word letter run", `ocrRescueWordRun\s*=\s*(\d+)`, `OCR_RESCUE_WORD_RUN\s*=\s*(\d+)`},
 		// The sparse rung's mode. It is the rung that recovers display lettering a poster's layout
 		// analysis throws away, and a drift here means one edition reads the poster and the other
 		// shows the reader a picture with nothing on it.
@@ -274,34 +270,6 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		jv := num(t, p.name+" (ocr-overlay.js)", p.jsRe, jsSrc)
 		if gv != jv {
 			t.Errorf("%s drift: tesseract.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", p.name, gv, jv)
-		}
-	}
-
-	// admitBySize runs on the ladder's two kinds of rung - the grey rungs and the screen rung - and
-	// nowhere else: not on the ordinary pass, not on the screen sweep over a page that already read.
-	// Counted per edition, because one edition applying it to the sweep would plate a French
-	// masthead the other leaves alone.
-	overlaySrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
-	if n := strings.Count(goSrc, "ocrRescueLineConf, true, known(grey))"); n != 2 {
-		t.Errorf("tesseract.go applies admitBySize on %d passes, want 2 (the grey rungs and the screen rung)", n)
-	}
-	if n := strings.Count(overlaySrc, "admitBySize(lines, OCR_RESCUE_LINE_CONF);"); n != 2 {
-		t.Errorf("ocr-overlay.js applies admitBySize on %d passes, want 2 (the grey rungs and the screen rung)", n)
-	}
-	for _, re := range []string{
-		`l\.admitted \|\| l\.meanConf\(\) >= minConf`,
-		`sameTypeSize\(h, a\)`,
-	} {
-		if !regexp.MustCompile(re).MatchString(goSrc) {
-			t.Errorf("tesseract.go lost %q (admitBySize / keepLine shape, see docs/PARITY.md)", re)
-		}
-	}
-	for _, re := range []string{
-		`l\.admitted === true \|\| l\.conf >= minConf`,
-		`sameTypeSize\(h, a\)`,
-	} {
-		if !regexp.MustCompile(re).MatchString(jsSrc) {
-			t.Errorf("ocr-cluster.js lost %q (admitBySize / keepLine shape, see docs/PARITY.md)", re)
 		}
 	}
 }

@@ -19,11 +19,14 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [INSTALL-TRUST.md](INSTALL-TRUST.md) | `INSTALL-TRUST` | 1.0 | producer - bound, not yet adopted |
 | [MEDIA-CLASSIFICATION.md](MEDIA-CLASSIFICATION.md) | `MEDIA-CLASSIFICATION` | 0.9 draft | consumer - input format dispatch across books, documents, comics, and images |
 | [UPDATE-MANIFEST.md](UPDATE-MANIFEST.md) | `UPDATE-MANIFEST` | 0.9 draft | consumer - release discovery and winget package synchronization |
-| [SITE-FAMILY-MAP.md](SITE-FAMILY-MAP.md) | `SITE-FAMILY-MAP` | 1.1 | consumer - footer tools grid and unified contact information |
-| [PAGE-STYLE.md](PAGE-STYLE.md) | `PAGE-STYLE` | 1.0 | consumer - product landing page visual and technical system |
-| [PAGE-CONTENT.md](PAGE-CONTENT.md) | `PAGE-CONTENT` | 1.1 | consumer - product landing page content structure |
-| [APP-BEHAVIOUR.md](APP-BEHAVIOUR.md) | `APP-BEHAVIOUR` | 0.9 draft | consumer - GUI launcher behaviour (`cmd/doc-html-ui`) |
-| [APP-STYLE.md](APP-STYLE.md) | `APP-STYLE` | 0.9 draft | consumer - desktop GUI and reader styling |
+| [SITE-FAMILY-MAP.md](SITE-FAMILY-MAP.md) | `SITE-FAMILY-MAP` | 1.1 | consumer - the footer family grid and the one contact on every site page |
+| [PAGE-STYLE.md](PAGE-STYLE.md) | `PAGE-STYLE` | 1.1 | consumer - the kit `assets/sza-kit.css` byte-identical, page rules in `assets/site.css` |
+| [PAGE-CONTENT.md](PAGE-CONTENT.md) | `PAGE-CONTENT` | 1.1 | consumer - landing page order, "Medium app" variant |
+| [APP-BEHAVIOUR.md](APP-BEHAVIOUR.md) | `APP-BEHAVIOUR` | 0.10 draft | consumer - GUI launcher behaviour (`cmd/doc-html-ui`) |
+| [APP-STYLE.md](APP-STYLE.md) | `APP-STYLE` | 0.10 draft | consumer - desktop GUI and reader styling |
+| [ICON-SET.md](ICON-SET.md) | `ICON-SET` | 0.15 draft | consumer - one glyph and one name per meaning, inventory in [`../GLYPH-MAP.md`](../GLYPH-MAP.md) |
+| [ICON-RENDER.md](ICON-RENDER.md) | `ICON-RENDER` | 0.13 draft | consumer - grid, theme colour, RTL, accessible names |
+| [ICON-EXTERNAL.md](ICON-EXTERNAL.md) | `ICON-EXTERNAL` | 0.10 draft | consumer - no third-party marks; glyph sources on record |
 | [CHECK-VERDICT.md](CHECK-VERDICT.md) | `CHECK-VERDICT` | 0.9 draft | consumer - the gate scripts' exit codes and verdict line |
 | [CHECK-BASELINE.md](CHECK-BASELINE.md) | `CHECK-BASELINE` | 0.9 draft | consumer, dormant - no baseline file in use |
 | [CHECK-PLACEMENT.md](CHECK-PLACEMENT.md) | `CHECK-PLACEMENT` | 0.10 draft | consumer - `configs/check-placement.jsonl` |
@@ -31,7 +34,11 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [REPO-STAMP.md](REPO-STAMP.md) | `REPO-STAMP` | 0.9 draft | producer - `.sza-canon.json` at the repository root |
 | [REPO-LAYOUT.md](REPO-LAYOUT.md) | `REPO-LAYOUT` | 0.9 draft | consumer - repository structure and named entry points |
 | [HARNESS-PROFILE.md](HARNESS-PROFILE.md) | `HARNESS-PROFILE` | 0.9 draft | not applicable - the shipped harness is never run here, no `.sza-profile.json` |
-| [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule set via the `sza` plugin; stamp currently stale |
+| [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule set via the `sza` plugin; stamp current at `2026.09.24.1` |
+
+Read and **not applicable**: `WAVE-PARTICLES` 0.10 (`animated-backdrop/`, checked 2026-09-25). No site page and no
+GUI surface draws a canvas or runs `requestAnimationFrame`; the only background is the kit's CSS blobs. The
+product is not in the contract's consumers and owes no row; adopting the backdrop would be a separate opt-in.
 
 Two further documents in the same catalog folder are **records** owned by other products and cite this one:
 `OCR-ACCURACY` (FastMediaSorter Android's measurement record) and `OCR-EXCHANGE` (FastMediaSorter_Lite's
