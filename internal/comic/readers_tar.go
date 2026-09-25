@@ -5,52 +5,62 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
-	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/limits"
 )
 
-// readCBT reads a CBT (TAR container) and returns its page entries. TAR is a
-// sequential format with no central directory, so entries are streamed in order;
-// natural sorting happens later in Extract, identically to CBZ.
-func readCBT(path string) ([]page, error) {
+// openCBT lists a TAR container. TAR has no central directory, so the headers are
+// walked once and each regular file's data offset is recorded; a page's open() is
+// then a section of the file, read only when that page is written. The walk seeks
+// over the data, so listing a 2 GB archive reads its headers, not its pages.
+func openCBT(path string) (*archive, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open cbt: %w", err)
 	}
-	defer f.Close()
-
+	arc := &archive{close: func() { _ = f.Close() }}
 	tr := tar.NewReader(f)
-	var c collector
 	for {
 		hdr, terr := tr.Next()
 		if terr == io.EOF {
 			break
 		}
 		if terr != nil {
+			arc.close()
 			return nil, fmt.Errorf("read cbt: %w", terr)
 		}
-		if !hdr.FileInfo().Mode().IsRegular() {
+		arc.count++
+		if arc.count > limits.MaxArchiveEntries {
+			break // over budget already; selectPages refuses it without walking the rest
+		}
+		if hdr.Typeflag != tar.TypeReg || isSparse(hdr) {
 			continue
 		}
-		if !isPageEntry(hdr.Name) {
-			continue
+		// tar.Reader reads whole header blocks and nothing ahead, so after Next the
+		// file position is the first byte of this entry's data.
+		off, serr := f.Seek(0, io.SeekCurrent)
+		if serr != nil {
+			arc.close()
+			return nil, fmt.Errorf("read cbt: %w", serr)
 		}
-		if hdr.Size > maxPageBytes {
-			logging.Printf("  WARNING: comic page %s is larger than %d bytes, skipped\n", hdr.Name, maxPageBytes)
-			continue
-		}
-		data, rerr := io.ReadAll(io.LimitReader(tr, maxPageBytes+1))
-		if rerr != nil {
-			logging.Printf("  WARNING: comic page %s could not be read, skipped: %v\n", hdr.Name, rerr)
-			continue
-		}
-		if int64(len(data)) > maxPageBytes {
-			logging.Printf("  WARNING: comic page %s exceeded %d bytes while reading, skipped\n", hdr.Name, maxPageBytes)
-			continue
-		}
-		if err := c.add(hdr.Name, data); err != nil {
-			return nil, err
+		size := hdr.Size
+		arc.entries = append(arc.entries, entry{
+			name: hdr.Name,
+			size: size,
+			open: func() (io.ReadCloser, error) { return io.NopCloser(io.NewSectionReader(f, off, size)), nil },
+		})
+	}
+	return arc, nil
+}
+
+// isSparse reports a GNU sparse entry, whose stored bytes are not its content laid
+// out in order - a section read would return the packed map, not the page.
+func isSparse(hdr *tar.Header) bool {
+	for k := range hdr.PAXRecords {
+		if strings.HasPrefix(k, "GNU.sparse.") {
+			return true
 		}
 	}
-	return c.pages, nil
+	return false
 }
