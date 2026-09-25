@@ -15,11 +15,12 @@ tactical folder `NN_YYYY-MM-DD_<slug>/`), where `NN` is its line number in the t
 directory listing reads in execution order. Reordering the queue means renaming the files and fixing
 every link to them in the same commit. A ticket that moves to `done/` drops its `NN_` prefix.
 
-- `rel` - the release package this ticket ships in. It is an **ordinal**, not a version: this product's
-  version is derived mechanically from the build date (`26.MMDD.HHmm`) and is never hand-picked.
-  `--` = not scheduled, no code work left here.
+- `#` - the queue position, the same number as the file's `NN_` prefix. `--` = no ticket file yet.
+- The release package is the `## release N` heading a line sits under. It is an **ordinal**, not a
+  version: this product's version is derived mechanically from the build date (`26.MMDD.HHmm`) and is
+  never hand-picked.
 - `ticket` - spec file name in `DEV/plan/` without the extension, or `(no ticket)` for work that is
-  real, evidenced and unfiled - see "Unfiled work" below.
+  real, evidenced and unfiled.
 - `changed` - the date the STATUS last moved (from the ticket's own status line or its tactical
   `INDEX.md` "Last updated"), not the date the prose was last edited.
 - `status` - copied from the ticket file itself. There is no catalog to mirror in this repo, so this
