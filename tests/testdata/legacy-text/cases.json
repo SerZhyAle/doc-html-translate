@@ -1,0 +1,51 @@
+[
+  {
+    "name": "wordpad-ru",
+    "format": "rtf",
+    "input": "wordpad-ru.rtf",
+    "expected": "wordpad-ru.expected.txt",
+    "about": "English-Windows WordPad typing Russian: \\ansicpg1252 with a \\fcharset204 font, font table, colour table, generator and a picture"
+  },
+  {
+    "name": "libreoffice-uc",
+    "format": "rtf",
+    "input": "libreoffice-uc.rtf",
+    "expected": "libreoffice-uc.expected.txt",
+    "about": "LibreOffice style: \\uN with \\'XX fallback under \\uc1 and \\uc2, a surrogate pair, a \\bin picture with braces in its data, starred destinations"
+  },
+  {
+    "name": "cp1252",
+    "format": "rtf",
+    "input": "cp1252.rtf",
+    "expected": "cp1252.expected.txt",
+    "about": "Windows-1252 RTF: \\'XX accents, a raw high byte, control symbols, symbol words, header and footer destinations"
+  },
+  {
+    "name": "cp1251-poem",
+    "format": "fb2",
+    "input": "cp1251-poem.fb2",
+    "expected": "cp1251-poem.expected.txt",
+    "about": "FB2 declared windows-1251 with an epigraph, a poem (stanzas, text-author), a subtitle and a table"
+  },
+  {
+    "name": "utf8-truncated",
+    "format": "txt",
+    "input": "utf8-truncated.txt",
+    "expected": "utf8-truncated.expected.txt",
+    "about": "Russian UTF-8 whose last byte was cut off"
+  },
+  {
+    "name": "utf16le-nobom",
+    "format": "txt",
+    "input": "utf16le-nobom.txt",
+    "expected": "utf16le-nobom.expected.txt",
+    "about": "UTF-16LE without a byte-order mark"
+  },
+  {
+    "name": "latin1-fr",
+    "format": "txt",
+    "input": "latin1-fr.txt",
+    "expected": "latin1-fr.expected.txt",
+    "about": "French in Latin-1 (read as windows-1252, the Western fallback)"
+  }
+]

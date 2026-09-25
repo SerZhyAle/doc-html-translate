@@ -19,8 +19,10 @@ func NormalizeLineSeparatorsPreserveFormFeed(text string) string {
 }
 
 func normalizeLineSeparators(text string, preserveFormFeed bool) string {
+	// Invalid bytes (pdftotext passes through whatever a broken font maps to) stay visible as
+	// U+FFFD: dropping them silently glued the neighbouring letters together.
 	if !utf8.ValidString(text) {
-		text = strings.ToValidUTF8(text, "")
+		text = DecodeUTF8([]byte(text))
 	}
 
 	pairs := []string{

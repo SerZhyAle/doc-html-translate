@@ -1,11 +1,43 @@
-// fb2.js - FictionBook 2 reader. Ports internal/fb2/extract.go (walk <body> ->
-// <section> recursively, collecting <title>/<epigraph>/<p> text) and additionally
-// inlines embedded <binary> images as data: URLs and builds a nested TOC from the
-// section titles. Pure XML via DOMParser; no external library.
+// fb2.js - FictionBook 2 reader. Ports internal/fb2 (walk <body> -> <section> recursively,
+// keeping every prose element: paragraphs, verse stanzas, subtitles, epigraph and poem
+// authors, citations, table cells) and additionally inlines embedded <binary> images as data:
+// URLs and builds a nested TOC from the section titles. Pure XML via DOMParser; no external
+// library.
 
 import { normalizeLangTag } from "./lang.js";
 
 const XLINK = "http://www.w3.org/1999/xlink";
+
+// The XML declaration must open the document, so only its head is searched. Mirrors
+// declPrescanBytes and xmlDeclEncodingRe in internal/fb2/content.go.
+const DECL_PRESCAN_BYTES = 1024;
+const XML_DECL_ENCODING = /^[\t\n\f\r ]*<\?xml[\t\n\f\r ][^>]*?\bencoding[\t\n\f\r ]*=[\t\n\f\r ]*["']([A-Za-z0-9._:-]+)["']/;
+
+// decodeFb2 turns FB2 bytes into a string: a BOM wins, then the encoding the XML declaration
+// names (a WHATWG label, which TextDecoder takes directly), then UTF-8. A Russian FB2 declared
+// windows-1251 used to be decoded as UTF-8 and came out as replacement characters. An unknown
+// label, or a UTF-16 label with no BOM (an ASCII declaration rules UTF-16 out), reads as UTF-8.
+// Mirrors decodingReader in internal/fb2/content.go. Exported for the unit test.
+export function decodeFb2(data) {
+  const b = new Uint8Array(data);
+  if (b.length >= 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return new TextDecoder("utf-8").decode(b);
+  if (b.length >= 2) {
+    if (b[0] === 0xff && b[1] === 0xfe) return new TextDecoder("utf-16le").decode(b);
+    if (b[0] === 0xfe && b[1] === 0xff) return new TextDecoder("utf-16be").decode(b);
+  }
+  let head = "";
+  for (let i = 0; i < Math.min(b.length, DECL_PRESCAN_BYTES); i++) head += String.fromCharCode(b[i]);
+  const m = XML_DECL_ENCODING.exec(head);
+  if (m) {
+    try {
+      const d = new TextDecoder(m[1]);
+      if (d.encoding !== "utf-8" && !d.encoding.startsWith("utf-16")) return d.decode(b);
+    } catch {
+      // Not a label the browser knows: fall through to UTF-8.
+    }
+  }
+  return new TextDecoder("utf-8").decode(b);
+}
 
 function textOf(el) {
   return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
@@ -23,9 +55,25 @@ function titleText(secEl) {
   return Array.from(t.children).filter((c) => c.localName === "p").map(textOf).join(" ").trim();
 }
 
-// parseFb2 decodes UTF-8 bytes and returns the render-ready book shape.
+// inlineImages lists the <image> elements nested inside a prose element, in document order.
+function inlineImages(el) {
+  const found = [];
+  for (const c of Array.from(el.children)) {
+    if (c.localName === "image") found.push(c);
+    else found.push(...inlineImages(c));
+  }
+  return found;
+}
+
+// The paragraph class per prose element; the same classes internal/fb2 writes.
+const PROSE_CLASS = { p: "", subtitle: "subtitle", "text-author": "text-author", td: "", th: "" };
+
+// Elements whose children are rendered in place: they group prose but carry none themselves.
+const CONTAINERS = new Set(["epigraph", "cite", "poem", "annotation", "table", "tr", "title"]);
+
+// parseFb2 decodes the bytes and returns the render-ready book shape.
 export async function parseFb2(data) {
-  const doc = new DOMParser().parseFromString(new TextDecoder("utf-8").decode(data), "application/xml");
+  const doc = new DOMParser().parseFromString(decodeFb2(data), "application/xml");
   if (doc.getElementsByTagName("parsererror").length) throw new Error("invalid FB2 XML");
 
   // Embedded images: <binary id content-type>base64</binary> -> data: URL by id.
@@ -56,6 +104,55 @@ export async function parseFb2(data) {
     return img;
   };
 
+  const addImages = (el, frag) => {
+    for (const im of inlineImages(el)) {
+      const img = imgFor(im);
+      if (img) frag.appendChild(img);
+    }
+  };
+
+  const addPara = (frag, text, cls) => {
+    if (!text) return;
+    const p = document.createElement("p");
+    if (cls) p.className = cls;
+    p.textContent = text;
+    frag.appendChild(p);
+  };
+
+  // A stanza is one paragraph with its verse lines separated by <br>.
+  const addStanza = (frag, lines) => {
+    if (!lines.length) return;
+    const p = document.createElement("p");
+    p.className = "stanza";
+    lines.forEach((line, i) => {
+      if (i) p.appendChild(document.createElement("br"));
+      p.appendChild(document.createTextNode(line));
+    });
+    frag.appendChild(p);
+  };
+
+  // renderBlock renders one non-section body element, mirroring the element set parseFB2
+  // keeps in internal/fb2/content.go.
+  const renderBlock = (el, frag) => {
+    const ln = el.localName;
+    if (ln in PROSE_CLASS) {
+      addPara(frag, textOf(el), PROSE_CLASS[ln]);
+      addImages(el, frag);
+    } else if (ln === "image") {
+      const img = imgFor(el);
+      if (img) frag.appendChild(img);
+    } else if (ln === "stanza") {
+      const verses = Array.from(el.children).filter((c) => c.localName === "v");
+      addStanza(frag, verses.map(textOf).filter((t) => t));
+      for (const v of verses) addImages(v, frag);
+    } else if (ln === "v") {
+      addStanza(frag, [textOf(el)].filter((t) => t));
+      addImages(el, frag);
+    } else if (CONTAINERS.has(ln)) {
+      for (const child of Array.from(el.children)) renderBlock(child, frag);
+    }
+  };
+
   let counter = 0;
   // renderSection builds a fragment for one <section> and returns its TOC entry.
   const renderSection = (secEl, depth) => {
@@ -70,25 +167,12 @@ export async function parseFb2(data) {
     for (const child of Array.from(secEl.children)) {
       const ln = child.localName;
       if (ln === "title") continue;
-      if (ln === "p") {
-        const p = document.createElement("p");
-        p.textContent = textOf(child);
-        frag.appendChild(p);
-      } else if (ln === "image") {
-        const img = imgFor(child);
-        if (img) frag.appendChild(img);
-      } else if (ln === "epigraph") {
-        for (const ep of Array.from(child.children)) {
-          if (ep.localName === "p") {
-            const p = document.createElement("p");
-            p.textContent = textOf(ep);
-            frag.appendChild(p);
-          }
-        }
-      } else if (ln === "section") {
+      if (ln === "section") {
         const sub = renderSection(child, depth + 1);
         frag.appendChild(sub.frag);
         children.push(sub.entry);
+      } else {
+        renderBlock(child, frag);
       }
     }
     return { frag, entry: { title: label, anchor: id, children } };
@@ -97,22 +181,31 @@ export async function parseFb2(data) {
   const sections = [];
   const toc = [];
   for (const body of Array.from(doc.getElementsByTagNameNS("*", "body"))) {
-    for (const sec of Array.from(body.children)) {
-      if (sec.localName !== "section") continue;
-      const r = renderSection(sec, 0);
+    // A body's own title and epigraph come before its sections; they get a page of their own
+    // rather than being dropped.
+    let lead = null;
+    const flushLead = () => {
+      if (lead && lead.childNodes.length) sections.push({ id: `fb2-page-${sections.length}`, label: "", frag: lead });
+      lead = null;
+    };
+    for (const child of Array.from(body.children)) {
+      if (child.localName !== "section") {
+        if (!lead) lead = document.createDocumentFragment();
+        renderBlock(child, lead);
+        continue;
+      }
+      flushLead();
+      const r = renderSection(child, 0);
       sections.push({ id: `fb2-page-${sections.length}`, label: r.entry.title, frag: r.frag });
       toc.push(r.entry);
     }
+    flushLead();
   }
 
-  // Fallback: a book with no <section> structure - gather every <p> into one page.
+  // Fallback: a book with no <body> structure - gather every <p> into one page.
   if (!sections.length) {
     const frag = document.createDocumentFragment();
-    for (const p of Array.from(doc.getElementsByTagNameNS("*", "p"))) {
-      const node = document.createElement("p");
-      node.textContent = textOf(p);
-      if (node.textContent) frag.appendChild(node);
-    }
+    for (const p of Array.from(doc.getElementsByTagNameNS("*", "p"))) addPara(frag, textOf(p), "");
     sections.push({ id: "fb2-page-0", label: "", frag });
   }
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { splitParagraphs, decodeText } from "../src/txt.js";
+import { splitParagraphs, decodeText, sniffUtf16, measureUtf8, acceptAsUtf8 } from "../src/txt.js";
 
 // Bytes as Notepad's "Unicode" / "Unicode big endian" write them: a BOM, then 2-byte units.
 function utf16Bytes(s, littleEndian) {
@@ -59,6 +59,54 @@ test("decodeText: non-Russian legacy bytes are not forced into Cyrillic", () => 
   const bytes = Uint8Array.from([...src].map((c) => c.charCodeAt(0) & 0xff));
   const out = decodeText(bytes.buffer);
   assert.ok(!/[а-яА-Я]/.test(out), `should not invent Cyrillic, got: ${out}`);
+  // The Western fallback reads it as windows-1252, so the accents come out right.
+  assert.equal(out, src);
+});
+
+function utf16NoBom(s, littleEndian) {
+  const buf = new ArrayBuffer(s.length * 2);
+  const view = new DataView(buf);
+  for (let i = 0; i < s.length; i++) view.setUint16(i * 2, s.charCodeAt(i), littleEndian);
+  return buf;
+}
+
+// BOM-less UTF-16 is valid UTF-8 for ASCII and Cyrillic, so it used to come through with NULs.
+test("decodeText: BOM-less UTF-16 in both byte orders", () => {
+  for (const want of ["Plain English line.\nSecond line.", "Привет, мир. Это текст без метки порядка байтов."]) {
+    assert.equal(decodeText(utf16NoBom(want, true)), want);
+    assert.equal(decodeText(utf16NoBom(want, false)), want);
+  }
+});
+
+test("sniffUtf16: text without NULs, NULs on both parities and tiny input are not UTF-16", () => {
+  assert.equal(sniffUtf16(new TextEncoder().encode("ordinary text")), null);
+  assert.equal(sniffUtf16(new Uint8Array(8)), null);
+  assert.equal(sniffUtf16(new Uint8Array([0x61, 0])), null);
+});
+
+// One damaged byte in a Russian UTF-8 book used to send the whole file to the legacy detector.
+test("decodeText: a truncated UTF-8 tail costs one replacement character", () => {
+  const full = new TextEncoder().encode("Обычный русский текст. ".repeat(20) + "конец");
+  assert.equal(decodeText(full.slice(0, -1)), "Обычный русский текст. ".repeat(20) + "коне\u{FFFD}");
+});
+
+test("decodeText: damage mid-text stays UTF-8 below the threshold", () => {
+  const text = "Обычный русский текст в кодировке UTF-8. ".repeat(20);
+  const b = new TextEncoder().encode(text);
+  b[b.indexOf(0x20, b.length >> 1)] = 0xff;
+  const out = decodeText(b);
+  assert.equal(out.split("\u{FFFD}").length - 1, 1);
+  assert.ok(out.startsWith("Обычный"));
+});
+
+// The same WHATWG counts as internal/textutil TestMeasureUTF8.
+test("measureUtf8 / acceptAsUtf8: threshold and truncated tail", () => {
+  const enc = (s) => Uint8Array.from(Buffer.from(s, "latin1"));
+  const tail = measureUtf8(new Uint8Array([...new TextEncoder().encode("Привет"), 0xd1]));
+  assert.deepEqual(tail, { multi: 6, invalidBytes: 1, errors: 1, truncatedTail: true });
+  assert.equal(acceptAsUtf8(new Uint8Array([...new TextEncoder().encode("ПриветПрив"), 0xff, 0xff])), false);
+  assert.equal(acceptAsUtf8(enc("abc\xd0")), true);
+  assert.equal(acceptAsUtf8(enc("caf\xe9 cr\xe8me")), false);
 });
 
 test("splitParagraphs: blank lines join consecutive lines into one paragraph", () => {

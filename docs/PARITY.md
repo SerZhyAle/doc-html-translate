@@ -38,7 +38,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
 | Plain text: source-encoding decode | [`internal/txt/extract.go`](../internal/txt/extract.go) (`decodeText`) | [`extension/src/txt.js`](../extension/src/txt.js) (`decodeText`) |
-| RTF strip + cp1251 decode | [`internal/rtf/`](../internal/rtf/) | [`extension/src/rtf.js`](../extension/src/rtf.js) |
+| RTF reader + code-page decode | [`internal/rtf/`](../internal/rtf/) | [`extension/src/rtf.js`](../extension/src/rtf.js) |
 | Markdown -> HTML | [`internal/md/`](../internal/md/) (`goldmark`) | [`extension/src/md.js`](../extension/src/md.js) (vendored `marked`) |
 | FB2 XML -> sections/TOC | [`internal/fb2/`](../internal/fb2/) | [`extension/src/fb2.js`](../extension/src/fb2.js) |
 | HTML `<body>` extract | [`internal/htmlconv/`](../internal/htmlconv/) | [`extension/src/html.js`](../extension/src/html.js) |
@@ -117,7 +117,8 @@ extensionless file still routes correctly and a binary is never fed to a text re
   them to the text extractor. A recognized binary signature - ZIP, RAR, 7z, tar (`ustar` at offset 257),
   DjVu, and defensively PDF/MOBI/image - is refused and named; anything else with a NUL byte in the first
   4 KB is refused as "binary data". A BOM is checked first, so UTF-16 text (which is full of NUL bytes) is
-  not mistaken for binary.
+  not mistaken for binary, and BOM-less UTF-16 is recognized by its NULs sitting on one byte parity (the
+  text decoder's step 4, below).
 
 The two are not byte-identical by design - the extension re-renders in a live tab and leans on the PDF
 reader's error path, while the Go CLI is a batch converter that must refuse with a non-zero exit and no
@@ -127,11 +128,13 @@ becomes a document.** Go: `internal/txt/sniff.go`. JS: `extension/src/viewer.js`
 
 ### Plain-text source-encoding decode order
 
-**Guard:** Prose only. Both sides test their own decoder (`internal/txt/extract_test.go`,
-`test/txt.test.mjs`); nothing reads both. A future ticket would pin the order of the steps and
-`MIN_CYRILLIC_FRACTION` across `decodeText` in Go and JS.
+**Guard:** Guarded by the shared fixtures in [`tests/testdata/legacy-text/`](../tests/testdata/legacy-text/)
+(`tests/legacy_text_test.go` `TestLegacyTextFixtures` and `extension/test/legacy-text.test.mjs` read the
+same inputs and expected texts), and by `TestParityLegacyTextTables`, which compares the candidate list,
+the Western label and the UTF-16 sniff window. The damage threshold and the NUL-pattern rule are pinned
+by the fixtures, not compared as source.
 
-Both editions decide a `.txt` file's encoding from its leading bytes, in this order. The **order is the
+Both editions decide a `.txt` file's encoding from its bytes, in this order. The **order is the
 invariant**: the same file must not read correctly on one edition and as mojibake on the other.
 
 | # | Test | Result |
@@ -139,18 +142,41 @@ invariant**: the same file must not read correctly on one edition and as mojibak
 | 1 | `EF BB BF` | UTF-8; the mark is removed, never shown |
 | 2 | `FF FE` | UTF-16LE |
 | 3 | `FE FF` | UTF-16BE |
-| 4 | the bytes are valid UTF-8 | UTF-8 as-is |
-| 5 | otherwise | a legacy Cyrillic code page by detection (below), else UTF-8 |
+| 4 | BOM-less UTF-16: in the first 4096 bytes the NULs sit on one byte parity (below) | UTF-16LE (odd offsets) or UTF-16BE (even offsets) |
+| 5 | UTF-8 with damage below the threshold (below) | UTF-8; each invalid subpart becomes one U+FFFD |
+| 6 | a legacy Cyrillic code page is confidently detected (below) | that code page |
+| 7 | otherwise | windows-1252, the Western fallback |
 
-Go: `internal/txt/extract.go` `decodeText` (`golang.org/x/text/encoding/unicode`, BOM tested explicitly).
-JS: `extension/src/txt.js` `decodeText` (`TextDecoder` with an explicit `utf-16le`/`utf-16be` label).
+- **BOM-less UTF-16 (step 4).** The high byte of every Latin letter, digit, space and punctuation mark is
+  zero, and 8-bit text has no NUL at all. The dominant parity must hold at least 2 NULs and cover 5% of
+  the code units; the other parity at most a tenth as many. Such a file is often valid UTF-8 (ASCII and
+  Cyrillic code units are all bytes below 0x80), which is why this step comes before step 5. The Go
+  binary sniff (`LooksBinary`) accepts the same pattern as text.
+- **Damaged-UTF-8 threshold (step 5, owner decision 2026-09-25).** Counted with the WHATWG UTF-8
+  decoder (the one `TextDecoder` runs): the bytes are UTF-8 when they hold at least one valid multi-byte
+  sequence and the invalid bytes are under 1% of those sequences, or when the only invalidity is a
+  sequence cut off by the end of the data. One bad byte used to send a whole Russian book to step 6.
+- **Output.** Always valid UTF-8; damage is visible as U+FFFD, one per maximal invalid subpart (the
+  WHATWG rule), never dropped. Go: `internal/textutil` `DecodeUTF8`, which the PDF line normalizer uses
+  too (`pdftotext` output).
+
+Go: `internal/txt/extract.go` `decodeText`, `internal/txt/decode.go` (`sniffUTF16`, `acceptAsUTF8`),
+`internal/textutil` (`MeasureUTF8`, `DecodeUTF8`, `LookupCodec`).
+JS: `extension/src/txt.js` (`decodeText`, `sniffUtf16`, `measureUtf8`, `acceptAsUtf8`).
 
 **One difference that is not drift:** step 1 is implicit on the JS side. `TextDecoder` strips a leading
 BOM by itself unless `ignoreBOM` is set, so the extension never had the UTF-8-BOM leak the Go side did.
 Both arrive at the same text; only Go has to say so out loud.
 
-Scope: this covers `.txt` only. `md.js`, `html.js` and `fb2.js` still decode as UTF-8 unconditionally,
-matching their Go counterparts - a shared gap, not a divergence.
+**Code-page tables are the browser's.** Every legacy decode (TXT candidates, the Western fallback, RTF
+code pages, FB2 declarations) resolves a WHATWG Encoding Standard label: `TextDecoder(label)` in the
+extension, `internal/textutil` `LookupCodec` (`golang.org/x/text/encoding/htmlindex`) in Go. Where a
+single-byte code page leaves a byte in 0x80-0x9F undefined (0x81 in windows-1252, 0x98 in
+windows-1251), the WHATWG index maps it to the C1 control of the same value and `x/text` to U+FFFD;
+`LookupCodec` follows the browser, so both editions emit the same character.
+
+Scope: `.txt`, RTF and FB2 (next section). `md.js` and `html.js` still decode as UTF-8 unconditionally;
+the HTML-input gap is recorded under "EPUB and HTML content fidelity".
 
 #### Step 5: legacy Cyrillic code-page detection
 
@@ -164,7 +190,7 @@ sides, or the same DOS-era `.txt` decodes to one code page here and another ther
   KOI8-R remap the *same* byte range, so both yield ~the same *number* of Cyrillic letters (fraction
   0.761 vs 0.760 on the corpus fixture) - only the frequency weighting separates them (16718 vs 10612).
 - **Confidence by Cyrillic fraction.** Russian letters over all characters must reach **0.30**, or the
-  bytes pass through as UTF-8 unchanged. Measured: the real cp1251 fixture is 0.76; French Latin-1
+  bytes fall through to windows-1252 (step 7). Measured: the real cp1251 fixture is 0.76; French Latin-1
   mis-read as KOI8-R (which tops the *weight* score) is 0.17, so the floor rejects it. Selection needs
   weight, confidence needs fraction - neither metric alone does both.
 - **Known limit, accepted:** a very short, accent-dense non-Russian string can exceed 0.30 and be
@@ -172,8 +198,56 @@ sides, or the same DOS-era `.txt` decodes to one code page here and another ther
 
 Go: `internal/txt/legacy.go` (`legacyCandidates`, `ruLetterFreq`, `cyrillicFit`, `minCyrillicFraction`,
 `detectLegacy`). JS: `extension/src/txt.js` (`LEGACY_CANDIDATES`, `RU_LETTER_FREQ`, `cyrillicFit`,
-`MIN_CYRILLIC_FRACTION`, `detectLegacy`). RTF's separate cp1251 decode (`\'XX` escapes) is unrelated and
-stays as-is.
+`MIN_CYRILLIC_FRACTION`, `detectLegacy`). RTF does not guess: its code page is declared (next section).
+
+### RTF and FB2 text decoding
+
+**Guard:** Guarded by the shared fixtures in [`tests/testdata/legacy-text/`](../tests/testdata/legacy-text/)
+(WordPad Russian RTF with a font table, LibreOffice RTF with `\uc` and `\'XX` fallbacks, a cp1252 RTF, a
+windows-1251 FB2 with a poem), read by `tests/legacy_text_test.go` and
+`extension/test/legacy-text.test.mjs`, and by `TestParityLegacyTextTables`, which compares the RTF code-page,
+charset, destination, symbol and break tables and the FB2 declaration window value by value. The same
+RTF unit cases run on both sides (`internal/rtf/parse_test.go`, `extension/test/rtf.test.mjs`).
+
+**RTF** is read in one forward pass with RTF's group state:
+
+- **Destinations.** Each `{` copies the group state and `}` restores it. The font table is read for
+  charsets and never shown. The known non-text destinations (`colortbl`, `stylesheet`, `info`, `pict`,
+  `object`, header and footer variants, `listtable`, `fldinst`, `xe`, `tc` and the rest of
+  `skippedDestinations`) and every `{\*\..}` group are skipped. Only known names are listed, so an unknown
+  generator's text is never hidden. `fldrslt`, `pntext` and `listtext` are visible text and stay.
+- **Unicode.** `\uN` is signed 16-bit (a negative N adds 65536); a surrogate pair of two `\u` words
+  becomes one character, a lone surrogate U+FFFD. After each `\uN` the next `\ucN` characters are the
+  fallback and are dropped: a text byte, a `\'XX` escape or a control word each counts as one; `{` or `}`
+  ends the fallback. `\ucN` defaults to 1 and is scoped to its group.
+- **Binary.** `\binN` skips N raw bytes by count, braces and backslashes included.
+- **Control symbols.** `\~` U+00A0, `\_` U+2011, `\-` dropped, `\{ \} \\` literal, `\<newline>` a paragraph
+  break. Symbol words (`\emdash`, `\ldblquote`, `\bullet`, ..) map to their characters; `\par`, `\line`,
+  `\sect`, `\page`, `\row` break the paragraph; `\tab` and `\cell` are a tab. Raw CR/LF in the source are
+  not text.
+- **Code page.** `\'XX` escapes and raw high bytes decode in the current font's code page (`\fcharsetN`
+  mapped to a code page, or the font's `\cpgN`), else the document's `\ansicpgN` (`\mac` = 10000), else
+  1252. `\fcharset0` and `1` mean "the document's code page". A code page with no WHATWG label (437,
+  850) falls back to 1252. Consecutive bytes decode together, through one decoder per code page per
+  document, so a double-byte code page sees both halves of a character and nothing creates a decoder
+  per byte.
+
+Go: `internal/rtf/parse.go`, `internal/rtf/codepage.go`. JS: `extension/src/rtf.js`.
+
+**FB2:**
+
+- **Encoding.** A BOM wins, then the encoding the XML declaration names (in the first 1024 bytes),
+  resolved as a WHATWG label, then UTF-8. An unknown label, or a UTF-16 label with no BOM, reads as
+  UTF-8; damaged UTF-8 shows U+FFFD instead of failing the parse.
+- **Prose elements.** Everything in a `<body>` that holds text becomes a paragraph, in document order:
+  `<p>` (in sections, epigraphs, citations, annotations, titles), `<subtitle>` (class `subtitle`),
+  `<text-author>` (class `text-author`), table cells `<td>`/`<th>`, and each `<stanza>` as one paragraph
+  of class `stanza` with its `<v>` lines separated by `<br>`. Inline markup is flattened and whitespace
+  collapses to single spaces. A section title is a paragraph in the Go pages and a heading in the
+  extension, as before.
+
+Go: `internal/fb2/content.go` (`decodingReader`, `parseFB2`). JS: `extension/src/fb2.js` (`decodeFb2`,
+`renderBlock`).
 
 ### Reader theme palette
 

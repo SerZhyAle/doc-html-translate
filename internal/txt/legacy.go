@@ -3,22 +3,18 @@ package txt
 import (
 	"unicode"
 
-	"golang.org/x/text/encoding"
-	"golang.org/x/text/encoding/charmap"
+	"doc-html-translate/internal/textutil"
 )
 
 // legacyCandidates are the pre-Unicode code pages this app's audience actually produces:
-// Russian/Ukrainian DOS and early-web text. Ordered most-likely-first so an exact score tie
-// resolves to the common case; in practice the frequency score below separates them.
-var legacyCandidates = []struct {
-	name string
-	enc  encoding.Encoding
-}{
-	{"windows-1251", charmap.Windows1251},
-	{"koi8-r", charmap.KOI8R},
-	{"cp866", charmap.CodePage866},
-	{"iso-8859-5", charmap.ISO8859_5},
-}
+// Russian/Ukrainian DOS and early-web text, as WHATWG labels so they resolve to the same tables
+// as the extension's TextDecoder. Ordered most-likely-first so an exact score tie resolves to
+// the common case; in practice the frequency score below separates them.
+var legacyCandidates = []string{"windows-1251", "koi8-r", "ibm866", "iso-8859-5"}
+
+// westernLabel is the last rung of the decode ladder: bytes that are neither UTF-8 nor
+// confidently Cyrillic are read as the Western default code page.
+const westernLabel = "windows-1252"
 
 // ruLetterFreq is the relative frequency (percent) of each lowercase Russian letter in
 // ordinary text. It is what lets the detector tell the *right* code page from a wrong one
@@ -63,27 +59,28 @@ func cyrillicFit(s string) (freqWeight, fraction float64, letters, runes int) {
 // minCyrillicFraction is the confidence floor. Measured: the real cp1251 corpus fixture is
 // 0.76 Russian letters by rune, while French Latin-1 mis-read as KOI8-R (which otherwise wins
 // on freqWeight) is 0.17 - only its handful of accented bytes land on Cyrillic. 0.30 sits well
-// clear of both, so genuine Cyrillic legacy text is decoded and everything else passes through
-// unchanged rather than being forced into a wrong alphabet.
+// clear of both, so genuine Cyrillic legacy text is decoded and everything else falls through to
+// the Western code page rather than being forced into a wrong alphabet.
 const minCyrillicFraction = 0.30
 
 // detectLegacy decodes bytes that carry no BOM and are not valid UTF-8 - a text file in a
 // pre-Unicode Cyrillic code page. It tries each candidate, keeps the most Russian-looking
 // result by freqWeight, and commits only when that result is confidently Cyrillic by fraction;
-// otherwise it returns ok=false so the caller passes the raw bytes through, exactly the app's
-// prior behaviour for this input. The chosen encoding's name lets the caller say which it used.
+// otherwise it returns ok=false so the caller falls back to the Western code page. The chosen
+// encoding's name lets the caller say which it used.
 func detectLegacy(raw []byte) (text, encName string, ok bool) {
 	bestWeight := -1.0
 	var bestText, bestName string
 	var bestFraction float64
-	for _, c := range legacyCandidates {
-		decoded, err := c.enc.NewDecoder().Bytes(raw)
-		if err != nil {
+	for _, label := range legacyCandidates {
+		codec, found := textutil.LookupCodec(label)
+		if !found {
 			continue
 		}
-		weight, fraction, _, _ := cyrillicFit(string(decoded))
+		decoded := codec.Decode(raw)
+		weight, fraction, _, _ := cyrillicFit(decoded)
 		if weight > bestWeight {
-			bestWeight, bestText, bestName, bestFraction = weight, string(decoded), c.name, fraction
+			bestWeight, bestText, bestName, bestFraction = weight, decoded, codec.Name(), fraction
 		}
 	}
 	if bestWeight < 0 || bestFraction < minCyrillicFraction {

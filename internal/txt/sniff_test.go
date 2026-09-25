@@ -57,6 +57,8 @@ func TestLooksBinaryAcceptsText(t *testing.T) {
 		{"utf-8 bom", append(bomUTF8, []byte("hello")...)},
 		{"utf-16le bom (has NULs)", append(bomUTF16LE, []byte{'T', 0, 'h', 0, 'e', 0}...)},
 		{"utf-16be bom (has NULs)", append(bomUTF16BE, []byte{0, 'T', 0, 'h', 0, 'e'}...)},
+		{"utf-16le without bom", []byte{'T', 0, 'h', 0, 'e', 0, ' ', 0}},
+		{"utf-16be without bom", []byte{0, 'T', 0, 'h', 0, 'e', 0, ' '}},
 		{"text starting with BM (not a BMP)", []byte("BM this is a note, not a bitmap image file.")},
 	}
 	for _, tt := range tests {

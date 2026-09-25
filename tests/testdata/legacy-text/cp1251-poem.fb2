@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+<description><title-info><genre>poetry</genre><author><first-name>Александр</first-name><last-name>Пушкин</last-name></author><book-title>Стихи</book-title><lang>ru</lang></title-info></description>
+<body>
+<section>
+<title><p>Зимнее утро</p></title>
+<epigraph><p>Эпиграф к стихам.</p><text-author>Автор эпиграфа</text-author></epigraph>
+<poem>
+<stanza>
+<v>Мороз и солнце; день чудесный!</v>
+<v>Ещё ты дремлешь, друг прелестный -</v>
+</stanza>
+<stanza>
+<v>Пора, красавица, проснись:</v>
+<v>Открой сомкнуты негой взоры</v>
+</stanza>
+<text-author>А. С. Пушкин</text-author>
+</poem>
+<subtitle>* * *</subtitle>
+<p>Обычный абзац после <emphasis>стихотворения</emphasis>.</p>
+<table><tr><td>Ячейка один</td><td>Ячейка два</td></tr></table>
+</section>
+</body>
+</FictionBook>
