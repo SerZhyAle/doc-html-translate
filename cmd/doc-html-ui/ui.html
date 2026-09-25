@@ -401,6 +401,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
     <summary data-i18n="secIntegration">Windows integration</summary>
     <div class="body">
         <label class="chk"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
+        <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()" data-i18n="btnOpenDefaultApps">Open Default apps</button>
         <div class="hint" id="registerStatus" data-i18n="registerHint">Optional and off by default. The "Convert to HTML" right-click entry is always added - this only makes double-clicking a document open it with this app (per-user file associations).</div>
     </div>
 </details>
@@ -790,11 +791,41 @@ let envReady = false, statusReady = false, integrationHidden = false;
 
 async function loadAssocStatus() {
     try {
-        const d = await (await api('/api/assoc-status')).json();
-        el('chkDefaultHandler').checked = !!d.default;
+        applyAssocState(await (await api('/api/assoc-status')).json(), null);
     } catch(e) { /* leave unchecked */ }
     statusReady = true;
     maybeShowAssocPrompt();
+}
+
+// applyAssocState renders what Windows actually uses, not what was written: since Windows 8
+// the user's own choice beats the class key, so "registered" and "default" are different
+// states. action is 'register', 'unregister' or null for the load-time read.
+function applyAssocState(d, action) {
+    const list = a => (a || []).join(', ');
+    // The toggle means "the app is registered or chosen", so a blocked registration stays on.
+    el('chkDefaultHandler').checked = d.state !== 'none';
+    let msg = null, needSettings = false;
+    switch (d.state) {
+    case 'default':
+        if (action === 'register') msg = ['registerDone', null, 'ok'];
+        if (action === 'unregister') { msg = ['unregisterStill', {exts: list(d.defaults)}, 'warn']; needSettings = true; }
+        break;
+    case 'blocked':
+        msg = ['registerBlocked', {exts: list(d.blocked)}, 'warn']; needSettings = true;
+        break;
+    case 'unknown':
+        msg = ['registerUnknown', {exts: list(d.unknown)}, 'warn']; needSettings = true;
+        break;
+    case 'partial':
+        if (action === 'unregister') { msg = ['unregisterStill', {exts: list(d.defaults)}, 'warn']; needSettings = true; }
+        else msg = ['registerPartial', {exts: list(d.other)}, 'warn'];
+        break;
+    default: // none
+        if (action === 'unregister') msg = ['unregisterDone', null, 'ok'];
+        if (action === 'register') msg = ['registerFail', {msg: t('unknownError')}, 'warn'];
+    }
+    el('btnDefaultApps').style.display = needSettings ? '' : 'none';
+    if (msg) setStatus('registerStatus', msg[0], msg[1], msg[2]);
 }
 
 async function toggleDefaultHandler() {
@@ -804,7 +835,7 @@ async function toggleDefaultHandler() {
         const r = await api(on ? '/api/register' : '/api/unregister', {method:'POST'});
         const d = await r.json();
         if (d.ok) {
-            setStatus('registerStatus', on ? 'registerDone' : 'unregisterDone', null, 'ok');
+            applyAssocState(d, on ? 'register' : 'unregister');
         } else {
             setStatus('registerStatus', 'registerFail', {msg: d.error || t('unknownError')}, 'warn');
             el('chkDefaultHandler').checked = !on; // revert the toggle on failure
@@ -812,6 +843,15 @@ async function toggleDefaultHandler() {
     } catch(e) {
         setStatus('registerStatus', 'registerFail', {msg: e.message}, 'warn');
         el('chkDefaultHandler').checked = !on;
+    }
+}
+
+async function openDefaultApps() {
+    try {
+        const d = await (await api('/api/open-default-apps', {method:'POST'})).json();
+        if (!d.ok) setStatus('registerStatus', 'openDefaultAppsFail', {msg: d.error || t('unknownError')}, 'warn');
+    } catch(e) {
+        setStatus('registerStatus', 'openDefaultAppsFail', {msg: e.message}, 'warn');
     }
 }
 

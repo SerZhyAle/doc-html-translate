@@ -3,10 +3,13 @@
 package windowsreg
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -39,7 +42,8 @@ type regKey interface {
 // against a fake HKCU. Paths are relative to HKCU.
 var (
 	createKey = func(path string) (regKey, error) {
-		k, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.SET_VALUE)
+		// QUERY_VALUE too: a write reads the old value first, to save it or to skip a no-op.
+		k, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.SET_VALUE|registry.QUERY_VALUE)
 		return k, err
 	}
 	openKey = func(path string, access uint32) (regKey, error) {
@@ -50,21 +54,79 @@ var (
 	}
 )
 
-// RegisterHandler registers the program as the HKCU handler for all SupportedExtensions.
-// Returns the list of successfully registered extensions.
-func RegisterHandler() ([]string, error) {
+// notifyAssocChanged and openSettings are indirected so a test neither refreshes the real
+// Explorer nor opens a Settings window.
+var (
+	// Without SHCNE_ASSOCCHANGED Explorer keeps showing the old icons and handler until it
+	// restarts, so a correct write still looks like a failure.
+	notifyAssocChanged = func() {
+		_, _, _ = procSHChangeNotify.Call(shcneAssocChanged, shcnfIDList, 0, 0)
+	}
+	openSettings = func() error {
+		verb, _ := windows.UTF16PtrFromString("open")
+		uri, _ := windows.UTF16PtrFromString("ms-settings:defaultapps")
+		return windows.ShellExecute(0, verb, uri, nil, nil, windows.SW_SHOWNORMAL)
+	}
+)
+
+var procSHChangeNotify = windows.NewLazySystemDLL("shell32.dll").NewProc("SHChangeNotify")
+
+const (
+	shcneAssocChanged = 0x08000000
+	shcnfIDList       = 0x0000
+)
+
+// backupValue holds, inside Software\Classes\<ext>, the per-user handler that was the
+// default before RegisterHandler replaced it, so Unregister can hand the type back.
+const backupValue = "doc-html-translate.previous"
+
+// cliExeName is the converter's file name. "Open with -> Always" on it records the choice as
+// Applications\<exe>, which is this app as much as progID is.
+const cliExeName = "doc-html-translate.exe"
+
+// fileExtsPath is where Explorer keeps the user's own per-extension choice.
+const fileExtsPath = `Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\`
+
+// changeTracker remembers whether a write actually changed a value, so an idempotent rewrite
+// on every launch does not make Explorer rebuild its icon cache each time.
+type changeTracker struct{ changed bool }
+
+func (c *changeTracker) set(k regKey, name, value string) error {
+	if cur, _, err := k.GetStringValue(name); err == nil && cur == value {
+		return nil
+	}
+	if err := k.SetStringValue(name, value); err != nil {
+		return err
+	}
+	c.changed = true
+	return nil
+}
+
+// notifyIfChanged is deferred by every writer: a partial write still changed something.
+func (c *changeTracker) notifyIfChanged() {
+	if c.changed {
+		notifyAssocChanged()
+	}
+}
+
+// RegisterHandler registers the program as the HKCU handler for all SupportedExtensions and
+// reports, per extension, whether Windows now actually uses it. The error is set only when
+// nothing could be registered; a partial result is described by the Registration.
+func RegisterHandler() (Registration, error) {
 	exePath, err := os.Executable()
 	if err != nil {
-		return nil, fmt.Errorf("resolve executable path: %w", err)
+		return Registration{}, fmt.Errorf("resolve executable path: %w", err)
 	}
+	var w changeTracker
+	defer w.notifyIfChanged()
 
 	// Remove stale ProgID keys from previous versions.
 	for _, legacy := range legacyProgIDs {
-		_ = deleteKey(`Software\Classes\` + legacy + `\shell\open\command`)
-		_ = deleteKey(`Software\Classes\` + legacy + `\shell\open`)
-		_ = deleteKey(`Software\Classes\` + legacy + `\shell`)
-		_ = deleteKey(`Software\Classes\` + legacy + `\DefaultIcon`)
-		_ = deleteKey(`Software\Classes\` + legacy)
+		for _, sub := range []string{`\shell\open\command`, `\shell\open`, `\shell`, `\DefaultIcon`, ``} {
+			if deleteKey(`Software\Classes\`+legacy+sub) == nil {
+				w.changed = true
+			}
+		}
 	}
 
 	command := fmt.Sprintf("\"%s\" \"%%1\"", exePath)
@@ -75,49 +137,54 @@ func RegisterHandler() ([]string, error) {
 	progKeyPath := `Software\Classes\` + progID
 	progKey, err := createKey(progKeyPath)
 	if err != nil {
-		return nil, fmt.Errorf("create progid key: %w", err)
+		return Registration{}, fmt.Errorf("create progid key: %w", err)
 	}
 	defer progKey.Close()
 
-	if err := progKey.SetStringValue("", "DOC-HTML-TRANSLATE Document"); err != nil {
-		return nil, fmt.Errorf("set progid description: %w", err)
+	if err := w.set(progKey, "", "DOC-HTML-TRANSLATE Document"); err != nil {
+		return Registration{}, fmt.Errorf("set progid description: %w", err)
 	}
 
 	iconKey, err := createKey(progKeyPath + `\DefaultIcon`)
 	if err != nil {
-		return nil, fmt.Errorf("create default icon key: %w", err)
+		return Registration{}, fmt.Errorf("create default icon key: %w", err)
 	}
 	defer iconKey.Close()
 
-	if err := iconKey.SetStringValue("", defaultIconValue); err != nil {
-		return nil, fmt.Errorf("set default icon value: %w", err)
+	if err := w.set(iconKey, "", defaultIconValue); err != nil {
+		return Registration{}, fmt.Errorf("set default icon value: %w", err)
 	}
 
 	commandKey, err := createKey(progKeyPath + `\shell\open\command`)
 	if err != nil {
-		return nil, fmt.Errorf("create open command key: %w", err)
+		return Registration{}, fmt.Errorf("create open command key: %w", err)
 	}
 	defer commandKey.Close()
 
-	if err := commandKey.SetStringValue("", command); err != nil {
-		return nil, fmt.Errorf("set open command value: %w", err)
+	if err := w.set(commandKey, "", command); err != nil {
+		return Registration{}, fmt.Errorf("set open command value: %w", err)
 	}
 
-	// Register each extension
-	var registered []string
+	var reg Registration
 	for _, ext := range SupportedExtensions {
-		if err := registerExtension(ext); err != nil {
-			fmt.Fprintf(os.Stderr, "WARNING: failed to register %s: %v\n", ext, err)
+		if err := registerExtension(&w, ext); err != nil {
+			reg.Failed = append(reg.Failed, ext)
 			continue
 		}
-		registered = append(registered, ext)
+		switch extState(ext) {
+		case stateDefault:
+			reg.Default = append(reg.Default, ext)
+		case stateBlocked:
+			reg.Blocked = append(reg.Blocked, ext)
+		default:
+			reg.Unknown = append(reg.Unknown, ext)
+		}
 	}
 
-	if len(registered) == 0 {
-		return nil, fmt.Errorf("failed to register any extensions")
+	if len(reg.Failed) == len(SupportedExtensions) {
+		return reg, fmt.Errorf("failed to register any extensions")
 	}
-
-	return registered, nil
+	return reg, nil
 }
 
 // RegisterOpenWith advertises the current executable in the Windows "Open with"
@@ -149,13 +216,15 @@ func RegisterOpenWith() ([]string, error) {
 // extensions.
 func RegisterOpenWithFor(exePath string) ([]string, error) {
 	appKeyPath := `Software\Classes\Applications\` + filepath.Base(exePath)
+	var w changeTracker
+	defer w.notifyIfChanged()
 
 	appKey, err := createKey(appKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("create application key: %w", err)
 	}
 	defer appKey.Close()
-	if err := appKey.SetStringValue("FriendlyAppName", "DOC-HTML-TRANSLATE"); err != nil {
+	if err := w.set(appKey, "FriendlyAppName", "DOC-HTML-TRANSLATE"); err != nil {
 		return nil, fmt.Errorf("set FriendlyAppName: %w", err)
 	}
 
@@ -164,7 +233,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("create default icon key: %w", err)
 	}
 	defer iconKey.Close()
-	if err := iconKey.SetStringValue("", fmt.Sprintf("\"%s\",0", exePath)); err != nil {
+	if err := w.set(iconKey, "", fmt.Sprintf("\"%s\",0", exePath)); err != nil {
 		return nil, fmt.Errorf("set default icon value: %w", err)
 	}
 
@@ -173,7 +242,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("create open command key: %w", err)
 	}
 	defer commandKey.Close()
-	if err := commandKey.SetStringValue("", fmt.Sprintf("\"%s\" \"%%1\"", exePath)); err != nil {
+	if err := w.set(commandKey, "", fmt.Sprintf("\"%s\" \"%%1\"", exePath)); err != nil {
 		return nil, fmt.Errorf("set open command value: %w", err)
 	}
 
@@ -185,7 +254,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 
 	var advertised []string
 	for _, ext := range SupportedExtensions {
-		if err := typesKey.SetStringValue(ext, ""); err != nil {
+		if err := w.set(typesKey, ext, ""); err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to advertise %s: %v\n", ext, err)
 			continue
 		}
@@ -224,6 +293,8 @@ func RegisterContextMenu() ([]string, error) {
 func RegisterContextMenuFor(exePath string) ([]string, error) {
 	command := fmt.Sprintf("\"%s\" \"%%1\"", exePath)
 	icon := fmt.Sprintf("\"%s\",0", exePath)
+	var w changeTracker
+	defer w.notifyIfChanged()
 
 	var added []string
 	for _, ext := range SupportedExtensions {
@@ -233,8 +304,9 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to add context menu for %s: %v\n", ext, err)
 			continue
 		}
-		_ = verbKey.SetStringValue("MUIVerb", "Convert to HTML")
-		_ = verbKey.SetStringValue("Icon", icon)
+		// The label and icon are cosmetic: Explorer falls back to the verb name and no icon.
+		_ = w.set(verbKey, "MUIVerb", "Convert to HTML")
+		_ = w.set(verbKey, "Icon", icon)
 		verbKey.Close()
 
 		cmdKey, err := createKey(verbPath + `\command`)
@@ -242,7 +314,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to add context menu command for %s: %v\n", ext, err)
 			continue
 		}
-		err = cmdKey.SetStringValue("", command)
+		err = w.set(cmdKey, "", command)
 		cmdKey.Close()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to set context menu command for %s: %v\n", ext, err)
@@ -258,52 +330,205 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 
 // Unregister releases the default-handler association created by RegisterHandler, leaving
 // the non-destructive right-click verb and "Open with" advertisement in place. For each
-// SupportedExtensions type whose HKCU default ProgID is ours, it deletes that default
-// value so the file type falls back to its previous handler; it never touches an extension
-// pointed at some other app, nor the ProgID definition or the "Convert to HTML" verb.
-// Returns the extensions that were released.
+// SupportedExtensions type whose HKCU default ProgID is ours, it puts back the handler saved
+// at registration, or deletes the value when none was saved (nothing was there, or the
+// registration predates the backup). It never touches an extension pointed at some other app,
+// nor the ProgID definition or the "Convert to HTML" verb, nor the user's own choice in
+// Windows, which only the user may change. Returns the extensions that were released; the
+// error names the ones that could not be.
 func Unregister() ([]string, error) {
-	var released []string
+	var w changeTracker
+	defer w.notifyIfChanged()
+
+	var released, failed []string
 	for _, ext := range SupportedExtensions {
 		k, err := openKey(`Software\Classes\`+ext, registry.QUERY_VALUE|registry.SET_VALUE)
-		if err != nil {
+		if errors.Is(err, registry.ErrNotExist) {
 			continue // never associated - nothing to release
 		}
-		cur, _, err := k.GetStringValue("")
-		if err == nil && cur == progID {
-			_ = k.DeleteValue("")
+		if err != nil {
+			failed = append(failed, ext)
+			continue
+		}
+		ok, err := releaseExtension(k)
+		k.Close()
+		switch {
+		case err != nil:
+			failed = append(failed, ext)
+		case ok:
+			w.changed = true
 			released = append(released, ext)
 		}
-		k.Close()
+	}
+	if len(failed) > 0 {
+		return released, fmt.Errorf("could not release %s", strings.Join(failed, ", "))
 	}
 	return released, nil
 }
 
-// IsDefaultHandler reports whether this program is currently the HKCU default handler for
-// every SupportedExtensions type (RegisterHandler in effect and not undone by Unregister).
-// The GUI uses it to reflect the association toggle's on/off state.
-func IsDefaultHandler() bool {
-	for _, ext := range SupportedExtensions {
-		k, err := openKey(`Software\Classes\`+ext, registry.QUERY_VALUE)
-		if err != nil {
-			return false
+// releaseExtension hands one extension key back and reports whether it was ours.
+func releaseExtension(k regKey) (bool, error) {
+	prev, _, prevErr := k.GetStringValue(backupValue)
+	hasBackup := prevErr == nil
+	cur, _, err := k.GetStringValue("")
+	if err != nil || cur != progID {
+		// Someone else owns the type now. A kept backup would, on some later unregister,
+		// resurrect a handler the user has since moved away from.
+		if hasBackup {
+			return false, k.DeleteValue(backupValue)
 		}
-		cur, _, err := k.GetStringValue("")
-		k.Close()
-		if err != nil || cur != progID {
-			return false
+		return false, nil
+	}
+	if hasBackup && prev != "" && prev != progID {
+		err = k.SetStringValue("", prev)
+	} else {
+		err = k.DeleteValue("")
+	}
+	if err != nil {
+		return false, err
+	}
+	if hasBackup {
+		if err := k.DeleteValue(backupValue); err != nil {
+			return false, err
 		}
 	}
-	return true
+	return true, nil
 }
 
-// registerExtension associates a file extension with our ProgID in HKCU.
-func registerExtension(ext string) error {
+// IsDefaultHandler reports whether Windows opens every SupportedExtensions type with this
+// program. The GUI uses it to reflect the association toggle's on/off state.
+func IsDefaultHandler() bool {
+	return HandlerStatus().IsDefault()
+}
+
+// HandlerStatus reports, per SupportedExtensions type, which handler Windows actually uses.
+func HandlerStatus() Status {
+	var s Status
+	for _, ext := range SupportedExtensions {
+		switch extState(ext) {
+		case stateDefault:
+			s.Default = append(s.Default, ext)
+		case stateBlocked:
+			s.Blocked = append(s.Blocked, ext)
+		case stateUnknown:
+			s.Unknown = append(s.Unknown, ext)
+		default:
+			s.Other = append(s.Other, ext)
+		}
+	}
+	return s
+}
+
+// OpenDefaultAppsSettings opens Settings > Apps > Default apps, the only place the user's own
+// choice may be changed: Windows protects it with a hash no other program may forge.
+func OpenDefaultAppsSettings() error {
+	return openSettings()
+}
+
+type handlerState int
+
+const (
+	stateOther handlerState = iota
+	stateDefault
+	stateBlocked
+	stateUnknown
+)
+
+// extState decides which handler Windows uses for ext. The user's choice, when recorded,
+// wins; without one the per-user class key does.
+func extState(ext string) handlerState {
+	registered := false
+	if k, err := openKey(`Software\Classes\`+ext, registry.QUERY_VALUE); err == nil {
+		cur, _, err := k.GetStringValue("")
+		k.Close()
+		registered = err == nil && cur == progID
+	}
+	choice, found, err := userChoice(ext)
+	switch {
+	case err != nil:
+		return stateUnknown
+	case !found:
+		if registered {
+			return stateDefault
+		}
+		return stateOther
+	case isOurProgID(choice):
+		return stateDefault
+	case registered:
+		return stateBlocked
+	}
+	return stateOther
+}
+
+// userChoice reads the ProgID the user picked for ext. Windows 11 24H2 added UserChoiceLatest
+// and prefers it over UserChoice; its ProgId sits either on the key or in a ProgId subkey,
+// depending on the build.
+func userChoice(ext string) (id string, found bool, err error) {
+	base := fileExtsPath + ext
+	if id, found, err := readProgID(base+`\UserChoiceLatest`, base+`\UserChoiceLatest\ProgId`); found || err != nil {
+		return id, found, err
+	}
+	return readProgID(base + `\UserChoice`)
+}
+
+// readProgID reads the ProgId value of key, then of each alt key. A missing key means no
+// choice; a key that exists but yields no ProgId is an error, so the caller says "unknown"
+// rather than guessing.
+func readProgID(key string, alt ...string) (string, bool, error) {
+	k, err := openKey(key, registry.QUERY_VALUE)
+	if errors.Is(err, registry.ErrNotExist) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	id, _, err := k.GetStringValue("ProgId")
+	k.Close()
+	if err == nil && id != "" {
+		return id, true, nil
+	}
+	for _, p := range alt {
+		k, err := openKey(p, registry.QUERY_VALUE)
+		if err != nil {
+			continue
+		}
+		id, _, err := k.GetStringValue("ProgId")
+		k.Close()
+		if err == nil && id != "" {
+			return id, true, nil
+		}
+	}
+	return "", false, fmt.Errorf("%s holds no readable ProgId", key)
+}
+
+func isOurProgID(id string) bool {
+	if strings.EqualFold(id, progID) || strings.EqualFold(id, `Applications\`+cliExeName) {
+		return true
+	}
+	// A renamed portable exe advertises itself under its own name.
+	exe, err := os.Executable()
+	return err == nil && strings.EqualFold(id, `Applications\`+filepath.Base(exe))
+}
+
+// registerExtension associates a file extension with our ProgID in HKCU, first saving the
+// handler it replaces so Unregister can put it back.
+func registerExtension(w *changeTracker, ext string) error {
 	extKey, err := createKey(`Software\Classes\` + ext)
 	if err != nil {
 		return fmt.Errorf("create extension key: %w", err)
 	}
 	defer extKey.Close()
 
-	return extKey.SetStringValue("", progID)
+	cur, _, err := extKey.GetStringValue("")
+	switch {
+	case errors.Is(err, registry.ErrNotExist):
+	case err != nil:
+		// Overwriting a value that cannot be read would lose it for good.
+		return fmt.Errorf("read current handler: %w", err)
+	case cur != "" && cur != progID:
+		if err := w.set(extKey, backupValue, cur); err != nil {
+			return fmt.Errorf("save previous handler: %w", err)
+		}
+	}
+	return w.set(extKey, "", progID)
 }

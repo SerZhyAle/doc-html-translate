@@ -63,7 +63,6 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
 15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-25  In Progress (repo done; catalog
     blank-images                                                    step ⛔ owner machine)
 ```
@@ -186,6 +185,7 @@ ticket (in done/)                                   check left
 12_2026-09-24_bugfix-resource-budgets                  2 GB CBZ on the 386 build, real 7-Zip
 13_2026-09-24_bugfix-ocr-language-data-and-detection   language download in the Store build
 25_2026-09-24_chore-hygiene-and-test-gaps              scripts/check.ps1 on Windows (Windows-only tests)
+20_2026-09-24_bugfix-windows-registration-honesty      Windows 11 with an existing .epub user choice
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

@@ -100,6 +100,7 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/drop", postAction(handleDrop))
 	mux.HandleFunc("/api/register", postAction(handleRegister))
 	mux.HandleFunc("/api/unregister", postAction(handleUnregister))
+	mux.HandleFunc("/api/open-default-apps", postAction(handleOpenDefaultApps))
 	mux.HandleFunc("/api/report", postAction(handleReport))
 	mux.HandleFunc("/api/logs-clear", postAction(handleLogsClear))
 	mux.HandleFunc("/api/settings", getOrPostJSON(handleSettings))
@@ -600,7 +601,10 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	cmd.Stdin = strings.NewReader("\n")
 	hideWindow(cmd)
 	out, err := cmd.CombinedOutput()
-	resp := map[string]any{"ok": err == nil}
+	// The child's exit code says only that something was written. Whether Windows now uses
+	// it is read back from the registry, the same way the status endpoint does.
+	resp := assocStatus()
+	resp["ok"] = err == nil
 	if err != nil {
 		msg := strings.TrimSpace(string(out))
 		if msg == "" {
@@ -621,6 +625,18 @@ const registerTimeout = 2 * time.Minute
 // so it needs no CLI round-trip and does not depend on which exe wrote them.
 func handleUnregister(w http.ResponseWriter, _ *http.Request) {
 	_, err := windowsreg.Unregister()
+	resp := assocStatus()
+	resp["ok"] = err == nil
+	if err != nil {
+		resp["error"] = err.Error()
+	}
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// handleOpenDefaultApps opens Settings > Default apps, the one place the user's own choice
+// can be changed. It runs only on a click: popping Settings unasked would be a surprise.
+func handleOpenDefaultApps(w http.ResponseWriter, _ *http.Request) {
+	err := windowsreg.OpenDefaultAppsSettings()
 	resp := map[string]any{"ok": err == nil}
 	if err != nil {
 		resp["error"] = err.Error()
@@ -628,11 +644,39 @@ func handleUnregister(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// handleAssocStatus reports whether this app is currently the default handler for the
-// supported types, so the GUI can reflect the association toggle's on/off state and decide
-// whether to show the one-time first-run opt-in prompt.
+// handleAssocStatus reports which handler Windows actually uses for the supported types, so
+// the GUI can reflect the association toggle's state, tell "registered, not default" apart
+// from "default", and decide whether to show the one-time first-run opt-in prompt.
 func handleAssocStatus(w http.ResponseWriter, _ *http.Request) {
-	_ = json.NewEncoder(w).Encode(map[string]any{"default": windowsreg.IsDefaultHandler()})
+	_ = json.NewEncoder(w).Encode(assocStatus())
+}
+
+// assocStatus is the association state the GUI renders:
+//
+//	default  → Windows opens every supported type with the app
+//	defaults → the types Windows opens with the app
+//	state   → default, blocked, unknown, partial or none (windowsreg.Status.Summary)
+//	blocked → registered, but the user's own choice in Windows wins
+//	unknown → the user's choice could not be read
+//	other   → types that open with something else
+func assocStatus() map[string]any {
+	st := windowsreg.HandlerStatus()
+	return map[string]any{
+		"default":  st.IsDefault(),
+		"state":    st.Summary(),
+		"defaults": nonNil(st.Default),
+		"blocked":  nonNil(st.Blocked),
+		"unknown":  nonNil(st.Unknown),
+		"other":    nonNil(st.Other),
+	}
+}
+
+// nonNil keeps an empty list a JSON [] rather than null, so the page can join it unguarded.
+func nonNil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }
 
 // handleEnv reports environment facts the GUI adapts to on load:

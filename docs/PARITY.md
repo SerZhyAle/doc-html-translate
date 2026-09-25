@@ -869,7 +869,7 @@ itself the default handler / auto-interceptor without an explicit user action; i
 offers a right-click "convert" entry. Desktop: the no-arg first run and GUI launch register only the
 non-destructive "Convert to HTML" verb + "Open with" ([`windowsreg`](../internal/windowsreg/register_windows.go)
 `RegisterContextMenu`/`RegisterOpenWith`); becoming the default handler is a separate opt-in (CLI
-`-register`, GUI association toggle, one-time first-run prompt) and `-unregister` reverses it. Extension:
+`-register`, GUI association toggle, one-time first-run prompt) and `-unregister` reverses it. Both report what Windows actually uses (the user's own `UserChoice` wins over the class key) and `-unregister` restores the handler saved at registration (2026-09-25, desktop-only). Extension:
 [`defaults.js`](../extension/src/defaults.js) `enabledByDefault` is **`false`** (no DNR interception until
 the popup toggle is on); the "Convert with doc-html-translate" right-click item
 ([`background.js`](../extension/src/background.js)) is the always-available on-demand path. See

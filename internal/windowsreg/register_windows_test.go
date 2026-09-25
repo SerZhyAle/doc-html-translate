@@ -19,6 +19,9 @@ type fakeHKCU struct {
 	keys       map[string]map[string]string
 	failCreate func(path string) bool
 	failSet    func(path, name string) bool
+	failDelete func(path, name string) bool
+	notified   int
+	settings   int
 }
 
 type fakeKey struct {
@@ -43,6 +46,9 @@ func (k fakeKey) GetStringValue(name string) (string, uint32, error) {
 }
 
 func (k fakeKey) DeleteValue(name string) error {
+	if k.hive.failDelete != nil && k.hive.failDelete(k.path, name) {
+		return errors.New("access denied")
+	}
 	delete(k.hive.keys[k.path], name)
 	return nil
 }
@@ -54,7 +60,13 @@ func useFakeHKCU(t *testing.T) *fakeHKCU {
 	t.Helper()
 	h := &fakeHKCU{keys: map[string]map[string]string{}}
 	origCreate, origOpen, origDelete := createKey, openKey, deleteKey
-	t.Cleanup(func() { createKey, openKey, deleteKey = origCreate, origOpen, origDelete })
+	origNotify, origSettings := notifyAssocChanged, openSettings
+	t.Cleanup(func() {
+		createKey, openKey, deleteKey = origCreate, origOpen, origDelete
+		notifyAssocChanged, openSettings = origNotify, origSettings
+	})
+	notifyAssocChanged = func() { h.notified++ }
+	openSettings = func() error { h.settings++; return nil }
 
 	createKey = func(path string) (regKey, error) {
 		p := strings.ToLower(path)
@@ -111,8 +123,11 @@ func TestRegisterHandlerMakesAppTheDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Equal(got, SupportedExtensions) {
-		t.Errorf("registered %v, want %v", got, SupportedExtensions)
+	if !slices.Equal(got.Default, SupportedExtensions) || !got.Complete() {
+		t.Errorf("registered %+v, want every extension default", got)
+	}
+	if h.notified != 1 {
+		t.Errorf("Explorer notified %d times, want once", h.notified)
 	}
 	for _, ext := range SupportedExtensions {
 		if v, _ := h.value(`Software\Classes\`+ext, ""); v != progID {
@@ -141,8 +156,8 @@ func TestRegisterHandlerFailures(t *testing.T) {
 		h := useFakeHKCU(t)
 		h.failCreate = func(p string) bool { return p == strings.ToLower(`Software\Classes\`+progID) }
 		got, err := RegisterHandler()
-		if err == nil || got != nil {
-			t.Fatalf("got %v, %v; want an error and nothing registered", got, err)
+		if err == nil || len(got.Default) != 0 {
+			t.Fatalf("got %+v, %v; want an error and nothing registered", got, err)
 		}
 		if _, ok := h.value(`Software\Classes\.epub`, ""); ok {
 			t.Error(".epub was associated although the ProgID it points at was never written")
@@ -155,8 +170,11 @@ func TestRegisterHandlerFailures(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if slices.Contains(got, ".pdf") || len(got) != len(SupportedExtensions)-1 {
-			t.Errorf("registered %v, want every extension but .pdf", got)
+		if slices.Contains(got.Default, ".pdf") || len(got.Default) != len(SupportedExtensions)-1 {
+			t.Errorf("registered %+v, want every extension but .pdf", got)
+		}
+		if !slices.Equal(got.Failed, []string{".pdf"}) || got.Complete() {
+			t.Errorf("failed = %v, want [.pdf] and an incomplete result", got.Failed)
 		}
 		if IsDefaultHandler() {
 			t.Error("IsDefaultHandler = true with .pdf unassociated")
@@ -165,8 +183,9 @@ func TestRegisterHandlerFailures(t *testing.T) {
 	t.Run("every extension fails", func(t *testing.T) {
 		h := useFakeHKCU(t)
 		h.failCreate = func(p string) bool { return strings.HasPrefix(p, `software\classes\.`) }
-		if got, err := RegisterHandler(); err == nil || got != nil {
-			t.Fatalf("got %v, %v; want an error", got, err)
+		got, err := RegisterHandler()
+		if err == nil || !slices.Equal(got.Failed, SupportedExtensions) {
+			t.Fatalf("got %+v, %v; want an error with every extension failed", got, err)
 		}
 	})
 }
@@ -295,5 +314,150 @@ func TestRegisterContextMenuForFailsWhenNothingIsAdded(t *testing.T) {
 	h.failSet = func(p, name string) bool { return name == "" && strings.HasSuffix(p, `\command`) }
 	if got, err := RegisterContextMenuFor(`C:\a\app.exe`); err == nil || got != nil {
 		t.Fatalf("got %v, %v; want an error", got, err)
+	}
+}
+
+func userChoiceKey(ext string) string { return fileExtsPath + ext + `\UserChoice` }
+
+// Since Windows 8 the user's own choice wins over the class key: writing it must not be
+// reported as having become the default.
+func TestRegisterHandlerReportsAUserChoiceThatWins(t *testing.T) {
+	h := useFakeHKCU(t)
+	h.set(userChoiceKey(".epub"), "ProgId", "Calibre.epub")
+	h.set(userChoiceKey(".pdf"), "ProgId", `Applications\`+cliExeName)
+
+	got, err := RegisterHandler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(got.Blocked, []string{".epub"}) || got.Complete() {
+		t.Errorf("blocked = %v, want [.epub] and an incomplete result", got.Blocked)
+	}
+	if !slices.Contains(got.Default, ".pdf") {
+		t.Error(`"Open with -> Always" on the converter was not counted as the default`)
+	}
+	st := HandlerStatus()
+	if st.Summary() != "blocked" || IsDefaultHandler() {
+		t.Errorf("status %+v (%s), want blocked and not default", st, st.Summary())
+	}
+}
+
+func TestHandlerStatusReadsTheWindows11Choice(t *testing.T) {
+	h := useFakeHKCU(t)
+	if _, err := RegisterHandler(); err != nil {
+		t.Fatal(err)
+	}
+	// UserChoiceLatest wins over a stale UserChoice that still names us.
+	h.set(userChoiceKey(".epub"), "ProgId", progID)
+	h.set(fileExtsPath+`.epub\UserChoiceLatest`, "Hash", "x")
+	h.set(fileExtsPath+`.epub\UserChoiceLatest\ProgId`, "ProgId", "Calibre.epub")
+	// A choice key with no readable ProgId is unknown, never "yes".
+	h.set(userChoiceKey(".pdf"), "Hash", "x")
+
+	st := HandlerStatus()
+	if !slices.Equal(st.Blocked, []string{".epub"}) {
+		t.Errorf("blocked = %v, want [.epub]", st.Blocked)
+	}
+	if !slices.Equal(st.Unknown, []string{".pdf"}) {
+		t.Errorf("unknown = %v, want [.pdf]", st.Unknown)
+	}
+	if st.IsDefault() {
+		t.Error("IsDefault = true with an unreadable choice")
+	}
+}
+
+func TestRegisterThenUnregisterRestoresThePreviousHandler(t *testing.T) {
+	h := useFakeHKCU(t)
+	h.set(`Software\Classes\.epub`, "", "Calibre.epub")
+
+	// Registering twice must not replace the saved handler with our own ProgID.
+	for range 2 {
+		if _, err := RegisterHandler(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if v, _ := h.value(`Software\Classes\.epub`, backupValue); v != "Calibre.epub" {
+		t.Fatalf("backup = %q, want Calibre.epub", v)
+	}
+	h.notified = 0
+
+	released, err := Unregister()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(released, SupportedExtensions) {
+		t.Errorf("released %v, want %v", released, SupportedExtensions)
+	}
+	if v, _ := h.value(`Software\Classes\.epub`, ""); v != "Calibre.epub" {
+		t.Errorf(".epub default = %q, want Calibre.epub restored", v)
+	}
+	if _, ok := h.value(`Software\Classes\.epub`, backupValue); ok {
+		t.Error("the backup outlived the restore")
+	}
+	if _, ok := h.value(`Software\Classes\.pdf`, ""); ok {
+		t.Error(".pdf had no previous handler but still has a default")
+	}
+	if h.notified != 1 {
+		t.Errorf("Explorer notified %d times, want once", h.notified)
+	}
+}
+
+func TestUnregisterDropsABackupForATypeSomeoneElseTook(t *testing.T) {
+	h := useFakeHKCU(t)
+	h.set(`Software\Classes\.epub`, "", "Calibre.epub")
+	if _, err := RegisterHandler(); err != nil {
+		t.Fatal(err)
+	}
+	h.set(`Software\Classes\.epub`, "", "Other.epub")
+
+	if _, err := Unregister(); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := h.value(`Software\Classes\.epub`, ""); v != "Other.epub" {
+		t.Errorf(".epub default = %q, want Other.epub kept", v)
+	}
+	if _, ok := h.value(`Software\Classes\.epub`, backupValue); ok {
+		t.Error("a stale backup survived")
+	}
+}
+
+func TestUnregisterReportsAFailedRelease(t *testing.T) {
+	h := useFakeHKCU(t)
+	if _, err := RegisterHandler(); err != nil {
+		t.Fatal(err)
+	}
+	h.failDelete = func(p, name string) bool { return p == `software\classes\.pdf` && name == "" }
+
+	released, err := Unregister()
+	if err == nil || !strings.Contains(err.Error(), ".pdf") {
+		t.Fatalf("err = %v, want one naming .pdf", err)
+	}
+	if slices.Contains(released, ".pdf") || len(released) != len(SupportedExtensions)-1 {
+		t.Errorf("released %v, want every extension but .pdf", released)
+	}
+}
+
+// The launch-time integrations run on every GUI start: an unchanged rewrite must not make
+// Explorer rebuild its icon cache.
+func TestIdempotentRewriteDoesNotNotifyExplorer(t *testing.T) {
+	h := useFakeHKCU(t)
+	exe := `C:\a\doc-html-translate.exe`
+	for range 2 {
+		if _, err := RegisterOpenWithFor(exe); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := RegisterContextMenuFor(exe); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if h.notified != 2 {
+		t.Errorf("Explorer notified %d times, want 2 (the first run of each only)", h.notified)
+	}
+}
+
+func TestOpenDefaultAppsSettings(t *testing.T) {
+	h := useFakeHKCU(t)
+	if err := OpenDefaultAppsSettings(); err != nil || h.settings != 1 {
+		t.Errorf("err = %v, opened %d times; want one open", err, h.settings)
 	}
 }
