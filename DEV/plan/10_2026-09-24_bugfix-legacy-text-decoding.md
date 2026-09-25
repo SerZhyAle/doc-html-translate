@@ -1,7 +1,7 @@
 # Strategic spec: 10_2026-09-24_bugfix-legacy-text-decoding - Decode RTF, FB2 and TXT text correctly in both editions
 
 **Ticket:** 10_2026-09-24_bugfix-legacy-text-decoding
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 80
 **Date:** 2026-09-24
 **Tier:** Moderate
@@ -73,11 +73,11 @@ Bytes -> encoding decision -> decoded text -> structure extraction -> paragraphs
    - **Question:** what share of invalid bytes still counts as UTF-8?
    - **Options:** under 1% of multi-byte sequences; only a truncated tail; the valid-sequence ratio.
    - **To find out:** run it against the local test_doc corpus.
-   - **Status:** Open.
+   - **Status:** Decided (owner, 2026-09-25): the input is UTF-8 when it holds at least one valid multi-byte sequence and its invalid bytes are under 1% of those sequences, OR when the only invalidity is a sequence truncated in the last 3 bytes. Invalid bytes become U+FFFD. Counting follows the WHATWG UTF-8 decoder so both editions agree. The local `test_doc/` corpus is not present in the implementation environment, so the rule is validated on the shared fixtures and unit cases only (truncated tail, one bad byte in a Russian book, 20% damage, Latin-1, cp1251).
 2. **Extension encoding coverage**
    - **Question:** can the extension decode windows-1251 FB2 via TextDecoder?
    - **To find out:** check TextDecoder label support in Chrome/Edge.
-   - **Status:** Open.
+   - **Status:** Decided (owner, 2026-09-25): yes. Chrome and Edge implement the WHATWG Encoding Standard labels (windows-1251, koi8-r, windows-1252, iso-8859-x, ..), so the extension follows the FB2 XML-declared encoding too. The "UTF-8 only" FB2 gap is removed from docs/PARITY.md and the decoding rules are shared invariants there.
 
 ## 7. Risks
 - **Destination skipping hides real text in unusual RTF generators.** Likelihood: low. Impact: text missing. Mitigation: skip only known destinations and `\*`-prefixed ones.
@@ -99,4 +99,30 @@ None.
 4. A French Latin-1 TXT shows accented letters correctly.
 
 ## 12. Next step
-`/spec-tech 10_2026-09-24_bugfix-legacy-text-decoding`
+`/spec-check 10_2026-09-24_bugfix-legacy-text-decoding` (implemented directly from the owner decisions; no tactical plan directory was created).
+
+## Implementation
+
+Implemented 2026-09-25 in both editions. Also takes finding X20 (FB2 peak memory, filed under ticket 12) because the FB2 reader was rewritten here anyway.
+
+**Shared (Go):** `internal/textutil/utf8.go` - `MeasureUTF8` and `DecodeUTF8`, the WHATWG UTF-8 decoder (one U+FFFD per maximal invalid subpart, the same as `TextDecoder`). `internal/textutil/codec.go` - `LookupCodec`, legacy decoding by WHATWG label through `x/text/encoding/htmlindex`, with the browser's C1 mapping for undefined single-byte positions and a streaming reader. `internal/textutil/lines.go` - P23: invalid UTF-8 from `pdftotext` becomes U+FFFD instead of being dropped.
+
+**TXT (X5, X21, X22):** the ladder BOM -> BOM-less UTF-16 by NUL pattern -> UTF-8 below the damage threshold -> Cyrillic detection -> windows-1252. Go: `internal/txt/extract.go` `decodeText`, `internal/txt/decode.go` (`sniffUTF16`, `acceptAsUTF8`), `internal/txt/legacy.go` (candidates as WHATWG labels, `westernLabel`); `LooksBinary` accepts BOM-less UTF-16. JS: `extension/src/txt.js` (`sniffUtf16`, `measureUtf8`, `acceptAsUtf8`, `decodeText`).
+
+**RTF (X1, X2, X3, X22, B21):** a group-state reader with a destination stack. Go: `internal/rtf/parse.go` (reader), `internal/rtf/codepage.go` (code-page, charset, destination, symbol and break tables); `internal/rtf/extract.go` keeps paging. JS: `extension/src/rtf.js` is the same reader with the same tables. `\ucN` fallback skipping ends the B21 doubled letters; `\'XX` and raw high bytes are batched and decoded by one decoder per code page per document.
+
+**FB2 (X4, X18, X19, X20):** Go `internal/fb2/content.go` - `decodingReader` (BOM, XML-declared encoding via `LookupCodec`, else validating UTF-8), a single streaming pass `parseFB2` over the open file (title, prose, binaries; the second `xml.Unmarshal` pass and the whole-file read are gone), and `readBinary`, which decodes the base64 in 16 KB chunks straight into the output instead of copying the text three times. Prose elements: `p`, `subtitle`, `text-author`, `td`/`th`, and each `stanza` as one `p.stanza` with `<br>` between verse lines. `internal/fb2/extract.go` - collision-safe image names (`nameSet.imageFileName`: a sanitized id keeps its name when it was already safe, otherwise gains an FNV-32a hash of the full id; leading dots are stripped; uniqueness is case-insensitive with a numbered fallback), page CSS for the three classes. JS: `extension/src/fb2.js` - `decodeFb2` (the same encoding rule through `TextDecoder`) and `renderBlock` (the same element set and classes), a body's leading title/epigraph kept on its own page; `extension/src/viewer.css` styles the classes.
+
+**Docs:** `docs/PARITY.md` - the TXT ladder table, the damage threshold and output rule, the WHATWG-label rule for code pages, a new "RTF and FB2 text decoding" section, the port-map RTF row renamed; the FB2 "UTF-8 only" scope note removed.
+
+**Fixtures:** `tests/testdata/legacy-text/` - WordPad Russian RTF (`\ansicpg1252` plus a `\fcharset204` font), LibreOffice RTF (`\uc1`/`\uc2`, `\'XX` fallbacks, a surrogate pair, a `\bin` picture with braces), cp1252 RTF, windows-1251 FB2 with a poem, truncated-tail UTF-8 TXT, BOM-less UTF-16LE TXT, Latin-1 French TXT, each with an expected text; generated deterministically by `gen.go` (`go run tests/testdata/legacy-text/gen.go`), listed in `cases.json`, `-text` in `.gitattributes`. Against the pre-change extension readers the JS fixture test fails 7 of 7.
+
+**Done criteria -> proof:**
+1. WordPad Russian RTF, no font-table paragraph, every letter correct, both editions: fixture `wordpad-ru` in `tests/legacy_text_test.go` `TestLegacyTextFixtures` and `extension/test/legacy-text.test.mjs`; unit cases in `internal/rtf/parse_test.go` `TestStripRTF` and `extension/test/rtf.test.mjs` (same case list).
+2. windows-1251 FB2 with a poem converts, poem present: fixture `cp1251-poem`; `internal/fb2/decode_test.go` `TestParseFB2DeclaredWindows1251`, `TestParseFB2ProseElements`; `extension/test/fb2.test.mjs`.
+3. Russian UTF-8 TXT with the last byte cut off, one U+FFFD: fixture `utf8-truncated`; `internal/txt/decode_test.go` `TestDecodeTextToleratesDamagedUTF8`; `extension/test/txt.test.mjs`.
+4. French Latin-1 TXT with correct accents: fixture `latin1-fr`; `internal/txt/extract_test.go` `TestExtractDecodesWesternLegacy`.
+
+Goals 4-7: BOM-less UTF-16 (`utf16le-nobom`, `TestDecodeTextBOMlessUTF16`); valid output (`TestDecodeTextOutputAlwaysValid`, `internal/textutil` tests); image names (`TestImageFileNamesAreUnique`, `TestExtractSurvivesPathologicalImageID`); parity (`TestParityLegacyTextTables` compares the tables and constants value by value). Performance: `TestStripRTFLargeInput` (about 5 MB of `\'XX`-dense RTF) and `BenchmarkStripRTF` (about 100 MB/s), with a matching large-input test in `extension/test/rtf.test.mjs`; X20: `TestReadBinaryAcrossChunks`.
+
+Not validated: the local `test_doc/` corpus (absent in the implementation environment).
