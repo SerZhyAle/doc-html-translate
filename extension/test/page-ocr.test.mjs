@@ -16,10 +16,18 @@ let host = () => {};             // (msg) -> the host's reaction to a broadcast
 let offscreen;                   // set per test: present = offscreen host, undefined = frame host
 const offscreenCalls = { created: 0, closed: 0 };
 
-// deliver hands a message to the broker as if it came from the given tab (or from the extension
-// itself when tabId is null), which is how the host and the agent both reach it.
+// deliver hands a message to the broker as if it came from the given tab (the page agent) or,
+// when tabId is null, from the recognizer host page named after msg.hostId - the only sender the
+// broker takes host messages from.
 function deliver(msg, tabId = null) {
-  const sender = tabId == null ? {} : { tab: { id: tabId } };
+  const sender = tabId == null
+    ? { id: "test", url: `chrome-extension://test/src/ocr-host.html?host=${msg.hostId}` }
+    : { tab: { id: tabId } };
+  for (const fn of listeners.message) fn({ dht: "page-ocr", ...msg }, sender, () => {});
+}
+
+// deliverFrom is deliver with an explicit sender, for the messages a genuine host never sends.
+function deliverFrom(sender, msg) {
   for (const fn of listeners.message) fn({ dht: "page-ocr", ...msg }, sender, () => {});
 }
 
@@ -73,16 +81,19 @@ test("a run recognizes every picture in order and forwards the plates to the pag
   host = (msg) => {
     if (msg.t !== "recognize") return;
     recognized.push({ src: msg.src, lang: msg.lang, hostId: msg.hostId });
-    queueMicrotask(() => deliver({ t: "job-done", jobId: msg.jobId, ok: true, specs: [{ text: msg.src }], htmlLang: "de" }));
+    queueMicrotask(() => deliver({ t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok: true, specs: [{ text: msg.src }], htmlLang: "de" }));
   };
 
   await startRun(11);
 
-  // The reader's stored OCR language reaches the host, and pictures go one at a time in page order.
-  assert.deepEqual(recognized, [
-    { src: "https://x.test/a.png", lang: "deu", hostId: "offscreen" },
-    { src: "https://x.test/b.png", lang: "deu", hostId: "offscreen" },
+  // The reader's stored OCR language reaches the host, and pictures go one at a time in page order,
+  // both to the one unguessable host id the offscreen document was created with.
+  assert.deepEqual(recognized.map(({ src, lang }) => ({ src, lang })), [
+    { src: "https://x.test/a.png", lang: "deu" },
+    { src: "https://x.test/b.png", lang: "deu" },
   ]);
+  assert.match(recognized[0].hostId, /^off-[0-9a-f-]{36}$/);
+  assert.equal(recognized[1].hostId, recognized[0].hostId);
   const plates = forTab(11, "plates");
   assert.deepEqual(plates.map((p) => [p.id, p.specs[0].text, p.htmlLang]), [
     ["a", "https://x.test/a.png", "de"],
@@ -106,7 +117,7 @@ test("a picture the host cannot read is counted as failed, and the run carries o
   host = (msg) => {
     if (msg.t !== "recognize") return;
     const ok = !msg.src.includes("bad");
-    queueMicrotask(() => deliver({ t: "job-done", jobId: msg.jobId, ok, specs: [], error: ok ? undefined : "fetch" }));
+    queueMicrotask(() => deliver({ t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok, specs: [], error: ok ? undefined : "fetch" }));
   };
   const warn = console.warn;
   console.warn = () => {};
@@ -145,7 +156,7 @@ test("a page that refuses the recognizer frame is told so instead of left waitin
   }
 
   const frameReq = forTab(13, "host-frame")[0];
-  assert.match(frameReq.url, /^chrome-extension:\/\/test\/src\/ocr-host\.html\?host=tab13-\d+$/);
+  assert.match(frameReq.url, /^chrome-extension:\/\/test\/src\/ocr-host\.html\?host=tab13-[0-9a-f-]{36}$/);
   const st = lastStatus(13);
   assert.equal(st.running, false);
   assert.match(st.error, /does not let the extension start its text recognizer/);
@@ -188,4 +199,27 @@ test("stop from the page settles the picture in flight and removal tears the lay
 
   await removeLayer(15);
   assert.equal(forTab(15, "teardown").length, 1);
+});
+
+test("host messages count only from the host page that carries the job's host id", async () => {
+  useOffscreenHost();
+  agent = (tabId, msg) => (msg.t === "collect" ? { images: [{ id: "a", src: "https://x.test/a.png" }] } : null);
+  host = (msg) => {
+    if (msg.t !== "recognize") return;
+    const forged = { t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok: true, specs: [{ text: "forged" }] };
+    queueMicrotask(() => {
+      // A page agent (it has a tab), a copy of the host page named after another id, and a page
+      // that is not the host at all: none of them may settle the job.
+      deliverFrom({ tab: { id: 16 }, url: "https://evil.test/" }, forged);
+      deliverFrom({ id: "test", url: "chrome-extension://test/src/ocr-host.html?host=off-guess" }, forged);
+      deliverFrom({ id: "test", url: `chrome-extension://test/src/viewer.html?host=${msg.hostId}` }, forged);
+      // The same job id answered for a different host id is not this job's answer either.
+      deliver({ ...forged, hostId: "off-guess" });
+      deliver({ t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok: true, specs: [{ text: "real" }] });
+    });
+  };
+
+  await startRun(16);
+
+  assert.deepEqual(forTab(16, "plates").map((p) => p.specs[0].text), ["real"]);
 });

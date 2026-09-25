@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "Não foi possível começar a ler esta página.",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "Este documento quer carregar {1} item(ns) da internet. Eles estão bloqueados para que o autor não saiba que você o abriu.",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "Carregar",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "Sempre carregar conteúdo externo",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "O site enviou uma página web em vez do documento",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "Normalmente isso significa que o documento exige login ou uma confirmação no site. Abra o original, conclua essa etapa e converta o documento novamente.",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "Abrir original",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "Carregar imagens externas nos documentos",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "Desativado por padrão: imagens que um documento busca na internet são bloqueadas para que o autor não saiba que você o abriu. O visualizador permite carregá-las documento a documento.",
+    "description": "Hint under the remote-images checkbox."
   }
 }

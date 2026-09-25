@@ -29,11 +29,30 @@ const JOB_TIMEOUT_MS = 150000;
 const HOST_READY_TIMEOUT_MS = 10000;
 
 const runs = new Map();        // tabId -> run
-const pendingJobs = new Map(); // jobId -> { resolve, timer }
+const pendingJobs = new Map(); // jobId -> { resolve, timer, hostId }
 const hostReady = new Map();   // hostId -> { resolve, timer }
 let jobSeq = 0;
-let hostSeq = 0;
 let offscreenPromise = null;
+let offscreenHostId = "";
+
+// ocr-host.html has to stay web-accessible (the frame host is parked inside the reader's page),
+// so any site can load its own copy in a frame. Two things keep such a copy useless:
+//   - host ids are unguessable, so a copy never matches the id a job is broadcast to;
+//   - a host message counts only when it comes from the host page carrying that same id.
+// Without both, a site could embed a host named after another tab's and receive that tab's
+// pictures, or answer jobs it was never given.
+const HOST_PAGE = chrome.runtime.getURL("src/ocr-host.html");
+
+function newHostId(prefix) {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
+function isHostSender(sender, hostId) {
+  if (!hostId || !sender || typeof sender.url !== "string") return false;
+  // Split by hand: URL.origin is "null" for a non-special scheme in some engines.
+  const [page, query = ""] = sender.url.split("#")[0].split("?");
+  return page === HOST_PAGE && new URLSearchParams(query).get("host") === hostId;
+}
 
 function broadcast(msg) {
   try {
@@ -62,22 +81,35 @@ function waitForHost(hostId) {
 async function ensureOffscreenHost() {
   if (offscreenPromise) return offscreenPromise;
   offscreenPromise = (async () => {
-    const hostId = "offscreen";
-    const ready = waitForHost(hostId);
+    const create = async () => {
+      const hostId = newHostId("off");
+      const ready = waitForHost(hostId);
+      try {
+        await chrome.offscreen.createDocument({
+          url: `src/ocr-host.html?host=${hostId}`,
+          reasons: ["BLOBS", "DOM_SCRAPING"],
+          justification: "Runs the text-recognition engine outside the web page, so the page's own security policy cannot block it and the page's scripts cannot reach it.",
+        });
+      } catch (e) {
+        const waiter = hostReady.get(hostId);
+        if (waiter) { clearTimeout(waiter.timer); hostReady.delete(hostId); }
+        throw e;
+      }
+      if (!(await ready)) throw new Error("host-silent");
+      offscreenHostId = hostId;
+      return hostId;
+    };
     try {
-      await chrome.offscreen.createDocument({
-        url: `src/ocr-host.html?host=${hostId}`,
-        reasons: ["BLOBS", "DOM_SCRAPING"],
-        justification: "Runs the text-recognition engine outside the web page, so the page's own security policy cannot block it and the page's scripts cannot reach it.",
-      });
+      return await create();
     } catch (e) {
       // "Only a single offscreen document may be created" means one is already there - from an
-      // earlier run in this or another tab - and it is the host we want.
+      // earlier run in this or another tab. It is the host we want when this worker knows its
+      // id; after a worker restart the id is gone with the worker, so it is replaced.
       if (!/single offscreen document/i.test(String(e && e.message))) throw e;
-      return hostId;
+      if (offscreenHostId) return offscreenHostId;
+      try { await chrome.offscreen.closeDocument(); } catch { /* raced another close */ }
+      return create();
     }
-    if (!(await ready)) throw new Error("host-silent");
-    return hostId;
   })();
   try {
     return await offscreenPromise;
@@ -93,7 +125,7 @@ async function ensureHost(run) {
     run.hostId = await ensureOffscreenHost();
     return;
   }
-  const hostId = `tab${run.tabId}-${++hostSeq}`;
+  const hostId = newHostId(`tab${run.tabId}`);
   const ready = waitForHost(hostId);
   const res = await toTab(run.tabId, {
     t: "host-frame",
@@ -110,6 +142,7 @@ async function releaseHost(run) {
   // The offscreen document is shared, so it only goes away once nothing is using it.
   if (run.hostKind === "offscreen" && ![...runs.values()].some((r) => r !== run && r.hostKind === "offscreen")) {
     offscreenPromise = null;
+    offscreenHostId = "";
     try { await chrome.offscreen.closeDocument(); } catch { /* already gone */ }
   }
 }
@@ -123,15 +156,16 @@ function recognizeOne(run, picture) {
       pendingJobs.delete(jobId);
       resolve({ ok: false, error: "timeout" });
     }, JOB_TIMEOUT_MS);
-    pendingJobs.set(jobId, { resolve, timer });
+    pendingJobs.set(jobId, { resolve, timer, hostId: run.hostId });
     run.jobId = jobId;
     broadcast({ hostId: run.hostId, t: "recognize", jobId, src: picture.src, lang: run.lang });
   });
 }
 
-function settleJob(jobId, result) {
+// settleJob: hostId, when given, must be the host the job was sent to.
+function settleJob(jobId, result, hostId) {
   const pending = pendingJobs.get(jobId);
-  if (!pending) return;
+  if (!pending || (hostId !== undefined && pending.hostId !== hostId)) return;
   clearTimeout(pending.timer);
   pendingJobs.delete(jobId);
   pending.resolve(result);
@@ -260,12 +294,14 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   const tabId = sender.tab && sender.tab.id;
   switch (msg.t) {
     case "host-ready": {
+      if (!isHostSender(sender, msg.hostId)) return;
       const waiter = hostReady.get(msg.hostId);
       if (waiter) { clearTimeout(waiter.timer); hostReady.delete(msg.hostId); waiter.resolve(true); }
       return;
     }
     case "job-done":
-      settleJob(msg.jobId, msg);
+      if (!isHostSender(sender, msg.hostId)) return;
+      settleJob(msg.jobId, msg, msg.hostId);
       return;
     case "job-progress":
       return;
@@ -298,6 +334,7 @@ function forgetTab(tabId) {
   runs.delete(tabId);
   if (run.hostKind === "offscreen" && ![...runs.values()].some((r) => r.hostKind === "offscreen")) {
     offscreenPromise = null;
+    offscreenHostId = "";
     try { chrome.offscreen.closeDocument().catch(() => {}); } catch { /* ignore */ }
   }
 }

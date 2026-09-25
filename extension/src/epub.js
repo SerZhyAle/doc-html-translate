@@ -13,6 +13,7 @@
 // node; everything that parses XHTML uses DOMParser and runs only in the viewer.
 
 import { normalizeLangTag } from "./lang.js";
+import { DROP_TAGS, scrubTree } from "./url-policy.js";
 import { EPUB_MAX_ENTRY_BYTES, InputLimitError, checkArchive, entryTooLarge, inflateRawCapped } from "./limits.js";
 
 // ---- ZIP reader ------------------------------------------------------------
@@ -386,11 +387,11 @@ function buildEpubToc(pkg, files, opfDir, pathToIndex) {
 
 // ---- Chapter sanitize + rewrite (DOM) --------------------------------------
 
-const DROP_TAGS = "script,style,link,base,meta,title,noscript,iframe,object,embed,form";
 
 // rewriteImg points a relative <img src> at a blob: URL of the in-archive image,
 // or removes the image when the target is missing. http(s)/data sources are left
-// alone. srcset (which would carry now-broken relative refs) is dropped.
+// for scrubTree, which parks a remote one until the reader allows it. srcset (which
+// would carry now-broken relative refs) is dropped.
 export function rewriteImg(img, docDir, blobFor) {
   const src = img.getAttribute("src");
   if (!src) { img.remove(); return; }
@@ -473,15 +474,8 @@ export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
   host.querySelectorAll("image").forEach((im) => convertSvgImage(im, docDir, blobFor));
   host.querySelectorAll("a").forEach((a) => rewriteAnchor(a, index, docDir, pathToIndex));
 
-  // Strip event handlers and author inline styles, and namespace every id so the
-  // combined single-page document has no cross-chapter id collisions.
-  host.querySelectorAll("*").forEach((e) => {
-    for (const attr of Array.from(e.attributes)) {
-      const n = attr.name.toLowerCase();
-      if (n.startsWith("on") || n === "style") e.removeAttribute(attr.name);
-    }
-    if (e.id) e.id = `d${index}-${e.id}`;
-  });
+  // Links were retargeted above, so the shared scrub must not prefix their fragments again.
+  const remote = scrubTree(host, index, { rewriteFragments: false });
 
   const heading = host.querySelector("h1,h2,h3,h4");
   const label = heading ? heading.textContent.replace(/\s+/g, " ").trim().slice(0, 140) : "";
@@ -493,7 +487,7 @@ export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
     frag.appendChild(marker);
   }
   while (host.firstChild) frag.appendChild(host.firstChild);
-  return { frag, label };
+  return { frag, label, remote };
 }
 
 // ---- Public entry point ----------------------------------------------------
@@ -551,10 +545,12 @@ export async function loadEpub(arrayBuffer) {
 
   const sections = [];
   let sampleText = "";
+  let remote = 0;
   for (let i = 0; i < spine.length; i++) {
     const zp = spine[i];
-    const { frag, label } = renderChapter(decodeText(files.get(zp)), i, dirOf(zp), pathToIndex, blobFor);
+    const { frag, label, remote: r } = renderChapter(decodeText(files.get(zp)), i, dirOf(zp), pathToIndex, blobFor);
     if (sampleText.length < 8000) sampleText += " " + (frag.textContent || "");
+    remote += r;
     sections.push({ id: `epub-sec-${i}`, label, frag });
   }
 
@@ -566,6 +562,7 @@ export async function loadEpub(arrayBuffer) {
     sampleText,
     sections,
     toc,
+    remote,
     revoke: () => { for (const url of blobUrls.values()) URL.revokeObjectURL(url); blobUrls.clear(); },
   };
 }

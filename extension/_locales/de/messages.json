@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "Diese Seite konnte nicht gelesen werden.",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "Dieses Dokument möchte {1} Element(e) aus dem Internet laden. Sie sind blockiert, damit der Autor nicht sieht, dass Sie es geöffnet haben.",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "Laden",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "Externe Inhalte immer laden",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "Die Website hat eine Webseite statt des Dokuments geschickt",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "Meist braucht das Dokument eine Anmeldung oder eine Bestätigung auf der Website. Öffnen Sie das Original, erledigen Sie diesen Schritt und konvertieren Sie das Dokument erneut.",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "Original öffnen",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "Externe Bilder in Dokumenten laden",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "Standardmäßig aus: Bilder, die ein Dokument aus dem Internet nachlädt, werden blockiert, damit der Autor nicht sieht, dass Sie es geöffnet haben. Im Viewer lassen sie sich für einzelne Dokumente laden.",
+    "description": "Hint under the remote-images checkbox."
   }
 }

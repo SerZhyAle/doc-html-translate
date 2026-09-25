@@ -14,7 +14,7 @@ export async function parseHtml(data) {
   const title = titleEl ? titleEl.textContent.trim() : "";
   const lang = normalizeLangTag(doc.documentElement ? doc.documentElement.getAttribute("lang") || "" : "");
   const bodyHtml = doc.body ? doc.body.innerHTML : source;
-  const { frag, label } = sanitizeToFragment(bodyHtml, 0);
+  const { frag, label, remote } = sanitizeToFragment(bodyHtml, 0);
   const sampleText = (frag.textContent || "").slice(0, 8000);
   return {
     title,
@@ -22,6 +22,7 @@ export async function parseHtml(data) {
     sampleText,
     sections: [{ id: "html-sec-0", label, frag }],
     toc: [],
+    remote,
     revoke: () => {},
   };
 }

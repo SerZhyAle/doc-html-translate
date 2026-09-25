@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "اس صفحے کو پڑھنا شروع نہیں کیا جا سکا۔",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "یہ دستاویز انٹرنیٹ سے {1} آئٹم لوڈ کرنا چاہتی ہے۔ انہیں بلاک کیا گیا ہے تاکہ مصنف کو پتا نہ چلے کہ آپ نے اسے کھولا۔",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "لوڈ کریں",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "بیرونی مواد ہمیشہ لوڈ کریں",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "سائٹ نے دستاویز کی بجائے ایک ویب صفحہ بھیجا",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "عام طور پر اس کا مطلب ہے کہ دستاویز کے لیے سائٹ پر سائن اِن یا تصدیق درکار ہے۔ اصل کھولیں، وہ مرحلہ مکمل کریں، پھر دستاویز کو دوبارہ تبدیل کریں۔",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "اصل کھولیں",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "دستاویزات میں بیرونی تصاویر لوڈ کریں",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "بطور طے شدہ بند: دستاویز جو تصاویر انٹرنیٹ سے لاتی ہے وہ بلاک ہوتی ہیں تاکہ مصنف کو پتا نہ چلے کہ آپ نے اسے کھولا۔ ویوئر میں آپ انہیں ایک ایک دستاویز کے لیے لوڈ کر سکتے ہیں۔",
+    "description": "Hint under the remote-images checkbox."
   }
 }

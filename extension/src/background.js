@@ -16,6 +16,16 @@ import { startRun as startPageOcr } from "./page-ocr.js";
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
 
+// The document extension must end the URL's *path*: `[^?#]*` keeps the match out of the query
+// and fragment, so `https://site/viewer?file=a.pdf` - a web app's own page - is not taken over.
+// The query string itself is still captured and carried to the viewer.
+const INTERCEPT_EXT = "(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)";
+export const HTTPS_INTERCEPT_REGEX = `^(https?://[^?#]*\\.${INTERCEPT_EXT}(?:[?#].*)?)$`;
+// Three slashes: only empty-host file URLs. UNC paths (file://server/share) can't be granted to
+// extensions by any match pattern, so the viewer could never fetch them - leave those to
+// Chrome's built-in viewer.
+export const FILE_INTERCEPT_REGEX = `^(file:///[^?#]*\\.${INTERCEPT_EXT}(?:[?#].*)?)$`;
+
 // Extensions offered by the "Convert with doc-html-translate" right-click entry. Broader
 // than the DNR interception list (pdf/epub/rtf/fb2/mobi/azw3/cbz/cbt) because the viewer
 // can also render txt/md/html on demand, and CBR/CB7 are offered here so the viewer can
@@ -45,7 +55,7 @@ function buildRules(options) {
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
       // Capture the whole URL so the substitution keeps any query string intact.
-      regexFilter: "^(https?://.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)(?:[?#].*)?)$",
+      regexFilter: HTTPS_INTERCEPT_REGEX,
       resourceTypes: ["main_frame"],
     },
   };
@@ -57,10 +67,7 @@ function buildRules(options) {
     priority: 1,
     action: { type: "redirect", redirect: { regexSubstitution: sub } },
     condition: {
-      // Three slashes: only empty-host file URLs. UNC paths (file://server/share)
-      // can't be granted to extensions by any match pattern, so the viewer could
-      // never fetch them - leave those to Chrome's built-in viewer.
-      regexFilter: "^(file:///.*\\.(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)(?:[?#].*)?)$",
+      regexFilter: FILE_INTERCEPT_REGEX,
       resourceTypes: ["main_frame"],
     },
   };

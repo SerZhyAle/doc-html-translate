@@ -8,7 +8,7 @@ import { sanitizeToFragment } from "./sanitize.js";
 // parseMarkdown decodes UTF-8 bytes and returns the render-ready book shape.
 export async function parseMarkdown(data) {
   const text = new TextDecoder("utf-8").decode(data);
-  const { frag } = sanitizeToFragment(marked.parse(text), 0);
+  const { frag, remote } = sanitizeToFragment(marked.parse(text), 0);
 
   const sections = [];
   const toc = [];
@@ -36,5 +36,5 @@ export async function parseMarkdown(data) {
     if (sampleText.length >= 8000) break;
     sampleText += ` ${s.frag.textContent || ""}`;
   }
-  return { title: "", lang: "", sampleText, sections, toc, revoke: () => {} };
+  return { title: "", lang: "", sampleText, sections, toc, remote, revoke: () => {} };
 }

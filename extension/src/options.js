@@ -19,6 +19,7 @@ const themeEl = document.getElementById("theme");
 const langEl = document.getElementById("lang");
 const hostsEl = document.getElementById("hosts");
 const ocrImagesEl = document.getElementById("ocr-images");
+const allowRemoteEl = document.getElementById("allow-remote");
 const ocrLangsEl = document.getElementById("ocr-langs");
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
@@ -149,6 +150,13 @@ async function init() {
     renderOcrLangs();
   });
   renderOcrLangs();
+
+  allowRemoteEl.checked = o.allowRemoteContent === true;
+  allowRemoteEl.addEventListener("change", async () => {
+    const opts = await getOptions();
+    opts.allowRemoteContent = allowRemoteEl.checked;
+    await setOptions(opts);
+  });
 
   enabledEl.addEventListener("change", async () => {
     const opts = await getOptions();

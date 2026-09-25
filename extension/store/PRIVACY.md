@@ -45,7 +45,9 @@ you decide whether to paste it into a mail to the author.
 ## Network access
 The extension itself makes no network requests to any server we control. It fetches the document you
 opened (from the site or local file you chose) in order to render it, and it fetches an image you asked
-it to OCR. The only outbound request beyond that is optional: when you explicitly download an extra OCR
+it to OCR. Images a document itself points at on the internet are blocked until you choose to load
+them, so opening a document does not tell its author or a tracker that you opened it. The only outbound
+request beyond that is optional: when you explicitly download an extra OCR
 language, its data file is fetched from the public open-source host named above and cached locally.
 Translation is performed by your browser's own built-in translation feature, which you invoke yourself;
 that feature is governed by your browser vendor's privacy policy, not ours.

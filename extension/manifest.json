@@ -46,36 +46,21 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/viewer.html",
-        "src/viewer.js",
-        "src/viewer.css",
-        "src/defaults.js",
-        "src/reflow.js",
-        "src/toc.js",
-        "src/lang.js",
-        "src/epub.js",
-        "src/sanitize.js",
-        "src/txt.js",
-        "src/rtf.js",
-        "src/html.js",
-        "src/md.js",
-        "src/fb2.js",
-        "src/ebook.js",
-        "src/comic.js",
-        "src/ocr.html",
-        "src/ocr.js",
-        "src/ocr-overlay.js",
-        "src/ocr-plates.js",
-        "src/ocr-host.html",
-        "src/ocr-host.js",
-        "src/ocr-overlay.css",
-        "src/ocr-lang.js",
-        "src/ocr-text.js",
-        "src/pdf-images.js",
-        "vendor/*"
+        "src/viewer.html"
       ],
       "matches": [
         "<all_urls>",
+        "file:///*"
+      ]
+    },
+    {
+      "resources": [
+        "src/ocr-host.html",
+        "src/ocr-plates.js"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*",
         "file:///*"
       ]
     }

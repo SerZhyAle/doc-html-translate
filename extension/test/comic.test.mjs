@@ -15,6 +15,7 @@ import {
   parseComic,
   DesktopOnlyError,
   PAGE_EXTS,
+  tarEntries,
 } from "../src/comic.js";
 
 test("naturalCompare orders pages numeric-aware", () => {
@@ -137,6 +138,68 @@ test("parseComic reads a CBZ with deflated entries", async () => {
 
 test("parseComic reads a CBT (tar) in natural order", async () => {
   await assertPages(makeTar(sample));
+});
+
+// tarHeader builds one 512-byte header; magic picks the flavour ("ustar\0" + "00" for USTAR/PAX,
+// "ustar  \0" for GNU).
+function tarHeader({ name, size, type = 0x30, prefix = "", magic = "ustar\u000000" }) {
+  const hdr = Buffer.alloc(512);
+  hdr.write(name, 0, "utf8");
+  hdr.write(size.toString(8).padStart(11, "0") + "\0", 124, "ascii");
+  hdr.write("        ", 148, "ascii");
+  hdr[156] = type;
+  hdr.write(magic, 257, "latin1");
+  if (prefix) hdr.write(prefix, 345, "utf8");
+  return hdr;
+}
+
+function tarData(raw) {
+  const data = Buffer.alloc(Math.ceil(raw.length / 512) * 512);
+  raw.copy(data);
+  return data;
+}
+
+function paxRecord(key, value) {
+  const body = ` ${key}=${value}\n`;
+  let len = body.length + 1;
+  while (String(len).length + body.length !== len) len = String(len).length + body.length;
+  return `${len}${body}`;
+}
+
+test("tarEntries honours GNU long names, PAX path/size and the USTAR prefix like Go's archive/tar", () => {
+  const long = `${"deep/".repeat(30)}page2.jpg`; // 159 bytes: past the 100-byte name field
+  const pax = Buffer.from(paxRecord("path", "pax/page3.jpg") + paxRecord("size", "5"), "utf8");
+  const sparse = Buffer.from(paxRecord("GNU.sparse.major", "1"), "utf8");
+  const buf = Buffer.concat([
+    tarHeader({ name: "././@LongLink", size: long.length + 1, type: 0x4c, magic: "ustar  \0" }),
+    tarData(Buffer.from(`${long}\0`, "utf8")),
+    tarHeader({ name: long.slice(0, 100), size: 3, magic: "ustar  \0" }),
+    tarData(Buffer.from("TWO")),
+    tarHeader({ name: "PaxHeaders/x", size: pax.length, type: 0x78 }),
+    tarData(pax),
+    tarHeader({ name: "truncated.jpg", size: 0 }),
+    tarData(Buffer.from("THREE")),
+    tarHeader({ name: "page1.jpg", size: 3, prefix: "vol" }),
+    tarData(Buffer.from("ONE")),
+    // A GNU header keeps other data where USTAR keeps the prefix; it must not become a path.
+    tarHeader({ name: "page4.jpg", size: 4, prefix: "junk", magic: "ustar  \0" }),
+    tarData(Buffer.from("FOUR")),
+    tarHeader({ name: "PaxHeaders/y", size: sparse.length, type: 0x78 }),
+    tarData(sparse),
+    tarHeader({ name: "sparse.jpg", size: 1 }),
+    tarData(Buffer.from("S")),
+    tarHeader({ name: "dir/", size: 0, type: 0x00 }),
+    Buffer.alloc(1024),
+  ]);
+  const { entries, count } = tarEntries(new Uint8Array(buf));
+  assert.deepEqual(entries.map((e) => [e.name, e.size]), [
+    [long, 3],
+    ["pax/page3.jpg", 5],
+    ["vol/page1.jpg", 3],
+    ["page4.jpg", 4],
+  ]);
+  // Go consumes the L and x records and returns the rest - the sparse entry and the directory too.
+  assert.equal(count, 6);
 });
 
 test("parseComic rejects CBR/CB7 with DesktopOnlyError", async () => {

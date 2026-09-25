@@ -60,6 +60,8 @@ src/
   ebook.js             MOBI + AZW3 (KF8) via vendored foliate-js (replaces the desktop's Calibre)
   comic.js             CBZ (zip) + CBT (tar) comics: natural page order, entry filter, lazy inflate; CBR/CB7 declined
   sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
+  url-policy.js        link/resource URL rules, name removal, remote-content parking (sanitize.js + epub.js)
+  export-html.js       the "save as HTML" shell, with its own script-free content policy
   lang.js              source-language detection -> <html lang>
   i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
@@ -134,6 +136,12 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
   arrive translated and the existing translation survives. Jump to a far page via the page box and
   the TOC - both must land on real text, not an empty section. Finally "&#8595; HTML" must save the
   pages reached and say so in the status bar.
+- **Step 7 (content security).** A Markdown file with `[x](javascript:alert(1))`, saved with "&#8595; HTML"
+  and opened from disk, does nothing on click. An EPUB with a remote image makes no request (DevTools
+  Network) until **Load them**. A Markdown footnote link scrolls to its note. `https://site/viewer?file=a.pdf`
+  is not intercepted. Run "OCR every image on this page" on three different sites (one with a strict
+  content policy) - the web-accessible surface is now only `viewer.html`, `ocr-host.html` and
+  `ocr-plates.js`, and page OCR must still work. A page that frames `ocr.html` gets nothing.
 
 ## Translate text in images (OCR)
 
@@ -167,11 +175,25 @@ real, translatable HTML, so one **Translate page** covers pictures too. Ways in:
 optional: they download on demand from the tessdata_fast host and cache locally for reuse - the only new
 network access, and only when you click **Download**. See [`store/PRIVACY.md`](store/PRIVACY.md).
 
+## Remote content
+
+A document can point at images on the internet - a cover on a CDN, or a one-pixel tracker that tells its
+author the book was opened. The viewer **blocks those by default**: the image keeps a dashed placeholder
+and a notice above the document offers **Load them** (this document) or **Always load remote content**.
+The same switch is in the options page ("Load remote images in documents"). Images inside the file
+itself (EPUB, MOBI, FB2, comics) are never affected.
+
+Links keep only `http`, `https`, `mailto`, `tel` and in-document targets; anything else (`javascript:`,
+`data:`, `file:` ..) becomes plain text. A file saved with "&#8595; HTML" carries its own content policy
+that forbids script, so it stays inert when opened from disk, outside the extension.
+
 ## Known limitations
 
-- Interception matches the **request URL** (`*.pdf` / `*.epub`), so files served without a matching
-  extension in the URL aren't auto-intercepted (open them via **Open file** in the viewer). DNR can't
-  see the response Content-Type before the request.
+- Interception matches the **request URL path** (`*.pdf` / `*.epub`), so files served without a matching
+  extension in the path aren't auto-intercepted (open them via **Open file** in the viewer), and a
+  `.pdf` inside a query string (`viewer?file=a.pdf`) is left to the site. DNR can't see the response
+  Content-Type before the request; when a document URL answers with a web page (a sign-in wall), the
+  viewer says so and offers **Open original**.
 - PDF.js text extraction is weaker than Poppler on ligatures / non-standard font maps (same caveat the
   desktop app notes for its pure-Go reader - exotic fonts remain a humbling experience).
 - Scanned/image-only PDFs are out of scope (OCR); the viewer detects them and offers the original.

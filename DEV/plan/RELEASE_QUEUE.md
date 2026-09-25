@@ -63,7 +63,6 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-19  19_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
 18  18_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-25  Draft (P60)
 20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
 15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-25  In Progress (repo done; catalog

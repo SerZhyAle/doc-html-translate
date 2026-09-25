@@ -1,12 +1,12 @@
 # Strategic spec: 19_2026-09-24_bugfix-extension-content-security - Extension: untrusted documents stay inert
 
 **Ticket:** 19_2026-09-24_bugfix-extension-content-security
-**Status:** Draft
+**Status:** Implemented (2026-09-25; manual browser gates of §13 still to run)
 **Priority:** 60
 **Date:** 2026-09-24
 **Tier:** Security/Compliance (urgent)
-**Tactical plan:** `DEV/plan/19_2026-09-24_bugfix-extension-content-security/` (created by /spec-tech)
-**Findings:** B14 B15 B16 B17 B18 B22 B24 B26 B29 (see the [findings register](../research/audit_2026-09-24/README.md))
+**Tactical plan:** none - implemented directly from this spec (see §13)
+**Findings:** B14 B15 B16 B17 B18 B22 B24 B26 B29 (see the [findings register](../../research/audit_2026-09-24/README.md))
 
 > **Scope:** STRATEGIC.
 
@@ -74,11 +74,15 @@ default credentials.
 ## 6. Open questions / research items
 1. **Remote images default**
    - **Question:** block by default, or allow with a notice?
-   - **Status:** Open.
+   - **Status:** Resolved - block by default with a notice ("Load them" / "Always load remote content"),
+     as done criterion 3 requires. Owner may still flip `allowRemoteContent`'s default.
 2. **Which pages must stay web-accessible**
    - **Question:** which resources do the page-OCR frame and viewer redirects actually need?
    - **To find out:** trace every `getURL` and iframe use.
-   - **Status:** Open.
+   - **Status:** Resolved - three: `src/viewer.html` (DNR redirect target must be web-accessible),
+     `src/ocr-host.html` (framed in the page where there is no offscreen API) and `src/ocr-plates.js`
+     (dynamic `import()` from the page agent content script). Everything else is loaded same-origin by
+     extension pages or injected with `chrome.scripting`, which needs no web-accessible entry.
 
 ## 7. Risks
 - **Narrowing web-accessible resources breaks page OCR.** Likelihood: medium. Impact: the feature stops working. Mitigation: the §6.2 trace, plus a manual page-OCR check on three sites.
@@ -102,3 +106,26 @@ Extension docs: the remote content setting.
 
 ## 12. Next step
 `/spec-tech 19_2026-09-24_bugfix-extension-content-security`
+
+## 13. Implementation record (2026-09-25)
+
+| Finding | Change |
+|---|---|
+| B14 | `extension/src/url-policy.js` scheme allow-list (links: http/https/mailto/tel/relative/fragment; resources: relative/blob/data, remote parked, rest dropped), SVG animation elements dropped; used by `sanitize.js` and `epub.js`. `export-html.js` embeds a script-free CSP in every export. |
+| B15 | Web-accessible list cut to the three resources of §6.2 (`test/content-security.test.mjs` pins it). Broker mints `crypto.randomUUID()` host ids and takes host messages only from `ocr-host.html` carrying that id; jobs settle only for the host they were sent to. The host takes jobs only from the service worker. `ocr.html` refuses to run framed. |
+| B16 | Remote `src`/`srcset`/`poster`/`background`/SVG `href` parked as `data-dht-remote-*`; viewer notice restores per document or always (`allowRemoteContent`, options page, 13 locales). Parked images are not queued for OCR, so OCR never fetches them before opt-in. |
+| B17 | `name` removed everywhere; an anchor's `name` becomes its id first. |
+| B18 | Same-section `#x` links retargeted to `#d<index>-x`; MOBI `filepos:` / `kindle:pos` links resolved to in-page anchors (`ebook.js` `retargetBookLinks`). |
+| B24 | DNR regexes anchor the extension in the path (`[^?#]*`); table test in `test/background.test.mjs`. |
+| B26 | Viewer document fetch uses `credentials: "include"`; an HTML reply for a non-HTML document URL shows a notice with "Open original". |
+| B22 | `comic.js` `tarEntries` honours GNU `L`, PAX `path`/`size`/sparse and the USTAR-only prefix like Go; docs/PARITY.md updated. |
+| B29 | `build.mjs` pins the SHA-256 of the decompressed `eng.traineddata` (tessdata_fast 4.0.0, equal to `build/tessdata/eng.traineddata`) and times the fetch out after 60 s. |
+
+Not done / open:
+- `use_dynamic_url` was not set: `runtime.getURL` returns the static URL across the supported browser
+  range (minimum 105), so the DNR redirect and the host frame would point at a URL the flag refuses.
+- Manual gates, need a real browser: README "Step 7 (content security)", including page OCR on three
+  sites (spec §7 risk 1).
+- The pinned digest was checked against tessdata_fast 4.0.0 on GitHub, not against the
+  projectnaptha mirror (unreachable from the implementing environment); the first real `npm run vendor`
+  confirms or fails loudly.

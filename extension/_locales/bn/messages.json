@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "এই পাতা পড়া শুরু করা যায়নি।",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "এই নথিটি ইন্টারনেট থেকে {1}টি আইটেম লোড করতে চায়। সেগুলো ব্লক করা আছে, যাতে লেখক জানতে না পারেন যে আপনি এটি খুলেছেন।",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "লোড করুন",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "সবসময় বাইরের কনটেন্ট লোড করুন",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "সাইটটি নথির বদলে একটি ওয়েব পেজ পাঠিয়েছে",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "সাধারণত এর মানে নথিটির জন্য সাইটে সাইন-ইন বা নিশ্চিতকরণ দরকার। মূলটি খুলুন, সেই ধাপটি শেষ করুন, তারপর নথিটি আবার রূপান্তর করুন।",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "মূলটি খুলুন",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "নথিতে বাইরের ছবি লোড করুন",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "ডিফল্টভাবে বন্ধ: নথি ইন্টারনেট থেকে যে ছবি আনে সেগুলো ব্লক করা হয়, যাতে লেখক জানতে না পারেন যে আপনি এটি খুলেছেন। ভিউয়ারে প্রতিটি নথির জন্য আলাদাভাবে সেগুলো লোড করা যায়।",
+    "description": "Hint under the remote-images checkbox."
   }
 }

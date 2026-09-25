@@ -11,6 +11,9 @@
 // cannot reach in: an extension frame is a separate origin from the document that hosts it.
 //
 // ?host=<id> names this host so a broadcast meant for one tab's frame is ignored by another's.
+// The broker mints ids nobody can guess: this page is web-accessible (it must be, to be framed
+// inside the reader's page), so a site can load a copy of it, and a guessable id would hand that
+// copy another tab's pictures.
 
 import { recognize, ocrLangToHtmlLang } from "./ocr-overlay.js";
 import { plateSpecs } from "./ocr-plates.js";
@@ -59,8 +62,14 @@ async function runJob(job) {
   }
 }
 
-chrome.runtime.onMessage.addListener((msg) => {
-  if (!msg || msg.dht !== "page-ocr" || msg.hostId !== HOST_ID) return;
+// Jobs come from the broker in the service worker, which has no tab. Anything with a tab is a
+// page agent or another extension page, and none of them hands out work.
+function fromBroker(sender) {
+  return !!sender && sender.id === chrome.runtime.id && !sender.tab;
+}
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (!HOST_ID || !msg || msg.dht !== "page-ocr" || msg.hostId !== HOST_ID || !fromBroker(sender)) return;
   if (msg.t === "recognize") { stopped = false; runJob(msg); return; }
   if (msg.t === "stop") { stopped = true; return; }
 });

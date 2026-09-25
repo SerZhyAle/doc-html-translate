@@ -279,3 +279,19 @@ test("renderChapter: label is empty and text is preserved when there is no headi
   assert.equal(label, "");
   assert.equal(fragText(frag).trim(), "Just prose.");
 });
+
+test("renderChapter: remote images are parked and counted; script links and names do not survive", () => {
+  const xhtml = doc(
+    `<img src="https://tracker.test/p.gif"><svg><image xlink:href="http://cdn.test/c.jpg"/></svg>` +
+    `<img src="pic.png"><a href="javascript:x()">j</a><a name="n1" href="#n1">self</a>`,
+  );
+  const { frag, remote } = renderChapter(xhtml, 4, "OEBPS", pathIndex(), () => "blob:pic");
+  const html = fragHtml(frag);
+  assert.equal(remote, 2);
+  assert.ok(!/ src="https?:/.test(html), `no live remote src: ${html}`);
+  assert.ok(html.includes('data-dht-remote-src="https://tracker.test/p.gif"'), html);
+  assert.ok(html.includes('src="blob:pic"'), "the in-book image still resolves");
+  assert.ok(!/javascript|name=/.test(html), html);
+  // rewriteAnchor retargets the fragment once; the shared scrub must not prefix it again.
+  assert.ok(html.includes('href="#d4-n1"') && html.includes('id="d4-n1"'), html);
+});

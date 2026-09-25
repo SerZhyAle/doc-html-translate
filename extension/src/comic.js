@@ -227,27 +227,87 @@ function zipEntries(arrayBuffer) {
 // TAR is a flat sequence of 512-byte header blocks each followed by the file's
 // bytes padded to 512. No compression, so an entry's bytes are just a subarray of
 // the buffer - load() slices lazily. Only regular files are returned.
+//
+// Names follow Go's archive/tar, which the desktop edition reads with, so both editions list
+// the same pages (docs/PARITY.md, "Comic archives"):
+//   - a GNU 'L' record carries the next entry's full name, 'K' its link name (ignored here);
+//   - a PAX 'x' record's path= and size= override the next header's fields, and a GNU.sparse.*
+//     key marks it sparse - skipped, as its stored bytes are not the page laid out in order;
+//   - the ustar prefix field joins the name only in USTAR/PAX headers: a GNU header keeps
+//     other data at that offset;
+//   - '0', or '\0' with no trailing slash, is a regular file.
+// Go consumes the 'L'/'K'/'x' records and returns a PAX global 'g' record as an entry of its
+// own, so the entry count (the limits budget) matches only with the same bookkeeping.
 
-function tarEntries(u8) {
+const TAR_REG = 0x30, TAR_REGA = 0x00, GNU_LONGNAME = 0x4c, GNU_LONGLINK = 0x4b, PAX_LOCAL = 0x78;
+
+function cstr(dec, bytes) {
+  const nul = bytes.indexOf(0);
+  return dec.decode(nul >= 0 ? bytes.subarray(0, nul) : bytes);
+}
+
+// parsePax reads "<len> <key>=<value>\n" records. A malformed length ends the parse: what came
+// before it is kept, as Go's reader would have failed the archive instead.
+function parsePax(dec, bytes) {
+  const out = new Map();
+  let pos = 0;
+  while (pos < bytes.length) {
+    const sp = bytes.indexOf(0x20, pos);
+    if (sp < 0) break;
+    const len = parseInt(dec.decode(bytes.subarray(pos, sp)), 10);
+    if (!(len > 0) || pos + len > bytes.length) break;
+    const rec = dec.decode(bytes.subarray(sp + 1, pos + len)).replace(/\n$/, "");
+    const eq = rec.indexOf("=");
+    if (eq > 0) out.set(rec.slice(0, eq), rec.slice(eq + 1));
+    pos += len;
+  }
+  return out;
+}
+
+export function tarEntries(u8) {
   const out = [];
   let count = 0;
   const dec = new TextDecoder("utf-8");
   let off = 0;
+  let longName = null;
+  let pax = null;
   while (off + 512 <= u8.length) {
     const block = u8.subarray(off, off + 512);
     // Two consecutive zero blocks mark the end of the archive.
     if (block.every((b) => b === 0)) break;
-    let name = dec.decode(block.subarray(0, 100)).replace(/\0.*$/, "");
-    const size = parseOctal(block.subarray(124, 136));
     const typeflag = block[156];
-    // Prefix field (GNU/USTAR long paths under 155 bytes).
-    const prefix = dec.decode(block.subarray(345, 500)).replace(/\0.*$/, "");
-    if (prefix) name = `${prefix}/${name}`;
+    let size = parseOctal(block.subarray(124, 136));
+    if (pax && pax.has("size")) {
+      const n = Number(pax.get("size"));
+      if (Number.isSafeInteger(n) && n >= 0) size = n;
+    }
     const dataStart = off + 512;
     off = dataStart + Math.ceil(size / 512) * 512;
+    const data = () => u8.subarray(dataStart, Math.min(dataStart + size, u8.length));
+
+    if (typeflag === GNU_LONGNAME) { longName = cstr(dec, data()); continue; }
+    if (typeflag === GNU_LONGLINK) continue;
+    if (typeflag === PAX_LOCAL) { pax = parsePax(dec, data()); continue; }
+
+    let name = cstr(dec, block.subarray(0, 100));
+    const magic = dec.decode(block.subarray(257, 265));
+    const isGnu = magic === "ustar  \0";
+    if (!isGnu && magic.startsWith("ustar")) {
+      const prefix = cstr(dec, block.subarray(345, 500));
+      if (prefix) name = `${prefix}/${name}`;
+    }
+    if (longName !== null) name = longName;
+    let sparse = false;
+    if (pax) {
+      if (pax.has("path")) name = pax.get("path");
+      for (const k of pax.keys()) if (k.startsWith("GNU.sparse.")) sparse = true;
+    }
+    longName = null;
+    pax = null;
     count++;
-    // typeflag '0' or '\0' is a regular file; skip directories and other types.
-    if (typeflag === 0x30 || typeflag === 0x00) {
+
+    const regular = typeflag === TAR_REG || (typeflag === TAR_REGA && !name.endsWith("/"));
+    if (regular && !sparse) {
       const start = dataStart;
       const end = dataStart + size;
       out.push({ name, size, load: async () => u8.slice(start, end) });

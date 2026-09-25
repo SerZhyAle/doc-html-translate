@@ -431,6 +431,14 @@ pages, or the same pages in a different order:
   anything under `__MACOSX/`. Go: `internal/comic/extract.go` `pageExts` / `isPageEntry`. JS:
   `extension/src/comic.js` `PAGE_EXTS` / `isPageEntry`. Guarded by `tests/parity_test.go`
   (`TestParityComicPageFilter`).
+- **TAR entry names follow Go's `archive/tar`** (2026-09-25). A GNU `L` record names the next entry, a
+  PAX `x` record's `path=` / `size=` override the next header, a `GNU.sparse.*` key marks the entry sparse
+  (skipped - its stored bytes are not the page), the ustar prefix field is joined only in USTAR/PAX headers
+  (a GNU header keeps other data there), and a `\0` typeflag counts as a regular file unless the name ends
+  in `/`. The `L`/`K`/`x` records are consumed and not counted as entries, as in Go, so the entry budget
+  matches too. Go: [`readers_tar.go`](../internal/comic/readers_tar.go) (`tar.Reader`). JS: `comic.js`
+  `tarEntries`, pinned by `test/comic.test.mjs`. Before this the extension read only the 100-byte name
+  field and the prefix, so long page names and PAX archives listed different pages than the desktop.
 
 Container support differs by capability, not drift (see [Intentional divergences](#intentional-divergences-do-not-fix)):
 the desktop app opens all four (CBR/CB7 by shelling out to 7-Zip, the MOBI/Calibre precedent), while the
@@ -964,9 +972,19 @@ These are by design. Do not "sync" them without a decision - document changes he
 
 - **EPUB output model.** Go extracts a **multi-file book to disk** and does **not** sanitize chapter
   HTML (it opens local files in the user's own browser). The extension merges the whole spine into **one
-  in-memory DOM** and therefore sanitizes (drops `script/style/inline styles/on*`), rewrites `<img>` to
-  `blob:` URLs, and namespaces ids/anchors. So sanitize, image-blobbing and anchor remapping exist
-  **only in the extension** by design.
+  in-memory DOM** and therefore sanitizes (drops `script/style/inline styles/on*` and `name`, keeps only
+  `http`/`https`/`mailto`/`tel`/relative/fragment links), rewrites `<img>` to `blob:` URLs, and
+  namespaces ids/anchors. So sanitize, image-blobbing and anchor remapping exist **only in the
+  extension** by design. The shared URL rules live in [`url-policy.js`](../extension/src/url-policy.js).
+- **Remote content is opt-in in the extension only** (2026-09-25). The viewer parks every remote
+  `src`/`srcset`/`poster`/`background`/SVG `href` a document carries until the reader allows it - per
+  document from a notice, or always (`allowRemoteContent`, default off, in [`defaults.js`](../extension/src/defaults.js)).
+  Opening a document must not tell its author, or an embedded tracker, that it was opened, and the
+  viewer's fetches carry the extension's host access. The desktop app writes a local file the reader's
+  own browser opens under its own rules and fetches nothing itself, so it has no such setting. The
+  extension's "save as HTML" file also carries its own script-free content policy
+  ([`export-html.js`](../extension/src/export-html.js)), because the file leaves the extension's policy
+  behind; the desktop output's own `javascript:` question is ticket `bugfix-reader-layer-and-single-page`.
 - **New-format parsing stacks differ by design.** The extension reimplements the pure-Go extractors
   in JS feeding a shared renderer: TXT/RTF/FB2/HTML are hand ports, but Markdown uses the vendored
   **`marked`** (Go uses `goldmark`) and MOBI/AZW3 use the vendored **`foliate-js`** (Go shells out to

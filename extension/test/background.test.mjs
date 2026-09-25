@@ -109,6 +109,27 @@ test("enabling interception installs redirect rules that honour disabled hosts",
   assert.ok(!fileRe.test("file://server/share/a.pdf"), "UNC paths are left to the browser");
 });
 
+test("interception matches the document extension in the URL path only", async () => {
+  const { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX } = await import("../src/background.js");
+  const https = new RegExp(HTTPS_INTERCEPT_REGEX);
+  const file = new RegExp(FILE_INTERCEPT_REGEX);
+  const table = [
+    // [url, intercepted]
+    ["https://site/a.pdf", true],
+    ["https://site/dir/book.epub?token=1&x=2", true],
+    ["https://site/a.cbz#p=3", true],
+    ["https://site/viewer?file=a.pdf", false],
+    ["https://site/viewer?next=/x/book.epub#top", false],
+    ["https://site/page#a.pdf", false],
+    ["https://site/a.pdf.html", false],
+    ["https://site/a.pdfx", false],
+    ["https://site/pdf", false],
+  ];
+  for (const [url, want] of table) assert.equal(https.test(url), want, url);
+  assert.equal(file.test("file:///C:/b/a.azw3?x"), true);
+  assert.equal(file.test("file:///C:/b/viewer.html?f=a.pdf"), false);
+});
+
 test("a storage change outside the options leaves the rules alone", async () => {
   const before = calls.dynamicRules.length;
   fire("storageChanged", { uiLang: { newValue: "de" } }, "local");

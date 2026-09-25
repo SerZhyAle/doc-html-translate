@@ -10,6 +10,7 @@
 import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -25,6 +26,11 @@ const vendor = join(root, "vendor");
 // Version 4.0.0 must match ocr-lang.js CDN_LANG_PATH and the desktop app's pinned
 // tessdata version (internal/ocr/tessdata.go cdnBase) - see ../docs/PARITY.md ("OCR").
 const TESSDATA_BASE = "https://tessdata.projectnaptha.com/4.0.0_fast";
+// SHA-256 of the decompressed eng.traineddata: tessdata_fast 4.0.0, the same bytes as the
+// desktop edition's build/tessdata/eng.traineddata. A shipped model is code-adjacent - the
+// store package carries it - so a changed upstream file fails the build instead of shipping.
+const ENG_TRAINEDDATA_SHA256 = "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2";
+const TESSDATA_TIMEOUT_MS = 60000;
 
 async function vendorPdfjs() {
   if (!existsSync(pdfjs)) {
@@ -113,14 +119,28 @@ async function vendorTesseract() {
 
   // Bundled English data: fetch the gzipped tessdata_fast file once and store it
   // decompressed so the runtime loads it with gzip:false and no network.
+  // The digest pins the decompressed file, not the gzip bytes, so a mirror that recompresses
+  // the same model still passes and one that serves a different model does not.
   const url = `${TESSDATA_BASE}/eng.traineddata.gz`;
-  const resp = await fetch(url);
+  let resp;
+  try {
+    resp = await fetch(url, { signal: AbortSignal.timeout(TESSDATA_TIMEOUT_MS) });
+  } catch (e) {
+    console.error(`Failed to fetch ${url}: ${e.message}`);
+    process.exit(1);
+  }
   if (!resp.ok) {
     console.error(`Failed to fetch ${url}: ${resp.status} ${resp.statusText}`);
     process.exit(1);
   }
   const gz = new Uint8Array(await resp.arrayBuffer());
   const data = gunzipSync(gz);
+  const digest = createHash("sha256").update(data).digest("hex");
+  if (digest !== ENG_TRAINEDDATA_SHA256) {
+    console.error(`eng.traineddata digest mismatch: got ${digest}, pinned ${ENG_TRAINEDDATA_SHA256}. ` +
+      "Verify the new file and update ENG_TRAINEDDATA_SHA256 in build.mjs deliberately.");
+    process.exit(1);
+  }
   await writeFile(join(langDir, "eng.traineddata"), data);
 
   // Carry the upstream licences next to the vendored code.

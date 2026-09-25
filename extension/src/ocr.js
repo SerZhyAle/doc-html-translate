@@ -111,6 +111,14 @@ async function getOcrLang() {
 }
 
 async function main() {
+  // This page fetches the URL it is given with the extension's host access. It is not
+  // web-accessible, but it refuses a frame anyway, as the viewer does: a framed copy would let
+  // the framing page choose what gets fetched.
+  if (window.top !== window.self) {
+    mount.replaceChildren();
+    setStatus(msg("vFrameBody", "Open this document in a top-level tab."));
+    return;
+  }
   const src = parseSrc();
   if (!src || !isSafe(src)) {
     mount.replaceChildren();

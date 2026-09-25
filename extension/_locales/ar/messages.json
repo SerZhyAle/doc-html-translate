@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "تعذّر بدء قراءة هذه الصفحة.",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "يريد هذا المستند تحميل {1} عنصر من الإنترنت. تم حظرها حتى لا يعرف مؤلفه أنك فتحته.",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "تحميلها",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "تحميل المحتوى الخارجي دائمًا",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "أرسل الموقع صفحة ويب بدلًا من المستند",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "يعني هذا عادةً أن المستند يتطلب تسجيل الدخول أو تأكيدًا على الموقع. افتح الأصل وأكمل هذه الخطوة ثم حوّل المستند مرة أخرى.",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "فتح الأصل",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "تحميل الصور الخارجية في المستندات",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "معطّل افتراضيًا: تُحظر الصور التي يجلبها المستند من الإنترنت حتى لا يعرف مؤلفه أنك فتحته. يتيح لك العارض تحميلها لكل مستند على حدة.",
+    "description": "Hint under the remote-images checkbox."
   }
 }

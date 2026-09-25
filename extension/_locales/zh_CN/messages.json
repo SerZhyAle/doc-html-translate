@@ -528,5 +528,37 @@
   "pageOcrFailedStart": {
     "message": "无法开始读取此页面。",
     "description": "Shown when the whole-page run could not be started at all."
+  },
+  "vRemoteBlocked": {
+    "message": "此文档想从互联网加载 {1} 个项目。它们已被阻止，这样作者就无法得知你打开了它。",
+    "description": "Viewer notice when a document references remote images. {1} is the number of items."
+  },
+  "vRemoteLoad": {
+    "message": "加载",
+    "description": "Button: load the blocked remote items for this document only."
+  },
+  "vRemoteAlways": {
+    "message": "始终加载外部内容",
+    "description": "Button: allow remote content for every document from now on."
+  },
+  "vHtmlReplyTitle": {
+    "message": "网站返回了网页而不是文档",
+    "description": "Viewer notice title when a document URL returned a web page (usually a login)."
+  },
+  "vHtmlReplyBody": {
+    "message": "这通常表示该文档需要在网站上登录或确认。请打开原始链接，完成该步骤，然后重新转换文档。",
+    "description": "Viewer notice body for the web-page-instead-of-document case."
+  },
+  "vBtnOpenOriginal": {
+    "message": "打开原始链接",
+    "description": "Button: open the original URL in this tab, bypassing the viewer."
+  },
+  "optAllowRemote": {
+    "message": "加载文档中的外部图片",
+    "description": "Options checkbox label: load remote images in documents."
+  },
+  "optAllowRemoteHint": {
+    "message": "默认关闭：文档从互联网拉取的图片会被阻止，这样作者就无法得知你打开了它。你可以在查看器中针对单个文档加载它们。",
+    "description": "Hint under the remote-images checkbox."
   }
 }

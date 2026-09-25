@@ -14,4 +14,9 @@ export const DEFAULT_OPTIONS = {
   theme: "light",
   ocrImages: false,
   ocrLang: "eng",
+  // Off by default: a document's remote images and media are not fetched until the reader
+  // allows them, per document from the viewer's notice or always from here. Opening a book
+  // must not tell anyone it was opened. The desktop app has no equivalent - its output is a
+  // local file the browser opens under its own rules (docs/PARITY.md).
+  allowRemoteContent: false,
 };

@@ -27,6 +27,8 @@ import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { recordRun } from "./diagnostics.js";
+import { buildExportHtml } from "./export-html.js";
+import { restoreRemote, REMOTE_MARK } from "./url-policy.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -128,6 +130,7 @@ function imageMime(data, name) {
 // loading another file into the same tab.
 let revokeCurrent = null;
 function teardownCurrent() {
+  clearRemoteNotice();
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
   if (ocrObserver) { ocrObserver.disconnect(); ocrObserver = null; }
   // Bumping the generation strands any chunk still rendering from the old document,
@@ -308,7 +311,8 @@ function registerImagesForOcr(root, force = false) {
   ensureOcrCss();
   const obs = getOcrObserver();
   for (const img of imgs) {
-    if (ocrQueued.has(img)) continue;
+    // A parked remote image has no src yet; it is registered when the reader allows it.
+    if (ocrQueued.has(img) || img.hasAttribute(REMOTE_MARK)) continue;
     ocrQueued.add(img);
     ocrTotal += 1;
     obs.observe(img);
@@ -641,30 +645,6 @@ async function collectExportCss(clone) {
   return parts.filter(Boolean).join("\n\n");
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-}
-
-function buildExportHtml({ title, theme, lang, styleVars, css, body }) {
-  const attrs = `lang="${escapeHtml(lang)}" data-theme="${escapeHtml(theme)}"` +
-    (styleVars ? ` style="${escapeHtml(styleVars)}"` : "");
-  return `<!DOCTYPE html>
-<html ${attrs}>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${escapeHtml(title)}</title>
-<style>
-${css}
-</style>
-</head>
-<body>
-${body}
-</body>
-</html>
-`;
-}
-
 // ---- TOC -------------------------------------------------------------------
 function renderToc(entries) {
   const tree = $("toc-tree");
@@ -802,6 +782,17 @@ function isFileUrl(url) {
   return /^file:/i.test(url);
 }
 
+// isHtmlReplyForDocument: the server answered with HTML for a URL that names a non-HTML
+// document. file:// replies carry no meaningful type, and a URL naming no known format may
+// well be a page on purpose, so neither is judged here.
+function isHtmlReplyForDocument(resp, url) {
+  if (isFileUrl(url)) return false;
+  const type = (resp.headers.get("content-type") || "").toLowerCase();
+  if (!/^\s*(text\/html|application\/xhtml\+xml)/.test(type)) return false;
+  const format = FORMAT_EXT[fileExt(url)];
+  return !!format && format !== "html";
+}
+
 // loadUrl downloads a PDF by URL and renders it. On failure it offers the local
 // file picker (which needs no host access and no file-URL toggle) as a fallback.
 async function loadUrl(url) {
@@ -819,8 +810,21 @@ async function loadUrl(url) {
   setStatus(t("vStatusDownloading", "Downloading document.."));
   let data;
   try {
-    const resp = await fetch(url);
+    // With the reader's cookies: a document behind a login opens here exactly when it opens in
+    // a plain tab. The extension's host access already bypasses CORS, so this adds nothing a
+    // page could use - the request is the viewer's own and its reply never reaches a page.
+    const resp = await fetch(url, { credentials: "include" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    if (isHtmlReplyForDocument(resp, url)) {
+      // A login wall or an interstitial answers a document URL with a web page. Parsing it as
+      // the document would report a corrupt file; the page itself is what the reader needs.
+      showNotice(t("vHtmlReplyTitle", "The site sent a web page instead of the document"), [
+        para(t("vHtmlReplyBody", "This usually means the document needs a sign-in or a confirmation click on the site. Open the original, finish that step, then convert the document again.")),
+        originalButton(t("vBtnOpenOriginal", "Open original")),
+        filePickerButton(),
+      ]);
+      return;
+    }
     const blob = await resp.blob();
     setOriginalDownload(blob, filenameFromUrl(url)); // keep a downloadable copy (browser-backed)
     data = await blob.arrayBuffer();
@@ -1378,6 +1382,52 @@ function reportRenderIdle() {
   setTimeout(hideStatus, 1400);
 }
 
+// ---- Remote content --------------------------------------------------------
+// A document's remote images and media are parked by the sanitizer (url-policy.js), so opening
+// a book never tells its author, or a tracker they embedded, that it was opened. The reader
+// gets one notice per document and decides: this document, or every document from now on
+// (options.allowRemoteContent). The notice sits outside #content so it is never exported.
+let remoteNotice = null;
+
+function clearRemoteNotice() {
+  if (remoteNotice) { remoteNotice.remove(); remoteNotice = null; }
+}
+
+function loadRemoteContent() {
+  clearRemoteNotice();
+  const content = $("content");
+  restoreRemote(content);
+  registerImagesForOcr(content); // the restored images now have something to recognize
+}
+
+async function allowRemoteAlways() {
+  loadRemoteContent();
+  options.allowRemoteContent = true;
+  try {
+    const got = await chrome.storage.local.get("options");
+    await chrome.storage.local.set({ options: { ...DEFAULT_OPTIONS, ...(got.options || {}), allowRemoteContent: true } });
+  } catch { /* the choice still holds for this document */ }
+}
+
+function offerRemoteContent(count) {
+  clearRemoteNotice();
+  const bar = el("div", "remote-notice");
+  bar.setAttribute("role", "status");
+  const text = el("span");
+  text.textContent = t("vRemoteBlocked", "This document wants to load {1} item(s) from the internet. They are blocked, so its author cannot see that you opened it.", count);
+  const once = el("button");
+  once.type = "button";
+  once.textContent = t("vRemoteLoad", "Load them");
+  once.addEventListener("click", loadRemoteContent);
+  const always = el("button");
+  always.type = "button";
+  always.textContent = t("vRemoteAlways", "Always load remote content");
+  always.addEventListener("click", allowRemoteAlways);
+  bar.append(text, once, always);
+  $("content").before(bar);
+  remoteNotice = bar;
+}
+
 // ---- EPUB ------------------------------------------------------------------
 // EPUB content is already semantic XHTML, so there is no reflow step: epub.js
 // returns chapters as sanitized DOM fragments (images -> blob: URLs, links ->
@@ -1427,8 +1477,10 @@ function renderBook(book, fallbackTitle) {
   const content = $("content");
   content.replaceChildren();
 
+  const remoteAllowed = options.allowRemoteContent === true;
   let totalChars = 0;
   book.sections.forEach((s, i) => {
+    if (remoteAllowed) restoreRemote(s.frag);
     const n = i + 1;
     const section = el("section");
     section.id = s.id;
@@ -1458,6 +1510,7 @@ function renderBook(book, fallbackTitle) {
     );
     content.prepend(banner);
   }
+  if (book.remote > 0 && !remoteAllowed) offerRemoteContent(book.remote);
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
   setStatus(total === 1
