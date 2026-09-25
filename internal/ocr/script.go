@@ -121,7 +121,7 @@ func DetectScript(bin, imgPath, dataDir string) (script string, conf float64, ok
 // unscaled images, and enlarging changes what the detector reports.
 func stageForDetection(imgPath string) (string, func()) {
 	if o := exifOrientation(imgPath); o != orientNormal {
-		if p, cleanup, ok := stageForOCR(imgPath, o, false); ok {
+		if p, _, cleanup, ok := stageForOCR(imgPath, o, false); ok {
 			return p, cleanup
 		}
 	}
