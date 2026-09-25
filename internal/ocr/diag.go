@@ -50,22 +50,26 @@ type diagDropped struct {
 	Y1    int     `json:"y1"`
 }
 
-// diagImage is one overlaid image's record, written as a single JSON line.
+// diagImage is one recognized image's record, written as a single JSON line - for an image that
+// got plates and for one that read fine and got none. Blocks and Dropped are always arrays, never
+// absent: an image with both empty is "the engine read nothing", one with no blocks and a
+// non-empty dropped list is "everything was thrown away", and an omitted field would blur the two.
 type diagImage struct {
 	File    string        `json:"file"`
 	Width   int           `json:"width"`
 	Height  int           `json:"height"`
 	Blocks  []diagBlock   `json:"blocks"`
-	Dropped []diagDropped `json:"dropped,omitempty"`
+	Dropped []diagDropped `json:"dropped"`
 }
 
 // diagMu serializes appends. Phase 3 of OverlayBook is sequential today, but a diagnostics
 // writer that corrupts its own file the day that changes would be a nasty thing to debug.
 var diagMu sync.Mutex
 
-// recordDiagnostics appends one line describing what wrapImage just drew. A no-op when
-// diagnostics are off, and best-effort when they are on: a failure to write a developer's debug
-// file must never affect a conversion.
+// recordDiagnostics appends one line describing what wrapImage just drew, or - for an image with no
+// plates - what the recognizer read and the floor discarded. A no-op when diagnostics are off, and
+// best-effort when they are on: a failure to write a developer's debug file must never affect a
+// conversion.
 //
 // The style and colours are recomputed here with the same pure functions wrapImage used, rather
 // than threaded back out of it. That keeps the rendering path byte-identical whether or not
@@ -75,7 +79,7 @@ func recordDiagnostics(file string, res Result, srcImg image.Image) {
 	if path == "" {
 		return
 	}
-	rec := diagImage{File: file, Width: res.Width, Height: res.Height}
+	rec := diagImage{File: file, Width: res.Width, Height: res.Height, Blocks: []diagBlock{}, Dropped: []diagDropped{}}
 	for _, b := range res.Blocks {
 		db := diagBlock{
 			Text: b.Text, X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1, LineH: b.LineH,

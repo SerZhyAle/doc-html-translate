@@ -153,3 +153,94 @@ func TestDiagnosticsRecordGeometryAndColours(t *testing.T) {
 		t.Errorf("recorded background %q does not appear in the rendered page", b.Background)
 	}
 }
+
+// readDiagLines applies the overlay to a one-image page and returns the diagnostics records it
+// wrote, whatever applyOverlays decided about the DOM.
+func readDiagLines(t *testing.T, dir string, results map[string]recognition) []diagImage {
+	t.Helper()
+	out := filepath.Join(t.TempDir(), "diag.jsonl")
+	t.Setenv(diagEnvVar, out)
+	doc, err := gohtml.Parse(strings.NewReader(`<html><body><p><img src="page.png"></p></body></html>`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	stats, changed := applyOverlays(doc, dir, results)
+	if changed || stats.NoText != 1 || stats.Overlaid != 0 {
+		t.Fatalf("fixture is not a no-plate image: changed=%v NoText=%d Overlaid=%d", changed, stats.NoText, stats.Overlaid)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("no diagnostics file for a no-plate image (OCR-OVERLAY rule 12): %v", err)
+	}
+	var recs []diagImage
+	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+		var rec diagImage
+		if err := json.Unmarshal([]byte(line), &rec); err != nil {
+			t.Fatal(err)
+		}
+		recs = append(recs, rec)
+		// Absent and empty must not be conflated: the raw line has to carry both arrays.
+		if !strings.Contains(line, `"blocks":[`) || !strings.Contains(line, `"dropped":[`) {
+			t.Errorf("record omits blocks or dropped: %s", line)
+		}
+	}
+	return recs
+}
+
+// OCR-OVERLAY rule 12: the discard record is written also for an image that produced no plates,
+// which is the case it exists for. This is the 2026-09-22 probe that found it missing, kept.
+func TestDiagnosticsRecordDiscardsForNoPlateImage(t *testing.T) {
+	dir, imgPath, _ := diagFixture(t)
+	results := map[string]recognition{
+		imgPath: {res: Result{Width: 200, Height: 100, Dropped: []DroppedLine{
+			{Text: "Hello there reader", Conf: ocrMinLineConf - 5, Floor: ocrMinLineConf, X0: 20, Y0: 20, X1: 160, Y1: 34},
+		}}},
+	}
+	recs := readDiagLines(t, dir, results)
+	if len(recs) != 1 {
+		t.Fatalf("want one line for the no-plate image, got %d", len(recs))
+	}
+	rec := recs[0]
+	if rec.File != imgPath || rec.Width != 200 || rec.Height != 100 {
+		t.Errorf("record = %q %dx%d, want %q 200x100", rec.File, rec.Width, rec.Height, imgPath)
+	}
+	if len(rec.Blocks) != 0 {
+		t.Errorf("no-plate image recorded %d blocks", len(rec.Blocks))
+	}
+	if len(rec.Dropped) != 1 {
+		t.Fatalf("want the one discarded line, got %d", len(rec.Dropped))
+	}
+	d := rec.Dropped[0]
+	if d.Text != "Hello there reader" || d.Conf != ocrMinLineConf-5 || d.Floor != ocrMinLineConf || d.X1 != 160 {
+		t.Errorf("discard record = %+v, want the dropped line as recognized", d)
+	}
+
+	// The extension's lab harness writes the same line; both pin it to one literal.
+	rec.File = "page.png"
+	line, err := json.Marshal(rec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(line) != goDiagLine {
+		t.Errorf("no-plate line drifted from the shape both editions write:\n got %s\nwant %s", line, goDiagLine)
+	}
+}
+
+// goDiagLine is the line written for TestDiagnosticsRecordDiscardsForNoPlateImage's image, with the
+// path shortened. extension/test/ocrlab-evidence.test.mjs holds GO_DIAG_LINE to the same bytes and
+// TestParityOCRDiscardRecord holds the two literals equal.
+const goDiagLine = `{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"x0":20,"y0":20,"x1":160,"y1":34}]}`
+
+// "Read fine, found no text" still writes its line, with an empty dropped array, so it stays
+// distinguishable from "everything was thrown away".
+func TestDiagnosticsRecordEmptyDiscardsForBlankImage(t *testing.T) {
+	dir, imgPath, _ := diagFixture(t)
+	results := map[string]recognition{imgPath: {res: Result{Width: 200, Height: 100}}}
+	recs := readDiagLines(t, dir, results)
+	if len(recs) != 1 {
+		t.Fatalf("want one line for the blank image, got %d", len(recs))
+	}
+	if len(recs[0].Blocks) != 0 || len(recs[0].Dropped) != 0 {
+		t.Errorf("blank image recorded blocks=%d dropped=%d, want 0 and 0", len(recs[0].Blocks), len(recs[0].Dropped))
+	}
+}

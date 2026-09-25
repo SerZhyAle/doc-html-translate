@@ -67,8 +67,8 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 19  19_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
 18  18_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-24  Draft (P60)
 20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
-15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-22  Draft
-    blank-images
+15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-25  In Progress (repo done; catalog
+    blank-images                                                    step ⛔ owner machine)
 17  17_2026-09-22_tsv-columns-read-by-position          2026-09-22  Draft
 ```
 

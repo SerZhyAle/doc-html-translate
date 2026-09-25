@@ -55,6 +55,31 @@ export function makePlate(p = {}) {
   };
 }
 
+// makeDiagRecord is one recognized image's discard record (OCR-OVERLAY rule 12), in the shape of the
+// desktop edition's DOCHT_OCR_DIAG line (internal/ocr/diag.go diagImage) so one reader handles both.
+// blocks and dropped are always arrays: both empty is "the engine read nothing", no blocks and a
+// non-empty dropped list is "everything was thrown away", and an absent field would blur the two.
+// The desktop line also carries each block's rendered style and sampled colours; the browser
+// resolves those at layout time, and the evidence plates already record them as laid out.
+export function makeDiagRecord(file, rec = {}) {
+  return {
+    file: str(file),
+    width: int(rec.width),
+    height: int(rec.height),
+    blocks: (rec.blocks || []).map((b) => ({
+      text: str(b.text),
+      ...makeRect(b.bbox),
+      lineH: int(b.lineHeight),
+    })),
+    dropped: (rec.dropped || []).map((d) => ({
+      text: str(d.text),
+      conf: num(d.conf),
+      floor: num(d.floor),
+      ...makeRect(d.bbox),
+    })),
+  };
+}
+
 // CLIP_SLACK_PX is how much overflow is layout rounding rather than hidden text.
 //
 // The shipped re-fit uses one pixel, and the lab needs more: scrollHeight and clientHeight are

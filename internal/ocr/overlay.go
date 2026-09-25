@@ -218,6 +218,10 @@ func applyOverlays(doc *gohtml.Node, baseDir string, results map[string]recognit
 			stats.Failed = append(stats.Failed, OverlayFailure{File: job.file, Err: r.err})
 		case !r.ok:
 			stats.NoText++
+			// OCR-OVERLAY rule 12: the image that produced nothing is the case the discard record
+			// exists for - without this line "the engine found nothing" and "every line failed the
+			// floor" read the same. No blocks, so no colours to sample and no decode needed.
+			recordDiagnostics(job.file, r.res, nil)
 		default:
 			// The boxes already arrived in display space (stageForOCR turned the picture before
 			// recognition), so the colours have to be sampled from the same view - otherwise a

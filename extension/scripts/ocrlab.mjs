@@ -18,12 +18,12 @@
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { die } from "./_lib.mjs";
 import { CDP, evaluate, findChrome, sleep, waitFor } from "./_ocrlab-cdp.mjs";
-import { EDITION_EXTENSION, makeRun, makeScene, validateRun } from "./_ocrlab-evidence.mjs";
+import { EDITION_EXTENSION, makeDiagRecord, makeRun, makeScene, validateRun } from "./_ocrlab-evidence.mjs";
 import { assembleToNatural, bandsFor } from "./_ocrlab-image.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -209,6 +209,17 @@ const READ_PLATES = `(() => {
   });
 })()`;
 
+// The recognizer's own record of the image - blocks placed and lines the floor discarded - which
+// overlayImage leaves on the container as a property, never in the DOM. Null only when the viewer
+// did not go through overlayImage, which a run must report rather than paper over.
+const READ_RECORD = `(() => {
+  const c = document.querySelector(".ocr-overlay");
+  return JSON.stringify(c && c.ocrRecord ? c.ocrRecord : null);
+})()`;
+
+// Same name as the desktop runner's DiagFile, so a run folder reads the same from either edition.
+const DIAG_FILE = "ocr-diag.jsonl";
+
 // APPLY_STRESS swaps every plate's text, ported from the desktop probe's applyCase. The original
 // is remembered on the element so each case is applied to the source rather than to the previous
 // case's output, and the swap is a real text-node mutation - which is what makes the extension's
@@ -261,7 +272,10 @@ async function runScene(ctx, s) {
       }
     }, OCR_TIMEOUT_MS);
     if (state.state === "failed") throw new Error(state.error);
-    if (v.name === PRIMARY_VIEWPORT) scene.ocrMs = Date.now() - ocrStart;
+    if (v.name === PRIMARY_VIEWPORT) {
+      scene.ocrMs = Date.now() - ocrStart;
+      await writeDiagRecord(ctx, s);
+    }
 
     for (const c of STRESS_CASES) {
       await evaluate(ctx.cdp, ctx.session, APPLY_STRESS(c));
@@ -282,6 +296,15 @@ async function runScene(ctx, s) {
   scene.renderMs = Date.now() - renderStart - (scene.ocrMs || 0);
   scene.peakRssBytes = await heapUsed(ctx);
   return scene;
+}
+
+// writeDiagRecord appends the scene's discard record (OCR-OVERLAY rule 12) to the run's
+// ocr-diag.jsonl - for a scene with no plates as much as for one with plates, since the empty scene
+// is where "found nothing" and "threw everything away" have to be told apart.
+async function writeDiagRecord(ctx, s) {
+  const rec = JSON.parse(await evaluate(ctx.cdp, ctx.session, READ_RECORD));
+  if (!rec) throw new Error("the overlay carries no recognition record - the viewer bypassed overlayImage");
+  appendFileSync(join(ctx.outDir, DIAG_FILE), `${JSON.stringify(makeDiagRecord(s.mediaPath, rec))}\n`);
 }
 
 // The source needs no browser: it is the corpus file itself, copied so the run folder is

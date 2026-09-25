@@ -590,13 +590,17 @@ export {
 // (and move) that element; pass a URL/Blob to create a fresh <img>.
 export async function overlayImage(source, { lang = "eng", onProgress } = {}) {
   const isEl = typeof HTMLImageElement !== "undefined" && source instanceof HTMLImageElement;
-  const { blocks, width, height } = await recognize(source, { lang, onProgress });
+  const { blocks, dropped, width, height } = await recognize(source, { lang, onProgress });
   const container = buildOverlay(
     isEl
       ? { imageEl: source, blocks, width, height }
       : { imageSrc: source, blocks, width, height },
   );
   if (!blocks.length) container.classList.add("ocr-empty");
+  // The discard record of OCR-OVERLAY rule 12, for the lab harness to read. A JS property rather
+  // than an attribute: it never reaches the rendered DOM, so reading it cannot change what the
+  // reader sees, and it is there for an image with no plates too - the case the record exists for.
+  container.ocrRecord = { width, height, blocks, dropped };
   return container;
 }
 

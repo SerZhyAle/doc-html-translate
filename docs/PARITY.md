@@ -631,15 +631,20 @@ their own test where one exists.
   - **it travels with the rung that won**, not merged across rungs, because a merged set describes
     no single decision.
 
-  The two editions surface it differently on purpose, and neither is a shared value: the desktop
-  writes it into the `DOCHT_OCR_DIAG` sidecar (which the lab already points into its run directory),
-  and it is written **even for a page that produced no plates at all** - the case the record exists
-  for. The extension returns it from `recognize()` beside the blocks. **Named gap:** the extension's
-  lab runner reads plates back out of the DOM and does not persist the record, so the distribution
-  behind the floor is derived from the desktop edition's evidence and applied to both. Closing it
-  needs a field on `evidence.Scene` and therefore a `SchemaVersion` bump on both sides; the floor
-  itself is a shared constant, so the derivation is not edition-specific - what is missing is the
-  ability to *check* it on the browser engine, whose confidences differ.
+  Both editions write it as one JSON line per recognized image into an `ocr-diag.jsonl` in the same
+  shape - `file`, `width`, `height`, `blocks`, `dropped` - and **also for an image that produced no
+  plates at all**, the case OCR-OVERLAY rule 12 says the record exists for. `blocks` and `dropped`
+  are always arrays, never omitted: both empty is "read fine, found no text", no blocks with a
+  non-empty `dropped` is "everything was thrown away". The desktop writes it from `applyOverlays`
+  into the `DOCHT_OCR_DIAG` sidecar (`diag.go`, guarded by `TestDiagnosticsRecordDiscardsForNoPlateImage`);
+  until 2026-09-25 the no-plate arm kept the record as far as `applyOverlays` and then wrote nothing.
+  The extension has no environment variable to hang a sidecar on, so `overlayImage` leaves the
+  recognizer's record on the overlay container as a JS property (`ocrRecord`, never an attribute -
+  it cannot reach the rendered DOM) and the lab harness `extension/scripts/ocrlab.mjs` writes it
+  through `makeDiagRecord`, whose output is pinned byte-for-byte to the desktop line by
+  `test/ocrlab-evidence.test.mjs`. **Intentional difference:** the desktop line also carries each
+  block's rendered `style` and sampled colours; the browser resolves those at layout time, and the
+  evidence plates already record them as laid out.
 - **Plate colour orientation** identical: the band just outside a block decides which sampled colour
   is the paper, over `RING_MIN_SAMPLES (40)` pixels - `overlay.go` `ringNearerInk` / `ringMinSamples`
   == `ocr-overlay.js` `ringNearerInk` / `RING_MIN_SAMPLES` (guarded by

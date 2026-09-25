@@ -340,6 +340,30 @@ func TestParityOCRDroppedLines(t *testing.T) {
 	}
 }
 
+// TestParityOCRDiscardRecord: both editions write the discard record of OCR-OVERLAY rule 12 as the
+// same JSON line, also for an image with no plates. Each edition pins its own output to a literal
+// (internal/ocr/diag_test.go goDiagLine, extension/test/ocrlab-evidence.test.mjs GO_DIAG_LINE); this
+// holds the two literals equal, so a field renamed on one side fails here rather than in a reader.
+// See docs/PARITY.md "OCR" (the confidence floor and its record).
+func TestParityOCRDiscardRecord(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "diag_test.go")
+	jsSrc := readRepoFile(t, "extension", "test", "ocrlab-evidence.test.mjs")
+	goM := regexp.MustCompile("const goDiagLine = `([^`]+)`").FindStringSubmatch(goSrc)
+	jsM := regexp.MustCompile(`const GO_DIAG_LINE = '([^']+)';`).FindStringSubmatch(jsSrc)
+	if goM == nil || jsM == nil {
+		t.Fatalf("discard-record literal not found (go=%v js=%v) - see docs/PARITY.md OCR", goM != nil, jsM != nil)
+	}
+	if goM[1] != jsM[1] {
+		t.Errorf("the editions write different discard records:\n go %s\n js %s", goM[1], jsM[1])
+	}
+	if !regexp.MustCompile(`recordDiagnostics\(job\.file, r\.res, nil\)`).MatchString(readRepoFile(t, "internal", "ocr", "overlay.go")) {
+		t.Error("overlay.go: the no-plate arm no longer writes the discard record (OCR-OVERLAY rule 12)")
+	}
+	if !regexp.MustCompile(`container\.ocrRecord = \{ width, height, blocks, dropped \}`).MatchString(readRepoFile(t, "extension", "src", "ocr-overlay.js")) {
+		t.Error("ocr-overlay.js: overlayImage no longer leaves the discard record for the lab harness")
+	}
+}
+
 // TestParityOCRPrintPlate: an overlaid page has to survive being printed. A browser drops
 // background colours from a printed page by default, and a plate is an opaque background carrying
 // text - so without `print-color-adjust:exact` the translation prints on top of the source

@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   SCHEMA_VERSION, EDITION_DESKTOP, EDITION_EXTENSION, MODE_FILL,
-  clipped, makePlate, makeRun, makeScene, validateRun,
+  clipped, makeDiagRecord, makePlate, makeRun, makeScene, validateRun,
 } from "../scripts/_ocrlab-evidence.mjs";
 
 const GO_RUN = {
@@ -157,4 +157,31 @@ test("a failed scene carries its reason and is not graded on geometry it never h
 
 test("the default mode is the one the Go encoder writes today", () => {
   assert.equal(makePlate().mode, MODE_FILL);
+});
+
+// OCR-OVERLAY rule 12. GO_DIAG_LINE is the line internal/ocr/diag.go writes for a no-plate image
+// (TestDiagnosticsRecordDiscardsForNoPlateImage's fixture); the browser record must serialize to
+// the same bytes, so one reader handles both editions' ocr-diag.jsonl.
+// TestParityOCRDiscardRecord holds this literal equal to goDiagLine in internal/ocr/diag_test.go.
+const GO_DIAG_LINE = '{"file":"page.png","width":200,"height":100,"blocks":[],"dropped":[{"text":"Hello there reader","conf":45,"floor":50,"x0":20,"y0":20,"x1":160,"y1":34}]}';
+
+test("makeDiagRecord writes a no-plate image's discards in the desktop line's shape", () => {
+  const rec = makeDiagRecord("page.png", {
+    width: 200, height: 100, blocks: [],
+    dropped: [{ text: "Hello there reader", conf: 45, floor: 50, bbox: { x0: 20, y0: 20, x1: 160, y1: 34 } }],
+  });
+  assert.equal(JSON.stringify(rec), GO_DIAG_LINE);
+});
+
+test("makeDiagRecord keeps both arrays for an image the engine read nothing in", () => {
+  const line = JSON.stringify(makeDiagRecord("blank.png", { width: 10, height: 10 }));
+  assert.equal(line, '{"file":"blank.png","width":10,"height":10,"blocks":[],"dropped":[]}');
+});
+
+test("makeDiagRecord records placed blocks with their box and line height", () => {
+  const rec = makeDiagRecord("p.png", {
+    width: 50, height: 50, dropped: [],
+    blocks: [{ text: "Hi", bbox: { x0: 1, y0: 2, x1: 30, y1: 12 }, lineHeight: 10, lines: [] }],
+  });
+  assert.deepEqual(rec.blocks, [{ text: "Hi", x0: 1, y0: 2, x1: 30, y1: 12, lineH: 10 }]);
 });

@@ -150,6 +150,17 @@ adds a boundary test to the clustering, this repairs the clustering's input. The
 balloons and real lines overlap (1.87-2.57x) is measured, stated, and left to 07.3.
 
 
+## Correction (2026-09-25): §1.3 overstated what landed
+
+§1.3 says the discard record "is written **even for a page that produced no plates**". It was not.
+What landed was the preservation of the record up to `applyOverlays`: `recognizePaths` kept the
+dropped lines for a no-plate image, and `applyOverlays` then wrote diagnostics only in the arm that
+drew plates. The extension computed `droppedLines` and no module consumed it. Proven with a throwaway
+probe on 2026-09-22 (`applyOverlays: changed=false NoText=1`, no diagnostics file) and fixed by ticket
+15 (`ocr-discard-record-missing-for-blank-images`): both editions now write the line for a no-plate
+image, and `TestDiagnosticsRecordDiscardsForNoPlateImage` keeps the probe. §1.3 is left as written,
+since it records what was believed on 2026-08-15.
+
 ## Bookkeeping found while rebuilding the queue (2026-08-15)
 
 Recorded rather than quietly fixed, because a status that two files state differently is a status

@@ -1,6 +1,6 @@
 # The discard record is not written for the image it exists for
 
-**Status:** Draft
+**Status:** In Progress (repo criteria met 2026-09-25; the ⛔ catalog step remains)
 **Priority:** 50
 **Date:** 2026-09-22
 
@@ -48,19 +48,32 @@ landed was the preservation of the record up to `applyOverlays`, not its writing
 
 ## Done criteria
 
-- [ ] With `DOCHT_OCR_DIAG` set, an image that produced no plates writes one diagnostics line carrying its
+- [x] With `DOCHT_OCR_DIAG` set, an image that produced no plates writes one diagnostics line carrying its
       size and its `dropped` array (empty when the engine genuinely read nothing - "read fine, found no
       text" and "everything was thrown away" must be distinguishable in the file).
-- [ ] A test in `internal/ocr/` fails if that line stops being written - the probe above, kept.
-- [ ] The extension writes the same record from its lab harness, or `docs/PARITY.md` records a named
+- [x] A test in `internal/ocr/` fails if that line stops being written - the probe above, kept.
+- [x] The extension writes the same record from its lab harness, or `docs/PARITY.md` records a named
       divergence with the reason the browser edition cannot.
-- [ ] `DEV/plan/done/2026-08-15_release-1-worklog.md` §1.3 is corrected in the entry that lands this, rather than rewritten in
+- [x] `DEV/plan/done/2026-08-15_release-1-worklog.md` §1.3 is corrected in the entry that lands this, rather than rewritten in
       place.
 - [ ] **⛔ Local only - changes the contract catalog.** The exception row for `OCR-OVERLAY` rule 12 in the
       catalog registry (quoted below) is closed, not re-dated - after the three repo criteria above are met.
       The same change corrects the two catalog places that state the same deviation, or they contradict the
       closed row: this product's `OCR-OVERLAY` adoption row in the registry ("Two deviations ..") and the
       doc-html-translate row of section 8 in `ocr-overlay/README.md` (with a document-log row).
+
+## Delivered (2026-09-25)
+
+- **Go.** `applyOverlays` writes the record in the `!r.ok` arm too (`recordDiagnostics(job.file, r.res, nil)`);
+  `diagImage.Blocks` / `Dropped` always serialize as arrays, so "read nothing" (`[]`/`[]`) and "threw
+  everything away" (`[]`/non-empty) differ in the file. `TestDiagnosticsRecordDiscardsForNoPlateImage` and
+  `TestDiagnosticsRecordEmptyDiscardsForBlankImage` keep the probe; both fail with the new call removed.
+- **Extension.** `overlayImage` leaves `{ width, height, blocks, dropped }` on the container as the
+  `ocrRecord` property (not an attribute, so the rendered DOM is untouched); `scripts/ocrlab.mjs` writes it
+  to the run's `ocr-diag.jsonl` through `makeDiagRecord` for every scene, plated or not.
+- **Parity.** One literal line pins both editions' output; `TestParityOCRDiscardRecord` holds the two
+  literals equal and checks both write sites. `docs/PARITY.md` "OCR" rewritten, the "named gap" removed.
+- **Ledger.** The release-1 worklog gains a dated correction section; §1.3 itself is left as written.
 
 ## Contract snapshot (2026-09-25)
 
