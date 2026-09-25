@@ -1,19 +1,19 @@
 # The reader can only OCR a live page one picture at a time, in a tab that is no longer the page
 
-**Ticket:** 29_2026-09-19_page-ocr-overlay
+**Ticket:** 2026-09-19_page-ocr-overlay
 **Status:** BlockNeedUserTest - implemented; needs a hands-on pass on a real webcomic, a real scanned-archive page and a page whose pictures are cross-origin, plus one site with a restrictive content security policy and one browser below the offscreen-API version, before the store-listing permission text is written (§3.3 owner sign-off).
 **Priority:** 50
 **Date:** 2026-09-19
 **Tier:** Strategic
 **Tactical plan:** none - implemented directly from this strategic spec once research item 1 was
 answered in code (capability detection with a documented fallback). The shipped shape is recorded
-under [Intentional divergences](../../docs/PARITY.md#intentional-divergences-do-not-fix).
+under [Intentional divergences](../../../docs/PARITY.md#intentional-divergences-do-not-fix).
 
 > **Scope:** STRATEGIC. Goals, constraints, open questions. No class names, paths, line budgets,
 > schema versions, or framework module details.
 
 > Extension-only feature ticket. There is no desktop counterpart and there must not be one - the Go
-> app does not live inside somebody else's page. Read [`docs/PARITY.md`](../../docs/PARITY.md) before
+> app does not live inside somebody else's page. Read [`docs/PARITY.md`](../../../docs/PARITY.md) before
 > starting and record this under "Intentional divergences", not as a gap to close.
 
 ---
@@ -80,8 +80,8 @@ pictures as real selectable text - so the words can be copied, and so the browse
 ### 3.3 Owner inputs (Approval gate)
 
 - **Related tickets:** none blocking. Shares the recognition and plate-composition work tracked by
-  [`28_2026-08-15_plate-styling-single-source`](28_2026-08-15_plate-styling-single-source.md) and the
-  closed composition tickets in [`done/`](done/); this ticket must not fork that logic.
+  [`28_2026-08-15_plate-styling-single-source`](../28_2026-08-15_plate-styling-single-source.md) and the
+  closed composition tickets in [`done/`](./); this ticket must not fork that logic.
 - **Copy/tone policy:** the new menu item and the layer's controls follow the wording of the existing
   image menu item, in all authored locales.
 - **Performance budget:** the page stays interactive throughout; recognition is queued, one picture at
@@ -262,11 +262,11 @@ mirror of the divergences already recorded in the other direction.
 
 ## 10. Links to other specs
 
-- [`28_2026-08-15_plate-styling-single-source`](28_2026-08-15_plate-styling-single-source.md) - the layer's
+- [`28_2026-08-15_plate-styling-single-source`](../28_2026-08-15_plate-styling-single-source.md) - the layer's
   styling must come from the source that ticket is consolidating, not from a new one.
-- [`done/2026-07-01_app-ocr-image-overlay`](done/2026-07-01_app-ocr-image-overlay.md) - the overlay
+- [`done/2026-07-01_app-ocr-image-overlay`](2026-07-01_app-ocr-image-overlay.md) - the overlay
   this feature reuses.
-- [`done/2026-08-12_extension-crashes-the-tab-on-a-detailed-scan`](done/2026-08-12_extension-crashes-the-tab-on-a-detailed-scan.md)
+- [`done/2026-08-12_extension-crashes-the-tab-on-a-detailed-scan`](2026-08-12_extension-crashes-the-tab-on-a-detailed-scan.md)
   - the failure mode the queue design exists to avoid.
 
 ## 11. Done criteria (strategic)

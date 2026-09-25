@@ -761,7 +761,7 @@ func num(t *testing.T, what, pattern, s string) float64 {
 //
 // So the page agent is pinned to the shipped unit: it loads ocr-plates.js and calls into it, and it
 // does not carry plate arithmetic or plate constants of its own. See docs/PARITY.md "OCR" and
-// DEV/plan/29_2026-09-19_page-ocr-overlay.md (done criterion 8).
+// DEV/plan/done/2026-09-19_page-ocr-overlay.md (done criterion 8).
 func TestPlateRulesHaveOneImplementation(t *testing.T) {
 	agent := readRepoFile(t, "extension", "src", "page-agent.js")
 
@@ -779,9 +779,9 @@ func TestPlateRulesHaveOneImplementation(t *testing.T) {
 		}
 	}
 	// And the engine stays out of the reader's document: the agent must not reach for the module
-	// that owns the Tesseract worker. See DEV/plan/29_2026-09-19_page-ocr-overlay.md, ADR-1.
+	// that owns the Tesseract worker. See DEV/plan/done/2026-09-19_page-ocr-overlay.md, ADR-1.
 	if strings.Contains(agent, "ocr-overlay.js") {
-		t.Error("page-agent.js imports ocr-overlay.js, which carries the recognition engine into the reader's page - see DEV/plan/29_2026-09-19_page-ocr-overlay.md ADR-1")
+		t.Error("page-agent.js imports ocr-overlay.js, which carries the recognition engine into the reader's page - see DEV/plan/done/2026-09-19_page-ocr-overlay.md ADR-1")
 	}
 }
 

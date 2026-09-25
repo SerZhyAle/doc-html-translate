@@ -815,7 +815,7 @@ These are by design. Do not "sync" them without a decision - document changes he
   recognition, clustering and plate geometry are the same code the viewer uses
   ([`ocr-plates.js`](../extension/src/ocr-plates.js)), pinned by `TestPlateRulesHaveOneImplementation`,
   so the page agent can never grow a second set of plate rules. Decided in
-  [`DEV/plan/29_2026-09-19_page-ocr-overlay.md`](../DEV/plan/29_2026-09-19_page-ocr-overlay.md) (ADR-3).
+  [`DEV/plan/done/2026-09-19_page-ocr-overlay.md`](../DEV/plan/done/2026-09-19_page-ocr-overlay.md) (ADR-3).
 - **Where the recognition engine runs, in the extension, is decided at runtime.** The engine never
   runs inside the reader's document - a third-party page's content security policy governs what
   compiles there, and a great many sites would refuse the WebAssembly module silently. It runs in an

@@ -124,7 +124,6 @@ process and the GUI drop/delete need a pass on Windows. Rule 7 puts it at the bo
 26  26_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
 27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
 28  28_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
-29  29_2026-09-19_page-ocr-overlay                      2026-09-19  BlockNeedUserTest - hands-on pass + store permission text
 30  30_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
@@ -198,7 +197,7 @@ PC" reads nothing from us. It is package 2 rather than 1 because no shipped code
 because every unanswered warning is a user who does not come back. The contract it closes is
 `INSTALL-TRUST` 1.0, and until it lands the gap is a dated exception in the shared registry.
 
-[`29_2026-09-19_page-ocr-overlay`](29_2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**
+[`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**
 in this queue rather than a defect or an instrument: recognize every picture on an ordinary live web
 page and lay the plates over them in place, so the words can be copied and the browser's own page
 translation reaches them. **The code is written and the gates are green**; what gates it now is a human
