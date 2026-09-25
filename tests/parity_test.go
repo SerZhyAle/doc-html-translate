@@ -97,6 +97,7 @@ func TestParityOCRCatalog(t *testing.T) {
 // constants must match, or the two editions recognize/group text differently. See docs/PARITY.md "OCR".
 func TestParityOCRClustering(t *testing.T) {
 	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	boundarySrc := readRepoFile(t, "internal", "ocr", "boundary.go")
 	overlaySrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
 	clusterSrc := readRepoFile(t, "extension", "src", "ocr-cluster.js")
 	pairs := []struct{ name, goRe, jsFile, jsRe string }{
@@ -107,6 +108,7 @@ func TestParityOCRClustering(t *testing.T) {
 		{"max plate coverage", `ocrMaxPlateCoverage\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_PLATE_COVERAGE\s*=\s*([\d.]+)`},
 		{"min plate line fill", `ocrMinPlateLineFill\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MIN_PLATE_LINE_FILL\s*=\s*([\d.]+)`},
 		{"max word gap ratio", `ocrMaxWordGapRatio\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_MAX_WORD_GAP_RATIO\s*=\s*([\d.]+)`},
+		{"boundary reach", `ocrBoundaryReach\s*=\s*([\d.]+)`, "ocr-cluster.js", `OCR_BOUNDARY_REACH\s*=\s*([\d.]+)`},
 		{"upscale dpi floor", `ocrUpscaleDPIFloor\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_UPSCALE_DPI_FLOOR\s*=\s*([\d.]+)`},
 		{"assumed page inches", `ocrAssumedPageInches\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_ASSUMED_PAGE_INCHES\s*=\s*([\d.]+)`},
 		{"min declared dpi", `ocrMinDeclaredDPI\s*=\s*([\d.]+)`, "ocr-overlay.js", `OCR_MIN_DECLARED_DPI\s*=\s*([\d.]+)`},
@@ -188,8 +190,37 @@ func TestParityOCRClustering(t *testing.T) {
 		// the page straight back into the order this exists to undo.
 		{"cut runs are regrouped into columns", "tesseract.go", goSrc, `func orderColumns\(runs \[\]\*ocrLine, minConf float64\) \[\]\*ocrLine`},
 		{"cut runs are regrouped into columns", "ocr-cluster.js", clusterSrc, `export function orderColumns\(runs, minConf = OCR_MIN_LINE_CONF\)`},
-		{"columns are formed from the lines that can reach a plate", "tesseract.go", goSrc, `if keepLine\(r, minConf\) \{\s*byX = append\(byX, r\)`},
-		{"columns are formed from the lines that can reach a plate", "ocr-cluster.js", clusterSrc, `runs\.filter\(\(r\) => keepLine\(r, minConf\)\)\.sort`},
+		{"columns are formed from the lines that can reach a plate", "tesseract.go", goSrc, `if keepLine\(r, minConf\) && !r\.orphan \{\s*byX = append\(byX, r\)`},
+		{"columns are formed from the lines that can reach a plate", "ocr-cluster.js", clusterSrc, `runs\.filter\(\(r\) => keepLine\(r, minConf\) && !r\.orphan\)\.sort`},
+		// The stroke between two words is the other half of the same cut (Phase 07 Step 07.3 of the
+		// lab ticket, 2026-09-25), and again the constant is the least of it. A gap is cut when it is
+		// too wide *or* a stroke crosses it; the reach is the words' median height times the constant,
+		// in the recognizer's own pixels; the path has to run past the band on both sides, which is
+		// the whole difference between a balloon outline and a letter left out of its box; ink is the
+		// plate colours' own contrast from a paper read outside the word boxes; and every pass reads
+		// the plane of the picture itself. A side that dropped any one of these would pass the value
+		// check above and cut real lines, or none.
+		{"a stroke cuts a gap the ratio keeps", "tesseract.go", goSrc, `wide := float64\(max\(w\.x0-prev\.x1, prev\.x0-w\.x1\)\) > maxGap\s*if wide \|\| strokeBetween\(ink, prev, w, reach\)`},
+		{"a stroke cuts a gap the ratio keeps", "ocr-cluster.js", clusterSrc, `const wide = gap > maxGap;\s*if \(wide \|\| strokeBetween\(ink, prev, w\.bbox, reach\)\)`},
+		// And what a stroke cuts off is not always text: a run it separates that could not be a plate
+		// on its own is the outline or the artwork beside it, and both sides park it rather than let it
+		// sit in a column between two lines of one balloon (atomicwar0401, 2026-09-25).
+		{"a stroke's untranslatable fragment is an orphan", "tesseract.go", goSrc, `byStroke\[i-1\] \|\| i < len\(byStroke\) && byStroke\[i\]\) && !isTranslatable\(`},
+		{"a stroke's untranslatable fragment is an orphan", "ocr-cluster.js", clusterSrc, `byStroke\[i - 1\]\) \|\| \(i < byStroke\.length && byStroke\[i\]\)\) && !isTranslatable\(`},
+		{"an orphan reaches the clustering as a line", "ocr-overlay.js", overlaySrc, `if \(words\.orphan === true\) line\.orphan = true;`},
+		{"the reach is the words' median times the constant", "tesseract.go", goSrc, `reach := int\(float64\(med\) \* ocrBoundaryReach\)`},
+		{"the reach is the words' median times the constant", "ocr-cluster.js", clusterSrc, `const reach = Math\.floor\(rawMed \* OCR_BOUNDARY_REACH\)`},
+		{"the stroke runs past the band on both sides", "boundary.go", boundarySrc, `y0, y1 := min\(a\.y0, b\.y0\)-reach, max\(a\.y1, b\.y1\)\+reach`},
+		{"the stroke runs past the band on both sides", "ocr-cluster.js", clusterSrc, `const y0 = Math\.min\(a\.y0, b\.y0\) - reach, y1 = Math\.max\(a\.y1, b\.y1\) \+ reach`},
+		{"the path must reach the far row", "boundary.go", boundarySrc, `if py == h-1 \{\s*return true`},
+		{"the path must reach the far row", "ocr-cluster.js", clusterSrc, `if \(py === h - 1\) return true;`},
+		{"ink is the plate contrast from the paper", "boundary.go", boundarySrc, `d >= plateMinContrast \|\| -d >= plateMinContrast`},
+		{"ink is the plate contrast from the paper", "ocr-cluster.js", clusterSrc, `- paper\) >= ink\.minContrast`},
+		{"ink is the plate contrast from the paper", "ocr-overlay.js", overlaySrc, `minContrast: PLATE_MIN_CONTRAST`},
+		{"paper is read outside the word boxes", "boundary.go", boundarySrc, `\{w\.y0 - 3, w\.y0 - 2, w\.y1 \+ 1, w\.y1 \+ 2\}`},
+		{"paper is read outside the word boxes", "ocr-cluster.js", clusterSrc, `\[w\.y0 - 3, w\.y0 - 2, w\.y1 \+ 1, w\.y1 \+ 2\]`},
+		{"every pass reads the picture's own plane", "tesseract.go", goSrc, `ocrMinLineConf, frame\.grey\)`},
+		{"every pass reads the picture's own plane", "ocr-overlay.js", overlaySrc, `const ink = await strokePlane\(image\);`},
 	}
 	for _, m := range meaning {
 		if !regexp.MustCompile(m.re).MatchString(m.src) {
@@ -229,6 +260,10 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		// The rescue floor lives in ocr-cluster.js on the JS side, beside keepLine which applies it,
 		// so this pair reads it from the combined extension source above.
 		{"rescue line confidence", `ocrRescueLineConf\s*=\s*([\d.]+)`, `OCR_RESCUE_LINE_CONF\s*=\s*([\d.]+)`},
+		// The size rule's word gate (admitBySize): the letter run and the relieved floor. A drift
+		// here keeps the poster's headline in one edition and drops it in the other.
+		{"rescue word confidence", `ocrRescueWordConf\s*=\s*([\d.]+)`, `OCR_RESCUE_WORD_CONF\s*=\s*([\d.]+)`},
+		{"rescue word letter run", `ocrRescueWordRun\s*=\s*(\d+)`, `OCR_RESCUE_WORD_RUN\s*=\s*(\d+)`},
 		// The sparse rung's mode. It is the rung that recovers display lettering a poster's layout
 		// analysis throws away, and a drift here means one edition reads the poster and the other
 		// shows the reader a picture with nothing on it.
@@ -239,6 +274,34 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		jv := num(t, p.name+" (ocr-overlay.js)", p.jsRe, jsSrc)
 		if gv != jv {
 			t.Errorf("%s drift: tesseract.go=%v ocr-overlay.js=%v (must match - see docs/PARITY.md OCR)", p.name, gv, jv)
+		}
+	}
+
+	// admitBySize runs on the ladder's two kinds of rung - the grey rungs and the screen rung - and
+	// nowhere else: not on the ordinary pass, not on the screen sweep over a page that already read.
+	// Counted per edition, because one edition applying it to the sweep would plate a French
+	// masthead the other leaves alone.
+	overlaySrc := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+	if n := strings.Count(goSrc, "ocrRescueLineConf, true, known(grey))"); n != 2 {
+		t.Errorf("tesseract.go applies admitBySize on %d passes, want 2 (the grey rungs and the screen rung)", n)
+	}
+	if n := strings.Count(overlaySrc, "admitBySize(lines, OCR_RESCUE_LINE_CONF);"); n != 2 {
+		t.Errorf("ocr-overlay.js applies admitBySize on %d passes, want 2 (the grey rungs and the screen rung)", n)
+	}
+	for _, re := range []string{
+		`l\.admitted \|\| l\.meanConf\(\) >= minConf`,
+		`sameTypeSize\(h, a\)`,
+	} {
+		if !regexp.MustCompile(re).MatchString(goSrc) {
+			t.Errorf("tesseract.go lost %q (admitBySize / keepLine shape, see docs/PARITY.md)", re)
+		}
+	}
+	for _, re := range []string{
+		`l\.admitted === true \|\| l\.conf >= minConf`,
+		`sameTypeSize\(h, a\)`,
+	} {
+		if !regexp.MustCompile(re).MatchString(jsSrc) {
+			t.Errorf("ocr-cluster.js lost %q (admitBySize / keepLine shape, see docs/PARITY.md)", re)
 		}
 	}
 }

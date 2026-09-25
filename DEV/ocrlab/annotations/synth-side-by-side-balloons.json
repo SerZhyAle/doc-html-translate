@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "synth-side-by-side-balloons",
+  "origin": "human",
+  "imageWidth": 760,
+  "imageHeight": 300,
+  "groups": [
+    {
+      "id": "balloon-left",
+      "type": "balloon",
+      "transcript": "WHERE DID THE OLD MAP GO?",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "l-1",
+          "kind": "box",
+          "points": [
+            [
+              150,
+              78
+            ],
+            [
+              346,
+              107
+            ]
+          ]
+        },
+        {
+          "id": "l-2",
+          "kind": "box",
+          "points": [
+            [
+              175,
+              116
+            ],
+            [
+              346,
+              145
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "balloon-left-bounds",
+        "kind": "box",
+        "points": [
+          [
+            150,
+            78
+          ],
+          [
+            346,
+            145
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "left-replace",
+        "kind": "box",
+        "points": [
+          [
+            35,
+            55
+          ],
+          [
+            361,
+            195
+          ]
+        ]
+      }
+    },
+    {
+      "id": "balloon-right",
+      "type": "balloon",
+      "transcript": "BEHIND THE BIG CLOCK!",
+      "language": "en",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "r-1",
+          "kind": "box",
+          "points": [
+            [
+              392,
+              78
+            ],
+            [
+              542,
+              107
+            ]
+          ]
+        },
+        {
+          "id": "r-2",
+          "kind": "box",
+          "points": [
+            [
+              392,
+              116
+            ],
+            [
+              539,
+              145
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "balloon-right-bounds",
+        "kind": "box",
+        "points": [
+          [
+            392,
+            78
+          ],
+          [
+            542,
+            145
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "right-replace",
+        "kind": "box",
+        "points": [
+          [
+            377,
+            55
+          ],
+          [
+            711,
+            195
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": [
+    {
+      "id": "left-outline",
+      "kind": "polygon",
+      "points": [
+        [
+          30,
+          50
+        ],
+        [
+          366,
+          50
+        ],
+        [
+          366,
+          200
+        ],
+        [
+          30,
+          200
+        ],
+        [
+          30,
+          50
+        ],
+        [
+          34,
+          54
+        ],
+        [
+          34,
+          196
+        ],
+        [
+          362,
+          196
+        ],
+        [
+          362,
+          54
+        ],
+        [
+          34,
+          54
+        ]
+      ]
+    },
+    {
+      "id": "right-outline",
+      "kind": "polygon",
+      "points": [
+        [
+          372,
+          50
+        ],
+        [
+          716,
+          50
+        ],
+        [
+          716,
+          200
+        ],
+        [
+          372,
+          200
+        ],
+        [
+          372,
+          50
+        ],
+        [
+          376,
+          54
+        ],
+        [
+          376,
+          196
+        ],
+        [
+          712,
+          196
+        ],
+        [
+          712,
+          54
+        ],
+        [
+          376,
+          54
+        ]
+      ]
+    }
+  ],
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/synth",
+    "annotatedOn": "2026-08-11",
+    "checkedBy": "tools/ocrlab/synth (exact by construction)",
+    "checkedOn": "2026-08-11"
+  }
+}

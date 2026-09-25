@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
-  sameTypeSize, splitWideGaps, strictlyBetter, trimOutlierWords,
-  OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
+  admitBySize, clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  sameTypeSize, splitWideGaps, strictlyBetter, strokeBetween, trimOutlierWords,
+  longestLetterRun, OCR_BOUNDARY_REACH, OCR_RESCUE_LINE_CONF, OCR_RESCUE_WORD_RUN, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
 } from "../src/ocr-cluster.js";
 
 // The line boxes below are not invented: they are what tesseract returned for the lab's two
@@ -331,6 +331,148 @@ test("the split reads boxes in the source's own pixels", () => {
   assert.deepEqual(textsOf(splitWideGaps(upscaled, 2)), textsOf(splitWideGaps(stitchedAcrossTheFigure)));
 });
 
+// ---- the stroke between two words -----------------------------------------------------------
+// Mirrors internal/ocr/boundary_test.go case for case: two words 100 px tall on white paper, 200 px
+// apart - a 2.0x gap, under the ratio, inside the band where balloon stitches and real lines overlap.
+
+const PLATE_MIN_CONTRAST = 55; // handed over with the plane by ocr-overlay.js; pinned in tests/parity_test.go
+const page = (w, h, luma) => ({ luma: new Uint8Array(w * h).fill(luma), width: w, height: h, minContrast: PLATE_MIN_CONTRAST });
+const paint = (ink, x0, y0, x1, y1, luma) => {
+  for (let y = y0; y < y1; y++) ink.luma.fill(luma, y * ink.width + x0, y * ink.width + x1);
+};
+const leftWord = { x0: 100, y0: 200, x1: 300, y1: 300 };
+const rightWord = { x0: 500, y0: 200, x1: 700, y1: 300 };
+const reachFor = (med) => Math.floor(med * OCR_BOUNDARY_REACH);
+
+test("an outline crossing the gap and running on past the line is a boundary", () => {
+  const ink = page(800, 500, 255);
+  paint(ink, 395, 60, 399, 440, 0);
+  assert.equal(strokeBetween(ink, leftWord, rightWord, reachFor(100)), true);
+  const line = [{ bbox: leftWord, text: "BE" }, { bbox: rightWord, text: "WHO" }];
+  assert.equal(splitWideGaps(line, 1, ink).length, 2, "the stitched line is cut");
+  assert.equal(splitWideGaps(line, 1, null).length, 1, "without pixels only the ratio rule is left");
+});
+
+test("a letter left out of its word box is not a boundary", () => {
+  // The T of "DON'T", the V of "IV. VINTER": ink in the gap, but inside the line's band.
+  const ink = page(800, 500, 255);
+  paint(ink, 310, 200, 330, 300, 0);
+  paint(ink, 300, 200, 360, 215, 0);
+  assert.equal(strokeBetween(ink, leftWord, rightWord, reachFor(100)), false);
+});
+
+test("the boundary reach brackets the measured bands", () => {
+  // Word height 100 px, so a stroke's overshoot in pixels is the reach in hundredths. See
+  // OCR_BOUNDARY_REACH and DEV/research/ocr_balloon_boundary_2026-09-25.md.
+  const stroke = (overshoot) => {
+    const ink = page(800, 500, 255);
+    paint(ink, 395, 200 - overshoot, 399, 300 + overshoot, 0);
+    return strokeBetween(ink, leftWord, rightWord, reachFor(100));
+  };
+  assert.equal(stroke(7), false, "a glyph overshooting by 7% (the Petit Journal J) is not a boundary");
+  assert.equal(stroke(30), true, "an outline running 30% past the line (the first stitch lost) is");
+  const oneSided = page(800, 500, 255);
+  paint(oneSided, 395, 200, 399, 400, 0);
+  assert.equal(strokeBetween(oneSided, leftWord, rightWord, reachFor(100)), false, "a descender runs past on one side only");
+  assert.ok(OCR_BOUNDARY_REACH > 0.07 && OCR_BOUNDARY_REACH < 0.30, "strictly between the measured failures");
+});
+
+test("a slanted outline is followed across the gap", () => {
+  const ink = page(800, 500, 255);
+  for (let y = 150; y < 350; y++) {
+    const x = 340 + Math.floor((y - 150) / 2);
+    paint(ink, x, y, x + 2, y + 1, 0);
+  }
+  assert.equal(strokeBetween(ink, leftWord, rightWord, reachFor(100)), true);
+});
+
+test("light lettering on a dark ground has dark paper", () => {
+  const ink = page(800, 500, 10);
+  paint(ink, 395, 60, 399, 440, 245);
+  assert.equal(strokeBetween(ink, leftWord, rightWord, reachFor(100)), true);
+});
+
+test("a right-to-left pair finds the outline between its words", () => {
+  const ink = page(800, 500, 255);
+  paint(ink, 395, 60, 399, 440, 0);
+  assert.equal(strokeBetween(ink, rightWord, leftWord, reachFor(100)), true);
+});
+
+test("no evidence never cuts", () => {
+  const ink = page(800, 500, 255);
+  paint(ink, 395, 0, 399, 500, 0);
+  assert.equal(strokeBetween(null, leftWord, rightWord, reachFor(100)), false, "no plane");
+  assert.equal(strokeBetween(ink, leftWord, { x0: 300, y0: 200, x1: 500, y1: 300 }, reachFor(100)), false, "no gap");
+  const top = (w) => ({ ...w, y0: 0, y1: 100 });
+  assert.equal(strokeBetween(ink, top(leftWord), top(rightWord), reachFor(100)), false, "no room above the line");
+  assert.equal(strokeBetween(ink, leftWord, rightWord, reachFor(6)), false, "a reach that rounds to nothing");
+});
+
+test("what a stroke cuts off and cannot be a plate is parked, not left in the balloon", () => {
+  // atomicwar0401, mirroring boundary_test.go TestParseTSVParksWhatAStrokeCutOff: a speck read as
+  // "A" at the head of a balloon's last line, cut off by the outline, lands in the page-wide column
+  // at that line's height and broke the balloon into two plates.
+  const ink = page(1000, 1000, 255);
+  paint(ink, 630, 700, 636, 950, 0);
+  const last = [
+    { bbox: { x0: 618, y0: 818, x1: 620, y1: 822 }, text: "A", confidence: 90 },
+    { bbox: { x0: 652, y0: 820, x1: 755, y1: 837 }, text: "RUSSKIES", confidence: 95 },
+    { bbox: { x0: 765, y0: 820, x1: 815, y1: 836 }, text: "WILL", confidence: 95 },
+  ];
+  const runs = splitWideGaps(last, 1, ink);
+  assert.deepEqual(textsOf(runs), ["A", "RUSSKIES WILL"]);
+  assert.equal(runs[0].orphan, true, "the speck is marked");
+  assert.equal(runs[1].orphan, undefined, "the lettering is not");
+  const lineOf = (r) => ({
+    bbox: { x0: Math.min(...r.map((w) => w.bbox.x0)), y0: Math.min(...r.map((w) => w.bbox.y0)),
+      x1: Math.max(...r.map((w) => w.bbox.x1)), y1: Math.max(...r.map((w) => w.bbox.y1)) },
+    text: r.map((w) => w.text).join(" "), conf: 95, wordH: r.map((w) => w.bbox.y1 - w.bbox.y0),
+    ...(r.orphan ? { orphan: true } : {}),
+  });
+  const lines = orderColumns([
+    { bbox: { x0: 27, y0: 19, x1: 888, y1: 50 }, text: "ONLY A STRONG AMERICA CAN PREVENT", conf: 95, wordH: [31, 31] },
+    { bbox: { x0: 660, y0: 785, x1: 894, y1: 802 }, text: "THE KREMLIN, THOSE", conf: 95, wordH: [17, 17, 17] },
+    ...runs.map(lineOf),
+  ]);
+  assert.equal(lines[lines.length - 1].text, "A", "the orphan is parked at the end");
+  assert.deepEqual(clusterLines(lines, undefined, 1000, 1000).map((b) => b.text), [
+    "ONLY A STRONG AMERICA CAN PREVENT",
+    "THE KREMLIN, THOSE RUSSKIES WILL",
+  ]);
+});
+
+test("balloons stitched at a narrow gap become one plate each", () => {
+  // The end-to-end shape of samson-and-delilah-15, mirroring boundary_test.go
+  // TestParseTSVSplitsBalloonsStitchedAtANarrowGap: every line of two side-by-side balloons stitched
+  // into one recognizer line, the two texts 2.5 word heights apart.
+  const ink = page(800, 400, 255);
+  paint(ink, 312, 70, 315, 200, 0);
+  paint(ink, 335, 70, 338, 200, 0);
+  const rows = ["one", "two", "three"].map((n, i) => {
+    const y0 = 100 + 30 * i, y1 = y0 + 20;
+    return [
+      { bbox: { x0: 100, y0, x1: 190, y1 }, text: "Left", confidence: 95 },
+      { bbox: { x0: 200, y0, x1: 300, y1 }, text: n, confidence: 95 },
+      { bbox: { x0: 350, y0, x1: 440, y1 }, text: "Right", confidence: 95 },
+      { bbox: { x0: 450, y0, x1: 550, y1 }, text: n, confidence: 95 },
+    ];
+  });
+  const linesOf = (plane) => {
+    const runs = rows.flatMap((words) => splitWideGaps(words, 1, plane));
+    const lines = runs.map((r) => ({
+      bbox: { x0: Math.min(...r.map((w) => w.bbox.x0)), y0: Math.min(...r.map((w) => w.bbox.y0)),
+        x1: Math.max(...r.map((w) => w.bbox.x1)), y1: Math.max(...r.map((w) => w.bbox.y1)) },
+      text: r.map((w) => w.text).join(" "), conf: 95, wordH: r.map((w) => w.bbox.y1 - w.bbox.y0),
+    }));
+    return runs.length > rows.length ? orderColumns(lines) : lines;
+  };
+  assert.equal(clusterLines(linesOf(null), undefined, 800, 400).length, 1, "without pixels: the merged plate");
+  assert.deepEqual(clusterLines(linesOf(ink), undefined, 800, 400).map((b) => b.text), [
+    "Left one Left two Left three",
+    "Right one Right two Right three",
+  ]);
+});
+
 // ---- putting the cut runs back in reading order -------------------------------------------
 
 test("cut runs are regrouped into columns, in reading order", () => {
@@ -468,4 +610,57 @@ test("clusterLines records the lines a refused cluster held", () => {
   }]);
   assert.equal(clusterLines(lines, 50).length, 1, "the record does not change the decision");
   assert.deepEqual(droppedLines([line(0, 0, 9, 9, 10, "noise")], 50).map((d) => d.gate), [GATE_CONFIDENCE]);
+});
+
+// The poster's sparse rung as the 2026-09-25 probe recorded it (conf, ink height), read with `rus`
+// and with the default `eng`. Mirrors rescue_test.go posterRungRus / posterRungEng.
+const posterRung = (rows) => {
+  let y = 0;
+  return rows.map(([h, conf, text]) => {
+    const l = { text, conf, bbox: { x0: 40, y0: y, x1: 600, y1: y + h } };
+    y += h + 20;
+    return l;
+  });
+};
+const posterRus = [
+  [287, 69.2, "ЗАЧЕМ"], [281, 80.7, "ТРАХАТЬСЯ:"], [155, 96.1, "МЫ ЖЕ"], [154, 41.2, "ВЗРОСЛЫЕ"],
+  [171, 92.6, "ЛЮДИ,"], [153, 95.9, "МОЖЕМ"], [142, 73.9, "ОБ ЗЛОМ"], [149, 87.2, "ПРОСТО"], [137, 95.0, "ПОГОВОРИТЬ"],
+];
+const posterEng = [
+  [287, 0.0, "SAuEM"], [281, 17.7, "TPAXATbGR:"], [155, 34.8, "Mbl KE"], [153, 34.1, "MODKEM"],
+  [142, 47.0, "Ob STOM"], [149, 63.4, "NPOCTO"], [137, 0.0, "NOTOBOPHTE"],
+];
+const admitted = (lines) => lines.filter((l) => l.admitted).map((l) => l.text);
+
+test("the size rule keeps the headline under the right language", () => {
+  const lines = posterRung(posterRus);
+  admitBySize(lines, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(admitted(lines), ["ЗАЧЕМ", "ОБ ЗЛОМ"]);
+  assert.ok(keepLine(lines[0], OCR_RESCUE_LINE_CONF), "keepLine must honour an admitted line");
+  assert.ok(!droppedLines(lines, OCR_RESCUE_LINE_CONF).some((d) => d.text === "ЗАЧЕМ"));
+});
+
+test("the size rule admits nothing under the wrong alphabet", () => {
+  const lines = posterRung(posterEng);
+  admitBySize(lines, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(admitted(lines), []);
+  assert.equal(clusterLines(lines, OCR_RESCUE_LINE_CONF, 1920, 2560).length, 0);
+});
+
+test("the size rule needs a word anchor, the same size, and a word", () => {
+  const glyph = posterRung([[150, 81.7, "\\"], [149, 63.4, "NPOCTO"]]);
+  admitBySize(glyph, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(admitted(glyph), [], "a stray glyph is no anchor");
+  const sizes = posterRung([[281, 80.7, "ТРАХАТЬСЯ:"], [142, 73.9, "ОБ ЗЛОМ"]]);
+  admitBySize(sizes, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(admitted(sizes), [], "a heading does not vouch for body type");
+  const short = posterRung([[150, 95.9, "МОЖЕМ"], [150, 69.0, "Cor"]]);
+  admitBySize(short, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(admitted(short), [], `a run under ${OCR_RESCUE_WORD_RUN} letters is debris`);
+});
+
+test("longestLetterRun counts letters in any script", () => {
+  for (const [s, want] of [["", 0], ["4 y", 1], ["TPAXATBCR: 4 y", 9], ["ОБ ЗЛОМ", 4], ["Cor!", 3], ["$ЫСНТЕУ.", 6]]) {
+    assert.equal(longestLetterRun(s), want, s);
+  }
 });

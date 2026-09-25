@@ -226,7 +226,11 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	frame, scale, dpi, cleanup := prepareForOCR(imgPath)
 	defer cleanup()
 
-	res, err := recognizePass(bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf)
+	// frame.grey is the luminance the line split reads for its stroke test (strokeBetween), handed
+	// over unbuilt: recognizePass builds it once the recognizer has returned, which is the moment
+	// the rescue ladder or screenSweep built it before the test existed - every image reaches it
+	// either way - so the worker holds no more memory, for no longer, than it did.
+	res, err := recognizePass(bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf, false, frame.grey)
 	if err != nil {
 		return Result{}, err
 	}
@@ -263,7 +267,14 @@ const (
 // recognizePass runs one recognition attempt: a prepared image, a language, a declared DPI and a
 // thresholding method. Splitting it out is what lets Recognize retry a picture that came back
 // empty without re-deciding how the image was staged.
-func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64) (Result, error) {
+//
+// ink supplies the luminance of the picture the passes read, for the line split's stroke test; it
+// is asked for only after the recognizer has returned, and nil or a nil answer leaves the split to
+// its ratio rule. Every pass reads the picture itself, not the grey or low-passed copy it may have
+// handed the recognizer.
+//
+// bySize turns on admitBySize for the pass: true only on the rescue ladder's rungs.
+func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64, bySize bool, ink func() *image.Gray) (Result, error) {
 	res, err := runTesseract(procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
 	if err != nil {
 		return Result{}, err
@@ -272,8 +283,15 @@ func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm in
 	if res.StdoutTruncated {
 		return Result{}, fmt.Errorf("tesseract: output larger than %d MB", procrun.DefaultMaxStdout>>20)
 	}
-	return parseTSV(res.Stdout, minConf)
+	var plane *image.Gray
+	if ink != nil {
+		plane = ink()
+	}
+	return parsePass(res.Stdout, minConf, bySize, plane)
 }
+
+// known hands recognizePass a luminance plane that already exists.
+func known(g *image.Gray) func() *image.Gray { return func() *image.Gray { return g } }
 
 // tesseractArgs builds one pass's command line.
 func tesseractArgs(ocrPath, lang, dataDir string, dpi, thresholding, psm int) []string {
@@ -371,7 +389,7 @@ func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Res
 	defer cleanup()
 	var best Result
 	for _, rung := range greyRescuePasses {
-		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf)
+		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf, true, known(grey))
 		if err != nil {
 			continue
 		}
@@ -418,7 +436,7 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 		return Result{}, false
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
+	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, true, known(grey))
 	if err != nil {
 		return Result{}, false
 	}
@@ -455,12 +473,10 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 // with. Turning it into a measured number needs annotated whole pages, which the corpus does not yet
 // have (see the ticket's human-owned gate).
 //
-// The 2026-08-15 word rule is inherited here for the same reason and with the same caveat, and the
-// caveat is sharper: the rule's band was measured on pages that read *nothing*, while this pass
-// fires on pages that read fine, so its prior is not the one the band came from. It is kept
-// inherited rather than excluded because excluding it would be an unmeasured decision too, and the
-// corpus run over all 46 scenes is what checks it - precision, cross-group and protected-area
-// damage are exactly what a wrong plate on a good page moves.
+// admitBySize is not applied here. Its band was measured on pages that read *nothing*, while this
+// pass fires on pages that read fine, so its prior is not the one the band came from - and the
+// candidates it would admit on the corpus are mostly half-read masthead lines of a French page
+// (DEV/research/ocr_rescue_third_axis_2026-09-25.md).
 //
 // The second result is the sweep's own discard record: the lines its floor and its translatability
 // test rejected, and the plates the merge refused as duplicates.
@@ -480,7 +496,7 @@ func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kep
 		return kept, nil
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf)
+	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, false, known(grey))
 	if err != nil {
 		return kept, nil
 	}
@@ -527,9 +543,79 @@ const ocrRescueLineConf = 80
 // headline when the language is right, but under the app's default `eng` a Cyrillic poster then
 // gets one plate of transliterated debris (`TPAXATBCR: 4 y`) 782x310 px over its own lettering,
 // where it previously got none. That is the regression this floor exists to prevent, so the floor
-// stays at 80 and the gap stays open. What ships from that cycle is the record above and the
-// measurement; the next attempt needs an axis that is not confidence and not length alone.
+// stays at 80. The third axis that closes the gap is admitBySize below.
+
+// The word rule's two numbers, inherited from the 2026-08-15 measurement rather than re-derived:
+// a line under the rescue floor is a candidate only when it carries an unbroken run of
+// ocrRescueWordRun letters (at 3 the band closes on debris like `Cor` and `yar`) and clears
+// ocrRescueWordConf, the middle of the empty band 36.1 / 58.3 those lines bracket. Neither is
+// enough on its own - see admitBySize for the axis that makes them safe.
+const (
+	ocrRescueWordConf = 47
+	ocrRescueWordRun  = 4
+)
+
+// admitBySize keeps a rescued line the floor would drop when it looks like the lettering the same
+// pass already trusts: a candidate under the word rule above whose ink height is the same type size
+// (sameTypeSize) as a line of the same pass that cleared the floor on its own and carries a word
+// itself. It marks such lines admitted and changes nothing else.
 //
+// The anchor is the whole point, and it is why this is safe where the 2026-08-15 word rule was not.
+// That rule let `TPAXATBCR: 4 y` through under `eng` because nothing tied the line to anything on the
+// page. Under the wrong alphabet the recognizer trusts none of a picture's lettering - on
+// poster-display-type-on-flat-colour read with `eng`, no line of any rung clears the floor with a
+// word in it, only a stray `\` and `4` - so there is no anchor and the rule admits nothing: the
+// scene stays exactly as it was. Read with `rus`, the sparse rung trusts ТРАХАТЬСЯ: at 80.7 and the
+// headline's other word, ЗАЧЕМ at 69.2, is the same size, so it is kept. The rule can therefore
+// never produce a pass's first plate; it can only extend what the floor already accepted, and a
+// pass's worth is bounded by the floor it has always had.
+//
+// The same property is also the limit, stated rather than hidden: when the floor already trusts
+// debris - an English balloon read with `rus` clears 81.4 as `МОТ ЕУЕМ` - the rule extends the
+// debris too. That scene is already wrong before this rule; the rule does not make a right one
+// wrong. Measured: DEV/research/ocr_rescue_third_axis_2026-09-25.md.
+//
+// Only the rescue ladder applies it. The screen sweep reads pages that already produced plates, a
+// prior this band was never measured on, and extending it there is a separate decision.
+func admitBySize(lines []*ocrLine, floor float64) {
+	var anchors []int
+	for _, l := range lines {
+		if l.text.Len() > 0 && l.meanConf() >= floor && longestLetterRun(l.text.String()) >= ocrRescueWordRun {
+			anchors = append(anchors, l.inkHeight())
+		}
+	}
+	if len(anchors) == 0 {
+		return
+	}
+	for _, l := range lines {
+		c := l.meanConf()
+		if l.text.Len() == 0 || c >= floor || c < ocrRescueWordConf || longestLetterRun(l.text.String()) < ocrRescueWordRun {
+			continue
+		}
+		h := l.inkHeight()
+		for _, a := range anchors {
+			if h > 0 && a > 0 && sameTypeSize(h, a) {
+				l.admitted = true
+				break
+			}
+		}
+	}
+}
+
+// longestLetterRun is the longest unbroken run of letters in s, in any script: the word rule's
+// measure of whether a line carries a word or only debris.
+func longestLetterRun(s string) int {
+	best, cur := 0, 0
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			cur = 0
+			continue
+		}
+		cur++
+		best = max(best, cur)
+	}
+	return best
+}
 
 // greyRendition returns an 8-bit luminance copy of the image, or nil when it cannot be decoded.
 // What matters is that the channels agree, not the depth: measured, an 8-bit grey PNG and an RGB
@@ -859,11 +945,28 @@ func hasLangFile(dir, lang string) bool {
 //
 // 3.5 is the geometric middle of 2.57 and 4.80, so every legitimate line keeps 36% of margin.
 //
-// The band 1.87-2.57x overlaps and is deliberately left alone: comic balloons drawn side by side
-// stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
-// geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
-// words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
-// (DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+// The band 1.87-2.57x overlaps and no ratio separates it: comic balloons drawn side by side stitch
+// at 1.87-3.04x while real lines run up to 2.57x, and a geometric rule must not pretend otherwise.
+// Those are cut on evidence from the pixels between the two words instead - see strokeBetween and
+// ocrBoundaryReach below.
+//
+// ocrBoundaryReach is how far past the words' band, above and below, a stroke has to run before the
+// gap it crosses counts as a boundary - a fraction of the line's median word height, like the ratio
+// above. It is what tells a balloon outline, which is drawn on past the line, from a letter the
+// recognizer left out of its word box, which stays inside it.
+//
+// Bracketed over all 1043 word gaps of the lab corpus plus test_doc/1.png with the desktop engine,
+// each gap the test's verdict depends on labelled by eye as a stitch between two regions or one real
+// line (DEV/research/ocr_balloon_boundary_2026-09-25.md):
+//
+//   - At 0.07 and below a real line is cut: the J of le-petit-journal's "Petit Journal" masthead,
+//     left out of its word box, descends that far below the line.
+//   - From 0.08 to 0.25 no real line is cut and all 11 stitches under ocrMaxWordGapRatio are.
+//   - At 0.30 the first stitch is lost (two paper notices side by side on a photographed wall), at
+//     0.50 a balloon stitch, at 0.75 two more: an outline beside the first or last line of its
+//     balloon turns away before it reaches that far.
+//
+// 0.14 is the geometric middle of 0.07 and 0.30, about 2x of margin each way.
 //
 // Shared invariant - see docs/PARITY.md and ocr-cluster.js OCR_MAX_WORD_GAP_RATIO.
 const (
@@ -874,6 +977,7 @@ const (
 	ocrMaxPlateCoverage   = 0.52
 	ocrMinPlateLineFill   = 0.72
 	ocrMaxWordGapRatio    = 3.5
+	ocrBoundaryReach      = 0.14
 )
 
 // ocrLine is one recognized text line: its bounding box, the concatenated word text, and the
@@ -892,6 +996,11 @@ type ocrLine struct {
 	// put two plates of transliterated debris ("NPOCTO", "0b 3TOM") over a legible Russian poster,
 	// which is what the rescue floor exists to prevent.
 	inkX0, inkY0, inkX1, inkY1 int
+	// orphan marks a run a stroke cut off that cannot be a plate on its own (see splitWideGaps):
+	// orderColumns parks it with the lines the confidence floor will drop.
+	orphan bool
+	// admitted marks a line under the floor that admitBySize kept (see there); keepLine honours it.
+	admitted bool
 }
 
 // ocrWord is one recognized word's box, text and confidence, kept only long enough to decide
@@ -908,14 +1017,18 @@ type ocrWord struct {
 }
 
 // splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
-// horizontal step wider than ocrMaxWordGapRatio times the line's own median word height. It returns
-// the line itself when there is nothing to cut, which is the answer on every ordinary line.
+// horizontal step wider than ocrMaxWordGapRatio times the line's own median word height, and at any
+// narrower step a stroke crosses (strokeBetween). It returns the line itself when there is nothing to
+// cut, which is the answer on every ordinary line.
 //
 // The step is measured between the two boxes and not from left to right, so a right-to-left line is
 // read the same way round as a left-to-right one instead of producing a negative gap on every pair
 // and silently opting out of the rule. Overlapping boxes give a negative step and never cut.
+//
+// ink is the luminance of the picture the recognizer read, in its coordinates; nil (a picture that
+// could not be decoded, or a test fixture with no pixels) leaves only the ratio rule.
 // Mirrors ocr-cluster.js splitWideGaps (docs/PARITY.md).
-func (l *ocrLine) splitWideGaps() []*ocrLine {
+func (l *ocrLine) splitWideGaps(ink *image.Gray) []*ocrLine {
 	if len(l.words) < 2 {
 		return []*ocrLine{l}
 	}
@@ -924,13 +1037,17 @@ func (l *ocrLine) splitWideGaps() []*ocrLine {
 		return []*ocrLine{l}
 	}
 	maxGap := float64(med) * ocrMaxWordGapRatio
+	reach := int(float64(med) * ocrBoundaryReach)
 
 	var runs [][]ocrWord
+	var byStroke []bool // one per cut: true when a stroke made it and the ratio would not have
 	cur := []ocrWord{l.words[0]}
 	for _, w := range l.words[1:] {
 		prev := cur[len(cur)-1]
-		if float64(max(w.x0-prev.x1, prev.x0-w.x1)) > maxGap {
+		wide := float64(max(w.x0-prev.x1, prev.x0-w.x1)) > maxGap
+		if wide || strokeBetween(ink, prev, w, reach) {
 			runs = append(runs, cur)
+			byStroke = append(byStroke, !wide)
 			cur = nil
 		}
 		cur = append(cur, w)
@@ -940,8 +1057,18 @@ func (l *ocrLine) splitWideGaps() []*ocrLine {
 		return []*ocrLine{l}
 	}
 	out := make([]*ocrLine, 0, len(runs))
-	for _, run := range runs {
-		out = append(out, lineFromWords(run))
+	for i, run := range runs {
+		r := lineFromWords(run)
+		// A run a stroke cut off that could not be a plate on its own is the outline or the artwork
+		// next to it, read as text: every one of the 8 such runs on the lab corpus is ("|", "}", "gs",
+		// the speck "A" beside a balloon on atomicwar0401). Handed to the clustering where it stands,
+		// it sits in its column at the height of the line it was cut from and breaks that line's plate
+		// from the one above - measured on atomicwar0401, one balloon became two plates. So it is
+		// marked, orderColumns parks it at the end, and the translatability gate records it there.
+		if (i > 0 && byStroke[i-1] || i < len(byStroke) && byStroke[i]) && !isTranslatable(r.text.String()) {
+			r.orphan = true
+		}
+		out = append(out, r)
 	}
 	return out
 }
@@ -992,7 +1119,8 @@ func lineFromWords(words []ocrWord) *ocrLine {
 // discard record. A line the floor will drop must not decide where a column is: measured on
 // test_doc/1.png, the engine also returns one empty 1982x1864 px "line" across the whole picture,
 // and letting it into the grouping chains both columns into a single column, which sorts the page
-// straight back into the interleaving this exists to undo.
+// straight back into the interleaving this exists to undo. An orphan - the outline or artwork a
+// stroke cut off a line, too little text to be a plate (see splitWideGaps) - is parked the same way.
 //
 // Columns go left to right, which is reading order for every script the corpus stitches. A
 // right-to-left page would want them the other way round, and nothing measured says whether its
@@ -1008,7 +1136,7 @@ func orderColumns(runs []*ocrLine, minConf float64) []*ocrLine {
 	}
 	var byX, parked []*ocrLine
 	for _, r := range runs {
-		if keepLine(r, minConf) {
+		if keepLine(r, minConf) && !r.orphan {
 			byX = append(byX, r)
 		} else {
 			parked = append(parked, r)
@@ -1185,12 +1313,40 @@ func isTSVHeader(row string) bool {
 // words give each line its text and confidence, and clusterLines groups the confident lines
 // into plates by proximity. Block/paragraph boxes are ignored - trusting them makes an opaque
 // plate span imagery the engine folded into a text paragraph (see clusterLines, docs/PARITY.md).
-func parseTSV(data []byte, minConf float64) (Result, error) {
+func parseTSV(data []byte, minConf float64, ink *image.Gray) (Result, error) {
+	return parsePass(data, minConf, false, ink)
+}
+
+// parsePass is parseTSV for one recognition pass, with admitBySize applied first when bySize is
+// set - so the record and the plates both see the line the rule admitted as kept.
+func parsePass(data []byte, minConf float64, bySize bool, ink *image.Gray) (Result, error) {
+	lines, w, h, err := tsvLines(data, minConf, ink)
+	if err != nil {
+		return Result{}, err
+	}
+	if bySize {
+		admitBySize(lines, minConf)
+	}
+	res := Result{Width: w, Height: h}
+
+	// Same predicate clusterLines uses, so the record cannot drift away from the decision: a line
+	// that carried text and did not clear the floor is one the reader lost.
+	for _, l := range lines {
+		if l.text.Len() > 0 && !keepLine(l, minConf) {
+			res.Dropped = append(res.Dropped, lineDrop(l, minConf, gateConfidence))
+		}
+	}
+	res.Blocks = clusterLinesRecording(lines, minConf, res.Width, res.Height, &res.Dropped)
+	return res, nil
+}
+
+// tsvLines reads a TSV page into its lines - split, reordered and trimmed, before any floor is
+// applied - plus the page's own size. minConf only steers orderColumns, which parks the lines the
+// floor will drop.
+func tsvLines(data []byte, minConf float64, ink *image.Gray) (lines []*ocrLine, width, height int, err error) {
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 
-	var res Result
-	var lines []*ocrLine
 	var cur *ocrLine
 
 	// A line is only complete once the next one starts, so this is where the split runs. Whether
@@ -1201,7 +1357,7 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		if cur == nil {
 			return
 		}
-		runs := cur.splitWideGaps()
+		runs := cur.splitWideGaps(ink)
 		if len(runs) > 1 {
 			split = true
 		}
@@ -1235,7 +1391,7 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 
 		switch level {
 		case 1: // page: the image dimensions
-			res.Width, res.Height = w, h
+			width, height = w, h
 		case 4: // line: close the one before it, then start a fresh accumulator
 			closeLine()
 			cur = &ocrLine{x0: left, y0: top, x1: left + w, y1: top + h}
@@ -1260,7 +1416,7 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 		}
 	}
 	if err := sc.Err(); err != nil {
-		return Result{}, err
+		return nil, 0, 0, err
 	}
 	closeLine()
 	if split {
@@ -1269,16 +1425,7 @@ func parseTSV(data []byte, minConf float64) (Result, error) {
 	for _, l := range lines {
 		l.trimOutlierWords()
 	}
-
-	// Same predicate clusterLines uses, so the record cannot drift away from the decision: a line
-	// that carried text and did not clear the floor is one the reader lost.
-	for _, l := range lines {
-		if l.text.Len() > 0 && !keepLine(l, minConf) {
-			res.Dropped = append(res.Dropped, lineDrop(l, minConf, gateConfidence))
-		}
-	}
-	res.Blocks = clusterLinesRecording(lines, minConf, res.Width, res.Height, &res.Dropped)
-	return res, nil
+	return lines, width, height, nil
 }
 
 func lineDrop(l *ocrLine, floor float64, gate string) DroppedLine {
@@ -1291,11 +1438,14 @@ func lineDrop(l *ocrLine, floor float64, gate string) DroppedLine {
 // keepLine is the confidence floor, in one place. clusterLines applies it and parseTSV records
 // what it rejected; if the two ever stated it separately, the record would stop describing the
 // decision the first time either moved.
+//
+// A line admitBySize admitted is kept whatever its confidence: the rule has already weighed it
+// against the pass's own floor, and asking here keeps the record and the plates on one decision.
 func keepLine(l *ocrLine, minConf float64) bool {
 	if l.text.Len() == 0 {
 		return false
 	}
-	return l.meanConf() >= minConf
+	return l.admitted || l.meanConf() >= minConf
 }
 
 // clusterLines drops low-confidence noise lines, then groups the survivors (in reading order)

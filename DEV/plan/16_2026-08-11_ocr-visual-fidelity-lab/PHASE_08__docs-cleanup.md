@@ -129,7 +129,8 @@ Every surface that must know about the lab knows about it, and no public quality
 **Status:** `[~]` in progress - every phase 01-06 and 08 file is in `DEV/CHANGELOG.md` (checked
 2026-09-25; phases 01-06 under their brace-list entries of 2026-08-11 - 2026-08-12, phase 08's docs in
 the entry of 2026-09-25). `test_doc/CORPUS.md` lives under the gitignored `test_doc/` and was not
-checkable from a fresh clone. The phase 07 files wait on phase 07, which is ⛔ Blocked.
+checkable from a fresh clone. Step 07.3's files are in the entry of 2026-09-25 15:43:25; the rest of
+phase 07's wait on 07.1 / 07.2, which are ⛔ Blocked.
 
 ## Phase done criteria
 

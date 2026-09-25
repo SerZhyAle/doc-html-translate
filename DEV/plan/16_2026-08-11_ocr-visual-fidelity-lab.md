@@ -1,7 +1,7 @@
 # Strategic spec: 16_2026-08-11_ocr-visual-fidelity-lab - OCR that replaces image text convincingly
 
 **Ticket:** 16_2026-08-11_ocr-visual-fidelity-lab
-**Status:** In Progress (6 / 8 phases; phase 07 ⛔ blocked on human-owned annotation - see the tactical INDEX, which is the authority on phase state)
+**Status:** In Progress (6 / 8 phases; phase 07 1 / 7 - Step 07.3 done 2026-09-25, 07.1 / 07.2 ⛔ blocked on human-owned annotation - see the tactical INDEX, which is the authority on phase state)
 **Priority:** 40
 **Date:** 2026-08-11
 **Tier:** Complex

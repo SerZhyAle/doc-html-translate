@@ -362,7 +362,7 @@ func stitchedAcrossTheFigure() *ocrLine {
 }
 
 func TestSplitWideGaps(t *testing.T) {
-	runs := stitchedAcrossTheFigure().splitWideGaps()
+	runs := stitchedAcrossTheFigure().splitWideGaps(nil)
 	if len(runs) != 2 {
 		t.Fatalf("runs = %d, want 2", len(runs))
 	}
@@ -388,11 +388,11 @@ func TestSplitWideGaps(t *testing.T) {
 
 func TestSplitWideGapsLeavesAnOrdinaryLineAlone(t *testing.T) {
 	l := lineFromWords(stitchedAcrossTheFigure().words[:5])
-	runs := l.splitWideGaps()
+	runs := l.splitWideGaps(nil)
 	if len(runs) != 1 || runs[0] != l {
 		t.Fatalf("an uncut line was rebuilt: %d run(s)", len(runs))
 	}
-	if got := lineFromWords([]ocrWord{{x0: 0, y0: 0, x1: 10, y1: 10, text: "alone"}}).splitWideGaps(); len(got) != 1 {
+	if got := lineFromWords([]ocrWord{{x0: 0, y0: 0, x1: 10, y1: 10, text: "alone"}}).splitWideGaps(nil); len(got) != 1 {
 		t.Errorf("a one-word line produced %d runs", len(got))
 	}
 }
@@ -407,13 +407,13 @@ func TestWordGapRatioBracketsTheMeasuredBands(t *testing.T) {
 			{x0: 100 + gap, y0: 0, x1: 200 + gap, y1: 100, text: "b"},
 		})
 	}
-	if got := len(pair(257).splitWideGaps()); got != 1 {
+	if got := len(pair(257).splitWideGaps(nil)); got != 1 {
 		t.Errorf("the widest gap inside a real line (2.57x) was cut into %d runs", got)
 	}
-	if got := len(pair(480).splitWideGaps()); got != 2 {
+	if got := len(pair(480).splitWideGaps(nil)); got != 2 {
 		t.Errorf("the narrowest cross-region stitch (4.80x) stayed %d run(s)", got)
 	}
-	if got := len(pair(1762).splitWideGaps()); got != 2 {
+	if got := len(pair(1762).splitWideGaps(nil)); got != 2 {
 		t.Errorf("synth-two-columns (17.62x) stayed %d run(s)", got)
 	}
 	if ocrMaxWordGapRatio != 3.5 {
@@ -430,17 +430,17 @@ func TestSplitWideGapsReadsRightToLeft(t *testing.T) {
 			{x0: 800 - gap, y0: 0, x1: 900 - gap, y1: 100, text: "الثاني"},
 		})
 	}
-	if got := len(rtl(20).splitWideGaps()); got != 1 {
+	if got := len(rtl(20).splitWideGaps(nil)); got != 1 {
 		t.Errorf("ordinary right-to-left spacing was cut into %d runs", got)
 	}
-	if got := len(rtl(700).splitWideGaps()); got != 2 {
+	if got := len(rtl(700).splitWideGaps(nil)); got != 2 {
 		t.Errorf("a right-to-left stitch stayed %d run(s)", got)
 	}
 	overlapping := lineFromWords([]ocrWord{
 		{x0: 0, y0: 0, x1: 100, y1: 100, text: "a"},
 		{x0: 60, y0: 0, x1: 160, y1: 100, text: "b"},
 	})
-	if got := len(overlapping.splitWideGaps()); got != 1 {
+	if got := len(overlapping.splitWideGaps(nil)); got != 1 {
 		t.Errorf("overlapping word boxes cut a line into %d runs", got)
 	}
 }

@@ -943,6 +943,31 @@
       "note": "right-to-left layout proxy: direction and alignment only, not Arabic shaping - real RTL scenes are corpus work"
     },
     {
+      "id": "synth-side-by-side-balloons",
+      "file": "synthetic/synth-side-by-side-balloons.png",
+      "sourceUrl": "",
+      "retrievedOn": "2026-08-11",
+      "licence": "SYNTHETIC",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "tools/ocrlab/synth",
+      "licenceVerifiedOn": "2026-08-11",
+      "sha256": "65e2b1fac61440da9b48185eb1baa9202997eca742a3ad5ea5ea0a2d4aa2fbfd",
+      "bytes": 8968,
+      "width": 760,
+      "height": 300,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "comic"
+      ],
+      "split": "dev",
+      "note": "two balloons side by side whose lines the recognizer stitches across both outlines"
+    },
+    {
       "id": "synth-text-on-halftone",
       "file": "synthetic/synth-text-on-halftone.png",
       "sourceUrl": "",

@@ -86,8 +86,56 @@ import { isTranslatable } from "./ocr-text.js";
 // invented lettering 8.4-73.9 - they **overlap**, so no single floor separates them. The rule the
 // distribution did support (a lower gate for a line carrying a run of four letters) was implemented,
 // run over the corpus and **rejected by it**: under the default `eng` a Cyrillic poster then gets a
-// 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80.
+// 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80;
+// the third axis that closes the gap is admitBySize below.
 export const OCR_RESCUE_LINE_CONF = 80;
+
+// The word rule's two numbers, inherited from the 2026-08-15 measurement: a line under the rescue
+// floor is a candidate only with an unbroken run of OCR_RESCUE_WORD_RUN letters and a confidence of
+// at least OCR_RESCUE_WORD_CONF, the middle of the empty band 36.1 / 58.3. Neither is enough on its
+// own - admitBySize is what makes them safe. Mirrors tesseract.go ocrRescueWordConf /
+// ocrRescueWordRun (docs/PARITY.md).
+export const OCR_RESCUE_WORD_CONF = 47;
+export const OCR_RESCUE_WORD_RUN = 4;
+
+// longestLetterRun is the longest unbroken run of letters in s, in any script. Mirrors tesseract.go
+// longestLetterRun.
+export function longestLetterRun(s) {
+  let best = 0, cur = 0;
+  for (const ch of String(s)) {
+    if (/\p{L}/u.test(ch)) {
+      cur++;
+      if (cur > best) best = cur;
+    } else {
+      cur = 0;
+    }
+  }
+  return best;
+}
+
+// admitBySize keeps a rescued line the floor would drop when it looks like the lettering the same
+// pass already trusts: a candidate under the word rule whose ink height is the same type size
+// (sameTypeSize) as a line of the same pass that cleared the floor on its own and carries a word
+// itself. It sets l.admitted and changes nothing else; keepLine honours the mark.
+//
+// The anchor is why this is safe where the 2026-08-15 word rule was not: under the wrong alphabet
+// the recognizer trusts none of a picture's lettering, so there is no anchor and nothing is
+// admitted - the rule can never produce a pass's first plate, only extend what the floor already
+// accepted. Called on the rescue ladder's rungs only, never on the ordinary pass or the screen sweep.
+// Mirrors tesseract.go admitBySize (docs/PARITY.md); measured in
+// DEV/research/ocr_rescue_third_axis_2026-09-25.md.
+export function admitBySize(lines, floor = OCR_RESCUE_LINE_CONF) {
+  const anchors = lines
+    .filter((l) => l.text && l.conf >= floor && longestLetterRun(l.text) >= OCR_RESCUE_WORD_RUN)
+    .map(lineInkHeight);
+  if (!anchors.length) return;
+  for (const l of lines) {
+    if (!l.text || l.conf >= floor || l.conf < OCR_RESCUE_WORD_CONF) continue;
+    if (longestLetterRun(l.text) < OCR_RESCUE_WORD_RUN) continue;
+    const h = lineInkHeight(l);
+    if (anchors.some((a) => h > 0 && a > 0 && sameTypeSize(h, a))) l.admitted = true;
+  }
+}
 
 // OCR_MAX_WORD_GAP_RATIO is the one rule that runs before any of the others, because it repairs
 // their input rather than their output: a *line* the recognizer handed us that is not one line.
@@ -118,12 +166,25 @@ export const OCR_RESCUE_LINE_CONF = 80;
 //
 // 3.5 is the geometric middle of 2.57 and 4.80, so every legitimate line keeps 36% of margin.
 //
-// The band **1.87-2.57x overlaps and is deliberately left alone**: comic balloons drawn side by side
-// stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
-// geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
-// words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
-// (DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+// The band **1.87-2.57x overlaps and no ratio separates it**: comic balloons drawn side by side
+// stitch at 1.87-3.04x while real lines run up to 2.57x, and a geometric rule must not pretend
+// otherwise. Those are cut on evidence from the pixels between the two words instead - see
+// strokeBetween and OCR_BOUNDARY_REACH below.
 export const OCR_MAX_WORD_GAP_RATIO = 3.5;
+
+// OCR_BOUNDARY_REACH is how far past the words' band, above and below, a stroke has to run before the
+// gap it crosses counts as a boundary - a fraction of the line's median word height, like the ratio
+// above. It is what tells a balloon outline, which is drawn on past the line, from a letter the
+// recognizer left out of its word box, which stays inside it.
+//
+// Bracketed over all 1043 word gaps of the lab corpus plus test_doc/1.png with the desktop engine,
+// each gap the test's verdict depends on labelled by eye (DEV/research/ocr_balloon_boundary_2026-09-25.md):
+// at 0.07 and below a real line is cut (the J of le-petit-journal's "Petit Journal" masthead, left
+// out of its word box, descends that far); from 0.08 to 0.25 no real line is cut and all 11 stitches
+// under OCR_MAX_WORD_GAP_RATIO are; at 0.30 the first stitch is lost, at 0.50 a balloon stitch, at
+// 0.75 two more. 0.14 is the geometric middle of 0.07 and 0.30, about 2x of margin each way.
+// Shared invariant - see docs/PARITY.md and tesseract.go ocrBoundaryReach.
+export const OCR_BOUNDARY_REACH = 0.14;
 
 export const OCR_MIN_LINE_CONF = 50;
 export const OCR_CLUSTER_PITCH_FACTOR = 1.2;
@@ -135,9 +196,10 @@ export const OCR_MIN_PLATE_LINE_FILL = 0.72;
 export const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.length >> 1] : 0);
 
 // splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
-// horizontal step wider than OCR_MAX_WORD_GAP_RATIO times the line's own median word height. It
-// returns one array of words per run, and the single original run when there is nothing to cut -
-// which is the answer on every ordinary line, so the common path allocates one array and stops.
+// horizontal step wider than OCR_MAX_WORD_GAP_RATIO times the line's own median word height, and at
+// any narrower step a stroke crosses (strokeBetween). It returns one array of words per run, and the
+// single original run when there is nothing to cut - which is the answer on every ordinary line, so
+// the common path allocates one array and stops.
 //
 // The step is measured between the two boxes and not from left to right, so a right-to-left line
 // (synth-rtl-layout) is read the same way round as a left-to-right one instead of producing a
@@ -146,28 +208,111 @@ export const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.len
 //
 // A word the recognizer gave no box for cannot be placed, so it stays with the run being built
 // rather than starting one: its text still reaches the reader, at the only position anything is
-// known about. Mirrors tesseract.go splitWideGaps (docs/PARITY.md).
-export function splitWideGaps(words, scale = 1) {
+// known about.
+//
+// `ink` is the luminance of the picture the recognizer read (see strokeBetween), in the recognizer's
+// own pixels - the boxes before `scale` divides them - which is where the desktop app reads it too.
+// Null leaves only the ratio rule. Mirrors tesseract.go splitWideGaps (docs/PARITY.md).
+export function splitWideGaps(words, scale = 1, ink = null) {
   const all = words || [];
   if (all.length < 2) return [all];
   const at = (v) => Math.round(v / scale);
-  const med = medianOf(all.filter((w) => w.bbox).map((w) => at(w.bbox.y1) - at(w.bbox.y0)).filter((h) => h > 0));
+  const boxed = all.filter((w) => w.bbox);
+  const med = medianOf(boxed.map((w) => at(w.bbox.y1) - at(w.bbox.y0)).filter((h) => h > 0));
   if (med <= 0) return [all];
   const maxGap = med * OCR_MAX_WORD_GAP_RATIO;
+  const rawMed = medianOf(boxed.map((w) => w.bbox.y1 - w.bbox.y0).filter((h) => h > 0));
+  const reach = Math.floor(rawMed * OCR_BOUNDARY_REACH);
 
   const parts = [];
+  const byStroke = []; // one per cut: true when a stroke made it and the ratio would not have
   let cur = [];
   let prev = null;
   for (const w of all) {
     if (w.bbox && prev && cur.length) {
       const gap = Math.max(at(w.bbox.x0) - at(prev.x1), at(prev.x0) - at(w.bbox.x1));
-      if (gap > maxGap) { parts.push(cur); cur = []; }
+      const wide = gap > maxGap;
+      if (wide || strokeBetween(ink, prev, w.bbox, reach)) { parts.push(cur); byStroke.push(!wide); cur = []; }
     }
     cur.push(w);
     if (w.bbox) prev = w.bbox;
   }
   if (cur.length) parts.push(cur);
-  return parts.length < 2 ? [all] : parts;
+  if (parts.length < 2) return [all];
+  // A run a stroke cut off that could not be a plate on its own is the outline or the artwork next
+  // to it, read as text; handed to the clustering where it stands it breaks the plate of the line it
+  // was cut from (atomicwar0401). It is marked, and orderColumns parks it. The mark rides on the run
+  // array, which every caller already treats as a list of words. Mirrors tesseract.go splitWideGaps.
+  parts.forEach((part, i) => {
+    const text = part.map((w) => w.text).join(" ");
+    if (((i > 0 && byStroke[i - 1]) || (i < byStroke.length && byStroke[i])) && !isTranslatable(text)) part.orphan = true;
+  });
+  return parts;
+}
+
+// strokeBetween reports whether a stroke crosses the gap between two consecutive words of one
+// recognizer line - evidence that the two words were never one line, whatever the width of the gap.
+//
+// The ratio rule cannot see this case: comic balloons drawn side by side are stitched into one line
+// with the words 1.00-3.46 word heights apart, while real lines reach 3.07x on the same corpus, so the
+// two overlap. What separates them is what a reader sees between the words: two balloon outlines, or
+// a panel rule, drawn clean through the line and on past it. A letter the recognizer left out of its
+// word box is ink in the gap too, but it stays inside the line's band.
+//
+// So the test is a path of ink, 8-connected, through the strip strictly between the two boxes, from
+// `reach` pixels above the words' band to `reach` pixels below it. Ink is a pixel whose luma stands at
+// least `ink.minContrast` from the paper - the plate colours' PLATE_MIN_CONTRAST, handed over by
+// ocr-overlay.js with the plane - and the paper is the median luma of the rows just outside both
+// words' boxes (paperLuma). A window the picture cannot hold, a strip with no width or no plane is no
+// evidence, and no evidence never cuts.
+//
+// `ink` is { luma: Uint8Array, width, height, minContrast }; `a` and `b` are word boxes in its pixels.
+// Measured and bracketed in DEV/research/ocr_balloon_boundary_2026-09-25.md.
+// Mirrors tesseract.go strokeBetween (docs/PARITY.md).
+export function strokeBetween(ink, a, b, reach) {
+  if (!ink || reach < 1) return false;
+  let x0 = a.x1, x1 = b.x0;
+  if (b.x1 <= a.x0) { x0 = b.x1; x1 = a.x0; } // right to left: b stands to the left of a
+  const y0 = Math.min(a.y0, b.y0) - reach, y1 = Math.max(a.y1, b.y1) + reach;
+  if (x1 <= x0 || x0 < 0 || x1 > ink.width || y0 < 0 || y1 > ink.height) return false;
+  const paper = paperLuma(ink, [a, b]);
+  if (paper < 0) return false;
+  const w = x1 - x0, h = y1 - y0;
+  const isInk = (x, y) => Math.abs(ink.luma[(y0 + y) * ink.width + x0 + x] - paper) >= ink.minContrast;
+  const seen = new Uint8Array(w * h);
+  const stack = [];
+  for (let x = 0; x < w; x++) {
+    if (isInk(x, 0)) { seen[x] = 1; stack.push(x); }
+  }
+  while (stack.length) {
+    const p = stack.pop();
+    const py = Math.floor(p / w), px = p % w;
+    if (py === h - 1) return true;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = px + dx, ny = py + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h || seen[ny * w + nx]) continue;
+        if (isInk(nx, ny)) { seen[ny * w + nx] = 1; stack.push(ny * w + nx); }
+      }
+    }
+  }
+  return false;
+}
+
+// paperLuma is the median luma of the paper the words sit on: two rows above and two rows below each
+// word's box, across the word's own width, skipping the row that touches the box so a glyph's
+// antialiased edge is not read as paper. Outside the boxes and not inside them, because bold comic
+// lettering fills half of a tight word box. -1 when no row is on the picture.
+// Mirrors tesseract.go paperLuma (docs/PARITY.md).
+export function paperLuma(ink, boxes) {
+  const vals = [];
+  for (const w of boxes) {
+    for (const y of [w.y0 - 3, w.y0 - 2, w.y1 + 1, w.y1 + 2]) {
+      if (y < 0 || y >= ink.height) continue;
+      for (let x = Math.max(w.x0, 0); x < Math.min(w.x1, ink.width); x++) vals.push(ink.luma[y * ink.width + x]);
+    }
+  }
+  return vals.length ? medianOf(vals) : -1;
 }
 
 // orderColumns is the other half of splitWideGaps, and without it the split trades one defect for
@@ -193,7 +338,9 @@ export function splitWideGaps(words, scale = 1) {
 // discard record. A line the floor will drop must not decide where a column is: measured on
 // test_doc/1.png, the desktop engine also returns one empty 1982x1864 px "line" across the whole
 // picture, and letting it into the grouping chains both columns into a single column, which sorts
-// the page straight back into the interleaving this exists to undo.
+// the page straight back into the interleaving this exists to undo. An orphan - the outline or
+// artwork a stroke cut off a line, too little text to be a plate (see splitWideGaps) - is parked the
+// same way.
 //
 // Columns go left to right, which is reading order for every script the corpus stitches. A
 // right-to-left page would want them the other way round, and nothing measured says whether its
@@ -201,9 +348,9 @@ export function splitWideGaps(words, scale = 1) {
 // guessed at. Mirrors tesseract.go orderColumns (docs/PARITY.md).
 export function orderColumns(runs, minConf = OCR_MIN_LINE_CONF) {
   if (!runs || runs.length < 2) return runs || [];
-  const parked = runs.filter((r) => !keepLine(r, minConf));
+  const parked = runs.filter((r) => !keepLine(r, minConf) || r.orphan);
   const cols = [];
-  for (const r of runs.filter((r) => keepLine(r, minConf)).sort((a, b) => a.bbox.x0 - b.bbox.x0)) {
+  for (const r of runs.filter((r) => keepLine(r, minConf) && !r.orphan).sort((a, b) => a.bbox.x0 - b.bbox.x0)) {
     const hit = cols.find((c) => {
       const overlap = Math.min(r.bbox.x1, c.x1) - Math.max(r.bbox.x0, c.x0);
       const narrower = Math.min(r.bbox.x1 - r.bbox.x0, c.x1 - c.x0);
@@ -366,9 +513,10 @@ export function releaseOversized(cur, imgW, imgH) {
 // those lines. Zero on either means the page size is unknown and the rule does not run.
 // keepLine is the confidence floor, in one place. clusterLines applies it and droppedLines records
 // what it rejected; stated separately, the record would stop describing the decision the first time
-// either moved. Mirrors tesseract.go keepLine (docs/PARITY.md).
+// either moved. A line admitBySize admitted is kept whatever its confidence. Mirrors tesseract.go
+// keepLine (docs/PARITY.md).
 export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
-  return Boolean(l.text) && l.conf >= minConf;
+  return Boolean(l.text) && (l.admitted === true || l.conf >= minConf);
 }
 
 // The gates a discard record names. Mirrors tesseract.go gateConfidence / gateTranslatable /

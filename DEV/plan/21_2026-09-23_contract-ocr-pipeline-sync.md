@@ -10,7 +10,7 @@
 > Pointers: [`OCR-PIPELINE`](../../docs/contracts/OCR-PIPELINE.md),
 > [`OCR-OVERLAY`](../../docs/contracts/OCR-OVERLAY.md), [`OCR-INVOCATION`](../../docs/contracts/OCR-INVOCATION.md).
 > Related tickets, not duplicated here:
-> [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md),
+> [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md) (done),
 > [`17_2026-09-22_tsv-columns-read-by-position`](done/17_2026-09-22_tsv-columns-read-by-position.md) (done).
 
 > **Remote execution (2026-09-25):** the contract text this ticket needs is quoted in "Contract snapshot" below, so every step not marked ⛔ runs in a cloud session from this repository alone. Steps marked **⛔ Local only** edit the shared contracts catalog (or another repository) and can run only on the owner's machine, where the catalog is mounted.
@@ -464,6 +464,12 @@ Every step in this section edits the shared contracts catalog and runs on the ow
 2. **⛔ Local only - changes the contract catalog.** **`OCR-PIPELINE` 1.1 (MINOR, additive):** the word-gap / column-order / trim stages and the word-median
    type size; the grow branch; the missing constants in §5 with a **status column** (derived with its
    report / inherited / policy); the page-OCR surface; the negative results of rule 15.
+   *Part done 2026-09-25, by ticket 16 (Step 07.3):* `OCR-PIPELINE` is now **1.1** - a dated amendment
+   section covering the word-gap split, the column regrouping, the new stroke test between two words and
+   orphan parking, with the word-gap ratio (3.5) and the boundary reach (0.14) added to §5, and the
+   registry rows bumped. Still owed from this step: the trim stage, the word-median type size, the grow
+   branch, the status column, the page-OCR surface and rule 15's negative results - as **1.2**, since 1.1
+   is taken.
 3. **⛔ Local only - changes the contract catalog.** **Ring band width** - correction or MINOR with a notice to both consumers, per open question 3.
 4. **⛔ Local only - changes the contract catalog.** **`OCR-INVOCATION` 1.1 (MINOR, clarification):** script correction and the no-plates stop for an
    omitted `-ocr-lang`; flags and exit codes unchanged.

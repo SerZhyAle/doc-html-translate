@@ -20,11 +20,13 @@ two editions (Go and the browser extension) held to one constant table by the gu
   rule 13`. The numbers themselves are this implementation's own; they are not facts another product may
   copy.
 - Cite rules in source as `OCR-OVERLAY rule N`, never as a path.
-- Two deviations are recorded as dated exceptions in the catalog registry, not fixed here in silence: the
-  discard record of rule 12 is not written for an image that produced no plates, and the extension edition
-  recognizes with an assumed `eng` because it has no script-detection pass (rule 10's failure mode).
-  Tickets: [`../../DEV/plan/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
-  and [`../PARITY.md`](../PARITY.md) ("Intentional divergences").
+- One deviation is recorded as a dated exception in the catalog registry, not fixed here in silence: the
+  extension edition recognizes with an assumed `eng` because it has no script-detection pass (rule 10's
+  failure mode) - see [`../PARITY.md`](../PARITY.md) ("Intentional divergences"). The second one found on
+  2026-09-22 - the discard record of rule 12 was not written for an image that produced no plates - was
+  closed on 2026-09-25 by
+  [`../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md);
+  the registry row is closed.
 
 **Conformance.** The catalog has no shared vector set for this contract yet; section 6 of its README names
 the ladder. This product holds the first three rungs - the discard record, the per-image diagnostic line

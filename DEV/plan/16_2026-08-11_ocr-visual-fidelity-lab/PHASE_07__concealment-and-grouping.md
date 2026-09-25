@@ -2,9 +2,10 @@
 
 **Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** ⛔ Blocked (reconciled 2026-09-25 - see "Reconciliation" below)
+**Status:** 🚧 In Progress - 07.3 done 2026-09-25 with the grouping halves of 07.4-07.7 (see "Step 07.3
+landed" below); 07.1 / 07.2 and the concealment halves of 07.4-07.7 stay ⛔ Blocked on strategic §9.1 / §9.2
 **Depends on:** Phase 06
-**Steps done:** 0 / 7
+**Steps done:** 1 / 7 (07.3), four more in part
 
 ## Objective
 
@@ -29,6 +30,13 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 | `extension/src/ocr-overlay.css` | Modified | - |
 | `docs/PARITY.md` | Modified | - |
 | `tests/parity_test.go` | Modified | - |
+| `internal/ocr/boundary.go` | New (07.3) | - |
+| `internal/ocr/boundary_test.go` | New (07.3, 07.7) | - |
+| `internal/ocr/cluster_test.go`, `internal/ocr/tsv_test.go` | Modified (07.3, signatures) | - |
+| `extension/src/ocr-cluster.js` | Modified (07.4) | - |
+| `extension/test/ocr-cluster.test.mjs` | Modified (07.4, 07.7) | - |
+| `tools/ocrlab/synth/synth.go`, `DEV/ocrlab/corpus.json`, `DEV/ocrlab/annotations/synth-side-by-side-balloons.json` | Modified / New (07.7) | - |
+| `docs/contracts/OCR-PIPELINE.md` | Modified (catalog 1.1) | - |
 
 ## Steps
 
@@ -94,7 +102,8 @@ respects balloon boundaries, and both editions moving together with a guarded sh
   edge produce two blocks instead of one.
 - `go run ./tools/ocrlab gate <new run>` shows the merge count improved and no other dimension regressed.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done 2026-09-25, on the horizontal axis - see "Step 07.3 landed" for the deviation and
+the evidence against each verification item.
 
 ---
 
@@ -114,7 +123,9 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - The extension's emitted plates carry `data-ocr-mode`.
 - The ported constants match the Go values character for character.
 
-**Status:** `[ ]` not done
+**Status:** `[~]` the clustering boundary test is ported (`ocr-cluster.js` `strokeBetween`, `paperLuma`,
+`OCR_BOUNDARY_REACH`, orphans; `ocr-overlay.js` `strokePlane`), `npm test` 271/271; the mode decision waits
+on 07.1.
 
 ---
 
@@ -132,7 +143,10 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - `docs/PARITY.md` names all three modes and the new constant.
 - The OCR table row for plate granularity mentions the boundary test.
 
-**Status:** `[ ]` not done
+**Status:** `[~]` the boundary test is in `docs/PARITY.md` (the "Line integrity" row and the word-gap note:
+`OCR_BOUNDARY_REACH`, the reused `PLATE_MIN_CONTRAST`, the paper ring, orphans, the one uncovered case);
+the three modes wait on 07.1. The `DOCHT_OCR_DIAG` note is moot - since ticket 15 the extension writes
+the same `ocr-diag.jsonl`.
 
 ---
 
@@ -150,7 +164,11 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - `TestParityOCRConcealment` matches exactly once.
 - Changing the constant in only one edition makes `go test ./tests/...` fail.
 
-**Status:** `[ ]` not done
+**Status:** `[~]` the boundary constant is guarded in the existing `TestParityOCRClustering` rather than a
+new test (it is a clustering constant, and that test already reads both sources): the value pair plus
+nine expression pins. Proven to fail on a one-sided change (`OCR_BOUNDARY_REACH = 0.15` in the extension
+only: `boundary reach drift: tesseract.go=0.14 ocr-cluster.js=0.15`). `TestParityOCRConcealment` waits on
+the modes of 07.1.
 
 ---
 
@@ -170,7 +188,10 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - `go run ./tools/ocrlab verify` still exits 0 on the manifest (or reports only the pre-existing
   coverage gaps).
 
-**Status:** `[ ]` not done
+**Status:** `[~]` for the grouping class: scene `synth-side-by-side-balloons` (exact by construction, in
+`corpus.json` and `DEV/ocrlab/annotations/`) and the deterministic tests `internal/ocr/boundary_test.go`
+(8) and their mirrors in `extension/test/ocr-cluster.test.mjs` (8). `ocrlab verify` reports only the
+pre-existing gaps. The concealment classes wait on 07.1 / 07.2.
 
 ## Phase done criteria
 
@@ -254,6 +275,54 @@ does not run"):
 polygons (resolving §9.1 / §9.2 for 07.1 - 07.2), and an owner-machine corpus run re-measures the
 balloon merge band (for 07.3). No step below is marked done by this reconciliation, and no rendering
 decision moved.
+
+## Step 07.3 landed (2026-09-25)
+
+Run on the owner's machine, where the corpus is: the half of the unblock condition above that needed no
+annotation. Research: [`DEV/research/ocr_balloon_boundary_2026-09-25.md`](../../research/ocr_balloon_boundary_2026-09-25.md).
+
+**The re-measure.** The balloon band holds and is wider than recorded: over all 1043 word gaps of the
+corpus (desktop engine, tesseract 5.4.0, the app's staging), stitches between two balloons sit at
+1.00-3.46x and real lines reach 3.07x. So the step's substance stood - an *added*, named boundary
+condition from the pixels.
+
+**Deviation from the prompt, and why.** The prompt put the condition in `clusterLines`, between two
+*vertically* adjacent lines. The measured cause is horizontal: facing balloons returned as one recognizer
+line, a merge `clusterLines` never sees as two lines. So the condition sits in the line split, before
+the clustering (`splitWideGaps`): a gap is also cut when a stroke crosses it and runs on past the line on
+both sides (`strokeBetween`, `internal/ocr/boundary.go`). `ocrMinLineConf` and `ocrClusterPitchFactor`
+are untouched. It also runs ahead of 07.1 / 07.2, which it does not depend on in substance - the
+reconciliation gave the two halves separate unblock conditions.
+
+**Against the verification items:**
+
+- *The new constant is declared once with a comment naming the table it came from:* `ocrBoundaryReach =
+  0.14` in `tesseract.go`'s shared block (and `OCR_BOUNDARY_REACH` in `ocr-cluster.js`), bracketed
+  between the two measured failures - a real line cut at 0.07, a stitch lost at 0.30. The ink threshold
+  reuses `plateMinContrast` (every value from 20 to 128 separates the labelled gaps identically).
+- *A test where two lines separated by a strong edge produce two blocks instead of one:*
+  `TestParseTSVSplitsBalloonsStitchedAtANarrowGap` (horizontal - one block without pixels, one per balloon
+  with them) with 7 more in `internal/ocr/boundary_test.go`, including the regression below.
+- *`ocrlab gate` shows the merge count improved and no other dimension regressed:* on the new scene
+  `synth-side-by-side-balloons`, stroke test off -> on, both editions: merges 1 -> 0, cross-group 6 -> 0,
+  protected damage 448 -> 0 px. Over the 14 annotated scenes (`temp/ocrlab/p16-final` against
+  `p16-base`) the gate fails the same 6 stale-threshold checks both times and is equal or better on
+  every line; every hard gate is 0 in both.
+
+**What the first corpus run caught.** On `atomicwar0401` the test correctly cut a speck read as `A` off
+a balloon's line, and the speck then split the balloon into two plates: the page-wide headline makes
+one column, and the speck sat in it at the height of the line it was cut from. Every untranslatable run
+a stroke cuts off on the corpus is artwork, so such a run is now an *orphan* and `orderColumns` parks it;
+`TestParseTSVParksWhatAStrokeCutOff` reproduces the split and fails without the parking.
+
+**Left open, measured:** when both outlines of a balloon pair are read as one token (`ff`, `fj`, `|`),
+no gap holds a stroke - two plates on `samson-and-delilah-15` still cross balloons this way. A test
+through the token also fires on a real word the recognizer glued an outline to (`TO}`), so it is a
+second design, not a follow-on threshold.
+
+**Catalog first:** `OCR-PIPELINE` 1.1 - a dated amendment in the catalog's `ocr-overlay/ocr-pipeline.md`
+covering the whole line split (the 2026-09-12 word-gap stage was never written there), both registry rows
+and `docs/contracts/OCR-PIPELINE.md` bumped.
 
 ## Handoff notes
 

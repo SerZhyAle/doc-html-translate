@@ -8,7 +8,7 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  admitBySize, clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
@@ -317,7 +317,7 @@ async function sampleColors(blob, blocks) {
 // two separated texts into one line box, and every rule downstream then reads them as one text.
 // splitWideGaps cuts those here, at the boundary between the engine's answer and our own, so the
 // clustering is never handed an input it cannot recover from - see OCR_MAX_WORD_GAP_RATIO.
-function collectLines(data, scale = 1) {
+function collectLines(data, scale = 1, ink = null) {
   const out = [];
   const at = (v) => Math.round(v / scale);
   let split = false; // did any line on this page have to be cut?
@@ -330,7 +330,10 @@ function collectLines(data, scale = 1) {
       .filter((h) => h > 0);
     // inkBox is the box a plate is drawn from; bbox stays what every clustering decision reads, so
     // trimming can never change what reaches the page - see trimOutlierWords and tesseract.go ix0.
-    out.push({ bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH });
+    const line = { bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH };
+    // A stroke-cut fragment that cannot be a plate is parked by orderColumns (ocr-cluster.js splitWideGaps).
+    if (words.orphan === true) line.orphan = true;
+    out.push(line);
   };
   const textOf = (words, fallback) => (words.length ? words.map((w) => w.text).join(" ") : (fallback || ""))
     .replace(/\s+/g, " ").trim();
@@ -350,7 +353,7 @@ function collectLines(data, scale = 1) {
   const push = (u) => {
     if (!u || !u.bbox) return;
     const words = u.words || [];
-    const parts = splitWideGaps(words, scale);
+    const parts = splitWideGaps(words, scale, ink);
     if (parts.length < 2) {
       const b = u.bbox;
       const bbox = scale === 1 ? b : { x0: at(b.x0), y0: at(b.y0), x1: at(b.x1), y1: at(b.y1) };
@@ -487,18 +490,20 @@ export async function recognize(imageSource, { lang = "eng", onProgress, isCance
       // (adjacent balloons read as one plate). Best-effort: keep going if the param won't set.
       if (dpi > 0) { try { await worker.setParameters({ user_defined_dpi: String(dpi) }); } catch { /* leave it to guess */ } }
       const { data } = await worker.recognize(image, {}, { blocks: true });
-      const lines = collectLines(data, scale);
+      // Read after the recognizer returns, as the desktop app does (tesseract.go recognizePass).
+      const ink = await strokePlane(image);
+      const lines = collectLines(data, scale, ink);
       const dropped = droppedLines(lines, OCR_MIN_LINE_CONF);
       let blocks = clusterLines(lines, OCR_MIN_LINE_CONF, bitmap.width, bitmap.height, dropped);
       // The record is the ordinary pass's drops followed by the ladder's or the sweep's, whether or
       // not the ladder placed anything: the ordinary pass ran and its rejections are the reader's
       // loss either way, and each entry names its floor and gate. Mirrors tesseract.go Recognize.
       if (!blocks.length) {
-        const rescued = await greyRescue(worker, image, scale, bitmap.width, bitmap.height);
+        const rescued = await greyRescue(worker, image, scale, bitmap.width, bitmap.height, ink);
         blocks = rescued.blocks;
         dropped.push(...rescued.dropped);
       } else {
-        const swept = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height);
+        const swept = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height, ink);
         blocks = swept.blocks;
         dropped.push(...swept.dropped);
       }
@@ -522,7 +527,7 @@ export async function recognize(imageSource, { lang = "eng", onProgress, isCance
 // The lines the rung rejected travel with the rung that won, exactly as Result.Dropped does in
 // tesseract.go: they are the reader's loss on the attempt that was actually kept, and a set merged
 // across rungs would describe no single decision.
-async function greyRescue(worker, image, scale, imgW, imgH) {
+async function greyRescue(worker, image, scale, imgW, imgH, ink = null) {
   const grey = await greyRendition(image);
   if (!grey) return { blocks: [], dropped: [] };
   let best = [], bestDropped = [];
@@ -531,7 +536,8 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
       try {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
-        const lines = collectLines(data, scale);
+        const lines = collectLines(data, scale, ink);
+        admitBySize(lines, OCR_RESCUE_LINE_CONF);
         const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
         const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped);
         if (strictlyBetter(blocks, best)) {
@@ -553,7 +559,7 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
   if (best.length) return { blocks: best, dropped: bestDropped };
   // Nothing read. Hand back whatever the ladder saw and had to throw away, so the caller can tell
   // "the floor rejected everything" from "there was nothing here".
-  const screened = await screenRescue(worker, image, scale, imgW, imgH);
+  const screened = await screenRescue(worker, image, scale, imgW, imgH, ink);
   if (screened.blocks.length) return screened;
   return { blocks: [], dropped: screened.dropped.concat(bestDropped) };
 }
@@ -568,14 +574,15 @@ async function greyRescue(worker, image, scale, imgW, imgH) {
 // own measured period rather than a fixed number, because a screen's pitch depends on the press and
 // on the scan resolution. Mirrors tesseract.go screenRescue (docs/PARITY.md); CSS `blur(Npx)` is a
 // Gaussian whose standard deviation is N, which is the same kernel the desktop app builds.
-async function screenRescue(worker, image, scale, imgW, imgH) {
+async function screenRescue(worker, image, scale, imgW, imgH, ink = null) {
   const pitch = await measureScreenPitch(image);
   if (!pitch) return { blocks: [], dropped: [] };
   const blurred = await greyRendition(image, `blur(${pitch / OCR_SCREEN_SIGMA_DIVISOR}px)`);
   if (!blurred) return { blocks: [], dropped: [] };
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    const lines = collectLines(data, scale);
+    const lines = collectLines(data, scale, ink);
+    admitBySize(lines, OCR_RESCUE_LINE_CONF);
     const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
     return { blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), dropped };
   } catch {
@@ -602,7 +609,7 @@ async function screenRescue(worker, image, scale, imgW, imgH) {
 //
 // Returns { blocks, dropped }: the sweep's own discard record is the lines its floor and its
 // translatability test rejected, and the plates the merge refused as duplicates.
-async function screenSweep(worker, image, scale, kept, imgW, imgH) {
+async function screenSweep(worker, image, scale, kept, imgW, imgH, ink = null) {
   const untouched = { blocks: kept, dropped: [] };
   const covered = kept.map(({ bbox: b }) => (scale === 1 ? b : {
     x0: Math.round(b.x0 * scale), y0: Math.round(b.y0 * scale),
@@ -614,7 +621,7 @@ async function screenSweep(worker, image, scale, kept, imgW, imgH) {
   if (!blurred) return untouched;
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    const lines = collectLines(data, scale);
+    const lines = collectLines(data, scale, ink);
     const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
     const rejected = [];
     const blocks = mergeScreenBlocks(kept, clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), rejected);
@@ -624,6 +631,32 @@ async function screenSweep(worker, image, scale, kept, imgW, imgH) {
     return { blocks, dropped };
   } catch {
     return untouched;
+  }
+}
+
+// strokePlane is the luminance the line split reads for its stroke test (ocr-cluster.js
+// strokeBetween): the prepared image - the pixels the recognizer reads, in its coordinates - as one
+// luma byte a pixel, with the contrast a stroke must stand from the paper. Every pass of one picture
+// reads the same plane, the rescue and screen passes included: the stroke is looked for on the
+// picture, not on the grey or low-passed copy a pass hands the recognizer. That is what the desktop
+// app reads too (tesseract.go Recognize, frame.grey()), with the same luma weights. Best-effort: null
+// on any failure, which leaves the line split to its ratio rule.
+async function strokePlane(blob) {
+  try {
+    const bmp = await createImageBitmap(blob, BITMAP_OPTS);
+    const { width, height } = bmp;
+    const cv = typeof OffscreenCanvas !== "undefined"
+      ? new OffscreenCanvas(width, height)
+      : Object.assign(document.createElement("canvas"), { width, height });
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(bmp, 0, 0);
+    if (bmp.close) bmp.close();
+    const { data } = ctx.getImageData(0, 0, width, height);
+    const plane = new Uint8Array(width * height);
+    for (let i = 0; i < plane.length; i++) plane[i] = luma(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
+    return { luma: plane, width, height, minContrast: PLATE_MIN_CONTRAST };
+  } catch {
+    return null;
   }
 }
 

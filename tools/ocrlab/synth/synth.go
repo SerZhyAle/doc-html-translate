@@ -244,6 +244,7 @@ func builders() []builder {
 		{"synth-two-columns", []corpus.Category{corpus.CatDocument}, "two text columns - a plate spanning both is a merge defect", sceneTwoColumns},
 		{"synth-balloon-on-panel", []corpus.Category{corpus.CatComic}, "white balloon with an outline over a coloured panel - the outline is protected", sceneBalloonOnPanel},
 		{"synth-adjacent-balloons", []corpus.Category{corpus.CatComic}, "two balloons close enough to tempt a merge", sceneAdjacentBalloons},
+		{"synth-side-by-side-balloons", []corpus.Category{corpus.CatComic}, "two balloons side by side whose lines the recognizer stitches across both outlines", sceneSideBySideBalloons},
 		{"synth-caption-on-gradient", []corpus.Category{corpus.CatTexture}, "caption over a smooth gradient - the ModeReconstruct case", sceneCaptionOnGradient},
 		{"synth-text-on-halftone", []corpus.Category{corpus.CatTexture, corpus.CatCartoon}, "text over a halftone screen - a block fill is visibly wrong here", sceneTextOnHalftone},
 		{"synth-display-lettering", []corpus.Category{corpus.CatPoster}, "large display type on a coloured fill", sceneDisplayLettering},
@@ -354,6 +355,47 @@ func sceneAdjacentBalloons() *canvas {
 	l4.ID = "b-2"
 	c.addGroup("balloon-b", truth.GroupBalloon, "NOT EVEN SLIGHTLY.", []truth.Region{l3, l4},
 		truth.Box("b-replace", 45, 123, 285, 177))
+	return c
+}
+
+// sceneSideBySideBalloons is the horizontal twin of sceneAdjacentBalloons, and the regression scene
+// for the stroke test of the line split (internal/ocr strokeBetween, Phase 07 Step 07.3). Two
+// balloons stand side by side with their lines at the same heights, the left one's lettering set
+// flush right and the right one's flush left, so the two texts face each other across both outlines.
+// The recognizer returns each facing pair as one line, 2.9 word heights apart (measured with the
+// app's own staging, 2026-09-25) - under ocrMaxWordGapRatio, so the ratio alone keeps one plate
+// across both balloons. That is the shape samson-and-delilah-15 has on nine of its lines.
+//
+// The 16 px between the lettering and each outline is part of the construction. With less - the
+// lettering 6-10 px from the outline, a 4-12 px gutter - the recognizer reads the two outlines as a
+// word of their own ("ff", "fj", "})j"), both inside one box, and no gap holds a stroke: that is a
+// different defect, an outline taken for letters, and this scene is not its fixture.
+func sceneSideBySideBalloons() *canvas {
+	c := newCanvas("synth-side-by-side-balloons", 760, 300, panelBg)
+	face := loadFace(24, true)
+
+	c.fillRect(30, 50, 366, 200, white)
+	c.protect(c.strokeRect("left-outline", 30, 50, 366, 200, 4, black))
+	c.fillRect(372, 50, 716, 200, white)
+	c.protect(c.strokeRect("right-outline", 372, 50, 716, 200, 4, black))
+
+	left := []string{"WHERE DID THE", "OLD MAP GO?"}
+	right := []string{"BEHIND THE", "BIG CLOCK!"}
+	var ll, rl []truth.Region
+	y := 78
+	for i := range left {
+		d := &font.Drawer{Face: face}
+		w := d.MeasureString(left[i]).Ceil()
+		r := c.drawLine(left[i], 346-w, y, black, face)
+		r.ID = fmt.Sprintf("l-%d", i+1)
+		ll = append(ll, r)
+		r = c.drawLine(right[i], 392, y, black, face)
+		r.ID = fmt.Sprintf("r-%d", i+1)
+		rl = append(rl, r)
+		y += 38
+	}
+	c.addGroup("balloon-left", truth.GroupBalloon, joinLines(left), ll, truth.Box("left-replace", 35, 55, 361, 195))
+	c.addGroup("balloon-right", truth.GroupBalloon, joinLines(right), rl, truth.Box("right-replace", 377, 55, 711, 195))
 	return c
 }
 

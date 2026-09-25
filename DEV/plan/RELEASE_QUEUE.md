@@ -63,9 +63,9 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-25  In Progress (repo done; catalog
-    blank-images                                                    step ⛔ owner machine)
 ```
+
+Empty since 2026-09-25: 15, the last line, moved to [`done/`](done/) with its catalog step closed.
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
 25 (`hygiene`) went first and is done (waiting on a Windows pass, listed below); the pipeline sandbox
@@ -75,8 +75,8 @@ extension tickets lead now, content security (19) first - an untrusted document 
 independent. 15 is the remaining OCR defect from the 2026-09-22 alignment run (17, its sibling, is done); it is the
 instrument 29 is measured with (rule 4).
 
-[`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
-is first among the OCR lines by rule 2: it is the instrument the rest is measured with. Opened by the contract
+[`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
+(done 2026-09-25) was first among the OCR lines by rule 2: it is the instrument the rest is measured with. Opened by the contract
 alignment run of 2026-09-22 against `OCR-OVERLAY rule 12`, and it corrects §1.3 of this file - the record
 was preserved as far as `applyOverlays` and is then not written, so an image that produced **no** plates
 still leaves nothing behind, which is the one case the record exists for. Proven with a throwaway probe in
@@ -87,18 +87,21 @@ when it lands; what changes is that a blank scene can be told from a discarded o
 
 ```
 #   ticket                                              changed     status
-16  16_2026-08-11_ocr-visual-fidelity-lab               2026-09-25  In Progress (6/8; 07 ⛔ annotation)
+16  16_2026-08-11_ocr-visual-fidelity-lab               2026-09-25  In Progress (6/8; 07: 07.3 done, 07.1-07.2 ⛔ annotation)
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
     a gradient
 ```
 
-`ocr-visual-fidelity-lab` is 6 of 8 phases. Phase 07 (concealment and grouping) was reconciled on
-2026-09-25 against a fresh synthetic-scene run and is now ⛔ Blocked rather than "Not started": its
-grouping target (`synth-two-columns`) was closed out of band on 2026-09-12 and measures 0 merges, and
-its concealment-mode steps need strategic §9.1 / §9.2, which wait on annotated `texture` scenes and
-protected polygons - human-owned work in package `--`. Phase 08 is 5 of 6 with its changelog step
-waiting only on 07's files.
+`ocr-visual-fidelity-lab` is 6 of 8 phases. Phase 07 (concealment and grouping) is 1 of 7: Step 07.3
+landed on 2026-09-25 on the owner's machine - the corpus re-measure the reconciliation asked for found
+the balloon merge band still there (1.00-3.46x), and balloons stitched side by side are now cut on a
+stroke crossing the gap between two words, in both editions (`OCR-PIPELINE` 1.1 in the catalog first).
+Its concealment-mode steps 07.1 / 07.2 still need strategic §9.1 / §9.2, which wait on annotated
+`texture` scenes and protected polygons - human-owned work in package `--`. Measured and left open by
+07.3: a balloon pair whose two outlines the recognizer reads as one token (`ff`, `fj`, `|`) stays
+stitched - two plates on `samson-and-delilah-15` - which needs a test through the token, not a
+threshold. Phase 08 is 5 of 6 with its changelog step waiting only on 07's files.
 
 **The `First-Earthman` cover plate rides over the `PLANET COMICS` logo.** The plate's text is the
 cover's own top banner line and it sits on that banner, but its box is taller than its line, so it

@@ -20,7 +20,7 @@
 | 04 | desktop-runner | 03 | ✅ Done | 6/6 | [PHASE_04__desktop-runner.md](PHASE_04__desktop-runner.md) |
 | 05 | extension-runner | 04 | ✅ Done | 5/5 | [PHASE_05__extension-runner.md](PHASE_05__extension-runner.md) |
 | 06 | baseline-and-thresholds | 04, 05 | ✅ Done | 5/5 | [PHASE_06__baseline-and-thresholds.md](PHASE_06__baseline-and-thresholds.md) |
-| 07 | concealment-and-grouping | 06 | ⛔ Blocked | 0/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
+| 07 | concealment-and-grouping | 06 | 🚧 In Progress (07.1-07.2 ⛔) | 1/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
 | 08 | docs-cleanup | all | 🚧 In Progress | 5/6 | [PHASE_08__docs-cleanup.md](PHASE_08__docs-cleanup.md) |
 
 Legend: ⬜ Not started · 🚧 In Progress · ✅ Done · ⛔ Blocked · ⏭️ Skipped
@@ -174,3 +174,13 @@ Two rows of strategic §6 produce no step, and that is a decision rather than an
   Step 08.6 stays open on phase 07; its phase 01-06 and 08 files are all in the changelog.
   Separately, ticket 15 made the `DOCHT_OCR_DIAG` sidecar write a line for a no-plate image as well,
   and the extension runner now writes the same `ocr-diag.jsonl`.
+- 2026-09-25 - **Step 07.3 done on the owner's machine**, the half of phase 07's unblock condition that
+  needed only the corpus: the balloon merge band was re-measured on all 46 scenes and holds (and is wider
+  - 1.00-3.46x, not 1.87-2.57x), so the step's substance was written as planned, an *added* named
+  boundary condition from the pixels. It sits in the line split rather than in `clusterLines`' vertical
+  test, because the measured stitches are horizontal: a stroke crossing the gap between two words and
+  running on past the line (`strokeBetween`, `ocrBoundaryReach` 0.14, bracketed between 0.07 and 0.30),
+  plus parking the untranslatable fragment it cuts off. Both editions, one parity guard, one regression
+  scene (`synth-side-by-side-balloons`). The grouping halves of 07.4-07.7 landed with it; 07.1 / 07.2
+  stay ⛔ on §9.1 / §9.2. Research: [`DEV/research/ocr_balloon_boundary_2026-09-25.md`](../../research/ocr_balloon_boundary_2026-09-25.md).
+  The catalog moved first: `OCR-PIPELINE` 1.1, a dated amendment for the whole line split.
