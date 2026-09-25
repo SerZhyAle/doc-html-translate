@@ -124,7 +124,7 @@ Notes:
     scene through the real pipeline and records what headless Chrome actually laid out. Not built by
     scripts/build.ps1 and in no package. Its one hook into shipped code is the opt-in `DOCHT_OCR_DIAG`
     sidecar in internal/ocr (off unless set; an output-identity test proves it changes nothing).
-    See tools/ocrlab/README.md and DEV/plan/07_2026-08-11_ocr-visual-fidelity-lab/.
+    See tools/ocrlab/README.md and DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab/.
 
 ## Cross-Edition Parity (READ BEFORE ADDING FEATURES)
 

@@ -111,7 +111,7 @@ translates the run-on as one sentence, so the damage survives into every languag
 - **Adjacent balloons that stitch below 3.5x stay merged** (`samson-and-delilah-03/15`, nearest
   declined case 3.46x). Geometry cannot separate them - the measured bands overlap - and the evidence
   that can is the pixels between the two words. That is Phase 07 Step 07.3 of
-  [`07_2026-08-11_ocr-visual-fidelity-lab`](../07_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
+  [`16_2026-08-11_ocr-visual-fidelity-lab`](../16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md),
   whose objective this ticket does not replace: 07.3 adds a boundary test to the *clustering*, this
   repairs the clustering's *input*. Both are needed.
 - **One tail fragment on the reported image** ("better.") stays its own plate, in both editions. It

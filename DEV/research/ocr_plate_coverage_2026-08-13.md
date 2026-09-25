@@ -1,6 +1,6 @@
 # What separates a merged plate from a real one, measured - and what does not
 
-2026-08-13. Feeds [`DEV/plan/16_2026-08-13_ocr-sweep-plate-composition.md`](../plan/16_2026-08-13_ocr-sweep-plate-composition.md)
+2026-08-13. Feeds [`DEV/plan/30_2026-08-13_ocr-sweep-plate-composition.md`](../plan/30_2026-08-13_ocr-sweep-plate-composition.md)
 (P47), which asked for "a measure of a plate's own occupancy" and named two candidates without
 measuring either. Both are measured here. One of them does not work, and saying so is the point of
 the note.

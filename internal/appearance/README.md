@@ -31,5 +31,5 @@ editions is legal only when `divergences` lists it with a reason - an entry with
 nothing uses.
 
 The plate's measured values (padding, radius, paper carrier) were each bracketed by a lab run
-(`DEV/plan/16_2026-08-13_ocr-sweep-plate-composition.md`, `docs/PARITY.md` "OCR"); their `note`
+(`DEV/plan/30_2026-08-13_ocr-sweep-plate-composition.md`, `docs/PARITY.md` "OCR"); their `note`
 fields say why, and they ship as CSS comments.

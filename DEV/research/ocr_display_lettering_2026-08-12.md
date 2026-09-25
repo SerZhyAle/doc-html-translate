@@ -282,7 +282,7 @@ untranslated one, for three clips in the three longest cases.
 off (its ink is 22 px against the list's 51) and the picture goes from **one plate over 80.6% of the
 image** to two, the larger covering **68.3%**. Better, and still a defect - the list's own rows share
 one type size, so nothing here separates them. Same-size separated regions remain
-[P47](../plan/16_2026-08-13_ocr-sweep-plate-composition.md).
+[P47](../plan/30_2026-08-13_ocr-sweep-plate-composition.md).
 
 ### Found while measuring, and not caused by this ticket
 
@@ -295,7 +295,7 @@ it, and its diagnostics record a byte-identical plate - same box, same text, sam
 across the two runs while its residual moved 0.085 -> 0.998. Same plate, different picture underneath
 it: the change is in how a plate is drawn, not in how lines are grouped.
 
-That is [P47](../plan/16_2026-08-13_ocr-sweep-plate-composition.md)'s second defect, which the sweep
+That is [P47](../plan/30_2026-08-13_ocr-sweep-plate-composition.md)'s second defect, which the sweep
 found by eye. It also answers, with the corpus, the open question that ticket records as unasked -
 whether the background belongs on the box or on the ink. The changelog row for that change says the
 corpus re-measure was "running"; this is it, and it is a regression against a recorded bound rather

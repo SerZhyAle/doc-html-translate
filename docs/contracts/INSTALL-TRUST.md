@@ -19,7 +19,7 @@ the site pages, nor the first-run GUI says the word. The Store build is signed b
 certification and is outside this contract's scope.
 
 The gap is declared in the catalog registry with a dated exception rather than left silent. Ticket:
-[`../../DEV/plan/13_2026-09-22_install-trust-page.md`](../../DEV/plan/13_2026-09-22_install-trust-page.md).
+[`../../DEV/plan/27_2026-09-22_install-trust-page.md`](../../DEV/plan/27_2026-09-22_install-trust-page.md).
 
 **What this repo owes it**
 

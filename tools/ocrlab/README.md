@@ -1,6 +1,6 @@
 # ocrlab - the OCR visual-fidelity lab
 
-The instrument required by [`DEV/plan/07_2026-08-11_ocr-visual-fidelity-lab.md`](../../DEV/plan/07_2026-08-11_ocr-visual-fidelity-lab.md)
+The instrument required by [`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../../DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md)
 before any OCR or redraw change is accepted. It measures the shipped program: plate geometry comes
 from the DOM the app produced and from the app's own diagnostics sidecar, never from a
 reimplementation.

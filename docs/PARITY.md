@@ -382,7 +382,7 @@ would keep one). The extension keeps entries in a `Map` keyed by exact name, whe
 with the extension. A future ticket would port the two extension gaps below and pin them with one
 fixture read by both editions.
 
-Ticket `2026-09-24_bugfix-epub-html-content-fidelity` moved the desktop EPUB normalization onto the
+Ticket `06_2026-09-24_bugfix-epub-html-content-fidelity` moved the desktop EPUB normalization onto the
 parsed tree and made HTML input charset-aware. Checked against the extension on the same date:
 
 | Behaviour | Go app | Extension |
@@ -441,7 +441,7 @@ so it recognizes a CBR/CB7 by signature and shows a "use the desktop app" notice
 
 **Guard:** Guarded by `TestParityInputLimits` ([`tests/limits_parity_test.go`](../tests/limits_parity_test.go)),
 which compares the Go and JS values and pins the published numbers. Ticket
-`2026-09-24_bugfix-resource-budgets`.
+`12_2026-09-24_bugfix-resource-budgets`.
 
 One hostile or merely huge file must be turned into a message before it is allocated: the desktop app
 ships a 32-bit build with a 2 GB address space, and a browser tab has less. Both editions probe first (an

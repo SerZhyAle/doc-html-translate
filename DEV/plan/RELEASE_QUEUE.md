@@ -10,12 +10,15 @@ Rebuilt 2026-09-25 against the ticket files themselves: the 17 tickets of the 20
 this is now the one queue for every open ticket. Finished lines and the release-1 narrative of
 2026-08-15 .. 2026-09-12 moved to [`done/2026-08-15_release-1-worklog.md`](done/2026-08-15_release-1-worklog.md).
 
-**File names carry the queue position.** An open ticket is `DEV/plan/NN_YYYY-MM-DD_<slug>.md` (its
-tactical folder `NN_YYYY-MM-DD_<slug>/`), where `NN` is its line number in the tables below, so a
-directory listing reads in execution order. Reordering the queue means renaming the files and fixing
-every link to them in the same commit. A ticket that moves to `done/` drops its `NN_` prefix.
+**The number is the ticket's id, not its place in the queue.** A ticket is
+`DEV/plan/NN_YYYY-MM-DD_<slug>.md` (its tactical folder `NN_YYYY-MM-DD_<slug>/`). `NN` is given once,
+when the ticket is filed - the next unused number, never one a ticket has had before - and it never
+changes: not on a reorder, not on the move to `done/`, which keeps the prefix. Execution order is the
+order of the lines below, so reordering the queue moves lines and renames nothing.
 
-- `#` - the queue position, the same number as the file's `NN_` prefix. `--` = no ticket file yet.
+next-ticket-number: 31
+
+- `#` - the ticket's id, the same number as the file's `NN_` prefix. `--` = no ticket file yet.
 - The release package is the `## release N` heading a line sits under. It is an **ordinal**, not a
   version: this product's version is derived mechanically from the build date (`26.MMDD.HHmm`) and is
   never hand-picked.
@@ -60,24 +63,24 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-01  01_2026-09-24_chore-hygiene-and-test-gaps           2026-09-24  Draft (P40)
-02  02_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
-03  03_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-24  Draft (P60)
-04  04_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
-05  05_2026-09-22_ocr-discard-record-missing-for-       2026-09-22  Draft
+25  25_2026-09-24_chore-hygiene-and-test-gaps           2026-09-24  Draft (P40)
+19  19_2026-09-24_bugfix-extension-content-security     2026-09-24  Draft (P60)
+18  18_2026-09-24_bugfix-extension-lifecycle-leaks      2026-09-24  Draft (P60)
+20  20_2026-09-24_bugfix-windows-registration-honesty   2026-09-24  Draft (P50)
+15  15_2026-09-22_ocr-discard-record-missing-for-       2026-09-22  Draft
     blank-images
-06  06_2026-09-22_tsv-columns-read-by-position          2026-09-22  Draft
+17  17_2026-09-22_tsv-columns-read-by-position          2026-09-22  Draft
 ```
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
-01 (`hygiene`) leads although its priority is the lowest of the six: its own text asks to land early,
+25 (`hygiene`) leads although its priority is the lowest of the six: its own text asks to land early,
 because the pipeline tests it adds make every later change safer (rule 2). The two extension tickets
-follow, content security first - an untrusted document that stays live is the more serious defect, and
-`lifecycle-leaks` touches the same viewer code right after it. 04 (`registration`) is Windows-only and
-independent. 05 and 06 are the two OCR defects from the 2026-09-22 alignment run; 05 goes first because
-it is the instrument 15 is measured with (rule 4).
+follow, content security (19) first - an untrusted document that stays live is the more serious defect, and
+`lifecycle-leaks` (18) touches the same viewer code right after it. 20 (`registration`) is Windows-only and
+independent. 15 and 17 are the two OCR defects from the 2026-09-22 alignment run; 15 goes first because
+it is the instrument 29 is measured with (rule 4).
 
-[`05_2026-09-22_ocr-discard-record-missing-for-blank-images`](05_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
+[`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md)
 is first among the OCR lines by rule 2: it is the instrument the rest is measured with. Opened by the contract
 alignment run of 2026-09-22 against `OCR-OVERLAY rule 12`, and it corrects §1.3 of this file - the record
 was preserved as far as `applyOverlays` and is then not written, so an image that produced **no** plates
@@ -85,7 +88,7 @@ still leaves nothing behind, which is the one case the record exists for. Proven
 package `ocr` (`applyOverlays: changed=false NoText=1`, no diagnostics file). Nothing a reader sees changes
 when it lands; what changes is that a blank scene can be told from a discarded one.
 
-[`06_2026-09-22_tsv-columns-read-by-position`](06_2026-09-22_tsv-columns-read-by-position.md) is the other
+[`17_2026-09-22_tsv-columns-read-by-position`](17_2026-09-22_tsv-columns-read-by-position.md) is the other
 finding of the alignment run: `parseTSV` skips the header row that names the columns and then reads fixed
 indices, so a Tesseract build that inserts a column would not fail - it would put plates in the wrong place
 with the wrong confidences. No build in use today does, so nothing is misplaced yet.
@@ -94,7 +97,7 @@ with the wrong confidences. No build in use today does, so nothing is misplaced 
 
 ```
 #   ticket                                              changed     status
-07  07_2026-08-11_ocr-visual-fidelity-lab               2026-08-15  In Progress (6/8 phases)
+16  16_2026-08-11_ocr-visual-fidelity-lab               2026-08-15  In Progress (6/8 phases)
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
     a gradient
@@ -121,12 +124,12 @@ rung. Decide, do not leave it unwritten.
 
 ```
 #   ticket                                              changed     status
-08  08_2026-09-23_contract-ocr-pipeline-sync            2026-09-23  Draft - catalog amendment first, then code
-09  09_2026-09-23_contract-rule-adoption-sync           2026-09-23  Draft - no product code
-10  10_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  Draft
-11  11_2026-09-23_contract-iconography-sync             2026-09-23  Draft - proposals before code
-12  12_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
-13  13_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
+21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-23  Draft - catalog amendment first, then code
+22  22_2026-09-23_contract-rule-adoption-sync           2026-09-23  Draft - no product code
+23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  Draft
+24  24_2026-09-23_contract-iconography-sync             2026-09-23  Draft - proposals before code
+26  26_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
+27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
 ```
 
 **The six `2026-09-23_contract-*` tickets** (five left - `automated-checks` reached Implemented on 2026-09-24 and moved to `done/`) come out of one contract-sync pass over every catalog domain
@@ -139,7 +142,7 @@ ticket carries one user-visible bug that should not wait for the rest of it: the
 `ua` on the landing page and `uk` on the extension page, so a language chosen on one shows all three on the
 other - a `/fix` candidate on its own. `WAVE-PARTICLES` was read and does not apply (no canvas backdrop).
 
-[`13_2026-09-22_install-trust-page`](13_2026-09-22_install-trust-page.md) is docs-only work, so rule 5 puts it
+[`27_2026-09-22_install-trust-page`](27_2026-09-22_install-trust-page.md) is docs-only work, so rule 5 puts it
 last among the schedulable lines. Three of the four download channels are unsigned - the setup exe and both
 portable exes - and nothing we ship says the word SmartScreen, so a user who meets "Windows protected your
 PC" reads nothing from us. No shipped code is wrong, but it is not `--` either: every
@@ -150,14 +153,14 @@ unanswered warning is a user who does not come back. The contract it closes is
 
 ```
 #   ticket                                              changed     status
-14  14_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
-15  15_2026-09-25_ocr-rescue-third-axis                 2026-09-25  Draft - lab corpus, owner machine
-16  16_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
+28  28_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
+29  29_2026-09-25_ocr-rescue-third-axis                 2026-09-25  Draft - lab corpus, owner machine
+30  30_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
 ```
 
-Rule 7 puts all three last: none can be scheduled from a cloud session. 14 has its code built and waits
-on the catalog step and four gates on the owner's machine; 15 needs every candidate run through the lab
-corpus, which exists only there, and the discard record that 05 adds; 16 has no code left.
+Rule 7 puts all three last: none can be scheduled from a cloud session. 28 has its code built and waits
+on the catalog step and four gates on the owner's machine; 29 needs every candidate run through the lab
+corpus, which exists only there, and the discard record that 15 adds; 30 has no code left.
 
 `plate-styling-single-source` is built (2026-09-24): `internal/appearance/appearance.json` is the one
 description of the OCR overlay and the reader palette, both editions derive from it, and
@@ -175,20 +178,20 @@ because nothing in it ships. Moving it is the owner's call.
 
 ## implemented, waiting on a hands-on check
 
-Moved to [`done/`](done/) on 2026-09-25 because their code is implemented and merged; each keeps its
+Moved to [`done/`](done/) on 2026-09-25, keeping their numbers, because their code is implemented and merged; each keeps its
 honest `BlockNeedUserTest` status line until the named check passes, and then becomes `Verified`.
 
 ```
 ticket (in done/)                                   check left
-2026-09-24_hotfix-epub-href-containment             owner sign-off, Windows pass
-2026-09-24_bugfix-shell-open-injection              Windows open check
-2026-09-24_bugfix-gui-local-api-hardening           owner sign-off, Windows pass
-2026-09-24_hotfix-output-dir-ownership              hidden marker, lock, GUI drop/delete on Windows
-2026-09-24_bugfix-output-completeness               Ctrl+C in a real console, rebuild while Chrome holds files
-2026-09-24_bugfix-translation-engine-correctness    real Google API and Ollama model, -max-cost run
-2026-09-24_bugfix-external-process-bounds           process-tree kill, upgraded pdftotext cache
-2026-09-24_bugfix-resource-budgets                  2 GB CBZ on the 386 build, real 7-Zip
-2026-09-24_bugfix-ocr-language-data-and-detection   language download in the Store build
+01_2026-09-24_hotfix-epub-href-containment             owner sign-off, Windows pass
+02_2026-09-24_bugfix-shell-open-injection              Windows open check
+03_2026-09-24_bugfix-gui-local-api-hardening           owner sign-off, Windows pass
+05_2026-09-24_hotfix-output-dir-ownership              hidden marker, lock, GUI drop/delete on Windows
+07_2026-09-24_bugfix-output-completeness               Ctrl+C in a real console, rebuild while Chrome holds files
+08_2026-09-24_bugfix-translation-engine-correctness    real Google API and Ollama model, -max-cost run
+11_2026-09-24_bugfix-external-process-bounds           process-tree kill, upgraded pdftotext cache
+12_2026-09-24_bugfix-resource-budgets                  2 GB CBZ on the 386 build, real 7-Zip
+13_2026-09-24_bugfix-ocr-language-data-and-detection   language download in the Store build
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

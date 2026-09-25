@@ -823,7 +823,7 @@ func hasLangFile(dir, lang string) bool {
 // stitch at 1.87-3.04x while real lines run up to 2.57x, so no threshold separates them and a
 // geometric rule must not pretend otherwise. Those need evidence from the pixels between the two
 // words - a balloon outline, a change of ground - which is Phase 07 Step 07.3's boundary test
-// (DEV/plan/07_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
+// (DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md), not a ratio.
 //
 // Shared invariant - see docs/PARITY.md and ocr-cluster.js OCR_MAX_WORD_GAP_RATIO.
 const (
