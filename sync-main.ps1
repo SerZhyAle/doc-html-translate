@@ -1,13 +1,16 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-  Pull everything, merge every branch that is ahead of main back into main, push main.
+  Commit everything, pull everything, merge every branch that is ahead of main back
+  into main, push main.
 
 .DESCRIPTION
   From the repo root it:
     1. Fetches all remotes (with prune).
-    2. Stashes uncommitted work (tracked + untracked) if the tree is dirty.
-    3. Checks out main and fast-forwards it from origin/main.
+    2. Commits all uncommitted work (tracked + untracked, `git add -A`) on the current
+       branch, with -Message or a timestamped default.
+    3. Checks out main and brings in origin/main (fast-forward when possible, a merge
+       commit when local main has its own commits).
     4. Merges every local branch and every origin/* branch that has commits main
        does not have. A clean fast-forward stays a fast-forward; otherwise a merge
        commit is made. A conflict confined to the append-only ledgers in -UnionFiles
@@ -17,13 +20,16 @@
     5. Runs `go build ./...` as a cheap gate (skip with -SkipBuild). A red build stops
        the run before the push; the merges stay local for inspection.
     6. Pushes main to origin (skip with -NoPush).
-    7. Returns to the branch you started on and restores the stash.
+    7. Returns to the branch you started on.
 
   Branches matching -Exclude (default: backup/*) are never merged.
   This pushes a BRANCH only - no tag, no release; every CI workflow fires on tags.
 
 .PARAMETER DryRun
-  Fetch and list what would be merged; change nothing.
+  Fetch and list what would be committed and merged; change nothing.
+
+.PARAMETER Message
+  Commit message for the uncommitted work. Default: "chore: sync-main auto-commit <timestamp>".
 
 .PARAMETER NoPush
   Merge locally, do not push.
@@ -51,6 +57,7 @@ param(
     [switch]$DryRun,
     [switch]$NoPush,
     [switch]$SkipBuild,
+    [string]$Message,
     [string[]]$Exclude = @('backup/*'),
     [string[]]$UnionFiles = @('DEV/CHANGELOG.md'),
     [string]$Remote = 'origin',
@@ -101,7 +108,24 @@ function Test-Excluded([string]$Name) {
 Write-Host "== fetch --all --prune" -ForegroundColor Cyan
 Invoke-Git fetch --all --prune | Out-Host
 
+$mainRef = "$Remote/$Main"
+$startBranch = (Invoke-Git rev-parse --abbrev-ref HEAD) | Select-Object -First 1
+$dirty = @(Invoke-Git status --porcelain)
+if (-not $Message) { $Message = "chore: sync-main auto-commit $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" }
+
+if ($dirty.Count -gt 0) {
+    if ($DryRun) {
+        Write-Host "Would commit $($dirty.Count) changed path(s) on ${startBranch}: $Message" -ForegroundColor Cyan
+    } else {
+        if ($startBranch -eq 'HEAD') { throw "Detached HEAD: check out a branch before committing." }
+        Write-Host "== commit uncommitted work on ${startBranch}: $Message" -ForegroundColor Cyan
+        Invoke-Git add -A | Out-Null
+        Invoke-Git commit -m $Message | Select-Object -First 2 | Out-Host
+    }
+}
+
 # Candidates: local branches and origin/* branches, minus main, HEAD and exclusions.
+# Collected after the commit, so a feature branch that just got one is included.
 $candidates = [System.Collections.Generic.List[string]]::new()
 $refs = Invoke-Git for-each-ref --format='%(refname)' "refs/heads" "refs/remotes/$Remote"
 foreach ($ref in $refs) {
@@ -114,7 +138,6 @@ foreach ($ref in $refs) {
     $candidates.Add($short)
 }
 
-$mainRef = "$Remote/$Main"
 $pending = @($candidates | Where-Object { [int](Invoke-Git rev-list --count "$mainRef..$_") -gt 0 })
 
 if ($pending.Count -eq 0) {
@@ -132,23 +155,21 @@ if ($DryRun) {
     exit 0
 }
 
-$startBranch = (Invoke-Git rev-parse --abbrev-ref HEAD) | Select-Object -First 1
-$stashed = $false
 $conflicts = @()
 $merged = @()
 $exitCode = 0
 
 try {
-    if (Invoke-Git status --porcelain) {
-        $msg = "sync-main autostash $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-        Write-Host "== stash uncommitted work: $msg" -ForegroundColor Cyan
-        Invoke-Git stash push -u -m $msg | Out-Host
-        $stashed = $true
-    }
-
-    Write-Host "== checkout $Main + fast-forward from $mainRef" -ForegroundColor Cyan
+    Write-Host "== checkout $Main + bring in $mainRef" -ForegroundColor Cyan
     Invoke-Git checkout $Main | Out-Host
-    Invoke-Git merge --ff-only $mainRef | Out-Host
+    # Local main may carry its own commits (the auto-commit above): merge, not ff-only.
+    $out = & git merge --no-edit $mainRef 2>&1
+    if ($LASTEXITCODE -ne 0 -and -not (Resolve-UnionConflicts)) {
+        $out | Out-Host
+        & git merge --abort 2>&1 | Out-Null
+        throw "$mainRef conflicts with local $Main - merge aborted; resolve by hand, nothing pushed."
+    }
+    $out | Select-Object -Last 1 | Out-Host
 
     foreach ($b in $pending) {
         # An earlier merge may already have brought this branch in.
@@ -196,13 +217,6 @@ try {
 } finally {
     if ($startBranch -and $startBranch -ne $Main -and $startBranch -ne 'HEAD' -and $exitCode -eq 0) {
         & git checkout $startBranch 2>&1 | Out-Host
-    }
-    if ($stashed) {
-        Write-Host "== restore stash" -ForegroundColor Cyan
-        & git stash pop 2>&1 | Out-Host
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "stash pop did not apply cleanly - your work is still in 'git stash list'." -ForegroundColor Red
-        }
     }
 }
 

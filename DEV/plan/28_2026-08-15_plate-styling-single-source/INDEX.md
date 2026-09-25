@@ -5,7 +5,7 @@
 **Tier:** Moderate · **Priority:** 44
 **Status:** In Progress
 **Phases:** 4 / 6 done
-**Last updated:** 2026-09-24
+**Last updated:** 2026-09-25
 
 > **Scope:** tactical, English, developer handoff. Every step has a verification predicate.
 > Rationale lives in the strategic spec.
@@ -18,7 +18,7 @@
 | 02 | desktop-derives | 01 | ✅ Done | 4/4 | [PHASE_02__desktop-derives.md](PHASE_02__desktop-derives.md) |
 | 03 | extension-derives | 01 | ✅ Done | 5/5 | [PHASE_03__extension-derives.md](PHASE_03__extension-derives.md) |
 | 04 | parity-gate | 02, 03 | ✅ Done | 4/4 | [PHASE_04__parity-gate.md](PHASE_04__parity-gate.md) |
-| 05 | parity-record | 04 | ⛔ Blocked (05.3: catalog) | 2/3 | [PHASE_05__parity-record.md](PHASE_05__parity-record.md) |
+| 05 | parity-record | 04 | ⛔ Blocked (05.3: ⛔ Local only - catalog) | 2/3 | [PHASE_05__parity-record.md](PHASE_05__parity-record.md) |
 | 06 | docs-cleanup | all | 🚧 In Progress | 1/2 | [PHASE_06__docs-cleanup.md](PHASE_06__docs-cleanup.md) |
 
 Legend: ⬜ Not started · 🚧 In Progress · ✅ Done · ⛔ Blocked · ⏭️ Skipped
@@ -79,3 +79,8 @@ are constraints carried into the phases below, not research gates:
   re-budgeted to 240, `appearance_parity_test.go` label reader folded, re-budgeted to 600 (reasons in
   PHASE_02 / PHASE_04). Linux session: `go test ./...` ok except the known base-commit `TestPdfTitle`;
   `gen-appearance.mjs --check` fresh. Still open for the owner's machine: 05.3, 06.2.
+- 2026-09-25 - remote-execution format: Step 05.3 marked **⛔ Local only - changes the contract catalog**,
+  and PHASE_05 gains a "Contract snapshot (2026-09-25)" quoting the catalog's current
+  `ocr-overlay/ocr-pipeline.md` §3.1 and section 6 plate-rendering row, so the edit can be reviewed from
+  the repo alone. Re-verified against the catalog this date: `internal/appearance` still matches 0 times
+  there, so 05.3 is not done. No step state changed.
