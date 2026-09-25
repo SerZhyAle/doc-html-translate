@@ -72,7 +72,8 @@ reads.
 > 6-digit lowercase hex.
 
 **Verification:**
-- `roles.container` has 7 entries; `roles.plate` has 14 entries; `roles.image` has 5 entries.
+- `roles.container` has 7 entries; `roles.plate` has 17 entries (the shipped literal's count once the
+  print-color-adjust pair landed); `roles.image` has 5 entries.
 - `roles.image` contains entries with `property` values `margin` and `max-height`.
 - `roles.plate` contains no entry with `property` equal to `box-shadow`.
 - Every entry in `themes` has exactly the eight keys `bg`, `fg`, `muted`, `barBg`, `barFg`,

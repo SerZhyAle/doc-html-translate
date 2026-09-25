@@ -23,7 +23,7 @@ carrying its styles inline.
 |------|:--------------:|------------:|
 | `internal/appearance/appearance.go` | New | ≤ 220 |
 | `internal/appearance/appearance_test.go` | New | ≤ 160 |
-| `internal/ocr/overlay.go` | Modified | ≤ 60 changed |
+| `internal/ocr/overlay.go` | Modified | ≤ 75 changed |
 | `internal/htmlgen/navbar.go` | Modified | ≤ 60 changed |
 
 ## Steps

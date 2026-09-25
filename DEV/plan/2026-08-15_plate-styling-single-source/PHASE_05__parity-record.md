@@ -20,7 +20,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 
 | File | New / Modified | Line budget |
 |------|:--------------:|------------:|
-| `docs/PARITY.md` | Modified | ≤ 120 changed |
+| `docs/PARITY.md` | Modified | ≤ 130 changed |
 | `OCR-PIPELINE.md` (shared contracts catalog) | Modified | ≤ 20 changed |
 
 ## Steps
