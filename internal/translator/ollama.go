@@ -21,7 +21,11 @@ const (
 	ollamaDefaultURL    = "http://localhost:11434/api/generate"
 	ollamaDefaultModel  = "gemma3:12b"
 	ollamaDefaultNumCtx = 8192 // far below default 128K; our batches need <4K tokens
-	ollamaTimeout       = 300 * time.Second
+	// ollamaRequestTimeout bounds one request once the model is in memory.
+	ollamaRequestTimeout = 300 * time.Second
+	// ollamaLoadTimeout bounds the requests sent before the model has answered once: a cold
+	// load of a large model from disk can take minutes on its own, before any token is produced.
+	ollamaLoadTimeout = 15 * time.Minute
 	// Smaller batch keeps the model focused and reduces echo-back failures
 	ollamaBatchSize = 20
 	// Max retry passes for segments that came back untranslated (echo)
@@ -35,11 +39,11 @@ type OllamaClient struct {
 	numCtx      int
 	parallelism int
 	httpClient  *http.Client
-	onProgress  func(done, total int) // optional — called after each batch completes
+	onProgress  func(done, total int) // optional - called after each batch completes
 	// first-request detection (thread-safe)
 	firstMu   sync.Mutex
 	firstDone bool
-	loadStart time.Time
+	ready     atomic.Bool // the model has answered once, so it is loaded
 }
 
 // SetProgress implements ProgressReporter. f is called after each batch with (done, total) segment counts.
@@ -48,7 +52,7 @@ func (c *OllamaClient) SetProgress(f func(done, total int)) {
 }
 
 // Unload asks Ollama to release the model from VRAM (keep_alive: 0).
-// Safe to call from a signal handler — uses a short 5-second timeout.
+// It uses its own short timeout, so it works after the run's context was cancelled.
 func (c *OllamaClient) Unload() {
 	body, err := json.Marshal(map[string]interface{}{
 		"model":      c.model,
@@ -59,19 +63,20 @@ func (c *OllamaClient) Unload() {
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest("POST", c.baseURL, bytes.NewReader(body))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
 	if err != nil {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err == nil {
-		resp.Body.Close()
+	if resp, err := c.httpClient.Do(req); err == nil {
+		_ = resp.Body.Close()
 	}
 }
 
-// NewOllamaClient creates a client pointing at local Ollama.
+// NewOllamaClient creates a client pointing at local Ollama. Timeouts are per request (see
+// call), not on the http.Client, because the first request needs a much longer one.
 func NewOllamaClient(model string) *OllamaClient {
 	if model == "" {
 		model = ollamaDefaultModel
@@ -81,9 +86,7 @@ func NewOllamaClient(model string) *OllamaClient {
 		model:       model,
 		numCtx:      ollamaDefaultNumCtx,
 		parallelism: 1,
-		httpClient: &http.Client{
-			Timeout: ollamaTimeout,
-		},
+		httpClient:  &http.Client{},
 	}
 }
 
@@ -105,6 +108,36 @@ func (c *OllamaClient) SetNumCtx(n int) {
 	c.numCtx = n
 }
 
+// ollamaJob is one request's worth of texts: a numbered batch of one-line texts, or a single
+// text sent on its own.
+type ollamaJob struct {
+	idx    []int // positions in the caller's slice
+	single bool
+}
+
+// planJobs groups texts into requests. A text containing a line break is sent on its own: the
+// numbered-list prompt is one line per text, so its second line came back as an unnumbered line
+// the parser dropped - or, if it began with a number ("1984. It was.."), as another slot's answer.
+func planJobs(texts []string) []ollamaJob {
+	var jobs []ollamaJob
+	var batch []int
+	for i, t := range texts {
+		if strings.ContainsAny(t, "\r\n") {
+			jobs = append(jobs, ollamaJob{idx: []int{i}, single: true})
+			continue
+		}
+		batch = append(batch, i)
+		if len(batch) == ollamaBatchSize {
+			jobs = append(jobs, ollamaJob{idx: batch})
+			batch = nil
+		}
+	}
+	if len(batch) > 0 {
+		jobs = append(jobs, ollamaJob{idx: batch})
+	}
+	return jobs
+}
+
 // Translate implements the Client interface using Ollama.
 // Batches are sent concurrently (up to c.parallelism) for better GPU utilization
 // when OLLAMA_NUM_PARALLEL is set accordingly.
@@ -117,8 +150,9 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 		return nil, nil
 	}
 
-	numBatches := (len(texts) + ollamaBatchSize - 1) / ollamaBatchSize
-	batchResults := make([][]string, numBatches) // indexed by batch number, no races
+	jobs := planJobs(texts)
+	results := make([]string, len(texts))
+	done := make([]bool, len(jobs)) // each goroutine writes only its own job's slots
 
 	var (
 		firstErr error
@@ -126,11 +160,9 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 		doneSegs int64
 		wg       sync.WaitGroup
 	)
-
 	sem := make(chan struct{}, c.parallelism)
 
-	for b := 0; b < numBatches; b++ {
-		// Early abort if a previous batch failed.
+	for j, job := range jobs {
 		errMu.Lock()
 		abort := firstErr != nil
 		errMu.Unlock()
@@ -138,21 +170,13 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 			break
 		}
 
-		start := b * ollamaBatchSize
-		end := start + ollamaBatchSize
-		if end > len(texts) {
-			end = len(texts)
-		}
-		batchTexts := texts[start:end]
-		bIdx, bStart, bEnd := b, start, end
-
 		sem <- struct{}{} // acquire concurrency slot
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			translated, err := c.translateBatch(ctx, batchTexts, sourceLang, targetLang)
+			translated, err := c.runJob(ctx, texts, job, sourceLang, targetLang)
 			if err != nil {
 				errMu.Lock()
 				if firstErr == nil {
@@ -161,33 +185,14 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 				errMu.Unlock()
 				return
 			}
-
-			// Retry echo-backs with a simpler single-item prompt.
-			for attempt := 0; attempt < ollamaMaxRetries; attempt++ {
-				anyRetried := false
-				for j, orig := range batchTexts {
-					if !isEchoBack(translated[j], orig) {
-						continue
-					}
-					retried, err := c.translateSingle(ctx, orig, sourceLang, targetLang)
-					if err != nil {
-						break
-					}
-					if !isEchoBack(retried, orig) {
-						translated[j] = retried
-						anyRetried = true
-					}
-				}
-				if !anyRetried {
-					break
-				}
+			for k, i := range job.idx {
+				results[i] = translated[k]
 			}
-
-			batchResults[bIdx] = translated
+			done[j] = true
 
 			if c.onProgress != nil {
-				done := int(atomic.AddInt64(&doneSegs, int64(bEnd-bStart)))
-				c.onProgress(done, len(texts))
+				n := int(atomic.AddInt64(&doneSegs, int64(len(job.idx))))
+				c.onProgress(n, len(texts))
 			}
 		}()
 	}
@@ -197,80 +202,79 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-
-	results := make([]string, len(texts))
+	if firstErr == nil {
+		return results, nil
+	}
 	var missing []int
-	for b, tr := range batchResults {
-		start := b * ollamaBatchSize
-		if tr == nil {
-			end := min(start+ollamaBatchSize, len(texts))
-			for i := start; i < end; i++ {
-				missing = append(missing, i)
-			}
-			continue
+	for j, job := range jobs {
+		if !done[j] {
+			missing = append(missing, job.idx...)
 		}
-		copy(results[start:], tr)
 	}
-	if firstErr != nil {
-		if len(missing) == len(texts) {
-			return nil, firstErr
-		}
-		return results, &PartialError{Missing: missing, Err: firstErr}
+	if len(missing) == len(texts) {
+		return nil, firstErr
 	}
-	return results, nil
+	return results, &PartialError{Missing: missing, Err: firstErr}
 }
 
-// translateSingle translates one text string using a simple, direct prompt.
-// Used for retry passes where the numbered-batch format failed.
+// runJob translates one job, then retries its echo-backs one text at a time.
+func (c *OllamaClient) runJob(ctx context.Context, texts []string, job ollamaJob, src, dst string) ([]string, error) {
+	jobTexts := make([]string, len(job.idx))
+	for k, i := range job.idx {
+		jobTexts[k] = texts[i]
+	}
+
+	var translated []string
+	if job.single {
+		t, err := c.translateSingle(ctx, jobTexts[0], src, dst)
+		if err != nil {
+			return nil, err
+		}
+		translated = []string{t}
+	} else {
+		var err error
+		if translated, err = c.translateBatch(ctx, jobTexts, src, dst); err != nil {
+			return nil, err
+		}
+	}
+
+	// Retry echo-backs with a simpler single-item prompt.
+	for attempt := 0; attempt < ollamaMaxRetries; attempt++ {
+		anyRetried := false
+		for k, orig := range jobTexts {
+			if !isEchoBack(translated[k], orig) {
+				continue
+			}
+			retried, err := c.translateSingle(ctx, orig, src, dst)
+			if err != nil {
+				break
+			}
+			if !isEchoBack(retried, orig) {
+				translated[k] = retried
+				anyRetried = true
+			}
+		}
+		if !anyRetried {
+			break
+		}
+	}
+	return translated, nil
+}
+
+// translateSingle translates one text string using a simple, direct prompt, keeping its line
+// breaks. Used for texts that span lines and for retry passes where the numbered-batch format
+// failed.
 func (c *OllamaClient) translateSingle(ctx context.Context, text, srcLang, dstLang string) (string, error) {
 	prompt := fmt.Sprintf(
 		"Translate the following text from %s to %s.\n"+
-			"Output ONLY the translation. Do not add explanations or repeat the original.\n\n%s",
+			"Output ONLY the translation. Keep the line breaks. Do not add explanations or repeat the original.\n\n%s",
 		langName(srcLang), langName(dstLang), text,
 	)
-	reqBody := ollamaRequest{
-		Model:   c.model,
-		Prompt:  prompt,
-		Stream:  false,
-		Options: ollamaOptions{NumCtx: c.numCtx, Temperature: 0},
-	}
-	body, err := json.Marshal(reqBody)
+	out, err := c.generate(ctx, prompt)
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.post(ctx, body)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("ollama: HTTP %d", resp.StatusCode)
-	}
-	var result ollamaResponse
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", err
-	}
-	if result.Error != "" {
-		return "", fmt.Errorf("ollama: %s", result.Error)
-	}
-	return strings.TrimSpace(result.Response), nil
-}
-
-// isEchoBack returns true if the model returned the original text unchanged.
-func isEchoBack(translated, original string) bool {
-	if translated == "" {
-		return true
-	}
-	t := strings.TrimSpace(translated)
-	o := strings.TrimSpace(original)
-	if len(o) < 10 {
-		return false // short strings — don't retry
-	}
-	return strings.EqualFold(t, o)
+	return strings.TrimSpace(out), nil
 }
 
 type ollamaOptions struct {
@@ -293,7 +297,7 @@ type ollamaResponse struct {
 func (c *OllamaClient) translateBatch(ctx context.Context, texts []string, srcLang, dstLang string) ([]string, error) {
 	// Build numbered list prompt
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(
+	fmt.Fprintf(&sb,
 		"Translate each line from %s to %s.\n"+
 			"Rules:\n"+
 			"- Output ONLY the translated lines, numbered exactly as input.\n"+
@@ -301,30 +305,34 @@ func (c *OllamaClient) translateBatch(ctx context.Context, texts []string, srcLa
 			"- Do NOT add explanations, comments, or extra text.\n"+
 			"- If a line contains quoted speech, translate the speech too.\n\n",
 		langName(srcLang), langName(dstLang),
-	))
+	)
 	for i, t := range texts {
 		fmt.Fprintf(&sb, "%d. %s\n", i+1, t)
 	}
+	out, err := c.generate(ctx, sb.String())
+	if err != nil {
+		return nil, err
+	}
+	return parseNumberedResponse(out, len(texts)), nil
+}
 
-	reqBody := ollamaRequest{
+// generate runs one prompt and returns the model's answer.
+func (c *OllamaClient) generate(ctx context.Context, prompt string) (string, error) {
+	body, err := json.Marshal(ollamaRequest{
 		Model:   c.model,
-		Prompt:  sb.String(),
+		Prompt:  prompt,
 		Stream:  false,
 		Options: ollamaOptions{NumCtx: c.numCtx, Temperature: 0},
-	}
-
-	body, err := json.Marshal(reqBody)
+	})
 	if err != nil {
-		return nil, fmt.Errorf("ollama: marshal request: %w", err)
+		return "", fmt.Errorf("ollama: marshal request: %w", err)
 	}
 
-	// Thread-safe first-request load detection.
 	isFirst := false
 	c.firstMu.Lock()
 	if !c.firstDone {
 		c.firstDone = true
 		isFirst = true
-		c.loadStart = time.Now()
 	}
 	c.firstMu.Unlock()
 	if isFirst {
@@ -332,68 +340,86 @@ func (c *OllamaClient) translateBatch(ctx context.Context, texts []string, srcLa
 	}
 
 	t0 := time.Now()
-	resp, err := c.post(ctx, body)
+	status, respBody, err := c.call(ctx, body)
 	if isFirst {
 		logging.Printf("  Model ready in %s\n", formatLoadTime(time.Since(t0)))
 	}
 	if err != nil {
-		return nil, fmt.Errorf("ollama: http request: %w (is Ollama running?)", err)
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+		return "", fmt.Errorf("ollama: http request: %w (is Ollama running?)", err)
 	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("ollama: read response: %w", err)
+	if status != http.StatusOK {
+		return "", fmt.Errorf("ollama: HTTP %d: %s", status, strings.TrimSpace(string(respBody)))
 	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("ollama: HTTP %d: %s", resp.StatusCode, string(respBody))
-	}
-
 	var result ollamaResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, fmt.Errorf("ollama: unmarshal response: %w", err)
+		return "", fmt.Errorf("ollama: unmarshal response: %w", err)
 	}
 	if result.Error != "" {
-		return nil, fmt.Errorf("ollama: model error: %s", result.Error)
+		return "", fmt.Errorf("ollama: model error: %s", result.Error)
 	}
-
-	return parseNumberedResponse(result.Response, len(texts)), nil
+	c.ready.Store(true)
+	return result.Response, nil
 }
 
-func (c *OllamaClient) post(ctx context.Context, body []byte) (*http.Response, error) {
+// call sends one request under its own timeout: the long one until the model has answered
+// once, the ordinary one after. The body is read before the timeout's context is released.
+func (c *OllamaClient) call(ctx context.Context, body []byte) (int, []byte, error) {
+	timeout := ollamaRequestTimeout
+	if !c.ready.Load() {
+		timeout = ollamaLoadTimeout
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	return c.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+	return resp.StatusCode, respBody, nil
 }
 
-// parseNumberedResponse extracts "N. text" lines from the model output.
-// Falls back to full response split by newlines if parsing fails.
+// isEchoBack returns true if the model returned the original text unchanged.
+func isEchoBack(translated, original string) bool {
+	if translated == "" {
+		return true
+	}
+	t := strings.TrimSpace(translated)
+	o := strings.TrimSpace(original)
+	if len(o) < 10 {
+		return false // short strings - don't retry
+	}
+	return strings.EqualFold(t, o)
+}
+
+// numberedLineRe matches one "N. text" answer line of the model output.
 var numberedLineRe = regexp.MustCompile(`(?m)^\s*(\d+)\.\s*(.+)$`)
 
+// parseNumberedResponse maps "N. text" lines onto the expected slots. The first answer for a
+// number wins and numbers outside 1..expected are ignored, so a translated line that itself
+// starts with a number ("1984. It was..") can neither overwrite an earlier slot nor invent one.
+// A slot with no answer stays empty and the caller keeps the original text.
 func parseNumberedResponse(response string, expected int) []string {
-	matches := numberedLineRe.FindAllStringSubmatch(response, -1)
-
-	// Build map by number
-	parsed := make(map[int]string, len(matches))
-	for _, m := range matches {
-		n, err := strconv.Atoi(m[1])
-		if err == nil && n >= 1 && n <= expected {
-			parsed[n] = strings.TrimSpace(m[2])
-		}
-	}
-
 	results := make([]string, expected)
-	for i := range results {
-		if v, ok := parsed[i+1]; ok {
-			results[i] = v
-		} else {
-			// Missing number — use empty string (original will be kept by caller)
-			results[i] = ""
+	filled := make([]bool, expected)
+	for _, m := range numberedLineRe.FindAllStringSubmatch(response, -1) {
+		n, err := strconv.Atoi(m[1])
+		if err != nil || n < 1 || n > expected || filled[n-1] {
+			continue
 		}
+		results[n-1] = strings.TrimSpace(m[2])
+		filled[n-1] = true
 	}
 	return results
 }

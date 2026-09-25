@@ -116,4 +116,18 @@ func init() {
 		"বাধাপ্রাপ্ত - ফলাফল অসম্পূর্ণ, পরের বার আবার তৈরি হবে",
 		"رک گیا - نتیجہ نامکمل ہے اور اگلی بار دوبارہ بنایا جائے گا",
 		"已中断 - 输出不完整，下次运行时将重新生成")
+
+	Add("[3/4] Estimated cost $%s USD (%s characters) is within -max-cost $%s - translating without asking.",
+		"[3/4] Оценка стоимости $%s USD (%s символов) укладывается в -max-cost $%s - перевод без подтверждения.",
+		"[3/4] Оцінка вартості $%s USD (%s символів) вкладається в -max-cost $%s - переклад без підтвердження.",
+		"[3/4] Geschätzte Kosten $%s USD (%s Zeichen) liegen innerhalb von -max-cost $%s - Übersetzung ohne Rückfrage.",
+		"[3/4] Costo stimato $%s USD (%s caratteri) entro -max-cost $%s - traduzione senza conferma.",
+		"[3/4] Coste estimado $%s USD (%s caracteres) dentro de -max-cost $%s - se traduce sin preguntar.",
+		"[3/4] Coût estimé $%s USD (%s caractères) dans la limite -max-cost $%s - traduction sans confirmation.",
+		"[3/4] Custo estimado $%s USD (%s caracteres) dentro de -max-cost $%s - tradução sem confirmação.",
+		"[3/4] التكلفة المقدّرة $%s USD (%s حرفًا) ضمن حد -max-cost $%s - تتم الترجمة دون سؤال.",
+		"[3/4] अनुमानित लागत $%s USD (%s अक्षर) -max-cost $%s के भीतर है - बिना पूछे अनुवाद हो रहा है।",
+		"[3/4] আনুমানিক খরচ $%s USD (%s অক্ষর) -max-cost $%s-এর মধ্যে - জিজ্ঞাসা ছাড়াই অনুবাদ হচ্ছে।",
+		"[3/4] تخمینی لاگت $%s USD (%s حروف) -max-cost $%s کے اندر ہے - پوچھے بغیر ترجمہ ہو رہا ہے۔",
+		"[3/4] 预计费用 $%s USD (%s 个字符) 在 -max-cost $%s 以内 - 无需确认直接翻译。")
 }

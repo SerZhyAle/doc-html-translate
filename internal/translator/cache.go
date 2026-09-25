@@ -52,6 +52,11 @@ func (c *CachingClient) Translate(ctx context.Context, texts []string, srcLang, 
 	if err != nil && !errors.As(err, &partial) {
 		return nil, err
 	}
+	// Matching by index is only sound when every text got exactly one answer; an engine that
+	// broke that promise must not crash the run or put one text's translation on another.
+	if len(translated) != len(missTexts) {
+		return nil, fmt.Errorf("translation engine returned %d results for %d texts", len(translated), len(missTexts))
+	}
 
 	// A slot the inner client could not fill must not be cached: the next page asking for the
 	// same text would get the empty string back as if it were the translation.

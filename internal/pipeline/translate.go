@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/dialog"
@@ -106,7 +107,7 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 			return none
 		}
 		pages := loadContentPages(book, outputDir)
-		if !r.approveGoogleCost(pages) {
+		if !r.approveGoogleCost(book, pages) {
 			return none
 		}
 		client := translator.NewCachingClient(r.engines.google(apiKey))
@@ -129,28 +130,6 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 		logging.Println("[3/4] Translation skipped (use -google or -ollama to enable)")
 		return none
 	}
-}
-
-// approveGoogleCost applies the -max-cost guard and the confirmation dialog.
-func (r Runner) approveGoogleCost(pages []contentPage) bool {
-	totalChars := countLoadedPageChars(pages)
-	if totalChars <= 1000 {
-		return true
-	}
-	estCost := float64(totalChars) / 1_000_000 * 20
-	if r.cfg.MaxCost > 0 && estCost > r.cfg.MaxCost {
-		logging.Printf("[3/4] Translation skipped - estimated cost $%.2f USD exceeds -max-cost $%.2f limit\n", estCost, r.cfg.MaxCost)
-		return false
-	}
-	msg := fmt.Sprintf(
-		"Characters to send: %s\nEstimated cost: $%.2f USD\n\nProceed with Google Translate?",
-		formatInt(totalChars), estCost,
-	)
-	if !r.engines.confirm("Google Translate - Cost Warning", msg) {
-		logging.Println("[3/4] Translation cancelled by user")
-		return false
-	}
-	return true
 }
 
 // translateContent translates all HTML content files in the book. The first engine failure
@@ -350,24 +329,12 @@ func loadContentPages(book *epub.Book, outputDir string) []contentPage {
 		}
 		if err == nil {
 			for _, seg := range segments {
-				page.charCount += len(seg.Text)
+				page.charCount += utf8.RuneCountInString(seg.Text)
 			}
 		}
 		pages = append(pages, page)
 	}
 	return pages
-}
-
-// countLoadedPageChars returns total number of translatable characters across parsed content pages.
-func countLoadedPageChars(pages []contentPage) int {
-	total := 0
-	for _, page := range pages {
-		if page.err != nil {
-			continue
-		}
-		total += page.charCount
-	}
-	return total
 }
 
 // formatDuration formats seconds as "4m5s" or "38s".
@@ -378,18 +345,4 @@ func formatDuration(seconds float64) string {
 	m := int(seconds) / 60
 	s := int(seconds) % 60
 	return fmt.Sprintf("%dm%ds", m, s)
-}
-
-// formatInt formats an integer with thousands separators.
-func formatInt(n int) string {
-	s := fmt.Sprintf("%d", n)
-	out := make([]byte, 0, len(s)+len(s)/3)
-	for i, c := range s {
-		pos := len(s) - i
-		if i > 0 && pos%3 == 0 {
-			out = append(out, ',')
-		}
-		out = append(out, byte(c))
-	}
-	return string(out)
 }

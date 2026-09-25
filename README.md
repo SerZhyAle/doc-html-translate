@@ -156,7 +156,7 @@ Why this workflow is popular (besides the obvious):
 | `-ollama-model` | `gemma3:12b` | Ollama model name |
 | `-ollama-parallel` | `1` | Parallel batch requests |
 | `-ollama-ctx` | `8192` | Ollama context size |
-| `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N (`0` = no limit) |
+| `-max-cost` | `0` | Abort paid translation before sending if estimated cost in USD exceeds N; within N it runs without the cost dialog (`0` = no limit; negative, NaN or Inf is refused) |
 | `-ocr` | `false` | OCR text inside document images and overlay it as translatable HTML (needs Tesseract) |
 | `-ocr-lang` | (`-src`) | OCR language(s), e.g. `eng` or `eng+rus`. Left empty it defaults from `-src` (else `eng`) and the app checks the page's writing system: it adds a language rather than replacing one (`rus+eng`) where the data is installed, and leaves the page without text plates - naming the pack to install - where it is not. Passing the flag turns that check off |
 | `-ocr-langs` | `false` | List installed/available OCR languages and exit |
@@ -223,7 +223,8 @@ and PDF); other formats are unaffected.
 - EPUB table-of-contents snippets are generated correctly even when chapter files live under subfolders such as `OEBPS/`.
 - The table of contents prefers the book's authored navigation (EPUB2 `toc.ncx` navMap, EPUB3 `nav.xhtml`, or PDF bookmarks) and renders it as a collapsible multi-level tree with deep links. When a document has no authored TOC, headings (`h1`-`h6`) on each page are scanned and given stable `id` anchors so the generated TOC still links into sections. Use `-toc-depth N` to cap the nesting (`0` = unlimited).
 - The generated HTML carries a small reader layer: a theme toggle (Light/Sepia/Dark/Night, stored in `localStorage`) and a reading-position tracker (scroll saved per book, a "Continue reading" link on `index.html`, and a progress bar in the navbar). It is pure client-side JS and works on `file://`. Single-page documents (no navbar) do not get this layer.
-- For paid engines the estimated cost is `chars / 1e6 * $20`. `-max-cost N` turns the existing advisory dialog into a hard pre-flight guard: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated.
+- For paid engines the estimated cost is `characters / 1e6 * $20`, counted in characters (not bytes) over everything that is sent: the pages, the book title and the table-of-contents labels. `-max-cost N` is a hard pre-flight guard at any document size: if the estimate exceeds `N`, translation is skipped and the book is still produced untranslated. A set limit is also the approval: an estimate within `N` translates without the cost dialog, so an unattended or scripted run (`-google -max-cost 2 -noopen book.epub`) never stops to ask. Without `-max-cost` the dialog asks as before for anything over 1000 characters. A negative, `NaN` or infinite `-max-cost` is refused at startup (exit code `1`).
+- The Google API key is sent in a request header, never in the URL, and it is removed from any error text and from the run log.
 - PDF extraction is best-effort and includes fallback flows for difficult files (PDFs have opinions, and they are rarely kind).
 - In `doc-html-ui`, `Split Size = 0` now matches the CLI and disables page splitting completely.
 - `doc-html-ui` file picker and supported-format hints cover all formats, including MOBI/AZW3 (Calibre required) and CBZ/CBR/CB7/CBT comics (CBR/CB7 need 7-Zip).

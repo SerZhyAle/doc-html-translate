@@ -83,3 +83,76 @@ func TestOllamaCancelled(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+// Done criterion 6: a segment with two lines comes back with both lines, because it is sent on
+// its own rather than as one line of the numbered list.
+func TestOllamaMultiLineSegmentKeepsEveryLine(t *testing.T) {
+	var numbered, single int
+	c := ollamaStub(t, func(prompt string) (int, string, bool) {
+		if strings.HasPrefix(prompt, "Translate the following text") {
+			single++
+			text := prompt[strings.LastIndex(prompt, "\n\n")+2:]
+			body, _ := json.Marshal(ollamaResponse{Response: strings.ReplaceAll("XX:"+text, "\n", "\nXX:")})
+			return http.StatusOK, string(body), true
+		}
+		numbered++
+		if strings.Contains(prompt, "second line") {
+			t.Errorf("multi-line text went into the numbered prompt:\n%s", prompt)
+		}
+		return 0, "", false
+	})
+	in := []string{"one line", "first line\nsecond line", "another line"}
+	got, err := c.Translate(context.Background(), in, "en", "de")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got[1] != "XX:first line\nXX:second line" {
+		t.Fatalf("multi-line segment = %q", got[1])
+	}
+	if got[0] != "XX:one line" || got[2] != "XX:another line" {
+		t.Fatalf("neighbours = %q, %q", got[0], got[2])
+	}
+	if single != 1 || numbered != 1 {
+		t.Fatalf("single = %d, numbered = %d", single, numbered)
+	}
+}
+
+// A reply line that starts with a number must not land in another slot: the first answer per
+// number wins and out-of-range numbers are ignored.
+func TestParseNumberedFirstAnswerWins(t *testing.T) {
+	reply := "1. Es war ein kalter Tag\n2. Zweite Zeile\n1984. Ein Jahr\n2. overwrite attempt\n"
+	got := parseNumberedResponse(reply, 3)
+	if got[0] != "Es war ein kalter Tag" || got[1] != "Zweite Zeile" || got[2] != "" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestOllama1984LineKeepsItsSlot(t *testing.T) {
+	c := ollamaStub(t, nil)
+	in := []string{"1984. It was a bright cold day", "Chapter 2"}
+	got, err := c.Translate(context.Background(), in, "en", "de")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got[0] != "XX:1984. It was a bright cold day" || got[1] != "XX:Chapter 2" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+// The first request waits for a cold model load under the long timeout; after the model has
+// answered, requests use the ordinary one.
+func TestOllamaLoadTimeoutOnlyUntilReady(t *testing.T) {
+	c := ollamaStub(t, nil)
+	if c.ready.Load() {
+		t.Fatal("a new client claims its model is loaded")
+	}
+	if _, err := c.Translate(context.Background(), []string{"a"}, "en", "de"); err != nil {
+		t.Fatal(err)
+	}
+	if !c.ready.Load() {
+		t.Fatal("a successful answer did not mark the model loaded")
+	}
+	if c.httpClient.Timeout != 0 {
+		t.Fatalf("a client-wide timeout %v would also cut the cold load", c.httpClient.Timeout)
+	}
+}

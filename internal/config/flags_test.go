@@ -6,6 +6,21 @@ import (
 	"testing"
 )
 
+// Done criterion 5 of ticket 08: a limit that cannot guard anything is refused at startup
+// instead of silently meaning "no limit".
+func TestParseArgsRejectsInvalidMaxCost(t *testing.T) {
+	for _, v := range []string{"-1", "-0.01", "NaN", "Inf", "-Inf", "+Inf"} {
+		if _, err := ParseArgs([]string{"-max-cost", v, "book.epub"}); err == nil || !strings.Contains(err.Error(), "-max-cost") {
+			t.Errorf("-max-cost %s: err = %v", v, err)
+		}
+	}
+	for _, v := range []string{"0", "0.01", "2"} {
+		if _, err := ParseArgs([]string{"-max-cost", v, "book.epub"}); err != nil {
+			t.Errorf("-max-cost %s refused: %v", v, err)
+		}
+	}
+}
+
 // -h is a request, not a failure. It must come back as ErrHelp so main can exit 0 with the
 // usage on stdout, the same way -version already exits 0 - not as a generic error that gets
 // an "Error:" prefix and exit 1.
