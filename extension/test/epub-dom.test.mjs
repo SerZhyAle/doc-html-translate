@@ -219,6 +219,27 @@ test("rewriteAnchor: link outside the rendered spine loses its href but keeps it
   assert.equal(a.textContent, "Notes");
 });
 
+// B20 (hotfix-epub-href-containment): the fragment is cut before decoding, so an
+// encoded %23 stays in the file name, and "/x" resolves from the archive root.
+test("rewriteAnchor: %23 in a file name and root-relative hrefs resolve like the desktop app", () => {
+  const index = new Map([["OEBPS/a#b.xhtml", 0], ["root.xhtml", 1], ["OEBPS/Chapter 1.xhtml", 2]]);
+  const enc = el(`<a href="a%23b.xhtml#s">x</a>`, "a");
+  rewriteAnchor(enc, 0, "OEBPS", index);
+  assert.equal(enc.getAttribute("href"), "#d0-s");
+
+  const rooted = el(`<a href="/root.xhtml">x</a>`, "a");
+  rewriteAnchor(rooted, 0, "OEBPS", index);
+  assert.equal(rooted.getAttribute("href"), "#epub-sec-1");
+
+  const spaced = el(`<a href="Chapter%201.xhtml">x</a>`, "a");
+  rewriteAnchor(spaced, 0, "OEBPS", index);
+  assert.equal(spaced.getAttribute("href"), "#epub-sec-2");
+
+  const escaping = el(`<a href="../../root.xhtml">x</a>`, "a");
+  rewriteAnchor(escaping, 0, "OEBPS", index);
+  assert.equal(escaping.getAttribute("href"), null);
+});
+
 test("rewriteAnchor: a bare <a name> becomes an id target", () => {
   const a = el(`<a name="top"></a>`, "a");
   rewriteAnchor(a, 2, "OEBPS", pathIndex());

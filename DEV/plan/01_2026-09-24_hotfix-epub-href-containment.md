@@ -1,7 +1,7 @@
 # Strategic spec: 01_2026-09-24_hotfix-epub-href-containment - Book-supplied paths stay inside the book
 
 **Ticket:** 01_2026-09-24_hotfix-epub-href-containment
-**Status:** Draft
+**Status:** BlockNeedUserTest - implemented and covered by tests on Linux; needs the owner's sign-off on the security fix and a Windows pass (NTFS case folding of `Index.xhtml`, the case-collision warning).
 **Priority:** 95
 **Date:** 2026-09-24
 **Tier:** Security/Compliance (urgent)
@@ -71,7 +71,7 @@ Package document -> resolution gate (decode, normalize, contain) -> clean item l
 1. **Out-of-tree spine item policy**
    - **Question:** should dropping it fail the whole conversion or only that item?
    - **Options:** skip with a warning (preferred); refuse the book.
-   - **Status:** Open.
+   - **Status:** Resolved (2026-09-25, the preferred option taken at implementation). The item is skipped with a warning. Only an out-of-book `container.xml` rootfile fails the book, since without the package document there is nothing left to convert.
 
 ## 7. Risks
 - **Over-strict normalization drops valid items (for example `./` prefixes).** Likelihood: medium. Impact: missing chapters. Mitigation: a corpus sweep over the local test books before and after the change.
@@ -92,5 +92,11 @@ No changes to user docs.
 3. A book with one missing manifest item converts, and a warning names that item.
 4. A book containing `Index.xhtml` keeps that chapter.
 
+## Implementation notes (2026-09-25)
+- Done criteria 1-4 are covered by tests: `internal/htmlgen/containment_test.go` (spine, encoded, backslash, root-relative, drive letter, UNC vectors through both the single-page merge and the multipage navbar; container pointer; `Chapter%201.xhtml`; a missing item; `Index.xhtml` at the root and under `OEBPS/`), `internal/epub/resolve_test.go`, and the shared fixture `tests/testdata/epub_href_cases.json`, which the extension runs in `extension/test/epub.test.mjs`. The containment tests were checked to fail with the gate bypassed.
+- `ManifestItem.Href` is now a decoded, contained file path. Every place that writes a book path into generated HTML escapes it through `epub.URLPath`, which escapes only what changes URL parsing, so ASCII names produce byte-identical output. `TOCEntry.Href` is a URL.
+- The single-page merge compares `index.html` ignoring case before deleting absorbed chapters; before, a chapter `Index.xhtml` under `OEBPS/` deleted the merged page itself on NTFS.
+- Out of scope, left as found: names the page splitter generates (`<name>_s2.html`) are not checked for a case-only clash with a book file.
+
 ## 12. Next step
-`/spec-tech 01_2026-09-24_hotfix-epub-href-containment`
+Owner sign-off, then a Windows pass on a book with `Index.xhtml` and one with case-only duplicate entries.

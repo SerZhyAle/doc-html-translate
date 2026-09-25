@@ -3,7 +3,6 @@ package epub
 import (
 	"bytes"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -59,7 +58,7 @@ func normalizeContent(book *Book, outputDir string) {
 			continue
 		}
 		// The reserved name is a move, not a copy: the generated nav takes that path.
-		if filepath.Clean(srcPath) == navPath && r.finalHref != item.Href {
+		if samePathFold(srcPath, navPath) && r.finalHref != item.Href {
 			if err := os.Remove(srcPath); err != nil {
 				logging.Errorf("WARNING: remove renamed %s: %v\n", item.Href, err)
 			}
@@ -91,7 +90,8 @@ func planContentRenames(book *Book, outputDir string) ([]contentRename, map[stri
 		}
 		htmlHref := toHTMLExt(item.Href)
 		finalHref := htmlHref
-		if filepath.Clean(bookPath(outputDir, book.BasePath, htmlHref)) == navPath {
+		// Case-insensitive: on NTFS Index.html *is* index.html, and the nav would overwrite it.
+		if samePathFold(bookPath(outputDir, book.BasePath, htmlHref), navPath) {
 			finalHref = path.Join(path.Dir(htmlHref), "_content_"+path.Base(htmlHref))
 		}
 		plan[i] = contentRename{htmlHref: htmlHref, finalHref: finalHref}
@@ -102,13 +102,16 @@ func planContentRenames(book *Book, outputDir string) ([]contentRename, map[stri
 	return plan, linkMap
 }
 
-// cleanHrefPath returns a manifest href as the decoded, cleaned path that
-// rewriteLinks hands to its callback.
+// cleanHrefPath returns a manifest href as the cleaned path that rewriteLinks
+// hands to its callback. The href is already decoded (resolveBookPath), so it
+// must not be decoded again: a book file literally named "a%20b" stays that.
 func cleanHrefPath(href string) string {
-	if u, err := url.PathUnescape(href); err == nil {
-		href = u
-	}
 	return path.Clean(href)
+}
+
+// samePathFold compares two file paths the way Windows does, ignoring case.
+func samePathFold(a, b string) bool {
+	return strings.EqualFold(filepath.Clean(a), filepath.Clean(b))
 }
 
 // normalizeChapter reads srcPath, applies the DOM normalizations and writes

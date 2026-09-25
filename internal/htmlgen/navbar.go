@@ -695,10 +695,10 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 
 		var prevRel, nextRel string
 		if i > 0 {
-			prevRel = relativePath(thisDir, fullHrefs[i-1])
+			prevRel = epub.URLPath(relativePath(thisDir, fullHrefs[i-1]))
 		}
 		if i < total-1 {
-			nextRel = relativePath(thisDir, fullHrefs[i+1])
+			nextRel = epub.URLPath(relativePath(thisDir, fullHrefs[i+1]))
 		}
 		indexRel := relativePath(thisDir, "index.html")
 
@@ -711,7 +711,7 @@ func InjectNavBars(book *epub.Book, outputDir, sourceName string) error {
 			Current:    i + 1,
 			Total:      total,
 			BookKey:    bookKey,
-			SelfHref:   href,
+			SelfHref:   epub.URLPath(href),
 		}
 
 		if err := injectNavIntoFile(filePath, nav); err != nil {

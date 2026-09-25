@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -90,7 +91,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	var cssLinks []string
 	for _, item := range book.Manifest {
 		if item.MediaType == "text/css" {
-			cssLinks = append(cssLinks, fmt.Sprintf(`  <link rel="stylesheet" href="%s">`, html.EscapeString(item.Href)))
+			cssLinks = append(cssLinks, fmt.Sprintf(`  <link rel="stylesheet" href="%s">`, html.EscapeString(epub.URLPath(item.Href))))
 		}
 	}
 
@@ -151,8 +152,10 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	// best-effort and happens only after the merge is safely on disk; a file we cannot
 	// delete is left alone rather than failing a conversion that already succeeded.
 	for _, href := range spineHrefs {
-		if href == "index.html" {
-			continue // never the merged file itself
+		// Never the merged file itself - compared ignoring case, because on NTFS a chapter
+		// named Index.html is that file, and removing it would delete the whole book.
+		if strings.EqualFold(path.Clean(href), "index.html") {
+			continue
 		}
 		_ = os.Remove(bookPath(outputDir, book.BasePath, href))
 	}
@@ -160,7 +163,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	entry := filepath.Join(outputDir, "index.html")
 	if book.BasePath != "" && book.BasePath != "." {
 		// Redirect entry at the output root -> merged page in the base dir.
-		target := book.BasePath + "/index.html"
+		target := epub.URLPath(book.BasePath) + "/index.html"
 		redirect := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>

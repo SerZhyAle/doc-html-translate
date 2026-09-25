@@ -65,13 +65,17 @@ func (ix anchorIndex) relocate(target, frag, rawFrag string) (string, bool) {
 }
 
 // rewriteTOC points TOC entries whose fragment moved to a later part at that
-// part. TOC hrefs are OPF-relative manifest hrefs, so no URL decoding applies.
+// part. A TOC href is an escaped URL over the decoded manifest paths the index
+// is keyed by, so the file part is decoded to look up and re-escaped to write.
 func rewriteTOC(entries []epub.TOCEntry, ix anchorIndex) {
 	for i := range entries {
 		e := &entries[i]
 		if file, frag, ok := strings.Cut(e.Href, "#"); ok && file != "" && frag != "" {
+			if u, err := url.PathUnescape(file); err == nil {
+				file = u
+			}
 			if moved, changed := ix.relocate(path.Clean(file), frag, frag); changed {
-				e.Href = moved + "#" + frag
+				e.Href = epub.URLPath(moved) + "#" + frag
 			}
 		}
 		rewriteTOC(e.Children, ix)

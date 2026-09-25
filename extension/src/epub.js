@@ -9,7 +9,7 @@
 // EPUB2 NCX table of contents, single-image SVG cover -> <img>), but renders into
 // the DOM instead of writing files to disk.
 //
-// The pure pieces - unzip(), resolvePath() - use no DOM and are unit-tested under
+// The pure pieces - unzip(), resolveBookPath() - use no DOM and are unit-tested under
 // node; everything that parses XHTML uses DOMParser and runs only in the viewer.
 
 import { normalizeLangTag } from "./lang.js";
@@ -90,18 +90,51 @@ export async function unzip(arrayBuffer) {
 
 // ---- Path helpers (pure) ---------------------------------------------------
 
-// resolvePath resolves an EPUB href against a base directory, dropping any query
-// or fragment and collapsing "." / "..". Result is a forward-slash ZIP entry path.
+// resolveBookPath turns a name the book supplies (container full-path, manifest
+// href, link, image or TOC target) into an archive entry path, or null when the
+// name must be dropped. It is the port of the desktop resolveBookPath
+// (internal/epub/resolve.go), and both run the shared fixture
+// tests/testdata/epub_href_cases.json - see ../../docs/PARITY.md, "EPUB href
+// resolution". The rule, in order:
+//   1. cut ?query and #fragment off the raw value, before decoding, so an encoded
+//      %23 stays part of the name;
+//   2. percent-decode once (a malformed escape keeps the raw text);
+//   3. treat "\" as "/";
+//   4. refuse a colon, a leading "//", control characters, a segment ending in a
+//      dot or space, and Windows device names - the desktop edition writes these
+//      to disk, and one rule keeps the two editions reading the same chapters;
+//   5. a leading "/" is archive-root-relative, anything else resolves against
+//      baseDir;
+//   6. the result must name something strictly inside the archive.
 // Pure (no DOM) - unit-tested.
-export function resolvePath(baseDir, href) {
-  href = String(href).split("#")[0].split("?")[0];
-  const stack = baseDir ? baseDir.split("/").filter(Boolean) : [];
-  for (const part of href.split("/")) {
-    if (part === "" || part === ".") continue;
-    if (part === "..") stack.pop();
-    else stack.push(part);
+export function resolveBookPath(baseDir, href) {
+  let p = String(href ?? "");
+  const cut = p.search(/[?#]/);
+  if (cut >= 0) p = p.slice(0, cut);
+  p = decodeHref(p).replace(/\\/g, "/");
+  if (!p || p.startsWith("//")) return null;
+  if (/[\u0000-\u001f\u007f:]/.test(p)) return null;
+  for (const seg of p.split("/")) {
+    if (seg === "" || seg === "." || seg === "..") continue;
+    if (/[. ]$/.test(seg) || isWindowsDeviceName(seg)) return null;
   }
-  return stack.join("/");
+  const stack = !p.startsWith("/") && baseDir ? baseDir.split("/").filter((s) => s && s !== ".") : [];
+  for (const part of p.split("/")) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") {
+      if (stack.length === 0) return null;
+      stack.pop();
+    } else {
+      stack.push(part);
+    }
+  }
+  return stack.length ? stack.join("/") : null;
+}
+
+// isWindowsDeviceName: CON, NUL, COM1.. with or without an extension.
+function isWindowsDeviceName(seg) {
+  const stem = seg.split(".")[0].replace(/ +$/, "").toUpperCase();
+  return /^(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9]|LPT[1-9])$/.test(stem);
 }
 
 function dirOf(path) {
@@ -286,7 +319,7 @@ function resolveTocAnchor(href, tocDir, pathToIndex) {
   if (!href || isExternalHref(href)) return null;
   const [file, frag] = splitFrag(href);
   if (!file) return null;
-  const idx = pathToIndex.get(resolvePath(tocDir, decodeHref(file)));
+  const idx = pathToIndex.get(resolveBookPath(tocDir, file));
   if (idx == null) return null;
   return frag ? `d${idx}-${frag}` : `epub-sec-${idx}`;
 }
@@ -305,7 +338,7 @@ function resolveTocEntries(raw, tocDir, pathToIndex) {
 function buildEpubToc(pkg, files, opfDir, pathToIndex) {
   const navItem = pkg.manifest.find((it) => hasToken(it.properties, "nav"));
   if (navItem) {
-    const navPath = resolvePath(opfDir, navItem.href);
+    const navPath = navItem.path;
     const html = decodeText(files.get(navPath));
     if (html) {
       const resolved = resolveTocEntries(parseNavToc(html), dirOf(navPath), pathToIndex);
@@ -315,7 +348,7 @@ function buildEpubToc(pkg, files, opfDir, pathToIndex) {
   let ncxItem = pkg.spineTocId ? pkg.manifest.find((it) => it.id === pkg.spineTocId) : null;
   if (!ncxItem) ncxItem = pkg.manifest.find((it) => it.mediaType === "application/x-dtbncx+xml");
   if (ncxItem) {
-    const ncxPath = resolvePath(opfDir, ncxItem.href);
+    const ncxPath = ncxItem.path;
     const xml = decodeText(files.get(ncxPath));
     if (xml) {
       const resolved = resolveTocEntries(parseNcxToc(xml), dirOf(ncxPath), pathToIndex);
@@ -337,7 +370,8 @@ export function rewriteImg(img, docDir, blobFor) {
   if (!src) { img.remove(); return; }
   img.removeAttribute("srcset");
   if (/^(https?|data):/i.test(src)) return;
-  const url = blobFor(resolvePath(docDir, decodeHref(src)));
+  const target = resolveBookPath(docDir, src);
+  const url = target && blobFor(target);
   if (url) img.setAttribute("src", url);
   else img.remove();
 }
@@ -352,7 +386,8 @@ export function convertSvgImage(im, docDir, blobFor) {
   const img = document.createElement("img");
   img.alt = im.getAttribute("alt") || "";
   if (href && !/^(https?|data):/i.test(href)) {
-    const url = blobFor(resolvePath(docDir, decodeHref(href)));
+    const target = resolveBookPath(docDir, href);
+    const url = target && blobFor(target);
     if (url) img.setAttribute("src", url);
   } else if (href) {
     img.setAttribute("src", href);
@@ -381,7 +416,7 @@ export function rewriteAnchor(a, index, docDir, pathToIndex) {
     return;
   }
   const [file, frag] = splitFrag(href);
-  const idx = pathToIndex.get(resolvePath(docDir, decodeHref(file)));
+  const idx = pathToIndex.get(resolveBookPath(docDir, file));
   if (idx == null) { a.removeAttribute("href"); return; }
   a.setAttribute("href", frag ? `#d${idx}-${frag}` : `#epub-sec-${idx}`);
 }
@@ -445,21 +480,31 @@ export async function loadEpub(arrayBuffer) {
 
   const containerXml = decodeText(files.get("META-INF/container.xml"));
   if (!containerXml) throw new Error("not an EPUB (missing META-INF/container.xml)");
-  const opfPath = parseContainer(containerXml);
+  const opfPath = resolveBookPath("", parseContainer(containerXml));
+  if (!opfPath) throw new Error("EPUB package document path points outside the book");
   const opfXml = decodeText(files.get(opfPath));
   if (!opfXml) throw new Error("EPUB package document not found");
   const opfDir = dirOf(opfPath);
   const pkg = parseOpf(opfXml);
 
-  // Resolve the spine to in-archive paths, keeping only entries that exist.
+  // Resolve every manifest href once, through the same gate as the desktop app:
+  // an item that is malformed or points outside the book is dropped, and its
+  // spine entries with it.
+  pkg.manifest = pkg.manifest.filter((it) => {
+    it.path = resolveBookPath(opfDir, it.href);
+    if (!it.path) console.warn(`EPUB: skipped manifest item ${it.href}`);
+    return it.path != null;
+  });
+
+  // Keep only spine entries whose file exists; one missing chapter costs that chapter.
   const byId = new Map(pkg.manifest.map((it) => [it.id, it]));
-  const mediaByPath = new Map(pkg.manifest.map((it) => [resolvePath(opfDir, it.href), it.mediaType]));
+  const mediaByPath = new Map(pkg.manifest.map((it) => [it.path, it.mediaType]));
   const spine = [];
   for (const idref of pkg.spine) {
     const it = byId.get(idref);
     if (!it) continue;
-    const zipPath = resolvePath(opfDir, it.href);
-    if (files.has(zipPath)) spine.push(zipPath);
+    if (files.has(it.path)) spine.push(it.path);
+    else console.warn(`EPUB: skipped spine item ${it.href}: not in the book`);
   }
   if (spine.length === 0) throw new Error("EPUB has no readable content in its spine");
 

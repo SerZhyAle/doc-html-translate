@@ -3,6 +3,7 @@ package epub
 import (
 	"encoding/xml"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -289,7 +290,9 @@ func resolveTOC(raw []TOCEntry, book *Book, tocHref string, manifest map[string]
 
 // resolveTOCHref maps a raw NCX/nav src to a final manifest href (+fragment).
 // External links pass through; internal targets are resolved relative to the
-// TOC document's directory and must exist in the manifest.
+// TOC document's directory and must exist in the manifest. The file part is
+// decoded to match the decoded manifest hrefs, and the result is a URL again
+// (URLPath), so TOCEntry.Href can go straight into a generated link.
 func resolveTOCHref(raw, tocDir string, book *Book, manifest map[string]bool) (string, bool) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -304,6 +307,9 @@ func resolveTOCHref(raw, tocDir string, book *Book, manifest map[string]bool) (s
 		return "", false // pure #fragment into the TOC doc itself — not useful
 	}
 
+	if u, err := url.PathUnescape(file); err == nil {
+		file = u
+	}
 	resolved := path.Clean(path.Join(tocDir, file))
 
 	final := book.resolveHrefChain(resolved)
@@ -314,9 +320,9 @@ func resolveTOCHref(raw, tocDir string, book *Book, manifest map[string]bool) (s
 		return "", false
 	}
 	if frag != "" {
-		return final + "#" + frag, true
+		return URLPath(final) + "#" + frag, true
 	}
-	return final, true
+	return URLPath(final), true
 }
 
 func splitFragment(href string) (file, frag string) {

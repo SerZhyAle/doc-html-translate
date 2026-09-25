@@ -41,10 +41,11 @@ func BuildFallbackTOC(book *epub.Book, outputDir string, snippets map[string]str
 		}
 
 		headings := scanAndAnchorHeadings(pagePath)
+		link := epub.URLPath(href)
 		top = append(top, epub.TOCEntry{
 			Title:    label,
-			Href:     href,
-			Children: nestHeadings(headings, href),
+			Href:     link,
+			Children: nestHeadings(headings, link),
 		})
 	}
 	return top

@@ -8,8 +8,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
+
+	"doc-html-translate/internal/i18n"
+	"doc-html-translate/internal/logging"
 )
 
 // Book represents a parsed EPUB structure.
@@ -17,7 +21,7 @@ type Book struct {
 	Title    string
 	Manifest []ManifestItem
 	Spine    []SpineItem
-	BasePath string     // directory within EPUB where content.opf resides
+	BasePath string     // directory within EPUB where content.opf resides (slash path, "." at the root)
 	TOC      []TOCEntry // authored table of contents (NCX navMap / nav.xhtml), nil if none
 
 	// hrefRewrites maps an original content href to its final href after
@@ -32,8 +36,9 @@ type Book struct {
 }
 
 // TOCEntry is one node of a (possibly nested) table of contents.
-// Href is relative to the OPF base directory and may carry a #fragment,
-// matching the convention used by SpineHrefs.
+// Href is a URL relative to the OPF base directory and may carry a
+// #fragment: the file part is URLPath of a manifest href, so unlike
+// ManifestItem.Href it is already escaped for generated HTML.
 type TOCEntry struct {
 	Title    string
 	Href     string
@@ -41,6 +46,11 @@ type TOCEntry struct {
 }
 
 // ManifestItem represents a single item in the OPF manifest.
+//
+// For an EPUB, Href is not the raw OPF attribute: it has passed resolveBookPath,
+// so it is a decoded, cleaned slash path relative to BasePath that is known to
+// stay inside the book. It is a file path, not a URL - pass it through URLPath
+// before writing it into generated HTML.
 type ManifestItem struct {
 	ID         string
 	Href       string
@@ -107,11 +117,14 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 	defer r.Close()
 
 	// Extract all files
+	foldedNames := make(map[string]string, len(r.File))
 	for _, f := range r.File {
 		if err := extractFile(f, outputDir); err != nil {
 			// best-effort: warn and continue
 			fmt.Fprintf(os.Stderr, "WARNING: skip %s: %v\n", f.Name, err)
+			continue
 		}
+		warnCaseCollision(foldedNames, f.Name)
 	}
 
 	// Parse container.xml to find content.opf path
@@ -126,6 +139,8 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 		return nil, fmt.Errorf("parse content.opf: %w", err)
 	}
 
+	dropMissingContent(book, outputDir)
+
 	// Re-serialize XHTML as HTML, transcode to UTF-8, unwrap SVG covers and
 	// resolve the reserved index.html name, rewriting in-book links to match.
 	// Must run before parseTOC so the TOC follows the recorded renames.
@@ -139,6 +154,40 @@ func Extract(epubPath, outputDir string) (*Book, error) {
 	}
 
 	return book, nil
+}
+
+// warnCaseCollision reports an archive entry whose name differs from an
+// earlier one only in letter case: on a case-insensitive file system (NTFS)
+// the later entry has just overwritten the earlier one.
+func warnCaseCollision(seen map[string]string, name string) {
+	name = path.Clean(strings.ReplaceAll(name, `\`, "/"))
+	key := strings.ToLower(name)
+	if prev, ok := seen[key]; ok {
+		if prev != name {
+			logging.Errorf("WARNING: %s\n", i18n.S("Book files %s and %s differ only in letter case; on Windows one replaces the other", prev, name))
+		}
+		return
+	}
+	seen[key] = name
+}
+
+// dropMissingContent removes HTML manifest items whose file the archive did
+// not ship, so one broken reference costs that chapter and not the whole book:
+// every later stage (merge, navbar, split, translation) may then assume each
+// content item exists.
+func dropMissingContent(book *Book, outputDir string) {
+	kept := book.Manifest[:0]
+	for _, item := range book.Manifest {
+		if isHTMLMediaType(item.MediaType) {
+			st, err := os.Stat(bookPath(outputDir, book.BasePath, item.Href))
+			if err != nil || !st.Mode().IsRegular() {
+				logging.Errorf("WARNING: %s\n", i18n.S("Skipped book item %s: the file is not in the book", item.Href))
+				continue
+			}
+		}
+		kept = append(kept, item)
+	}
+	book.Manifest = kept
 }
 
 // recordHrefRewrite notes that content addressed as `from` by an earlier
@@ -240,14 +289,22 @@ func parseContainer(baseDir string) (string, error) {
 
 	for _, rf := range c.RootFiles {
 		if rf.MediaType == "application/oebps-package+xml" || strings.HasSuffix(rf.FullPath, ".opf") {
-			return rf.FullPath, nil
+			opfPath, err := resolveBookPath("", rf.FullPath)
+			if err != nil {
+				return "", fmt.Errorf("rootfile %q: %w", rf.FullPath, err)
+			}
+			return opfPath, nil
 		}
 	}
 
 	return "", fmt.Errorf("no rootfile found in container.xml")
 }
 
-// parseOPF reads content.opf and returns a populated Book.
+// parseOPF reads content.opf and returns a populated Book. opfRelPath has
+// already passed resolveBookPath. Every manifest href is resolved here, once
+// (ADR-1 of hotfix-epub-href-containment): an item that is malformed or points
+// outside the book is dropped with a warning, and its spine entries with it,
+// so no later stage ever turns a book-supplied name into a path on its own.
 func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 	opfFullPath := filepath.Join(baseDir, filepath.FromSlash(opfRelPath))
 	data, err := os.ReadFile(opfFullPath)
@@ -261,7 +318,7 @@ func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 	}
 
 	book := &Book{
-		BasePath: filepath.Dir(opfRelPath),
+		BasePath: path.Dir(opfRelPath),
 	}
 
 	if len(pkg.Metadata.Title) > 0 {
@@ -269,6 +326,12 @@ func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 	}
 
 	for _, item := range pkg.Manifest.Items {
+		resolved, err := resolveBookPath(book.BasePath, item.Href)
+		if err != nil {
+			logging.Errorf("WARNING: %s\n", i18n.S("Skipped book item %s: %v", item.Href, err))
+			continue
+		}
+		item.Href = relToBase(book.BasePath, resolved)
 		book.Manifest = append(book.Manifest, ManifestItem(item))
 	}
 

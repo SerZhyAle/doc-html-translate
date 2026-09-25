@@ -45,7 +45,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 			if book.BasePath != "" && book.BasePath != "." {
 				href = book.BasePath + "/" + href
 			}
-			cssLinks = append(cssLinks, fmt.Sprintf(`    <link rel="stylesheet" href="%s">`, html.EscapeString(href)))
+			cssLinks = append(cssLinks, fmt.Sprintf(`    <link rel="stylesheet" href="%s">`, html.EscapeString(epub.URLPath(href))))
 		}
 	}
 
@@ -171,6 +171,7 @@ func renderFlatSpineTOC(book *epub.Book, outputDir string, snippets map[string]s
 		if book.BasePath != "" && book.BasePath != "." {
 			fullHref = book.BasePath + "/" + href
 		}
+		fullHref = epub.URLPath(fullHref)
 		label := chapterLabel(href, i+1)
 
 		snippet := ""
@@ -245,11 +246,11 @@ func renderTOCEntry(sb *strings.Builder, e epub.TOCEntry, basePath string, depth
 	}
 }
 
-// prefixBase joins the OPF base directory to a book-relative href (which may
-// carry a #fragment), matching the spine-href convention.
+// prefixBase joins the OPF base directory to a book-relative TOC href (a URL
+// that may carry a #fragment), escaping the directory to match.
 func prefixBase(basePath, href string) string {
 	if basePath != "" && basePath != "." {
-		return basePath + "/" + href
+		return epub.URLPath(basePath) + "/" + href
 	}
 	return href
 }
@@ -410,7 +411,7 @@ func GenerateSinglePageIndex(book *epub.Book, outputDir string) (string, error) 
 </head>
 <body></body>
 </html>
-`, target)
+`, epub.URLPath(target))
 
 	if err := os.WriteFile(indexPath, []byte(html), 0o644); err != nil {
 		return "", fmt.Errorf("write single-page index: %w", err)

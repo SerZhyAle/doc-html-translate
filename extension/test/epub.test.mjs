@@ -6,8 +6,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { Buffer } from "node:buffer";
+import { readFileSync } from "node:fs";
 
-import { unzip, resolvePath } from "../src/epub.js";
+import { unzip, resolveBookPath } from "../src/epub.js";
 
 // makeZip builds a minimal ZIP (no CRC - the reader ignores it) with the given
 // entries, exercising both stored (method 0) and deflate (method 8) paths.
@@ -80,15 +81,13 @@ test("unzip: rejects a non-ZIP buffer", async () => {
   await assert.rejects(() => unzip(notZip), /not a ZIP archive/);
 });
 
-test("resolvePath: resolves hrefs and collapses . / ..", () => {
-  assert.equal(resolvePath("OEBPS", "ch1.xhtml"), "OEBPS/ch1.xhtml");
-  assert.equal(resolvePath("OEBPS/text", "../images/cover.jpg"), "OEBPS/images/cover.jpg");
-  assert.equal(resolvePath("OEBPS", "./a/./b.xhtml"), "OEBPS/a/b.xhtml");
-  assert.equal(resolvePath("", "content.opf"), "content.opf");
-  assert.equal(resolvePath("a/b/c", "../../x.html"), "a/x.html");
-});
-
-test("resolvePath: strips fragment and query", () => {
-  assert.equal(resolvePath("OEBPS", "ch.xhtml#frag"), "OEBPS/ch.xhtml");
-  assert.equal(resolvePath("OEBPS", "ch.xhtml?v=2#frag"), "OEBPS/ch.xhtml");
+// The same fixture drives internal/epub TestResolveBookPathSharedCases, so the two
+// editions agree on which book-supplied names resolve and where (docs/PARITY.md,
+// "EPUB href resolution").
+test("resolveBookPath: shared Go/JS fixture", () => {
+  const fixture = JSON.parse(readFileSync(new URL("../../tests/testdata/epub_href_cases.json", import.meta.url), "utf8"));
+  assert.ok(fixture.cases.length > 0);
+  for (const c of fixture.cases) {
+    assert.equal(resolveBookPath(c.base, c.href), c.want, `resolveBookPath(${JSON.stringify(c.base)}, ${JSON.stringify(c.href)})`);
+  }
 });

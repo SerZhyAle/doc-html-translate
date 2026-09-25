@@ -266,6 +266,37 @@ and the external-href definition (extension `isExternalHref` now mirrors `toc.go
 difference - Go keeps external TOC entries, the extension drops them (single in-memory DOM) - is listed
 under [Intentional divergences](#intentional-divergences-do-not-fix).
 
+### EPUB href resolution
+
+**Guard:** Guarded by the shared fixture [`tests/testdata/epub_href_cases.json`](../tests/testdata/epub_href_cases.json),
+which `TestResolveBookPathSharedCases` ([`internal/epub/resolve_test.go`](../internal/epub/resolve_test.go)) and
+`resolveBookPath: shared Go/JS fixture` ([`extension/test/epub.test.mjs`](../extension/test/epub.test.mjs)) both
+run. A case added for one edition runs against the other.
+
+Every name the book supplies - the container `full-path`, each manifest href, and (in the extension) each
+link, image and TOC target - becomes a path through one function, `resolveBookPath`
+([`resolve.go`](../internal/epub/resolve.go), [`epub.js`](../extension/src/epub.js)). Ticket
+`hotfix-epub-href-containment` introduced it after a crafted spine made the desktop single-page merge read
+and then delete a file next to the book.
+
+| Step | Both sides |
+|---|---|
+| 1 | cut `?query` and `#fragment` off the **raw** value, so an encoded `%23` stays part of the file name |
+| 2 | percent-decode once; a malformed or non-UTF-8 escape keeps the raw text |
+| 3 | `\` is a separator |
+| 4 | refuse a colon (drive letter, scheme, stream), a leading `//` (UNC), control characters, a segment ending in a dot or space, and DOS device names (`CON`, `NUL`, `COM1`..) |
+| 5 | a leading `/` is relative to the book root; anything else resolves against the referring file's directory |
+| 6 | the result must name something strictly inside the book, or the name is dropped |
+
+A manifest item that fails is dropped with a warning (Go: localized log line, extension: console), and its
+spine entries go with it; a spine item whose file is missing costs only that chapter. The Go app resolves
+once, at OPF parse time, and every later stage uses the resolved `ManifestItem.Href` - a decoded file path
+that generated HTML escapes through `URLPath`.
+
+Intentional difference: case collisions. The Go app writes files, so it compares its generated names
+(`index.html`) with book files ignoring case and warns when two archive entries differ only in case (NTFS
+would keep one). The extension keeps entries in a `Map` keyed by exact name, where nothing is overwritten.
+
 ### EPUB and HTML content fidelity (2026-09-25)
 
 **Guard:** Prose only. The desktop behaviour is covered by its own package tests; nothing compares it
