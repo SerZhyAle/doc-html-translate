@@ -1,7 +1,7 @@
 # Strategic spec: 12_2026-09-24_bugfix-resource-budgets - Memory, disk and size budgets for hostile or huge inputs
 
 **Ticket:** 12_2026-09-24_bugfix-resource-budgets
-**Status:** Draft
+**Status:** BlockNeedUserTest - peak memory of a 2 GB CBZ on the 386 Windows build (done criterion 3), and CBR/CB7 through a real 7-Zip on Windows (the list-then-extract flags are verified here only against a stub)
 **Priority:** 75
 **Date:** 2026-09-24
 **Tier:** Strategic
@@ -73,10 +73,23 @@ Input -> header or listing probe -> budget decision -> streamed extraction or de
 1. **The limits**
    - **Question:** what are the pixel budget, the per-entry and total archive sizes, the entry count, and the comic page cap?
    - **To find out:** check the largest legitimate files in the local corpus.
-   - **Status:** Open.
+   - **Status:** Decided: full image decode at most 100 megapixels and 32768 px per side, probed from the
+     header first. Archives (EPUB, CBZ/CBT, CBR/CB7): at most 20000 entries and 4 GB unpacked in total,
+     checked from the listing before anything is unpacked. Per-entry caps: the owner's general 512 MB was
+     replaced by the stricter caps already in the code - 100 MB for one EPUB file, 200 MB for one comic
+     page. Comic page cap: the existing 20000, now the same number as the entry cap. Published in
+     README.md (and RU/UK), extension/README.md and docs/PARITY.md "Input limits"; pinned by
+     `TestParityInputLimits`.
 2. **Downscale vs refuse**
    - **Question:** should oversized images be downscaled for display and OCR, or skipped?
-   - **Status:** Open.
+   - **Status:** Decided: display always keeps the original file. Where a full decode is needed to convert
+     (TIFF to PNG, the PDF TIFF flip) an image over the budget is refused with a localized message naming
+     the limit. For OCR the owner asked for a downscale to fit the budget; as implemented, an image under
+     the budget is never enlarged past it, and an image over it is not decoded in process at all, because
+     every standard decoder must decode the full raster before it can be shrunk - that decode is what the
+     budget forbids. Such an image degrades instead: Tesseract reads the original in its own process, the
+     in-process passes (staging, grey ladder, screen pass, plate colours) are skipped, and a localized
+     warning names the image and the limit. Owner to confirm this reading.
 
 ## 7. Risks
 - **A limit refuses a legitimate large scan.** Likelihood: medium. Impact: the user cannot convert. Mitigation: generous defaults and a clear message naming the limit.
@@ -100,3 +113,53 @@ README and extension docs: the published input limits.
 
 ## 12. Next step
 `/spec-tech 12_2026-09-24_bugfix-resource-budgets`
+
+## Implementation
+
+X20 (FB2 image copies) is not in this change: it is covered by ticket 10 in the FB2 reader.
+
+**Desktop (Go).**
+- `internal/limits` (new): the published numbers, `CheckPixels`, `CheckArchive`, `EntryTooLarge`,
+  `CopyCapped` (one byte past the cap is an error), `UncheckableListing`, and a TIFF IFD size reader
+  (`TIFFFrameSize` / `CheckTIFF`). Messages in `internal/i18n/i18n_limits.go`, all 12 translations.
+- X11, X12, X13 - `internal/img`: the IFD walk reads through an `io.ReaderAt` with every offset in int64;
+  each frame decodes through a view that patches only the header's IFD pointer (no per-frame copy of the
+  file); ImageWidth/ImageLength are read from the IFD before `tiff.Decode`. The IFD read is ours rather
+  than `tiff.DecodeConfig` because on 386 that rejects a large frame with a bare "image too large" before
+  the size is known.
+- X11, X14 - `internal/pdf/images.go`: the TIFF flip probes the header, then swaps `Pix` rows in place on
+  the decoder's concrete type (Gray, Gray16, RGBA, RGBA64, NRGBA, NRGBA64, CMYK, Paletted; anything else is
+  converted once to NRGBA), and replaces the file atomically through `fsutil`.
+- E16 - `internal/epub`: the central directory is checked before extraction; an entry over 100 MB is
+  skipped by name, an entry inflating past its size fails and its partial file is removed; symlink entries
+  are skipped; the leftover `fmt.Fprintf(os.Stderr)` warnings now go through `logging`.
+- X15, X16, X17, X24 - `internal/comic`: every container is listed first (`archive` / `entry`), held to
+  the budget in `selectPages`, sorted naturally, and each page is streamed into its file (`writePage`).
+  TAR entries open as sections at recorded offsets. CBR/CB7: `7z l -slt` is parsed, and only the accepted
+  pages are unpacked, named through a UTF-8 list file with `-spd`; a missing size or a truncated listing
+  refuses the archive; symlink entries are dropped from the listing and unpacked files are `Lstat`-checked.
+  `container.go` identifies ZIP/RAR/7z/TAR by signature, with the extension as fallback.
+- O6 - `internal/ocr`: `decodeImage` refuses an image over the pixel budget from its header; the pool is
+  `min(CPU count, memoryWorkers)` (`budget.go`, four 4-byte copies of the largest image against 1 GB on a
+  32-bit build, 4 GB on 64-bit); one `ocrFrame` per recognition carries the staged picture to the grey
+  ladder and the screen pass instead of a second decode, and drops the colour copy once the grey exists;
+  `orientImage` reuses an RGBA source instead of copying it. Plate colours still decode once more in the
+  overlay phase (one image at a time, after the pool), which keeps `overlay.go` untouched beyond the probe.
+
+**Extension (JS).** B23 - `extension/src/limits.js` (new) holds the same numbers; `epub.js` `unzip` and
+`comic.js` check the listing before inflating and inflate through `inflateRawCapped`, capped at the
+listed size. Over the archive limits the viewer shows a localized notice (`vLimit*` keys, 13 locales);
+an entry over its cap is skipped by name with `console.warn`, as the desktop skips it.
+
+**Done criteria.**
+1. `internal/img` `TestExtractTIFFPixelBombRefused` (a 378-byte TIFF declaring 60000 x 60000, refused with
+   the limit named, under 16 MB allocated; passes under `GOARCH=386`), and
+   `TestTIFFFrameOffsetsHugeIFDOffset` (no panic on 386). PDF: `TestFlipImageFileRefusesOverBudget`.
+2. `internal/comic` `TestSevenZipBombRefusedFromListing` - refused from the listing and the stub proves
+   7-Zip extraction never ran; `TestSevenZipUnknownSizeRefused`. Verified against a stub 7-Zip only.
+3. `internal/comic` `TestExtractCBZStreamsPages`: a 64 MB CBZ converts allocating under a quarter of its
+   size (the old reader allocated all of it). The 2 GB / 386 Windows measurement needs a human run.
+4. Go `internal/epub` `TestExtractRefusesTotalBomb` and JS `test/limits.test.mjs` "unzip refuses an EPUB
+   whose listing unpacks past the total limit" refuse the same bomb shape (50 x 90 MB of zeros).
+5. `internal/comic` `TestRARNamedCBZConverts` (via the stub) and `TestRARNamedCBZWithout7Zip` (accurate
+   notice naming the RAR container and the `.cbz` extension).

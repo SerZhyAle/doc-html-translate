@@ -185,6 +185,12 @@ network access, and only when you click **Download**. See [`store/PRIVACY.md`](s
   a comic has no text layer); page order is the archive's natural filename order. **CBR (RAR) and CB7 (7z)
   are declined** with a "use the desktop app" notice - a browser cannot decode RAR/7z. ZIP64 CBZs are not
   supported (same as EPUB).
+- Input limits (the desktop app's numbers, see [docs/PARITY.md](../docs/PARITY.md) "Input limits"): an
+  EPUB or CBZ/CBT is checked from its listing before anything is inflated and refused, with a notice
+  naming the limit, above **20000 entries** or **4 GB** unpacked in total. A single EPUB file over
+  **100 MB**, or a comic page over **200 MB**, is skipped by name; an entry that inflates past the size
+  its listing declares is dropped rather than inflated in full. The desktop's image pixel budget has no
+  counterpart here: the browser decodes images itself.
 - Firefox and mobile are out of scope (different PDF + interception story).
 - With OCR **off**, the viewer is text-extraction only (`getTextContent()`) and never rasterizes pages.
   OCR (Tesseract) uses WebAssembly, and scanned-PDF OCR rasterizes the page, so the manifest sets
