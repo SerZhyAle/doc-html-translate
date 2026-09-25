@@ -54,6 +54,17 @@ var urlSchemeRe = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9+.-]*:`)
 // attribute changed.
 func rewriteLinks(doc *gohtml.Node, fileHref string, fn func(target string) (string, bool)) bool {
 	baseDir := path.Dir(fileHref)
+	return RewriteURLs(doc, func(value string) (string, bool) {
+		return rewriteLinkValue(baseDir, value, fn)
+	})
+}
+
+// RewriteURLs offers the raw value of every URL-bearing attribute of doc to fn
+// (each srcset candidate on its own) and writes back what fn returns. It is the
+// attribute walk under rewriteLinks, exported so the single-page merge rebases
+// a chapter with the same notion of "a link" that normalization uses. Values
+// arrive untrimmed and unresolved; fn decides. Returns whether anything changed.
+func RewriteURLs(doc *gohtml.Node, fn func(value string) (string, bool)) bool {
 	changed := false
 	var walk func(*gohtml.Node)
 	walk = func(n *gohtml.Node) {
@@ -67,11 +78,11 @@ func rewriteLinks(doc *gohtml.Node, fileHref string, fn func(target string) (str
 				var nv string
 				var ok bool
 				if kind == "srcset" {
-					nv, ok = rewriteSrcset(baseDir, a.Val, fn)
+					nv, ok = rewriteSrcset(a.Val, fn)
 				} else {
-					nv, ok = rewriteLinkValue(baseDir, a.Val, fn)
+					nv, ok = fn(a.Val)
 				}
-				if ok {
+				if ok && nv != a.Val {
 					a.Val = nv
 					changed = true
 				}
@@ -145,7 +156,7 @@ func rewriteLinkValue(baseDir, value string, fn func(string) (string, bool)) (st
 // separators and width/density descriptors verbatim. A candidate URL runs up to
 // whitespace (so commas inside a data: URL stay part of it); trailing commas on
 // it are separators, as in the HTML srcset parsing algorithm.
-func rewriteSrcset(baseDir, value string, fn func(string) (string, bool)) (string, bool) {
+func rewriteSrcset(value string, fn func(string) (string, bool)) (string, bool) {
 	var b strings.Builder
 	changed := false
 	i := 0
@@ -167,7 +178,7 @@ func rewriteSrcset(baseDir, value string, fn func(string) (string, bool)) (strin
 		for trail > 0 && u[trail-1] == ',' {
 			trail--
 		}
-		if nu, ok := rewriteLinkValue(baseDir, u[:trail], fn); ok {
+		if nu, ok := fn(u[:trail]); ok {
 			b.WriteString(nu)
 			changed = true
 		} else {
@@ -192,4 +203,62 @@ func rewriteSrcset(baseDir, value string, fn func(string) (string, bool)) (strin
 
 func isHTMLSpace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f'
+}
+
+// cssRefRe matches a CSS url() and the quoted form of @import, the two ways a
+// stylesheet names another file. The grammar is the one internal/assets uses to
+// copy HTML-input assets; that package sits above htmlgen and cannot be
+// imported from here, so the pattern is repeated rather than shared.
+var cssRefRe = regexp.MustCompile(`(?i)(@import\s+)("[^"]*"|'[^']*')|url\(\s*("[^"]*"|'[^']*'|[^)\s'"]*)\s*\)`)
+
+// RewriteCSSURLs offers each url() and quoted @import target of css, unquoted,
+// to fn and splices back what fn returns inside double quotes, so fn must
+// return a value that is safe there (URLPath output is). Returns the new text
+// and whether anything changed.
+func RewriteCSSURLs(css string, fn func(ref string) (string, bool)) (string, bool) {
+	changed := false
+	out := cssRefRe.ReplaceAllStringFunc(css, func(m string) string {
+		sub := cssRefRe.FindStringSubmatch(m)
+		if sub[1] != "" {
+			if nv, ok := fn(unquoteCSS(sub[2])); ok {
+				changed = true
+				return sub[1] + `"` + nv + `"`
+			}
+			return m
+		}
+		if nv, ok := fn(unquoteCSS(sub[3])); ok {
+			changed = true
+			return `url("` + nv + `")`
+		}
+		return m
+	})
+	return out, changed
+}
+
+func unquoteCSS(s string) string {
+	if len(s) >= 2 && (s[0] == '"' || s[0] == '\'') && s[len(s)-1] == s[0] {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
+
+// ExternalHref classifies a link the book supplies (a TOC target, typically).
+// external is true for anything with a URL scheme or a network prefix;
+// clickable only for the schemes a reader may follow from a local page -
+// http, https and mailto. Any other external value (javascript:, data:,
+// vbscript:, file:, ..) must never become a link.
+func ExternalHref(href string) (external, clickable bool) {
+	h := strings.TrimSpace(href)
+	if strings.HasPrefix(h, "//") || strings.HasPrefix(h, `\\`) {
+		return true, false
+	}
+	m := urlSchemeRe.FindString(h)
+	if m == "" {
+		return false, false
+	}
+	switch strings.ToLower(strings.TrimSuffix(m, ":")) {
+	case "http", "https", "mailto":
+		return true, true
+	}
+	return true, false
 }

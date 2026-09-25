@@ -301,10 +301,12 @@ export function parseNcxToc(xml) {
   return points(navMap);
 }
 
-// isExternalHref matches the desktop app's internal/epub isExternalHref (toc.go): any
-// scheme with "://" (http, ftp, ..) or a mailto:/tel:/data: URI. Shared by the TOC
-// resolver and the chapter-link rewriter so both classify links the same way as the Go
-// side - keep in sync with toc.go (see ../../docs/PARITY.md, "EPUB TOC parsing").
+// isExternalHref: any scheme with "://" (http, ftp, ..) or a mailto:/tel:/data: URI.
+// Shared by the TOC resolver and the chapter-link rewriter. The desktop app's
+// ExternalHref (internal/epub links.go) counts every scheme as external and keeps only
+// http/https/mailto clickable; here a TOC entry that is external is dropped anyway, and a
+// javascript:/vbscript: value fails resolveBookPath (colon) so it never becomes a link -
+// see ../../docs/PARITY.md, "EPUB TOC parsing".
 function isExternalHref(href) {
   const s = String(href || "").toLowerCase();
   return s.includes("://") || /^(mailto|tel|data):/.test(s);

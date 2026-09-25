@@ -195,3 +195,43 @@ func TestParseTOC_ReservedNameRename(t *testing.T) {
 		t.Errorf("reserved-renamed target = %q, want _content_index.html", book.TOC[0].Href)
 	}
 }
+
+// Only web and mail TOC links stay links, kept as authored; a script or data scheme keeps
+// its label as plain text and loses the href.
+func TestResolveTOCExternalSchemes(t *testing.T) {
+	raw := []TOCEntry{
+		{Title: "Web", Href: " https://example.com/x "},
+		{Title: "Mail", Href: "mailto:a@example.com"},
+		{Title: "Script", Href: "javascript:alert(1)"},
+		{Title: "Script2", Href: "JavaScript://%0aalert(1)"},
+		{Title: "VB", Href: "vbscript:msgbox"},
+		{Title: "Data", Href: "data:text/html,<b>x</b>"},
+	}
+	got := resolveTOC(raw, &Book{}, "nav.xhtml", map[string]bool{})
+	want := []string{"https://example.com/x", "mailto:a@example.com", "", "", "", ""}
+	if len(got) != len(want) {
+		t.Fatalf("got %d entries, want %d: %+v", len(got), len(want), got)
+	}
+	for i, w := range want {
+		if got[i].Href != w || got[i].Title != raw[i].Title {
+			t.Errorf("entry %d = %+v, want href %q", i, got[i], w)
+		}
+	}
+}
+
+func TestExternalHref(t *testing.T) {
+	for _, c := range []struct {
+		in                  string
+		external, clickable bool
+	}{
+		{"https://a", true, true}, {"HTTP://a", true, true}, {"mailto:x@y", true, true},
+		{"javascript:x", true, false}, {"data:x", true, false}, {"tel:1", true, false},
+		{"file:///c:/x", true, false}, {"//host/x", true, false},
+		{"ch.html#x", false, false}, {"Text/a b.html", false, false},
+	} {
+		e, k := ExternalHref(c.in)
+		if e != c.external || k != c.clickable {
+			t.Errorf("ExternalHref(%q) = %v, %v; want %v, %v", c.in, e, k, c.external, c.clickable)
+		}
+	}
+}

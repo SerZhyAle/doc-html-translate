@@ -276,12 +276,17 @@ func resolveTOC(raw []TOCEntry, book *Book, tocHref string, manifest map[string]
 	for _, e := range raw {
 		children := resolveTOC(e.Children, book, tocHref, manifest)
 		href, ok := resolveTOCHref(e.Href, tocDir, book, manifest)
+		// A script or data "link" keeps its label as plain text: the entry is
+		// the author's, only the scheme is refused.
+		if external, clickable := ExternalHref(e.Href); external && !clickable {
+			href, ok = "", true
+		}
 		if !ok && len(children) == 0 {
 			continue
 		}
 		out = append(out, TOCEntry{
 			Title:    e.Title,
-			Href:     href, // "" when the node only groups children
+			Href:     href, // "" when the node only groups children or its scheme was refused
 			Children: children,
 		})
 	}
@@ -289,7 +294,8 @@ func resolveTOC(raw []TOCEntry, book *Book, tocHref string, manifest map[string]
 }
 
 // resolveTOCHref maps a raw NCX/nav src to a final manifest href (+fragment).
-// External links pass through; internal targets are resolved relative to the
+// Web and mail links pass through as authored, any other scheme is refused
+// (ExternalHref); internal targets are resolved relative to the
 // TOC document's directory and must exist in the manifest. The file part is
 // decoded to match the decoded manifest hrefs, and the result is a URL again
 // (URLPath), so TOCEntry.Href can go straight into a generated link.
@@ -298,8 +304,8 @@ func resolveTOCHref(raw, tocDir string, book *Book, manifest map[string]bool) (s
 	if raw == "" {
 		return "", false
 	}
-	if isExternalHref(raw) {
-		return raw, true
+	if external, clickable := ExternalHref(raw); external {
+		return raw, clickable
 	}
 
 	file, frag := splitFragment(raw)
@@ -330,14 +336,6 @@ func splitFragment(href string) (file, frag string) {
 		return href[:i], href[i+1:]
 	}
 	return href, ""
-}
-
-func isExternalHref(href string) bool {
-	lower := strings.ToLower(href)
-	return strings.Contains(lower, "://") ||
-		strings.HasPrefix(lower, "mailto:") ||
-		strings.HasPrefix(lower, "tel:") ||
-		strings.HasPrefix(lower, "data:")
 }
 
 // ── x/net/html helpers ──────────────────────────────────────────────
