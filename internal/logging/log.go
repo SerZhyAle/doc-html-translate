@@ -49,11 +49,12 @@ func StopRunLog() {
 
 // emit prints console to dst and appends logLine to the run log when one is installed. The
 // two texts differ only where the console uses in-place redrawing, which a file must not
-// inherit. The write is done under the lock so concurrent loops cannot interleave a line.
+// inherit. Both writes are done under the lock so concurrent loops cannot interleave a line,
+// on the console or in the log.
 func emit(dst io.Writer, console, logLine string) {
-	fmt.Fprint(dst, console)
 	runLogMu.Lock()
 	defer runLogMu.Unlock()
+	_, _ = io.WriteString(dst, console)
 	if runLog != nil {
 		if runLogFilter != nil {
 			logLine = runLogFilter(logLine)

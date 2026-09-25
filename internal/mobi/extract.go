@@ -45,7 +45,7 @@ func Extract(mobiPath, outputDir string) (*epub.Book, error) {
 	bin := findEbookConvert()
 	if bin == "" {
 		return nil, fmt.Errorf(
-			"Calibre not found - install Calibre from https://calibre-ebook.com to open .mobi/.azw3 files;\n" +
+			"calibre (ebook-convert) not found - install Calibre from https://calibre-ebook.com to open .mobi/.azw3 files;\n" +
 				"after installing, re-register this app with: doc-html-translate.exe -register",
 		)
 	}

@@ -23,7 +23,7 @@ func main() {
 		if errors.Is(err, config.ErrHelp) {
 			os.Exit(0)
 		}
-		if err.Error() == "version" {
+		if errors.Is(err, config.ErrVersion) {
 			fmt.Println("doc-html-translate " + Version)
 			os.Exit(0)
 		}
@@ -39,9 +39,9 @@ func main() {
 	// exactly as it was, with nothing said about it.
 	_, _ = report.Trim()
 	if err := os.MkdirAll(report.LogsDir(), 0o755); err == nil {
-		if f, err := os.OpenFile(report.RunLogPath(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
+		if f, err := os.OpenFile(report.RunLogPath(time.Now(), os.Getpid()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
 			logging.SetRunLogFilter(report.Redact)
-			logging.StartRunLog(f)
+			logging.StartRunLog(report.CapRunLog(f))
 			defer func() {
 				logging.StopRunLog()
 				_ = f.Close()

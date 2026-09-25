@@ -19,7 +19,7 @@ func seedLog(t *testing.T) {
 	if err := os.MkdirAll(report.LogsDir(), 0o755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	p := report.RunLogPath(time.Date(2026, 8, 11, 14, 0, 0, 0, time.UTC))
+	p := report.RunLogPath(time.Date(2026, 8, 11, 14, 0, 0, 0, time.UTC), 1)
 	if err := os.WriteFile(p, []byte("[14:00:00] doc-html-translate test\n"), 0o600); err != nil {
 		t.Fatalf("write log: %v", err)
 	}

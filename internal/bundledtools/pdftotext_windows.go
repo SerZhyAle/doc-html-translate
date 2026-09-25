@@ -13,6 +13,10 @@ import (
 //go:embed pdftotext
 var pdftotextFS embed.FS
 
+// pdftotextSet is what PDFToTextPath unpacks; a test swaps in its own set, since a source
+// checkout may not carry the vendored pdftotext.exe.
+var pdftotextSet fs.FS = pdftotextFS
+
 const pdftotextExe = "pdftotext.exe"
 
 var (
@@ -33,10 +37,10 @@ func PDFToTextPath() (string, error) {
 			return pdftotextPath, nil
 		}
 	}
-	if _, err := fs.Stat(pdftotextFS, "pdftotext/"+pdftotextExe); err != nil {
+	if _, err := fs.Stat(pdftotextSet, "pdftotext/"+pdftotextExe); err != nil {
 		return "", ErrNotBundled
 	}
-	dir, err := extractSet(pdftotextFS, "pdftotext", CacheRoot(), "pdftotext")
+	dir, err := extractSet(pdftotextSet, "pdftotext", CacheRoot(), "pdftotext")
 	if err != nil {
 		return "", err
 	}

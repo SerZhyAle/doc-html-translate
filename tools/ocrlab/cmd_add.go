@@ -48,7 +48,7 @@ func cmdAdd(args []string) error {
 		return err
 	}
 	if fs.NArg() == 0 {
-		return errors.New("usage: ocrlab add [flags] <image>..")
+		return errors.New("usage: ocrlab add [flags] <image> [<image>]")
 	}
 
 	categories, err := parseCategories(*cats)

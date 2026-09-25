@@ -37,10 +37,7 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", 0, fmt.Errorf("create report folder: %w", err)
 	}
-	name := fmt.Sprintf("report_doc-html-translate_%s_%s.zip", opts.AppVersion, opts.At.Format("20060102-1504"))
-	path = filepath.Join(dir, name)
-
-	f, err := os.Create(path)
+	f, path, err := createArchive(dir, fmt.Sprintf("report_doc-html-translate_%s_%s", opts.AppVersion, opts.At.Format("20060102-150405")))
 	if err != nil {
 		return "", 0, fmt.Errorf("create archive: %w", err)
 	}
@@ -98,6 +95,24 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 		return "", 0, fmt.Errorf("close archive: %w", err)
 	}
 	return path, droppedLogs, nil
+}
+
+// createArchive creates base.zip, or base-2.zip, base-3.zip.. when that name is taken. A report
+// is never overwritten: two built within the same second - the GUI button pressed twice - would
+// otherwise leave the user holding one file while the app announced two.
+func createArchive(dir, base string) (*os.File, string, error) {
+	for n := 1; ; n++ {
+		name := base + ".zip"
+		if n > 1 {
+			name = fmt.Sprintf("%s-%d.zip", base, n)
+		}
+		path := filepath.Join(dir, name)
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+		if errors.Is(err, fs.ErrExist) && n < 1000 {
+			continue
+		}
+		return f, path, err
+	}
 }
 
 // closeFailed abandons a half-written archive rather than leaving one that looks complete.

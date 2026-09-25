@@ -26,6 +26,30 @@ const progID = "doc-html-translate"
 // which app owns that type's default association.
 const contextMenuVerb = "dochtmltranslate.convert"
 
+// regKey is the part of registry.Key this package uses; a test substitutes an in-memory
+// key so it never writes to the real HKCU hive.
+type regKey interface {
+	SetStringValue(name, value string) error
+	GetStringValue(name string) (string, uint32, error)
+	DeleteValue(name string) error
+	Close() error
+}
+
+// createKey, openKey and deleteKey are indirected so a test can run registration
+// against a fake HKCU. Paths are relative to HKCU.
+var (
+	createKey = func(path string) (regKey, error) {
+		k, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.SET_VALUE)
+		return k, err
+	}
+	openKey = func(path string, access uint32) (regKey, error) {
+		return registry.OpenKey(registry.CURRENT_USER, path, access)
+	}
+	deleteKey = func(path string) error {
+		return registry.DeleteKey(registry.CURRENT_USER, path)
+	}
+)
+
 // RegisterHandler registers the program as the HKCU handler for all SupportedExtensions.
 // Returns the list of successfully registered extensions.
 func RegisterHandler() ([]string, error) {
@@ -36,20 +60,20 @@ func RegisterHandler() ([]string, error) {
 
 	// Remove stale ProgID keys from previous versions.
 	for _, legacy := range legacyProgIDs {
-		_ = registry.DeleteKey(registry.CURRENT_USER, `Software\Classes\`+legacy+`\shell\open\command`)
-		_ = registry.DeleteKey(registry.CURRENT_USER, `Software\Classes\`+legacy+`\shell\open`)
-		_ = registry.DeleteKey(registry.CURRENT_USER, `Software\Classes\`+legacy+`\shell`)
-		_ = registry.DeleteKey(registry.CURRENT_USER, `Software\Classes\`+legacy+`\DefaultIcon`)
-		_ = registry.DeleteKey(registry.CURRENT_USER, `Software\Classes\`+legacy)
+		_ = deleteKey(`Software\Classes\` + legacy + `\shell\open\command`)
+		_ = deleteKey(`Software\Classes\` + legacy + `\shell\open`)
+		_ = deleteKey(`Software\Classes\` + legacy + `\shell`)
+		_ = deleteKey(`Software\Classes\` + legacy + `\DefaultIcon`)
+		_ = deleteKey(`Software\Classes\` + legacy)
 	}
 
 	command := fmt.Sprintf("\"%s\" \"%%1\"", exePath)
-	// Icon is embedded in the exe — reference it directly as resource index 0.
+	// Icon is embedded in the exe - reference it directly as resource index 0.
 	defaultIconValue := fmt.Sprintf("\"%s\",0", exePath)
 
 	// Create ProgID key once (shared across all extensions)
 	progKeyPath := `Software\Classes\` + progID
-	progKey, _, err := registry.CreateKey(registry.CURRENT_USER, progKeyPath, registry.SET_VALUE)
+	progKey, err := createKey(progKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("create progid key: %w", err)
 	}
@@ -59,7 +83,7 @@ func RegisterHandler() ([]string, error) {
 		return nil, fmt.Errorf("set progid description: %w", err)
 	}
 
-	iconKey, _, err := registry.CreateKey(registry.CURRENT_USER, progKeyPath+`\DefaultIcon`, registry.SET_VALUE)
+	iconKey, err := createKey(progKeyPath + `\DefaultIcon`)
 	if err != nil {
 		return nil, fmt.Errorf("create default icon key: %w", err)
 	}
@@ -69,7 +93,7 @@ func RegisterHandler() ([]string, error) {
 		return nil, fmt.Errorf("set default icon value: %w", err)
 	}
 
-	commandKey, _, err := registry.CreateKey(registry.CURRENT_USER, progKeyPath+`\shell\open\command`, registry.SET_VALUE)
+	commandKey, err := createKey(progKeyPath + `\shell\open\command`)
 	if err != nil {
 		return nil, fmt.Errorf("create open command key: %w", err)
 	}
@@ -126,7 +150,7 @@ func RegisterOpenWith() ([]string, error) {
 func RegisterOpenWithFor(exePath string) ([]string, error) {
 	appKeyPath := `Software\Classes\Applications\` + filepath.Base(exePath)
 
-	appKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath, registry.SET_VALUE)
+	appKey, err := createKey(appKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("create application key: %w", err)
 	}
@@ -135,7 +159,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("set FriendlyAppName: %w", err)
 	}
 
-	iconKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\DefaultIcon`, registry.SET_VALUE)
+	iconKey, err := createKey(appKeyPath + `\DefaultIcon`)
 	if err != nil {
 		return nil, fmt.Errorf("create default icon key: %w", err)
 	}
@@ -144,7 +168,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("set default icon value: %w", err)
 	}
 
-	commandKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\shell\open\command`, registry.SET_VALUE)
+	commandKey, err := createKey(appKeyPath + `\shell\open\command`)
 	if err != nil {
 		return nil, fmt.Errorf("create open command key: %w", err)
 	}
@@ -153,7 +177,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 		return nil, fmt.Errorf("set open command value: %w", err)
 	}
 
-	typesKey, _, err := registry.CreateKey(registry.CURRENT_USER, appKeyPath+`\SupportedTypes`, registry.SET_VALUE)
+	typesKey, err := createKey(appKeyPath + `\SupportedTypes`)
 	if err != nil {
 		return nil, fmt.Errorf("create supported types key: %w", err)
 	}
@@ -204,7 +228,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 	var added []string
 	for _, ext := range SupportedExtensions {
 		verbPath := `Software\Classes\SystemFileAssociations\` + ext + `\shell\` + contextMenuVerb
-		verbKey, _, err := registry.CreateKey(registry.CURRENT_USER, verbPath, registry.SET_VALUE)
+		verbKey, err := createKey(verbPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to add context menu for %s: %v\n", ext, err)
 			continue
@@ -213,7 +237,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 		_ = verbKey.SetStringValue("Icon", icon)
 		verbKey.Close()
 
-		cmdKey, _, err := registry.CreateKey(registry.CURRENT_USER, verbPath+`\command`, registry.SET_VALUE)
+		cmdKey, err := createKey(verbPath + `\command`)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to add context menu command for %s: %v\n", ext, err)
 			continue
@@ -241,7 +265,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 func Unregister() ([]string, error) {
 	var released []string
 	for _, ext := range SupportedExtensions {
-		k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Classes\`+ext, registry.QUERY_VALUE|registry.SET_VALUE)
+		k, err := openKey(`Software\Classes\`+ext, registry.QUERY_VALUE|registry.SET_VALUE)
 		if err != nil {
 			continue // never associated - nothing to release
 		}
@@ -260,7 +284,7 @@ func Unregister() ([]string, error) {
 // The GUI uses it to reflect the association toggle's on/off state.
 func IsDefaultHandler() bool {
 	for _, ext := range SupportedExtensions {
-		k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Classes\`+ext, registry.QUERY_VALUE)
+		k, err := openKey(`Software\Classes\`+ext, registry.QUERY_VALUE)
 		if err != nil {
 			return false
 		}
@@ -275,7 +299,7 @@ func IsDefaultHandler() bool {
 
 // registerExtension associates a file extension with our ProgID in HKCU.
 func registerExtension(ext string) error {
-	extKey, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Classes\`+ext, registry.SET_VALUE)
+	extKey, err := createKey(`Software\Classes\` + ext)
 	if err != nil {
 		return fmt.Errorf("create extension key: %w", err)
 	}

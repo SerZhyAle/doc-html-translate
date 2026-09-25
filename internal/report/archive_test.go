@@ -154,3 +154,26 @@ func TestBuildNeverArchivesTheAPIKeyFile(t *testing.T) {
 		}
 	}
 }
+
+// A second report built in the same second gets its own file instead of replacing the first.
+func TestBuildNeverOverwritesAReport(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+
+	first, _, err := Build(buildOpts())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	second, _, err := Build(buildOpts())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if first == second {
+		t.Fatalf("both reports written to %q", first)
+	}
+	for _, p := range []string{first, second} {
+		if _, err := os.Stat(p); err != nil {
+			t.Errorf("report %q missing: %v", p, err)
+		}
+	}
+}

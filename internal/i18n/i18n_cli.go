@@ -155,7 +155,7 @@ func init() {
 		"%d registros antiguos no cupieron.",
 		"%d journaux plus anciens n'ont pas pu être inclus.",
 		"%d registos antigos não couberam.",
-		"‏%d من السجلات القديمة لم تتسع.",
+		"\u200f%d من السجلات القديمة لم تتسع.",
 		"%d पुराने लॉग नहीं समा सके।",
 		"%d পুরোনো লগ জায়গা পায়নি।",
 		"%d پرانے لاگ نہ سما سکے۔",
@@ -165,4 +165,34 @@ func init() {
 	// "y"/"yes" are always accepted on top of these - the prompt shows [y/N] in most languages.
 	Add("y", "д", "т", "j", "s", "s", "o", "s", "ن", "ह", "হ", "ج", "是")
 	Add("yes", "да", "так", "ja", "sì", "sí", "oui", "sim", "نعم", "हाँ", "হ্যাঁ", "جی", "是的")
+
+	// Flag validation in config.ParseArgs. The flag name and the numbers are verbs, so every
+	// translation keeps them in the same order.
+	Add("invalid %s %d: give 0 or more",
+		"недопустимое значение %s %d: укажите 0 или больше",
+		"неприпустиме значення %s %d: вкажіть 0 або більше",
+		"ungültiger Wert für %s: %d - erlaubt ist 0 oder mehr",
+		"valore non valido per %s: %d - usa 0 o più",
+		"valor no válido para %s: %d - usa 0 o más",
+		"valeur invalide pour %s : %d - indiquez 0 ou plus",
+		"valor inválido para %s: %d - use 0 ou mais",
+		"قيمة غير صالحة لـ %s: %d - استخدم 0 أو أكثر",
+		"%s के लिए अमान्य मान: %d - 0 या अधिक दें",
+		"%s-এর জন্য অবৈধ মান: %d - 0 বা তার বেশি দিন",
+		"%s کے لیے غلط قدر: %d - 0 یا زیادہ دیں",
+		"%s 的值 %d 无效：请使用 0 或更大的数")
+
+	Add("%s %d is below the minimum; using %d",
+		"%s %d меньше минимума; используется %d",
+		"%s %d менше мінімуму; використовується %d",
+		"%s %d liegt unter dem Minimum; verwendet wird %d",
+		"%s %d è sotto il minimo; si usa %d",
+		"%s %d está por debajo del mínimo; se usa %d",
+		"%s %d est en dessous du minimum ; utilisation de %d",
+		"%s %d está abaixo do mínimo; usando %d",
+		"%s %d أقل من الحد الأدنى؛ سيُستخدم %d",
+		"%s %d न्यूनतम से कम है; %d का उपयोग किया जा रहा है",
+		"%s %d সর্বনিম্নের চেয়ে কম; %d ব্যবহার করা হচ্ছে",
+		"%s %d کم از کم حد سے نیچے ہے؛ %d استعمال ہو رہا ہے",
+		"%s %d 低于最小值；改用 %d")
 }

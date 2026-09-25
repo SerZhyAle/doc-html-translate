@@ -1,6 +1,7 @@
 package report
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,8 +13,8 @@ func TestRunLogPathIsTimestamped(t *testing.T) {
 	t.Setenv("LOCALAPPDATA", t.TempDir())
 
 	at := time.Date(2026, 7, 29, 13, 5, 9, 0, time.UTC)
-	got := RunLogPath(at)
-	if want := filepath.Join(LogsDir(), "run-20260729-130509.log"); got != want {
+	got := RunLogPath(at, 42)
+	if want := filepath.Join(LogsDir(), "run-20260729-130509-42.log"); got != want {
 		t.Fatalf("RunLogPath = %q, want %q", got, want)
 	}
 }
@@ -27,7 +28,7 @@ func writeLogs(t *testing.T, n int, size int) []string {
 	base := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	names := make([]string, 0, n)
 	for i := 0; i < n; i++ {
-		p := RunLogPath(base.Add(time.Duration(i) * time.Minute))
+		p := RunLogPath(base.Add(time.Duration(i)*time.Minute), 1)
 		if err := os.WriteFile(p, []byte(strings.Repeat("x", size)), 0o600); err != nil {
 			t.Fatalf("write log: %v", err)
 		}
@@ -119,5 +120,33 @@ func TestDirFallsBackWithoutLocalAppData(t *testing.T) {
 
 	if got := Dir(); !strings.Contains(got, "doc-html-translate") {
 		t.Fatalf("Dir() = %q, want a doc-html-translate folder under the temp directory", got)
+	}
+}
+
+// Two runs started in the same second must not share a file: with O_APPEND their lines would
+// interleave into one log that belongs to neither.
+func TestRunLogPathSeparatesSameSecondRuns(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	at := time.Date(2026, 7, 29, 13, 5, 9, 0, time.UTC)
+	if a, b := RunLogPath(at, 100), RunLogPath(at, 101); a == b {
+		t.Fatalf("same-second runs share %q", a)
+	}
+}
+
+func TestCapRunLogStopsAtCapWithMarker(t *testing.T) {
+	var buf strings.Builder
+	w := CapRunLog(&buf)
+	line := strings.Repeat("x", 1023) + "\n"
+	for i := 0; i < MaxRunLogBytes/len(line)+10; i++ {
+		if n, err := io.WriteString(w, line); err != nil || n != len(line) {
+			t.Fatalf("write %d: n=%d err=%v, want a silent success", i, n, err)
+		}
+	}
+	out := buf.String()
+	if len(out) > MaxRunLogBytes+200 {
+		t.Errorf("log grew to %d bytes, cap is %d", len(out), MaxRunLogBytes)
+	}
+	if strings.Count(out, "[run log cut at") != 1 || !strings.HasSuffix(out, "not recorded]\n") {
+		t.Errorf("want exactly one closing marker, got tail %q", out[len(out)-80:])
 	}
 }

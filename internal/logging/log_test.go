@@ -6,7 +6,9 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 // captureStdout swaps os.Stdout for a pipe and returns what was written while fn ran.
@@ -118,5 +120,42 @@ func TestRunLogWriteErrorIsIgnored(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("stdout missing %q after a failing run log; got %q", want, out)
 		}
+	}
+}
+
+// overlapDetector fails a test when two writes are in flight at once - the interleaving a
+// console write outside the lock allowed.
+type overlapDetector struct {
+	busy    chan struct{}
+	overlap bool
+}
+
+func (d *overlapDetector) Write(p []byte) (int, error) {
+	select {
+	case d.busy <- struct{}{}:
+	default:
+		d.overlap = true
+		return len(p), nil
+	}
+	time.Sleep(50 * time.Microsecond)
+	<-d.busy
+	return len(p), nil
+}
+
+func TestEmitSerializesConsoleWrites(t *testing.T) {
+	d := &overlapDetector{busy: make(chan struct{}, 1)}
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 50; j++ {
+				emit(d, "line\n", "line\n")
+			}
+		}()
+	}
+	wg.Wait()
+	if d.overlap {
+		t.Fatal("two console writes overlapped: emit must hold the lock across the console write")
 	}
 }

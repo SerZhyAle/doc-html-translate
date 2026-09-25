@@ -128,6 +128,10 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
+	for _, n := range a.cfg.Notices {
+		logging.Println(n)
+	}
+
 	// Ctrl+C cancels the run cooperatively: the pipeline stops between pages and returns
 	// ExitInterrupted instead of the process exiting in the middle of a page write. Once the
 	// first interrupt is seen the default handling is back, so a second Ctrl+C still kills a run

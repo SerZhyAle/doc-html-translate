@@ -27,8 +27,8 @@ func TestExtract_NoCalibre(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when Calibre is not installed, got nil")
 	}
-	if !strings.Contains(err.Error(), "Calibre not found") {
-		t.Errorf("expected 'Calibre not found' in error, got: %v", err)
+	if !strings.Contains(err.Error(), "calibre (ebook-convert) not found") {
+		t.Errorf("expected 'calibre (ebook-convert) not found' in error, got: %v", err)
 	}
 }
 

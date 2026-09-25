@@ -224,3 +224,56 @@ func TestParseArgsTOCDepth(t *testing.T) {
 		t.Fatalf("expected TOCDepth=2, got %d", cfg.TOCDepth)
 	}
 }
+
+// The version request is matched by identity: main must not depend on the sentinel's wording.
+func TestParseArgsVersionIsSentinel(t *testing.T) {
+	if _, err := ParseArgs([]string{"-version"}); !errors.Is(err, ErrVersion) {
+		t.Fatalf("err = %v, want ErrVersion", err)
+	}
+}
+
+// A negative size never meant anything, so it is refused at parse time and names the flag.
+func TestParseArgsRejectsNegativeNumbers(t *testing.T) {
+	for _, flag := range []string{"-split", "-toc-depth", "-ollama-ctx", "-ollama-parallel"} {
+		_, err := ParseArgs([]string{"-ui-lang", "en", flag, "-5", "book.epub"})
+		if err == nil || !strings.Contains(err.Error(), flag+" -5") {
+			t.Errorf("%s -5: err = %v, want a refusal naming the flag", flag, err)
+		}
+	}
+	for _, flag := range []string{"-split", "-toc-depth"} {
+		if _, err := ParseArgs([]string{flag, "0", "book.epub"}); err != nil {
+			t.Errorf("%s 0 refused: %v", flag, err)
+		}
+	}
+}
+
+// A value below the floor is raised, and the adjustment is reported rather than applied quietly.
+func TestParseArgsRaisesOllamaFloorsWithNotice(t *testing.T) {
+	cfg, err := ParseArgs([]string{"-ui-lang", "en", "-ollama-ctx", "100", "-ollama-parallel", "0", "book.epub"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.OllamaNumCtx != MinOllamaNumCtx || cfg.OllamaParallel != 1 {
+		t.Errorf("ctx=%d parallel=%d, want %d and 1", cfg.OllamaNumCtx, cfg.OllamaParallel, MinOllamaNumCtx)
+	}
+	want := []string{"-ollama-parallel 0 is below the minimum; using 1", "-ollama-ctx 100 is below the minimum; using 512"}
+	if strings.Join(cfg.Notices, "|") != strings.Join(want, "|") {
+		t.Errorf("notices = %q, want %q", cfg.Notices, want)
+	}
+
+	cfg, err = ParseArgs([]string{"book.epub"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Notices) != 0 {
+		t.Errorf("defaults produced notices: %q", cfg.Notices)
+	}
+}
+
+// The messages follow -ui-lang, like the rest of the console output.
+func TestParseArgsValidationIsLocalized(t *testing.T) {
+	_, err := ParseArgs([]string{"-ui-lang", "ru", "-split", "-5", "book.epub"})
+	if err == nil || !strings.Contains(err.Error(), "недопустимое значение -split -5") {
+		t.Errorf("err = %v, want the Russian message", err)
+	}
+}

@@ -10,12 +10,22 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/i18n"
+	"doc-html-translate/internal/syslocale"
 )
 
 // ErrHelp is returned when -h/-help was requested. Usage has already been written to stdout
 // and the caller should exit 0 without reporting anything: help is a request, not a failure -
 // the same treatment -version already gets.
 var ErrHelp = flag.ErrHelp
+
+// ErrVersion is returned when -version was requested. The caller prints the version and exits 0.
+// It is a sentinel rather than an error text so a reworded message cannot turn the request into
+// a failure.
+var ErrVersion = errors.New("version requested")
+
+// MinOllamaNumCtx is the smallest context window worth sending to Ollama: below it a batch of
+// segments does not fit and every request degrades into a truncated answer.
+const MinOllamaNumCtx = 512
 
 type Config struct {
 	Register         bool
@@ -45,6 +55,9 @@ type Config struct {
 	UILang           string // -ui-lang: interface language of the console output and the page chrome ("" = from the OS)
 	Report           bool   // -report: pack the recent run logs into an archive and exit
 	InputFile        string
+	// Notices are the adjustments ParseArgs made to what was typed, already in the interface
+	// language. The caller prints them: a value that was quietly replaced reads as a bug later.
+	Notices []string
 }
 
 func ParseArgs(args []string) (Config, error) {
@@ -102,7 +115,7 @@ func ParseArgs(args []string) (Config, error) {
 	}
 
 	if *version {
-		return Config{}, errors.New("version")
+		return Config{}, ErrVersion
 	}
 
 	// A negative, NaN or infinite limit used to fail every "estimate > limit" comparison and so
@@ -116,6 +129,34 @@ func ParseArgs(args []string) (Config, error) {
 	// identical "translated" captures. The accepted list is i18n.Codes, so it cannot drift.
 	if *uiLang != "" && i18n.Resolve(*uiLang, "", "") != *uiLang {
 		return Config{}, fmt.Errorf("unknown -ui-lang %q: use one of %s", *uiLang, strings.Join(i18n.Codes, " "))
+	}
+
+	// Numeric flags are checked here, in one place, so a meaningless value is refused before any
+	// work starts instead of being clamped somewhere deep in a run. Only values that never meant
+	// anything are refused (a negative size); a value that is merely too small is raised to the
+	// floor, and the user is told.
+	lang := i18n.Resolve(*uiLang, "", syslocale.Lang())
+	for _, f := range []struct {
+		name string
+		v    int
+	}{
+		{"-split", *splitSize}, {"-toc-depth", *tocDepth}, {"-ollama-ctx", *ollamaNumCtx},
+	} {
+		if f.v < 0 {
+			return Config{}, errors.New(i18n.T(lang, "invalid %s %d: give 0 or more", f.name, f.v))
+		}
+	}
+	if *ollamaParallel < 0 {
+		return Config{}, errors.New(i18n.T(lang, "invalid %s %d: give 0 or more", "-ollama-parallel", *ollamaParallel))
+	}
+	var notices []string
+	if *ollamaParallel < 1 {
+		notices = append(notices, i18n.T(lang, "%s %d is below the minimum; using %d", "-ollama-parallel", *ollamaParallel, 1))
+		*ollamaParallel = 1
+	}
+	if *ollamaNumCtx < MinOllamaNumCtx {
+		notices = append(notices, i18n.T(lang, "%s %d is below the minimum; using %d", "-ollama-ctx", *ollamaNumCtx, MinOllamaNumCtx))
+		*ollamaNumCtx = MinOllamaNumCtx
 	}
 
 	cfg := Config{
@@ -144,6 +185,7 @@ func ParseArgs(args []string) (Config, error) {
 		OCRDownload:      *ocrDownload,
 		UILang:           *uiLang,
 		Report:           *report,
+		Notices:          notices,
 	}
 
 	// First-click UX: running without any args enters the first-run flow - a

@@ -7,6 +7,8 @@ package report
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -22,6 +24,10 @@ const (
 	MaxLogFiles = 20
 	// MaxLogBytes is the total size the store may occupy.
 	MaxLogBytes = 20 << 20
+	// MaxRunLogBytes caps a single run's log. Without it one runaway run (a verbose OCR of a
+	// thousand-page scan) could outgrow MaxLogBytes on its own and make Trim evict the whole
+	// history it was meant to sit beside.
+	MaxRunLogBytes = MaxLogBytes / 4
 )
 
 // Dir is the per-user, writable root of the report state. It mirrors the choice of
@@ -39,10 +45,41 @@ func LogsDir() string {
 	return filepath.Join(Dir(), "logs")
 }
 
-// RunLogPath names the log file of a run started at `at`. The timestamp is a parameter
-// rather than a clock read so callers and tests agree on the name.
-func RunLogPath(at time.Time) string {
-	return filepath.Join(LogsDir(), "run-"+at.Format("20060102-150405")+".log")
+// RunLogPath names the log file of a run started at `at` by process pid. The timestamp is a
+// parameter rather than a clock read so callers and tests agree on the name. The pid keeps two
+// runs started in the same second - a batch over a folder does exactly that - out of one file,
+// where O_APPEND would interleave their lines.
+func RunLogPath(at time.Time, pid int) string {
+	return filepath.Join(LogsDir(), fmt.Sprintf("run-%s-%d.log", at.Format("20060102-150405"), pid))
+}
+
+// CapRunLog wraps a run log so it stops growing at MaxRunLogBytes. The line that would cross
+// the cap is replaced by one marker line, so a reader of the report sees the log was cut rather
+// than guessing the run stopped there. Every write reports success: the run log is a side
+// channel whose failure must never reach the conversion. Not safe for concurrent use on its
+// own; logging serializes its writes.
+func CapRunLog(w io.Writer) io.Writer {
+	return &cappedLog{w: w, left: MaxRunLogBytes}
+}
+
+type cappedLog struct {
+	w    io.Writer
+	left int
+	cut  bool
+}
+
+func (c *cappedLog) Write(p []byte) (int, error) {
+	if c.cut {
+		return len(p), nil
+	}
+	if len(p) > c.left {
+		c.cut = true
+		_, _ = fmt.Fprintf(c.w, "[run log cut at %d MiB: the rest of this run was not recorded]\n", MaxRunLogBytes>>20)
+		return len(p), nil
+	}
+	c.left -= len(p)
+	_, _ = c.w.Write(p)
+	return len(p), nil
 }
 
 // Trim deletes the oldest run logs until both bounds hold, and reports how many it removed.
