@@ -76,8 +76,9 @@ func TestAssembledArgsSurviveTheCLIParser(t *testing.T) {
 	if cfg.SplitSize != 0 || cfg.TOCDepth != 3 || cfg.MaxCost != 5 {
 		t.Errorf("numbers dropped: split=%d toc=%d maxCost=%v", cfg.SplitSize, cfg.TOCDepth, cfg.MaxCost)
 	}
-	if cfg.OllamaModel != "llama3" || cfg.OllamaParallel != 2 || cfg.OllamaNumCtx != 4096 {
-		t.Errorf("ollama settings dropped: model=%q parallel=%d ctx=%d", cfg.OllamaModel, cfg.OllamaParallel, cfg.OllamaNumCtx)
+	// Google is the engine here, so the Ollama boxes must not reach the CLI at all.
+	if cfg.OllamaModel != "gemma3:12b" || cfg.OllamaParallel != 1 || cfg.OllamaNumCtx != 8192 {
+		t.Errorf("ollama settings leaked into a Google run: model=%q parallel=%d ctx=%d", cfg.OllamaModel, cfg.OllamaParallel, cfg.OllamaNumCtx)
 	}
 	if cfg.SourceLang != "ru" || cfg.TargetLang != "en" || cfg.OCRLang != "rus" {
 		t.Errorf("languages dropped: src=%q dst=%q ocr=%q", cfg.SourceLang, cfg.TargetLang, cfg.OCRLang)

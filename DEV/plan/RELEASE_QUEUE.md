@@ -61,7 +61,7 @@ current-next-release: 1 (rebuilt 2026-09-25)
 #   ticket                                              changed     status
 01  01_2026-09-24_hotfix-epub-href-containment          2026-09-25  BlockNeedUserTest - sign-off, Windows
 02  02_2026-09-24_bugfix-shell-open-injection           2026-09-25  BlockNeedUserTest - Windows hands-on
-03  03_2026-09-24_bugfix-gui-local-api-hardening        2026-09-24  Draft (P90)
+03  03_2026-09-24_bugfix-gui-local-api-hardening        2026-09-25  BlockNeedUserTest - sign-off, Windows
 05  05_2026-09-24_hotfix-output-dir-ownership           2026-09-25  BlockNeedUserTest - Windows hands-on
 ```
 

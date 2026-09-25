@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="dht-token" content="__DHT_TOKEN__">
 <link rel="icon" href="/favicon.ico">
 <title>DOC-HTML-UI</title>
 <style>
@@ -203,6 +204,8 @@ details > .body { padding: 2px 12px 12px; }
 }
 .btn-run:hover { background: var(--accent-hover); }
 .btn-run:disabled { opacity: .45; cursor: not-allowed; }
+.btn-cancel { background: var(--surface2); }
+.btn-cancel:hover { background: var(--surface); }
 
 .log {
     background: var(--log-bg);
@@ -306,6 +309,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
         </div>
     </div>
     <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
+    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelConvert()" style="display:none" data-i18n="btnCancel">Cancel</button>
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="dropStatus" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
@@ -441,6 +445,17 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
 <script src="/i18n.js"></script>
 <script>
+// ── API access ──────────────────────────────────────────
+// Every API call carries this launch's token, which the server wrote into this page and
+// nowhere else; without it the server refuses the call. A string body is always JSON.
+const API_TOKEN = document.querySelector('meta[name="dht-token"]').content;
+function api(path, opts) {
+    opts = Object.assign({}, opts || {});
+    opts.headers = Object.assign({'X-DHT-Token': API_TOKEN}, opts.headers || {});
+    if (typeof opts.body === 'string' && !opts.headers['Content-Type']) opts.headers['Content-Type'] = 'application/json';
+    return fetch(path, opts);
+}
+
 // ── i18n ────────────────────────────────────────────────
 // The GUI opens in the Windows UI language (reported by /api/env) and can be
 // switched with the EN/RU/UK buttons; the choice is persisted per user. Static
@@ -551,7 +566,19 @@ document.getElementById('btnSwap').addEventListener('click', () => {
 document.getElementById('srcLang').addEventListener('change', syncOcrLangToSource);
 
 // ── heartbeat ───────────────────────────────────────────
-setInterval(() => fetch('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
+// The server exits once this page is gone. A minimized window has its timers throttled to
+// about one a minute, so the ping alone is not a reliable sign of life; the open /api/alive
+// request is, because throttling does not close connections. It is reopened if it drops.
+setInterval(() => api('/api/ping', {method:'POST'}).catch(()=>{}), 3000);
+async function keepAlive() {
+    try {
+        const r = await api('/api/alive');
+        const reader = r.body.getReader();
+        while (!(await reader.read()).done) { /* keepalive newlines */ }
+    } catch (e) { /* reopened below */ }
+    setTimeout(keepAlive, 2000);
+}
+keepAlive();
 
 // ── input file display ──────────────────────────────────
 function setInputPath(p) {
@@ -594,25 +621,39 @@ function extractDroppedPath(ev) {
     }
     return '';
 }
-async function uploadDropped(file) {
+// Only one document is converted per run, so a multi-file drop says which one was used
+// rather than leaving the others to vanish silently.
+function droppedCount(ev) {
+    const dt = ev.dataTransfer;
+    if (!dt) return 0;
+    if (dt.files && dt.files.length) return dt.files.length;
+    const uris = (dt.getData('text/uri-list') || '').split(/\r?\n/).filter(x => x && !x.startsWith('#'));
+    return uris.length;
+}
+function noteFirstOnly(count, path) {
+    if (count > 1) setStatus('dropStatus', 'dropFirstOnly', {n: count, name: path.split(/[\\/]/).pop() || path}, 'warn');
+}
+async function uploadDropped(file, count) {
     setStatus('dropStatus', 'statusLoading', {name: file.name});
     try {
-        const r = await fetch('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
+        const r = await api('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
         if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', {msg: (await r.text()).trim()}, 'warn'); return; }
         const d = await r.json();
         if (d.path) {
             setInputPath(d.path);
             setStatus('dropStatus', 'statusLoadedCopy');
+            noteFirstOnly(count, d.path);
         }
     } catch(e) {
         setStatus('dropStatus', 'statusLoadFail', {msg: e.message}, 'warn');
     }
 }
 async function handleDrop(ev) {
+    const count = droppedCount(ev);
     const p = extractDroppedPath(ev);
-    if (p) { setInputPath(p); setStatus('dropStatus', ''); return; }
+    if (p) { setInputPath(p); setStatus('dropStatus', ''); noteFirstOnly(count, p); return; }
     const dt = ev.dataTransfer;
-    if (dt && dt.files && dt.files.length) await uploadDropped(dt.files[0]);
+    if (dt && dt.files && dt.files.length) await uploadDropped(dt.files[0], count);
 }
 
 ['dragenter','dragover','dragleave','drop'].forEach(name => {
@@ -649,17 +690,17 @@ function renderAbout() {
 }
 
 // ── version / initial file / environment ────────────────
-fetch('/api/version').then(r=>r.json()).then(d=>{
+api('/api/version').then(r=>r.json()).then(d=>{
     document.getElementById('ver').textContent = 'v' + d.version;
     appVersion = d.version;
     document.getElementById('aboutVer').textContent = d.version;
 }).catch(()=>{});
 
-fetch('/api/initial').then(r=>r.json()).then(d=>{
+api('/api/initial').then(r=>r.json()).then(d=>{
     if (d.file) setInputPath(d.file);
 }).catch(()=>{});
 
-fetch('/api/env').then(r=>r.json()).then(d=>{
+api('/api/env').then(r=>r.json()).then(d=>{
     integrationHidden = !!d.packaged;
     if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
@@ -680,14 +721,14 @@ fetch('/api/env').then(r=>r.json()).then(d=>{
 // ── browse buttons ──────────────────────────────────────
 async function browseFile() {
     try {
-        const r = await fetch('/api/browse-file', {method:'POST'});
+        const r = await api('/api/browse-file', {method:'POST'});
         const d = await r.json();
         if (d.path) { setInputPath(d.path); setStatus('dropStatus', ''); }
     } catch(e) { console.error('browseFile', e); }
 }
 async function browseFolder() {
     try {
-        const r = await fetch('/api/browse-folder', {method:'POST'});
+        const r = await api('/api/browse-folder', {method:'POST'});
         const d = await r.json();
         if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); updateCmdPreview(); }
     } catch(e) { console.error('browseFolder', e); }
@@ -711,7 +752,7 @@ function syncEngineUI() {
 // ── Google API key ──────────────────────────────────────
 async function refreshGoogleKeyStatus() {
     try {
-        const r = await fetch('/api/google-key');
+        const r = await api('/api/google-key');
         const d = await r.json();
         if (d.exists) {
             setStatus('googleKeyStatus', 'googleKeyFound', null, 'ok');
@@ -726,7 +767,7 @@ async function saveGoogleKey() {
     const key = document.getElementById('googleKey').value.trim();
     if (!key) { setStatus('googleKeyStatus', 'googleKeyEnterFirst', null, 'warn'); return; }
     try {
-        const r = await fetch('/api/google-key', {
+        const r = await api('/api/google-key', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({key}),
@@ -749,7 +790,7 @@ let envReady = false, statusReady = false, integrationHidden = false;
 
 async function loadAssocStatus() {
     try {
-        const d = await (await fetch('/api/assoc-status')).json();
+        const d = await (await api('/api/assoc-status')).json();
         el('chkDefaultHandler').checked = !!d.default;
     } catch(e) { /* leave unchecked */ }
     statusReady = true;
@@ -760,7 +801,7 @@ async function toggleDefaultHandler() {
     const on = el('chkDefaultHandler').checked;
     setStatus('registerStatus', on ? 'registering' : 'unregistering');
     try {
-        const r = await fetch(on ? '/api/register' : '/api/unregister', {method:'POST'});
+        const r = await api(on ? '/api/register' : '/api/unregister', {method:'POST'});
         const d = await r.json();
         if (d.ok) {
             setStatus('registerStatus', on ? 'registerDone' : 'unregisterDone', null, 'ok');
@@ -825,7 +866,9 @@ function applySettings(s) {
     if (!s || typeof s !== 'object') return;
     if (typeof s.lang === 'string') userLang = s.lang;
     if (typeof s.engine === 'string') {
-        const r = document.querySelector('input[name="engine"][value="' + s.engine + '"]');
+        // Matched by value, never spliced into a selector: a stray quote in the saved file
+        // must not throw and abandon the rest of the settings.
+        const r = [...document.querySelectorAll('input[name="engine"]')].find(x => x.value === s.engine);
         if (r) r.checked = true;
     }
     if (s.output != null) el('outputFolder').value = s.output;
@@ -847,7 +890,7 @@ function saveSettings() {
     if (!settingsLoaded) return; // don't overwrite saved state before it loads
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-        fetch('/api/settings', {
+        api('/api/settings', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(collectSettings()),
@@ -855,7 +898,11 @@ function saveSettings() {
     }, 400);
 }
 
-fetch('/api/settings').then(r=>r.json()).then(applySettings).catch(()=>{}).finally(() => {
+api('/api/settings').then(r => {
+    const moved = r.headers.get('X-Settings-Corrupt');
+    if (moved) el('logArea').textContent = t('settingsCorrupt', {path: moved}) + '\n';
+    return r.json();
+}).then(applySettings).catch(()=>{}).finally(() => {
     settingsLoaded = true;
     resolveLang();
     syncOcrLangToSource();
@@ -869,7 +916,7 @@ document.addEventListener('change', saveSettings);
 let ocrCatalog = [];
 async function loadOcrLangs() {
     try {
-        const langs = await (await fetch('/api/ocr-langs')).json();
+        const langs = await (await api('/api/ocr-langs')).json();
         ocrCatalog = langs;
         const sel = el('ocrLang'), dl = el('ocrDownloadSel');
         const want = sel.dataset.want || sel.value || 'eng';
@@ -914,7 +961,7 @@ el('btnOcrDownload').addEventListener('click', async () => {
     btn.disabled = true;
     setStatus('ocrStatus', 'ocrDownloading', {lang});
     try {
-        const r = await (await fetch('/api/ocr-download', {
+        const r = await (await api('/api/ocr-download', {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang}),
         })).json();
         if (r.ok) { setStatus('ocrStatus', 'ocrInstalledMsg', {lang}); el('ocrLang').dataset.want = lang; await loadOcrLangs(); saveSettings(); }
@@ -983,7 +1030,7 @@ function updateCmdPreview() {
     clearTimeout(cmdTimer);
     cmdTimer = setTimeout(async () => {
         try {
-            const r = await fetch('/api/preview', {
+            const r = await api('/api/preview', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(collectRunConfig()),
@@ -1016,7 +1063,7 @@ async function checkOutputStatus() {
         return;
     }
     try {
-        const r = await fetch('/api/output-status', {
+        const r = await api('/api/output-status', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(collectRunConfig()),
@@ -1038,7 +1085,7 @@ document.addEventListener('input', scheduleOutputStatus);
 // copied into the app's own data folder, so "where did it go?" is otherwise a fair question.
 async function openPrevResult(folder) {
     try {
-        const r = await (await fetch('/api/open-output', {
+        const r = await (await api('/api/open-output', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -1058,7 +1105,7 @@ el('btnOpenPrevFolder').addEventListener('click', () => openPrevResult(true));
 el('btnDeletePrev').addEventListener('click', async () => {
     if (!confirm(t('confirmDeletePrev'))) return;
     try {
-        const r = await (await fetch('/api/delete-output', {
+        const r = await (await api('/api/delete-output', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({input: el('inputFile').value.trim(), output: el('outputFolder').value.trim()}),
@@ -1122,11 +1169,11 @@ el('btnSendLogs').addEventListener('click', async () => {
     lastReport = null;
     setStatus('sendLogsMsg', 'sendLogsBuilding');
     try {
-        const r = await (await fetch('/api/report', {method:'POST'})).json();
+        const r = await (await api('/api/report', {method:'POST'})).json();
         if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
         reportPath = r.path;
         await copyToClipboard(reportPath);
-        await fetch('/api/report-reveal', {method:'POST', body: JSON.stringify({path: reportPath})});
+        await api('/api/report-reveal', {method:'POST', body: JSON.stringify({path: reportPath})});
         const subject = 'doc-html-translate ' + appVersion + ' - log report';
         location.href = 'mailto:' + encodeURIComponent(authorAddress)
             + '?subject=' + encodeURIComponent(subject)
@@ -1147,7 +1194,7 @@ el('btnSendLogs').addEventListener('click', async () => {
 el('btnOpenArchive').addEventListener('click', async () => {
     if (!reportPath) return;
     try {
-        const r = await (await fetch('/api/report-open', {method:'POST', body: JSON.stringify({path: reportPath})})).json();
+        const r = await (await api('/api/report-open', {method:'POST', body: JSON.stringify({path: reportPath})})).json();
         if (!r.ok) setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')});
     } catch (e) {
         setStatus('sendLogsMsg', 'sendLogsFailed', {msg: e.message});
@@ -1156,7 +1203,7 @@ el('btnOpenArchive').addEventListener('click', async () => {
 
 el('btnClearLogs').addEventListener('click', async () => {
     try {
-        const r = await (await fetch('/api/logs-clear', {method:'POST'})).json();
+        const r = await (await api('/api/logs-clear', {method:'POST'})).json();
         if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', {msg: r.error || t('unknownError')}); return; }
         lastReport = null;
         aboutFacts.logs = {count: 0, bytes: 0};
@@ -1175,7 +1222,7 @@ async function runConvert() {
     const engine = currentEngine();
     if (engine === 'google') {
         try {
-            const d = await (await fetch('/api/google-key')).json();
+            const d = await (await api('/api/google-key')).json();
             if (!d.exists && !confirm(t('confirmNoKey'))) return;
         } catch(e) { /* let the CLI report it */ }
     }
@@ -1191,35 +1238,71 @@ async function runConvert() {
     if (outputStatus.exists && outputStatus.paramsChanged) cfg.force = true;
 
     const btn = document.getElementById('btnRun');
+    const cancelBtn = document.getElementById('btnCancel');
     const log = document.getElementById('logArea');
     btn.disabled = true;
+    btn.style.display = 'none';
+    cancelBtn.style.display = '';
+    cancelBtn.disabled = false;
+    cancelBtn.focus();
     log.textContent = '';
+    runTarget = {input: cfg.input, output: cfg.output};
+
+    // Follow new output only while the reader is already at the bottom, so scrolling up to
+    // read an earlier line is not undone by the next chunk.
+    const append = text => {
+        const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
+        // appendChild is O(chunk); "textContent +=" re-reads the whole log each
+        // time (O(n^2)) and can freeze the page on a long conversion.
+        log.appendChild(document.createTextNode(text));
+        if (atBottom) log.scrollTop = log.scrollHeight;
+    };
 
     try {
-        const resp = await fetch('/api/run', {
+        runAbort = new AbortController();
+        const resp = await api('/api/run', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(cfg),
+            signal: runAbort.signal,
         });
+        if (!resp.ok) {
+            append(t('runRequestFailed', {msg: (await resp.text()).trim() || resp.status}) + '\n');
+            return;
+        }
         const reader = resp.body.getReader();
         const dec = new TextDecoder();
         while (true) {
             const {value, done} = await reader.read();
             if (done) break;
-            // appendChild is O(chunk); "textContent +=" re-reads the whole log each
-            // time (O(n^2)) and can freeze the page on a long conversion.
-            log.appendChild(document.createTextNode(dec.decode(value, {stream: true})));
-            log.scrollTop = log.scrollHeight;
+            append(dec.decode(value, {stream: true}));
         }
     } catch(e) {
-        log.appendChild(document.createTextNode('\n[ERROR] ' + e.message + '\n'));
+        if (e.name !== 'AbortError') append('\n' + t('runRequestFailed', {msg: e.message}) + '\n');
     } finally {
+        runAbort = null;
+        runTarget = null;
         btn.disabled = false;
+        btn.style.display = '';
+        cancelBtn.style.display = 'none';
         // The run just created (or replaced) the result, so re-read its status: this is
         // what puts "Open result" and the output path on screen the moment it is ready,
         // rather than leaving the reader to hunt for where it landed.
         await checkOutputStatus();
     }
+}
+
+// Cancel asks the server to stop the run, which kills the converter and everything it
+// started and ends the log with "Cancelled.". If the server cannot be reached, dropping the
+// request stops the run too.
+let runAbort = null, runTarget = null;
+async function cancelConvert() {
+    const cancelBtn = document.getElementById('btnCancel');
+    cancelBtn.disabled = true;
+    try {
+        const r = await api('/api/cancel', {method: 'POST', body: JSON.stringify(runTarget || {})});
+        if (r.ok) return;
+    } catch (e) { /* fall through */ }
+    if (runAbort) runAbort.abort();
 }
 </script>
 </body>
