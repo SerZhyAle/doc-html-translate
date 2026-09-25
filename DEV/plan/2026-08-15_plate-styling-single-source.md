@@ -1,6 +1,6 @@
 # Both editions describe the same plate twice, and nothing notices when the copies part
 
-**Status:** In Progress
+**Status:** Partial
 **Priority:** 44
 **Date:** 2026-08-15
 **Tactical plan:** [`2026-08-15_plate-styling-single-source/`](2026-08-15_plate-styling-single-source/INDEX.md)
@@ -188,3 +188,44 @@ it from a screenshot.
   widens. Those measurements are inputs here, not open questions.
 - [`docs/PARITY.md`](../../docs/PARITY.md) - the process note preferring a single source in code over
   a copy plus a comment is the rule this ticket applies.
+
+## Last Audit
+
+**Date:** 2026-09-25
+**Mode:** full
+**Outcome:** Partial
+**Counts:** PASS 75 · WARN 8 · FAIL 0 · MANUAL 4 · EXEMPT 1
+
+Static audit of the tree at `6b952c2`. Build and test predicates are taken from the 2026-09-24 run
+recorded in the INDEX change log, not re-run. Criteria 1-4 and 6-8 PASS. Every shared-invariant heading
+in `docs/PARITY.md` has its mark (15 of 15, 9 `Prose only`). No `TODO(phase-*)` or verification tags.
+
+### Action items
+1. **[WARN Step 01.2]** `roles.plate` has 17 entries, the predicate says 14. The shipped desktop
+   literal already had 17 (the print-color-adjust pair came after the count was taken), and
+   `TestOverlayCSSMatchesShipped` pins it. Fix: correct the predicate to 17.
+2. **[WARN Step 04.3]** `box-shadow` is in `extension/src/page-overlay.css:64`, and the predicate
+   says "no stylesheet". It is the page-OCR control bar's shadow, and it was there before this
+   ticket. The `ocr-overlay.css:8` hit is a comment. Fix: narrow the predicate to "no plate role".
+3. **[WARN Phase 02 budget]** `internal/appearance/appearance.go` has 250 lines against a budget of
+   220. Fix: trim it (the decode validation could go, `appearance_test.go` already covers the shape)
+   or re-budget.
+4. **[WARN Phase 02 budget]** `internal/ocr/overlay.go` has 73 changed lines against 60, 51 of them
+   removed prose. Fix: re-budget.
+5. **[WARN Phase 03 budget]** `extension/src/ocr-overlay.css` has 101 lines against 90, because the
+   generated notes are wrapped comments. Fix: re-budget.
+6. **[WARN Phase 04 budget]** `tests/appearance_parity_test.go` has 577 lines against 320. Fix: fold
+   `desktopEdition` and `extensionEdition` into one reader and drop the duplicated role/theme
+   plumbing, or re-budget with a reason.
+7. **[WARN Phase 04 budget]** `tests/parity_test.go` has 121 changed lines against 40, 97 of them
+   deletions the plan itself asked for (`TestParityThemePalette` and its helpers). Fix: re-budget.
+8. **[WARN Phase 05 budget]** `docs/PARITY.md` has 126 changed lines against 120. Fix: re-budget.
+
+### Manual / on-target
+- [ ] Step 05.3: repoint the catalog's `ocr-pipeline.md` plate rows and §3.1 at
+      `internal/appearance`. The catalog is not reachable from the audit session.
+- [ ] Criterion 5: render one corpus comic page with OCR on, in both editions, and compare it with the
+      2026-08-15 output. The headless-Chromium CSS comparison found 0 differing pixels, but it does
+      not replace the corpus run.
+- [ ] Criterion 9: `./scripts/test.ps1`, `lint.ps1`, `typo.ps1` and `check.ps1` exit 0 on Windows.
+- [ ] Step 06.2: record the exit codes and the corpus page in the INDEX change log.
