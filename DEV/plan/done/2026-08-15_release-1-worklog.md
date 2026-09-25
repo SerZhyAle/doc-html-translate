@@ -51,8 +51,9 @@ this item; it is now unblocked and is the next dated baseline run, not a release
 
 ### 1.3 The floor could not be re-derived, and the rule that followed was refused by the corpus
 
-[`04_2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](../04_2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
-- now **Partial**. Evidence:
+[`2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
+- closed 2026-09-25 as **Implemented** (instrument and measurement); the recall it asked for moved to
+[`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md). Evidence:
 [`DEV/research/ocr_rescue_floor_2026-08-15.md`](../../research/ocr_rescue_floor_2026-08-15.md).
 
 The ticket asked for the band behind `ocrRescueLineConf` to be re-measured. It was, and **the band

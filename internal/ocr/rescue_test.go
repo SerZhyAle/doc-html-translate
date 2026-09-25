@@ -149,19 +149,20 @@ func TestGreyRescueKeepsTheStrongestRung(t *testing.T) {
 
 // TestRescueConfidenceFloorIsStricter: a rescue is a second guess after the ordinary pass found
 // nothing, so it has to clear a higher bar - otherwise the ladder turns "no text here" into a plate
-// of invented words painted over artwork. Measured on the lab's corpus: genuine rescued lettering
-// scored 93.1-97.0, hallucinated lettering 50.8.
+// of invented words painted over artwork. The band is the 2026-08-15 corpus measurement
+// (DEV/research/ocr_rescue_floor_2026-08-15.md): invented lettering reached 73.9 and genuine rescued
+// lettering 69.2, so the populations overlap and the floor sits above both. It pins the side the
+// corpus chose - no measured invention gets through - and states the price, rather than citing the
+// older 93.1 / 50.8 pair that described a gap which no longer exists.
 func TestRescueConfidenceFloorIsStricter(t *testing.T) {
 	if ocrRescueLineConf <= ocrMinLineConf {
 		t.Errorf("rescue floor %v does not exceed the ordinary floor %v", ocrRescueLineConf, ocrMinLineConf)
 	}
-	// The measured bands either side of the floor must both stay on their own side of it.
-	const worstGenuineRescue, bestHallucination = 93.1, 50.8
-	if ocrRescueLineConf > worstGenuineRescue {
-		t.Errorf("rescue floor %v rejects genuine lettering measured at %v", ocrRescueLineConf, worstGenuineRescue)
-	}
-	if ocrRescueLineConf <= bestHallucination {
-		t.Errorf("rescue floor %v admits hallucinated lettering measured at %v", ocrRescueLineConf, bestHallucination)
+	// Genuine rescued lettering was measured up to 69.2, under this bound: that loss is known and is
+	// what ticket P49's follow-up reopens with a third axis, not by lowering this number.
+	const bestInvention = 73.9
+	if ocrRescueLineConf <= bestInvention {
+		t.Errorf("rescue floor %v admits invented lettering measured at %v", ocrRescueLineConf, bestInvention)
 	}
 }
 
