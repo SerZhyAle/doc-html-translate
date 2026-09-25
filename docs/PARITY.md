@@ -391,6 +391,15 @@ their own test where one exists.
   `tessdata.projectnaptha.com/4.0.0_fast` (gzip, [`ocr-lang.js`](../extension/src/ocr-lang.js)) and
   bundles eng from the same 4.0.0 ([`build.mjs`](../extension/build.mjs)). Different host/format,
   identical upstream bytes -> matching recognition.
+- **Download integrity is desktop-only (intentional).** The desktop app accepts only catalogue codes
+  (`ocr.CheckLang`, called by `-ocr-download`, the GUI's `/api/ocr-download` and `ocr.Download`
+  itself) and installs a pack only when its size and SHA-256 match the table pinned in
+  [`download.go`](../internal/ocr/download.go) `packDigests` (plain 4.0.0 files), through a unique
+  temp file and a rename, into the per-user folder (`os.UserCacheDir()/doc-html-translate/tessdata`,
+  looked up before `<exe>/tessdata`). The extension cannot share that table: tesseract.js fetches the
+  gzipped build from projectnaptha itself and caches it in IndexedDB, so the bytes it receives are
+  neither the plain files nor seen by extension code. Its catalogue gate is the `LANGS` list the
+  picker is built from.
 - **Language catalog = 13** on both sides (`eng rus ukr jpn jpn_vert deu fra spa ita por pol chi_sim
   kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`.
 - **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50`, `OCR_CLUSTER_PITCH_FACTOR = 1.2`,

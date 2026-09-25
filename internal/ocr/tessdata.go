@@ -1,14 +1,13 @@
 package ocr
 
 import (
-	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
+
+	"doc-html-translate/internal/logging"
 )
 
 // LangInfo describes a supported OCR language.
@@ -48,19 +47,82 @@ var Bundled = []string{"eng"}
 // must reference the same tessdata version - see docs/PARITY.md ("OCR").
 const cdnBase = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0"
 
-// DataDir is the tessdata directory the app manages: <exe dir>/tessdata.
-func DataDir() string {
+// appDirName is the per-user folder the app keeps writable state in - the same name the
+// translator's key fallback and the report store use under %LOCALAPPDATA%, so all of the app's
+// per-user state sits in one place.
+const appDirName = "doc-html-translate"
+
+// userDataDir is where downloads go: a per-user folder that is writable in every build flavour.
+// The packaged (MSIX/Store) install directory is read-only, so no pack can be written next to
+// the executable there. On Windows os.UserCacheDir is %LOCALAPPDATA%, the translator's precedent.
+// A variable so tests can point it at a temp folder.
+var userDataDir = func() string {
+	base, err := os.UserCacheDir()
+	if err != nil {
+		base = os.TempDir()
+	}
+	return filepath.Join(base, appDirName, "tessdata")
+}
+
+// bundledDataDir is <exe dir>/tessdata: where the build provisions eng and where earlier versions
+// installed downloads. Read-only under MSIX, so the app only ever reads from it.
+var bundledDataDir = func() string {
 	if exe, err := os.Executable(); err == nil {
 		return filepath.Join(filepath.Dir(exe), "tessdata")
 	}
 	return "tessdata"
 }
 
+// UserDataDir is the writable per-user tessdata folder Download installs into.
+func UserDataDir() string { return userDataDir() }
+
+// DataDirs lists the tessdata folders the app reads, in lookup order: per-user, then bundled.
+func DataDirs() []string {
+	user, bundled := userDataDir(), bundledDataDir()
+	if filepath.Clean(user) == filepath.Clean(bundled) {
+		return []string{user}
+	}
+	return []string{user, bundled}
+}
+
+// DataDir returns the one folder to hand Tesseract as --tessdata-dir. Tesseract takes a single
+// folder, so rus+eng cannot load when rus was downloaded into the per-user folder and eng is
+// bundled next to the exe. A folder that already holds every pack is returned as is; only when
+// both hold something is the bundled data copied into the per-user folder (once, a few MB), which
+// then holds the union. A failed copy is logged and the per-user folder is still returned: its
+// packs are the ones the user asked for.
+func DataDir() string {
+	user, bundled := userDataDir(), bundledDataDir()
+	userPacks := packsIn(user)
+	if len(userPacks) == 0 {
+		if len(packsIn(bundled)) > 0 {
+			return bundled
+		}
+		return user
+	}
+	if filepath.Clean(user) == filepath.Clean(bundled) {
+		return user
+	}
+	have := make(map[string]bool, len(userPacks))
+	for _, c := range userPacks {
+		have[c] = true
+	}
+	for _, c := range packsIn(bundled) {
+		if have[c] {
+			continue
+		}
+		if err := copyInto(user, langFile(bundled, c)); err != nil {
+			logging.RunLogf("OCR: could not stage %s into %s: %v\n", filepath.Base(langFile(bundled, c)), user, err)
+		}
+	}
+	return user
+}
+
 func langFile(dir, code string) string { return filepath.Join(dir, code+".traineddata") }
 
-// Installed lists the language codes present in the tessdata directory.
-func Installed() []string {
-	entries, err := os.ReadDir(DataDir())
+// packsIn lists the language codes that have a traineddata file in dir.
+func packsIn(dir string) []string {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil
 	}
@@ -73,14 +135,58 @@ func Installed() []string {
 			out = append(out, code)
 		}
 	}
+	return out
+}
+
+// copyInto copies src into dir under its own name through a unique temp file and a rename, so a
+// reader - or a second process staging the same file - never sees half of it.
+func copyInto(dir, src string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = in.Close() }()
+	tmp, err := os.CreateTemp(dir, filepath.Base(src)+"-*.tmp")
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(tmp, in)
+	if cerr := tmp.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Rename(tmp.Name(), filepath.Join(dir, filepath.Base(src)))
+	}
+	if err != nil {
+		_ = os.Remove(tmp.Name())
+	}
+	return err
+}
+
+// Installed lists the language codes present in any tessdata folder the app reads.
+func Installed() []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, dir := range DataDirs() {
+		for _, c := range packsIn(dir) {
+			if !seen[c] {
+				seen[c] = true
+				out = append(out, c)
+			}
+		}
+	}
 	sort.Strings(out)
 	return out
 }
 
-// IsInstalled reports whether a language's data is present locally.
+// IsInstalled reports whether a language's data is present in any tessdata folder the app reads.
 func IsInstalled(code string) bool {
-	_, err := os.Stat(langFile(DataDir(), code))
-	return err == nil
+	for _, dir := range DataDirs() {
+		if _, err := os.Stat(langFile(dir, code)); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 // iso2tess maps common ISO-639-1 codes (as used by the app's -src flag) to Tesseract
@@ -146,42 +252,4 @@ func LangLabel(lang string) string {
 		return lang
 	}
 	return strings.Join(parts, " + ")
-}
-
-// Download fetches a language's traineddata into the tessdata directory. It writes to a
-// temp file and renames on success so a partial download never looks installed.
-func Download(code string) error {
-	code = strings.TrimSpace(code)
-	if code == "" {
-		return fmt.Errorf("empty language code")
-	}
-	dir := DataDir()
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return fmt.Errorf("create tessdata dir: %w", err)
-	}
-	url := fmt.Sprintf("%s/%s.traineddata", cdnBase, code)
-	client := &http.Client{Timeout: 10 * time.Minute}
-	resp, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("download %s: %w", code, err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download %s: HTTP %d (unknown language code?)", code, resp.StatusCode)
-	}
-	tmp := langFile(dir, code) + ".tmp"
-	f, err := os.Create(tmp)
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		f.Close()
-		os.Remove(tmp)
-		return fmt.Errorf("download %s: %w", code, err)
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return os.Rename(tmp, langFile(dir, code))
 }
