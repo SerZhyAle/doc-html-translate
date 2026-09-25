@@ -1,10 +1,13 @@
 # The rescue floor was derived for inventions and is now rejecting real words
 
-**Status:** Partial
+**Status:** Implemented (2026-09-25) - scope closed on what the ticket could answer: the discard record
+ships in both editions and the floor was re-measured. The recall it hoped for did not come from the
+floor, and that work moved to
+[`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md).
 **Priority:** 49
 **Date:** 2026-08-13
-**Closed:** 2026-08-15 - evidence in
-[`DEV/research/ocr_rescue_floor_2026-08-15.md`](../research/ocr_rescue_floor_2026-08-15.md)
+**Measured:** 2026-08-15 - evidence in
+[`DEV/research/ocr_rescue_floor_2026-08-15.md`](../../research/ocr_rescue_floor_2026-08-15.md)
 
 > **What the measurement found, ahead of the original text below.** The floor could not be
 > re-derived, because the two populations **overlap on confidence**: genuine rescued lettering runs
@@ -19,13 +22,13 @@
 > `eng` a Cyrillic poster then gets a 782x310 px plate of transliterated debris where it previously
 > got none. `ocrRescueLineConf` stays at **80** and the gap stays open.
 >
-> **Status is `Partial`, not `Implemented`.** What ships is the instrument (the floor's discard
-> record) and the measurement; the recall this ticket asked for does not. The next attempt needs a
+> **Closed 2026-09-25 with the recall split out.** What ships is the instrument (the floor's discard
+> record) and the measurement; the recall this ticket asked for does not, and it lives in ticket 29. The next attempt needs a
 > third axis - most promisingly, not running the rescue ladder at all when the script check says the
 > language is wrong, which is where this poster's debris comes from.
 
 > Cross-edition feature ticket. One feature = one ticket covering every edition.
-> Read [`docs/PARITY.md`](../../docs/PARITY.md) before starting; update it when a shared invariant moves.
+> Read [`docs/PARITY.md`](../../../docs/PARITY.md) before starting; update it when a shared invariant moves.
 
 ## What / why
 
@@ -88,15 +91,27 @@ ticket."* It does, twice on one image. This is that ticket.
 
 ## Done criteria
 
-- [ ] The floor is re-derived from a distribution measured over the current corpus, and both edges of
+- [x] The floor is re-derived from a distribution measured over the current corpus, and both edges of
       the band are named with the scenes they came from, in a note under `DEV/research/`.
-- [ ] `poster-display-type-on-flat-colour` reaches recall 1.00, or the reason it cannot is stated as a
-      measurement rather than as an expectation.
-- [ ] No scene gains a plate over artwork that holds no text: precision and the concealment/damage
-      metrics do not regress on the dev split against a named baseline run.
-- [ ] A line discarded by the floor is visible somewhere a person or the lab can read.
-- [ ] Both editions, `docs/PARITY.md` updated, a parity test pinning the value and its band.
-- [ ] `./scripts/test.ps1`, `./scripts/lint.ps1`, `npm test` green; `DEV/CHANGELOG.md` entry.
+      *Met as a measurement: the note names every edge with its scene, and what the distribution
+      says is that the two populations overlap (32.8-69.2 / 8.4-73.9), so there is no band to split.*
+- [x] `poster-display-type-on-flat-colour` reaches recall 1.00, or the reason it cannot is stated as a
+      measurement rather than as an expectation. *The second branch: note §3-4 - under the default
+      `eng` any rule that recovers `ЗАЧЕМ` also paints transliterated debris 782x310 px.*
+- [x] No scene gains a plate over artwork that holds no text: precision and the concealment/damage
+      metrics do not regress on the dev split against a named baseline run. *`temp/ocrlab/revert-check`
+      is identical to `temp/ocrlab/20260815-190756` on every scored field.*
+- [x] A line discarded by the floor is visible somewhere a person or the lab can read.
+      *`Result.Dropped` / `droppedLines`, written to the `DOCHT_OCR_DIAG` sidecar. The one case it
+      still misses - an image that yields no plates at all - is ticket 15.*
+- [x] Both editions, `docs/PARITY.md` updated, a parity test pinning the value and its band.
+      *`TestParityOCRGreyRescue` pins 80 on both sides; `TestRescueConfidenceFloorIsStricter` now pins
+      the band the corpus measured (highest invention 73.9) instead of the stale 93.1 / 50.8 pair.*
+- [x] `./scripts/test.ps1`, `./scripts/lint.ps1`, `npm test` green; `DEV/CHANGELOG.md` entry.
+      *2026-08-15 cycle on the owner machine. The 2026-09-25 close ran on Linux: `go test
+      ./internal/ocr/ ./tests/` green; `npm test` 135 pass / 2 fail, both failures present on the base
+      commit too (`ebook.test.mjs`, `pdf-images.test.mjs`: `vendor/foliate/` is not in the checkout).
+      The PowerShell gates were not run there.*
 
 ## Open questions
 
@@ -106,3 +121,17 @@ ticket."* It does, twice on one image. This is that ticket.
   the words that survived its floor, so lowering the floor also changes which rung wins.
 - **Does the ordinary floor (50) need the same look?** It was derived against the same two bands and
   has the same provenance; nothing here has measured it.
+
+## Resolution (2026-09-25)
+
+Closed rather than left `Partial`, because every criterion that the floor could answer has been
+answered, and the one outcome still missing - `ЗАЧЕМ` on the poster - needs a change this ticket did
+not name: an axis that is neither confidence nor length. Keeping the ticket open would have left a
+queue line whose next step is research, sitting in release 1 against rule 3.
+
+- What moved to [`29_2026-09-25_ocr-rescue-third-axis`](../29_2026-09-25_ocr-rescue-third-axis.md):
+  finding and measuring that axis, and the three open questions below.
+- What changed in code on the close: only `TestRescueConfidenceFloorIsStricter`, which still cited
+  the 2026-08-13 pair and would have let a future floor of 75 pass while admitting the 73.9 misread.
+- Not re-measured on the close: the corpus media is gitignored and was not reachable from the session
+  that closed it, so every number above is the 2026-08-15 run, unchanged.

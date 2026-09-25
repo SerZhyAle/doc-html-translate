@@ -62,8 +62,6 @@ current-next-release: 1 (rebuilt 2026-09-25)
 01  01_2026-09-24_hotfix-epub-href-containment          2026-09-25  BlockNeedUserTest - sign-off, Windows
 02  02_2026-09-24_bugfix-shell-open-injection           2026-09-25  BlockNeedUserTest - Windows hands-on
 03  03_2026-09-24_bugfix-gui-local-api-hardening        2026-09-24  Draft (P90)
-04  04_2026-08-13_ocr-rescue-floor-drops-genuine-       2026-08-15  Partial - rule measured and refused
-    lettering
 05  05_2026-09-24_hotfix-output-dir-ownership           2026-09-25  BlockNeedUserTest - Windows hands-on
 ```
 
@@ -75,9 +73,10 @@ landed ([`done/2026-09-24_bugfix-epub-html-content-fidelity`](done/2026-09-24_bu
 Rule 7 would sink it below 05. 02 is in the same state (a Windows open check). Both keep their numbers for now, a stated deviation:
 renumbering 01-05 is one commit of its own, so the implementation commits stay reviewable.
 
-**04 sits below them for a stated reason, against rule 3** (Partial before Draft): its next step is not
-ready to build. The corpus refused the length rule and a third separating axis has to be found first -
-see [worklog §1.3](done/2026-08-15_release-1-worklog.md#13-the-floor-could-not-be-re-derived-and-the-rule-that-followed-was-refused-by-the-corpus).
+**04 left the package on 2026-09-25.** `ocr-rescue-floor-drops-genuine-lettering` closed on its
+measurement and moved to [`done/`](done/2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md); the recall
+it did not reach is ticket 29 in package 4. It was never a data-safety item, so package 4 is where the
+rest belongs. Its number stays free rather than renumbering 05, the same as 06.
 Ticket 15 corrects that section's claim about the no-plate record.
 
 **05 is implemented** (58c9caa) and covered by tests on Linux. It stays out of `done/` because
@@ -128,6 +127,7 @@ link-rewrite machinery.
 26  26_2026-09-23_contract-product-web-pages-sync       2026-09-23  Draft - site, every authored locale
 27  27_2026-09-22_install-trust-page                    2026-09-22  Draft - docs only, every authored locale
 28  28_2026-08-15_plate-styling-single-source           2026-09-25  BlockNeedUserTest (4 manual, owner machine)
+29  29_2026-09-25_ocr-rescue-third-axis                 2026-09-25  Draft - lab corpus, owner machine
 30  30_2026-08-13_ocr-sweep-plate-composition           2026-08-13  Partial (7/8 criteria) - human corpus entry
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
@@ -138,7 +138,10 @@ Changes against the previous edition of this package, each for a rule: 28 (`plat
 (`ocr-sweep`) moved to the bottom by rule 7 - the first waits on four manual checks on the owner's
 machine, the second on human corpus entry with no code left. The audit's extension and registration
 tickets (18-20) sit with the other ready Drafts; its hygiene ticket (25) sits just above the docs-only
-lines by rule 5. The two unfiled items carry no number until they get a ticket file.
+lines by rule 5. The two unfiled items carry no number until they get a ticket file. 29 (`ocr-rescue-third-axis`,
+split out of the closed 04 on 2026-09-25) joins them by rule 7: every candidate it names has to be run
+through the lab corpus, which exists only on the owner's machine. It sits below 15 by rule 4 - it
+needs the discard record for a no-plate image to compare what a relaxed rule newly reads.
 
 **The six `2026-09-23_contract-*` tickets** (five left - `automated-checks` reached Implemented on 2026-09-24 and moved to `done/`) come out of one contract-sync pass over every catalog domain
 that touches this product. Each has two halves: what the repo changes to conform, and what the catalog

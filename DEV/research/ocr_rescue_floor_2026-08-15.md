@@ -1,6 +1,6 @@
 # The rescue floor, re-measured over the corpus it now has - 2026-08-15
 
-**Ticket:** [`04_2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](../plan/04_2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
+**Ticket:** [`2026-08-13_ocr-rescue-floor-drops-genuine-lettering`](../plan/done/2026-08-13_ocr-rescue-floor-drops-genuine-lettering.md)
 **Question:** `ocrRescueLineConf` is 80, set between two points from one cycle (genuine rescued
 lettering 93.1-97.0, hallucinated lettering 50.8). The corpus has grown since. What does the
 distribution look like now, and what floor does it actually support?
