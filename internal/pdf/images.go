@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -14,6 +15,7 @@ import (
 
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/procrun"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	pdfcpulib "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
@@ -119,7 +121,8 @@ func writePDFImages(pdfPath, imagesDir string) (byPage map[int][]string, pageCou
 func pageImagesSafe(ctx *model.Context, pageNum int) (kept []model.Image, thumbs, dups int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			logging.Printf("  WARNING: PDF image extraction panicked on page %d: %v\n%s", pageNum, r, debug.Stack())
+			logging.Printf("  WARNING: PDF image extraction panicked on page %d: %v\n", pageNum, r)
+			logging.RunLogf("%s\n", debug.Stack())
 			kept, thumbs, dups, err = nil, 0, 0, fmt.Errorf("panic on page %d: %v", pageNum, r)
 		}
 	}()
@@ -314,7 +317,8 @@ func extractImages(pdfPath, outputDir string) pdfImages {
 func writePDFImagesSafe(pdfPath, imagesDir string) (byPage map[int][]string, pageCount int) {
 	defer func() {
 		if r := recover(); r != nil {
-			logging.Printf("  WARNING: PDF image extraction panicked: %v\n%s", r, debug.Stack())
+			logging.Printf("  WARNING: PDF image extraction panicked: %v\n", r)
+			logging.RunLogf("%s\n", debug.Stack())
 			byPage, pageCount = nil, 0
 		}
 	}()
@@ -377,15 +381,14 @@ func convertJPXFile(jpxPath string) (string, error) {
 		return "", fmt.Errorf("no JPX converter found (install ImageMagick or ffmpeg)")
 	}
 	jpgPath := strings.TrimSuffix(jpxPath, filepath.Ext(jpxPath)) + ".jpg"
-	var cmd *exec.Cmd
-	switch kind {
-	case "ffmpeg":
-		cmd = exec.Command(bin, "-y", "-i", jpxPath, "-update", "1", jpgPath)
-	default: // magick
-		cmd = exec.Command(bin, jpxPath, jpgPath)
+	args := []string{jpxPath, jpgPath}
+	if kind == "ffmpeg" {
+		args = []string{"-y", "-i", jpxPath, "-update", "1", jpgPath}
 	}
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("%s: %w\n%s", kind, err, out)
+	if _, err := procrun.Run(context.Background(), procrun.Cmd{
+		Tool: kind, Path: bin, Args: args, Timeout: procrun.ImageConvert.ForFile(jpxPath),
+	}); err != nil {
+		return "", err
 	}
 	_ = os.Remove(jpxPath)
 	return jpgPath, nil

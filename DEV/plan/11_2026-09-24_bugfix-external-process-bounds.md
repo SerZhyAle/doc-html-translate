@@ -1,7 +1,7 @@
 # Strategic spec: 11_2026-09-24_bugfix-external-process-bounds - Bounded helper processes and contained crashes
 
 **Ticket:** 11_2026-09-24_bugfix-external-process-bounds
-**Status:** Draft
+**Status:** BlockNeedUserTest - on Windows: (a) a hung helper leaves no process behind after its deadline (job object path), (b) after an app upgrade the new bundled pdftotext folder is used and the old one removed
 **Priority:** 75
 **Date:** 2026-09-24
 **Tier:** Moderate
@@ -64,10 +64,10 @@ Stage -> process runner (deadline, cancel) -> helper -> result or timeout -> sta
 ## 6. Open questions / research items
 1. **Timeout policy**
    - **Question:** fixed per tool, or scaled by input size or page count?
-   - **Status:** Open.
+   - **Status:** Decided: a per-tool base deadline scaled by input size and clamped to a ceiling - pdftotext 2 min + 1 min per 50 MB (max 30 min), Tesseract 2 min per image + 10 s per MB (max 10 min), its short probes 30 s, Calibre 10 min + 30 s per MB (max 60 min), 7-Zip 2 min + 6 s per MB (max 30 min), ffmpeg/ImageMagick 2 min. The environment variable `DOCHT_TOOL_TIMEOUT_SCALE` (a float multiplier, applied after the ceiling) is the override; no new CLI flag.
 2. **GUI install button**
    - **Question:** offer an in-app "install Poppler" action, or only link to the instructions?
-   - **Status:** Open.
+   - **Status:** Decided: no install anywhere. The automatic winget install is removed; the CLI prints localized advice on installing Poppler manually, and the GUI only shows that advice (the converter's warning dialog), with no install button.
 
 ## 7. Risks
 - **Timeouts fire on slow machines with huge PDFs.** Likelihood: medium. Impact: the conversion fails. Mitigation: size-scaled deadlines and an override flag.
@@ -90,3 +90,20 @@ README: pdftotext is never auto-installed; how to install Poppler manually.
 
 ## 12. Next step
 `/spec-tech 11_2026-09-24_bugfix-external-process-bounds`
+
+## Implementation
+
+- **ADR-1 - one runner.** New package `internal/procrun`: `Run(ctx, Cmd) (Result, error)` with a deadline (`Cmd.Timeout`), a process-tree kill on expiry or cancel (Windows: a job object with `KILL_ON_JOB_CLOSE`, `taskkill /T /F` fallback; elsewhere: its own process group killed by `-pgid`), `cmd.WaitDelay` so a grandchild holding a pipe cannot hang `Wait`, capped stdout/stderr, and one `*procrun.Error` that names the tool and says timeout (localized), matching `errors.Is(err, procrun.ErrTimeout)`. Leftovers are killed after a normal exit too, so no helper outlives its call. Per-tool policy in `procrun.Budget` (`For`, `ForFile`).
+- **X9 / O5 - deadlines at every helper call.** pdftotext and the JPX converter (`internal/pdf`), Calibre (`internal/mobi`), 7-Zip (`internal/comic`), and all three Tesseract calls (`internal/ocr`: recognition, `--list-langs`, script detection) go through `procrun`. A timed-out pdftotext falls back to the pure-Go reader; a timed-out Tesseract image is one OCR failure. A pdftotext output over 256 MB, or a Tesseract TSV over the cap, is treated as a failure rather than parsed truncated. Call sites pass `context.Background()` for now; the cancellation path is in place for `bugfix-gui-local-api-hardening` to thread a real context.
+- **X10 - no installs.** `tryInstallPoppler` and every winget call are gone. A blocked bundled pdftotext retries a Poppler the user installed, then falls back and prints/shows localized advice (`winget install ossia.poppler`; `poppler-utils` / `brew install poppler` elsewhere). The old advice to exempt the cache folder from antivirus scanning is dropped: INSTALL-TRUST forbids telling users to weaken a protection. The GUI never offered an install and needed no change.
+- **P15 - versioned cache.** `internal/bundledtools`: the bundled set is unpacked into `<UserCacheDir>/doc-html-translate/pdftotext-<sha256[:12]>/`, hashed over file names and contents; each file is written to a temp name in that folder and renamed, a file already holding the right bytes is left alone (it may be running in another instance), and older `pdftotext` / `pdftotext-<hash>` folders are removed best-effort. A build without the vendored exe reports `ErrNotBundled` instead of a path to nothing.
+- **X7 / O7 - containment.** `recover` at: each page of the PDF image pass and the pass as a whole, the pdfcpu repair attempt (`optimizeSafe`), each OCR image in the worker pool (`recognizeSafe`, a panic becomes that image's failure), and the OCR stage as a whole (`overlayImagesSafe`). `pipeline.Runner.Run` has a top-level guard: a panic becomes a localized "internal error" and exit code 3 (`ExitInternal = ExitParse`) - reused, not new, because the exit codes are an OCR-INVOCATION contract and an escaped panic is in practice a parser failing on this document. Stacks go to the run log only (`logging.RunLogf`).
+- **O9.** Every Tesseract process runs with `OMP_THREAD_LIMIT=1`.
+- Docs: README (EN/RU/UK) behavior notes on no auto-install, manual Poppler install, the versioned cache and `DOCHT_TOOL_TIMEOUT_SCALE`; AGENTS.md architecture map.
+
+Tests:
+
+- Done 1: `TestExtractFallsBackWhenPDFToTextHangs` (`internal/pdf`, non-Windows) - a stub pdftotext that never exits and starts a child: the conversion falls back within the deadline and the child is gone. `internal/procrun`: `TestRunKillsTheTreeAtTheDeadline`, `TestRunKillsTheTreeOnCancel`, `TestRunDoesNotHangOnAnInheritedPipe`, `TestRunBoundsCapturedOutput`. The Windows job-object path is compiled and vetted but needs a hands-on check (status).
+- Done 2: `tests/no_auto_install_test.go` fails on any `"winget"` program literal or winget agreement flag in shipped Go code.
+- Done 3: `internal/bundledtools/cache_test.go` - content-keyed folder, upgrade lands in a new folder and prunes the old one, a partial file is repaired with no temp left, eight concurrent extractions all see a complete copy. The real upgrade on an installed app needs a hands-on check (status).
+- Done 4: `TestRecognizePathsContainsAPanickingImage` (`internal/ocr`) - one image panics, it is one recorded failure, the others are recognized.

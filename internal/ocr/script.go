@@ -2,10 +2,11 @@ package ocr
 
 import (
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"doc-html-translate/internal/procrun"
 )
 
 // The OCR language is chosen from -ocr-lang, or - when that is empty - from -src, a flag about
@@ -91,10 +92,11 @@ func DetectScript(bin, imgPath, dataDir string) (script string, conf float64, ok
 	if dataDir != "" && hasLangFile(dataDir, "osd") {
 		args = append(args, "--tessdata-dir", dataDir)
 	}
-	out, err := exec.Command(bin, args...).CombinedOutput()
+	res, err := runTesseract(procrun.TesseractProbe, bin, imgPath, args)
 	if err != nil {
 		return "", 0, false
 	}
+	out := append(res.Stdout, res.Stderr...)
 	m := osdScriptLine.FindSubmatch(out)
 	if m == nil {
 		return "", 0, false

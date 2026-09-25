@@ -4,19 +4,21 @@
 package pdf
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"image"
 	"io"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"strings"
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/procrun"
 	"doc-html-translate/internal/textutil"
 
 	pdflib "github.com/ledongthuc/pdf"
@@ -25,6 +27,10 @@ import (
 
 // maxPageSize is the safety limit per page text (10 MB).
 const maxPageSize = 10 * 1024 * 1024
+
+// maxPDFToTextOutput caps what is kept of pdftotext's output. Text runs to a few megabytes
+// even for a very long book, so reaching the cap means something is wrong with the file.
+const maxPDFToTextOutput = 256 << 20
 
 // Extract reads a PDF file, generates per-page HTML files in outputDir,
 // and returns an *epub.Book adapter for pipeline compatibility.
@@ -92,13 +98,23 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	}
 	defer cleanup()
 
-	cmd := exec.Command(pdftotextBin, "-layout", "-enc", "UTF-8", pdfPathForTool, "-")
-	out, err := cmd.Output()
+	res, err := procrun.Run(context.Background(), procrun.Cmd{
+		Tool:      "pdftotext",
+		Path:      pdftotextBin,
+		Args:      []string{"-layout", "-enc", "UTF-8", pdfPathForTool, "-"},
+		Timeout:   procrun.PDFToText.ForFile(pdfPath),
+		MaxStdout: maxPDFToTextOutput,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("pdftotext: %w", err)
+		return nil, err
+	}
+	// A cut-off text would silently lose the book's last pages; the pure-Go reader is slower
+	// but reads them all.
+	if res.StdoutTruncated {
+		return nil, fmt.Errorf("pdftotext: output larger than %d MB", maxPDFToTextOutput>>20)
 	}
 
-	text := textutil.NormalizeLineSeparatorsPreserveFormFeed(string(out))
+	text := textutil.NormalizeLineSeparatorsPreserveFormFeed(string(res.Stdout))
 
 	// Pages are separated by form-feed \f
 	pageTexts := strings.Split(text, "\f")
@@ -581,11 +597,25 @@ func tryRepairPDF(inputPath string) (string, error) {
 	repairedPath := tmp.Name()
 	_ = tmp.Close()
 
-	if err := api.OptimizeFile(inputPath, repairedPath, nil); err != nil {
+	if err := optimizeSafe(inputPath, repairedPath); err != nil {
 		_ = os.Remove(repairedPath)
 		return "", fmt.Errorf("repair pdf with pdfcpu: %w", err)
 	}
 	return repairedPath, nil
+}
+
+// optimizeSafe is the repair attempt behind a panic guard. The file reaching it has already
+// defeated one PDF library, which is exactly the input most likely to panic the next one; a
+// failed repair must end as the original extraction error, not as a crash.
+func optimizeSafe(inputPath, outputPath string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logging.Printf("  WARNING: PDF repair panicked: %v\n", r)
+			logging.RunLogf("%s\n", debug.Stack())
+			err = fmt.Errorf("pdfcpu panic: %v", r)
+		}
+	}()
+	return api.OptimizeFile(inputPath, outputPath, nil)
 }
 
 // extractPage safely extracts text from a single PDF page.

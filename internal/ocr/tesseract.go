@@ -28,6 +28,8 @@ import (
 	"strings"
 	"unicode"
 
+	"doc-html-translate/internal/procrun"
+
 	xdraw "golang.org/x/image/draw"
 )
 
@@ -119,11 +121,11 @@ func Locate() (string, error) {
 // must not turn a failed probe into a claim about the user's machine.
 func EngineLangs(bin string) ([]string, error) {
 	// The list goes to stdout on some builds and to stderr on others, so both are read.
-	out, err := exec.Command(bin, "--list-langs").CombinedOutput()
+	res, err := runTesseract(procrun.TesseractProbe, bin, "", []string{"--list-langs"})
 	if err != nil {
 		return nil, err
 	}
-	return parseLangList(string(out)), nil
+	return parseLangList(string(res.Stdout) + "\n" + string(res.Stderr)), nil
 }
 
 // parseLangList pulls the codes out of "tesseract --list-langs". Its first line names the
@@ -244,14 +246,15 @@ const (
 // thresholding method. Splitting it out is what lets Recognize retry a picture that came back
 // empty without re-deciding how the image was staged.
 func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64) (Result, error) {
-	cmd := exec.Command(bin, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm)...)
-	var out, errb bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errb
-	if err := cmd.Run(); err != nil {
-		return Result{}, fmt.Errorf("tesseract: %w: %s", err, strings.TrimSpace(errb.String()))
+	res, err := runTesseract(procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
+	if err != nil {
+		return Result{}, err
 	}
-	return parseTSV(out.Bytes(), minConf)
+	// A truncated TSV parses into a page missing its lower half; better no plates than wrong ones.
+	if res.StdoutTruncated {
+		return Result{}, fmt.Errorf("tesseract: output larger than %d MB", procrun.DefaultMaxStdout>>20)
+	}
+	return parseTSV(res.Stdout, minConf)
 }
 
 // tesseractArgs builds one pass's command line.

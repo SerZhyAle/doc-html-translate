@@ -4,7 +4,7 @@ package bundledtools
 
 import (
 	"embed"
-	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
@@ -13,56 +13,33 @@ import (
 //go:embed pdftotext
 var pdftotextFS embed.FS
 
+const pdftotextExe = "pdftotext.exe"
+
 var (
 	pdftotextMu   sync.Mutex
 	pdftotextPath string
-	pdftotextErr  error
 )
 
-// PDFToTextPath returns the path to the bundled pdftotext.exe, extracting it
-// to the user cache directory on first call. Re-extracts if the cached file
-// has been removed (e.g., quarantined by antivirus after initial extraction).
+// PDFToTextPath returns the path to the bundled pdftotext.exe, unpacking the bundled set into
+// a folder named after its content hash on first use (see extractSet). It re-extracts when the
+// cached file has gone, e.g. quarantined by antivirus after the first run. A build whose
+// embedded set carries no pdftotext.exe (a source checkout without the vendored binary)
+// reports ErrNotBundled.
 func PDFToTextPath() (string, error) {
 	pdftotextMu.Lock()
 	defer pdftotextMu.Unlock()
-	if pdftotextPath != "" && pdftotextErr == nil {
+	if pdftotextPath != "" {
 		if _, err := os.Stat(pdftotextPath); err == nil {
 			return pdftotextPath, nil
 		}
 	}
-	pdftotextPath, pdftotextErr = extractPDFToText()
-	return pdftotextPath, pdftotextErr
-}
-
-func extractPDFToText() (string, error) {
-	cacheBase, err := os.UserCacheDir()
+	if _, err := fs.Stat(pdftotextFS, "pdftotext/"+pdftotextExe); err != nil {
+		return "", ErrNotBundled
+	}
+	dir, err := extractSet(pdftotextFS, "pdftotext", CacheRoot(), "pdftotext")
 	if err != nil {
-		cacheBase = os.TempDir()
+		return "", err
 	}
-	toolDir := filepath.Join(cacheBase, "doc-html-translate", "pdftotext")
-	exePath := filepath.Join(toolDir, "pdftotext.exe")
-
-	if _, err := os.Stat(exePath); err == nil {
-		return exePath, nil
-	}
-
-	if err := os.MkdirAll(toolDir, 0o755); err != nil {
-		return "", fmt.Errorf("create pdftotext cache dir: %w", err)
-	}
-
-	entries, err := pdftotextFS.ReadDir("pdftotext")
-	if err != nil {
-		return "", fmt.Errorf("read embedded pdftotext: %w", err)
-	}
-	for _, e := range entries {
-		data, err := pdftotextFS.ReadFile("pdftotext/" + e.Name())
-		if err != nil {
-			return "", fmt.Errorf("read embedded %s: %w", e.Name(), err)
-		}
-		if err := os.WriteFile(filepath.Join(toolDir, e.Name()), data, 0o755); err != nil {
-			return "", fmt.Errorf("write %s: %w", e.Name(), err)
-		}
-	}
-
-	return exePath, nil
+	pdftotextPath = filepath.Join(dir, pdftotextExe)
+	return pdftotextPath, nil
 }

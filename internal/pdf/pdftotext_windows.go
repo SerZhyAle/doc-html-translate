@@ -3,11 +3,9 @@
 package pdf
 
 import (
-	"os"
-	"os/exec"
-
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 )
 
@@ -28,46 +26,21 @@ var pdftotextKnownGlobs = []string{
 // only ever blocked, never simply absent, and the blocked case has its own warning.
 func pdftotextMissingAdvice() string { return "" }
 
-// retryBlockedPDFToText handles a pdftotext that exists but could not be started.
-// It returns the book when a retry succeeded, nil when the caller should fall back.
+// retryBlockedPDFToText handles a bundled pdftotext that exists but could not be started,
+// typically quarantined by antivirus. A Poppler the user installed is tried; otherwise the
+// user is told how to install one. Nothing is installed from here: an unrequested system-wide
+// install in the middle of a conversion is not the converter's call to make.
 func retryBlockedPDFToText(pdfPath, outputDir string) *epub.Book {
-	logging.Printf("  pdftotext blocked (possibly by antivirus) - attempting auto-install..\n")
-	if p := tryInstallPoppler(); p != "" {
+	if p := findSystemPDFToText(); p != "" {
 		logging.Printf("  Retrying with system pdftotext: %s\n", p)
 		if book, err := extractWithPDFToText(p, pdfPath, outputDir); err == nil {
 			return book
 		}
 	}
-	logging.Printf("  Auto-install failed. To install manually, run:\n")
-	logging.Printf("    winget install ossia.poppler\n")
-	dialog.ShowWarning(
-		"PDF Quality Reduced - pdftotext Unavailable",
-		"pdftotext could not run (blocked by antivirus or unavailable)\n"+
-			"and automatic installation failed.\n"+
-			"Text extraction fell back to a less accurate method - ligatures\n"+
-			"and complex fonts may not render correctly.\n\n"+
-			"To restore full quality, run:\n\n"+
-			"  winget install ossia.poppler\n\n"+
-			"Or exclude the app cache from antivirus scans:\n"+
-			"  %LOCALAPPDATA%\\doc-html-translate\\pdftotext\\",
-	)
+	// The advice deliberately stops at installing Poppler: telling a user to exempt a folder
+	// from antivirus scanning is weakening a protection, which INSTALL-TRUST rules out.
+	advice := i18n.S("pdftotext could not run (possibly blocked by antivirus), so the text was read with a less accurate method - ligatures and complex fonts may look wrong. Nothing is installed automatically. To restore full quality, install Poppler yourself, for example: winget install ossia.poppler")
+	logging.Printf("  %s\n", advice)
+	dialog.ShowWarning(i18n.S("PDF quality reduced - pdftotext unavailable"), advice)
 	return nil
-}
-
-// tryInstallPoppler runs "winget install ossia.poppler" and returns the path to
-// pdftotext if installation succeeded and the binary can be located.
-func tryInstallPoppler() string {
-	winget, err := exec.LookPath("winget")
-	if err != nil {
-		return ""
-	}
-	logging.Printf("  Installing Poppler via winget..\n")
-	cmd := exec.Command(winget, "install", "--id", "ossia.poppler",
-		"--accept-package-agreements", "--accept-source-agreements")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return ""
-	}
-	return findSystemPDFToText()
 }

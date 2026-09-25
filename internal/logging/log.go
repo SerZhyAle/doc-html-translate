@@ -71,6 +71,17 @@ func Errorf(format string, args ...any) {
 	emit(os.Stderr, line, line)
 }
 
+// RunLogf writes a timestamped message to the run log only. It is for detail a reader of the
+// console cannot act on but a bug report needs, such as the stack of a recovered panic.
+func RunLogf(format string, args ...any) {
+	line := ts() + fmt.Sprintf(format, args...)
+	runLogMu.Lock()
+	defer runLogMu.Unlock()
+	if runLog != nil {
+		_, _ = io.WriteString(runLog, line)
+	}
+}
+
 // Progress prints an in-place progress update line (uses \r to overwrite, no trailing newline).
 func Progress(format string, args ...any) {
 	line := ts() + fmt.Sprintf(format, args...)
