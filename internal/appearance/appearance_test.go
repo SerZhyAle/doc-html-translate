@@ -98,6 +98,14 @@ html[data-dht-theme="night"]{--dht-bg:#0a0a0b;--dht-fg:#9a9a9a;--dht-muted:#6a6a
 // unequal to the same colour written the other way on the other edition.
 func TestSourceShape(t *testing.T) {
 	s := Load()
+	for _, r := range Roles {
+		if len(s.Roles[r]) == 0 {
+			t.Errorf("role %q is missing or empty", r)
+		}
+	}
+	if len(s.Roles) != len(Roles) || len(s.Themes) == 0 {
+		t.Errorf("source has %d roles and %d themes, want exactly %v and at least one theme", len(s.Roles), len(s.Themes), Roles)
+	}
 	hex := regexp.MustCompile(`^#[0-9a-f]{6}$`)
 	for role, decls := range s.Roles {
 		seen := map[string]bool{}

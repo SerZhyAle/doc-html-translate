@@ -75,3 +75,7 @@ are constraints carried into the phases below, not research gates:
     harness reports a difference when the viewer's `:not(.ocr-overlay-img)` is removed, so it is not
     blind to the defect class.
   - Done criteria 1, 2, 6 demonstrated on the real tree - see Phase 04 handoff notes.
+- 2026-09-25 - the two budget WARNs from the re-audit resolved: `appearance.go` trimmed to 238 and
+  re-budgeted to 240, `appearance_parity_test.go` label reader folded, re-budgeted to 600 (reasons in
+  PHASE_02 / PHASE_04). Linux session: `go test ./...` ok except the known base-commit `TestPdfTitle`;
+  `gen-appearance.mjs --check` fresh. Still open for the owner's machine: 05.3, 06.2.

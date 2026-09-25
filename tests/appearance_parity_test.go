@@ -261,22 +261,30 @@ func desktopEdition(t *testing.T, s appearance.Source) *edition {
 	return e
 }
 
+// addLabelled adds every rule of css by its `/* role: X */` or `/* theme: X */` label and returns
+// the selectors of the rules that carry neither.
+func (e *edition) addLabelled(css string) (unlabelled []string) {
+	for _, r := range parseDeclarations(css) {
+		switch kind, name, _ := strings.Cut(r.Label, ": "); kind {
+		case "role":
+			e.addRole(name, r.Selector, r.Decls)
+		case "theme":
+			e.addTheme(name, r.Selector, r.Decls)
+		default:
+			unlabelled = append(unlabelled, r.Selector)
+		}
+	}
+	return unlabelled
+}
+
 // extensionEdition reads the extension's generated regions as they sit in the shipped files.
 func extensionEdition(t *testing.T) *edition {
 	t.Helper()
 	e := newEdition("extension")
 	for _, file := range []string{"ocr-overlay.css", "viewer.css"} {
 		inside, _ := region(t, "extension/src/"+file, readRepoFile(t, "extension", "src", file))
-		for _, r := range parseDeclarations(inside) {
-			kind, name, _ := strings.Cut(r.Label, ": ")
-			switch kind {
-			case "role":
-				e.addRole(name, r.Selector, r.Decls)
-			case "theme":
-				e.addTheme(name, r.Selector, r.Decls)
-			default:
-				t.Errorf("extension/src/%s: generated rule %q has no role or theme label", file, r.Selector)
-			}
+		for _, sel := range e.addLabelled(inside) {
+			t.Errorf("extension/src/%s: generated rule %q has no role or theme label", file, sel)
 		}
 	}
 	return e
@@ -538,13 +546,8 @@ func TestAppearanceNoRoleDeclaredOutsideSource(t *testing.T) {
 func TestAppearanceComparatorDetectsDrift(t *testing.T) {
 	plate := func(name, css string) *edition {
 		e := newEdition(name)
-		for _, r := range parseDeclarations(css) {
-			kind, n, _ := strings.Cut(r.Label, ": ")
-			if kind == "role" {
-				e.addRole(n, r.Selector, r.Decls)
-			} else {
-				e.addTheme(n, r.Selector, r.Decls)
-			}
+		if u := e.addLabelled(css); len(u) > 0 {
+			t.Fatalf("unlabelled test rules %v", u)
 		}
 		return e
 	}

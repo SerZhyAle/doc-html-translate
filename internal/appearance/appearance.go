@@ -177,6 +177,8 @@ func mustDecode(b []byte) Source {
 	return s
 }
 
+// decode keeps theme order, which encoding/json's map decoding loses. The shape the generators
+// rely on - every role present, themes non-empty - is TestSourceShape's job.
 func decode(b []byte) (Source, error) {
 	var doc struct {
 		Roles       map[string][]Decl `json:"roles"`
@@ -190,61 +192,47 @@ func decode(b []byte) (Source, error) {
 		return Source{}, err
 	}
 	s := Source{Roles: doc.Roles, Divergences: doc.Divergences, Notes: doc.Notes}
-	for _, r := range Roles {
-		if len(s.Roles[r]) == 0 {
-			return Source{}, fmt.Errorf("role %q is missing or empty", r)
-		}
-	}
-	if len(s.Roles) != len(Roles) {
-		return Source{}, fmt.Errorf("roles has %d entries, want exactly %v", len(s.Roles), Roles)
-	}
-	names, err := orderedKeys(doc.Themes)
+	names, themes, err := orderedObject(doc.Themes)
 	if err != nil {
 		return Source{}, fmt.Errorf("themes: %w", err)
 	}
-	var byName map[string]json.RawMessage
-	if err := json.Unmarshal(doc.Themes, &byName); err != nil {
-		return Source{}, fmt.Errorf("themes: %w", err)
-	}
-	for _, name := range names {
-		tokens, err := orderedKeys(byName[name])
+	for i, name := range names {
+		tokens, values, err := orderedObject(themes[i])
 		if err != nil {
 			return Source{}, fmt.Errorf("theme %q: %w", name, err)
 		}
-		var values map[string]string
-		if err := json.Unmarshal(byName[name], &values); err != nil {
-			return Source{}, fmt.Errorf("theme %q: %w", name, err)
-		}
 		th := Theme{Name: name}
-		for _, tok := range tokens {
-			th.Colors = append(th.Colors, Color{Token: tok, Value: values[tok]})
+		for j, tok := range tokens {
+			var v string
+			if err := json.Unmarshal(values[j], &v); err != nil {
+				return Source{}, fmt.Errorf("theme %q %s: %w", name, tok, err)
+			}
+			th.Colors = append(th.Colors, Color{Token: tok, Value: v})
 		}
 		s.Themes = append(s.Themes, th)
-	}
-	if len(s.Themes) == 0 {
-		return Source{}, fmt.Errorf("themes is empty")
 	}
 	return s, nil
 }
 
-// orderedKeys returns the keys of a JSON object in document order; encoding/json's map decoding
-// loses it, and theme order decides which theme is the default.
-func orderedKeys(obj json.RawMessage) ([]string, error) {
+// orderedObject returns the keys and raw values of a JSON object in document order.
+func orderedObject(obj json.RawMessage) ([]string, []json.RawMessage, error) {
 	dec := json.NewDecoder(bytes.NewReader(obj))
 	if t, err := dec.Token(); err != nil || t != json.Delim('{') {
-		return nil, fmt.Errorf("not a JSON object")
+		return nil, nil, fmt.Errorf("not a JSON object")
 	}
 	var keys []string
+	var values []json.RawMessage
 	for dec.More() {
 		t, err := dec.Token()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+		var v json.RawMessage
+		if err := dec.Decode(&v); err != nil {
+			return nil, nil, err
 		}
 		keys = append(keys, t.(string))
-		var skip json.RawMessage
-		if err := dec.Decode(&skip); err != nil {
-			return nil, err
-		}
+		values = append(values, v)
 	}
-	return keys, nil
+	return keys, values, nil
 }

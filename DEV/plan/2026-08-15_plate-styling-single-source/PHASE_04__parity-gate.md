@@ -21,10 +21,17 @@ either side declares a role outside its derived path.
 
 | File | New / Modified | Line budget |
 |------|:--------------:|------------:|
-| `tests/appearance_parity_test.go` | New | ≤ 320 |
+| `tests/appearance_parity_test.go` | New | ≤ 600 |
 | `tests/parity_test.go` | Modified | ≤ 125 changed |
 
 > A new file rather than growing `tests/parity_test.go`, which is already 690 lines.
+>
+> Re-budgeted 320 -> 600 (2026-09-25). The 320 estimate predates three things the step prompts
+> then required: a CSS reader that survives `@media`, quotes and `:not(a, b)` (the real stylesheets
+> carry all three), divergence exemption with stale-entry detection (criterion 3), and the ring
+> self-test (criterion 1). The label reader shared by the extension edition and the self-test was
+> folded into one `addLabelled`; the desktop reader stays separate because it maps by the selectors
+> the desktop code passes, not by labels the generated CSS does not carry.
 
 ## Steps
 

@@ -21,10 +21,14 @@ carrying its styles inline.
 
 | File | New / Modified | Line budget |
 |------|:--------------:|------------:|
-| `internal/appearance/appearance.go` | New | ≤ 220 |
+| `internal/appearance/appearance.go` | New | ≤ 240 |
 | `internal/appearance/appearance_test.go` | New | ≤ 160 |
 | `internal/ocr/overlay.go` | Modified | ≤ 75 changed |
 | `internal/htmlgen/navbar.go` | Modified | ≤ 60 changed |
+
+> `appearance.go` re-budgeted 220 -> 240 (2026-09-25): the plan did not foresee decoding the themes
+> object in document order - `encoding/json` maps lose it, and the first theme is the default. The
+> shape checks moved out of `decode` into `TestSourceShape`; what is left is that ordered decode.
 
 ## Steps
 

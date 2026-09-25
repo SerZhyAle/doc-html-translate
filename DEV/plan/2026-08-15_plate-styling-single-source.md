@@ -203,11 +203,12 @@ re-budgets (overlay.go, ocr-overlay.css, parity_test.go, PARITY.md). The two lef
 trim the code or re-budget with a reason.
 
 ### Action items
-1. **[WARN Phase 02 budget]** `internal/appearance/appearance.go` has 250 lines against 220. Decide:
-   trim it (the decode validation could go, `appearance_test.go` already covers the shape) or re-budget.
-2. **[WARN Phase 04 budget]** `tests/appearance_parity_test.go` has 577 lines against 320. Decide:
-   fold `desktopEdition` and `extensionEdition` into one reader and drop the duplicated role/theme
-   plumbing, or re-budget with a reason.
+1. ~~**[WARN Phase 02 budget]** `appearance.go` 250 against 220.~~ Resolved 2026-09-25: shape checks
+   moved into `TestSourceShape`, theme decode folded into one `orderedObject`; 238 lines, re-budgeted
+   to 240 with the reason in PHASE_02.
+2. ~~**[WARN Phase 04 budget]** `appearance_parity_test.go` 577 against 320.~~ Resolved 2026-09-25:
+   the duplicated label reader folded into `addLabelled`; re-budgeted to 600 with the reason in
+   PHASE_04 (the parser, divergence exemption and ring self-test were not in the estimate).
 
 ### Manual / on-target
 - [ ] Step 05.3: repoint the catalog's `ocr-pipeline.md` plate rows and §3.1 at
