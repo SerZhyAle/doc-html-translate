@@ -75,6 +75,9 @@ type apiError struct {
 // Translate sends texts to Google Translate v2 and returns one translation per text, in order.
 // Requests are bounded by segment count and size; throttling is waited out within the retry
 // budget; a reply whose shape does not match its request is an error, never a shifted result.
+//
+// When a later batch fails, the batches already answered are billed, so they come back with a
+// *PartialError naming the slots of the failed batch and every one after it.
 func (c *GoogleClient) Translate(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error) {
 	if len(texts) == 0 {
 		return nil, nil
@@ -83,7 +86,14 @@ func (c *GoogleClient) Translate(ctx context.Context, texts []string, sourceLang
 	for _, batch := range batchTexts(texts, maxCharsPerRequest, maxSegmentsPerRequest) {
 		results, err := c.translateBatch(ctx, batch, sourceLang, targetLang)
 		if err != nil {
-			return nil, err
+			if len(out) == 0 || ctx.Err() != nil {
+				return nil, err
+			}
+			missing := make([]int, 0, len(texts)-len(out))
+			for i := len(out); i < len(texts); i++ {
+				missing = append(missing, i)
+			}
+			return append(out, make([]string, len(missing))...), &PartialError{Missing: missing, Err: err}
 		}
 		out = append(out, results...)
 	}

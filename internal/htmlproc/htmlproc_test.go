@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 const testHTML = `<!DOCTYPE html>
@@ -27,7 +29,7 @@ func TestExtractTexts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	segments, doc, err := ExtractTexts(filePath)
+	segments, doc, err := ExtractTexts(filePath, nil)
 	if err != nil {
 		t.Fatalf("ExtractTexts failed: %v", err)
 	}
@@ -72,6 +74,29 @@ func TestExtractTexts(t *testing.T) {
 	}
 }
 
+// The caller's skip predicate drops a whole subtree, however deep its text sits.
+func TestExtractTextsSkipsCallerSubtree(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "chrome.html")
+	page := `<html><body><div class="bar"><span><a>Next page</a></span></div><p>Book text.</p></body></html>`
+	if err := os.WriteFile(p, []byte(page), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	skip := func(n *html.Node) bool {
+		return len(n.Attr) > 0 && n.Attr[0].Key == "class" && n.Attr[0].Val == "bar"
+	}
+	segments, _, err := ExtractTexts(p, skip)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(segments) != 1 || segments[0].Text != "Book text." {
+		var got []string
+		for _, s := range segments {
+			got = append(got, s.Text)
+		}
+		t.Fatalf("segments = %q, want only the book text", got)
+	}
+}
+
 func TestReplaceTextsAndRender(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "test.html")
@@ -79,7 +104,7 @@ func TestReplaceTextsAndRender(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	segments, doc, err := ExtractTexts(filePath)
+	segments, doc, err := ExtractTexts(filePath, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

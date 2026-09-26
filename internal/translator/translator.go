@@ -4,6 +4,7 @@ package translator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,6 +39,11 @@ func (e *PartialError) Error() string {
 }
 
 func (e *PartialError) Unwrap() error { return e.Err }
+
+// ErrNoTranslation is the cause a PartialError carries when every request succeeded but some
+// slots came back empty. The engine is still working, so a caller may go on to the next page;
+// the text itself stays in the source language and the result is partial.
+var ErrNoTranslation = errors.New("the engine returned no translation")
 
 // ProgressReporter is an optional interface for clients that support per-batch progress callbacks.
 // done and total are segment counts (done <= total).

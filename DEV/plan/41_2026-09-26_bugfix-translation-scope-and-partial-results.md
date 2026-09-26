@@ -1,6 +1,6 @@
 # Translation sends the reader chrome to the paid engine and hides partial results
 
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 85
 **Date:** 2026-09-26
 
@@ -35,3 +35,43 @@
 
 - A stub-engine test sees no navbar text in the request.
 - A stub Ollama that skips a number yields a partial run and no cached "".
+
+## Implementation (2026-09-26)
+
+All four goals are met; no item was declined or blocked.
+
+- **T13** - the reader chrome is left out where the text is collected, so it is neither sent nor
+  counted. `htmlgen.IsReaderChrome` (new `internal/htmlgen/chrome.go`) recognizes the roots of the
+  chrome htmlgen writes (`dht-navbar`: chapter bar and single-page header; `dht-toolbar`: index
+  toolbar); `htmlproc.ExtractTexts` takes a skip predicate that drops such a subtree; the pipeline
+  passes it (`internal/pipeline/translate.go`). The cost estimate is built from the same segments,
+  so it now counts only what is sent. No markup changes: the page output is identical except that
+  the chrome stays in the interface language. Tests: `TestReaderChromeIsNotSentForTranslation`
+  (paged and single-page, a recording stub engine sees no navbar text and no page carries a
+  translated chrome word), `TestChromeIsNotBilled`, `TestExtractTextsSkipsCallerSubtree`.
+- **T15** - `OllamaClient.runJob` now reports the slots still empty after the echo retries and no
+  longer drops a failed retry request's error. `Translate` returns them in a `*PartialError`
+  whose cause is the new `translator.ErrNoTranslation` when every request succeeded (a failed
+  retry is the cause otherwise, and stops new batches like any engine failure). `CachingClient`
+  never caches "" for a non-empty text and reports an unflagged empty answer the same way, whatever
+  the engine. The pipeline treats an `ErrNoTranslation` page as not fully translated but goes on
+  with the book (the engine is working); the run ends `partial` (the existing state) with exit 4.
+  Tests: `TestOllamaSkippedNumberIsPartialAndNotCached` (stub Ollama that skips a number: partial,
+  no cached ""), `TestOllamaRetryFailureIsReported`, `TestCacheRefusesUnflaggedEmptyAnswer`,
+  `TestEmptySlotIsPartialNotComplete` (pipeline: `partially translated, 4 of 5 pages`, record
+  `partial`).
+- **T11** - `GoogleClient.Translate` keeps the batches already answered when a later batch fails
+  and returns them with a `*PartialError` naming the rest, so `CachingClient` caches them and the
+  page keeps them. The Ollama half was already in place (`TestOllamaKeepsSuccessfulBatches`). The
+  TOC-label step also uses the labels of a partial reply instead of dropping all of them. Test:
+  `TestGoogleKeepsAnsweredBatches`.
+- **T10** - conforms to the `OCR-INVOCATION` pointer as it stands (`docs/contracts/OCR-INVOCATION.md`:
+  `4` = translation API): no code is added or re-used for another meaning, so no catalog amendment
+  was needed. `-google` with no key now ends with exit 4 like an unreachable Ollama; the book is
+  still produced and recorded `none` (so the next `-google` run rebuilds). Exit-code wording updated
+  in `README.md`, `README_RU.md`, `README_UK.md`. Test: `TestGoogleWithoutKeyExitsLikeOllamaDown`.
+
+Not changed: the Go/JS parity map (engine translation is Go-only, and the chrome markup is
+untouched), the completion record (no format constant to bump; `partial` is the existing state).
+For the owner on Windows: nothing platform-specific; a real `-google` run with the key file
+removed should now exit 4 (`echo %ERRORLEVEL%`).

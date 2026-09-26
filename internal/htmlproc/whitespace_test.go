@@ -16,7 +16,7 @@ func TestReplaceTextsKeepsNoBreakSpaceEdges(t *testing.T) {
 	if err := os.WriteFile(p, []byte(src), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	segs, doc, err := ExtractTexts(p)
+	segs, doc, err := ExtractTexts(p, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

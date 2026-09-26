@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -144,7 +145,8 @@ func planJobs(texts []string) []ollamaJob {
 //
 // A batch that fails does not discard the batches that succeeded: their translations come back
 // with a *PartialError naming the untranslated slots. No new batch starts after a failure or a
-// cancelled ctx.
+// cancelled ctx. A slot the model left empty even after the echo retries is untranslated too:
+// it is named in the PartialError, whose cause is ErrNoTranslation when no request failed.
 func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang, targetLang string) ([]string, error) {
 	if len(texts) == 0 {
 		return nil, nil
@@ -156,6 +158,7 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 
 	var (
 		firstErr error
+		unfilled []int
 		errMu    sync.Mutex
 		doneSegs int64
 		wg       sync.WaitGroup
@@ -176,7 +179,7 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			translated, err := c.runJob(ctx, texts, job, sourceLang, targetLang)
+			res, err := c.runJob(ctx, texts, job, sourceLang, targetLang)
 			if err != nil {
 				errMu.Lock()
 				if firstErr == nil {
@@ -186,9 +189,18 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 				return
 			}
 			for k, i := range job.idx {
-				results[i] = translated[k]
+				results[i] = res.translated[k]
 			}
 			done[j] = true
+			errMu.Lock()
+			for _, k := range res.unfilled {
+				unfilled = append(unfilled, job.idx[k])
+			}
+			// A retry request that failed is an engine failure like any other: no new batch.
+			if res.retryErr != nil && firstErr == nil {
+				firstErr = res.retryErr
+			}
+			errMu.Unlock()
 
 			if c.onProgress != nil {
 				n := int(atomic.AddInt64(&doneSegs, int64(len(job.idx))))
@@ -202,14 +214,18 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	if firstErr == nil {
+	if firstErr == nil && len(unfilled) == 0 {
 		return results, nil
 	}
-	var missing []int
+	missing := unfilled
 	for j, job := range jobs {
 		if !done[j] {
 			missing = append(missing, job.idx...)
 		}
+	}
+	sort.Ints(missing)
+	if firstErr == nil {
+		return results, &PartialError{Missing: missing, Err: ErrNoTranslation}
 	}
 	if len(missing) == len(texts) {
 		return nil, firstErr
@@ -217,40 +233,51 @@ func (c *OllamaClient) Translate(ctx context.Context, texts []string, sourceLang
 	return results, &PartialError{Missing: missing, Err: firstErr}
 }
 
+// jobResult is one job's answer. unfilled lists the job positions still empty after the echo
+// retries; retryErr is why a retry request failed, when one did - the job's own request had
+// succeeded, so what it brought back is kept.
+type jobResult struct {
+	translated []string
+	unfilled   []int
+	retryErr   error
+}
+
 // runJob translates one job, then retries its echo-backs one text at a time.
-func (c *OllamaClient) runJob(ctx context.Context, texts []string, job ollamaJob, src, dst string) ([]string, error) {
+func (c *OllamaClient) runJob(ctx context.Context, texts []string, job ollamaJob, src, dst string) (jobResult, error) {
 	jobTexts := make([]string, len(job.idx))
 	for k, i := range job.idx {
 		jobTexts[k] = texts[i]
 	}
 
-	var translated []string
+	var res jobResult
 	if job.single {
 		t, err := c.translateSingle(ctx, jobTexts[0], src, dst)
 		if err != nil {
-			return nil, err
+			return jobResult{}, err
 		}
-		translated = []string{t}
+		res.translated = []string{t}
 	} else {
 		var err error
-		if translated, err = c.translateBatch(ctx, jobTexts, src, dst); err != nil {
-			return nil, err
+		if res.translated, err = c.translateBatch(ctx, jobTexts, src, dst); err != nil {
+			return jobResult{}, err
 		}
 	}
 
 	// Retry echo-backs with a simpler single-item prompt.
+retries:
 	for attempt := 0; attempt < ollamaMaxRetries; attempt++ {
 		anyRetried := false
 		for k, orig := range jobTexts {
-			if !isEchoBack(translated[k], orig) {
+			if !isEchoBack(res.translated[k], orig) {
 				continue
 			}
 			retried, err := c.translateSingle(ctx, orig, src, dst)
 			if err != nil {
-				break
+				res.retryErr = err
+				break retries
 			}
 			if !isEchoBack(retried, orig) {
-				translated[k] = retried
+				res.translated[k] = retried
 				anyRetried = true
 			}
 		}
@@ -258,7 +285,12 @@ func (c *OllamaClient) runJob(ctx context.Context, texts []string, job ollamaJob
 			break
 		}
 	}
-	return translated, nil
+	for k, t := range res.translated {
+		if t == "" {
+			res.unfilled = append(res.unfilled, k)
+		}
+	}
+	return res, nil
 }
 
 // translateSingle translates one text string using a simple, direct prompt, keeping its line

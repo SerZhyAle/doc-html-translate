@@ -354,6 +354,9 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	if outcome.state == outputpath.TranslationPartial {
 		return ExitAPI, outcome.partialError()
 	}
+	if outcome.err != nil {
+		return ExitAPI, outcome.err
+	}
 	logging.Println("Done.")
 	return ExitOK, nil
 }

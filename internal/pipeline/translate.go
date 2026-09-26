@@ -56,7 +56,8 @@ func defaultEngines() engines {
 
 // translationOutcome is what the translation step did, in the terms the completion record and
 // the exit code need: how many pages with text there were, how many came back fully translated,
-// and the engine error that stopped it, if any.
+// and the engine error that stopped it, if any. err with state none means the requested engine
+// could not be used at all.
 type translationOutcome struct {
 	state        string // an outputpath.Translation* value
 	pages, done  int
@@ -104,6 +105,9 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 				logging.Printf("         %s\n", p)
 			}
 			logging.Printf("       Details: %v\n", keyErr)
+			// The requested engine is unavailable, as with an Ollama that is not running: the
+			// book is still produced, and the exit code says the translation was not.
+			none.err = fmt.Errorf("google translate unavailable: %w", keyErr)
 			return none
 		}
 		pages := loadContentPages(book, outputDir)
@@ -215,6 +219,10 @@ func (r Runner) translatePage(ctx context.Context, out *translationOutcome, clie
 	switch {
 	case ctx.Err() != nil:
 		return false
+	case errors.As(err, &partial) && errors.Is(partial.Err, translator.ErrNoTranslation):
+		// The engine answered every request, so the book goes on; this page stays partial.
+		logging.Errorf("\n  WARNING: %s: %d of %d segments came back empty and stay untranslated\n",
+			page.item.Href, len(partial.Missing), nSegs)
 	case errors.As(err, &partial):
 		logging.Errorf("\nTRANSLATION ERROR: %v\n", err)
 		logging.Errorf("Translation stopped at page %d/%d (%s): %d of %d segments kept\n",
@@ -275,12 +283,18 @@ func (r Runner) translateLabels(ctx context.Context, book *epub.Book, client tra
 		return
 	}
 	translated, err := client.Translate(ctx, titles, r.cfg.SourceLang, r.cfg.TargetLang)
-	if err != nil || len(translated) != len(titles) {
+	var partial *translator.PartialError
+	if (err != nil && !errors.As(err, &partial)) || len(translated) != len(titles) {
 		if ctx.Err() == nil {
 			logging.Errorf("  WARNING: table of contents not translated: %v\n", err)
 			out.labelsFailed = true
 		}
 		return
+	}
+	if partial != nil {
+		// The labels that did come back are used; assignTOCTitles keeps the source in the rest.
+		logging.Errorf("  WARNING: table of contents partly translated: %v\n", err)
+		out.labelsFailed = true
 	}
 	idx := 0
 	assignTOCTitles(book.TOC, translated, &idx)
@@ -319,7 +333,7 @@ func loadContentPages(book *epub.Book, outputDir string) []contentPage {
 	pages := make([]contentPage, 0, len(contentFiles))
 	for _, item := range contentFiles {
 		filePath := contentFilePath(book, outputDir, item)
-		segments, doc, err := htmlproc.ExtractTexts(filePath)
+		segments, doc, err := htmlproc.ExtractTexts(filePath, htmlgen.IsReaderChrome)
 		page := contentPage{
 			item:     item,
 			filePath: filePath,

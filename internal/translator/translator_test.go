@@ -409,6 +409,63 @@ func TestTranslateCancelled(t *testing.T) {
 	}
 }
 
+// A later batch failing used to discard the batches already answered, and billed.
+func TestGoogleKeepsAnsweredBatches(t *testing.T) {
+	requests := 0
+	srv := googleStub(t, func(w http.ResponseWriter, _ *http.Request, _ translateRequest) bool {
+		requests++
+		if requests == 2 {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"code":400,"message":"bad"}}`))
+			return true
+		}
+		return false
+	})
+	client, _ := newTestClient(srv.URL)
+	n := maxSegmentsPerRequest
+	texts := make([]string, n+10)
+	for i := range texts {
+		texts[i] = fmt.Sprintf("t%d", i)
+	}
+	cache := NewCachingClient(client)
+	got, err := cache.Translate(context.Background(), texts, "en", "de")
+	var partial *PartialError
+	if !errors.As(err, &partial) {
+		t.Fatalf("err = %v, want *PartialError", err)
+	}
+	if len(got) != len(texts) || got[0] != "tr:t0" || got[n-1] != fmt.Sprintf("tr:t%d", n-1) {
+		t.Fatalf("the answered batch was lost: len %d, first %q", len(got), got[0])
+	}
+	if len(partial.Missing) != 10 || partial.Missing[0] != n || got[n] != "" {
+		t.Fatalf("missing = %v", partial.Missing)
+	}
+	if cache.Stats() != n {
+		t.Fatalf("cached = %d, want the %d answered texts", cache.Stats(), n)
+	}
+}
+
+// An empty answer the engine did not flag is still no translation: reported, never cached.
+func TestCacheRefusesUnflaggedEmptyAnswer(t *testing.T) {
+	cache := NewCachingClient(emptyEngine{})
+	got, err := cache.Translate(context.Background(), []string{"a", "b"}, "en", "de")
+	var partial *PartialError
+	if !errors.As(err, &partial) || !errors.Is(err, ErrNoTranslation) || len(partial.Missing) != 1 || partial.Missing[0] != 1 {
+		t.Fatalf("err = %v", err)
+	}
+	if got[0] != "x:a" || cache.Stats() != 1 {
+		t.Fatalf("got = %q, cached = %d", got, cache.Stats())
+	}
+}
+
+// emptyEngine translates its first text and returns "" for the rest, without an error.
+type emptyEngine struct{}
+
+func (emptyEngine) Translate(_ context.Context, texts []string, _, _ string) ([]string, error) {
+	out := make([]string, len(texts))
+	out[0] = "x:" + texts[0]
+	return out, nil
+}
+
 func TestTranslateEmpty(t *testing.T) {
 	client := NewGoogleClient("test-key")
 	results, err := client.Translate(context.Background(), nil, "en", "ru")

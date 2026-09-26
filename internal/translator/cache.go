@@ -59,7 +59,8 @@ func (c *CachingClient) Translate(ctx context.Context, texts []string, srcLang, 
 	}
 
 	// A slot the inner client could not fill must not be cached: the next page asking for the
-	// same text would get the empty string back as if it were the translation.
+	// same text would get the empty string back as if it were the translation. An empty answer
+	// the engine did not flag is treated the same way, whichever engine gave it.
 	skip := map[int]bool{}
 	if partial != nil {
 		for _, j := range partial.Missing {
@@ -68,7 +69,7 @@ func (c *CachingClient) Translate(ctx context.Context, texts []string, srcLang, 
 	}
 	var missing []int
 	for j, idx := range missIdx {
-		if skip[j] {
+		if skip[j] || (translated[j] == "" && missTexts[j] != "") {
 			missing = append(missing, idx)
 			continue
 		}
@@ -76,8 +77,11 @@ func (c *CachingClient) Translate(ctx context.Context, texts []string, srcLang, 
 		key := fmt.Sprintf("%s:%s:%s", srcLang, dstLang, missTexts[j])
 		c.cache[key] = translated[j]
 	}
-	if partial != nil {
+	switch {
+	case partial != nil:
 		return results, &PartialError{Missing: missing, Err: partial.Err}
+	case len(missing) > 0:
+		return results, &PartialError{Missing: missing, Err: ErrNoTranslation}
 	}
 	return results, nil
 }

@@ -156,3 +156,55 @@ func TestOllamaLoadTimeoutOnlyUntilReady(t *testing.T) {
 		t.Fatalf("a client-wide timeout %v would also cut the cold load", c.httpClient.Timeout)
 	}
 }
+
+// skipSecondAnswer answers the numbered prompt without its "2." line.
+func skipSecondAnswer(prompt string) (int, string, bool) {
+	reply := strings.Replace(echoNumbered(prompt), "2. XX:second text\n", "", 1)
+	body, _ := json.Marshal(ollamaResponse{Response: reply})
+	return http.StatusOK, string(body), true
+}
+
+// A slot the model skips in the numbered reply and leaves empty on every echo retry is
+// untranslated: the reply says so, and the cache does not keep "" as its translation.
+func TestOllamaSkippedNumberIsPartialAndNotCached(t *testing.T) {
+	c := ollamaStub(t, func(prompt string) (int, string, bool) {
+		if strings.HasPrefix(prompt, "Translate the following text") {
+			body, _ := json.Marshal(ollamaResponse{Response: ""})
+			return http.StatusOK, string(body), true
+		}
+		return skipSecondAnswer(prompt)
+	})
+	cache := NewCachingClient(c)
+	got, err := cache.Translate(context.Background(), []string{"first text", "second text", "third text"}, "en", "de")
+	var partial *PartialError
+	if !errors.As(err, &partial) || !errors.Is(err, ErrNoTranslation) {
+		t.Fatalf("err = %v, want a PartialError caused by ErrNoTranslation", err)
+	}
+	if len(partial.Missing) != 1 || partial.Missing[0] != 1 {
+		t.Fatalf("missing = %v", partial.Missing)
+	}
+	if got[0] != "XX:first text" || got[1] != "" || got[2] != "XX:third text" {
+		t.Fatalf("got = %q", got)
+	}
+	if _, cached := cache.cache["en:de:second text"]; cached || cache.Stats() != 2 {
+		t.Fatalf("cache holds %d entries, second text cached = %v", cache.Stats(), cached)
+	}
+}
+
+// A retry request that fails is not dropped: its error is the cause of the partial result.
+func TestOllamaRetryFailureIsReported(t *testing.T) {
+	c := ollamaStub(t, func(prompt string) (int, string, bool) {
+		if strings.HasPrefix(prompt, "Translate the following text") {
+			return http.StatusInternalServerError, "boom", true
+		}
+		return skipSecondAnswer(prompt)
+	})
+	got, err := c.Translate(context.Background(), []string{"first text", "second text"}, "en", "de")
+	var partial *PartialError
+	if !errors.As(err, &partial) || errors.Is(err, ErrNoTranslation) || !strings.Contains(err.Error(), "HTTP 500") {
+		t.Fatalf("err = %v, want a PartialError caused by the failed retry", err)
+	}
+	if got[0] != "XX:first text" || len(partial.Missing) != 1 || partial.Missing[0] != 1 {
+		t.Fatalf("got = %q, missing = %v", got, partial.Missing)
+	}
+}

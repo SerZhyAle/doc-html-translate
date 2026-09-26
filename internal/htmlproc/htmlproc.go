@@ -30,8 +30,10 @@ type TextSegment struct {
 	Text string
 }
 
-// ExtractTexts reads an HTML file and returns all translatable text segments.
-func ExtractTexts(filePath string) ([]*TextSegment, *html.Node, error) {
+// ExtractTexts reads an HTML file and returns all translatable text segments. skip, when not
+// nil, names further elements whose whole subtree is left out - the caller's own markup, such
+// as reader chrome, that is not the document's text.
+func ExtractTexts(filePath string, skip func(*html.Node) bool) ([]*TextSegment, *html.Node, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read file: %w", err)
@@ -43,13 +45,13 @@ func ExtractTexts(filePath string) ([]*TextSegment, *html.Node, error) {
 	}
 
 	var segments []*TextSegment
-	walkAndCollect(doc, &segments, false)
+	walkAndCollect(doc, &segments, skip, false)
 	return segments, doc, nil
 }
 
 // walkAndCollect recursively traverses the DOM and collects text nodes.
-func walkAndCollect(n *html.Node, segments *[]*TextSegment, inSkip bool) {
-	if n.Type == html.ElementNode && skipTags[n.DataAtom] {
+func walkAndCollect(n *html.Node, segments *[]*TextSegment, skip func(*html.Node) bool, inSkip bool) {
+	if n.Type == html.ElementNode && (skipTags[n.DataAtom] || (skip != nil && skip(n))) {
 		inSkip = true
 	}
 
@@ -64,7 +66,7 @@ func walkAndCollect(n *html.Node, segments *[]*TextSegment, inSkip bool) {
 	}
 
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		walkAndCollect(c, segments, inSkip)
+		walkAndCollect(c, segments, skip, inSkip)
 	}
 }
 
