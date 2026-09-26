@@ -221,6 +221,41 @@ async function injectAgent(tabId) {
   await chrome.scripting.executeScript({ target: { tabId }, files: ["src/page-agent.js"] });
 }
 
+// A hostname that names the reader's own machine or network rather than a public site. The page
+// can show such a picture but not read it, and a re-fetch with the extension's access would read it
+// for the page. A public name that resolves to a private address is not caught here; the check is
+// what the URL alone can tell.
+const LOCAL_SUFFIXES = [".localhost", ".local", ".internal", ".lan", ".home.arpa", ".intranet", ".corp"];
+
+function isPublicHost(hostname) {
+  const h = hostname.toLowerCase().replace(/\.$/, "");
+  if (!h || h === "localhost" || !h.includes(".")) return false;
+  // Any IP literal: the URL parser has already normalized the shorthand forms (0x7f.1, 2130706433)
+  // to dotted quads, and an IPv6 literal keeps its brackets.
+  if (h.startsWith("[") || /^\d+\.\d+\.\d+\.\d+$/.test(h)) return false;
+  return !LOCAL_SUFFIXES.some((s) => h.endsWith(s));
+}
+
+// fallbackSource decides whether a picture whose pixels the page cannot read may be fetched again
+// by the extension. Only an http(s) picture on a public host qualifies: that is a request any
+// visitor could make, so the recognized words tell the page nothing it could not learn itself.
+export function fallbackSource(src) {
+  let url;
+  try { url = new URL(src); } catch { return ""; }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+  return isPublicHost(url.hostname) ? url.href : "";
+}
+
+// pictureSource asks the page agent for the picture as the page shows it. A data: URL copied from
+// the page's own canvas is the preferred source; the original URL is used only when the canvas was
+// tainted and the URL passes fallbackSource. Anything else is not read at all.
+async function pictureSource(run, picture) {
+  const px = await toTab(run.tabId, { t: "pixels", id: picture.id });
+  if (px && px.ok && typeof px.src === "string" && px.src.startsWith("data:image/")) return px.src;
+  if (px && px.error === "tainted") return fallbackSource(picture.src);
+  return "";
+}
+
 function hostFailureMessage(err) {
   const code = String((err && err.message) || err);
   if (code === "host-blocked" || code === "host-refused" || code === "host-silent") {
@@ -234,7 +269,8 @@ async function drain(run) {
   while (run.queue.length && !run.stopped) {
     const picture = run.queue.shift();
     await toTab(run.tabId, { t: "busy", id: picture.id, on: true });
-    const res = await recognizeOne(run, picture);
+    const src = await pictureSource(run, picture);
+    const res = src ? await recognizeOne(run, { ...picture, src }) : { ok: false, error: "not-readable-by-page" };
     await toTab(run.tabId, { t: "busy", id: picture.id, on: false });
     if (run.stopped) break;
     if (res.ok) {

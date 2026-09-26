@@ -449,9 +449,10 @@
       "defaultOn": false,
       "turnedOnBy": "OCR & translate this image, or OCR every image on this page, from the right-click menu",
       "lifetime": "that recognition run",
-      "leaves": "requests for those images to the sites that serve them; the recognition itself runs on the device",
+      "leaves": "requests for those images to the sites that serve them - for OCR every image on this page, only a picture on a public http(s) host that the page showed but could not read itself; the others are read from the pixels the page already shows; the recognition itself runs on the device",
       "evidence": [
-        { "file": "extension/src/ocr-overlay.js", "contains": "const resp = await fetch(url);" }
+        { "file": "extension/src/ocr-overlay.js", "contains": "const resp = await fetch(url);" },
+        { "file": "extension/src/page-ocr.js", "contains": "export function fallbackSource" }
       ],
       "public": {
         "en": "**The pictures you ask it to read** - the image you right-click, or the pictures of the page where you start *OCR every image on this page*, fetched from the sites that serve them.",
