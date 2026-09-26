@@ -1,12 +1,15 @@
 package main
 
 import (
+	"image/color"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
 	"doc-html-translate/internal/i18n"
+	"doc-html-translate/internal/iconart"
 )
 
 // Static gates for the desktop-app-ux contracts (APP-STYLE, APP-BEHAVIOUR) - what can be pinned
@@ -55,6 +58,54 @@ func TestPaletteDeclaresEveryRoleForBothThemes(t *testing.T) {
 	for _, m := range regexp.MustCompile(`var\((--[a-z-]+)\)`).FindAllStringSubmatch(uiHTML, -1) {
 		if !declared[m[1]] {
 			t.Errorf("var(%s) is used but never declared", m[1])
+		}
+	}
+}
+
+// APP-STYLE section 8 (contrast), measured for this product: every text role clears WCAG 2.1 AA
+// on each surface the stylesheet draws it on, in both themes. --text-muted carries the 11-12px
+// hints and field labels, so it gets a stricter floor - at 3.4:1 in dark it read as "hard to read".
+func TestPaletteTextMeetsWCAGAA(t *testing.T) {
+	style := uiStyle(t)
+	hex := func(s string) color.RGBA {
+		v, err := strconv.ParseUint(s[1:], 16, 32)
+		if err != nil {
+			t.Fatalf("bad colour %q: %v", s, err)
+		}
+		return color.RGBA{uint8(v >> 16), uint8(v >> 8), uint8(v), 0xFF}
+	}
+	themes := [2]map[string]color.RGBA{{}, {}} // light, dark
+	for _, m := range regexp.MustCompile(`--([a-z-]+):\s*light-dark\((#[0-9a-fA-F]{6}),\s*(#[0-9a-fA-F]{6})\)`).FindAllStringSubmatch(style, -1) {
+		themes[0][m[1]], themes[1][m[1]] = hex(m[2]), hex(m[3])
+	}
+	surfaces := []string{"surface-window", "surface-raised", "surface-sunken", "control"}
+	checks := []struct {
+		fg    string
+		on    []string
+		floor float64
+	}{
+		{"text-primary", surfaces, 4.5},
+		{"text-muted", surfaces, 6},
+		{"accent", []string{"surface-window", "surface-sunken"}, 4.5},
+		{"link", []string{"surface-window", "surface-raised", "surface-sunken"}, 4.5},
+		{"success", []string{"surface-window", "surface-sunken", "control"}, 4.5},
+		{"danger", []string{"surface-window", "surface-sunken"}, 4.5},
+		{"warning", []string{"surface-window", "surface-sunken"}, 4.5},
+		{"accent-ink", []string{"accent", "accent-hover"}, 4.5},
+		{"danger-ink", []string{"danger"}, 4.5},
+	}
+	for i, name := range []string{"light", "dark"} {
+		for _, c := range checks {
+			for _, bg := range c.on {
+				fg, okF := themes[i][c.fg]
+				back, okB := themes[i][bg]
+				if !okF || !okB {
+					t.Fatalf("%s: --%s or --%s is not a hex light-dark() pair", name, c.fg, bg)
+				}
+				if r := iconart.Contrast(fg, back); r < c.floor {
+					t.Errorf("%s: --%s on --%s is %.2f:1, want >= %.1f", name, c.fg, bg, r, c.floor)
+				}
+			}
 		}
 	}
 }

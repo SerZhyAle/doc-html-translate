@@ -52,9 +52,11 @@ see, so rule 2 (colour from the theme) cannot hold there - rule 9 says what hold
 ## Decisions (2026-09-25)
 
 - **The mark** (owner): a white sheet with a folded corner and `</>` cut into it, on the navy plate
-  `#1E3A8A`; the fold is the tint `#A9B8E0`. From 24 px up it is drawn on a 48 grid. At 16 and 20 px a
-  separate 16-grid drawing drops the slash and thickens the brackets. It is artwork (`ICON-SET` rule 7) - no
-  vocabulary glyph is used in it. Geometry: `internal/iconart/mark.go`.
+  `#1E3A8A`; the fold is the tint `#A9B8E0`. Drawn in three size tiers:
+  1. Small (16 and 20 px, 16 grid): drops the slash and thickens the brackets (`<>`) for razor-sharp 1px stroke legibility.
+  2. Medium (24 to 64 px, 48 grid): the full `</>` code transformation on the folded document sheet.
+  3. Large (96 px and up, 128 grid: 128, 150, 256, 310 px): adds "DOC" header and "HTML" footer branding typography framing the prominent `</>` center.
+  It is artwork (`ICON-SET` rule 7) - no vocabulary glyph is used in it. Geometry: `internal/iconart/mark.go`.
 - **One generator.** `internal/iconart` draws every surface: an SVG path parser for the vendored glyphs, an
   antialiased rasterizer on `golang.org/x/image/vector` (already a dependency), and an ICO writer.
   `go run ./tools/icongen` writes the committed files (`scripts/generate-icon.ps1` wraps it). With `-msix <dir>`

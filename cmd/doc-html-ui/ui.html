@@ -11,7 +11,10 @@
    light-dark(), resolved against color-scheme on every paint, so switching the theme reaches
    every element already on screen. "system" is color-scheme: light dark, which follows the OS
    live through prefers-color-scheme; data-theme pins one side. Names follow the role vocabulary
-   (surface.window -> --surface-window, ..); the values are this product's own. */
+   (surface.window -> --surface-window, ..); the values are this product's own.
+   Every text role clears WCAG AA (4.5:1) on each surface it is drawn on, and --text-muted - the
+   11-12px hints, field labels and placeholders - clears 6:1; --border clears roughly 3:1 so a
+   field's edge is visible. TestPaletteTextMeetsWCAGAA measures it. */
 :root {
     color-scheme: light dark;
     --surface-window:  light-dark(#eff1f5, #1e1e2e);
@@ -20,20 +23,20 @@
     --control:         light-dark(#ffffff, #2b2b3d);
     --control-hover:   light-dark(#dce0e8, #45475a);
     --control-pressed: light-dark(#ccd0da, #585b70);
-    --border:          light-dark(#bcc0cc, #45475a);
-    --text-primary:    light-dark(#4c4f69, #cdd6f4);
-    --text-muted:      light-dark(#5c5f77, #6c7086);
-    --text-disabled:   light-dark(#9ca0b0, #585b70);
-    --accent:          light-dark(#1e66f5, #89b4fa);
-    --accent-hover:    light-dark(#1753d6, #74c7ec);
+    --border:          light-dark(#8c8fa1, #6c7086);
+    --text-primary:    light-dark(#1f2233, #cdd6f4);
+    --text-muted:      light-dark(#4c4f69, #a6adc8);
+    --text-disabled:   light-dark(#9ca0b0, #6c7086);
+    --accent:          light-dark(#1450c8, #89b4fa);
+    --accent-hover:    light-dark(#0f3fa3, #74c7ec);
     --accent-ink:      light-dark(#ffffff, #11111b);
-    --accent-soft:     light-dark(rgba(30, 102, 245, 0.10), rgba(137, 180, 250, 0.10));
-    --link:            light-dark(#1e66f5, #89b4fa);
-    --info:            light-dark(#1e66f5, #89b4fa);
-    --success:         light-dark(#2d7d1a, #a6e3a1);
-    --danger:          light-dark(#d20f39, #f38ba8);
+    --accent-soft:     light-dark(rgba(20, 80, 200, 0.10), rgba(137, 180, 250, 0.10));
+    --link:            light-dark(#1450c8, #89b4fa);
+    --info:            light-dark(#1450c8, #89b4fa);
+    --success:         light-dark(#236b12, #a6e3a1);
+    --danger:          light-dark(#c00d33, #f38ba8);
     --danger-ink:      light-dark(#ffffff, #11111b);
-    --warning:         light-dark(#b0650b, #f9e2af);
+    --warning:         light-dark(#8a4b00, #f9e2af);
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }

@@ -91,3 +91,41 @@ func TestOnPlatformFormCutsTheCodeOut(t *testing.T) {
 		t.Errorf("sheet pixel %v, want white", c)
 	}
 }
+
+// Large mark (128 px and 256 px) carries the product branding lettering (DOC and HTML)
+// along with the heroic </> brackets.
+func TestLargeMarkCarriesBranding(t *testing.T) {
+	img := Mark(128, 128, 128, Plated)
+	// Top header "DOC" (y=27): crosses D, O, C strokes
+	docHits := 0
+	for x := 30; x < 80; x++ {
+		if Contrast(img.RGBAAt(x, 27), Sheet) >= 3 {
+			docHits++
+		}
+	}
+	if docHits < 5 {
+		t.Errorf("large mark header y=27 has %d dark pixels, want DOC lettering", docHits)
+	}
+
+	// Center "</>" (y=66): crosses left chevron, slash, right chevron
+	centerHits := 0
+	for x := 25; x < 100; x++ {
+		if Contrast(img.RGBAAt(x, 66), Sheet) >= 3 {
+			centerHits++
+		}
+	}
+	if centerHits < 10 {
+		t.Errorf("large mark center y=66 has %d dark pixels, want </> chevrons and slash", centerHits)
+	}
+
+	// Bottom "HTML" (y=103): crosses H, T, M, L strokes
+	htmlHits := 0
+	for x := 30; x < 95; x++ {
+		if Contrast(img.RGBAAt(x, 103), Sheet) >= 3 {
+			htmlHits++
+		}
+	}
+	if htmlHits < 10 {
+		t.Errorf("large mark footer y=103 has %d dark pixels, want HTML lettering", htmlHits)
+	}
+}
