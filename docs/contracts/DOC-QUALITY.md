@@ -10,6 +10,10 @@ What this repo does to stay conformant:
 - `docs/DOCUMENT_REGISTRY.jsonl` declares every maintained document (product areas, update triggers,
   `generated` for a render); `scripts/doc-registry.ps1` holds it both ways, checks each announced page's SEO
   block and hreflang cluster, and keeps `sitemap.xml` equal to its render. Runs in `scripts/check.ps1`.
+- Every repository `.md` (internal rules 3, 5-7), in the Go suite that `scripts/check.ps1` runs:
+  `tests/doc_links_test.go` (relative links, heading anchors, image paths, no `http://`, no remote
+  script), `tests/typography_test.go` (house style in Markdown prose), `tests/readme_flags_test.go`
+  (the README trio's flag tables against `internal/config/flags.go`, rule 4).
 - Rendered texts come from one source and are gated: `scripts/security-posture.ps1` (privacy blocks,
   `docs/SECURITY_POSTURE.md`), `tests/iconography_test.go` (`docs/GLYPH-MAP.md`), `tests/limits_parity_test.go`.
 - House text style in code and UI strings: `tests/typography_test.go`; on site pages: `tests/site_test.go`.

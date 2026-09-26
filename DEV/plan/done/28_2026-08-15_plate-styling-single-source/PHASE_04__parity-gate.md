@@ -1,4 +1,4 @@
-# Phase 04 — The gate that fails on an unnamed difference
+# Phase 04 - The gate that fails on an unnamed difference
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -35,7 +35,7 @@ either side declares a role outside its derived path.
 
 ## Steps
 
-### Step 04.1 — Declaration comparator
+### Step 04.1 - Declaration comparator
 
 **Files:** `tests/appearance_parity_test.go`
 **Depends on:** - start of phase
@@ -54,7 +54,7 @@ either side declares a role outside its derived path.
 
 ---
 
-### Step 04.2 — Assert both editions against the source
+### Step 04.2 - Assert both editions against the source
 
 **Files:** `tests/appearance_parity_test.go`
 **Depends on:** Step 04.1
@@ -77,7 +77,7 @@ either side declares a role outside its derived path.
 
 ---
 
-### Step 04.3 — Prove the gate bites, and triage what it finds
+### Step 04.3 - Prove the gate bites, and triage what it finds
 
 **Files:** `tests/appearance_parity_test.go`, `internal/appearance/appearance.json`
 **Depends on:** Step 04.2
@@ -100,7 +100,7 @@ either side declares a role outside its derived path.
 
 ---
 
-### Step 04.4 — Retire the palette-only comparison
+### Step 04.4 - Retire the palette-only comparison
 
 **Files:** `tests/parity_test.go`
 **Depends on:** Step 04.2

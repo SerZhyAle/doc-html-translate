@@ -1,4 +1,4 @@
-# Phase 01 — Corpus scenes for display lettering on saturated colour
+# Phase 01 - Corpus scenes for display lettering on saturated colour
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -24,7 +24,7 @@ against measured geometry instead of against the recognizer's own output.
 
 ## Steps
 
-### Step 01.1 — Register the reported poster as a scene
+### Step 01.1 - Register the reported poster as a scene
 **Files:** `DEV/ocrlab/corpus.json`, `test_doc/ocrlab/own/`
 **Depends on:** - start of phase
 
@@ -43,7 +43,7 @@ against measured geometry instead of against the recognizer's own output.
 
 ---
 
-### Step 01.2 — Annotate it from the pixels
+### Step 01.2 - Annotate it from the pixels
 **Files:** `DEV/ocrlab/annotations/<scene>.json`
 **Depends on:** Step 01.1
 
@@ -62,7 +62,7 @@ against measured geometry instead of against the recognizer's own output.
 
 ---
 
-### Step 01.3 — Add at least one sibling scene of the same class
+### Step 01.3 - Add at least one sibling scene of the same class
 **Files:** `DEV/ocrlab/corpus.json`, `DEV/ocrlab/annotations/<scene>.json`
 **Depends on:** Step 01.2
 

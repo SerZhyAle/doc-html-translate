@@ -6,7 +6,7 @@
 **Tactical plan:** [`28_2026-08-15_plate-styling-single-source/`](28_2026-08-15_plate-styling-single-source/INDEX.md)
 
 > Cross-edition feature ticket. One feature = one ticket covering every edition.
-> Read [`docs/PARITY.md`](../../docs/PARITY.md) before starting; update it when a shared invariant moves.
+> Read [`docs/PARITY.md`](../../../docs/PARITY.md) before starting; update it when a shared invariant moves.
 
 > **Remote execution (2026-09-25):** the contract text this ticket needs is quoted in "Contract snapshot" below, so every step not marked ⛔ runs in a cloud session from this repository alone. Steps marked **⛔ Local only** edit the shared contracts catalog (or another repository) and can run only on the owner's machine, where the catalog is mounted.
 > The snapshot for this ticket sits with the one step that needs it, in
@@ -188,10 +188,10 @@ it from a screenshot.
 
 ## Related
 
-- [`30_2026-08-13_ocr-sweep-plate-composition.md`](30_2026-08-13_ocr-sweep-plate-composition.md) - set the
+- [`30_2026-08-13_ocr-sweep-plate-composition.md`](../30_2026-08-13_ocr-sweep-plate-composition.md) - set the
   plate's measured constants (padding, radius, paper carrier) and the three-value guard this ticket
   widens. Those measurements are inputs here, not open questions.
-- [`docs/PARITY.md`](../../docs/PARITY.md) - the process note preferring a single source in code over
+- [`docs/PARITY.md`](../../../docs/PARITY.md) - the process note preferring a single source in code over
   a copy plus a comment is the rule this ticket applies.
 
 ## Last Audit

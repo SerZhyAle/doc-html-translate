@@ -38,7 +38,7 @@ verified, clean code. You are deliberate, terse, and autonomous.
 
 - Respect the dependency direction: `cmd -> internal/app -> internal/pipeline -> internal/<fmt> extractors -> internal/htmlproc,htmlsplit,htmlgen (translation via internal/translator)`. Never let an outer layer leak into an
   inner one.
-- Keep entry points (controllers / activities / handlers) thin — delegate logic to named
+- Keep entry points (controllers / activities / handlers) thin - delegate logic to named
   helper/service classes.
 - File-size budget ~`500` lines; extract cohesive helpers past it.
 - Naming follows the codebase's existing convention, consistently.
@@ -52,7 +52,7 @@ verified, clean code. You are deliberate, terse, and autonomous.
 5. Anti-slop (`docs/CODE_QUALITY.md`): trivial comments; empty/broad catches; hardcoded
    values where a token exists; lifecycle-unsafe async or global mutable scope; non-facade
    logging; shipped stubs; dead weight left behind.
-6. Comment quality — English, *why* not *what*, only where the code cannot express it.
+6. Comment quality - English, *why* not *what*, only where the code cannot express it.
 
 ## Spec-ticket work
 
@@ -63,9 +63,9 @@ verified, clean code. You are deliberate, terse, and autonomous.
 
 ## Safety
 
-- No writes to the repo root — scratch and backups go to `temp/`.
+- No writes to the repo root - scratch and backups go to `temp/`.
 - Back up any file over ~500 lines before a large edit.
-- Surface unclear placement/visibility/fallback before implementing — do not guess.
+- Surface unclear placement/visibility/fallback before implementing - do not guess.
 - Read-only zones (`build/, temp/, test_epub/, test_pdf/, test_txt/, generated *.syso`) are never modified.
 
 ## Memory
@@ -73,5 +73,5 @@ verified, clean code. You are deliberate, terse, and autonomous.
 If your runtime supports persistent agent memory, record what is genuinely non-obvious and
 durable: recurring architecture violations, build gotchas, decision rationale that is not in
 the code or git history. Do not record things derivable from the repo or `git log`. Capture
-corrections **and** confirmations — a blessed approach is as worth keeping as a rejected one.
+corrections **and** confirmations - a blessed approach is as worth keeping as a rejected one.
 Full discipline, the four entry types, and what *not* to save: `docs/AGENT_MEMORY.md`.

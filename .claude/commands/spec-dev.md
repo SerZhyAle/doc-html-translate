@@ -2,8 +2,8 @@
 
 Execute a tactical spec **one step at a time**. Read `DEV/plan/YYYY-MM-DD_<slug>_<slug>/INDEX.md` +
 phase files, follow each `Prompt for developer:` in dependency order, run each step's
-`Verification:` predicate **before** flipping it to `[x] done`. The discipline — one step,
-one check, hard-stop on ambiguity — is what keeps a long plan from drifting.
+`Verification:` predicate **before** flipping it to `[x] done`. The discipline - one step,
+one check, hard-stop on ambiguity - is what keeps a long plan from drifting.
 
 ## Usage
 
@@ -19,24 +19,24 @@ one check, hard-stop on ambiguity — is what keeps a long plan from drifting.
 
 | Strategic `Status:` | Behaviour |
 | --- | --- |
-| `Tactical` | Allowed — advance to `In Progress` on the first executed step. |
-| `In Progress` | Allowed — continue. |
+| `Tactical` | Allowed - advance to `In Progress` on the first executed step. |
+| `In Progress` | Allowed - continue. |
 | `Draft` / `Approved` | Abort: no tactical folder. Run `/spec-tech` first. |
 | `Implemented` / `Verified` | Abort: feature closed. |
 | `Partial` / `Broken` | Run `/spec-fix` (or apply the audit's action items), re-read status. If still broken, list remaining FAILs and stop. |
-| `BlockNeedUserTest` | Note in chat and stop — user must confirm the on-device/manual result first. |
+| `BlockNeedUserTest` | Note in chat and stop - user must confirm the on-device/manual result first. |
 | `BlockByOtherTask` / `BlockQuestions` / `BlockExternal` | Abort: blocked. Resolve first. |
 
 ## Process
 
-**1 — Parse args, load state.** Compute the target step set. Read the strategic spec, INDEX,
+**1 - Parse args, load state.** Compute the target step set. Read the strategic spec, INDEX,
 and all in-scope phase files. Verify the status gate. Verify all Pre-Implementation Blockers
-are ticked — if any unchecked, abort with the blocker text.
+are ticked - if any unchecked, abort with the blocker text.
 
-**2 — If `--dry-run`:** print the planned step table and exit.
+**2 - If `--dry-run`:** print the planned step table and exit.
 
-**3 — Execute steps, one at a time.** For each step in plan order:
-1. **Re-read the phase file.** If its `Status:` is no longer `[ ]`/`[~]`, log "pre-resolved — skipped".
+**3 - Execute steps, one at a time.** For each step in plan order:
+1. **Re-read the phase file.** If its `Status:` is no longer `[ ]`/`[~]`, log "pre-resolved - skipped".
 2. **Verify dependencies.** The `Depends on:` step must be `[x] done`, else abort:
    "Dependency violation: NN.M depends on NN.K which is not done."
 3. **Read the prompt + Files Touched.** For each referenced existing symbol, confirm it
@@ -57,11 +57,11 @@ are ticked — if any unchecked, abort with the blocker text.
 
 After all planned steps in a phase:
 - **Final-phase verification tags (before the phase check).** If this is the last in-scope phase
-  and acceptance includes manual testing, insert the verification tags now — one at each
+  and acceptance includes manual testing, insert the verification tags now - one at each
   changed-flow entry across all phases (see `CLAUDE.md` §6). Tags are the last code edits,
   inserted **before** the phase check below so one run validates code + tags.
 - **Phase done criteria:** run each checkbox. For the phase's verification rung, run the
-  narrowest meaningful check the phase names (per `docs/VALIDATION.md`) — a compile / type-check,
+  narrowest meaningful check the phase names (per `docs/VALIDATION.md`) - a compile / type-check,
   a targeted test, or `./scripts/build.ps1 (UI: ./scripts/build-ui.ps1)` only when the phase touches packaging, resources, or wiring.
   Exit 0 → tick; non-zero → append the output tail and hard stop.
 - All ticked → flip the phase to ✅ Done, update the INDEX row + counter. Any unticked →
@@ -82,21 +82,21 @@ After all phases:
 
 ## Hard stops
 
-Stop immediately and report — never guess, never attempt speculative recovery — on any of:
+Stop immediately and report - never guess, never attempt speculative recovery - on any of:
 1. **Ambiguous prompt** (placeholder, missing name, unspecified scope). Set `BlockQuestions`.
-2. **Verification FAIL** after an edit — step left `[~]`.
+2. **Verification FAIL** after an edit - step left `[~]`.
 3. **Read-only zone touch.**
 4. **File-size budget violation.**
-5. **Phase check FAIL** — the phase's narrowest-check command returned non-zero. Stop with the error excerpt.
+5. **Phase check FAIL** - the phase's narrowest-check command returned non-zero. Stop with the error excerpt.
 6. **Schema/migration change** the step does not fully specify (version + migration name).
 7. **Dependency-injection / module-graph change** beyond what the prompt scopes.
 8. **Missing symbol** the prompt names but does not also create.
-9. **Dependency violation** — a `Depends on:` step not `[x] done`.
-10. **External-system touch** — network, deletion outside `temp/`, force push, CI
+9. **Dependency violation** - a `Depends on:` step not `[x] done`.
+10. **External-system touch** - network, deletion outside `temp/`, force push, CI
     edit. Require explicit permission.
-11. **Localization gap** — a UI string added but not in all required locales. Never fabricate
+11. **Localization gap** - a UI string added but not in all required locales. Never fabricate
     translations.
-12. **External dependency missing** — needs a library version / hardware / third-party state
+12. **External dependency missing** - needs a library version / hardware / third-party state
     not present. Set `BlockExternal`.
 
 ## Conventions

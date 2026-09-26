@@ -1,4 +1,4 @@
-# Phase 06 — Docs cleanup
+# Phase 06 - Docs cleanup
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -24,7 +24,7 @@ The changelog records every file this ticket touched, and the whole gate runs gr
 
 ## Steps
 
-### Step 06.1 — Changelog entries
+### Step 06.1 - Changelog entries
 
 **Files:** `DEV/CHANGELOG.md`
 **Depends on:** - start of phase
@@ -42,7 +42,7 @@ The changelog records every file this ticket touched, and the whole gate runs gr
 
 ---
 
-### Step 06.2 — Full gate
+### Step 06.2 - Full gate
 
 **Files:** none - verification step against the finished tree
 **Depends on:** Step 06.1

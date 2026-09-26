@@ -1,4 +1,4 @@
-# Phase 07 — Type-size break
+# Phase 07 - Type-size break
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -30,7 +30,7 @@ measured.
 
 ## Steps
 
-### Step 07.1 — Measure the scene's line geometry
+### Step 07.1 - Measure the scene's line geometry
 **Files:** none (throwaway probe)
 **Depends on:** - start of phase
 
@@ -49,7 +49,7 @@ exceeds 1.12x.
 
 ---
 
-### Step 07.2 — Derive the ratio from the corpus, not from the scene
+### Step 07.2 - Derive the ratio from the corpus, not from the scene
 **Files:** none
 **Depends on:** Step 07.1
 
@@ -68,7 +68,7 @@ side.
 
 ---
 
-### Step 07.3 — Implement the break in `internal/ocr` with tests
+### Step 07.3 - Implement the break in `internal/ocr` with tests
 **Files:** `internal/ocr/tesseract.go`, `internal/ocr/cluster_test.go`
 **Depends on:** Step 07.2
 
@@ -86,7 +86,7 @@ side.
 
 ---
 
-### Step 07.4 — Port it, and pin the meaning in the parity test
+### Step 07.4 - Port it, and pin the meaning in the parity test
 **Files:** `extension/src/ocr-cluster.js`, `extension/test/ocr-cluster.test.mjs`, `tests/parity_test.go`
 **Depends on:** Step 07.3
 
@@ -104,7 +104,7 @@ the symmetry of the ratio.
 
 ---
 
-### Step 07.5 — Score it against the corpus and state the cost
+### Step 07.5 - Score it against the corpus and state the cost
 **Files:** none (run artefacts under `temp/ocrlab/`)
 **Depends on:** Step 07.4
 

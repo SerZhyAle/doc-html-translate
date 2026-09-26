@@ -1,4 +1,4 @@
-# Phase 02 — A measure of how much a result actually found
+# Phase 02 - A measure of how much a result actually found
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -24,7 +24,7 @@ results, with the weakness floor chosen from the recorded corpus rather than fro
 
 ## Steps
 
-### Step 02.1 — Implement the strength measure
+### Step 02.1 - Implement the strength measure
 **Files:** `internal/ocr/strength.go`
 **Depends on:** - start of phase
 
@@ -43,7 +43,7 @@ results, with the weakness floor chosen from the recorded corpus rather than fro
 
 ---
 
-### Step 02.2 — Implement the comparator
+### Step 02.2 - Implement the comparator
 **Files:** `internal/ocr/strength.go`
 **Depends on:** Step 02.1
 
@@ -61,7 +61,7 @@ results, with the weakness floor chosen from the recorded corpus rather than fro
 
 ---
 
-### Step 02.3 — Unit-test both against fabricated results
+### Step 02.3 - Unit-test both against fabricated results
 **Files:** `internal/ocr/strength_test.go`
 **Depends on:** Step 02.2
 
@@ -78,7 +78,7 @@ results, with the weakness floor chosen from the recorded corpus rather than fro
 
 ---
 
-### Step 02.4 — Choose the weakness floor from the recorded corpus
+### Step 02.4 - Choose the weakness floor from the recorded corpus
 **Files:** `DEV/research/ocr_display_lettering_2026-08-12.md`
 **Depends on:** Step 02.3
 

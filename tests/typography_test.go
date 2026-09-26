@@ -21,7 +21,10 @@ import (
 	"go/token"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,9 +39,9 @@ var houseStyleLangs = map[string]bool{"en": true, "ru": true, "uk": true}
 
 // badTypography returns a reason if v breaks the rule for lang, or "" if it is clean.
 //
-// For an author language: no ellipsis character, no three-dot ellipsis, and no em dash - except
-// inside a literal that also contains "<title>", which is the page-title exception settled
-// 2026-07-18. For every other language only an ASCII three-dot "..." is rejected, and not even
+// For an author language: no ellipsis character, no three-dot ellipsis, no en dash, and no em
+// dash - except inside a literal that also contains "<title>", which is the page-title exception
+// settled 2026-07-18. For every other language only an ASCII three-dot "..." is rejected, and not even
 // that in Chinese, whose own ellipsis is a doubled U+2026.
 func badTypography(lang, v string) string {
 	if !houseStyleLangs[lang] {
@@ -55,6 +58,9 @@ func badTypography(lang, v string) string {
 	}
 	if strings.Contains(v, "—") && !strings.Contains(v, "<title>") {
 		return "long dash (—) - use a short hyphen '-'"
+	}
+	if strings.Contains(v, "–") {
+		return "en dash (–) - use a short hyphen '-'"
 	}
 	return ""
 }
@@ -155,6 +161,8 @@ func TestBadTypographyLanguageScope(t *testing.T) {
 		{"en title em dash", "en", "<title>Book — Page 1</title>", false},
 		{"ru ellipsis char", "ru", "ждём…", true},
 		{"uk em dash", "uk", "текст — далі", true},
+		{"en en dash", "en", "pages 1–5", true},
+		{"en two-dot ellipsis", "en", "wait..", false},
 		{"zh double dash", "zh", "等待——完成", false},
 		{"zh own ellipsis", "zh", "等待……", false},
 		{"de en dash", "de", "Zeit – Ort", false},
@@ -194,3 +202,81 @@ func TestTypographySplashResources(t *testing.T) {
 		}
 	}
 }
+
+// markdownLang is the language a Markdown document is written in, from the suffix the tree uses
+// for translations (README_RU.md, *_ru.md); everything else is English.
+func markdownLang(file string) string {
+	base := strings.ToLower(strings.TrimSuffix(path.Base(file), path.Ext(file)))
+	for _, lang := range []string{"ru", "uk"} {
+		if strings.HasSuffix(base, "_"+lang) || strings.HasSuffix(base, "."+lang) {
+			return lang
+		}
+	}
+	return "en"
+}
+
+// quotedSections are Markdown sections whose blockquoted lines are verbatim copies of text this
+// repository does not own, so rewriting their punctuation would misquote the source. Only the
+// quoted (">") lines of the section are skipped; the document's own prose there is still read. An
+// entry whose section is gone fails, so the list never outlives the quote.
+var quotedSections = []struct {
+	file, heading, reason string
+}{
+	{
+		"DEV/plan/26_2026-09-23_contract-product-web-pages-sync.md", "Contract snapshot",
+		"a working copy of the shared catalog's page contracts, quoted verbatim so the ticket runs without the catalog; the catalog owns that text and the section is deleted when the ticket closes",
+	},
+}
+
+// TestTypographyMarkdownProse holds the house style in the prose of every Markdown document in the
+// repository (DOC-INTERNAL-QUALITY rule 5). Code spans, fences and HTML comments are blanked
+// first: a code example quotes what a program prints or reads, and "..." there is often Go or JS
+// syntax. The <title> exception applies per line, as it does per literal above.
+func TestTypographyMarkdownProse(t *testing.T) {
+	docs := markdownFiles(repoFiles(t))
+	sort.Strings(docs)
+	if len(docs) == 0 {
+		t.Fatal("no Markdown document found - the file listing may have failed")
+	}
+	quoted := map[string][]int{} // file -> indexes into quotedSections
+	for i, q := range quotedSections {
+		quoted[q.file] = append(quoted[q.file], i)
+	}
+	found := make([]bool, len(quotedSections))
+	for _, f := range docs {
+		src := readRepoFile(t, f)
+		raw := strings.Split(src, "\n")
+		lang := markdownLang(f)
+		inQuote, quoteLevel := false, 0
+		for i, line := range proseLines(src) {
+			if line == "" {
+				continue
+			}
+			if m := sectionHeading.FindStringSubmatch(raw[i]); m != nil {
+				level := len(m[1])
+				if inQuote && level <= quoteLevel {
+					inQuote = false
+				}
+				for _, qi := range quoted[f] {
+					if strings.HasPrefix(m[2], quotedSections[qi].heading) {
+						inQuote, quoteLevel, found[qi] = true, level, true
+					}
+				}
+			}
+			if inQuote && strings.HasPrefix(strings.TrimSpace(raw[i]), ">") {
+				continue
+			}
+			if reason := badTypography(lang, line); reason != "" {
+				t.Errorf("%s:%d: %s", f, i+1, reason)
+			}
+		}
+	}
+	for i, q := range quotedSections {
+		if !found[i] {
+			t.Errorf("%s has no section %q any more - drop it from quotedSections", q.file, q.heading)
+		}
+	}
+}
+
+// sectionHeading is an ATX heading of the document itself, not one inside a blockquote.
+var sectionHeading = regexp.MustCompile(`^ {0,3}(#{1,6})\s+(.*?)\s*$`)

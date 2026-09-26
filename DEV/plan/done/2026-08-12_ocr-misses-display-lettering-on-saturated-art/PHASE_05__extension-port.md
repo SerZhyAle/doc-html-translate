@@ -1,4 +1,4 @@
-# Phase 05 — Port both changes to the extension and pin them
+# Phase 05 - Port both changes to the extension and pin them
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -25,7 +25,7 @@ editions unable to drift on any of them.
 
 ## Steps
 
-### Step 05.1 — Port the strength measure and comparator
+### Step 05.1 - Port the strength measure and comparator
 **Files:** `extension/src/ocr-overlay.js`
 **Depends on:** - start of phase
 
@@ -41,7 +41,7 @@ editions unable to drift on any of them.
 
 ---
 
-### Step 05.2 — Port the trigger and the sparse rung
+### Step 05.2 - Port the trigger and the sparse rung
 **Files:** `extension/src/ocr-overlay.js`
 **Depends on:** Step 05.1
 
@@ -58,7 +58,7 @@ editions unable to drift on any of them.
 
 ---
 
-### Step 05.3 — Test the ported behaviour on the JS side
+### Step 05.3 - Test the ported behaviour on the JS side
 **Files:** `extension/test/ocr-overlay.test.mjs`
 **Depends on:** Step 05.2
 
@@ -73,7 +73,7 @@ editions unable to drift on any of them.
 
 ---
 
-### Step 05.4 — Record and pin the shared invariants
+### Step 05.4 - Record and pin the shared invariants
 **Files:** `docs/PARITY.md`, `tests/parity_test.go`
 **Depends on:** Step 05.3
 

@@ -1,4 +1,4 @@
-# Phase 03 — The extension derives its CSS
+# Phase 03 - The extension derives its CSS
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -34,7 +34,7 @@ from the reader stylesheet onto the image role.
 
 ## Steps
 
-### Step 03.1 — Write the generator
+### Step 03.1 - Write the generator
 
 **Files:** `extension/scripts/gen-appearance.mjs`
 **Depends on:** - start of phase
@@ -59,7 +59,7 @@ from the reader stylesheet onto the image role.
 
 ---
 
-### Step 03.2 — Generate the overlay block
+### Step 03.2 - Generate the overlay block
 
 **Files:** `extension/src/ocr-overlay.css`
 **Depends on:** Step 03.1
@@ -81,7 +81,7 @@ from the reader stylesheet onto the image role.
 
 ---
 
-### Step 03.3 — Move the image reset guard onto the role
+### Step 03.3 - Move the image reset guard onto the role
 
 **Files:** `extension/src/viewer.css`
 **Depends on:** Step 03.2
@@ -104,7 +104,7 @@ from the reader stylesheet onto the image role.
 
 ---
 
-### Step 03.4 — Generate the palette block
+### Step 03.4 - Generate the palette block
 
 **Files:** `extension/src/viewer.css`
 **Depends on:** Step 03.1
@@ -124,7 +124,7 @@ from the reader stylesheet onto the image role.
 
 ---
 
-### Step 03.5 — Wire the generator into the build
+### Step 03.5 - Wire the generator into the build
 
 **Files:** `extension/package.json`, `extension/build.mjs`
 **Depends on:** Step 03.2, Step 03.4

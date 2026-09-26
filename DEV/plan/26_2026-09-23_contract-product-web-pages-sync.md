@@ -457,7 +457,7 @@ medium); the §2 row for this product reads:
 
 > ## 5. Visual language
 >
-> - **Color:** see tokens in [`sza-kit.css`](reference/sza-kit.css). Green `--acc` is the primary/CTA color; gold `--gold` is the
+> - **Color:** see tokens in [`sza-kit.css`](26_2026-09-23_contract-product-web-pages-sync/sza-kit.reference-2026-09-25.css). Green `--acc` is the primary/CTA color; gold `--gold` is the
 >   *secondary* accent — use it for one thing at a time (a callout border, a highlight tag), never as a second CTA color.
 >   Code blocks stay dark in both themes.
 > - **Typography:** Outfit (headings, 700–800), Plus Jakarta Sans (body, 300–600), system mono for code. Tight letter-spacing on headings (`-0.02em`).

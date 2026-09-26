@@ -1,6 +1,6 @@
 # The canon stamp and the repo layout, declared against their contracts
 
-**Status:** Implemented - 2026-09-25 on the owner's machine: stamp re-synced to canon `2026.09.24.1` by the adopt-canon run (compliance gate 0 errors, 0 warnings), registry rows corrected, B1-B6 filed or withdrawn in writing. What the re-sync found owed is carried by [ticket 31](../31_2026-09-25_canon-resync-new-duties.md).
+**Status:** Implemented - 2026-09-25 on the owner's machine: stamp re-synced to canon `2026.09.24.1` by the adopt-canon run (compliance gate 0 errors, 0 warnings), registry rows corrected, B1-B6 filed or withdrawn in writing. What the re-sync found owed is carried by [ticket 31](31_2026-09-25_canon-resync-new-duties.md).
 **Priority:** 54
 **Date:** 2026-09-23
 
@@ -136,7 +136,7 @@ shape; the owner may instead shorten the fixture out of the pattern and drop the
 - No change owed: `AI_USAGE` (a prompt-submit hook's reach - this repo registers no hook of its own),
   `DEVELOPMENT` (an override that narrows a shipped default - no profile, no merge), `README` (index and
   glossary).
-- Owed, carried to [ticket 31](../31_2026-09-25_canon-resync-new-duties.md): the documentation registry
+- Owed, carried to [ticket 31](31_2026-09-25_canon-resync-new-duties.md): the documentation registry
   (`DOCUMENTATION_CONCEPT` §6), the permission and network-surface inventories (`SECURITY_AND_PRIVACY` §7),
   a contract gate on the release path (`RELEASE_AND_DISTRIBUTION` §2, `CONTRACTS` §6), and the research
   half of `REPO-LAYOUT` rule 3.

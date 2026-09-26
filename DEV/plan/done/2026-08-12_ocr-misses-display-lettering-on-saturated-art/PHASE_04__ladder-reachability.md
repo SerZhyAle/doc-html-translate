@@ -1,4 +1,4 @@
-# Phase 04 — Make the ladder reachable for a result that is technically not empty
+# Phase 04 - Make the ladder reachable for a result that is technically not empty
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -25,7 +25,7 @@ comparator says it is strictly better, and prove over the corpus that nothing wh
 
 ## Steps
 
-### Step 04.1 — Replace the emptiness trigger with the strength floor
+### Step 04.1 - Replace the emptiness trigger with the strength floor
 **Files:** `internal/ocr/tesseract.go`
 **Depends on:** - start of phase
 
@@ -43,7 +43,7 @@ comparator says it is strictly better, and prove over the corpus that nothing wh
 
 ---
 
-### Step 04.2 — Adopt a rescue result only when it is strictly better
+### Step 04.2 - Adopt a rescue result only when it is strictly better
 **Files:** `internal/ocr/tesseract.go`
 **Depends on:** Step 04.1
 
@@ -60,7 +60,7 @@ comparator says it is strictly better, and prove over the corpus that nothing wh
 
 ---
 
-### Step 04.3 — Test that a weak result is retried and a good one is untouched
+### Step 04.3 - Test that a weak result is retried and a good one is untouched
 **Files:** `internal/ocr/rescue_test.go`
 **Depends on:** Step 04.2
 
@@ -77,7 +77,7 @@ comparator says it is strictly better, and prove over the corpus that nothing wh
 
 ---
 
-### Step 04.4 — Score the corpus against the named baseline
+### Step 04.4 - Score the corpus against the named baseline
 **Files:** `DEV/research/ocr_display_lettering_2026-08-12.md`
 **Depends on:** Step 04.3
 

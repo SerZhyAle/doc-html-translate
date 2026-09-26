@@ -1,4 +1,4 @@
-# Phase 01 — Canonical appearance source
+# Phase 01 - Canonical appearance source
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -29,7 +29,7 @@ reads.
 
 ## Steps
 
-### Step 01.1 — Define the source schema
+### Step 01.1 - Define the source schema
 
 **Files:** `internal/appearance/appearance.json`
 **Depends on:** - start of phase
@@ -55,7 +55,7 @@ reads.
 
 ---
 
-### Step 01.2 — Fill it from both editions, and reconcile the image role
+### Step 01.2 - Fill it from both editions, and reconcile the image role
 
 **Files:** `internal/appearance/appearance.json`
 **Depends on:** Step 01.1
@@ -84,7 +84,7 @@ reads.
 
 ---
 
-### Step 01.3 — Seed the divergence list and document the format
+### Step 01.3 - Seed the divergence list and document the format
 
 **Files:** `internal/appearance/appearance.json`, `internal/appearance/README.md`
 **Depends on:** Step 01.2

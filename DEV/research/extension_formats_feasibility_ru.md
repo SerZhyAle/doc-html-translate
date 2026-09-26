@@ -155,5 +155,5 @@ DRM-защищённые Kindle-файлы не парсятся (как и Cali
    контекст-меню (точка расширения перехвата).
 4. [extension/build.mjs](../../extension/build.mjs) - как вендорятся зависимости.
 5. [docs/PARITY.md](../../docs/PARITY.md) - формат строк соответствия JS<->Go.
-6. [DEV/plan/_TEMPLATE_cross-edition.md](../plan/_TEMPLATE_cross-edition.md) - шаблон
+6. `DEV/plan/_TEMPLATE_cross-edition.md` - шаблон
    тикета (edition parity checklist).

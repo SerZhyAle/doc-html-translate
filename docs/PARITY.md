@@ -10,7 +10,7 @@ by hand, so shared constants and heuristics drift silently unless they are pinne
 [Editions](../README.md#editions) section for the user-facing framing.
 
 > Convention: this file is the *reference* (the invariants and the map). The actionable backlog of
-> open gaps lives in the parity ticket [`DEV/plan/2026-07-01_cross-edition-parity.md`](../DEV/plan/2026-07-01_cross-edition-parity.md).
+> open gaps lives in the parity ticket `DEV/plan/2026-07-01_cross-edition-parity.md` (never committed; open gaps are tickets in `DEV/plan/`).
 > When a gap is closed, update both.
 
 ## Editions and codebases
@@ -1211,7 +1211,7 @@ These are by design. Do not "sync" them without a decision - document changes he
 
 1. **One cross-edition ticket per feature.** A user-facing feature gets a single ticket in `DEV/plan/`
    that covers all affected editions, using the template
-   [`DEV/plan/_TEMPLATE_cross-edition.md`](../DEV/plan/_TEMPLATE_cross-edition.md). Do **not** open a
+   `DEV/plan/_TEMPLATE_cross-edition.md` (never committed). Do **not** open a
    separate ticket per edition (the OCR feature was done as two tickets - that is the anti-pattern this
    replaces).
 2. **Parity checklist.** Every such ticket answers, for CLI, GUI, MSIX and Extension: implemented, or
