@@ -203,6 +203,10 @@
     "message": "اس سائٹ پر",
     "description": "Popup per-site switch."
   },
+  "popupNoSite": {
+    "message": "(ویب سائٹ نہیں)",
+    "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
+  },
   "popupOptions": {
     "message": "اختیارات",
     "description": "Popup link to the options page."

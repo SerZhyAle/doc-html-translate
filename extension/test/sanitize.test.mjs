@@ -68,6 +68,43 @@ test("safe links survive; same-section fragments follow the namespaced ids", () 
   assert.ok(html.includes('href="#d3-fn1"') && html.includes('id="d3-fn1"'), `fragment retargeted: ${html}`);
 });
 
+// B51: ids were namespaced but the references to them were not, so gradients, clip paths, image
+// maps, labels and aria relationships pointed at ids that no longer existed.
+test("every same-section id reference follows the namespaced id", () => {
+  const { frag } = sanitizeToFragment(doc(
+    `<svg><defs><linearGradient id="g"></linearGradient><clipPath id="c"></clipPath><marker id="m"></marker></defs>` +
+    `<rect fill="url(#g)" stroke="url('#g')" clip-path="url(&quot;#c&quot;)" marker-end="url(#m)"></rect>` +
+    `<use href="#c"></use><use xlink:href="#m"></use></svg>` +
+    `<img src="data:image/png;base64,AA" usemap="#nav"><map name="nav"><area href="#t" alt="t"></map>` +
+    `<label for="q">Q</label><input id="q" aria-describedby="h1 h2" aria-labelledby="t">` +
+    `<p id="h1">one</p><p id="h2">two</p>` +
+    `<table><tr><th id="t">T</th><td headers="t">v</td></tr></table>`,
+  ), 4);
+  const host = document.createElement("div");
+  host.appendChild(frag);
+  const rect = host.querySelector("rect");
+  assert.equal(rect.getAttribute("fill"), "url(#d4-g)");
+  assert.equal(rect.getAttribute("stroke"), "url('#d4-g')");
+  assert.equal(rect.getAttribute("clip-path"), 'url("#d4-c")');
+  assert.equal(rect.getAttribute("marker-end"), "url(#d4-m)");
+  const uses = host.querySelectorAll("use");
+  assert.equal(uses[0].getAttribute("href"), "#d4-c");
+  assert.equal(uses[1].getAttribute("xlink:href"), "#d4-m");
+  assert.equal(host.querySelector("img").getAttribute("usemap"), "#d4-nav");
+  assert.equal(host.querySelector("map").getAttribute("name"), "d4-nav", "the map is found by name");
+  assert.equal(host.querySelector("area").getAttribute("href"), "#d4-t");
+  assert.equal(host.querySelector("label").getAttribute("for"), "d4-q");
+  const input = host.querySelector("input");
+  assert.equal(input.id, "d4-q");
+  assert.equal(input.getAttribute("aria-describedby"), "d4-h1 d4-h2");
+  assert.equal(input.getAttribute("aria-labelledby"), "d4-t");
+  assert.equal(host.querySelector("td").getAttribute("headers"), "d4-t");
+  // Every rewritten reference resolves to an element of this section.
+  for (const id of ["d4-g", "d4-c", "d4-m", "d4-q", "d4-h1", "d4-h2", "d4-t"]) {
+    assert.ok(host.querySelector(`[id="${id}"]`), `${id} exists`);
+  }
+});
+
 test("SVG links and animations cannot smuggle a script URL", () => {
   const { frag } = sanitizeToFragment(doc(
     `<svg><a xlink:href="javascript:x()"><text>a</text></a><a href="javascript:y()"><text>b</text></a>` +

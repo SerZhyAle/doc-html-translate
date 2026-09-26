@@ -5,6 +5,7 @@ import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { applyGlyphs } from "./glyphs.js";
+import { siteHost } from "./site-host.js";
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
@@ -97,10 +98,12 @@ async function setOptions(opts) {
   await chrome.storage.local.set({ options: opts });
 }
 
+// activeHost is the site the per-site switch acts on (site-host.js): on the viewer's own tab, the
+// host of the document it shows.
 async function activeHost() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.url) return new URL(tab.url).hostname;
+    if (tab && tab.url) return siteHost(tab.url, chrome.runtime.getURL("src/viewer.html"));
   } catch { /* no host access */ }
   return "";
 }
@@ -132,7 +135,7 @@ async function init() {
     siteEl.disabled = !opts.enabledByDefault;
     siteEl.checked = opts.enabledByDefault && !opts.disabledHosts.includes(host);
   } else {
-    hostEl.textContent = "(not a website)";
+    hostEl.textContent = msg("popupNoSite", "(not a website)");
     siteEl.disabled = true;
   }
 

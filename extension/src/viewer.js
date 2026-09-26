@@ -28,8 +28,9 @@ import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { recordRun } from "./diagnostics.js";
-import { buildExportHtml } from "./export-html.js";
+import { buildExportHtml, exportImageEncoding } from "./export-html.js";
 import { restoreRemote, REMOTE_MARK } from "./url-policy.js";
+import { parseFileParam } from "./site-host.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -52,18 +53,6 @@ const el = (tag, cls) => {
 };
 
 // ---- URL / params ----------------------------------------------------------
-// The interception rule substitutes the original URL after `file=` *without*
-// URL-encoding, so it may itself contain `?`/`&` (its own query string). Take the
-// whole raw tail after `file=` rather than URLSearchParams, which would split on
-// the embedded `&`. If the tail isn't already an absolute URL, treat it as
-// percent-encoded (the manual viewer.html?file=<encoded> entry point).
-function parseFileParam(search) {
-  const m = /[?&]file=(.*)$/s.exec(search);
-  if (!m) return "";
-  const raw = m[1];
-  if (/^(https?|file):/i.test(raw)) return raw;
-  try { return decodeURIComponent(raw); } catch { return raw; }
-}
 const fileUrl = parseFileParam(location.search);
 
 // Only ever hand http/https/file URLs to fetch()/navigation. parseFileParam can
@@ -134,6 +123,7 @@ let revokeCurrent = null;
 let pdfTask = null; // the pdf.js loading task of the document being opened, until it settles
 function teardownCurrent() {
   clearRemoteNotice();
+  resetToolbar();
   releaseOverlays($("content"));
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
   // destroy() ends the document's worker-side state too; dropping the reference alone kept every
@@ -159,6 +149,17 @@ function teardownCurrent() {
   ocrWithText = 0;
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
   pdfImageUrls = [];
+}
+
+// resetToolbar puts every per-document control back to its page-load state, so nothing the last
+// document decided - no TOC, OCR plates, a savable view, source bytes - carries over to the next
+// one. Each loader then shows what its own document has.
+function resetToolbar() {
+  $("toc-tree").replaceChildren();
+  $("btn-toc").classList.remove("hidden");
+  $("grp-ocr").hidden = true;
+  $("btn-save-html").classList.add("hidden");
+  setOriginalDownload(null, "");
 }
 
 // beginLoad tears the current document down and returns the new load's token. Every load checks
@@ -647,9 +648,11 @@ async function buildImageDataMap(root) {
       if (!w || !h) { map.set(src, null); continue; }
       c.width = w;
       c.height = h;
-      c.getContext("2d").drawImage(img, 0, 0);
-      const jpeg = await new Promise((resolve) => c.toBlob(resolve, "image/jpeg", 0.85));
-      map.set(src, jpeg ? await blobToDataUrl(jpeg) : null);
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const enc = exportImageEncoding(ctx, w, h);
+      const blob = await new Promise((resolve) => c.toBlob(resolve, enc.type, enc.quality));
+      map.set(src, blob ? await blobToDataUrl(blob) : null);
     } catch {
       map.set(src, null); // tainted or too large - dropped below
     } finally {
@@ -715,8 +718,10 @@ async function collectExportCss(clone) {
 function renderToc(entries) {
   const tree = $("toc-tree");
   tree.replaceChildren();
-  if (!entries || entries.length === 0) {
-    $("btn-toc").classList.add("hidden");
+  const empty = !entries || entries.length === 0;
+  $("btn-toc").classList.toggle("hidden", empty);
+  if (empty) {
+    $("toc").classList.add("hidden"); // an open panel would be left showing nothing
     return;
   }
   tree.append(buildTocList(entries));
@@ -994,6 +999,7 @@ async function loadImageData(data, title, mime) {
   $("btn-original").classList.add("hidden"); // no "native viewer" concept for a picture
   $("status").classList.remove("done");
   setPageTotal(1);
+  renderToc(null); // a picture has no table of contents
   ensureOcrCss();
 
   const content = $("content");
@@ -1316,14 +1322,20 @@ async function renderDocument(pdf, title, gen = docGen) {
 
   // Sample early pages for language detection before rendering everything.
   setStatus(t("vStatusDetecting", "Detecting language.."));
+  // Nothing of this document is referenced until pdfDoc is set below, so a superseded load
+  // releases it at whichever await it notices - before it can touch the newer document's
+  // <html lang>, TOC or banner.
+  const drop = () => { try { pdf.destroy(); } catch { /* ignore */ } };
   const sampleText = await collectSample(pdf, Math.min(total, 5));
-  await setDocumentLang(pdf, sampleText);
+  if (!isCurrent(gen)) { drop(); return; }
+  const lang = await pdfDocumentLang(pdf, sampleText);
+  if (!isCurrent(gen)) { drop(); return; }
+  applyLang(lang);
 
   // TOC from the outline.
   let toc = [];
   try { toc = await buildToc(pdf); } catch { toc = []; }
-  // Nothing of this document is referenced yet, so a superseded load releases it here.
-  if (!isCurrent(gen)) { try { pdf.destroy(); } catch { /* ignore */ } return; }
+  if (!isCurrent(gen)) { drop(); return; }
   renderToc(toc);
 
   $("content").replaceChildren();
@@ -1335,6 +1347,8 @@ async function renderDocument(pdf, title, gen = docGen) {
   pdfPagesWithText = 0;
 
   await renderChunk();
+  // A newer load's teardown has destroyed pdf by now and owns the counters warnIfNoText reads.
+  if (!isCurrent(gen)) return;
   // Judge "scanned, image-only PDF" on the first chunk alone: up to PAGE_CHUNK pages
   // is a fair sample, and a scanned book is scanned throughout. Waiting for the whole
   // document would mean never showing the banner on the files that most need it.
@@ -1675,7 +1689,9 @@ async function collectSample(pdf, pages) {
   return text;
 }
 
-async function setDocumentLang(pdf, sampleText) {
+// pdfDocumentLang only decides the language; the caller applies it once it knows the load is
+// still current.
+async function pdfDocumentLang(pdf, sampleText) {
   // Priority: explicit options hint -> PDF /Lang metadata -> text heuristic.
   let lang = "";
   if (options.sourceLang && options.sourceLang !== "auto") {
@@ -1689,7 +1705,7 @@ async function setDocumentLang(pdf, sampleText) {
     } catch { /* ignore */ }
   }
   if (!lang) lang = detectLang(sampleText);
-  applyLang(lang);
+  return lang;
 }
 
 // applyLang sets <html lang> and a content-language meta so Chrome offers

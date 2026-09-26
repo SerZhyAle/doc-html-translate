@@ -1067,9 +1067,11 @@ These are by design. Do not "sync" them without a decision - document changes he
 
 - **EPUB output model.** Go extracts a **multi-file book to disk** and does **not** sanitize chapter
   HTML (it opens local files in the user's own browser). The extension merges the whole spine into **one
-  in-memory DOM** and therefore sanitizes (drops `script/style/inline styles/on*` and `name`, keeps only
+  in-memory DOM** and therefore sanitizes (drops `script/style/inline styles/on*` and `name` - an image
+  map's is namespaced instead, as `usemap` finds it by name - keeps only
   `http`/`https`/`mailto`/`tel`/relative/fragment links), rewrites `<img>` to `blob:` URLs, and
-  namespaces ids/anchors. So sanitize, image-blobbing and anchor remapping exist **only in the
+  namespaces ids together with every reference to them (anchors, SVG `href` and `url(#id)`, `usemap`,
+  `label for`, `headers`, `aria-*` id lists). So sanitize, image-blobbing and anchor remapping exist **only in the
   extension** by design. The shared URL rules live in [`url-policy.js`](../extension/src/url-policy.js).
 - **Single-page merge styling and scoping.** In Go, single-page output is created by merging spine pages
   into a single `index.html` file on disk ([`internal/htmlgen`](../internal/htmlgen/singlepage.go)). To

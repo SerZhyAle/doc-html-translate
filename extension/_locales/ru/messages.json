@@ -219,6 +219,10 @@
     "message": "На этом сайте",
     "description": "Popup per-site switch."
   },
+  "popupNoSite": {
+    "message": "(не веб-сайт)",
+    "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
+  },
   "popupOptions": {
     "message": "Настройки",
     "description": "Popup link to the options page."
