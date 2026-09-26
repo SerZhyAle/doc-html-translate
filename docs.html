@@ -69,7 +69,7 @@
       <span class="eyebrow">Documentation</span>
       <h1>Fast local book reading with free Chrome translation</h1>
       <p class="lead">Convert EPUB/PDF and other formats into local HTML pages, then read in Chrome and translate to your language using built-in browser translation. No API key, no subscription, no ceremony required.</p>
-      <p class="meta"><a href="./">Home</a> · <a href="extension.html">Extension</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub Repository</a></p>
+      <p class="meta"><a href="./">Home</a> · <a href="extension.html">Extension</a> · <a href="#subject-index">Subject index</a> · <a href="#glossary">Glossary</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub Repository</a></p>
     </section>
 
     <section id="editions">
@@ -92,6 +92,8 @@
           <li>Open generated index in Chrome</li>
           <li>Use Chrome page translation to your target language</li>
         </ul>
+        <figure class="shot"><img src="tools/store/gui-en-us.png" width="1366" height="768" loading="lazy" alt="The doc-html-ui window: the drop zone, the Convert button and the translation choice with Chrome (free) selected"><figcaption>Step 1 - drop the file on the app window and press Convert.</figcaption></figure>
+        <figure class="shot"><img src="tools/store/table-of-contents-en-us.png" width="1366" height="768" loading="lazy" alt="A converted book open in the browser: the first page of Alice's Adventures in Wonderland under the reader toolbar"><figcaption>Step 2 - the converted book opens in the browser. Step 3 happens in the browser's own menu: Translate page.</figcaption></figure>
         <div class="commands">
           <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Copy</button></div>
           <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># or </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Copy</button></div>
@@ -249,6 +251,74 @@
           last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document
           text and no list of your sites.</p>
       </details>
+    </section>
+
+    <section id="subject-index">
+      <h2>Subject index</h2>
+      <ul class="subject-index">
+        <li><a href="#external-tools">7-Zip</a></li>
+        <li><a href="#editions">Browser extension</a></li>
+        <li><a href="#external-tools">Calibre</a></li>
+        <li><a href="#editions">CLI</a></li>
+        <li><a href="#formats">Comic archives (CBZ, CBR, CB7, CBT)</a></li>
+        <li><a href="#workflow">Convert a file</a></li>
+        <li><a href="#flags">Default handler (-register)</a></li>
+        <li><a href="#editions">Desktop app</a></li>
+        <li><a href="#editions">Editions</a></li>
+        <li><a href="#external-tools">External tools</a></li>
+        <li><a href="#external-tools">ffmpeg</a></li>
+        <li><a href="#flags">Flags</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+        <li><a href="#flags">Google Cloud translation (-google)</a></li>
+        <li><a href="#formats">Images (OCR overlay)</a></li>
+        <li><a href="#flags">Interface language (-ui-lang)</a></li>
+        <li><a href="#logs">Logs, sending to the author</a></li>
+        <li><a href="#editions">Microsoft Store app</a></li>
+        <li><a href="#flags">OCR (-ocr, -ocr-lang)</a></li>
+        <li><a href="#flags">Ollama (-ollama)</a></li>
+        <li><a href="#external-tools">pdftotext</a></li>
+        <li><a href="#links">Project links and downloads</a></li>
+        <li><a href="#quick-start">Quick start</a></li>
+        <li><a href="#reading">Reading position</a></li>
+        <li><a href="#reading">Reading themes</a></li>
+        <li><a href="#reference">Reference</a></li>
+        <li><a href="#reading">Spending guard (-max-cost)</a></li>
+        <li><a href="#flags">Split pages (-split)</a></li>
+        <li><a href="#formats">Supported formats</a></li>
+        <li><a href="#flags">Table of contents depth (-toc-depth)</a></li>
+        <li><a href="#workflow">Translate a book for free</a></li>
+        <li><a href="#formats">TXT encodings</a></li>
+      </ul>
+    </section>
+
+    <section id="glossary">
+      <h2>Glossary</h2>
+      <dl class="glossary">
+        <dt>Convert</dt>
+        <dd>Turn a document (EPUB, PDF, FB2, a comic archive, an image, ..) into a folder of local HTML pages with an <code>index.html</code>, navigation and a table of contents. The app's main job; nothing is uploaded.</dd>
+        <dt>Translate (page translation)</dt>
+        <dd>The free way to read in your language: open the converted <code>index.html</code> in Chrome or Edge and use the browser's own Translate page. Google Cloud and Ollama are optional engines that translate during conversion instead.</dd>
+        <dt>OCR overlay</dt>
+        <dd>Text that Tesseract recognized in a picture - a scan, a comic page, a standalone image - laid over it as translatable text plates, so page translation works on the picture in place.</dd>
+        <dt>Text plate</dt>
+        <dd>One block of the OCR overlay. It covers the letters it replaces; a button in the header hides every plate to show the picture underneath.</dd>
+        <dt>Desktop app</dt>
+        <dd>The Windows edition: <code>doc-html-ui.exe</code> (the window) and <code>doc-html-translate.exe</code> (the command line), portable or from the Microsoft Store.</dd>
+        <dt>CLI</dt>
+        <dd>The command-line converter <code>doc-html-translate.exe</code>. Every option is a flag listed under Main Flags.</dd>
+        <dt>Browser extension</dt>
+        <dd>The Chromium edition from the Chrome Web Store and Edge Add-ons: it converts a document right in a browser tab, without the desktop app.</dd>
+        <dt>Microsoft Store app</dt>
+        <dd>The desktop app as a Store-signed, auto-updating MSIX package.</dd>
+        <dt>Default handler</dt>
+        <dd>The program Windows starts when you double-click a file. The app becomes one for EPUB, PDF and the other supported files only when you opt in.</dd>
+        <dt>Table of contents (TOC)</dt>
+        <dd>The multi-level list of chapters on <code>index.html</code>, built from the book's own structure.</dd>
+        <dt>Spending guard</dt>
+        <dd>A cost limit for the paid translation engines: above it, translation is skipped and the book is still produced.</dd>
+        <dt>Tesseract</dt>
+        <dd>The open-source OCR engine the app calls for text in pictures; the OCR overlay needs it.</dd>
+      </dl>
     </section>
 
     <section id="links">

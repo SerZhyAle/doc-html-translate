@@ -13,7 +13,12 @@
     - any other skip (one sample over the size cap, Calibre or 7-Zip not installed, a fixture
       that is only present on some machines) is counted on the verdict line and named above it.
 
-  Last line: "test: PASS (run=N skipped=M)", "test: FAIL (n)" or "test: COULD NOT VERIFY (n)".
+  A passing test may also log a line "advisory: <text>" (tests/site_l10n_test.go does, for a
+  translation older than its English source): something found that the change under test cannot be
+  charged with. Advisories are named above the verdict and make it PASS WITH ADVISORIES, exit 3.
+
+  Last line: "test: PASS (run=N skipped=M)", "test: PASS WITH ADVISORIES (run=N skipped=M
+  advisories=A)", "test: FAIL (n)" or "test: COULD NOT VERIFY (n)".
   Raw events go to temp/logs/test.json, the readable log to temp/logs/test.log.
 #>
 $ErrorActionPreference = "Stop"
@@ -45,6 +50,7 @@ $failedTests = [System.Collections.Generic.List[string]]::new()
 $failedPkgs = [System.Collections.Generic.List[string]]::new()
 $inputAbsent = [System.Collections.Generic.List[string]]::new()
 $envSkips = [System.Collections.Generic.List[string]]::new()
+$advisories = [System.Collections.Generic.List[string]]::new()
 $passed = 0
 
 function Out-Line([string]$text) {
@@ -72,6 +78,7 @@ try {
                 if ($ev.Test) {
                     if (-not $buffers.ContainsKey($key)) { $buffers[$key] = [System.Collections.Generic.List[string]]::new() }
                     $buffers[$key].Add($ev.Output.TrimEnd())
+                    if ($ev.Output -match '^\s*\S+\.go:\d+: advisory: (.*)$') { $advisories.Add("$($ev.Package) $($ev.Test): $($Matches[1].Trim())") }
                 } else {
                     $text = $ev.Output.TrimEnd()
                     if ($text -and $text -ne 'PASS' -and $text -notmatch '^testing: warning: no tests to run') { Out-Line $text }
@@ -122,6 +129,12 @@ if ($inputAbsent.Count -gt 0) {
     Write-Host "declared input absent - these tests inspected nothing:" -ForegroundColor Magenta
     foreach ($s in $inputAbsent) { Write-Host "  - $s" -ForegroundColor Magenta }
     Exit-Verdict 'test' 2 "$($inputAbsent.Count)"
+}
+
+if ($advisories.Count -gt 0) {
+    Write-Host "advisories ($($advisories.Count)) - found, not charged to this change:" -ForegroundColor Yellow
+    foreach ($a in $advisories) { Write-Host "  - $a" -ForegroundColor Yellow }
+    Exit-Verdict 'test' 3 "run=$passed skipped=$($envSkips.Count) advisories=$($advisories.Count)"
 }
 
 Exit-Verdict 'test' 0 "run=$passed skipped=$($envSkips.Count)"
