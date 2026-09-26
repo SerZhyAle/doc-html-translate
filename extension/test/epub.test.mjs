@@ -84,6 +84,18 @@ test("unzip: rejects a non-ZIP buffer", async () => {
 // The same fixture drives internal/epub TestResolveBookPathSharedCases, so the two
 // editions agree on which book-supplied names resolve and where (docs/PARITY.md,
 // "EPUB href resolution").
+// internal/epub TestArchiveParityEPUB extracts the same archive: a symlink entry is never unpacked.
+test("unzip: shared Go/JS archive fixture skips a symlink entry", async () => {
+  const dir = new URL("../../tests/testdata/archive-parity/", import.meta.url);
+  const { epubs } = JSON.parse(readFileSync(new URL("cases.json", dir), "utf8"));
+  for (const c of epubs) {
+    const buf = readFileSync(new URL(c.file, dir));
+    const files = await unzip(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+    assert.ok(files.has(c.kept), `${c.about}: ${c.kept} kept`);
+    assert.ok(!files.has(c.skipped), `${c.about}: ${c.skipped} skipped`);
+  }
+});
+
 test("resolveBookPath: shared Go/JS fixture", () => {
   const fixture = JSON.parse(readFileSync(new URL("../../tests/testdata/epub_href_cases.json", import.meta.url), "utf8"));
   assert.ok(fixture.cases.length > 0);

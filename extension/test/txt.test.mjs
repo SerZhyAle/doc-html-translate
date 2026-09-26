@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { splitParagraphs, decodeText, sniffUtf16, measureUtf8, acceptAsUtf8 } from "../src/txt.js";
 
 // Bytes as Notepad's "Unicode" / "Unicode big endian" write them: a BOM, then 2-byte units.
@@ -117,6 +118,14 @@ test("splitParagraphs: blank lines join consecutive lines into one paragraph", (
 test("splitParagraphs: one paragraph per line when there are no blank lines", () => {
   const out = splitParagraphs("First\nSecond\nThird");
   assert.deepEqual(out, ["First", "Second", "Third"]);
+});
+
+test("splitParagraphs: shared Go/JS fixture", () => {
+  // internal/txt TestParagraphsSharedCases runs the same cases through parseParagraphs.
+  const fixture = JSON.parse(readFileSync(new URL("../../tests/testdata/txt_paragraph_cases.json", import.meta.url), "utf8"));
+  for (const c of fixture.cases) {
+    assert.deepEqual(splitParagraphs(c.in), c.want, c.name);
+  }
 });
 
 test("splitParagraphs: normalizes CRLF and CR", () => {

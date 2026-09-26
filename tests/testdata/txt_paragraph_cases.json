@@ -1,0 +1,14 @@
+{
+  "_comment": "Shared plain-text paragraph cases, read by internal/txt (parseParagraphs) and extension/src/txt.js (splitParagraphs). in is the decoded text, want the paragraphs in order. Every line separator the desktop edition knows - CR LF, CR, NEL (U+0085), LS (U+2028), PS (U+2029), vertical tab and form feed - is a line break in both. See docs/PARITY.md, Plain-text paragraphs.",
+  "cases": [
+    { "name": "blank lines join lines", "in": "Line one\nstill one\n\nPara two\n", "want": ["Line one still one", "Para two"] },
+    { "name": "one paragraph per line", "in": "First\nSecond\nThird", "want": ["First", "Second", "Third"] },
+    { "name": "CRLF and CR", "in": "a\r\nb\r\rc", "want": ["a b", "c"] },
+    { "name": "form feed on its own line is a blank line", "in": "l1\nl2\n\f\nl3\nl4", "want": ["l1 l2", "l3 l4"] },
+    { "name": "form feed between lines", "in": "l1\fl2", "want": ["l1", "l2"] },
+    { "name": "vertical tab", "in": "a\u000bb", "want": ["a", "b"] },
+    { "name": "next line U+0085", "in": "a\u0085b\u0085\u0085c", "want": ["a b", "c"] },
+    { "name": "line separator U+2028", "in": "a\u2028b", "want": ["a", "b"] },
+    { "name": "paragraph separator U+2029", "in": "a\u2029\u2029b", "want": ["a", "b"] }
+  ]
+}

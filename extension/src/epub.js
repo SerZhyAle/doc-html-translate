@@ -13,8 +13,10 @@
 // node; everything that parses XHTML uses DOMParser and runs only in the viewer.
 
 import { normalizeLangTag } from "./lang.js";
+import { decodeChapter } from "./charset.js";
+import { coverSvgImage, outermostSvg, xhtmlToHtmlSyntax } from "./epub-normalize.js";
 import { DROP_TAGS, scrubTree } from "./url-policy.js";
-import { EPUB_MAX_ENTRY_BYTES, InputLimitError, checkArchive, entryTooLarge, inflateRawCapped } from "./limits.js";
+import { EPUB_MAX_ENTRY_BYTES, InputLimitError, checkArchive, entryTooLarge, inflateRawCapped, zipEntryIsRegular } from "./limits.js";
 
 // ---- ZIP reader ------------------------------------------------------------
 // A minimal, central-directory-driven reader. Sizes and the local-header offset
@@ -43,7 +45,9 @@ function findEOCD(dv, len) {
 
 // unzip parses a ZIP archive into a Map of entry name -> bytes. Directory entries
 // are skipped, and so is an entry over EPUB_MAX_ENTRY_BYTES, by name (the desktop
-// edition skips it the same way). Throws on a non-ZIP buffer, ZIP64, an
+// edition skips it the same way). A symlink or other non-regular entry is never
+// unpacked - the desktop edition refuses it at extraction - but, as there, it still
+// counts toward the listing's entry count and unpacked total. Throws on a non-ZIP buffer, ZIP64, an
 // unsupported compression method, or a listing over the archive limits. Async
 // because inflate is stream-based. Pure (no DOM) - unit-tested.
 export async function unzip(arrayBuffer) {
@@ -65,6 +69,8 @@ export async function unzip(arrayBuffer) {
   for (let i = 0; i < count; i++) {
     if (p + 46 > u8.length || dv.getUint32(p, true) !== SIG_CEN) break;
     const nameLen = dv.getUint16(p + 28, true);
+    const madeBy = dv.getUint16(p + 4, true);
+    const extAttrs = dv.getUint32(p + 38, true);
     const entry = {
       method: dv.getUint16(p + 10, true),
       compSize: dv.getUint32(p + 20, true),
@@ -79,6 +85,10 @@ export async function unzip(arrayBuffer) {
       continue;
     }
     total += entry.size;
+    if (!zipEntryIsRegular(madeBy, extAttrs, entry.name)) {
+      console.warn(`EPUB: skipped ${entry.name}: not a regular file`);
+      continue;
+    }
     listing.push(entry);
   }
   checkArchive(count, total);
@@ -180,8 +190,10 @@ function hasToken(value, token) {
   return String(value || "").split(/\s+/).includes(token);
 }
 
+// decodeText reads a book file by the encoding it declares (BOM, XML declaration, <meta>
+// charset), as the desktop app reads a chapter - see charset.js.
 function decodeText(bytes) {
-  return bytes ? new TextDecoder("utf-8").decode(bytes) : "";
+  return decodeChapter(bytes);
 }
 
 const MIME_BY_EXT = {
@@ -196,16 +208,17 @@ function guessMime(path) {
 
 // ---- OPF / container parsing (DOM) -----------------------------------------
 
-// parseContainer returns the OPF package path from META-INF/container.xml.
-function parseContainer(xml) {
+// parseContainer returns the OPF package path from META-INF/container.xml: the first
+// rootfile that is a package document by its media type or its .opf name. A container
+// naming only other renditions has no package, and the book fails as it does on the
+// desktop (internal/epub parseContainer) rather than reading some other file as one.
+export function parseContainer(xml) {
   const doc = new DOMParser().parseFromString(xml, "application/xml");
-  const rootfiles = Array.from(doc.getElementsByTagNameNS("*", "rootfile"));
-  for (const rf of rootfiles) {
+  for (const rf of Array.from(doc.getElementsByTagNameNS("*", "rootfile"))) {
     const fp = rf.getAttribute("full-path");
     const mt = rf.getAttribute("media-type");
     if (fp && (mt === "application/oebps-package+xml" || fp.toLowerCase().endsWith(".opf"))) return fp;
   }
-  if (rootfiles[0] && rootfiles[0].getAttribute("full-path")) return rootfiles[0].getAttribute("full-path");
   throw new Error("no rootfile in container.xml");
 }
 
@@ -341,7 +354,7 @@ function isExternalHref(href) {
 // it points outside the rendered spine. Internal hrefs resolve relative to the TOC
 // document's directory; a #fragment becomes "d<index>-<fragment>" (the namespaced
 // id the chapter's element carries), a bare file becomes the chapter wrapper id.
-function resolveTocAnchor(href, tocDir, pathToIndex) {
+export function resolveTocAnchor(href, tocDir, pathToIndex) {
   href = String(href || "").trim();
   if (!href || isExternalHref(href)) return null;
   const [file, frag] = splitFrag(href);
@@ -366,7 +379,9 @@ function buildEpubToc(pkg, files, opfDir, pathToIndex) {
   const navItem = pkg.manifest.find((it) => hasToken(it.properties, "nav"));
   if (navItem) {
     const navPath = navItem.path;
-    const html = decodeText(files.get(navPath));
+    const text = decodeText(files.get(navPath));
+    // The desktop app reads the nav after the same XHTML rewrite as every chapter.
+    const html = text && isXhtmlItem(navPath, navItem.mediaType) ? xhtmlToHtmlSyntax(text) : text;
     if (html) {
       const resolved = resolveTocEntries(parseNavToc(html), dirOf(navPath), pathToIndex);
       if (resolved.length) return resolved;
@@ -403,25 +418,36 @@ export function rewriteImg(img, docDir, blobFor) {
   else img.remove();
 }
 
-// convertSvgImage turns an SVG <image> into a plain <img>. When the <svg> wraps a
-// single image (the Calibre/Kindlegen cover idiom) the whole <svg> is replaced, so
-// the injected img CSS controls sizing and the browser applies EXIF orientation -
-// mirroring the desktop normalizeCoverImages.
+// convertSvgImage points an SVG <image> at its in-archive picture. When the <svg> is a
+// cover wrapper - it draws that one image and nothing else (the Calibre/Kindlegen
+// idiom) - the whole <svg> becomes a plain <img>, so the injected img CSS controls
+// sizing and the browser applies EXIF orientation. Any other SVG is an illustration and
+// stays whole, text and all: only the picture's address changes, as the desktop
+// rewriteCoverSVGs leaves it (epub-normalize.js coverSvgImage holds the shared rule).
 export function convertSvgImage(im, docDir, blobFor) {
   const href = im.getAttribute("href") || im.getAttribute("xlink:href") ||
     im.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-  const img = document.createElement("img");
-  img.alt = im.getAttribute("alt") || "";
+  let src = "";
   if (href && !/^(https?|data):/i.test(href)) {
     const target = resolveBookPath(docDir, href);
-    const url = target && blobFor(target);
-    if (url) img.setAttribute("src", url);
+    src = (target && blobFor(target)) || "";
   } else if (href) {
-    img.setAttribute("src", href);
+    src = href;
   }
-  const svg = im.closest("svg");
-  if (svg && svg.querySelectorAll("image").length === 1) svg.replaceWith(img);
-  else im.replaceWith(img);
+  const svg = outermostSvg(im);
+  if (svg && coverSvgImage(svg) === im) {
+    const img = document.createElement("img");
+    img.alt = im.getAttribute("alt") || "";
+    if (src) img.setAttribute("src", src);
+    svg.replaceWith(img);
+    return;
+  }
+  if (!src) {
+    im.remove();
+    return;
+  }
+  im.removeAttribute("xlink:href");
+  im.setAttribute("href", src);
 }
 
 // rewriteAnchor turns a chapter's links into in-page navigation. External links
@@ -451,9 +477,11 @@ export function rewriteAnchor(a, index, docDir, pathToIndex) {
 // renderChapter parses one spine XHTML document, strips unsafe/irrelevant nodes,
 // rewrites images and links, namespaces ids so chapters can share one document,
 // and returns a fragment plus a heading-derived label. The fragment's text is read
-// by the caller (for language detection) before it is appended.
-export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
-  const parsed = new DOMParser().parseFromString(xhtml, "text/html");
+// by the caller (for language detection) before it is appended. The markup is XHTML
+// unless isXhtml is false: its self-closing tags are expanded first, or an <a id/>
+// would swallow the rest of the chapter in the HTML parser.
+export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor, isXhtml = true) {
+  const parsed = new DOMParser().parseFromString(isXhtml ? xhtmlToHtmlSyntax(xhtml) : xhtml, "text/html");
   const body = parsed.body;
   const host = document.createElement("div");
   for (const child of Array.from(body ? body.childNodes : [])) {
@@ -488,6 +516,12 @@ export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor) {
   }
   while (host.firstChild) frag.appendChild(host.firstChild);
   return { frag, label, remote };
+}
+
+// isXhtmlItem mirrors the desktop app's choice of which content documents get the XHTML
+// rewrite: the XHTML media type, or an .xhtml / .xhtm name.
+function isXhtmlItem(path, mediaType) {
+  return mediaType === "application/xhtml+xml" || /\.xhtml?$/i.test(path);
 }
 
 // ---- Public entry point ----------------------------------------------------
@@ -548,7 +582,7 @@ export async function loadEpub(arrayBuffer) {
   let remote = 0;
   for (let i = 0; i < spine.length; i++) {
     const zp = spine[i];
-    const { frag, label, remote: r } = renderChapter(decodeText(files.get(zp)), i, dirOf(zp), pathToIndex, blobFor);
+    const { frag, label, remote: r } = renderChapter(decodeText(files.get(zp)), i, dirOf(zp), pathToIndex, blobFor, isXhtmlItem(zp, mediaByPath.get(zp)));
     if (sampleText.length < 8000) sampleText += " " + (frag.textContent || "");
     remote += r;
     sections.push({ id: `epub-sec-${i}`, label, frag });

@@ -966,7 +966,7 @@ async function loadFromData(data, title, name, gen) {
     case "fb2": await loadBook(data, title, parseFb2, t("vStatusReadingFb2", "Reading FB2..")); return;
     case "mobi": await loadBook(data, title, parseEbook, t("vStatusReadingEbook", "Reading e-book..")); return;
     case "image": await loadImageData(data, title, imageMime(data, name)); return;
-    case "comic": await loadComicData(data, title); return;
+    case "comic": await loadComicData(data, title, name); return;
     default: await loadPdfData(data, title);
   }
 }
@@ -1062,7 +1062,7 @@ const comicLoaders = new WeakMap();
 // then OCR'd into translatable plates so the browser's "Translate page" reaches the
 // speech bubbles. CBR/CB7 (RAR/7z) have no in-browser decoder and are declined with a
 // notice pointing at the desktop app.
-async function loadComicData(data, title) {
+async function loadComicData(data, title, name) {
   const gen = docGen;
   $("doc-title").textContent = title;
   document.title = title;
@@ -1074,7 +1074,7 @@ async function loadComicData(data, title) {
 
   let pages;
   try {
-    pages = await parseComic(data);
+    pages = await parseComic(data, name);
   } catch (err) {
     if (!isCurrent(gen)) return;
     if (err instanceof InputLimitError) {

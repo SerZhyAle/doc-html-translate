@@ -54,7 +54,7 @@ func normalizeContent(book *Book, outputDir string) {
 		srcPath := bookPath(outputDir, book.BasePath, item.Href)
 		dstPath := bookPath(outputDir, book.BasePath, r.finalHref)
 		xhtml := item.MediaType == "application/xhtml+xml" || r.htmlHref != item.Href
-		if err := normalizeChapter(srcPath, dstPath, item.Href, book.Language, xhtml, lookup); err != nil {
+		if err := normalizeChapter(srcPath, dstPath, book.BasePath, item.Href, book.Language, xhtml, lookup); err != nil {
 			logging.Errorf("WARNING: normalize %s: %v\n", item.Href, err)
 			continue
 		}
@@ -156,10 +156,11 @@ func samePathFold(a, b string) bool {
 
 // normalizeChapter reads srcPath, applies the DOM normalizations and writes
 // the result to dstPath. fileHref is the chapter's current OPF-relative href,
-// against which its links resolve (renames never change the directory).
+// against which its links resolve (renames never change the directory), and
+// basePath the OPF directory, from which root-relative links resolve.
 // bookLang is the package's dc:language, given to a page that declares no
 // language of its own. A file that needs no change is left untouched on disk.
-func normalizeChapter(srcPath, dstPath, fileHref, bookLang string, xhtml bool, lookup func(string) (string, bool)) error {
+func normalizeChapter(srcPath, dstPath, basePath, fileHref, bookLang string, xhtml bool, lookup func(string) (string, bool)) error {
 	data, err := os.ReadFile(srcPath)
 	if err != nil {
 		return err
@@ -180,7 +181,7 @@ func normalizeChapter(srcPath, dstPath, fileHref, bookLang string, xhtml bool, l
 	if rewriteCoverSVGs(doc) {
 		changed = true
 	}
-	if rewriteLinks(doc, fileHref, lookup) {
+	if rewriteLinks(doc, basePath, fileHref, lookup) {
 		changed = true
 	}
 	if declareBookLang(doc, bookLang) {
@@ -241,6 +242,10 @@ func xhtmlToHTMLSyntax(data []byte) []byte {
 				foreign--
 			}
 		case gohtml.SelfClosingTagToken:
+			// The tokenizer switched to raw-text mode for <script/>, <title/>,
+			// <style/> and the like, inside <svg> too; the element is empty, so
+			// undo that, or an SVG <title/> swallows the rest of the chapter.
+			z.NextIsNotRawText()
 			if foreign > 0 {
 				break
 			}
@@ -249,9 +254,6 @@ func xhtmlToHTMLSyntax(data []byte) []byte {
 			if htmlVoidElements[string(name)] {
 				break
 			}
-			// The tokenizer switched to raw-text mode for <script/>, <title/>,
-			// <style/> and the like; the element is empty, so undo that.
-			z.NextIsNotRawText()
 			start := bytes.TrimRight(bytes.TrimSuffix(raw, []byte("/>")), " \t\r\n\f")
 			out.Write(start)
 			out.WriteString("></")

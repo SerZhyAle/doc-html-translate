@@ -9,6 +9,17 @@ import {
   sameTypeSize, splitWideGaps, strictlyBetter, strokeBetween, trimOutlierWords,
   OCR_BOUNDARY_REACH, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
 } from "../src/ocr-cluster.js";
+import { readFileSync } from "node:fs";
+
+// internal/ocr TestOrderColumnsSharedCases runs the same runs at the same floors (audit finding
+// B64; tests/ocr_floor_parity_test.go holds every pass to handing orderColumns its own floor).
+test("orderColumns: shared Go/JS fixture, per pass floor", () => {
+  const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_column_order_cases.json", import.meta.url), "utf8"));
+  for (const o of fx.orders) {
+    const runs = fx.runs.map((r) => ({ ...r, bbox: { ...r.bbox } }));
+    assert.deepEqual(orderColumns(runs, o.floor).map((r) => r.text), o.want, `floor ${o.floor}`);
+  }
+});
 
 // The line boxes below are not invented: they are what tesseract returned for the lab's two
 // grouping scenes on 2026-08-11, in the upscaled space the desktop app clusters in. The extension

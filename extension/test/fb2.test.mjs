@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { fragHtml } from "./_dom.mjs";
 import { decodeFb2, parseFb2 } from "../src/fb2.js";
 
@@ -48,4 +49,22 @@ test("parseFb2: keeps every prose element", async () => {
   ]) {
     assert.ok(html.includes(want), `missing ${want} in ${html}`);
   }
+});
+
+// internal/fb2 TestFB2SharedCase converts the same book: the cover opens it, a stanza keeps its own
+// title and subtitle, and a picture with no binary leaves a visible note (audit B34, B35).
+test("parseFb2: shared Go/JS fixture", async () => {
+  const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/fb2_parity_cases.json", import.meta.url), "utf8"));
+  const book = await parseFb2(new TextEncoder().encode(fx.xml));
+  const html = book.sections.map((s) => fragHtml(s.frag)).join("\n");
+  const img = html.indexOf("<img");
+  assert.ok(img >= 0 && img < html.indexOf(fx.firstText), `the cover does not open the book: ${html}`);
+  let at = 0;
+  for (const text of fx.order) {
+    const i = html.indexOf(text, at);
+    assert.ok(i >= 0, `${text} missing or out of order in ${html}`);
+    at = i + text.length;
+  }
+  assert.ok(html.includes(`class="subtitle">${fx.subtitle}`), `${fx.subtitle} is not a subtitle: ${html}`);
+  assert.ok(html.includes(fx.placeholder), `no placeholder in ${html}`);
 });

@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { Buffer } from "node:buffer";
+import { readFileSync } from "node:fs";
 
 import {
   naturalCompare,
@@ -219,4 +220,27 @@ test("detectContainer recognizes signatures", () => {
   assert.equal(detectContainer(new Uint8Array([0x52, 0x61, 0x72, 0x21, 0x1a, 0x07])), "rar");
   assert.equal(detectContainer(new Uint8Array([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c])), "7z");
   assert.equal(detectContainer(new Uint8Array([0x00, 0x01, 0x02, 0x03])), "tar");
+});
+
+test("detectContainer falls back to the file extension when no signature matches", () => {
+  const none = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+  assert.equal(detectContainer(none, "book.cbz"), "zip");
+  assert.equal(detectContainer(none, "book.CBR"), "rar");
+  assert.equal(detectContainer(none, "book.cb7"), "7z");
+  assert.equal(detectContainer(none, "book.cbt"), "tar");
+  const ustar = new Uint8Array(300);
+  ustar.set([0x75, 0x73, 0x74, 0x61, 0x72], 257);
+  assert.equal(detectContainer(ustar, "book.cbz"), "tar", "a ustar signature beats the extension");
+});
+
+test("archive fixtures: shared Go/JS page lists", async () => {
+  // internal/comic TestArchiveParityComics reads the same archives and cases.
+  const dir = new URL("../../tests/testdata/archive-parity/", import.meta.url);
+  const { comics } = JSON.parse(readFileSync(new URL("cases.json", dir), "utf8"));
+  for (const c of comics) {
+    const buf = readFileSync(new URL(c.file, dir));
+    const pages = await parseComic(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength), c.file);
+    assert.deepEqual(pages.map((p) => p.name), c.pages, c.about);
+    assert.equal(Buffer.from(await pages[0].load()).toString("utf8"), c.first, c.about);
+  }
 });

@@ -1,0 +1,12 @@
+{
+  "_comment": "Shared HTML-input language cases, read by internal/htmlconv (rootAttrs) and extension/src/html.js (parseHtml). want is the language the converted page declares: <html> is asked first, then <body> (only the body's content is kept, so its declaration is lifted), each by lang and then xml:lang; a blank value counts as none. The desktop edition copies the tag as found, the extension normalizes it (lang.js normalizeLangTag), so every tag here is already in normal form. See docs/PARITY.md, HTML input language (audit finding E28).",
+  "cases": [
+    { "name": "html lang", "html": "<html lang=\"ru\"><head><title>t</title></head><body lang=\"de\"><p>x</p></body></html>", "want": "ru" },
+    { "name": "html xml:lang", "html": "<html xml:lang=\"de\"><head><title>t</title></head><body lang=\"uk\"><p>x</p></body></html>", "want": "de" },
+    { "name": "body lang", "html": "<html><head><title>t</title></head><body lang=\"uk\"><p>x</p></body></html>", "want": "uk" },
+    { "name": "body xml:lang", "html": "<html><head><title>t</title></head><body xml:lang=\"fr\"><p>x</p></body></html>", "want": "fr" },
+    { "name": "a blank html lang falls through to body", "html": "<html lang=\" \"><head><title>t</title></head><body lang=\"es\"><p>x</p></body></html>", "want": "es" },
+    { "name": "region subtag", "html": "<html lang=\"pt-BR\"><head><title>t</title></head><body><p>x</p></body></html>", "want": "pt-BR" },
+    { "name": "no declaration", "html": "<html><head><title>t</title></head><body><p>x</p></body></html>", "want": "" }
+  ]
+}

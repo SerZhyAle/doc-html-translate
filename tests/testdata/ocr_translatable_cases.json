@@ -1,0 +1,82 @@
+{
+  "_comment": "Shared OCR text-filter cases, read by internal/ocr (isTranslatable) and extension/src/ocr-text.js (isTranslatable). The CJK class is by Unicode script - Han, Hiragana, Katakana, Hangul - on both sides, astral planes included (audit finding B38). See docs/PARITY.md, OCR noise filter.",
+  "cases": [
+    {
+      "text": "Get your food, drink & duty free delivered before the trolley.",
+      "want": true
+    },
+    {
+      "text": "CHAPTER ONE",
+      "want": true
+    },
+    {
+      "text": "\u041f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0440, \u044d\u0442\u043e \u0442\u0435\u0441\u0442",
+      "want": true
+    },
+    {
+      "text": "\u65e5\u672c\u8a9e",
+      "want": true,
+      "about": "short CJK phrase"
+    },
+    {
+      "text": "\ud55c\uad6d\uc5b4",
+      "want": true,
+      "about": "Hangul syllables"
+    },
+    {
+      "text": "\u3072\u3089\u304c\u306a",
+      "want": true,
+      "about": "Hiragana"
+    },
+    {
+      "text": "\uff71\uff72\uff73\uff74\uff75",
+      "want": true,
+      "about": "halfwidth Katakana (U+FF71..): Katakana by script, outside the old BMP ranges"
+    },
+    {
+      "text": "\u3131\u3134\u3137",
+      "want": true,
+      "about": "Hangul compatibility jamo (U+3131..): Hangul by script"
+    },
+    {
+      "text": "\ud840\udc00\ud840\udc01",
+      "want": true,
+      "about": "astral Han (CJK Extension B): one character is two UTF-16 units"
+    },
+    {
+      "text": "\u30fc\u30fc",
+      "want": false,
+      "about": "prolonged sound mark: Common script, a letter but not a CJK one - too few letters"
+    },
+    {
+      "text": "\u30fb\u30fb",
+      "want": false,
+      "about": "Katakana middle dot: Common script punctuation, no letters"
+    },
+    {
+      "text": "XS",
+      "want": false,
+      "about": "< 5 letters"
+    },
+    {
+      "text": "25%",
+      "want": false,
+      "about": "digits and symbols"
+    },
+    {
+      "text": "BCDFG",
+      "want": false,
+      "about": "no vowels"
+    },
+    {
+      "text": "https://example.com/x",
+      "want": false,
+      "about": "address"
+    },
+    {
+      "text": "gr [u : &o Se A JETZT MIETEN",
+      "want": false,
+      "about": "mishmash"
+    }
+  ]
+}

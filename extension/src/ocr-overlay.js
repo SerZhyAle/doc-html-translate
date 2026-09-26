@@ -317,7 +317,12 @@ async function sampleColors(blob, blocks) {
 // two separated texts into one line box, and every rule downstream then reads them as one text.
 // splitWideGaps cuts those here, at the boundary between the engine's answer and our own, so the
 // clustering is never handed an input it cannot recover from - see OCR_MAX_WORD_GAP_RATIO.
-function collectLines(data, scale = 1, ink = null) {
+//
+// minConf is the confidence floor of the pass that recognized data - the rescue and screen passes
+// run at OCR_RESCUE_LINE_CONF - and orderColumns forms its columns from the lines that floor keeps,
+// as tesseract.go tsvLines hands it the pass floor. Ordering a rescue pass by the ordinary floor
+// let lines the pass then drops chain columns together, in this edition only.
+function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF) {
   const out = [];
   const at = (v) => Math.round(v / scale);
   let split = false; // did any line on this page have to be cut?
@@ -374,7 +379,7 @@ function collectLines(data, scale = 1, ink = null) {
     }
   }
   // Only a page the split actually cut is regrouped - see orderColumns.
-  return split ? orderColumns(out) : out;
+  return split ? orderColumns(out, minConf) : out;
 }
 
 // Decide how to feed the image to Tesseract: estimate its DPI, upscale genuinely low-res images
@@ -536,7 +541,7 @@ async function greyRescue(worker, image, scale, imgW, imgH, ink = null) {
       try {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
-        const lines = collectLines(data, scale, ink);
+        const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF);
         const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
         const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped);
         if (strictlyBetter(blocks, best)) {
@@ -580,7 +585,7 @@ async function screenRescue(worker, image, scale, imgW, imgH, ink = null) {
   if (!blurred) return { blocks: [], dropped: [] };
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    const lines = collectLines(data, scale, ink);
+    const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF);
     const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
     return { blocks: clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), dropped };
   } catch {
@@ -619,7 +624,7 @@ async function screenSweep(worker, image, scale, kept, imgW, imgH, ink = null) {
   if (!blurred) return untouched;
   try {
     const { data } = await worker.recognize(blurred, {}, { blocks: true });
-    const lines = collectLines(data, scale, ink);
+    const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF);
     const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
     const rejected = [];
     const blocks = mergeScreenBlocks(kept, clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), rejected);

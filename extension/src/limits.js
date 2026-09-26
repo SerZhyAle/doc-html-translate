@@ -89,3 +89,29 @@ export async function inflateRawCapped(bytes, name, limit) {
   }
   return out;
 }
+
+// Unix file-type bits (st_mode & S_IFMT) that are not a regular file: FIFO, character device,
+// directory, block device, symlink, socket. Anything else - a plain S_IFREG, or no type at all -
+// is a regular file, as Go's archive/zip reads it.
+const UNIX_NON_REGULAR = new Set([0x1000, 0x2000, 0x4000, 0x6000, 0xa000, 0xc000]);
+
+// zipEntryIsRegular reports whether a ZIP central-directory entry is a regular file, read the way
+// Go's archive/zip FileHeader.Mode().IsRegular() reads it, so both editions leave the same entries
+// out: "Symlinks are never followed" (docs/PARITY.md, "Input limits"). The mode sits in the external
+// attributes and means what the host that wrote the entry says it means: a Unix or macOS host keeps
+// st_mode in the high 16 bits, a FAT, NTFS or VFAT host only a directory bit, and any other host
+// nothing this can read. A name ending in "/" is a directory whatever the attributes say.
+export function zipEntryIsRegular(versionMadeBy, externalAttrs, name) {
+  if (name.endsWith("/")) return false;
+  switch (versionMadeBy >>> 8) {
+    case 3: // Unix
+    case 19: // macOS
+      return !UNIX_NON_REGULAR.has((externalAttrs >>> 16) & 0xf000);
+    case 0: // FAT
+    case 11: // NTFS
+    case 14: // VFAT
+      return (externalAttrs & 0x10) === 0;
+    default:
+      return true;
+  }
+}

@@ -143,3 +143,45 @@ func TestParityMapMatchesPortMap(t *testing.T) {
 		}
 	}
 }
+
+// goSourceRef matches a Go file name cited in a JS module ("screen.go", "tesseract.go").
+var goSourceRef = regexp.MustCompile(`\b[a-z_]+\.go\b`)
+
+// TestParityMapWatchesEveryOCRPort: an OCR module of the extension that names the Go file it ports
+// must be watched, or a one-sided change to it passes the drift check in silence. ocr-screen.js,
+// the twin of screen.go, went unwatched this way (audit finding B56). Only the ocr-* modules are
+// held to it: they are all ports or extension-only hosts, while other modules cite Go files for
+// reasons that are not a pairing.
+func TestParityMapWatchesEveryOCRPort(t *testing.T) {
+	var pm parityMap
+	if err := json.Unmarshal([]byte(readRepoFile(t, "configs", "parity-map.json")), &pm); err != nil {
+		t.Fatalf("configs/parity-map.json: %v", err)
+	}
+	watched := func(p string) bool {
+		for _, pair := range pm.Pairs {
+			for _, pat := range pair.JS {
+				if covers(pat, p) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	files, err := filepath.Glob(filepath.Join("..", "extension", "src", "ocr-*.js"))
+	if err != nil || len(files) == 0 {
+		t.Fatalf("no extension/src/ocr-*.js modules found (err=%v)", err)
+	}
+	for _, f := range files {
+		name := filepath.Base(f)
+		ports := false
+		for _, r := range goSourceRef.FindAllString(readRepoFile(t, "extension", "src", name), -1) {
+			// A citation of the parity test is a pointer to a guard, not to a ported file.
+			if r != "parity_test.go" {
+				ports = true
+			}
+		}
+		if ports && !watched("extension/src/"+name) {
+			t.Errorf("extension/src/%s names the Go file it ports but configs/parity-map.json does not watch it", name)
+		}
+	}
+}

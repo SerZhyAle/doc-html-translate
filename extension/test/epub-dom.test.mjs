@@ -167,14 +167,16 @@ test("convertSvgImage: single-image svg is replaced by an <img> with the blob sr
   assert.equal(img.getAttribute("alt"), "Cover");
 });
 
-test("convertSvgImage: multi-image svg replaces only the <image> node", () => {
+test("convertSvgImage: multi-image svg keeps its <image> nodes, pointed at the blob", () => {
+  // An HTML <img> inside an <svg> never renders, so the picture stays an SVG <image>.
   const svgHtml = `<div><svg><image xlink:href="a.jpg"/><image xlink:href="b.jpg"/></svg></div>`;
   const container = el(svgHtml, "div");
   const first = container.querySelector("image");
   convertSvgImage(first, "OEBPS", () => "blob:a");
   assert.ok(container.querySelector("svg"), "the svg survives (more than one image)");
-  assert.equal(container.querySelector("img").getAttribute("src"), "blob:a");
-  assert.ok(container.querySelector("image"), "the second <image> is still present");
+  assert.equal(container.querySelector("img"), null);
+  assert.equal(container.querySelectorAll("image").length, 2, "both <image> nodes are still present");
+  assert.equal(first.getAttribute("href"), "blob:a");
 });
 
 test("convertSvgImage: absolute href is kept as-is on the new img", () => {

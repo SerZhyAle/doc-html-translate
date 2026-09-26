@@ -2,6 +2,7 @@
 // TestIsTranslatable - the two must agree (see docs/PARITY.md).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { isTranslatable } from "../src/ocr-text.js";
 
 test("keeps real translatable text", () => {
@@ -36,5 +37,13 @@ test("drops OCR noise with nothing to translate", () => {
     "gr [u : &o Se A JETZT MIETEN", // mishmash
   ]) {
     assert.equal(isTranslatable(s), false, `should drop: ${JSON.stringify(s)}`);
+  }
+});
+
+// internal/ocr TestIsTranslatableSharedCases runs the same cases (audit finding B38).
+test("isTranslatable: shared Go/JS fixture", () => {
+  const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_translatable_cases.json", import.meta.url), "utf8"));
+  for (const c of fx.cases) {
+    assert.equal(isTranslatable(c.text), c.want, `${JSON.stringify(c.text)} ${c.about || ""}`);
   }
 });

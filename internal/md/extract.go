@@ -109,18 +109,43 @@ func copyImages(rendered string, copier *assets.Copier) (string, error) {
 	return sb.String(), nil
 }
 
-// splitBySections splits HTML content at <h1> or <h2> boundaries.
+// voidElements never have an end tag, so their start tag opens no nesting level.
+var voidElements = map[string]bool{
+	"area": true, "base": true, "br": true, "col": true, "embed": true, "hr": true, "img": true,
+	"input": true, "link": true, "meta": true, "param": true, "source": true, "track": true, "wbr": true,
+}
+
+// splitBySections splits HTML content at its top-level <h1> or <h2> boundaries.
 // Each section includes everything from one heading to the next.
-// Content before the first heading becomes the first section.
+// Content before the first heading becomes the first section. A heading inside a
+// blockquote or a list item belongs to that block: cutting there split the block
+// across two pages with unbalanced markup, and the extension's md.js splits at
+// top-level headings only (docs/PARITY.md, Markdown sections).
 func splitBySections(body string) []string {
-	// Find split points at <h1 or <h2
 	var sections []string
-	lower := strings.ToLower(body)
 	var indices []int
-	for i := 0; i < len(lower); i++ {
-		if i+3 < len(lower) && lower[i:i+3] == "<h1" || i+3 < len(lower) && lower[i:i+3] == "<h2" {
-			indices = append(indices, i)
+	z := gohtml.NewTokenizer(strings.NewReader(body))
+	depth, offset := 0, 0
+	for {
+		tt := z.Next()
+		if tt == gohtml.ErrorToken {
+			break
 		}
+		switch tt {
+		case gohtml.StartTagToken:
+			name, _ := z.TagName()
+			if depth == 0 && (string(name) == "h1" || string(name) == "h2") {
+				indices = append(indices, offset)
+			}
+			if !voidElements[string(name)] {
+				depth++
+			}
+		case gohtml.EndTagToken:
+			if depth > 0 {
+				depth--
+			}
+		}
+		offset += len(z.Raw())
 	}
 
 	if len(indices) == 0 {
