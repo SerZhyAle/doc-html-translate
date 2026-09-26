@@ -382,6 +382,9 @@
   "vLimitEntry": {
     "message": "{1} wird entpackt größer als {2}, die Grenze für eine Datei"
   },
+  "vLimitText": {
+    "message": "Das Dokument ist {1} groß und liegt über der Grenze von {2} für ein Textdokument"
+  },
   "vComicReady": {
     "message": "Fertig - {1} Seiten, der Text wird beim Scrollen erkannt"
   },

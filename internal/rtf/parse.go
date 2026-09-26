@@ -1,6 +1,7 @@
 package rtf
 
 import (
+	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -27,6 +28,10 @@ type groupState struct {
 // maxParamDigits bounds a control word's numeric parameter; the spec allows a signed 16-bit
 // value, and a longer run of digits is garbage that must not overflow.
 const maxParamDigits = 10
+
+// maxParamValue saturates a parameter's magnitude: ten digits exceed a 32-bit int, and on the
+// 386 build the wrapped value used to reach the \bin skip arithmetic and panic.
+const maxParamValue = math.MaxInt32
 
 // reader turns RTF into plain text. It is a single forward pass: a group stack for the scoped
 // state, a destination per group so tables, metadata and pictures never reach the text, and
@@ -132,7 +137,8 @@ func (r *reader) control() {
 		// before anything could read it as RTF.
 		r.flush()
 		if hasParam && param > 0 {
-			r.pos = min(r.pos+param, len(r.in))
+			// Compared against what is left, never added first: r.pos+param can overflow.
+			r.pos += min(param, len(r.in)-r.pos)
 		}
 		return
 	}
@@ -151,10 +157,10 @@ func (r *reader) readParam() (int, bool) {
 		r.pos++
 	}
 	start := r.pos
-	n := 0
+	var n int64
 	for r.pos < len(r.in) && isDigit(r.in[r.pos]) {
 		if r.pos-start < maxParamDigits {
-			n = n*10 + int(r.in[r.pos]-'0')
+			n = min(n*10+int64(r.in[r.pos]-'0'), maxParamValue)
 		}
 		r.pos++
 	}
@@ -164,7 +170,7 @@ func (r *reader) readParam() (int, bool) {
 	if neg {
 		n = -n
 	}
-	return n, true
+	return int(n), true
 }
 
 // symbol handles a control symbol: a backslash followed by one non-letter.

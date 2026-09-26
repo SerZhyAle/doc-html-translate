@@ -6,13 +6,13 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"doc-html-translate/internal/assets"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 
 	"github.com/yuin/goldmark"
@@ -24,7 +24,7 @@ import (
 // files in outputDir, and returns an *epub.Book adapter for pipeline compatibility.
 // Local images the Markdown references are copied into outputDir so they still display.
 func Extract(mdPath, outputDir string) (*epub.Book, error) {
-	data, err := os.ReadFile(mdPath)
+	data, err := limits.ReadTextInput(mdPath)
 	if err != nil {
 		return nil, fmt.Errorf("open markdown: %w", err)
 	}

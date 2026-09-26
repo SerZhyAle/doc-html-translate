@@ -1,6 +1,7 @@
 package comic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -88,7 +89,7 @@ func TestSevenZipBombRefusedFromListing(t *testing.T) {
 	mark := withFake7z(t, sevenZipListing(items...))
 	path := writeFile(t, "bomb.cb7", []byte("7z\xbc\xaf\x27\x1c\x00\x04"))
 
-	_, err := Extract(path, t.TempDir())
+	_, err := Extract(context.Background(), path, t.TempDir())
 	if !errors.Is(err, limits.ErrTooLarge) {
 		t.Fatalf("Extract = %v, want the listing refusal", err)
 	}
@@ -100,7 +101,7 @@ func TestSevenZipBombRefusedFromListing(t *testing.T) {
 func TestSevenZipUnknownSizeRefused(t *testing.T) {
 	mark := withFake7z(t, sevenZipListing("Path = page1.jpg\nFolder = -\nSize = \n"))
 	path := writeFile(t, "nosize.cbr", []byte("Rar!\x1a\x07\x01\x00"))
-	_, err := Extract(path, t.TempDir())
+	_, err := Extract(context.Background(), path, t.TempDir())
 	if !errors.Is(err, limits.ErrTooLarge) || !strings.Contains(err.Error(), "page1.jpg") {
 		t.Fatalf("Extract = %v, want the unchecked-size refusal naming the entry", err)
 	}
@@ -121,7 +122,7 @@ func TestRARNamedCBZConverts(t *testing.T) {
 	))
 	path := writeFile(t, "renamed.cbz", []byte("Rar!\x1a\x07\x01\x00"))
 	out := t.TempDir()
-	book, err := Extract(path, out)
+	book, err := Extract(context.Background(), path, out)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
@@ -141,7 +142,7 @@ func TestRARNamedCBZWithout7Zip(t *testing.T) {
 		t.Skip("7-Zip is installed at a probed location")
 	}
 	path := writeFile(t, "renamed.cbz", []byte("Rar!\x1a\x07\x01\x00"))
-	_, err := Extract(path, t.TempDir())
+	_, err := Extract(context.Background(), path, t.TempDir())
 	if err == nil || !strings.Contains(err.Error(), "RAR archive with a .cbz extension") || !strings.Contains(err.Error(), "7-Zip not found") {
 		t.Fatalf("Extract = %v, want the accurate 7-Zip notice", err)
 	}

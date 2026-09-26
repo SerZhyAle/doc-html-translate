@@ -3,6 +3,7 @@ package pdf
 import (
 	"bytes"
 	"compress/zlib"
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -121,7 +122,7 @@ func TestExtractImages_CMYKRasterIsUprightPNG(t *testing.T) {
 			writeCMYKFixturePDF(t, pdfPath, indexed)
 			out := filepath.Join(tmp, "out")
 
-			got := extractImages(pdfPath, out)
+			got := extractImages(context.Background(), pdfPath, out)
 			imgs := got.byPage[1]
 			if len(imgs) != 1 {
 				t.Fatalf("page 1 images = %v, want one", imgs)

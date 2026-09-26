@@ -70,6 +70,18 @@ func TestShowWarning(t *testing.T) {
 	}
 }
 
+// P34: an unattended console run (a -noopen batch) logs the warning; a modal box would halt it.
+func TestUnattendedWarningShowsNoBox(t *testing.T) {
+	t.Setenv(HostEnv, "")
+	SetUnattended(true)
+	t.Cleanup(func() { SetUnattended(false) })
+	calls := fakeMessageBox(t, 0x1234, 0)
+	ShowWarning("PDF", "pdftotext was blocked")
+	if len(*calls) != 0 {
+		t.Errorf("native boxes shown in an unattended run: %+v", *calls)
+	}
+}
+
 // Under the GUI no native box may open at all: it would sit behind the GUI's window.
 func TestHostedDialogsShowNoNativeBox(t *testing.T) {
 	t.Setenv(HostEnv, HostStdio)

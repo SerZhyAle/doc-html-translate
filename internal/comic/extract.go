@@ -14,6 +14,7 @@
 package comic
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"io"
@@ -90,7 +91,7 @@ type archive struct {
 // The container is identified by its signature and the extension is only the
 // fallback: a RAR renamed to .cbz is common in the wild and used to fail as a
 // "corrupt ZIP".
-func Extract(comicPath, outputDir string) (*epub.Book, error) {
+func Extract(ctx context.Context, comicPath, outputDir string) (*epub.Book, error) {
 	ext := strings.ToLower(filepath.Ext(comicPath))
 	if !exts[ext] {
 		return nil, fmt.Errorf("not a comic archive: %s", ext)
@@ -106,7 +107,7 @@ func Extract(comicPath, outputDir string) (*epub.Book, error) {
 	case containerTar:
 		arc, err = openCBT(comicPath)
 	default:
-		arc, err = openSevenZip(comicPath, ext, kind)
+		arc, err = openSevenZip(ctx, comicPath, ext, kind)
 	}
 	if err != nil {
 		return nil, err

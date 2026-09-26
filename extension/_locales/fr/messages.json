@@ -382,6 +382,9 @@
   "vLimitEntry": {
     "message": "{1} décompressé dépasse {2}, la limite pour un fichier"
   },
+  "vLimitText": {
+    "message": "Le document fait {1}, au-delà de la limite de {2} pour un document texte"
+  },
   "vComicReady": {
     "message": "Prêt - {1} pages, le texte est reconnu au fil du défilement"
   },

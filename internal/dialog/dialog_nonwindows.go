@@ -23,9 +23,14 @@ func Confirm(title, message string) bool {
 }
 
 // ShowWarning prints a warning message to stderr, or hands it to the GUI that runs the converter.
+// An unattended run also keeps it in the run log.
 func ShowWarning(title, message string) {
 	if hostedByGUI() {
 		noteHost(title, message)
+		return
+	}
+	if unattended.Load() {
+		logWarning(title, message)
 		return
 	}
 	fmt.Fprintf(os.Stderr, "\n⚠ WARNING: %s\n%s\n", title, message)

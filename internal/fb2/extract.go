@@ -3,6 +3,7 @@
 package fb2
 
 import (
+	"bytes"
 	"fmt"
 	"hash/fnv"
 	"html"
@@ -12,6 +13,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 )
@@ -24,12 +26,11 @@ const paragraphsPerPage = 30
 // the body references (<image>) are decoded to sibling files and shown in place;
 // a reference with no matching binary degrades to a visible note, not a silent gap.
 func Extract(fb2Path, outputDir string) (*epub.Book, error) {
-	f, err := os.Open(fb2Path)
+	raw, err := limits.ReadTextInput(fb2Path)
 	if err != nil {
 		return nil, fmt.Errorf("open fb2: %w", err)
 	}
-	doc, err := parseFB2(f)
-	_ = f.Close()
+	doc, err := parseFB2(bytes.NewReader(raw))
 	if err != nil {
 		return nil, fmt.Errorf("parse fb2 xml: %w", err)
 	}

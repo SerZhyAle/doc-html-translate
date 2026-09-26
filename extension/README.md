@@ -216,7 +216,8 @@ that forbids script, so it stays inert when opened from disk, outside the extens
   EPUB or CBZ/CBT is checked from its listing before anything is inflated and refused, with a notice
   naming the limit, above **20000 entries** or **4 GB** unpacked in total. A single EPUB file over
   **100 MB**, or a comic page over **200 MB**, is skipped by name; an entry that inflates past the size
-  its listing declares is dropped rather than inflated in full. The desktop's image pixel budget has no
+  its listing declares is dropped rather than inflated in full. A TXT, Markdown, FB2, RTF or HTML document
+  over **100 MB** is refused with the same notice before it is parsed. The desktop's image pixel budget has no
   counterpart here: the browser decodes images itself.
 - Firefox and mobile are out of scope (different PDF + interception story).
 - With OCR **off**, the viewer is text-extraction only (`getTextContent()`) and never rasterizes pages.

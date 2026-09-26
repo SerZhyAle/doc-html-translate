@@ -277,7 +277,7 @@ func sameShapeRaster(a, b model.Image) bool {
 // extractImages extracts all embedded images from the PDF using pdfcpu into
 // outputDir/pdf_images/. The page map is empty (non-fatal) if no images exist or
 // extraction fails; pageCount is 0 when pdfcpu could not read the document at all.
-func extractImages(pdfPath, outputDir string) pdfImages {
+func extractImages(ctx context.Context, pdfPath, outputDir string) pdfImages {
 	imagesSubdir := "pdf_images"
 	imagesDir := filepath.Join(outputDir, imagesSubdir)
 	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
@@ -291,7 +291,7 @@ func extractImages(pdfPath, outputDir string) pdfImages {
 		return pdfImages{pageCount: pageCount}
 	}
 
-	if err := normalizeExtractedPDFImages(imagesDir, byName); err != nil {
+	if err := normalizeExtractedPDFImages(ctx, imagesDir, byName); err != nil {
 		logging.Printf("  WARNING: could not normalize extracted PDF images: %v\n", err)
 		if strings.Contains(err.Error(), "no JPX converter found") {
 			dialog.ShowWarning(
@@ -335,13 +335,13 @@ func writePDFImagesSafe(pdfPath, imagesDir string) (byPage map[int][]string, pag
 // normalizeExtractedPDFImages makes the written images displayable in a browser, updating
 // byPage in place where a conversion renames a file (.jpx becomes .jpg). A file that could
 // not be converted keeps its entry, as it did before the page map was recorded at write time.
-func normalizeExtractedPDFImages(imagesDir string, byPage map[int][]string) error {
+func normalizeExtractedPDFImages(ctx context.Context, imagesDir string, byPage map[int][]string) error {
 	var firstErr error
 	for _, names := range byPage {
 		for i, name := range names {
 			path := filepath.Join(imagesDir, name)
 			if strings.EqualFold(filepath.Ext(name), ".jpx") {
-				jpgPath, err := convertJPXFile(path)
+				jpgPath, err := convertJPXFile(ctx, path)
 				if err != nil {
 					if firstErr == nil {
 						firstErr = fmt.Errorf("%s: %w", name, err)
@@ -378,7 +378,7 @@ func findJPXConverter() (bin, kind string) {
 
 // convertJPXFile converts a JPEG 2000 (.jpx) file to JPEG using ImageMagick or
 // ffmpeg, removes the original, and returns the new .jpg path.
-func convertJPXFile(jpxPath string) (string, error) {
+func convertJPXFile(ctx context.Context, jpxPath string) (string, error) {
 	bin, kind := findJPXConverter()
 	if bin == "" {
 		return "", fmt.Errorf("no JPX converter found (install ImageMagick or ffmpeg)")
@@ -388,7 +388,7 @@ func convertJPXFile(jpxPath string) (string, error) {
 	if kind == "ffmpeg" {
 		args = []string{"-y", "-i", jpxPath, "-update", "1", jpgPath}
 	}
-	if _, err := procrun.Run(context.Background(), procrun.Cmd{
+	if _, err := procrun.Run(ctx, procrun.Cmd{
 		Tool: kind, Path: bin, Args: args, Timeout: procrun.ImageConvert.ForFile(jpxPath),
 	}); err != nil {
 		return "", err

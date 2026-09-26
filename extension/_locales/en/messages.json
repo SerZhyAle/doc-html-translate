@@ -447,6 +447,10 @@
     "message": "{1} unpacks to more than {2}, the limit for one file",
     "description": "Viewer runtime string."
   },
+  "vLimitText": {
+    "message": "The document is {1}, above the limit of {2} for a text document",
+    "description": "Viewer runtime string."
+  },
   "vComicReady": {
     "message": "Ready - {1} pages, text is recognized as you scroll",
     "description": "Viewer runtime string."

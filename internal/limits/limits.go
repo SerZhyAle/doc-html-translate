@@ -6,9 +6,11 @@
 package limits
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"doc-html-translate/internal/i18n"
 )
@@ -26,6 +28,11 @@ const (
 	MaxArchiveEntries          = 20000
 	MaxArchiveTotalBytes int64 = 4 << 30
 )
+
+// MaxTextInputBytes is the budget for a document read whole: TXT, Markdown, FB2, RTF and HTML.
+// It is the EPUB per-file cap, because an EPUB chapter goes through the same whole-file path;
+// parsing and rendering hold several copies, so a larger file is what ends the 386 build.
+const MaxTextInputBytes int64 = 100 << 20
 
 // ErrTooLarge marks every refusal from this package, so a caller can tell a budget refusal
 // from a corrupt file with errors.Is.
@@ -99,6 +106,39 @@ func CopyCapped(dst io.Writer, src io.Reader, name string, limit int64) (int64, 
 		return n, perr
 	}
 	return n, nil
+}
+
+// TextInputTooLarge is the refusal for a whole-file document over MaxTextInputBytes.
+func TextInputTooLarge(size int64) error {
+	return &tooLarge{i18n.S("The document is %s, above the limit of %s for a text document",
+		FormatBytes(uint64(size)), FormatBytes(uint64(MaxTextInputBytes)))}
+}
+
+// ReadTextInput reads a whole-file document, refusing one over MaxTextInputBytes from its size on
+// disk before the read allocates anything. The read itself is capped as well, so a file that
+// grows after the check is refused instead of read without bound.
+func ReadTextInput(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if fi.Size() > MaxTextInputBytes {
+		return nil, TextInputTooLarge(fi.Size())
+	}
+	var buf bytes.Buffer
+	buf.Grow(int(fi.Size()) + bytes.MinRead)
+	if _, err := buf.ReadFrom(io.LimitReader(f, MaxTextInputBytes+1)); err != nil {
+		return nil, err
+	}
+	if int64(buf.Len()) > MaxTextInputBytes {
+		return nil, TextInputTooLarge(int64(buf.Len()))
+	}
+	return buf.Bytes(), nil
 }
 
 // FormatBytes renders a size in binary units, the way the limits are published.

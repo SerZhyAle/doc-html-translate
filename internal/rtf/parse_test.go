@@ -22,6 +22,7 @@ func TestStripRTF(t *testing.T) {
 		{"starred destination skipped", `{\rtf1{\*\generator Riched20;}Body}`, "Body"},
 		{"picture skipped", `{\rtf1{\pict\wmetafile8 0102abcdef}Body}`, "Body"},
 		{"bin data skipped even with braces", "{\\rtf1{\\pict\\bin4 {}\\}}Body}", "Body"},
+		{"huge bin parameter skips to the end", "{\\rtf1 a\\bin99999999999 xyz}", "a"},
 		{"control symbols", `{\rtf1 a\~b\_c\-d\{\}\\}`, "a\U000000A0b\U00002011cd{}\\"},
 		{"symbol words", `{\rtf1\ldblquote x\rdblquote\emdash}`, "\U0000201Cx\U0000201D\U00002014"},
 		{"paragraph and tab", `{\rtf1 a\par b\tab c}`, "a\n\nb\tc"},
@@ -41,6 +42,31 @@ func TestStripRTF(t *testing.T) {
 				t.Errorf("stripRTF(%q)\n got %q\nwant %q", c.in, got, c.want)
 			}
 		})
+	}
+}
+
+// X29: a ten-digit parameter overflowed a 32-bit int and \bin2147483647 then panicked on the
+// 386 build (r.pos+param wrapped negative). Run under GOARCH=386 as well.
+func TestReadParamSaturates(t *testing.T) {
+	for _, c := range []struct {
+		in   string
+		want int
+	}{
+		{"2147483647", maxParamValue},
+		{"9999999999", maxParamValue},
+		{"-9999999999", -maxParamValue},
+		{"123456789012", 1234567890},
+		{"42", 42},
+	} {
+		r := &reader{in: []byte(c.in)}
+		if got, ok := r.readParam(); !ok || got != c.want {
+			t.Errorf("readParam(%q) = %d, %v; want %d", c.in, got, ok, c.want)
+		}
+	}
+	for _, in := range []string{`{\rtf1 abc\bin2147483647 x}`, `{\rtf1 abc\bin4294967295 x}`} {
+		if got := stripRTF([]byte(in)); got != "abc" {
+			t.Errorf("stripRTF(%q) = %q, want %q", in, got, "abc")
+		}
 	}
 }
 

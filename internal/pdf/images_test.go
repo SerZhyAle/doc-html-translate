@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -93,7 +94,7 @@ func TestExtractImages_PageComesFromThePageNotTheFileName(t *testing.T) {
 	buildFixturePDF(t, pdfPath, 10, allPages(10), pageSet(1, 5, 9))
 
 	out := filepath.Join(tmp, "out")
-	got := extractImages(pdfPath, out)
+	got := extractImages(context.Background(), pdfPath, out)
 
 	if got.pageCount != 10 {
 		t.Errorf("pageCount = %d, want 10", got.pageCount)
@@ -123,7 +124,7 @@ func TestExtract_Volume3ImagesOnTheirPages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	book, err := Extract(pdfPath, out)
+	book, err := Extract(context.Background(), pdfPath, out)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
@@ -164,7 +165,7 @@ func TestExtractWithPDFToText_KeepsTrailingImageOnlyPages(t *testing.T) {
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	book, err := extractWithPDFToText(stub, pdfPath, out)
+	book, err := extractWithPDFToText(context.Background(), stub, pdfPath, out)
 	if err != nil {
 		t.Fatalf("extractWithPDFToText: %v", err)
 	}
@@ -203,7 +204,7 @@ func TestExtractWithPDFToText_UnreadableCountNeverShrinks(t *testing.T) {
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	book, err := extractWithPDFToText(stub, pdfPath, out)
+	book, err := extractWithPDFToText(context.Background(), stub, pdfPath, out)
 	if err != nil {
 		t.Fatalf("extractWithPDFToText: %v", err)
 	}

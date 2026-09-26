@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -136,7 +137,7 @@ func sampleEntries() map[string][]byte {
 func assertExtracted(t *testing.T, comicPath string) {
 	t.Helper()
 	out := t.TempDir()
-	book, err := Extract(comicPath, out)
+	book, err := Extract(context.Background(), comicPath, out)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
@@ -197,7 +198,7 @@ func TestExtractCBT(t *testing.T) { assertExtracted(t, makeCBT(t, sampleEntries(
 
 func TestExtractNoPages(t *testing.T) {
 	path := makeCBZ(t, map[string][]byte{"ComicInfo.xml": []byte("<x/>"), "readme.txt": []byte("hi")})
-	if _, err := Extract(path, t.TempDir()); err == nil {
+	if _, err := Extract(context.Background(), path, t.TempDir()); err == nil {
 		t.Fatal("expected error when archive has no page images")
 	}
 }

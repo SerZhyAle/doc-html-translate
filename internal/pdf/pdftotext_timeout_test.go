@@ -3,6 +3,7 @@
 package pdf
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -46,7 +47,7 @@ func TestExtractFallsBackWhenPDFToTextHangs(t *testing.T) {
 	}
 
 	start := time.Now()
-	book, err := Extract(pdfPath, out)
+	book, err := Extract(context.Background(), pdfPath, out)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}

@@ -32,7 +32,7 @@ func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir st
 
 	// Without its data file the engine fails on every image with the same sentence, so a book
 	// of scans produced hundreds of identical errors that never named the fix. Ask once instead.
-	if missing := ocr.MissingLangs(bin, lang); len(missing) > 0 {
+	if missing := ocr.MissingLangs(ctx, bin, lang); len(missing) > 0 {
 		logging.Printf("  OCR skipped: no language data for %s. %s\n",
 			strings.Join(missing, ", "), ocr.MissingAdvice(missing))
 		return

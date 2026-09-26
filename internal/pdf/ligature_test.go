@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -92,7 +93,7 @@ func TestExtractWithPDFToText_KeepsShortTextPages(t *testing.T) {
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	book, err := extractWithPDFToText(stub, pdfPath, out)
+	book, err := extractWithPDFToText(context.Background(), stub, pdfPath, out)
 	if err != nil {
 		t.Fatalf("extractWithPDFToText: %v", err)
 	}

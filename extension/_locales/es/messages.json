@@ -382,6 +382,9 @@
   "vLimitEntry": {
     "message": "{1} ocupa más de {2} al descomprimirse, el límite para un archivo"
   },
+  "vLimitText": {
+    "message": "El documento ocupa {1}, por encima del límite de {2} para un documento de texto"
+  },
   "vComicReady": {
     "message": "Listo - {1} páginas, el texto se reconoce al desplazarte"
   },

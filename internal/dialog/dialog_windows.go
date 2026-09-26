@@ -67,10 +67,14 @@ func Confirm(title, message string) bool {
 }
 
 // ShowWarning displays a warning with an OK button. Under the GUI it becomes a notice in the
-// GUI's window.
+// GUI's window; in an unattended run it is logged, so it cannot halt a batch.
 func ShowWarning(title, message string) {
 	if hostedByGUI() {
 		noteHost(title, message)
+		return
+	}
+	if unattended.Load() {
+		logWarning(title, message)
 		return
 	}
 	owner := consoleOwner()

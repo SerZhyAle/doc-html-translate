@@ -310,3 +310,53 @@ func TestExtract_Windows1251ChapterBecomesUTF8(t *testing.T) {
 		t.Errorf("charset declaration not replaced:\n%s", html)
 	}
 }
+
+const collisionOPF = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Collision</dc:title></metadata>
+  <manifest>
+    <item id="a" href="a.xhtml" media-type="application/xhtml+xml"/>
+    <item id="b" href="a.html" media-type="text/html"/>
+    <item id="c" href="c.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine><itemref idref="a"/><itemref idref="b"/><itemref idref="c"/></spine>
+</package>`
+
+// E34: a.xhtml renamed beside a.html must not overwrite that chapter, and links follow each file.
+func TestExtract_XHTMLRenameAvoidsCollision(t *testing.T) {
+	dir := t.TempDir()
+	epubPath := buildEPUB(t, dir, "collision.epub", [][2]string{
+		{"mimetype", "application/epub+zip"},
+		{"META-INF/container.xml", fidelityContainer},
+		{"content.opf", collisionOPF},
+		{"a.xhtml", chapterXHTML("From XHTML")},
+		{"a.html", "<html><head><title>H</title></head><body><p>From HTML</p></body></html>"},
+		{"c.xhtml", `<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>C</title></head>
+<body><p><a href="a.xhtml">X</a> <a href="a.html">H</a></p></body></html>`},
+	})
+	out := filepath.Join(dir, "out")
+	book, err := Extract(epubPath, out)
+	if err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	spine := book.SpineHrefs()
+	if len(spine) != 3 || spine[0] == spine[1] {
+		t.Fatalf("both chapters landed on one href: %v", spine)
+	}
+	if spine[0] != "a_2.html" || spine[1] != "a.html" {
+		t.Errorf("spine = %v, want [a_2.html a.html ..]", spine)
+	}
+	if html := readOut(t, out, "a.html"); !strings.Contains(html, "From HTML") {
+		t.Errorf("a.html overwritten:\n%s", html)
+	}
+	if html := readOut(t, out, "a_2.html"); !strings.Contains(html, "From XHTML") {
+		t.Errorf("a_2.html lacks the XHTML chapter:\n%s", html)
+	}
+	c := readOut(t, out, "c.html")
+	for _, want := range []string{`href="a_2.html"`, `href="a.html"`} {
+		if !strings.Contains(c, want) {
+			t.Errorf("c.html missing %q:\n%s", want, c)
+		}
+	}
+}

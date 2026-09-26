@@ -17,7 +17,7 @@ import (
 func TestOverlayTwiceEqualsOnce(t *testing.T) {
 	saved := recognizeImage
 	t.Cleanup(func() { recognizeImage = saved })
-	recognizeImage = func(_, _, _, _ string) (Result, error) {
+	recognizeImage = func(_ context.Context, _, _, _, _ string) (Result, error) {
 		return Result{Width: 100, Height: 200, Blocks: []Block{
 			{Text: "Hello there, reader", X0: 1, Y0: 1, X1: 90, Y1: 20, LineH: 10},
 		}}, nil

@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -87,14 +88,14 @@ func installedForScript(dataDir, script string) []string {
 // it named and how sure it was. ok=false for every failure - no osd.traineddata (the app bundles
 // only eng, so this is the common case on a fresh install), too few characters on the page, a
 // broken engine - because the rule this feeds must never act on an answer that was not given.
-func DetectScript(bin, imgPath, dataDir string) (script string, conf float64, ok bool) {
+func DetectScript(ctx context.Context, bin, imgPath, dataDir string) (script string, conf float64, ok bool) {
 	osdPath, cleanup := stageForDetection(imgPath)
 	defer cleanup()
 	args := []string{osdPath, "stdout", "--psm", "0"}
 	if dataDir != "" && hasLangFile(dataDir, "osd") {
 		args = append(args, "--tessdata-dir", dataDir)
 	}
-	res, err := runTesseract(procrun.TesseractProbe, bin, osdPath, args)
+	res, err := runTesseract(ctx, procrun.TesseractProbe, bin, osdPath, args)
 	if err != nil {
 		return "", 0, false
 	}

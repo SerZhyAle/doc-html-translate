@@ -7,8 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"html"
-	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +14,7 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 )
@@ -100,13 +99,12 @@ const paragraphsPerPage = 30
 // Extract reads a plain text file, generates per-page HTML files in outputDir,
 // and returns an *epub.Book adapter for pipeline compatibility.
 func Extract(txtPath, outputDir string) (*epub.Book, error) {
-	f, err := os.Open(txtPath)
+	raw, err := limits.ReadTextInput(txtPath)
 	if err != nil {
 		return nil, fmt.Errorf("open txt: %w", err)
 	}
-	defer func() { _ = f.Close() }()
 
-	paragraphs := parseParagraphs(f)
+	paragraphs := parseParagraphs(raw)
 	if len(paragraphs) == 0 {
 		return nil, fmt.Errorf("no text content found: %s", txtPath)
 	}
@@ -148,18 +146,14 @@ func Extract(txtPath, outputDir string) (*epub.Book, error) {
 	return book, nil
 }
 
-// parseParagraphs splits an io.Reader into paragraphs.
+// parseParagraphs splits a document's bytes into paragraphs.
 // Strategy:
 //   - Normalize line endings to \n (handles \r\n and \r).
 //   - If the text contains blank lines, use them as paragraph separators
 //     (consecutive non-blank lines are joined with a space).
 //   - If there are NO blank lines (typical for Linux single-\n files),
 //     treat each non-empty line as its own paragraph.
-func parseParagraphs(r io.Reader) []string {
-	raw, err := io.ReadAll(r)
-	if err != nil {
-		return nil
-	}
+func parseParagraphs(raw []byte) []string {
 	normalized := textutil.NormalizeLineSeparators(decodeText(raw))
 
 	hasBlankLine := strings.Contains(normalized, "\n\n")

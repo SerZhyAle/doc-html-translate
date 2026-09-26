@@ -22,7 +22,7 @@ import { parseMarkdown } from "./md.js";
 import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
 import { parseComic, DesktopOnlyError } from "./comic.js";
-import { InputLimitError } from "./limits.js";
+import { InputLimitError, checkTextInput } from "./limits.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang, releaseOverlays } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
@@ -940,11 +940,22 @@ function setPageTotal(total) {
   recordRun({ pages: total });
 }
 
+// The formats read whole, held against the text-input budget before parsing (limits.js).
+const TEXT_FORMATS = new Set(["txt", "rtf", "html", "md", "fb2"]);
+
 async function loadFromData(data, title, name, gen) {
   if (!isCurrent(gen)) return;
   const format = detectFormat(data, name);
   // The format id only - never the document's name, bytes or URL. See diagnostics.js.
   recordRun({ format });
+  if (TEXT_FORMATS.has(format)) {
+    try {
+      checkTextInput(data.byteLength);
+    } catch (err) {
+      showLimitNotice(err);
+      return;
+    }
+  }
   switch (format) {
     case "epub": await loadEpubData(data, title); return;
     case "pdf": await loadPdfData(data, title); return;

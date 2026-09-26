@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
@@ -141,6 +142,8 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
+	dialog.SetUnattended(unattendedRun(a.cfg.NoOpen, logging.StdoutIsTerminal()))
+
 	for _, n := range a.cfg.Notices {
 		logging.Println(n)
 	}
@@ -153,6 +156,12 @@ func (a App) Run() (int, error) {
 	defer stop()
 	context.AfterFunc(ctx, stop)
 	return pipeline.NewRunner(a.cfg).RunContext(ctx)
+}
+
+// unattendedRun reports whether nobody is expected to click a warning: -noopen is the batch
+// flag, and output piped into a script or a file has no one at a console reading it.
+func unattendedRun(noOpen, stdoutTerminal bool) bool {
+	return noOpen || !stdoutTerminal
 }
 
 // ExitInterrupted is the exit code of a run stopped by Ctrl+C.
@@ -290,21 +299,6 @@ func promptSetDefault() bool {
 	return askYes(i18n.S("  Make DOC-HTML-TRANSLATE the default handler for these file types? [y/N]: "))
 }
 
-// askYes prints prompt and reads one answer. Anything but an explicit yes is treated as no, so
-// pressing Enter declines. Accepted are "y"/"yes" plus the affirmative of the interface
-// language, because someone reading the prompt in Bengali will answer in Bengali.
-func askYes(prompt string) bool {
-	fmt.Print(prompt)
-	var answer string
-	_, _ = fmt.Scanln(&answer)
-	answer = strings.ToLower(strings.TrimSpace(answer))
-	switch answer {
-	case "y", "yes":
-		return true
-	}
-	return answer == i18n.S("y") || answer == i18n.S("yes")
-}
-
 // printPressEnterAndPause prints the closing rule and keeps the console open until Enter.
 // Piped or redirected there is no window to hold open, so the invitation would be a lie and
 // the pause a hang: print the rule and return.
@@ -316,5 +310,5 @@ func printPressEnterAndPause() {
 		return
 	}
 	fmt.Println(i18n.S("  Press Enter to close.. (we both know you'll close the window anyway)"))
-	_, _ = fmt.Scanln() // pause - keep console open until user presses Enter
+	readLine(stdin) // pause - keep console open until user presses Enter
 }

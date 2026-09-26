@@ -16,12 +16,12 @@ var tesseractEnv = []string{"OMP_THREAD_LIMIT=1"}
 
 // runTesseract runs one Tesseract call through the shared runner, with a deadline taken from
 // budget and the size of input (the image being read, or "" for a call that reads none).
-func runTesseract(budget procrun.Budget, bin, input string, args []string) (procrun.Result, error) {
+func runTesseract(ctx context.Context, budget procrun.Budget, bin, input string, args []string) (procrun.Result, error) {
 	timeout := budget.For(0)
 	if input != "" {
 		timeout = budget.ForFile(input)
 	}
-	return procrun.Run(context.Background(), procrun.Cmd{
+	return procrun.Run(ctx, procrun.Cmd{
 		Tool:    "tesseract",
 		Path:    bin,
 		Args:    args,
@@ -38,7 +38,7 @@ var recognizeImage = Recognize
 // staging code run on whatever a book embeds, and OCR is best-effort (OCR-PIPELINE): a picture
 // that panics a decoder is one failed image in the report, not the end of the conversion. A
 // panic in a worker goroutine cannot be recovered anywhere else, so the guard has to be here.
-func recognizeSafe(bin, imgPath, lang, dataDir string) (res Result, err error) {
+func recognizeSafe(ctx context.Context, bin, imgPath, lang, dataDir string) (res Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// The console hears about it from the overlay report, which lists each failed
@@ -47,5 +47,5 @@ func recognizeSafe(bin, imgPath, lang, dataDir string) (res Result, err error) {
 			res, err = Result{}, fmt.Errorf("internal error while reading the image: %v", r)
 		}
 	}()
-	return recognizeImage(bin, imgPath, lang, dataDir)
+	return recognizeImage(ctx, bin, imgPath, lang, dataDir)
 }

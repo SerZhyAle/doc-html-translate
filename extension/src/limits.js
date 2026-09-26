@@ -9,6 +9,8 @@ export const ARCHIVE_MAX_ENTRIES = 20000;
 export const ARCHIVE_MAX_TOTAL_BYTES = 4 * 1024 * 1024 * 1024;
 export const EPUB_MAX_ENTRY_BYTES = 100 * 1024 * 1024;
 export const COMIC_MAX_PAGE_BYTES = 200 * 1024 * 1024;
+// One document read whole (TXT, Markdown, FB2, RTF, HTML): parsing holds several copies of it.
+export const TEXT_MAX_INPUT_BYTES = 100 * 1024 * 1024;
 
 // InputLimitError is a refusal on size. It carries its message key and arguments so the
 // viewer can show it in the reader's language; message is the English text for logs and
@@ -45,6 +47,15 @@ export function checkArchive(entries, total) {
   if (total > ARCHIVE_MAX_TOTAL_BYTES) {
     throw new InputLimitError("vLimitTotal", "The archive unpacks to {1}, above the limit of {2}",
       formatBytes(total), formatBytes(ARCHIVE_MAX_TOTAL_BYTES));
+  }
+}
+
+// checkTextInput refuses a whole-file document over TEXT_MAX_INPUT_BYTES before it is parsed.
+// Matches internal/limits ReadTextInput.
+export function checkTextInput(size) {
+  if (size > TEXT_MAX_INPUT_BYTES) {
+    throw new InputLimitError("vLimitText", "The document is {1}, above the limit of {2} for a text document",
+      formatBytes(size), formatBytes(TEXT_MAX_INPUT_BYTES));
   }
 }
 

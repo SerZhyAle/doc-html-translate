@@ -6,12 +6,12 @@ package rtf
 import (
 	"fmt"
 	"html"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/textutil"
 )
@@ -23,7 +23,7 @@ const paragraphsPerPage = 30
 // paragraphs, generates per-page HTML files in outputDir, and returns
 // an *epub.Book adapter.
 func Extract(rtfPath, outputDir string) (*epub.Book, error) {
-	data, err := os.ReadFile(rtfPath)
+	data, err := limits.ReadTextInput(rtfPath)
 	if err != nil {
 		return nil, fmt.Errorf("open rtf: %w", err)
 	}

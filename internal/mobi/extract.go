@@ -41,7 +41,7 @@ func findEbookConvert() string {
 // Extract converts a MOBI or AZW3 file to EPUB via Calibre's ebook-convert,
 // then extracts the result using the EPUB pipeline.
 // Returns an error if Calibre is not installed or if the file is DRM-protected.
-func Extract(mobiPath, outputDir string) (*epub.Book, error) {
+func Extract(ctx context.Context, mobiPath, outputDir string) (*epub.Book, error) {
 	bin := findEbookConvert()
 	if bin == "" {
 		return nil, fmt.Errorf(
@@ -61,7 +61,7 @@ func Extract(mobiPath, outputDir string) (*epub.Book, error) {
 	epubPath := filepath.Join(tmpDir, baseName+".epub")
 
 	logging.Println("  Converting MOBI → EPUB via Calibre ebook-convert..")
-	if _, cmdErr := procrun.Run(context.Background(), procrun.Cmd{
+	if _, cmdErr := procrun.Run(ctx, procrun.Cmd{
 		Tool:      "ebook-convert",
 		Path:      bin,
 		Args:      []string{mobiPath, epubPath},
