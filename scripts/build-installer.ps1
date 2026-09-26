@@ -122,10 +122,11 @@ function Build-Exe([string]$CmdDir, [string]$OutExe, [string]$Arch, [string]$Ext
     New-VersionResourceFile (Join-Path (Join-Path $RepoRoot $CmdDir) "versioninfo.json") $vinfo $Stamp
     Push-Location (Join-Path $RepoRoot $CmdDir)
     try {
-        # -64 emits an amd64 COFF resource; omit it for the 386 (32-bit) resource so the
-        # linker does not choke on a mismatched relocation.
-        $goverArgs = @()
-        if ($Arch -eq "amd64") { $goverArgs += "-64" }
+        # -64 emits an amd64 COFF resource, -64=false a 386 one. Always pass it explicitly: its default
+        # follows the goversioninfo binary's own GOARCH, so on an amd64 host an omitted flag yields an amd64
+        # resource and the 386 link fails with "resource.syso: unknown relocation type 3".
+        $goverArgs = @("-64=false")
+        if ($Arch -eq "amd64") { $goverArgs = @("-64") }
         Invoke-GoVersionInfo @goverArgs -o resource.syso versioninfo.generated.json
         $env:GOOS = "windows"; $env:GOARCH = $Arch; $env:CGO_ENABLED = "0"
         go build -trimpath -ldflags "-s -w -X main.Version=$Stamp $ExtraLdflags" -o $OutExe .

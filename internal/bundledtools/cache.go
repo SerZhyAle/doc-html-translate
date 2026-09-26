@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"time"
 )
 
 // CacheRoot is the per-user folder bundled tools are unpacked under. It is what a user
@@ -103,17 +104,28 @@ func placeFile(dst string, data []byte) error {
 		_ = os.Remove(tmpName)
 		return werr
 	}
-	if err := os.Rename(tmpName, dst); err != nil {
-		_ = os.Remove(tmpName)
-		// Another instance got there first and the file is now locked by a running copy;
-		// what matters is that the right bytes are in place.
-		if sameContent(dst, data) {
+	// On Windows a rename over dst fails with "Access is denied" while another instance reads dst,
+	// renames onto it, or runs it, and a read in that same window can fail too. So retry briefly;
+	// what matters is that the right bytes end up in place, whoever put them there.
+	var rerr error
+	for attempt := 0; attempt < renameAttempts; attempt++ {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt) * 10 * time.Millisecond)
+		}
+		if rerr = os.Rename(tmpName, dst); rerr == nil {
 			return nil
 		}
-		return err
+		if sameContent(dst, data) {
+			_ = os.Remove(tmpName)
+			return nil
+		}
 	}
-	return nil
+	_ = os.Remove(tmpName)
+	return rerr
 }
+
+// renameAttempts bounds placeFile's retries: about half a second in all.
+const renameAttempts = 10
 
 func sameContent(p string, data []byte) bool {
 	existing, err := os.ReadFile(p)
