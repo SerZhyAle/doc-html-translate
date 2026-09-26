@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -107,7 +108,7 @@ func cmdSeed(args []string) error {
 // group. Every group is typed "incidental" on purpose: the engine cannot tell a balloon from a
 // caption, and guessing here would put an unearned label in front of the reviewer.
 func seedOne(bin string, s *corpus.Scene, root, lang string) (*truth.Annotation, error) {
-	res, err := ocr.Recognize(bin, s.Path(root), lang, "")
+	res, err := ocr.Recognize(context.Background(), bin, s.Path(root), lang, "")
 	if err != nil {
 		return nil, err
 	}

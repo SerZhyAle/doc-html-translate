@@ -3,6 +3,7 @@
 package pdf
 
 import (
+	"context"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
@@ -24,7 +25,7 @@ func pdftotextMissingAdvice() string {
 
 // retryBlockedPDFToText only advises: the system package manager is the user's to drive,
 // so nothing is installed or retried here.
-func retryBlockedPDFToText(_, _ string) *epub.Book {
+func retryBlockedPDFToText(_ context.Context, _, _ string) *epub.Book {
 	logging.Printf("  %s\n", pdftotextMissingAdvice())
 	return nil
 }

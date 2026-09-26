@@ -36,17 +36,21 @@ const maxPDFToTextOutput = 256 << 20
 // Extract reads a PDF file, generates per-page HTML files in outputDir,
 // and returns an *epub.Book adapter for pipeline compatibility.
 // Tries pdftotext (Xpdf/Poppler) first for best quality; falls back to the pure-Go reader.
-func Extract(pdfPath, outputDir string) (*epub.Book, error) {
+func Extract(ctx context.Context, pdfPath, outputDir string) (*epub.Book, error) {
 	// pdftotext handles complex font encodings, ligatures, and text ordering
 	// far better than the pure-Go reader.
 	if pdftotext := findPDFToText(); pdftotext != "" {
-		book, err := extractWithPDFToText(pdftotext, pdfPath, outputDir)
+		book, err := extractWithPDFToText(ctx, pdftotext, pdfPath, outputDir)
 		if err == nil {
 			return book, nil
 		}
+		// A cancelled run stops here: the fallback reader would read the whole book again.
+		if ctx.Err() != nil {
+			return nil, err
+		}
 		logging.Printf("  WARNING: pdftotext failed, falling back to pdflib: %v\n", err)
 		if isExecFileNotFound(err) {
-			if book := retryBlockedPDFToText(pdfPath, outputDir); book != nil {
+			if book := retryBlockedPDFToText(ctx, pdfPath, outputDir); book != nil {
 				return book, nil
 			}
 		}
@@ -54,7 +58,7 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 		logging.Printf("  %s\n", advice)
 	}
 
-	book, err := extractWithPDFLib(pdfPath, outputDir)
+	book, err := extractWithPDFLib(ctx, pdfPath, outputDir)
 	if err == nil {
 		return book, nil
 	}
@@ -66,7 +70,7 @@ func Extract(pdfPath, outputDir string) (*epub.Book, error) {
 	}
 	defer func() { _ = os.Remove(repairedPath) }()
 
-	book, retryErr := extractWithPDFLib(repairedPath, outputDir)
+	book, retryErr := extractWithPDFLib(ctx, repairedPath, outputDir)
 	if retryErr != nil {
 		if strings.Contains(retryErr.Error(), "no text content found in PDF") {
 			return nil, fmt.Errorf("no text content found in PDF (likely scanned/image-only, OCR required): %s", pdfPath)
@@ -86,7 +90,7 @@ type pageItem struct {
 
 // extractWithPDFToText uses pdftotext -layout (Xpdf/Poppler) for extraction.
 // The -layout flag preserves indentation so we can detect headings by centering.
-func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, error) {
+func extractWithPDFToText(ctx context.Context, pdftotextBin, pdfPath, outputDir string) (*epub.Book, error) {
 	pdfPathForTool := pdfPath
 	cleanup := func() {}
 	if needsPDFToTextPathStaging(pdfPath) {
@@ -99,7 +103,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	}
 	defer cleanup()
 
-	res, err := procrun.Run(context.Background(), procrun.Cmd{
+	res, err := procrun.Run(ctx, procrun.Cmd{
 		Tool:      "pdftotext",
 		Path:      pdftotextBin,
 		Args:      []string{"-layout", "-enc", "UTF-8", pdfPathForTool, "-"},
@@ -129,7 +133,7 @@ func extractWithPDFToText(pdftotextBin, pdfPath, outputDir string) (*epub.Book, 
 	title := pdfTitle(pdfPath)
 	book := &epub.Book{Title: title}
 
-	images := extractImages(pdfPath, outputDir)
+	images := extractImages(ctx, pdfPath, outputDir)
 	pageImages := images.byPage
 	// The trim above also drops trailing pages that have no text but do have a picture
 	// (a back cover, scanned plates). The document's own count brings them back; it only
@@ -464,7 +468,7 @@ func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, item
 }
 
 // extractWithPDFLib performs text extraction with the ledongthuc/pdf reader.
-func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
+func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *epub.Book, err error) {
 	// The underlying PDF library may panic on malformed files.
 	defer func() {
 		if r := recover(); r != nil {
@@ -492,7 +496,7 @@ func extractWithPDFLib(pdfPath, outputDir string) (book *epub.Book, err error) {
 	}
 
 	// Extract embedded images (non-fatal if PDF has none).
-	pageImages := extractImages(pdfPath, outputDir).byPage
+	pageImages := extractImages(ctx, pdfPath, outputDir).byPage
 
 	// Source PDF page number -> generated href (blank pages are skipped).
 	pdfPageToHref := make(map[int]string, totalPages)

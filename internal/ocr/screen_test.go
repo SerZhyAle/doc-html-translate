@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"image"
 	"math"
 	"math/rand/v2"
@@ -255,7 +256,7 @@ func TestScreenRungSkipsAnImageWithoutAScreen(t *testing.T) {
 	}
 	// A bin that would fail loudly if it were ever executed: reaching it means the rung did not
 	// skip. Nothing runs, so no tesseract is needed for this test.
-	if _, ok := screenRescue("tesseract-that-does-not-exist", flat, "eng", "", 150); ok {
+	if _, ok := screenRescue(context.Background(), "tesseract-that-does-not-exist", flat, "eng", "", 150); ok {
 		t.Error("screenRescue reported a result for an image with no screen")
 	}
 }

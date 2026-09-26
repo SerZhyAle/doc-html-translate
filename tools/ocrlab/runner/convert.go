@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -51,7 +52,7 @@ func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, r
 
 	// Geometry comes from the recognizer's own report of the page, which is what the plates were
 	// positioned against.
-	res, err = ocr.Recognize(bin, imgPath, opt.Lang, ocr.DataDir())
+	res, err = ocr.Recognize(context.Background(), bin, imgPath, opt.Lang, ocr.DataDir())
 	if err != nil {
 		return "", res, err
 	}

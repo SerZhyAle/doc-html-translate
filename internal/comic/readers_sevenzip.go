@@ -61,13 +61,13 @@ type sevenZipItem struct {
 // decoder, so this is the one comic path with a runtime dependency; when 7-Zip is
 // absent it returns an actionable "install 7-Zip" notice (never a crash or a
 // garbage conversion), the same contract MOBI keeps for Calibre.
-func openSevenZip(path, ext, kind string) (*archive, error) {
+func openSevenZip(ctx context.Context, path, ext, kind string) (*archive, error) {
 	bin := find7Zip()
 	if bin == "" {
 		return nil, sevenZipMissing(path, ext, kind)
 	}
 
-	res, err := procrun.Run(context.Background(), procrun.Cmd{
+	res, err := procrun.Run(ctx, procrun.Cmd{
 		Tool:      "7-Zip",
 		Path:      bin,
 		Args:      sevenZipArgs("l", "-slt", path),
@@ -97,7 +97,7 @@ func openSevenZip(path, ext, kind string) (*archive, error) {
 		arc.entries = append(arc.entries, entry{name: it.path, size: it.size})
 	}
 	arc.fetch = func(pages []entry) ([]entry, error) {
-		dir, err := extractSevenZip(bin, path, pages)
+		dir, err := extractSevenZip(ctx, bin, path, pages)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ func isLinkMode(attrs string) bool {
 // through a UTF-8 list file with wildcard matching off (-spd), so a page called
 // "*.jpg" cannot pull in the rest of the archive. The disk it can take is the
 // listing's checked total.
-func extractSevenZip(bin, path string, pages []entry) (string, error) {
+func extractSevenZip(ctx context.Context, bin, path string, pages []entry) (string, error) {
 	list, err := os.CreateTemp("", "doc-html-translate-comic-*.txt")
 	if err != nil {
 		return "", fmt.Errorf("create list file: %w", err)
@@ -206,7 +206,7 @@ func extractSevenZip(bin, path string, pages []entry) (string, error) {
 		return "", fmt.Errorf("create temp dir: %w", err)
 	}
 	logging.Printf("  Extracting comic via 7-Zip (%s)..\n", bin)
-	if _, err := procrun.Run(context.Background(), procrun.Cmd{
+	if _, err := procrun.Run(ctx, procrun.Cmd{
 		Tool:      "7-Zip",
 		Path:      bin,
 		Args:      sevenZipArgs("x", path, "-y", "-spd", "-scsUTF-8", "-o"+dir, "@"+list.Name()),

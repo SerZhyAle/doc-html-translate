@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"image"
 	"image/color"
 	"image/png"
@@ -367,7 +368,7 @@ func TestExtract_ValidPDF(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	book, err := Extract(pdfPath, outputDir)
+	book, err := Extract(context.Background(), pdfPath, outputDir)
 	if err != nil {
 		t.Fatalf("Extract() error: %v", err)
 	}
@@ -444,7 +445,7 @@ func TestExtract_EmptyPDF(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	book, err := Extract(pdfPath, outputDir)
+	book, err := Extract(context.Background(), pdfPath, outputDir)
 	if err != nil {
 		t.Fatalf("expected fallback HTML for empty PDF, got error: %v", err)
 	}
@@ -470,7 +471,7 @@ func TestExtract_InvalidFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := Extract(pdfPath, outputDir)
+	_, err := Extract(context.Background(), pdfPath, outputDir)
 	if err == nil {
 		t.Error("expected error for invalid PDF, got nil")
 	}
@@ -483,7 +484,7 @@ func TestExtract_NonExistentFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := Extract(filepath.Join(tmpDir, "nope.pdf"), outputDir)
+	_, err := Extract(context.Background(), filepath.Join(tmpDir, "nope.pdf"), outputDir)
 	if err == nil {
 		t.Error("expected error for non-existent file, got nil")
 	}

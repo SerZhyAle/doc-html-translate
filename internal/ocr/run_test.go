@@ -12,7 +12,7 @@ import (
 func TestRecognizePathsContainsAPanickingImage(t *testing.T) {
 	saved := recognizeImage
 	t.Cleanup(func() { recognizeImage = saved })
-	recognizeImage = func(_, imgPath, _, _ string) (Result, error) {
+	recognizeImage = func(_ context.Context, _, imgPath, _, _ string) (Result, error) {
 		if strings.HasSuffix(imgPath, "bad.png") {
 			panic("image: corrupt stream")
 		}

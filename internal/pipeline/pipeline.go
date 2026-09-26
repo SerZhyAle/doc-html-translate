@@ -159,10 +159,10 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 		// comic *is* the request to read its text, so OCR is forced here rather than
 		// left to -ocr (same rationale as a standalone image).
 		logging.Println("[1/4] Extracting comic archive..")
-		book, err = comic.Extract(inputPath, outputDir)
+		book, err = comic.Extract(ctx, inputPath, outputDir)
 		if err != nil {
 			cleanup()
-			return ExitParse, fmt.Errorf("extract comic: %w", err)
+			return extractFailed(ctx, fmt.Errorf("extract comic: %w", err))
 		}
 		forceOCR = true
 	} else {
@@ -178,10 +178,10 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 			logging.Printf("  Chapters: %d\n", len(book.Spine))
 		case ".pdf":
 			logging.Println("[1/4] Extracting PDF..")
-			book, err = pdf.Extract(inputPath, outputDir)
+			book, err = pdf.Extract(ctx, inputPath, outputDir)
 			if err != nil {
 				cleanup()
-				return ExitParse, fmt.Errorf("extract pdf: %w", err)
+				return extractFailed(ctx, fmt.Errorf("extract pdf: %w", err))
 			}
 		case ".txt":
 			logging.Println("[1/4] Extracting TXT..")
@@ -220,10 +220,10 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 			}
 		case ".mobi", ".azw3":
 			logging.Println("[1/4] Extracting MOBI..")
-			book, err = mobi.Extract(inputPath, outputDir)
+			book, err = mobi.Extract(ctx, inputPath, outputDir)
 			if err != nil {
 				cleanup()
-				return ExitParse, fmt.Errorf("extract mobi: %w", err)
+				return extractFailed(ctx, fmt.Errorf("extract mobi: %w", err))
 			}
 		default:
 			// Unknown extension: treat it as plain text - but only if it is text. A binary
@@ -356,6 +356,16 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	}
 	logging.Println("Done.")
 	return ExitOK, nil
+}
+
+// extractFailed classifies an extraction that returned an error. A helper killed because the
+// run was cancelled fails like a broken file, but the reader pressed Ctrl+C: that is an
+// interrupted run, not a parse failure.
+func extractFailed(ctx context.Context, err error) (int, error) {
+	if ctx.Err() != nil {
+		return interrupted()
+	}
+	return ExitParse, err
 }
 
 func interrupted() (int, error) {

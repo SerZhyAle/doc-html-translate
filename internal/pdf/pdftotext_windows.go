@@ -3,6 +3,7 @@
 package pdf
 
 import (
+	"context"
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/i18n"
@@ -30,10 +31,10 @@ func pdftotextMissingAdvice() string { return "" }
 // typically quarantined by antivirus. A Poppler the user installed is tried; otherwise the
 // user is told how to install one. Nothing is installed from here: an unrequested system-wide
 // install in the middle of a conversion is not the converter's call to make.
-func retryBlockedPDFToText(pdfPath, outputDir string) *epub.Book {
+func retryBlockedPDFToText(ctx context.Context, pdfPath, outputDir string) *epub.Book {
 	if p := findSystemPDFToText(); p != "" {
 		logging.Printf("  Retrying with system pdftotext: %s\n", p)
-		if book, err := extractWithPDFToText(p, pdfPath, outputDir); err == nil {
+		if book, err := extractWithPDFToText(ctx, p, pdfPath, outputDir); err == nil {
 			return book
 		}
 	}

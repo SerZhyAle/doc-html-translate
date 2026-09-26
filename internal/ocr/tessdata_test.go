@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -43,7 +44,7 @@ func TestISOForRoundTripsTessLang(t *testing.T) {
 // could not be asked would send the user to download data they already have, and - worse - the
 // caller skips the OCR pass on that answer.
 func TestMissingLangsSaysNothingWhenTheEngineCannotBeAsked(t *testing.T) {
-	if got := MissingLangs("no-such-tesseract-binary", "rus"); got != nil {
+	if got := MissingLangs(context.Background(), "no-such-tesseract-binary", "rus"); got != nil {
 		t.Errorf("MissingLangs with an unusable engine = %v, want nil", got)
 	}
 }

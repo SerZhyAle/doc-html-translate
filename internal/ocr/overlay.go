@@ -141,7 +141,7 @@ func OverlayBook(ctx context.Context, bin string, htmlPaths []string, lang, data
 	// four minutes on a 480-page comic.
 	script, conf, detected := "", 0.0, false
 	if !langFixed {
-		script, conf, detected = DetectScript(bin, order[0], dataDir)
+		script, conf, detected = DetectScript(ctx, bin, order[0], dataDir)
 	}
 	use, note, stop := resolveScript(lang, langFixed, script, conf, detected, installedForScript(dataDir, script))
 	stats.Lang, stats.ScriptNote = use, note
@@ -414,7 +414,7 @@ func recognizePaths(ctx context.Context, bin, lang, dataDir string, paths []stri
 			for i := range queue {
 				// Recognize is self-contained (its own temp file, its own process), so it
 				// is safe to run concurrently; each worker writes only its own slot.
-				res, err := recognizeSafe(bin, paths[i], lang, dataDir)
+				res, err := recognizeSafe(ctx, bin, paths[i], lang, dataDir)
 				ok, reason := classifyRecognition(res, err)
 				r := recognition{ok: ok, err: reason}
 				switch {

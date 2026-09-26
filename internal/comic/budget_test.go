@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/flate"
+	"context"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -81,7 +82,7 @@ func TestExtractCBZRefusesTotalBomb(t *testing.T) {
 		}
 	})
 	out := t.TempDir()
-	_, err := Extract(path, out)
+	_, err := Extract(context.Background(), path, out)
 	if !errors.Is(err, limits.ErrTooLarge) || !strings.Contains(err.Error(), "4 GB") {
 		t.Fatalf("Extract = %v, want the total-size refusal naming 4 GB", err)
 	}
@@ -98,7 +99,7 @@ func TestExtractCBZRefusesEntryCountBomb(t *testing.T) {
 			}
 		}
 	})
-	_, err := Extract(path, t.TempDir())
+	_, err := Extract(context.Background(), path, t.TempDir())
 	if !errors.Is(err, limits.ErrTooLarge) || !strings.Contains(err.Error(), "entries") {
 		t.Fatalf("Extract = %v, want the entry-count refusal", err)
 	}
@@ -118,7 +119,7 @@ func TestExtractCBZSkipsOversizePage(t *testing.T) {
 	defer logging.StopRunLog()
 
 	out := t.TempDir()
-	book, err := Extract(path, out)
+	book, err := Extract(context.Background(), path, out)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
@@ -153,7 +154,7 @@ func TestExtractCBZStreamsPages(t *testing.T) {
 	runtime.GC()
 	var before, after runtime.MemStats
 	runtime.ReadMemStats(&before)
-	book, err := Extract(path, out)
+	book, err := Extract(context.Background(), path, out)
 	runtime.ReadMemStats(&after)
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
@@ -196,7 +197,7 @@ func TestExtractCBTOffsets(t *testing.T) {
 		"page3.jpg":   bytes.Repeat([]byte("3"), 512),
 	})
 	out := t.TempDir()
-	if _, err := Extract(path, out); err != nil {
+	if _, err := Extract(context.Background(), path, out); err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
 	for name, want := range map[string]string{

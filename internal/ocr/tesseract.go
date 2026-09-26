@@ -12,6 +12,7 @@ package ocr
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"image"
@@ -134,9 +135,9 @@ func Locate() (string, error) {
 // carries them elsewhere, and --tessdata-dir is pinned only when our directory can satisfy the
 // request (see tesseractArgs). An error means "no idea" - never "none installed" - so a caller
 // must not turn a failed probe into a claim about the user's machine.
-func EngineLangs(bin string) ([]string, error) {
+func EngineLangs(ctx context.Context, bin string) ([]string, error) {
 	// The list goes to stdout on some builds and to stderr on others, so both are read.
-	res, err := runTesseract(procrun.TesseractProbe, bin, "", []string{"--list-langs"})
+	res, err := runTesseract(ctx, procrun.TesseractProbe, bin, "", []string{"--list-langs"})
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +162,8 @@ func parseLangList(out string) []string {
 // MissingLangs reports which codes of a "+"-joined language string the engine cannot load.
 // A probe that failed returns nothing: a wrong "not installed" would send the user to
 // download data they already have, which is worse than saying nothing.
-func MissingLangs(bin, lang string) []string {
-	engine, err := EngineLangs(bin)
+func MissingLangs(ctx context.Context, bin, lang string) []string {
+	engine, err := EngineLangs(ctx, bin)
 	if err != nil {
 		return nil
 	}
@@ -217,7 +218,7 @@ const ocrSparsePageSegMode = 11
 // halftone-screen pass - see there for why a picture with plainly legible lettering can come back
 // empty. An image that *did* read goes through screenSweep instead, which is the same low-pass spent
 // on the parts of the picture no plate covers.
-func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
+func Recognize(ctx context.Context, bin, imgPath, lang, dataDir string) (Result, error) {
 	if lang == "" {
 		lang = "eng"
 	}
@@ -230,7 +231,7 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 	// over unbuilt: recognizePass builds it once the recognizer has returned, which is the moment
 	// the rescue ladder or screenSweep built it before the test existed - every image reaches it
 	// either way - so the worker holds no more memory, for no longer, than it did.
-	res, err := recognizePass(bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf, frame.grey)
+	res, err := recognizePass(ctx, bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf, frame.grey)
 	if err != nil {
 		return Result{}, err
 	}
@@ -241,14 +242,14 @@ func Recognize(bin, imgPath, lang, dataDir string) (Result, error) {
 		// ladder read text and rejected all of it, that record is the only thing telling "the
 		// floor rejected everything" from "there was nothing here".
 		primary := res.Dropped
-		alt, ok := greyRescue(bin, frame, lang, dataDir, dpi)
+		alt, ok := greyRescue(ctx, bin, frame, lang, dataDir, dpi)
 		if ok {
 			res = alt
 		}
 		res.Dropped = append(primary, alt.Dropped...)
 	} else {
 		var swept []DroppedLine
-		res.Blocks, swept = screenSweep(bin, frame, lang, dataDir, dpi, res.Blocks)
+		res.Blocks, swept = screenSweep(ctx, bin, frame, lang, dataDir, dpi, res.Blocks)
 		res.Dropped = append(res.Dropped, swept...)
 	}
 	if scale > 1 {
@@ -272,8 +273,8 @@ const (
 // is asked for only after the recognizer has returned, and nil or a nil answer leaves the split to
 // its ratio rule. Every pass reads the picture itself, not the grey or low-passed copy it may have
 // handed the recognizer.
-func recognizePass(bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64, ink func() *image.Gray) (Result, error) {
-	res, err := runTesseract(procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
+func recognizePass(ctx context.Context, bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64, ink func() *image.Gray) (Result, error) {
+	res, err := runTesseract(ctx, procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
 	if err != nil {
 		return Result{}, err
 	}
@@ -375,7 +376,7 @@ type rescueRung struct {
 // The screen pass is last because it is the only rung that changes the picture rather than the
 // reading of it: a low-pass costs a little accuracy on lettering the earlier rungs can already
 // read, so it is spent only after they have all failed.
-func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Result, bool) {
+func greyRescue(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Result, bool) {
 	grey := frame.grey()
 	if grey == nil {
 		return Result{}, false
@@ -387,7 +388,7 @@ func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Res
 	defer cleanup()
 	var best Result
 	for _, rung := range greyRescuePasses {
-		res, err := recognizePass(bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf, known(grey))
+		res, err := recognizePass(ctx, bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf, known(grey))
 		if err != nil {
 			continue
 		}
@@ -404,7 +405,7 @@ func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Res
 	if len(best.Blocks) > 0 {
 		return best, true
 	}
-	screened, ok := screenRescue(bin, grey, lang, dataDir, dpi)
+	screened, ok := screenRescue(ctx, bin, grey, lang, dataDir, dpi)
 	if ok {
 		return screened, true
 	}
@@ -424,7 +425,7 @@ func greyRescue(bin string, frame *ocrFrame, lang, dataDir string, dpi int) (Res
 // there is nothing left to lose. The sigma is derived from the screen's own measured period rather
 // than fixed, because a screen's pitch depends on the press and on the scan resolution, and a
 // kernel tuned to one pitch is a fix for one pitch (see screen.go for the measurements).
-func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (Result, bool) {
+func screenRescue(ctx context.Context, bin string, grey *image.Gray, lang, dataDir string, dpi int) (Result, bool) {
 	pitch := screenPitch(grey)
 	if pitch == 0 {
 		return Result{}, false
@@ -434,7 +435,7 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 		return Result{}, false
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
+	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
 	if err != nil {
 		return Result{}, false
 	}
@@ -477,7 +478,7 @@ func screenRescue(bin string, grey *image.Gray, lang, dataDir string, dpi int) (
 //
 // The second result is the sweep's own discard record: the lines its floor and its translatability
 // test rejected, and the plates the merge refused as duplicates.
-func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block) ([]Block, []DroppedLine) {
+func screenSweep(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block) ([]Block, []DroppedLine) {
 	grey := frame.grey()
 	if grey == nil {
 		return kept, nil
@@ -493,7 +494,7 @@ func screenSweep(bin string, frame *ocrFrame, lang, dataDir string, dpi int, kep
 		return kept, nil
 	}
 	defer cleanup()
-	res, err := recognizePass(bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
+	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
 	if err != nil {
 		return kept, nil
 	}

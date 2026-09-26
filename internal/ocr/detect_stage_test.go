@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"image"
 	"image/png"
 	"os"
@@ -51,7 +52,7 @@ func TestDetectScriptStagesANonASCIIPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	script, conf, ok := DetectScript(bin, img, "")
+	script, conf, ok := DetectScript(context.Background(), bin, img, "")
 	if !ok || script != "Cyrillic" || conf != 8.24 {
 		t.Fatalf("DetectScript = %q %v %v, want Cyrillic 8.24 true", script, conf, ok)
 	}
