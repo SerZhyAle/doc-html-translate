@@ -1,4 +1,4 @@
-# Phase 06 — Docs cleanup
+# Phase 06 - Docs cleanup
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -22,7 +22,7 @@ Leave the record accurate: what changed, what it cost, and what is still open.
 
 ## Steps
 
-### Step 06.1 — Changelog entries
+### Step 06.1 - Changelog entries
 **Files:** `DEV/CHANGELOG.md`
 **Depends on:** - start of phase
 
@@ -38,7 +38,7 @@ Leave the record accurate: what changed, what it cost, and what is still open.
 
 ---
 
-### Step 06.2 — Index the research note
+### Step 06.2 - Index the research note
 **Files:** `DEV/research/RESEARCH_INDEX.md`
 **Depends on:** Step 06.1
 
@@ -52,7 +52,7 @@ Leave the record accurate: what changed, what it cost, and what is still open.
 
 ---
 
-### Step 06.3 — Update the queue row with the measured outcome
+### Step 06.3 - Update the queue row with the measured outcome
 **Files:** `DEV/plan/ROADMAP.md`
 **Depends on:** Step 06.2
 

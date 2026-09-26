@@ -4,7 +4,7 @@
 corpus, for both editions. It fixes nothing. Every confirmed problem leaves here as either a spec
 ticket under [`DEV/plan/`](../plan/) or an automated-test scenario (see [Outputs](#outputs)).
 
-Corpus and its measured numbers: [`test_doc/CORPUS.md`](../../test_doc/CORPUS.md) (gitignored;
+Corpus and its measured numbers: `test_doc/CORPUS.md` (gitignored;
 62 files, 807 MB). Re-measure with `test_doc/_fetch/verify-corpus.ps1`.
 
 ## Owner decisions (2026-07-17)
@@ -18,7 +18,7 @@ Corpus and its measured numbers: [`test_doc/CORPUS.md`](../../test_doc/CORPUS.md
    scope** (paid).
 4. **No stress tier.** `Aphrodite's Mirror (1).pdf` (388 MB, 2304 pages, no text layer - a serial
    OCR run of roughly half an hour) is **excluded**. Accepted consequence: the OCR-pool defect
-   ([`2026-07-17_ocr-pool-per-book`](../plan/2026-07-17_ocr-pool-per-book.md)) leaves this sweep
+   (`2026-07-17_ocr-pool-per-book`) leaves this sweep
    without a headline number. Everything else in the corpus is in scope.
 5. **Extension is driven by hand** this pass, with screenshots against a checklist. A Playwright
    harness is a *recommendation to spec*, not work to do mid-audit - the audit must not mutate the
@@ -140,7 +140,7 @@ Wave 7 is not padding. Nothing declares these formats, so D2 cannot fail - but t
 answers a `.cbz` with 24 MB of garbage and exit 0, and the extension routes any ZIP to the EPUB
 reader (`detectFormat` returns `"epub"` for any `PK\x03\x04` before the filename is consulted) and
 fails with a misleading "not an EPUB". Both are D1/D4 findings about *refusal quality*, and both are
-already predicted by [`2026-07-17_comic-archives`](../plan/2026-07-17_comic-archives.md).
+already predicted by `2026-07-17_comic-archives`.
 
 ### Fixture assignment
 
@@ -238,7 +238,7 @@ pre-flight and both **already confirmed**:
 
 - `internal/img` accepts `.tif`/`.tiff`; the extension's picker `accept` list has neither. It is
   also missing `.mobi`/`.azw3` while `ebook.js` reads them - the format lists have drifted from the
-  code, as [`2026-07-17_comic-archives`](../plan/2026-07-17_comic-archives.md) predicted ("six
+  code, as `2026-07-17_comic-archives` predicted ("six
   unsynchronised format lists").
 - The CLI's Ollama default is `gemma3:12b`. On this machine Ollama is installed with
   `qwen2.5:7b`, `gemma2`, `qwen2.5:3b`, `aya` - and **not** `gemma3:12b`. So `-ollama` with default
@@ -272,7 +272,7 @@ en/ru/uk across every surface. Any surface where only English moved is a finding
 Nothing is fixed here. Each confirmed problem leaves as exactly one of:
 
 1. **A spec ticket** - `DEV/plan/<YYYY-MM-DD>_<slug>.md`, cross-edition template
-   ([`_TEMPLATE_cross-edition.md`](../plan/_TEMPLATE_cross-edition.md)) when it touches both
+   (`_TEMPLATE_cross-edition.md`) when it touches both
    editions. Status starts at `Draft`.
 2. **An automated-test scenario** - a spec for a check that would have caught it. These are
    **extensions to the harness that already exists**, not new frameworks; see

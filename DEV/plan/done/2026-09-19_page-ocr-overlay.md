@@ -80,7 +80,7 @@ pictures as real selectable text - so the words can be copied, and so the browse
 ### 3.3 Owner inputs (Approval gate)
 
 - **Related tickets:** none blocking. Shares the recognition and plate-composition work tracked by
-  [`28_2026-08-15_plate-styling-single-source`](../28_2026-08-15_plate-styling-single-source.md) and the
+  [`28_2026-08-15_plate-styling-single-source`](28_2026-08-15_plate-styling-single-source.md) and the
   closed composition tickets in [`done/`](./); this ticket must not fork that logic.
 - **Copy/tone policy:** the new menu item and the layer's controls follow the wording of the existing
   image menu item, in all authored locales.
@@ -262,7 +262,7 @@ mirror of the divergences already recorded in the other direction.
 
 ## 10. Links to other specs
 
-- [`28_2026-08-15_plate-styling-single-source`](../28_2026-08-15_plate-styling-single-source.md) - the layer's
+- [`28_2026-08-15_plate-styling-single-source`](28_2026-08-15_plate-styling-single-source.md) - the layer's
   styling must come from the source that ticket is consolidating, not from a new one.
 - [`done/2026-07-01_app-ocr-image-overlay`](2026-07-01_app-ocr-image-overlay.md) - the overlay
   this feature reuses.

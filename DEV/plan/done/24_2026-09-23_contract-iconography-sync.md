@@ -46,7 +46,7 @@
 > exceptions and elsewhere: the text layer's off form (owed by the catalog's exporter), the kit's `◐` / `▸`
 > (co-signed kit proposals), 44 px targets (co-signed), and the rule 9 system surfaces - ticket
 > [32](../32_2026-09-25_icon-system-surfaces.md). The pdftotext licence gap found on the way is ticket
-> [33](../33_2026-09-25_bundled-binaries-notices.md).
+> [33](33_2026-09-25_bundled-binaries-notices.md).
 ## What / why
 
 The catalog now carries one vocabulary for every icon in the portfolio: one glyph and one canonical name

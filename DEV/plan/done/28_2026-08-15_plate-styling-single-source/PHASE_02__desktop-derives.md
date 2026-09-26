@@ -1,4 +1,4 @@
-# Phase 02 — The desktop editions derive their CSS
+# Phase 02 - The desktop editions derive their CSS
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -32,7 +32,7 @@ carrying its styles inline.
 
 ## Steps
 
-### Step 02.1 — Embed the source and expose two builders
+### Step 02.1 - Embed the source and expose two builders
 
 **Files:** `internal/appearance/appearance.go`
 **Depends on:** - start of phase
@@ -55,7 +55,7 @@ carrying its styles inline.
 
 ---
 
-### Step 02.2 — Point the overlay generator at the builder
+### Step 02.2 - Point the overlay generator at the builder
 
 **Files:** `internal/ocr/overlay.go`
 **Depends on:** Step 02.1
@@ -76,7 +76,7 @@ carrying its styles inline.
 
 ---
 
-### Step 02.3 — Point the reader palette at the builder
+### Step 02.3 - Point the reader palette at the builder
 
 **Files:** `internal/htmlgen/navbar.go`
 **Depends on:** Step 02.1
@@ -98,7 +98,7 @@ carrying its styles inline.
 
 ---
 
-### Step 02.4 — Pin the emitted CSS against what shipped
+### Step 02.4 - Pin the emitted CSS against what shipped
 
 **Files:** `internal/appearance/appearance_test.go`
 **Depends on:** Step 02.2, Step 02.3

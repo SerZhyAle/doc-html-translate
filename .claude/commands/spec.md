@@ -1,7 +1,7 @@
 # Strategic Specification Writer
 
 Write a **strategic** spec: the product-level *what* and *why*. No class names, file paths,
-line budgets, or framework details — those belong to `/spec-tech`. The discipline of
+line budgets, or framework details - those belong to `/spec-tech`. The discipline of
 keeping strategy free of implementation is the whole point: it forces you to agree on the
 problem before arguing about the solution.
 
@@ -13,7 +13,7 @@ problem before arguing about the solution.
 ```
 
 Never refuse input recognizable as a feature description. Only refuse genuinely unusable
-input (empty, or a single content-free token like `?`/`help`) — print a short usage hint
+input (empty, or a single content-free token like `?`/`help`) - print a short usage hint
 and stop. Do not ask the user to pick between candidate slugs; choose one deterministically
 and confirm it in the output.
 
@@ -25,31 +25,31 @@ This repo prefixes the file with its queue position once its line enters `DEV/pl
 
 ## Process
 
-**1 — Parse and normalize.** Derive a kebab-case `slug` from the description (2–5
+**1 - Parse and normalize.** Derive a kebab-case `slug` from the description (2-5
 content-bearing words, ≤ 60 chars). Prefix `bugfix-` for fix/crash wording, `hotfix-` for
-urgent/blocker wording. When the input is free-form, keep the user's original phrasing —
+urgent/blocker wording. When the input is free-form, keep the user's original phrasing -
 §1 must paraphrase *their* problem statement, not a reinterpretation. Default priority 50
 (bugfix 90, hotfix 95); `--priority N` (0..100) overrides.
 
-**2 — Read context.** The repo map, architecture doc, build/ops doc, and the existing
+**2 - Read context.** The repo map, architecture doc, build/ops doc, and the existing
 feature list. Enough to state the problem accurately and avoid duplicating an existing
 capability.
 
-**2.5 — Complexity gate (PRIMITIVE check).** Score the task:
+**2.5 - Complexity gate (PRIMITIVE check).** Score the task:
 
-- [ ] ≤ 3 existing files change — no new files
+- [ ] ≤ 3 existing files change - no new files
 - [ ] No new classes, interfaces, or public types
 - [ ] No schema/migration change
 - [ ] No new dependency-injection wiring / module
 - [ ] No new screen, route, or navigation destination
-- [ ] Mechanically deterministic — no deferred design decisions
+- [ ] Mechanically deterministic - no deferred design decisions
 - [ ] Estimated delta < ~100 lines total
 
-**If ALL pass → PRIMITIVE path** (skip steps 3–7):
-1. Allocate the id, write a minimal spec (`## Problem`, `## Approach` — one bullet per file,
-   `## Done criteria` — one observable check per file). Set `Status: In Progress`.
+**If ALL pass → PRIMITIVE path** (skip steps 3-7):
+1. Allocate the id, write a minimal spec (`## Problem`, `## Approach` - one bullet per file,
+   `## Done criteria` - one observable check per file). Set `Status: In Progress`.
 2. Implement directly, then run the narrowest meaningful check from `docs/VALIDATION.md` (a
-   compile / type-check or a targeted test). A primitive still proves itself — do not set
+   compile / type-check or a targeted test). A primitive still proves itself - do not set
    `Implemented` over a red or unrun check.
 3. If acceptance includes manual testing, insert the verification tags (see §6 of
    `CLAUDE.md`) and set `Status: BlockNeedUserTest`. Otherwise `Status: Implemented`.
@@ -57,15 +57,15 @@ capability.
 
 **If ANY criterion fails → COMPLEX path:** continue.
 
-**3 — Determine tier.** A rough size label for triage: `Quick Win` · `Easy` · `Moderate` ·
+**3 - Determine tier.** A rough size label for triage: `Quick Win` · `Easy` · `Moderate` ·
 `Strategic` · `Security/Compliance (urgent)`.
 
-**4 — Allocate the id** before any file write (scan `DEV/plan/`, increment).
+**4 - Allocate the id** before any file write (scan `DEV/plan/`, increment).
 
-**5 — Write the strategic file** using the template below.
+**5 - Write the strategic file** using the template below.
 
-**5.1 — Owner inputs (Approval gate).** Fill §3.3 with only the bullets that match the
-spec's actual scope — do not pad with `n/a` lines to look thorough. The one universally
+**5.1 - Owner inputs (Approval gate).** Fill §3.3 with only the bullets that match the
+spec's actual scope - do not pad with `n/a` lines to look thorough. The one universally
 required field is **Related tickets**. Emit a bullet only when its tag is triggered by the
 slug or the §1/§3.2 text, for example:
 - user-facing wording touched → **Copy/tone policy**
@@ -75,28 +75,28 @@ slug or the §1/§3.2 text, for example:
 - localization touched → **Localization**
 - any tag matched → also **Validation level** and **Owner sign-off**
 
-**6 — Approve.** Flip `Status: Draft → Approved` in the file. (The style gate — lists over
-tables, `..` not `...`, one idea per bullet — is enforced *here*, at approval, not while
+**6 - Approve.** Flip `Status: Draft → Approved` in the file. (The style gate - lists over
+tables, `..` not `...`, one idea per bullet - is enforced *here*, at approval, not while
 drafting. A Draft may stay rough.)
 
-**7 — Auto-chain to `/spec-tech`.** Immediately invoke `/spec-tech YYYY-MM-DD_<slug>` unless a §6
-research item is `Open` and marked as required before implementation — then list those and
+**7 - Auto-chain to `/spec-tech`.** Immediately invoke `/spec-tech YYYY-MM-DD_<slug>` unless a §6
+research item is `Open` and marked as required before implementation - then list those and
 ask whether to proceed.
 
 **Chat output:** `YYYY-MM-DD_<slug> <slug> — Tier T, Priority P. Status: Approved. -> Running /spec-tech…`
 
 ## Status lifecycle
 
-The gate table — which status each skill requires and produces, and where the pipeline pauses — is
+The gate table - which status each skill requires and produces, and where the pipeline pauses - is
 defined once in `docs/SPEC_LIFECYCLE.md`. This skill's row: requires none (allocates an id),
 produces `Approved`, auto-chains to `/spec-tech`. The flow:
 
 `Draft -> Approved -> Tactical -> In Progress -> Implemented -> Verified` (or `Partial` /
 `Broken` from an audit). Block states, set explicitly:
-- `BlockByOtherTask` — depends on another ticket (record it in §10).
-- `BlockNeedUserTest` — implementation done, awaiting hands-on verification.
-- `BlockQuestions` — awaiting user clarification.
-- `BlockExternal` — waiting on a library release, hardware, or third party.
+- `BlockByOtherTask` - depends on another ticket (record it in §10).
+- `BlockNeedUserTest` - implementation done, awaiting hands-on verification.
+- `BlockQuestions` - awaiting user clarification.
+- `BlockExternal` - waiting on a library release, hardware, or third party.
 
 Every transition **into** a `Block*` status records a one-line note: what must be tested, or
 what the blocker is and what resolves it.
@@ -196,10 +196,10 @@ in under N minutes".>
 
 ## Constraints
 
-- §5: architectural roles only — no class names, file paths, line budgets, schema versions,
+- §5: architectural roles only - no class names, file paths, line budgets, schema versions,
   DI modules.
 - §11: observable outcomes only.
-- §6 and §7 are mandatory even if trivial — write an explicit "none" rather than omitting.
+- §6 and §7 are mandatory even if trivial - write an explicit "none" rather than omitting.
 - Do not duplicate an existing feature-doc entry.
 - The style + completeness gate runs only at the `Draft -> Approved` flip; a Draft may keep
   rough phrasing.

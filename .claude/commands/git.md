@@ -15,7 +15,7 @@ Git workflow: branching, staging, grouping changes into clean commits, inspectin
 /git [optional question or action]
 ```
 
-- `/git` — full reference
+- `/git` - full reference
 - `/git what should I commit now?`
 - `/git analyze current changes and suggest commit groups`
 - `/git show me the old version of <file>`
@@ -25,25 +25,25 @@ Git workflow: branching, staging, grouping changes into clean commits, inspectin
 On `$ARGUMENTS`:
 - **Empty** → output the reference below.
 - **"Analyze changes"** →
-  1. `git status` — all modified + untracked.
-  2. `git branch --show-current` — confirm the active branch.
+  1. `git status` - all modified + untracked.
+  2. `git branch --show-current` - confirm the active branch.
   3. Group files by feature/concern.
   4. Identify files that should NOT be committed (see exclusion list).
-  5. Suggest 2–4 logical commit groups + proposed messages.
+  5. Suggest 2-4 logical commit groups + proposed messages.
   6. Show the exact `git add` commands per group.
 - **Specific file/topic** → focus there, use exact commands, never guess.
 
 ## Branching Model (adapt to your team)
 
-A simple, robust default — replace with your team's flow if you have one:
+A simple, robust default - replace with your team's flow if you have one:
 
-- **`main`** — release-stable. No direct development. Receives merges from work branches
+- **`main`** - release-stable. No direct development. Receives merges from work branches
   and release-only fixes.
-- **work branches** (`feat/<x>`, `fix/<x>`, or sequential `dev-vNNN`) — all development.
-- Before any task: `git branch --show-current` — confirm you are where you expect.
+- **work branches** (`feat/<x>`, `fix/<x>`, or sequential `dev-vNNN`) - all development.
+- Before any task: `git branch --show-current` - confirm you are where you expect.
 - Keep the number of live work branches small.
 
-> Many teams use trunk-based development or GitFlow instead. The kit does not impose one —
+> Many teams use trunk-based development or GitFlow instead. The kit does not impose one -
 > it only insists you know which branch you are on before you commit.
 
 ## Daily flow
@@ -116,8 +116,8 @@ doubt, check `.gitignore` and ask before adding a binary or a config file.
 
 Split unrelated work into logical commits:
 
-- **Feature** — the source change + its spec/plan file.
-- **Docs & changelog** — user docs, dev log, changelog.
-- **Infra** — build config, dependencies, settings.
+- **Feature** - the source change + its spec/plan file.
+- **Docs & changelog** - user docs, dev log, changelog.
+- **Infra** - build config, dependencies, settings.
 
 One concern per commit; one commit message that explains the *why* when it is not obvious.

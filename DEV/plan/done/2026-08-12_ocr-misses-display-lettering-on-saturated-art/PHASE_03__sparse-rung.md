@@ -1,4 +1,4 @@
-# Phase 03 — A sparse-text rung for input that is not a page
+# Phase 03 - A sparse-text rung for input that is not a page
 
 **Strategic spec:** [`../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md`](../2026-08-12_ocr-misses-display-lettering-on-saturated-art.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -23,7 +23,7 @@ sparse-text rescue rung that runs on the grey rendition.
 
 ## Steps
 
-### Step 03.1 — Carry the segmentation mode into the pass
+### Step 03.1 - Carry the segmentation mode into the pass
 **Files:** `internal/ocr/tesseract.go`
 **Depends on:** - start of phase
 
@@ -42,7 +42,7 @@ sparse-text rescue rung that runs on the grey rendition.
 
 ---
 
-### Step 03.2 — Add the sparse rung to the ladder
+### Step 03.2 - Add the sparse rung to the ladder
 **Files:** `internal/ocr/tesseract.go`
 **Depends on:** Step 03.1
 
@@ -62,7 +62,7 @@ sparse-text rescue rung that runs on the grey rendition.
 
 ---
 
-### Step 03.3 — Test the rung's position and its arguments
+### Step 03.3 - Test the rung's position and its arguments
 **Files:** `internal/ocr/rescue_test.go`
 **Depends on:** Step 03.2
 

@@ -50,12 +50,12 @@
 >
 > **Update 2026-07-17 (defects closed).** The three tickets that superseded this one are all
 > **Implemented** and measured against the real corpus:
-> [`pdf-raster-extraction-takes-the-wrong-images`](2026-07-17_pdf-raster-extraction-takes-the-wrong-images.md)
+> `pdf-raster-extraction-takes-the-wrong-images`
 > (P8 - thumbnails/duplicates no longer reach OCR),
-> [`ocr-upscale-threshold-misses-page-scans`](2026-07-17_ocr-upscale-threshold-misses-page-scans.md)
+> `ocr-upscale-threshold-misses-page-scans`
 > (P9 - gate keys on estimated DPI; a formerly-salad page now reads as clean prose; the masked non-ASCII
 > path bug is fixed, so a Cyrillic-named book goes 2/6 -> 5/6 overlaid), and
-> [`ocr-plate-fit`](2026-07-17_ocr-plate-fit.md) (P10 - a runtime re-fit keeps text inside its plate
+> `ocr-plate-fit` (P10 - a runtime re-fit keeps text inside its plate
 > even after the translator swaps it; Chrome-verified 0 clipped). So criterion 1's *overlay* half is met
 > and both defect classes ("plates are defective", "wrong image gets OCR'd") are closed.
 >

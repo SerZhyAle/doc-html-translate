@@ -93,9 +93,9 @@ diagnostics and the settings surface of the desktop UI.
 ### 3.3 Owner inputs (Approval gate)
 
 - **Related tickets:** none blocking. Touches the same surfaces as
-  [2026-07-28_thirteen-ui-languages](2026-07-28_thirteen-ui-languages.md) (new strings enter
+  `2026-07-28_thirteen-ui-languages` (new strings enter
   the thirteen-language set) and is a new row for
-  [2026-07-01_cross-edition-parity](2026-07-01_cross-edition-parity.md).
+  `2026-07-01_cross-edition-parity`.
 - **Copy/tone policy:** the button and the prefilled mail body are the author's own voice -
   short, no apology, no support-desk register. The mail body is written in the user's
   interface language, but the environment summary inside the archive stays English so the
@@ -348,12 +348,12 @@ user's account name and folder layout add nothing diagnostic and are the part wo
 
 ## 10. Links to other specs
 
-- [2026-07-01_cross-edition-parity](2026-07-01_cross-edition-parity.md) - gains the ADR-4 row.
-- [2026-07-28_thirteen-ui-languages](2026-07-28_thirteen-ui-languages.md) - the locale set the
+- `2026-07-01_cross-edition-parity` - gains the ADR-4 row.
+- `2026-07-28_thirteen-ui-languages` - the locale set the
   new app and extension strings must land in.
 - [docs/PARITY.md](../../../docs/PARITY.md) - owns the author's contact address, gains the report
   field list as a shared invariant, and gains the ADR-4 divergence entry.
-- [_TEMPLATE_cross-edition.md](_TEMPLATE_cross-edition.md) - this ticket is a cross-edition
+- `_TEMPLATE_cross-edition.md` - this ticket is a cross-edition
   feature; its edition checklist is carried by the tactical plan.
 
 ## 11. Done criteria (strategic)

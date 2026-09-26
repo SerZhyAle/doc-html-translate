@@ -1,4 +1,4 @@
-# Phase 05 — Record the rule and mark what it does not cover
+# Phase 05 - Record the rule and mark what it does not cover
 
 **Strategic spec:** [`../28_2026-08-15_plate-styling-single-source.md`](../28_2026-08-15_plate-styling-single-source.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
@@ -27,7 +27,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 
 ## Steps
 
-### Step 05.1 — State the single source
+### Step 05.1 - State the single source
 
 **Files:** `docs/PARITY.md`
 **Depends on:** - start of phase
@@ -46,7 +46,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 
 ---
 
-### Step 05.2 — Mark every invariant guarded or prose-only
+### Step 05.2 - Mark every invariant guarded or prose-only
 
 **Files:** `docs/PARITY.md`
 **Depends on:** Step 05.1
@@ -68,7 +68,7 @@ divergence list, and marks every invariant in the document as gate-enforced or p
 
 ---
 
-### Step 05.3 — Repoint the OCR pipeline doc
+### Step 05.3 - Repoint the OCR pipeline doc
 
 **⛔ Local only - changes the contract catalog.**
 
