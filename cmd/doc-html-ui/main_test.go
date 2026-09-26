@@ -194,9 +194,42 @@ func TestHandleOCRLangsCarriesTheISOAlias(t *testing.T) {
 	t.Errorf(`no "rus" row in the OCR catalog: %s`, rec.Body.String())
 }
 
+// The automatic entry is the GUI's default, and it must reach the CLI as no -ocr-lang at all: the
+// CLI then derives the language from -src and runs the script check, which an explicit -ocr-lang
+// switches off.
+func TestAssembleArgsSendsNoOCRLangForTheAutomaticChoice(t *testing.T) {
+	args := assembleArgs(runRequest{Input: `C:\books\comic.pdf`, OCR: true, OCRLang: "", SrcLang: "ru", DstLang: "en"})
+	if !slices.Contains(args, "-ocr") || slices.Contains(args, "-ocr-lang") {
+		t.Fatalf("want -ocr without -ocr-lang for the automatic choice, got %v", args)
+	}
+	cfg, err := config.ParseArgs(args)
+	if err != nil || cfg.OCRLang != "" {
+		t.Errorf("the CLI parsed OCRLang %q (%v), want empty so it derives from -src", cfg.OCRLang, err)
+	}
+}
+
+func TestUIDefaultsTheOCRLanguageToAutomatic(t *testing.T) {
+	// The select used to fall back to eng and the page copied the -src language into it, so every
+	// GUI run - the Store entry point - sent an explicit -ocr-lang and never ran the script check.
+	for _, snippet := range []string{
+		"auto.value = ''",
+		"ocrLangChoice:  el('ocrLang').value",
+		"function applyOcrWant()",
+	} {
+		if !strings.Contains(uiHTML, snippet) {
+			t.Errorf("ui.html is missing %q - the OCR language has no automatic default", snippet)
+		}
+	}
+	for _, stale := range []string{"sel.value || 'eng'", "o.value = 'eng'", "sel.value = row.code"} {
+		if strings.Contains(uiHTML, stale) {
+			t.Errorf("ui.html still has %q, which turns the default into an explicit -ocr-lang", stale)
+		}
+	}
+}
+
 func TestUIFollowsTheSourceLanguageForOCR(t *testing.T) {
-	// The GUI always sends an explicit -ocr-lang, so a stale pick silently OCRs a page in the
-	// wrong language and finds nothing. Every path that changes the source must resync.
+	// The automatic choice reads the -src language, so a -src whose data is missing must say so
+	// and offer the download. Every path that changes the source must resync.
 	for _, snippet := range []string{
 		"function syncOcrLangToSource()",
 		"document.getElementById('srcLang').addEventListener('change', syncOcrLangToSource)",
