@@ -1,11 +1,11 @@
 package pdf
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"image"
-	"image/draw"
+	"image/png"
 	"io"
 	"math"
 	"os"
@@ -16,16 +16,15 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/dialog"
-	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/procrun"
 
+	hhtiff "github.com/hhrutter/tiff"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	pdfcpulib "github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/sanitize"
-	"golang.org/x/image/tiff"
 )
 
 // pdfImages is what the image pass learned about a document.
@@ -94,6 +93,10 @@ func writePDFImages(pdfPath, imagesDir string) (byPage map[int][]string, pageCou
 		skippedThumbs += thumbs
 		skippedDups += dups
 		for _, img := range kept {
+			img, convErr := tiffAsPNG(img)
+			if convErr != nil {
+				logging.Printf("  WARNING: image obj#%d on page %d stays a .tif the browser cannot show: %v\n", img.ObjNr, pageNum, convErr)
+			}
 			name := imageFileName(prefix, pageNum, img, used)
 			if err := writeImageFile(filepath.Join(imagesDir, name), img); err != nil {
 				logging.Printf("  WARNING: could not write image from page %d: %v\n", pageNum, err)
@@ -346,10 +349,6 @@ func normalizeExtractedPDFImages(imagesDir string, byPage map[int][]string) erro
 					continue
 				}
 				names[i] = filepath.Base(jpgPath)
-				continue
-			}
-			if err := flipImageFileVertically(path); err != nil && firstErr == nil {
-				firstErr = fmt.Errorf("%s: %w", name, err)
 			}
 		}
 	}
@@ -398,91 +397,39 @@ func convertJPXFile(jpxPath string) (string, error) {
 	return jpgPath, nil
 }
 
-// flipImageFileVertically vertically flips a TIFF image file in place.
-// JPEG and PNG images extracted by pdfcpu are raw embedded streams and are
-// already correctly oriented; only TIFFs (reconstructed from raw PDF pixel
-// data, which uses a bottom-up Y axis) need a Y-flip.
+// tiffAsPNG re-encodes a raster pdfcpu rendered as TIFF - Flate DeviceCMYK and Indexed over
+// DeviceCMYK, with or without a soft mask - as PNG, because Chrome shows no TIFF at all. Any
+// other image comes back unchanged.
 //
-// The size is probed from the header first and a frame over the pixel budget is refused:
-// the flip needs the whole raster in memory, and the dimensions come from the PDF, which
-// is untrusted input.
-func flipImageFileVertically(path string) error {
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".tif" && ext != ".tiff" {
-		return nil
+// The rows are kept as they are. A PDF stores image samples top row first, and pdfcpu writes
+// them in that order, so the raster is already the right way up: flipping it on disk (and then
+// back in CSS) left an upside-down file for OCR and for any viewer that ignored the CSS.
+//
+// The decoder is pdfcpu's own TIFF package, the one that wrote the file: golang.org/x/image/tiff
+// rejects the CMYK colour model outright. The frame's declared size is checked against the pixel
+// budget before the decode, as for any TIFF. On failure the original bytes are put back, so the
+// caller still writes the .tif it always did.
+func tiffAsPNG(img model.Image) (model.Image, error) {
+	if !strings.EqualFold(img.FileType, "tif") || img.Reader == nil {
+		return img, nil
 	}
-
-	file, err := os.Open(path)
+	data, err := io.ReadAll(img.Reader)
 	if err != nil {
-		return err
+		return img, err
 	}
-	defer func() { _ = file.Close() }()
-	st, err := file.Stat()
+	img.Reader = bytes.NewReader(data)
+	if err := limits.CheckTIFF(bytes.NewReader(data), int64(len(data))); err != nil {
+		return img, err
+	}
+	src, err := hhtiff.Decode(bytes.NewReader(data))
 	if err != nil {
-		return err
+		return img, err
 	}
-	if err := limits.CheckTIFF(file, st.Size()); err != nil {
-		return err
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, src); err != nil {
+		return img, err
 	}
-	src, err := tiff.Decode(file)
-	if err != nil {
-		return err
-	}
-	if err := file.Close(); err != nil {
-		return err
-	}
-
-	flipped := flipRowsInPlace(src)
-	return fsutil.Write(path, 0o644, func(w io.Writer) error { return tiff.Encode(w, flipped, nil) })
-}
-
-// flipRowsInPlace mirrors an image top to bottom by swapping whole Pix rows, and returns it.
-// A per-pixel At/Set loop into a second image went through two interface calls per pixel and
-// held two full rasters at once; a row swap on the decoder's own buffer does neither. A type
-// with no Pix slice is converted once to NRGBA and flipped the same way.
-func flipRowsInPlace(img image.Image) image.Image {
-	var pix []byte
-	var stride int
-	switch m := img.(type) {
-	case *image.Gray:
-		pix, stride = m.Pix, m.Stride
-	case *image.Gray16:
-		pix, stride = m.Pix, m.Stride
-	case *image.RGBA:
-		pix, stride = m.Pix, m.Stride
-	case *image.RGBA64:
-		pix, stride = m.Pix, m.Stride
-	case *image.NRGBA:
-		pix, stride = m.Pix, m.Stride
-	case *image.NRGBA64:
-		pix, stride = m.Pix, m.Stride
-	case *image.CMYK:
-		pix, stride = m.Pix, m.Stride
-	case *image.Paletted:
-		pix, stride = m.Pix, m.Stride
-	default:
-		b := img.Bounds()
-		dst := image.NewNRGBA(b)
-		draw.Draw(dst, b, img, b.Min, draw.Src)
-		img, pix, stride = dst, dst.Pix, dst.Stride
-	}
-	rows := img.Bounds().Dy()
-	if rows < 2 || stride <= 0 {
-		return img
-	}
-	// The last row of a sub-image can be shorter than the stride; every row has at least
-	// its length of pixel data, so swapping that many bytes never reads past the buffer.
-	rowLen := len(pix) - (rows-1)*stride
-	if rowLen <= 0 {
-		return img
-	}
-	tmp := make([]byte, rowLen)
-	for top, bot := 0, rows-1; top < bot; top, bot = top+1, bot-1 {
-		a := pix[top*stride : top*stride+rowLen]
-		b := pix[bot*stride : bot*stride+rowLen]
-		copy(tmp, a)
-		copy(a, b)
-		copy(b, tmp)
-	}
-	return img
+	img.Reader = &buf
+	img.FileType = "png"
+	return img, nil
 }
