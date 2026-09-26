@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -53,7 +54,7 @@ func main() {
 	application := app.New(cfg)
 	exitCode, err := application.Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		reportFailure(os.Stderr, exitCode, err)
 		// Whoever pressed Ctrl+C is at the console and wants it back, not a pause.
 		if exitCode != app.ExitInterrupted {
 			waitOnError()
@@ -62,6 +63,13 @@ func main() {
 	}
 
 	os.Exit(exitCode)
+}
+
+// reportFailure prints the error that ended the run and records it in the run log, which the
+// console text never reaches: without it a -report bundle shows a run that simply stops.
+func reportFailure(stderr io.Writer, exitCode int, err error) {
+	fmt.Fprintf(stderr, "Error: %v\n", err)
+	logging.RunLogf("Run failed (exit code %d): %v\n", exitCode, err)
 }
 
 // waitOnError keeps the console window open so the user can read the error message (R9).
