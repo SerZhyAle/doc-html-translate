@@ -36,12 +36,14 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | PDF outline -> TOC | [`internal/pdf/toc.go`](../internal/pdf/toc.go) | [`extension/src/toc.js`](../extension/src/toc.js) |
 | PDF page images: select + same-shape dedupe | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`selectPageImages`, `sameShapeRaster`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`dedupeSameShape`, `sameShapeRaster`) |
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
+| EPUB chapter normalization (XHTML syntax, cover SVG, charset) | [`internal/epub/normalize.go`](../internal/epub/normalize.go) (`xhtmlToHTMLSyntax`, `rewriteCoverSVGs`), [`charset.go`](../internal/epub/charset.go) (`decodeToUTF8`) | [`extension/src/epub-normalize.js`](../extension/src/epub-normalize.js) (`xhtmlToHtmlSyntax`, `coverSvgImage`), [`charset.js`](../extension/src/charset.js) (`decodeChapter`) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
 | Plain text: source-encoding decode | [`internal/txt/extract.go`](../internal/txt/extract.go) (`decodeText`) | [`extension/src/txt.js`](../extension/src/txt.js) (`decodeText`) |
 | RTF reader + code-page decode | [`internal/rtf/`](../internal/rtf/) | [`extension/src/rtf.js`](../extension/src/rtf.js) |
 | Markdown -> HTML | [`internal/md/`](../internal/md/) (`goldmark`) | [`extension/src/md.js`](../extension/src/md.js) (vendored `marked`) |
 | FB2 XML -> sections/TOC | [`internal/fb2/`](../internal/fb2/) | [`extension/src/fb2.js`](../extension/src/fb2.js) |
 | HTML `<body>` extract | [`internal/htmlconv/`](../internal/htmlconv/) | [`extension/src/html.js`](../extension/src/html.js) |
+| HTML input charset | [`internal/htmlconv/extract.go`](../internal/htmlconv/extract.go) (`parseDocument`) | [`extension/src/charset.js`](../extension/src/charset.js) (`decodeHtml`) |
 | MOBI / AZW3 (KF8) | [`internal/mobi/`](../internal/mobi/) (shells out to Calibre) | [`extension/src/ebook.js`](../extension/src/ebook.js) (vendored `foliate-js`) |
 | Comic archive -> page book | [`internal/comic/`](../internal/comic/) (CBZ/CBT stdlib; CBR/CB7 shell out to 7-Zip) | [`extension/src/comic.js`](../extension/src/comic.js) (CBZ/CBT only; CBR/CB7 declined) |
 | Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
@@ -51,6 +53,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` (overlay rules generated from `internal/appearance`) |
 | OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
+| OCR halftone-screen detection (rescue rung, additive sweep) | [`internal/ocr/screen.go`](../internal/ocr/screen.go) (`screenPitch`, `mergeScreenBlocks`) | [`extension/src/ocr-screen.js`](../extension/src/ocr-screen.js) (`screenPitch`, `mergeScreenBlocks`) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
 | Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
@@ -177,8 +180,22 @@ single-byte code page leaves a byte in 0x80-0x9F undefined (0x81 in windows-1252
 windows-1251), the WHATWG index maps it to the C1 control of the same value and `x/text` to U+FFFD;
 `LookupCodec` follows the browser, so both editions emit the same character.
 
-Scope: `.txt`, RTF and FB2 (next section). `md.js` and `html.js` still decode as UTF-8 unconditionally;
-the HTML-input gap is recorded under "EPUB and HTML content fidelity".
+Scope: `.txt`, RTF and FB2 (next section). HTML input and EPUB chapters follow their own declarations
+(see "EPUB and HTML content fidelity"); Markdown is read as UTF-8 by both editions.
+
+#### Plain-text paragraphs
+
+**Guard:** Guarded by the shared fixture [`tests/testdata/txt_paragraph_cases.json`](../tests/testdata/txt_paragraph_cases.json),
+run by `TestParagraphsSharedCases` ([`internal/txt`](../internal/txt/paragraph_parity_test.go)) and
+`splitParagraphs: shared Go/JS fixture` ([`extension/test/txt.test.mjs`](../extension/test/txt.test.mjs)).
+
+After decoding, every line separator is a line break in both editions: CR LF, CR, NEL (U+0085), LS
+(U+2028), PS (U+2029), vertical tab and form feed. Text with a blank line splits into paragraphs at blank
+lines (the lines between join with a space); text with none is one paragraph per line. The extension
+used to know only CR and LF, so a page-break form feed on its own line read as text and the same file
+split into four paragraphs there and two on the desktop (audit finding X34). Go:
+`internal/textutil` `NormalizeLineSeparators`, `internal/txt` `parseParagraphs`. JS: `txt.js`
+`splitParagraphs`.
 
 #### Step 5: legacy Cyrillic code-page detection
 
@@ -244,9 +261,16 @@ Go: `internal/rtf/parse.go`, `internal/rtf/codepage.go`. JS: `extension/src/rtf.
 - **Prose elements.** Everything in a `<body>` that holds text becomes a paragraph, in document order:
   `<p>` (in sections, epigraphs, citations, annotations, titles), `<subtitle>` (class `subtitle`),
   `<text-author>` (class `text-author`), table cells `<td>`/`<th>`, and each `<stanza>` as one paragraph
-  of class `stanza` with its `<v>` lines separated by `<br>`. Inline markup is flattened and whitespace
-  collapses to single spaces. A section title is a paragraph in the Go pages and a heading in the
-  extension, as before.
+  of class `stanza` with its `<v>` lines separated by `<br>`. A stanza's own `<title>` and `<subtitle>`
+  come first, before its verses. Inline markup is flattened and whitespace collapses to single spaces.
+  A section title is a paragraph in the Go pages and a heading in the extension, as before.
+- **Cover and missing pictures.** The first image of a `<coverpage>` opens the book, ahead of the first
+  body text. An `<image>` whose `<binary>` is missing leaves the visible note
+  `[image not found: <id>]`, never a silent gap. The extension used to drop a stanza's title and
+  subtitle, never show the cover, and drop a dangling image (audit findings B34, B35); guarded by the
+  shared case [`tests/testdata/fb2_parity_cases.json`](../tests/testdata/fb2_parity_cases.json)
+  (`TestFB2SharedCase` in [`internal/fb2`](../internal/fb2/parity_test.go), `parseFb2: shared Go/JS
+  fixture` in [`extension/test/fb2.test.mjs`](../extension/test/fb2.test.mjs)).
 
 Go: `internal/fb2/content.go` (`decodingReader`, `parseFB2`). JS: `extension/src/fb2.js` (`decodeFb2`,
 `renderBlock`).
@@ -276,14 +300,14 @@ generated region of [`viewer.css`](../extension/src/viewer.css) (`--*`, `data-th
 
 ### Reader fonts
 
-**Guard:** Prose only. A future ticket would pin the three family strings in `readerScript` `FAMILIES`
-against `viewer.js`, whitespace- and quote-normalized - or move them into `internal/appearance`.
+**Guard:** Guarded by `TestParityReaderFonts` ([`tests/reader_parity_test.go`](../tests/reader_parity_test.go)),
+which compares the three stacks of both `FAMILIES` literals, spaces and double quotes dropped, and the
+values printed below.
 
-Serif / sans / mono families, identical strings both sides:
+Serif / sans / mono families, the same stacks both sides (spacing and quoting differ and do not matter):
 `serif` = `Georgia,"Times New Roman",serif` · `sans` = `"Segoe UI",system-ui,Arial,sans-serif` ·
-`mono` = `"Cascadia Code",Consolas,monospace`. Sources:
-[`navbar.go:404-408`](../internal/htmlgen/navbar.go#L404-L408),
-[`viewer.js:91-95`](../extension/src/viewer.js#L91-L95).
+`mono` = `"Cascadia Code",Consolas,monospace`. Sources: `readerScript` `FAMILIES` in
+[`navbar.go`](../internal/htmlgen/navbar.go), `FAMILIES` in [`viewer.js`](../extension/src/viewer.js).
 
 ### Vocabulary glyphs (2026-09-25)
 
@@ -361,6 +385,9 @@ most cheaply by running one fixture EPUB through both parsers and comparing the 
 | Label | first `<a>` (or `<span>`) not inside a nested `ol`/`ul` |
 
 Sources: [`internal/epub/toc.go`](../internal/epub/toc.go), [`extension/src/epub.js`](../extension/src/epub.js).
+A TOC target resolves through `resolveBookPath` from the TOC document's folder in both editions (next
+section), so a root-relative, backslash or `?query` target reaches the same chapter; the desktop app
+used to join the raw value itself and drop all three (audit finding E36).
 Title whitespace normalization (Go NCX now uses `collapseWS`, matching the nav path and the extension)
 was aligned in the 2026-07-01 parity pass. External TOC links (ticket
 `bugfix-reader-layer-and-single-page`, 2026-09-25): Go's `ExternalHref` ([`links.go`](../internal/epub/links.go))
@@ -376,10 +403,15 @@ script link. The remaining intentional difference - Go keeps web/mail TOC entrie
 **Guard:** Guarded by the shared fixture [`tests/testdata/epub_href_cases.json`](../tests/testdata/epub_href_cases.json),
 which `TestResolveBookPathSharedCases` ([`internal/epub/resolve_test.go`](../internal/epub/resolve_test.go)) and
 `resolveBookPath: shared Go/JS fixture` ([`extension/test/epub.test.mjs`](../extension/test/epub.test.mjs)) both
-run. A case added for one edition runs against the other.
+run. A case added for one edition runs against the other. Where TOC entries and chapter links land is
+guarded the same way by [`tests/testdata/epub_target_cases.json`](../tests/testdata/epub_target_cases.json)
+(`TestTOCTargetSharedCases` / `TestLinkTargetSharedCases` in [`internal/epub`](../internal/epub/target_parity_test.go),
+`resolveTocAnchor` / `rewriteAnchor: shared Go/JS target fixture` in
+[`extension/test/epub-parity.test.mjs`](../extension/test/epub-parity.test.mjs)).
 
-Every name the book supplies - the container `full-path`, each manifest href, and (in the extension) each
-link, image and TOC target - becomes a path through one function, `resolveBookPath`
+Every name the book supplies - the container `full-path`, each manifest href, each TOC target, a
+root-relative chapter link, and (in the extension) every link and image - becomes a path through one
+function, `resolveBookPath`
 ([`resolve.go`](../internal/epub/resolve.go), [`epub.js`](../extension/src/epub.js)). Ticket
 `hotfix-epub-href-containment` introduced it after a crafted spine made the desktop single-page merge read
 and then delete a file next to the book.
@@ -394,7 +426,18 @@ and then delete a file next to the book.
 | 6 | the result must name something strictly inside the book, or the name is dropped |
 
 A manifest item that fails is dropped with a warning (Go: localized log line, extension: console), and its
-spine entries go with it; a spine item whose file is missing costs only that chapter. The Go app resolves
+spine entries go with it; a spine item whose file is missing costs only that chapter. A chapter link
+written from the book root (`/OEBPS/ch2.xhtml`, or with backslashes) reaches the book root in both
+editions: the desktop app rewrites it relative to its file, because under `file://` a leading slash
+names the drive root (audit finding E37); a relative link keeps its own resolution.
+
+**Container.** `META-INF/container.xml` names the package document by the first `<rootfile>` whose
+media type is `application/oebps-package+xml` or whose `full-path` ends in `.opf` (any letter case), with a
+non-empty path. A container naming only other renditions has no package, and both editions refuse the
+book rather than read some other file as one; the extension used to fall back to the first rootfile of
+any type (audit finding B48). Guarded by [`tests/testdata/epub_container_cases.json`](../tests/testdata/epub_container_cases.json)
+(`TestContainerSharedCases`, `parseContainer: shared Go/JS fixture`). Go: `epub.go` `parseContainer`.
+JS: `epub.js` `parseContainer`. The Go app resolves
 once, at OPF parse time, and every later stage uses the resolved `ManifestItem.Href` - a decoded file path
 that generated HTML escapes through `URLPath`.
 
@@ -404,21 +447,54 @@ would keep one). The extension keeps entries in a `Map` keyed by exact name, whe
 
 ### EPUB and HTML content fidelity (2026-09-25)
 
-**Guard:** Prose only. The desktop behaviour is covered by its own package tests; nothing compares it
-with the extension. A future ticket would port the two extension gaps below and pin them with one
-fixture read by both editions.
+**Guard:** Guarded by the shared fixture [`tests/testdata/content_fidelity_cases.json`](../tests/testdata/content_fidelity_cases.json)
+- charset, XHTML-syntax and cover-SVG cases - run by `TestContentFidelitySharedCases`
+([`internal/epub`](../internal/epub/content_parity_test.go)), `TestCharsetSharedCases`
+([`internal/htmlconv`](../internal/htmlconv/parity_test.go)) and the `content fidelity: shared Go/JS ..`
+tests in [`extension/test/epub-parity.test.mjs`](../extension/test/epub-parity.test.mjs).
 
 Ticket `06_2026-09-24_bugfix-epub-html-content-fidelity` moved the desktop EPUB normalization onto the
-parsed tree and made HTML input charset-aware. Checked against the extension on the same date:
+parsed tree and made HTML input charset-aware; ticket 45 (audit finding B46) ported the three extension
+halves it had left open:
 
 | Behaviour | Go app | Extension |
 |---|---|---|
-| Single-image SVG cover -> `<img>` | DOM, only an `<svg>` whose sole content is one `<image>` ([`normalize.go`](../internal/epub/normalize.go) `rewriteCoverSVGs`) | DOM, `convertSvgImage` in [`epub.js`](../extension/src/epub.js) replaces an `<svg>` holding one `<image>` - but does not check for `<text>` beside it, so a titled cover drawing loses its text |
+| Single-image SVG cover -> `<img>` | DOM, only the outermost `<svg>` whose sole drawing is one `<image>` (title, desc, defs, metadata and whitespace aside) ([`normalize.go`](../internal/epub/normalize.go) `rewriteCoverSVGs`) | the same rule ([`epub-normalize.js`](../extension/src/epub-normalize.js) `coverSvgImage`, used by `epub.js` `convertSvgImage`); any other SVG stays whole, text and all, its `<image>` pointed at the in-memory picture |
 | Link rewrites | real link attributes only, resolved per file ([`links.go`](../internal/epub/links.go) `rewriteLinks`) | `<a>` on the DOM, resolved per chapter (`rewriteAnchor`) - same model |
-| XHTML self-closing tags (`<a id/>`, `<script/>`, `<title/>`) | expanded before parsing | **open gap:** `renderChapter` parses the XHTML as `text/html`, so the same Calibre markup still swallows text in the viewer |
-| Chapter / HTML-input charset | BOM, then XML declaration or meta charset, then detection ([`charset.go`](../internal/epub/charset.go), [`htmlconv`](../internal/htmlconv/extract.go)) | **open gap:** `TextDecoder("utf-8")` in `epub.js` `decodeText` and `html.js` - a windows-1251 page reads as mojibake |
+| XHTML self-closing tags (`<a id/>`, `<script/>`, `<title/>`) | expanded before parsing, for an item of the XHTML media type or an `.xhtml`/`.xhtm` name, the nav document included; an empty SVG `<title/>` no longer swallows what follows | the same token rewrite (`epub-normalize.js` `xhtmlToHtmlSyntax`) before `renderChapter` parses the chapter as `text/html` |
+| Chapter charset | BOM, then XML declaration, then meta charset; undeclared is UTF-8 ([`charset.go`](../internal/epub/charset.go)) | the same order ([`charset.js`](../extension/src/charset.js) `decodeChapter`, behind `epub.js` `decodeText`) |
+| HTML-input charset | BOM, then meta charset (a UTF-16 label read from ASCII is UTF-8), then detection: valid UTF-8 is UTF-8, anything else windows-1252, and a windows-1252 or Latin-1 label on valid UTF-8 reads as UTF-8 ([`htmlconv`](../internal/htmlconv/extract.go) `parseDocument`) | the same ([`charset.js`](../extension/src/charset.js) `decodeHtml`, used by `html.js`) |
 | Long-chapter splitting | [`htmlsplit`](../internal/htmlsplit/) splits through wrappers, by characters, keeping root attributes and retargeting links | none - the viewer renders one DOM, nothing to split (by construction) |
 | HTML input images / styles | copied locally ([`internal/assets`](../internal/assets/)) | the viewer cannot reach a local page's sibling files (by construction) |
+
+### HTML input language
+
+**Guard:** Guarded by the shared fixture [`tests/testdata/html_lang_cases.json`](../tests/testdata/html_lang_cases.json)
+(`TestLangSharedCases` in [`internal/htmlconv`](../internal/htmlconv/parity_test.go), `parseHtml: declared
+language` in [`extension/test/html.test.mjs`](../extension/test/html.test.mjs)).
+
+The language a converted HTML page declares comes from the same place in both editions: `<html>` first,
+then `<body>` (only the body's content is kept, so its declaration is lifted), each by `lang` and then
+`xml:lang`, a blank value counting as none. The extension used to read `<html lang>` only (audit finding
+E28). One difference stays, by design: the desktop app copies the tag as found into the output's
+`<html lang>`, the extension normalizes it (`lang.js` `normalizeLangTag`: `en_us` becomes `en-US`, a tag it
+cannot read becomes none), because the viewer compares it with its own detection. Consequence: an
+unusual tag (`x-klingon`, `zh-Hant-TW`) is declared as written by the desktop app and shortened or dropped
+by the extension, which then falls back to detecting the language from the text. Go:
+`htmlconv` `rootAttrs`. JS: `html.js` `declaredLang`.
+
+### Markdown sections
+
+**Guard:** Guarded by the shared fixture [`tests/testdata/md_section_cases.json`](../tests/testdata/md_section_cases.json)
+(`TestSectionsSharedCases` in [`internal/md`](../internal/md/parity_test.go), `parseMarkdown: sections` in
+[`extension/test/md.test.mjs`](../extension/test/md.test.mjs)).
+
+A Markdown document pages at its top-level `<h1>` and `<h2>` headings in both editions; text before the
+first heading is a section of its own. A heading inside a blockquote or a list item belongs to that block
+and opens no section. The desktop app used to cut at every `<h1`/`<h2` in the rendered HTML, splitting a
+blockquote across two pages with unbalanced markup (audit finding E26). Go: `md` `splitBySections`
+(depth-tracking tokenizer over goldmark's output). JS: `md.js` `parseMarkdown` (the fragment's top-level
+nodes of marked's output).
 
 ### Single-page merge and the reader layer (2026-09-25)
 
@@ -438,8 +514,12 @@ Checked against the extension on the same date:
 
 ### Comic archive page order and entry filter
 
-**Guard:** Guarded by `TestParityComicPageFilter` for the page-extension set. Page order (`naturalLess` /
-`naturalCompare`) is prose only; a future ticket would run one list of names through both comparators.
+**Guard:** Guarded by `TestParityComicPageFilter` for the page-extension set, and by the shared archives in
+[`tests/testdata/archive-parity/`](../tests/testdata/archive-parity/) (generated by its `gen.go`) for the
+listing - a symlink among the pages, a TAR entry named three ways, a ZIP behind a stub - read by
+`TestArchiveParityComics` ([`internal/comic`](../internal/comic/archive_parity_test.go)) and `archive
+fixtures: shared Go/JS page lists` ([`extension/test/comic.test.mjs`](../extension/test/comic.test.mjs)).
+Page order (`naturalLess` / `naturalCompare`) beyond those lists is prose only.
 
 A comic archive (CBZ/CBR/CB7/CBT) is a container of page images with no text layer; the reader OCRs each
 page into translatable plates (forced on, like a standalone image - opening a comic *is* the request to
@@ -461,7 +541,8 @@ pages, or the same pages in a different order:
   PAX `x` record's `path=` / `size=` override the next header, a `GNU.sparse.*` key marks the entry sparse
   (skipped - its stored bytes are not the page), the ustar prefix field is joined only in USTAR/PAX headers
   (a GNU header keeps other data there), and a `\0` typeflag counts as a regular file unless the name ends
-  in `/`. The `L`/`K`/`x` records are consumed and not counted as entries, as in Go, so the entry budget
+  in `/`. With both a GNU `L` record and a PAX `path=`, the `L` name wins, as `archive/tar` applies it
+  after merging the PAX record (the extension had it the other way round, audit finding B31). The `L`/`K`/`x` records are consumed and not counted as entries, as in Go, so the entry budget
   matches too. Go: [`readers_tar.go`](../internal/comic/readers_tar.go) (`tar.Reader`). JS: `comic.js`
   `tarEntries`, pinned by `test/comic.test.mjs`. Before this the extension read only the 100-byte name
   field and the prefix, so long page names and PAX archives listed different pages than the desktop.
@@ -507,12 +588,20 @@ The rules that go with the numbers:
   `RASTER_MAX_SIDE` (8192 px), in which case the scale shrinks to fit ([`pdf-images.js`](../extension/src/pdf-images.js)
   `rasterScale`). No shared constant: the desktop app renders pages through its own tools and has the
   decode budget above instead.
-- **Symlinks are never followed.** Symlink entries are skipped from the listing; on the desktop, files
-  7-Zip unpacked are `Lstat`-checked.
+- **Symlinks are never followed.** A ZIP entry is a regular file or it is not unpacked, read the way Go's
+  `archive/zip` reads the mode (the host that wrote the entry decides: Unix and macOS keep `st_mode`,
+  FAT, NTFS and VFAT only a directory bit). A comic's symlink is never a page; an EPUB's is never
+  unpacked, and a chapter the spine named through it is dropped. The entry still counts toward the entry
+  budget, and in an EPUB toward the unpacked total, as it does on the desktop. On the desktop, files 7-Zip
+  unpacked are `Lstat`-checked. The extension used to keep a symlink as a file holding its target's name
+  (audit findings B30, E39). Go: `archive/zip` `FileHeader.Mode`. JS: `limits.js` `zipEntryIsRegular`.
 - **Container by signature.** `PK\x03\x04` ZIP, `Rar!\x1a\x07` RAR, `7z\xBC\xAF\x27\x1C` 7z, `ustar` at
-  offset 257 TAR; the extension is only a fallback. Go: `internal/comic` `sniffContainer`; JS: `comic.js`
-  `detectContainer`. A RAR saved as `.cbz` converts on the desktop through 7-Zip and is declined in the
-  extension with the "use the desktop app" notice.
+  offset 257 TAR; with no signature the file's extension decides (`.cbz` ZIP, `.cbt` TAR, `.cbr` RAR,
+  `.cb7` 7z) in both editions, and a ZIP behind a stub is read from where it starts, as `archive/zip`
+  finds it (the extension used to fall back to TAR, audit finding B32). Go: `internal/comic`
+  `sniffContainer` / `containerKind`; JS: `comic.js` `detectContainer` / `zipBaseOffset`. A RAR saved as
+  `.cbz` converts on the desktop through 7-Zip and is declined in the extension with the "use the desktop
+  app" notice.
 
 Desktop-only, by capability: a TIFF frame or a PDF TIFF whose header is over the pixel budget is refused
 (converting it needs the full decode). An image on a page over the budget is shown untouched and OCR
@@ -533,11 +622,11 @@ their own test where one exists.
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/lib/tessdata.ps1` `Install-EngTessdata` (every desktop package: build, installer, MSIX, release zip) -> `<exe>/tessdata/eng.traineddata`, same size + SHA-256 as `download.go` `packDigests["eng"]` and `build.mjs` `ENG_TRAINEDDATA_SHA256` (`tests/tessdata_pin_test.go`) | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates. Proximity is not the whole test: a line also has to be the **same type size** as the cluster it would join - its ink height within `OCR_TYPE_SIZE_RATIO (1.6)` of the cluster's own median, either way round - because a page with separated regions gives the page-wide pitch estimate steps that belong to no single text, and a headline can then sit closer to the body than the body's own missing lines do. A fourth rule then looks at the page instead of at the neighbours: a finished cluster that covers more than `OCR_MAX_PLATE_COVERAGE (0.52)` of the image **and** whose own line boxes fill less than `OCR_MIN_PLATE_LINE_FILL (0.72)` of its height is **released into one plate per line** - a form, a list or an application window carries one type at one pitch, so nothing in its typography separates its regions, and the whole page arrives as one plate. Released, not refused: every recognized word still reaches a plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` / `sameTypeSize` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` / `sameTypeSize` |
-| Line integrity (before clustering) | A recognizer "line" is not always one line: PSM 3's layout analysis can walk across a picture and return a phrase from the left of the page and a phrase from the right as **one line box**. Every grouping rule below then reads them as one text and none can recover - the stitched box genuinely spans both columns, so the column test sees a real overlap, and the coverage release does not fire either because the plate is wide but short. So before anything else, a line is **cut between two consecutive words whose boxes stand more than `OCR_MAX_WORD_GAP_RATIO (3.5) x` the line's median word height apart**, each run boxed to its own words and carrying its own mean confidence - and **also at any narrower gap a stroke crosses**: a path of ink through the strip between the two boxes from `OCR_BOUNDARY_REACH (0.14) x` the median word height above the words' band to the same distance below it, ink being `PLATE_MIN_CONTRAST` (55) from a paper read in the rows just outside the word boxes. That is a balloon outline or a panel rule; a letter the recognizer left out of its box stays inside the band. A run a stroke cut off that cannot be a plate on its own (`isTranslatable`) is an **orphan** - the outline or artwork read as text - and is parked with the lines the confidence floor drops. The gap is measured **between the boxes**, not left-to-right, so a right-to-left line is judged the same way round. Cutting alone is not enough: the runs then interleave left, right, left, right down the page, and the clustering closes a plate on the first line that does not belong to it - so the runs of a **page** that was cut are **regrouped into columns** (x-overlap, the clustering's own test) and handed over column by column, top to bottom. The scope is the page and not the paragraph, because the clustering deliberately merges across the paragraph boundaries the engine invents and the engine invents them mid-column. A page nothing was cut on keeps the engine's order untouched | [`tesseract.go`](../internal/ocr/tesseract.go) `(*ocrLine).splitWideGaps` / `lineFromWords` / `orderColumns`, [`boundary.go`](../internal/ocr/boundary.go) `strokeBetween` / `paperLuma` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `splitWideGaps` / `strokeBetween` / `paperLuma` / `orderColumns`, [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `collectLines` / `strokePlane` |
+| Line integrity (before clustering) | A recognizer "line" is not always one line: PSM 3's layout analysis can walk across a picture and return a phrase from the left of the page and a phrase from the right as **one line box**. Every grouping rule below then reads them as one text and none can recover - the stitched box genuinely spans both columns, so the column test sees a real overlap, and the coverage release does not fire either because the plate is wide but short. So before anything else, a line is **cut between two consecutive words whose boxes stand more than `OCR_MAX_WORD_GAP_RATIO (3.5) x` the line's median word height apart**, each run boxed to its own words and carrying its own mean confidence - and **also at any narrower gap a stroke crosses**: a path of ink through the strip between the two boxes from `OCR_BOUNDARY_REACH (0.14) x` the median word height above the words' band to the same distance below it, ink being `PLATE_MIN_CONTRAST` (55) from a paper read in the rows just outside the word boxes. That is a balloon outline or a panel rule; a letter the recognizer left out of its box stays inside the band. A run a stroke cut off that cannot be a plate on its own (`isTranslatable`) is an **orphan** - the outline or artwork read as text - and is parked with the lines the confidence floor drops. The gap is measured **between the boxes**, not left-to-right, so a right-to-left line is judged the same way round. Cutting alone is not enough: the runs then interleave left, right, left, right down the page, and the clustering closes a plate on the first line that does not belong to it - so the runs of a **page** that was cut are **regrouped into columns** (x-overlap, the clustering's own test) and handed over column by column, top to bottom. The scope is the page and not the paragraph, because the clustering deliberately merges across the paragraph boundaries the engine invents and the engine invents them mid-column. A page nothing was cut on keeps the engine's order untouched. Columns are formed from the lines the **pass's own** confidence floor keeps - `OCR_RESCUE_LINE_CONF` on a rescue or screen pass, `OCR_MIN_LINE_CONF` on the ordinary one - in both editions (the extension ordered every pass by the ordinary floor, audit finding B64; pinned by `TestParityOCRColumnOrderFloor` and the shared case [`tests/testdata/ocr_column_order_cases.json`](../tests/testdata/ocr_column_order_cases.json)) | [`tesseract.go`](../internal/ocr/tesseract.go) `(*ocrLine).splitWideGaps` / `lineFromWords` / `orderColumns`, [`boundary.go`](../internal/ocr/boundary.go) `strokeBetween` / `paperLuma` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `splitWideGaps` / `strokeBetween` / `paperLuma` / `orderColumns`, [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `collectLines` / `strokePlane` |
 | Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` on the image role itself, on both editions (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); the container and image CSS come from [`internal/appearance`](../internal/appearance/appearance.json); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-plates.js`](../extension/src/ocr-plates.js) `plateSpecs` / `buildOverlay` |
 | Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. If the script does not run nothing is clipped either - the plate sets only `min-height`, so `overflow:hidden` never engages and the box grows at the unfitted size, measured 244 px for a 39 px source region with JS disabled in Chromium ([`DEV/research/page_ocr_placement_2026-09-25`](../DEV/research/page_ocr_placement_2026-09-25/README.md)) | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-plates.js`](../extension/src/ocr-plates.js) `fitPlate` / `scheduleFit` |
 | Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = **median** of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `15` per mille / `6`-px min-ink threshold. Median and not mean on both counts: a glyph's edge is a ramp of antialiased pixels running from the ink to the paper and the deviation test admits most of that ramp, so averaging lands between the two by construction - measured on a caption of rgb(17,17,17) on rgb(253,253,253), mean rgb(61,61,61) against median rgb(7,7,7). **Which of the two is the paper is then decided by the band just outside the block** (`1/3` of a **line height** - not of the 1.3-line ink strip - on each side, floor 2 px, deciding only on `>= RING_MIN_SAMPLES (40)` sampled pixels), and the pair is swapped when that band sits nearer the ink: the median assumes the text is the minority of its own box, which holds for body text in a balloon and fails for heavy display capitals, whose strokes fill more of a tight box than the paper between them - measured, a poster's word came out as cream lettering on a near-black ground, the exact inverse of the poster. **Integer arithmetic on both** (2026-09-25): the ring band, the ink strip and the min-ink count are floored and luma is truncated, as the desktop's integer division does; before that the extension rounded the band and the strip and compared a fractional luma against `140` and `55`, so a block near a threshold got a different ink per edition. The numbers are named constants on both sides (`inkDeviationMin` .. `fallbackLightInk` == `INK_DEVIATION_MIN` .. `FALLBACK_LIGHT_INK`), pinned by `TestParityOCRPlateColourNumbers` | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
-| Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
+| Noise filter | two gates. **Line confidence:** before clustering, drop a recognized line whose mean word confidence is `< OCR_MIN_LINE_CONF (50)` - real text scores ~80-97, "text" hallucinated from a drawing scores ~0-50, so this keeps plates off imagery and keeps oversized noise boxes from inflating the font. **Text (`isTranslatable`)** on the assembled plate text: drop when `< 5` letters (also kills numbers/symbols); letters but no vowels; the whole text is an address (URL/email/domain/path); or "mishmash" - among letter-bearing tokens, `< 0.5` are word-like (`>= 2` letters + a vowel), needs `>= 3` such tokens. Short CJK (`>= 2` ideographs) is kept; "CJK" is a character of the Han, Hiragana, Katakana or Hangul **script**, astral planes included - Go's script tables, the extension's `\p{Script=..}` classes, pinned by the shared cases in [`tests/testdata/ocr_translatable_cases.json`](../tests/testdata/ocr_translatable_cases.json) (the extension used BMP block ranges, so halfwidth katakana, compatibility jamo and astral Han were rejected there and kept on the desktop, audit finding B38) | [`tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) `isTranslatable` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) `isTranslatable` |
 | Pre-OCR resolution handling | Gate on **estimated DPI**, not raw pixel count (a page scan clears 1000 px even at ~100 DPI, so a pixel gate upscales clean renders for nothing or misses the scans that need it). Estimate DPI from the long side over an assumed `OCR_ASSUMED_PAGE_INCHES (11)`-tall page; below `OCR_UPSCALE_DPI_FLOOR (120)` enlarge `OCR_UPSCALE_FACTOR (2 x)` (high-quality) before recognition and divide recognized coordinates back; **always declare the resolution** to Tesseract (`user_defined_dpi`, clamped `>= OCR_MIN_DECLARED_DPI (70)`, doubled when upscaled) so layout analysis separates regions - adjacent balloons - it otherwise merges. Measured: a ~90-DPI newsprint scan gains hugely from the upscale, a ~150-DPI scan only needs the DPI declared (upscaling over-segments it) | [`tesseract.go`](../internal/ocr/tesseract.go) `prepareForOCR` / `estimateDPI` / `scaleDown` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `upscaleForOcr` / `estimateDpi` |
 | Page-segmentation mode | Tesseract runs in **PSM 3 (AUTO)** on both editions so layout analysis isolates real text regions on an illustrated/scanned page (a speech bubble, a caption) instead of reading the whole frame as one block. The desktop CLI's default is already PSM 3 (made explicit via `--psm`); the extension must set it because tesseract.js defaults to PSM 6 (SINGLE_BLOCK), which folds scene edges into the recognized text (stray punctuation, digits) and mis-merges separate regions into one plate | [`tesseract.go`](../internal/ocr/tesseract.go) `ocrPageSegMode` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `OCR_PSM` |
 | Grey rescue ladder | An image whose ordinary colour pass returns **no plates at all** is retried on a greyscale copy, first with the engine's own thresholder (`thresholding_method 0`), then with Leptonica's tiled one (`1`), then with the engine's own again but asking for **sparse text (PSM 11)** instead of a page; **every rung runs and the strongest result wins** - more confident words, with a tie keeping the earlier rung - and an image that reads normally never enters the ladder. Tesseract's default thresholder runs Otsu **per RGB channel** and takes ink only where every channel agrees - harmless on flat paper, but on saturated artwork (a brick-red comic panel behind a white balloon, a coloured poster) the channels disagree over the lettering and the mask that reaches recognition holds no text. The second rung then changes *who* thresholds: one global cut-off cannot survive a background that varies across the image (on a sky gradient Otsu splits the gradient itself and a white caption comes out the same value as its ground), while a tiled thresholder decides locally. The third rung changes neither the pixels nor the thresholder but what Tesseract is told to find: a poster is a few large words placed for effect, and the layout analysis PSM 3 runs finds no page in it and drops them. It is a **ladder, not a replacement** - the colour pass wins where lettering is separated by hue rather than brightness, so retrying only after an empty result leaves every image that works today unchanged | [`tesseract.go`](../internal/ocr/tesseract.go) `greyRescuePasses` / `greyRescue` / `greyRendition` / `strictlyBetter` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `GREY_RESCUE_PASSES` / `greyRescue` / `greyRendition` / `strictlyBetter` |
@@ -1066,13 +1155,17 @@ These are by design. Do not "sync" them without a decision - document changes he
   **`marked`** (Go uses `goldmark`) and MOBI/AZW3 use the vendored **`foliate-js`** (Go shells out to
   **Calibre**, which the browser can't). New formats build their fragment via [`sanitize.js`](../extension/src/sanitize.js);
   EPUB keeps its own `renderChapter`. Behavioural parity ("opens and reads correctly") is the bar, not
-  byte-identical HTML.
+  byte-identical HTML. MOBI/KF8 book-internal links (`filepos:`, `kindle:pos:`) are resolved by
+  `ebook.js` onto a `data-dht-target` marker that survives the sanitizer; a marker the document itself
+  carries is stripped from every section before that, whether or not the section has a book link of its
+  own (audit finding B33), so a document can never plant an in-page link. Calibre does the desktop's
+  conversion, so there is no marker and no counterpart there.
 - **How images reach the page differs by edition, but both show them.** FB2's embedded `<binary>` images:
   Go decodes each referenced binary to a **sibling file** ([`internal/fb2`](../internal/fb2/extract.go),
   `imageFileName`), the extension inlines it as a **`data:` URL** by id
   ([`fb2.js`](../extension/src/fb2.js)) - the same file-vs-inline split as EPUB above. Local images
   referenced by an HTML file: Go **copies the sibling files** from the source's directory subtree into the
-  output ([`internal/htmlconv`](../internal/htmlconv/extract.go), `copyLocalImages`, confined against `../`
+  output ([`internal/htmlconv`](../internal/htmlconv/extract.go) through the [`internal/assets`](../internal/assets/copier.go) `Copier`, confined against `../`
   traversal); the extension has **no analogue and needs none** - a URL-loaded page lets the browser resolve
   relative images against the origin, and a file picked through the picker grants no directory access to
   reach its siblings anyway. So HTML local-image copying is intentionally **Go-only**.
@@ -1090,9 +1183,10 @@ These are by design. Do not "sync" them without a decision - document changes he
   Consequently "&#8595; HTML" on a chunk-rendered PDF (below) exports only the pages reached so far, and
   says so in the status bar rather than rendering the remainder: finishing the render would reimpose the
   freeze chunking removes *and* mix untranslated pages under translated ones.
-- **Chunked PDF rendering is extension-only.** The viewer renders a PDF forward `PAGE_CHUNK = 50` pages at
-  a time, building the next chunk when the reader reaches `CHUNK_LEAD = 2` pages from the edge
-  ([`viewer.js`](../extension/src/viewer.js)). This exists because the extension renders *while the reader
+- **Chunked PDF rendering is extension-only.** The viewer renders a PDF forward `PAGE_CHUNK = 100` pages at
+  a time, building the next chunk when the reader reaches `CHUNK_LEAD = 5` pages from the edge
+  ([`viewer.js`](../extension/src/viewer.js); the two numbers here are held to the code by
+  `TestParityDocChunkConstants`). This exists because the extension renders *while the reader
   waits* in a live DOM that Chrome's translator is also mutating: an unbounded render loop both looks hung
   on a large book and breaks a translation requested mid-render. Go writes static HTML to disk in a batch
   job with no translator racing it, so it has no reason to chunk and no counterpart. The scanned /
@@ -1232,6 +1326,10 @@ These are by design. Do not "sync" them without a decision - document changes he
    sanitize / image / link / TOC) is covered by `extension/test/epub-dom.test.mjs` +
    `extension/test/sanitize.test.mjs` under `npm test` (a dev-only `linkedom` DOM, never bundled) - these
    assert the JS-side behaviour that mirrors `internal/epub`, complementing the value guards above.
+   A **behaviour** both editions must share is pinned by a shared fixture under `tests/testdata/` (a JSON
+   case list, or archives with the generator that built them) that a Go package test and an
+   `extension/test` file both run - a case added for one edition runs against the other. Each section
+   above names its fixture in its Guard line.
 6. **Structural drift-check (advisory):** `scripts/parity-check.ps1` (alias `a pc`, and run in the
    `scripts/check.ps1` gate) reads the pairs from `configs/parity-map.json` and *warns* when a Go extractor
    changed without its paired JS module, or vice versa. It never blocks - drift is an advisory (exit 3, named
