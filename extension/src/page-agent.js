@@ -68,7 +68,10 @@
     lastStatusAt: 0,
     io: null,
     mo: null,
+    onLoad: null,
+    onMessage: null,
     pendingNew: 0,
+    offered: new WeakSet(), // pictures already counted into pendingNew
     selectable: false,
     ping: 0,
     running: false,
@@ -90,9 +93,46 @@
   }
 
   // ---- Picture discovery ---------------------------------------------------
-  function usableSrc(img) {
+  // The run reads what the page itself shows and could read, never more. The broker holds the
+  // extension's access to every site; a picture the page merely names - a file: path, an intranet
+  // address, an image that never loaded - would otherwise be fetched with that access and its words
+  // written into this DOM, where the page's scripts read them (ticket 42, B49). file: and the
+  // browser's internal schemes are left out even where a page shows them: a web page cannot read
+  // them, so recognizing them would read on the page's behalf.
+  function pictureSrc(img) {
     const src = img.currentSrc || img.src || "";
-    return /^(https?:|file:|data:|blob:)/i.test(src) ? src : "";
+    return /^(https?:|data:|blob:)/i.test(src) ? src : "";
+  }
+
+  // A zero natural size is an image that failed or has not arrived yet: there are no pixels the
+  // page could have read, so there is nothing to recognize either.
+  function isLoaded(img) {
+    return !!img.complete && img.naturalWidth > 0 && img.naturalHeight > 0;
+  }
+
+  // readPixels copies the picture as the page decoded it. The canvas is subject to the page's own
+  // origin rules, so a cross-origin picture without CORS taints it and reading fails with
+  // "tainted" - the broker then decides whether a re-fetch is acceptable. PNG keeps the lettering
+  // lossless; drawImage already applies the EXIF orientation the <img> is displayed with.
+  function readPixels(id) {
+    const a = state.anchors.get(id);
+    const img = a && a.img;
+    if (!img || !img.isConnected || !pictureSrc(img) || !isLoaded(img)) return { ok: false, error: "unloaded" };
+    let url;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return { ok: false, error: "unreadable" };
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      url = canvas.toDataURL("image/png");
+    } catch (e) {
+      return { ok: false, error: e && e.name === "SecurityError" ? "tainted" : "unreadable" };
+    }
+    // A canvas past the browser's size limit serializes to "data:," instead of throwing.
+    if (typeof url !== "string" || !url.startsWith("data:image/png")) return { ok: false, error: "unreadable" };
+    return { ok: true, src: url };
   }
 
   function collect() {
@@ -101,11 +141,11 @@
     for (const img of document.images) {
       if (!img.isConnected) continue;
       if (state.ids.has(img)) continue;
-      const src = usableSrc(img);
-      if (!src) continue;
+      const src = pictureSrc(img);
+      if (!src || !isLoaded(img)) continue;
       const rect = img.getBoundingClientRect();
       if (rect.width < MIN_PICTURE_PX || rect.height < MIN_PICTURE_PX) continue;
-      if (img.naturalWidth && img.naturalWidth < MIN_PICTURE_PX) continue;
+      if (img.naturalWidth < MIN_PICTURE_PX) continue;
       const id = `p${state.nextId++}`;
       state.ids.set(img, id);
       state.anchors.set(id, { img, layer: null, stopFit: null, visible: true });
@@ -319,12 +359,14 @@
   }
 
   // ---- The reader's controls ----------------------------------------------
+  // The bar lives in the page's DOM, so the page's scripts can find these buttons and click them.
+  // Only the reader's own click counts: a scan started by the page would run on the page's say-so.
   function button(label, onClick) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "dht-ocr-btn";
     b.textContent = label;
-    b.addEventListener("click", onClick);
+    b.addEventListener("click", (e) => { if (e.isTrusted) onClick(e); });
     return b;
   }
 
@@ -346,7 +388,12 @@
     bar.append(status);
 
     const stop = button(msg("pageOcrStop", "Stop"), () => toBroker("stop"));
-    const rescan = button(msg("pageOcrRescan", "Scan new pictures"), () => { state.pendingNew = 0; toBroker("rescan"); render(); });
+    const rescan = button(msg("pageOcrRescan", "Scan new pictures"), () => {
+      state.pendingNew = 0;
+      state.offered = new WeakSet();
+      toBroker("rescan");
+      render();
+    });
     rescan.hidden = true;
     const hide = button(msg("pageOcrHide", "Hide text"), () => {
       const off = document.documentElement.classList.toggle(LAYER_OFF_CLASS);
@@ -403,7 +450,14 @@
 
   // Pictures that arrive after the run started - lazy loading, infinite scroll - are not recognized
   // behind the reader's back: the bar offers a rescan instead, so a run is always something the
-  // reader asked for and can see the size of.
+  // reader asked for and can see the size of. A picture already in the page counts once it loads,
+  // since only a loaded picture is collected.
+  function offer(img) {
+    if (state.ids.has(img) || state.offered.has(img)) return 0;
+    state.offered.add(img);
+    return 1;
+  }
+
   function watchForNewPictures() {
     if (state.mo || typeof MutationObserver === "undefined") return;
     state.mo = new MutationObserver((muts) => {
@@ -411,9 +465,9 @@
       for (const mu of muts) {
         for (const n of mu.addedNodes) {
           if (n.nodeType !== 1) continue;
-          if (n.tagName === "IMG" && !state.ids.has(n)) found++;
+          if (n.tagName === "IMG") found += offer(n);
           else if (n.querySelectorAll) {
-            for (const img of n.querySelectorAll("img")) if (!state.ids.has(img)) found++;
+            for (const img of n.querySelectorAll("img")) found += offer(img);
           }
         }
       }
@@ -422,6 +476,14 @@
       if (state.listening) schedule();
     });
     state.mo.observe(document.documentElement, { childList: true, subtree: true });
+    // load does not bubble; capture on the document sees every picture's.
+    state.onLoad = (e) => {
+      const img = e.target;
+      if (!img || img.tagName !== "IMG" || !isLoaded(img) || !offer(img)) return;
+      state.pendingNew++;
+      render();
+    };
+    document.addEventListener("load", state.onLoad, true);
   }
 
   // ---- The recognizer host, when it has to live in this page ---------------
@@ -458,6 +520,7 @@
     state.ids = new WeakMap();
     if (state.io) { state.io.disconnect(); state.io = null; }
     if (state.mo) { state.mo.disconnect(); state.mo = null; }
+    if (state.onLoad) { document.removeEventListener("load", state.onLoad, true); state.onLoad = null; }
     if (state.raf) { cancelAnimationFrame(state.raf); state.raf = 0; }
     unwatchLayout();
     setPing(false);
@@ -468,15 +531,21 @@
     document.documentElement.classList.remove(LAYER_OFF_CLASS, SELECTABLE_CLASS);
     state.selectable = false;
     state.running = false;
+    state.pendingNew = 0;
+    // A later Start injects a fresh agent; a listener left here would answer its messages first.
+    if (state.onMessage) { chrome.runtime.onMessage.removeListener(state.onMessage); state.onMessage = null; }
     try { delete window.__dhtPageOcr; } catch { window.__dhtPageOcr = undefined; }
   }
 
-  chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
+  state.onMessage = (m, sender, sendResponse) => {
     if (!m || m.dht !== NS) return;
     switch (m.t) {
       case "collect":
         ensureBar();
         sendResponse({ ok: true, images: collect() });
+        return;
+      case "pixels":
+        sendResponse(readPixels(m.id));
         return;
       case "host-frame":
         sendResponse(insertHostFrame(m.url));
@@ -505,5 +574,6 @@
       default:
         return;
     }
-  });
+  };
+  chrome.runtime.onMessage.addListener(state.onMessage);
 })();

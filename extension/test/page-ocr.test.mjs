@@ -40,7 +40,11 @@ globalThis.chrome = {
   tabs: {
     sendMessage: async (tabId, msg) => {
       sentToTab.push({ tabId, ...msg });
-      return agent(tabId, msg);
+      const reply = agent(tabId, msg);
+      // An agent fake that does not answer "pixels" stands for a cross-origin picture the page
+      // cannot read, so the broker falls back to the picture's public URL as before ticket 42.
+      if (msg.t === "pixels" && reply == null) return { ok: false, error: "tainted" };
+      return reply;
     },
     onRemoved: { addListener: (fn) => listeners.removed.push(fn) },
     onUpdated: { addListener: (fn) => listeners.updated.push(fn) },
@@ -55,7 +59,7 @@ globalThis.chrome = {
 };
 Object.defineProperty(globalThis.chrome, "offscreen", { get: () => offscreen, configurable: true });
 
-const { startRun, removeLayer } = await import("../src/page-ocr.js");
+const { startRun, removeLayer, fallbackSource } = await import("../src/page-ocr.js");
 
 const forTab = (tabId, t) => sentToTab.filter((m) => m.tabId === tabId && m.t === t);
 const lastStatus = (tabId) => forTab(tabId, "status").at(-1);
@@ -290,4 +294,95 @@ test("navigating away settles the picture in flight at once instead of after the
   assert.ok(sent, "the first picture was sent");
   assert.ok(Date.now() - started < 5000, "drain must not wait out the 150 s job timeout");
   assert.equal(forTab(25, "plates").length, 0);
+});
+
+// ---- Ticket 42 (B49): the run reads only what the page itself could read ----
+
+test("a picture the page can read is recognized from its own pixels, not fetched again", async () => {
+  useOffscreenHost();
+  const recognized = [];
+  agent = (tabId, msg) => {
+    if (msg.t === "collect") return { images: [{ id: "a", src: "https://x.test/a.png" }] };
+    if (msg.t === "pixels") return { ok: true, src: "data:image/png;base64,QUJD" };
+    return null;
+  };
+  host = (msg) => {
+    if (msg.t !== "recognize") return;
+    recognized.push(msg.src);
+    queueMicrotask(() => deliver({ t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok: true, specs: [] }));
+  };
+
+  await startRun(31);
+
+  assert.deepEqual(recognized, ["data:image/png;base64,QUJD"]);
+  assert.equal(lastStatus(31).done, 1);
+});
+
+test("a tainted picture on the reader's own machine or network is never fetched by the extension", async () => {
+  useOffscreenHost();
+  const local = [
+    "file:///C:/Users/me/secret.png",
+    "http://192.168.1.10/cam.jpg",
+    "http://127.0.0.1:8080/a.png",
+    "http://[::1]/a.png",
+    "http://intranet/a.png",
+    "http://nas.local/a.png",
+    "https://localhost/a.png",
+  ];
+  const recognized = [];
+  agent = (tabId, msg) => {
+    if (msg.t === "collect") return { images: [...local, "https://cdn.x.test/pub.png"].map((src, i) => ({ id: `p${i}`, src })) };
+    if (msg.t === "pixels") return { ok: false, error: "tainted" };
+    return null;
+  };
+  host = (msg) => {
+    if (msg.t !== "recognize") return;
+    recognized.push(msg.src);
+    queueMicrotask(() => deliver({ t: "job-done", hostId: msg.hostId, jobId: msg.jobId, ok: true, specs: [] }));
+  };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await startRun(32);
+  } finally {
+    console.warn = warn;
+  }
+
+  assert.deepEqual(recognized, ["https://cdn.x.test/pub.png"], "only the public picture is re-fetched");
+  const st = lastStatus(32);
+  assert.equal(st.done, 1);
+  assert.equal(st.failed, local.length);
+});
+
+test("a picture whose pixels the agent could not take for any other reason is not fetched", async () => {
+  useOffscreenHost();
+  let recognizeSent = false;
+  agent = (tabId, msg) => {
+    if (msg.t === "collect") return { images: [{ id: "a", src: "https://x.test/a.png" }] };
+    if (msg.t === "pixels") return { ok: false, error: "unloaded" };
+    return null;
+  };
+  host = (msg) => { if (msg.t === "recognize") recognizeSent = true; };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await startRun(33);
+  } finally {
+    console.warn = warn;
+  }
+
+  assert.equal(recognizeSent, false);
+  assert.equal(lastStatus(33).failed, 1);
+});
+
+test("fallbackSource admits only http(s) on a public host name", () => {
+  assert.equal(fallbackSource("https://cdn.example.com/a.png"), "https://cdn.example.com/a.png");
+  for (const src of [
+    "file:///etc/passwd", "ftp://example.com/a.png", "chrome://favicon/x", "data:image/png;base64,AA",
+    "http://10.0.0.1/a.png", "http://0x7f.1/a.png", "http://2130706433/a.png", "http://[fe80::1]/a.png",
+    "http://printer/a.png", "http://router.lan/a.png", "http://wiki.corp/a.png", "http://a.localhost/x",
+    "not a url",
+  ]) {
+    assert.equal(fallbackSource(src), "", src);
+  }
 });

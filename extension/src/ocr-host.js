@@ -35,9 +35,18 @@ function send(msg) {
 const cancelled = new Set();
 const MAX_CANCELLED = 256; // a stop for a job this host never saw must not grow the set forever
 
+// The broker hands over either the page's own pixels (a data: URL) or a public http(s) address it
+// has already vetted. Any other scheme reaching this host - file: above all - would be fetched with
+// the extension's access, so it is refused here as well as there.
+const JOB_SOURCE = /^(https?:|data:image\/)/i;
+
 async function runJob(job) {
   const isCancelled = () => cancelled.has(job.jobId);
   if (isCancelled()) { cancelled.delete(job.jobId); return; }
+  if (typeof job.src !== "string" || !JOB_SOURCE.test(job.src)) {
+    send({ t: "job-done", jobId: job.jobId, ok: false, error: "unsupported source" });
+    return;
+  }
   try {
     const { blocks, width, height } = await recognize(job.src, {
       lang: job.lang,
