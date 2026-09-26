@@ -81,6 +81,12 @@ func planContentRenames(book *Book, outputDir string) ([]contentRename, map[stri
 	navPath := filepath.Clean(filepath.Join(outputDir, "index.html"))
 	plan := make([]contentRename, len(book.Manifest))
 	linkMap := make(map[string]string)
+	// Every manifest href keeps its file on disk (renamed sources are not removed), so each is
+	// claimed up front; a rename target is claimed as it is planned.
+	claimed := make(map[string]bool, len(book.Manifest))
+	for _, item := range book.Manifest {
+		claimed[foldHref(item.Href)] = true
+	}
 	for i, item := range book.Manifest {
 		plan[i] = contentRename{htmlHref: item.Href, finalHref: item.Href}
 		if !isHTMLMediaType(item.MediaType) {
@@ -92,8 +98,22 @@ func planContentRenames(book *Book, outputDir string) ([]contentRename, map[stri
 		htmlHref := toHTMLExt(item.Href)
 		finalHref := htmlHref
 		// Case-insensitive: on NTFS Index.html *is* index.html, and the nav would overwrite it.
-		if samePathFold(bookPath(outputDir, book.BasePath, htmlHref), navPath) {
+		navClash := samePathFold(bookPath(outputDir, book.BasePath, htmlHref), navPath)
+		if navClash {
 			finalHref = path.Join(path.Dir(htmlHref), "_content_"+path.Base(htmlHref))
+		}
+		if finalHref != item.Href {
+			unique := unclaimedHref(finalHref, claimed, func(h string) bool {
+				_, err := os.Lstat(bookPath(outputDir, book.BasePath, h))
+				return err == nil
+			})
+			// The rewrite chain runs item.Href -> htmlHref -> finalHref, so an htmlHref that names
+			// another chapter would redirect that chapter's links too; skip the step instead.
+			if unique != finalHref && !navClash {
+				htmlHref = unique
+			}
+			finalHref = unique
+			claimed[foldHref(finalHref)] = true
 		}
 		plan[i] = contentRename{htmlHref: htmlHref, finalHref: finalHref}
 		if finalHref != item.Href {
@@ -101,6 +121,25 @@ func planContentRenames(book *Book, outputDir string) ([]contentRename, map[stri
 		}
 	}
 	return plan, linkMap
+}
+
+// unclaimedHref returns href, or href with a numeric suffix before its extension, such that no
+// other manifest item, planned rename or file on disk (onDisk) already holds that name. Without
+// it a.xhtml renamed beside a.html would overwrite that chapter and merge both manifest items.
+func unclaimedHref(href string, claimed map[string]bool, onDisk func(string) bool) string {
+	ext := path.Ext(href)
+	stem := strings.TrimSuffix(href, ext)
+	candidate := href
+	for n := 2; claimed[foldHref(candidate)] || onDisk(candidate); n++ {
+		candidate = fmt.Sprintf("%s_%d%s", stem, n, ext)
+	}
+	return candidate
+}
+
+// foldHref is the claim key of an href: cleaned and case-folded, because NTFS treats A.html and
+// a.html as one file.
+func foldHref(href string) string {
+	return strings.ToLower(path.Clean(href))
 }
 
 // cleanHrefPath returns a manifest href as the cleaned path that rewriteLinks
