@@ -118,7 +118,7 @@ async function imageObjToBlob(imgObj, flips = NO_FLIPS) {
   return null;
 }
 
-// ASPECT_RATIO_TOLERANCE mirrors the desktop app (internal/pdf/extract.go): two rasters
+// ASPECT_RATIO_TOLERANCE mirrors the desktop app (internal/pdf/images.go): two rasters
 // whose aspect ratios match within 1% are the same picture at a different resolution.
 const ASPECT_RATIO_TOLERANCE = 0.01;
 
@@ -135,9 +135,12 @@ export function sameShapeRaster(a, b) {
 // dedupeSameShape collapses proportional-scale duplicates - the same scanned page
 // embedded twice at two resolutions - keeping the largest, so a page is not shown twice.
 // Differently-shaped images (a composed page: an illustration beside a figure) are all
-// kept. Mirrors selectPageImages in the desktop app (internal/pdf/extract.go); the app
+// kept. Mirrors selectPageImages in the desktop app (internal/pdf/images.go); the app
 // also drops /Thumb previews, which never reach here because a thumbnail is a page-dict
-// entry that the content stream never paints.
+// entry that the content stream never paints. The app's other rule - a raster painted
+// through a stencil /Mask loses to its unmasked twin - is not ported: pdf.js marks /Mask
+// and /SMask images alike, so there is no signal to port it with (docs/PARITY.md,
+// "PDF page-image selection").
 export function dedupeSameShape(imgs) {
   const kept = [];
   for (const im of imgs) {

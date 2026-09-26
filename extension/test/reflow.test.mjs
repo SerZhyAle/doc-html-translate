@@ -3,6 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   classifyBlock,
@@ -55,6 +56,29 @@ test("isLigaturesArtifact: short garbage rows flagged", () => {
   assert.equal(isLigaturesArtifact("if lf if if if if if"), true);
   assert.equal(isLigaturesArtifact("This is normal prose text"), false);
   assert.equal(isLigaturesArtifact("a b c"), false); // < 4 words
+});
+
+// The same fixture drives internal/pdf TestIsLigaturesArtifactSharedCases, so the two
+// editions drop exactly the same rows (docs/PARITY.md, "PDF reflow heuristics").
+test("isLigaturesArtifact: shared Go/JS fixture", () => {
+  const fixture = JSON.parse(readFileSync(new URL("../../tests/testdata/ligature_artifact_cases.json", import.meta.url), "utf8"));
+  assert.ok(fixture.cases.length > 0);
+  for (const c of fixture.cases) {
+    assert.equal(isLigaturesArtifact(c.text), c.artifact, `isLigaturesArtifact(${JSON.stringify(c.text)}): ${c.why}`);
+  }
+});
+
+// Short real rows used to vanish from the page with the old average-word-length test.
+test("reflowPage: short dialogue rows survive, fragment rows do not", () => {
+  const row = (str, y) => ({ str, transform: [12, 0, 0, 12, 72, y], width: str.length * 6 });
+  const blocks = reflowPage(
+    { items: [row("Text of page 2", 700), row("fi fl fi fi fl", 686), row("Is it so? I do.", 672)] },
+    { width: 612 },
+  );
+  const text = blocks.map((b) => b.text).join(" | ");
+  assert.match(text, /Text of page 2/);
+  assert.match(text, /Is it so\? I do\./);
+  assert.doesNotMatch(text, /fi fl/);
 });
 
 test("extractRows: reconstructs word spacing from x-gaps", () => {

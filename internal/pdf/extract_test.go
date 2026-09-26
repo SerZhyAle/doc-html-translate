@@ -2,7 +2,6 @@ package pdf
 
 import (
 	"image"
-	"image/color"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/go-pdf/fpdf"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"golang.org/x/image/tiff"
 )
 
 // The page counter used to report the number of *emitted* pages under a "with text" label,
@@ -536,56 +534,6 @@ func TestStagePDFForPDFToText(t *testing.T) {
 	}
 	if string(stagedContent) != string(content) {
 		t.Fatalf("staged file content mismatch: got %q want %q", stagedContent, content)
-	}
-}
-
-func TestFlipImageFileVertically(t *testing.T) {
-	tmpDir := t.TempDir()
-	imgPath := filepath.Join(tmpDir, "sample.tif")
-
-	img := image.NewNRGBA(image.Rect(0, 0, 1, 2))
-	img.Set(0, 0, color.NRGBA{R: 255, A: 255})
-	img.Set(0, 1, color.NRGBA{B: 255, A: 255})
-
-	file, err := os.Create(imgPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := tiff.Encode(file, img, nil); err != nil {
-		file.Close()
-		t.Fatal(err)
-	}
-	if err := file.Close(); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := flipImageFileVertically(imgPath); err != nil {
-		t.Fatalf("flipImageFileVertically() error: %v", err)
-	}
-
-	flippedFile, err := os.Open(imgPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer flippedFile.Close()
-	flipped, err := tiff.Decode(flippedFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	top := color.NRGBAModel.Convert(flipped.At(0, 0)).(color.NRGBA)
-	bottom := color.NRGBAModel.Convert(flipped.At(0, 1)).(color.NRGBA)
-	if top.B != 255 || bottom.R != 255 {
-		t.Fatalf("expected image to be vertically flipped, got top=%v bottom=%v", top, bottom)
-	}
-}
-
-func TestImageHTMLClassAttr(t *testing.T) {
-	if got := imageHTMLClassAttr("pdf_images/sample.png"); got != "" {
-		t.Fatalf("expected no class for png, got %q", got)
-	}
-	if got := imageHTMLClassAttr("pdf_images/sample.tif"); got != ` class="pdf-flip-y"` {
-		t.Fatalf("expected tif flip class, got %q", got)
 	}
 }
 

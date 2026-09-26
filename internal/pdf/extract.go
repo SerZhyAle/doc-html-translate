@@ -15,6 +15,8 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
@@ -346,13 +348,16 @@ func isDoubleSpacedLayout(blocks []layoutBlock) bool {
 // value-for-value, with the browser extension's reflow.js (a hand port). A change here
 // must be mirrored there and in docs/PARITY.md ("PDF reflow heuristics").
 const (
-	paraGapFactor         = 1.5  // paragraph break when a Y-gap exceeds this * median line spacing (reflow.js PARA_GAP_FACTOR)
-	indentThreshold       = 8.0  // points; first-line indent past the left margin starts a paragraph (reflow.js INDENT_THRESHOLD)
-	medianGapFallback     = 12.0 // fallback median line spacing when it can't be measured
-	ligatureMaxAvgWordLen = 3.0  // avg word length below this (over >= ligatureMinWords words) = ligature garbage
-	ligatureMinWords      = 4
-	headingShortWords     = 8  // "short" line word cap for an h2 heading candidate
-	headingMediumWords    = 14 // "medium" line word cap for an h3 heading candidate
+	paraGapFactor      = 1.5  // paragraph break when a Y-gap exceeds this * median line spacing (reflow.js PARA_GAP_FACTOR)
+	indentThreshold    = 8.0  // points; first-line indent past the left margin starts a paragraph (reflow.js INDENT_THRESHOLD)
+	medianGapFallback  = 12.0 // fallback median line spacing when it can't be measured
+	headingShortWords  = 8    // "short" line word cap for an h2 heading candidate
+	headingMediumWords = 14   // "medium" line word cap for an h3 heading candidate
+
+	// The ligature-artifact signature (isLigaturesArtifact), mirrored by reflow.js LIGATURE_*.
+	ligatureMinWords         = 4   // fewer tokens than this is never an artifact
+	ligatureFragmentMaxLen   = 2   // a fragment is a letters-only token of at most this many letters
+	ligatureMaxDistinctRatio = 0.5 // distinct fragments / tokens at or below this = a repeated fragment run
 )
 
 func classifyBlock(text string, leadingSpaces int) string {
@@ -381,18 +386,41 @@ func classifyBlock(text string, leadingSpaces int) string {
 	}
 }
 
-// isLigaturesArtifact returns true for lines that are ligature-garbage rows
-// (e.g. "if lf if if if if if") produced when pdftotext can't decode font maps.
+// isLigaturesArtifact reports whether a row is ligature garbage - "if lf if if if if if" - that a
+// text extractor emits when it cannot decode a font's ligature glyphs: the same one- or
+// two-letter fragments, repeated. All three parts of that signature are required, because each
+// alone matches real text. Short average word length alone dropped "Text of page 2" and
+// "Is it so? I do.", and with them short verse and dialogue: a real line almost always holds a
+// word of three letters or more, a digit or a punctuation mark, or, when it does not ("is it so
+// I do"), its words are mostly distinct. Shared value-for-value with reflow.js and pinned by
+// tests/testdata/ligature_artifact_cases.json.
 func isLigaturesArtifact(s string) bool {
 	words := strings.Fields(s)
 	if len(words) < ligatureMinWords {
 		return false
 	}
-	total := 0
+	distinct := make(map[string]bool, len(words))
 	for _, w := range words {
-		total += len(w)
+		if !isLigatureFragment(w) {
+			return false
+		}
+		distinct[strings.ToLower(w)] = true
 	}
-	return float64(total)/float64(len(words)) < ligatureMaxAvgWordLen
+	return float64(len(distinct)) <= ligatureMaxDistinctRatio*float64(len(words))
+}
+
+// isLigatureFragment reports whether w is a letters-only token short enough to be half of a
+// split ligature ("f", "i", "fi", "lf").
+func isLigatureFragment(w string) bool {
+	if utf8.RuneCountInString(w) > ligatureFragmentMaxLen {
+		return false
+	}
+	for _, r := range w {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
 }
 
 // buildPDFPageHTML generates an HTML page from structured pageItems and images.
@@ -425,7 +453,6 @@ func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, item
 	sb.WriteString("    h2 { text-align: center; font-size: 1.5em; font-weight: bold; letter-spacing: 0.08em; margin: 1.8em 0 1.2em; text-transform: uppercase; }\n")
 	sb.WriteString("    h3 { text-align: center; font-size: 1.15em; font-style: italic; margin: 1.4em 0 0.8em; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
-	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	if sideBySide {
 		sb.WriteString("    .pdf-images { float: left; width: 58%; margin-right: 1.5em; margin-bottom: 0.5em; }\n")
 		sb.WriteString("    .pdf-float-clear { clear: both; }\n")
@@ -437,7 +464,7 @@ func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, item
 	if sideBySide {
 		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
 		}
 		sb.WriteString("  </div>\n")
 		for _, item := range items {
@@ -455,7 +482,7 @@ func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, item
 				sb.WriteString("  <div class=\"pdf-images\">\n")
 			}
 			for _, imgPath := range images {
-				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
 			}
 			sb.WriteString("  </div>\n")
 		}
@@ -659,8 +686,9 @@ func extractPage(reader *pdflib.Reader, pageNum int) (text string, skip bool, er
 // Words within a row are space-joined to fix the "ofNate"-style merge artifact.
 // Each detected paragraph is emitted as one line; buildPageHTML wraps it in <p>.
 //
-// NOTE: ligature characters (fi, fl, ff, …) encoded with non-standard font maps
-// may appear garbled — this is a limitation of the underlying PDF text extractor.
+// Ligature glyphs (fi, fl, ff, ..) in fonts with non-standard maps can still come out garbled -
+// a limitation of the underlying reader. A row that is nothing but their split fragments is
+// dropped (isLigaturesArtifact), per row as the extension's reflow.js does.
 func rowsToText(rows pdflib.Rows) string {
 	type rowData struct {
 		text   string
@@ -681,7 +709,7 @@ func rowsToText(rows pdflib.Rows) string {
 			}
 			b.WriteString(trimmedWord)
 		}
-		if t := strings.TrimSpace(b.String()); t != "" {
+		if t := strings.TrimSpace(b.String()); t != "" && !isLigaturesArtifact(t) {
 			y, firstX := 0.0, 0.0
 			if len(row.Content) > 0 {
 				y = row.Content[0].Y
@@ -778,7 +806,6 @@ func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text st
 	sb.WriteString("    body { font-family: Georgia, 'Times New Roman', serif; width: 95%; max-width: 1400px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }\n")
 	sb.WriteString("    p { margin: 0.4em 0; }\n")
 	sb.WriteString("    .pdf-images img { max-width: 100%; height: auto; display: block; margin: 0.5em 0; }\n")
-	sb.WriteString("    .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }\n")
 	if sideBySide {
 		sb.WriteString("    .pdf-images { float: left; width: 58%; margin-right: 1.5em; margin-bottom: 0.5em; }\n")
 		sb.WriteString("    .pdf-float-clear { clear: both; }\n")
@@ -792,7 +819,7 @@ func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text st
 	if sideBySide {
 		sb.WriteString("  <div class=\"pdf-images\">\n")
 		for _, imgPath := range images {
-			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+			sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
 		}
 		sb.WriteString("  </div>\n")
 		lines := strings.Split(strings.TrimSpace(text), "\n")
@@ -818,7 +845,7 @@ func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text st
 				sb.WriteString("  <div class=\"pdf-images\">\n")
 			}
 			for _, imgPath := range images {
-				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\"%s>\n", html.EscapeString(imgPath), imageHTMLClassAttr(imgPath)))
+				sb.WriteString(fmt.Sprintf("    <img src=\"%s\" loading=\"lazy\">\n", html.EscapeString(imgPath)))
 			}
 			sb.WriteString("  </div>\n")
 		}
@@ -865,14 +892,6 @@ func imageSize(path string) (int, int) {
 		return 0, 0
 	}
 	return cfg.Width, cfg.Height
-}
-
-func imageHTMLClassAttr(path string) string {
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext == ".tif" || ext == ".tiff" {
-		return ` class="pdf-flip-y"`
-	}
-	return ""
 }
 
 // pdfTitle is the file name without its extension. Both separators count, as they

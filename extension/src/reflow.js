@@ -42,14 +42,28 @@ export function classifyBlock(text, { centered = false, fontRatio = 1, notWide =
   return "p";
 }
 
-// isLigaturesArtifact flags ligature-garbage rows (e.g. "if lf if if if if")
-// produced when the font map can't be decoded - avg word length < 3 over >= 4
-// words. Mirrors internal/pdf/extract.go:isLigaturesArtifact.
+// The ligature-artifact signature, value-for-value with internal/pdf/extract.go ligature*.
+const LIGATURE_MIN_WORDS = 4;
+const LIGATURE_FRAGMENT_MAX_LEN = 2;
+const LIGATURE_MAX_DISTINCT_RATIO = 0.5;
+const LETTERS_ONLY = /^\p{L}+$/u;
+
+// isLigaturesArtifact flags ligature-garbage rows ("if lf if if if if") emitted when a
+// font's ligature glyphs can't be decoded: at least 4 tokens, every one a letters-only
+// fragment of at most 2 letters, and at most half of them distinct. Short average word
+// length alone dropped real short lines ("Text of page 2", "Is it so? I do."). Mirrors
+// internal/pdf/extract.go:isLigaturesArtifact; both are pinned by
+// tests/testdata/ligature_artifact_cases.json.
 export function isLigaturesArtifact(s) {
   const words = s.trim().split(/\s+/).filter(Boolean);
-  if (words.length < 4) return false;
-  const total = words.reduce((n, w) => n + w.length, 0);
-  return total / words.length < 3.0;
+  if (words.length < LIGATURE_MIN_WORDS) return false;
+  const distinct = new Set();
+  for (const w of words) {
+    // Code points, not UTF-16 units, so the count matches Go's rune count.
+    if ([...w].length > LIGATURE_FRAGMENT_MAX_LEN || !LETTERS_ONLY.test(w)) return false;
+    distinct.add(w.toLowerCase());
+  }
+  return distinct.size <= LIGATURE_MAX_DISTINCT_RATIO * words.length;
 }
 
 // extractRows groups PDF.js text items into visual rows (top-to-bottom,

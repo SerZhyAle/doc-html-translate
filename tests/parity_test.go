@@ -799,13 +799,23 @@ func TestParityReflowConstants(t *testing.T) {
 	pairs := []struct{ name, goRe, jsRe string }{
 		{"paragraph gap factor", `paraGapFactor\s+=\s+([\d.]+)`, `PARA_GAP_FACTOR\s*=\s*([\d.]+)`},
 		{"indent threshold", `indentThreshold\s+=\s+([\d.]+)`, `INDENT_THRESHOLD\s*=\s*([\d.]+)`},
-		{"ligature max avg word length", `ligatureMaxAvgWordLen\s+=\s+([\d.]+)`, `total\s*/\s*words\.length\s*<\s*([\d.]+)`},
+		{"ligature min words", `ligatureMinWords\s+=\s+([\d.]+)`, `LIGATURE_MIN_WORDS\s*=\s*([\d.]+)`},
+		{"ligature fragment max length", `ligatureFragmentMaxLen\s+=\s+([\d.]+)`, `LIGATURE_FRAGMENT_MAX_LEN\s*=\s*([\d.]+)`},
+		{"ligature max distinct ratio", `ligatureMaxDistinctRatio\s+=\s+([\d.]+)`, `LIGATURE_MAX_DISTINCT_RATIO\s*=\s*([\d.]+)`},
 	}
 	for _, p := range pairs {
 		gv := num(t, p.name+" (extract.go)", p.goRe, goSrc)
 		jv := num(t, p.name+" (reflow.js)", p.jsRe, jsSrc)
 		if gv != jv {
 			t.Errorf("%s drift: extract.go=%v reflow.js=%v (must match - see docs/PARITY.md)", p.name, gv, jv)
+		}
+	}
+	// The constants alone do not fix the rule: the shared case table does, and each edition's
+	// unit test must keep reading it.
+	const cases = "ligature_artifact_cases.json"
+	for _, f := range [][]string{{"internal", "pdf", "ligature_test.go"}, {"extension", "test", "reflow.test.mjs"}} {
+		if !strings.Contains(readRepoFile(t, f...), cases) {
+			t.Errorf("%s no longer runs the shared %s (see docs/PARITY.md)", strings.Join(f, "/"), cases)
 		}
 	}
 }

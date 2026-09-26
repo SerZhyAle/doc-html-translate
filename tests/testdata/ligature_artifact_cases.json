@@ -1,0 +1,22 @@
+{
+  "_comment": "Shared ligature-artifact cases, read by internal/pdf (isLigaturesArtifact) and extension/src/reflow.js (isLigaturesArtifact). artifact is true only for a row the filter must drop. See docs/PARITY.md, PDF reflow heuristics.",
+  "cases": [
+    { "text": "if lf if if if if if", "artifact": true, "why": "split-ligature fragments, two distinct" },
+    { "text": "fi fl fi fi", "artifact": true, "why": "four fragments, two distinct" },
+    { "text": "f i f i f i", "artifact": true, "why": "single letters, two distinct" },
+    { "text": "ff ffi ff ff", "artifact": false, "why": "ffi is three letters, not a two-letter fragment" },
+    { "text": "Text of page 2", "artifact": false, "why": "a word of four letters and a digit" },
+    { "text": "Is it so? I do.", "artifact": false, "why": "punctuation marks real dialogue" },
+    { "text": "is it so I do", "artifact": false, "why": "five distinct short words" },
+    { "text": "I am as I am", "artifact": false, "why": "three distinct of five" },
+    { "text": "to be or not to be", "artifact": false, "why": "not is three letters" },
+    { "text": "Oh, my, oh, my", "artifact": false, "why": "punctuation marks real text" },
+    { "text": "P a r a g r a p h", "artifact": false, "why": "letter-spaced word: five distinct of nine" },
+    { "text": "и в и в", "artifact": true, "why": "Cyrillic fragments, two distinct" },
+    { "text": "Я и ты", "artifact": false, "why": "fewer than four words" },
+    { "text": "a b c", "artifact": false, "why": "fewer than four words" },
+    { "text": "This is normal prose text", "artifact": false, "why": "ordinary prose" },
+    { "text": "1 2 1 2", "artifact": false, "why": "digits are not letter fragments" },
+    { "text": "", "artifact": false, "why": "empty" }
+  ]
+}

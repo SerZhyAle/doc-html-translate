@@ -34,7 +34,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 |---|---|---|
 | PDF paragraph/heading reflow | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`rowsToText`, `classifyBlock`, `isLigaturesArtifact`) | [`extension/src/reflow.js`](../extension/src/reflow.js) |
 | PDF outline -> TOC | [`internal/pdf/toc.go`](../internal/pdf/toc.go) | [`extension/src/toc.js`](../extension/src/toc.js) |
-| PDF page images: select + same-shape dedupe | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`selectPageImages`, `sameShapeRaster`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`dedupeSameShape`, `sameShapeRaster`) |
+| PDF page images: select + same-shape dedupe | [`internal/pdf/images.go`](../internal/pdf/images.go) (`selectPageImages`, `sameShapeRaster`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`dedupeSameShape`, `sameShapeRaster`) |
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
 | Plain text: source-encoding decode | [`internal/txt/extract.go`](../internal/txt/extract.go) (`decodeText`) | [`extension/src/txt.js`](../extension/src/txt.js) (`decodeText`) |
@@ -321,12 +321,21 @@ in both, drawn differently by surface: a button in the extension's table of cont
 | First-line indent threshold | `8` pt | `indentThreshold` | `INDENT_THRESHOLD` [`reflow.js:17`](../extension/src/reflow.js#L17) |
 | Left-margin baseline | 25th percentile of first-word X | `extract.go` | `reflow.js` |
 | Median line-spacing fallback | `12` | `extract.go` | `reflow.js` |
-| Ligature-artifact filter | avg word length `< 3.0` over `>= 4` words | `isLigaturesArtifact` | [`reflow.js:48-53`](../extension/src/reflow.js#L48-L53) |
+| Ligature-artifact filter | `>= 4` tokens, every one a letters-only fragment of `<= 2` letters, distinct fragments `<= 0.5` x tokens | `isLigaturesArtifact`, `ligature*` | `isLigaturesArtifact`, `LIGATURE_*` in [`reflow.js`](../extension/src/reflow.js) |
 | Heading word caps | "short" `<= 8`, "medium" `<= 14` | `classifyBlock` | [`reflow.js:36,41`](../extension/src/reflow.js#L36-L41) |
 
 Both sides now name these constants (Go: a documented `const` block in `extract.go`; JS: the
-`*_FACTOR`/`*_THRESHOLD` consts in `reflow.js`) and `tests/parity_test.go` asserts the values match. See
+`*_FACTOR`/`*_THRESHOLD`/`LIGATURE_*` consts in `reflow.js`) and `tests/parity_test.go` asserts the values match. See
 the JS-only additions under [Intentional divergences](#intentional-divergences-do-not-fix).
+
+The ligature-artifact filter drops a row only when all three parts of the signature hold - enough tokens,
+each a short letters-only fragment, and mostly repeats - because each part alone matches real text. Its
+earlier form (average word length under 3 letters over 4 or more words) dropped "Text of page 2", "Is it so?
+I do." and short verse or dialogue. A residue is accepted: a bare run of repeated one- or two-letter words
+with no punctuation ("no no no no") still reads as an artifact. The filter runs on every text path: per block
+on the desktop's pdftotext path, per row on the desktop's pure-Go path and in the extension. The shared case
+table [`tests/testdata/ligature_artifact_cases.json`](../tests/testdata/ligature_artifact_cases.json) drives
+both editions' unit tests, and `TestParityReflowConstants` fails if either stops reading it.
 
 ### PDF page-image selection
 
@@ -340,8 +349,23 @@ The signal is the aspect ratio: a uniform scale preserves it, so two rasters who
 images (a composed page: an illustration beside a figure) are all kept - guessing "the page" among genuinely
 distinct images would be wrong as often as right.
 
-Go: `internal/pdf/extract.go` `selectPageImages` / `sameShapeRaster` / `aspectRatioTolerance`.
+Go: `internal/pdf/images.go` `selectPageImages` / `sameShapeRaster` / `betterPageRaster` / `aspectRatioTolerance`.
 JS: `extension/src/pdf-images.js` `dedupeSameShape` / `sameShapeRaster` / `ASPECT_RATIO_TOLERANCE`.
+
+**Known divergence - the stencil `/Mask` preference is desktop-only.** Inside a same-shape group the Go side
+keeps a raster *without* a stencil `/Mask` over a larger one painted through it (`betterPageRaster`): a mixed
+raster content (MRC) scan's high-resolution foreground layer is undefined outside its mask, and pdfcpu
+extracts it whole, as a smear. The extension keeps the largest. It is not ported because pdf.js gives the
+extension no per-image signal to port it with: its operator list wraps an image with `/SMask` and one with
+`/Mask` the same way (`addImageOps`, `hasMask = SMask || Mask`), the image object carries only pixels, and the
+Go rule must not fire on `/SMask` (a PNG-with-alpha illustration). The consequence differs from the desktop's
+original bug: pdf.js applies the stencil as alpha (`PDFImage.fillOpacity`), so the extension's kept raster is
+not a smear but the foreground layer alone - lettering where the mask selects, transparent elsewhere. The
+page's background layer (paper tone, anything painted only there) is missing from the viewer, the lettering
+sits on the theme's page colour (dark lettering on the dark theme can be hard to read), and OCR runs on that
+partly transparent raster. This is reasoned from the vendored pdf.js source, not measured on an MRC file in
+the extension. Closing it needs the raw image dictionaries (a PDF object reader beside pdf.js), not a change
+to `dedupeSameShape`.
 
 The **thumbnail** half of the problem is handled asymmetrically by construction, not by drift (see
 [Intentional divergences](#intentional-divergences-do-not-fix)): the Go extractor drops pdfcpu's `/Thumb`
@@ -515,8 +539,9 @@ The rules that go with the numbers:
   `detectContainer`. A RAR saved as `.cbz` converts on the desktop through 7-Zip and is declined in the
   extension with the "use the desktop app" notice.
 
-Desktop-only, by capability: a TIFF frame or a PDF TIFF whose header is over the pixel budget is refused
-(converting it needs the full decode). An image on a page over the budget is shown untouched and OCR
+Desktop-only, by capability: a TIFF frame whose header is over the pixel budget is refused, and a PDF raster
+pdfcpu renders as TIFF (Flate CMYK or Indexed CMYK) over the budget is left as a `.tif` rather than turned into
+the PNG the browser can show (converting either needs the full decode). An image on a page over the budget is shown untouched and OCR
 degrades: Tesseract still reads it in its own process, while the in-process passes (staging, grey ladder,
 screen pass, plate colours) are skipped with a warning, because shrinking it would itself need the full
 decode. The OCR worker pool is `min(CPU count, memory count)`, the memory count assuming four 4-byte
