@@ -88,10 +88,12 @@ export function detectLang(text) {
 }
 
 // normalizeLangTag keeps only a sane BCP-47 primary subtag (and optional region)
-// from a PDF /Lang value like "en-US" or "EN".
+// from a PDF /Lang value like "en-US" or "EN". The lookahead stops a longer word from
+// passing as a tag ("russian" is not "rus", "zh-Hans" is "zh"); internal/textutil
+// NormalizeLangTag applies the same rule on the desktop.
 export function normalizeLangTag(tag) {
   if (typeof tag !== "string") return "";
-  const m = tag.trim().match(/^([A-Za-z]{2,3})(?:[-_]([A-Za-z]{2}))?/);
+  const m = tag.trim().match(/^([A-Za-z]{2,3})(?:[-_]([A-Za-z]{2}))?(?![A-Za-z0-9])/);
   if (!m) return "";
   return m[2] ? `${m[1].toLowerCase()}-${m[2].toUpperCase()}` : m[1].toLowerCase();
 }

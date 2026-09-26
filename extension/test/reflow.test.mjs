@@ -190,4 +190,10 @@ test("normalizeLangTag", () => {
   assert.equal(normalizeLangTag("fr_FR"), "fr-FR");
   assert.equal(normalizeLangTag(""), "");
   assert.equal(normalizeLangTag(null), "");
+  // Same cases as internal/textutil TestNormalizeLangTag.
+  assert.equal(normalizeLangTag(" ru "), "ru");
+  assert.equal(normalizeLangTag("zh-Hans"), "zh");
+  assert.equal(normalizeLangTag("russian"), "");
+  assert.equal(normalizeLangTag("uk-UA-x"), "uk-UA");
+  assert.equal(normalizeLangTag("123"), "");
 });

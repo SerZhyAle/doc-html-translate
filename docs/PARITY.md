@@ -54,7 +54,8 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
 | Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
-| Source-language detection | (none - Go copies the source `<html lang>`) | [`extension/src/lang.js`](../extension/src/lang.js) |
+| Source-language detection | (none - Go declares only a stated language, see "Declared source language") | [`extension/src/lang.js`](../extension/src/lang.js) |
+| Declared-language tag | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`NormalizeLangTag`) | [`extension/src/lang.js`](../extension/src/lang.js) (`normalizeLangTag`) |
 | Settings / options surface | [`internal/config/flags.go`](../internal/config/flags.go), [`ui.html`](../cmd/doc-html-ui/ui.html) | [`popup.js`](../extension/src/popup.js), [`options.js`](../extension/src/options.js), [`background.js`](../extension/src/background.js) |
 
 ## Shared invariants (MUST stay identical on both sides)
@@ -1004,6 +1005,33 @@ clipped overshot by 2 or 3 px with nothing actually hidden.
 Bump the schema version on **both** sides or neither. Guarded by `TestParityOCRLabEvidenceSchema` and by
 [`test/ocrlab-evidence.test.mjs`](../extension/test/ocrlab-evidence.test.mjs), which validates a run the
 Go runner actually emitted.
+
+### Declared source language (2026-09-26)
+
+A wrong `<html lang>` can stop Chrome offering "Translate page", so the document's language comes only
+from what the source states. Both editions read the same declarations:
+
+| Source | Declaration read | Go | JS |
+|---|---|---|---|
+| FB2 | `<title-info><lang>` (not `<src-title-info>`, which is the original's) | [`fb2/content.go`](../internal/fb2/content.go) | [`fb2.js`](../extension/src/fb2.js) |
+| EPUB | `dc:language` (Go skips a first entry that is not a tag and takes the next) | [`epub/epub.go`](../internal/epub/epub.go) `parseOPF` | [`epub.js`](../extension/src/epub.js) `parseOpf` |
+| HTML | `<html lang>` (Go also `xml:lang`) | [`htmlconv/extract.go`](../internal/htmlconv/extract.go) | [`html.js`](../extension/src/html.js) |
+
+- **The tag rule is identical:** a primary subtag of 2-3 letters plus an optional 2-letter region, lower /
+  upper cased, and a longer word does not pass as a tag (`russian` -> none, `zh-Hans` -> `zh`).
+  `textutil.NormalizeLangTag` == `lang.js` `normalizeLangTag`, pinned by the same cases in
+  `internal/textutil/lang_test.go` and `extension/test/reflow.test.mjs`.
+- **Go never guesses.** An extractor whose source states no language (TXT, RTF, Markdown, PDF, image,
+  comic) writes `<html>` with no `lang`, and the merged page and the TOC index take the first page's
+  language, else the book's, else none - never a default `en`. An EPUB page that declares no language of
+  its own is given the package's `dc:language`. `dir` is read from `<html>`, then `<body>`, by the merge
+  and the index alike. Guarded by `TestConvertedSourceLanguage` (Russian FB2 -> `<html lang="ru">`,
+  Markdown -> no `lang`) and `internal/htmlgen` `TestGenerateIndexCarriesDocumentLang`.
+- **Intentional difference:** where nothing is stated the extension still fills in a language - PDF
+  `/Lang` metadata, then the `lang.js` script heuristic - because its viewer has the text sample in hand
+  and sets `lang` at view time. The Go app leaves `lang` off and lets Chrome detect the language; it does
+  not read PDF `/Lang` yet. The one Go page that keeps `lang="en"` is the "nothing to convert" PDF fallback
+  page, whose only text is the app's own English note.
 
 ### Interface language set, and what the interface language must never touch
 

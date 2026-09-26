@@ -243,13 +243,17 @@ func TestGenerateIndex_FallbackLabelNotDoubleNumbered(t *testing.T) {
 	}
 }
 
-// The TOC page is in the book's language: it takes lang/dir from the first content page and
-// falls back to "en" only when that page declares none.
+// The TOC page is in the book's language: it takes lang/dir from the first content page the
+// way the merge does (dir from <html>, else <body>), falls back to the language the book
+// declares, and declares none rather than invent one (E30, E33).
 func TestGenerateIndexCarriesDocumentLang(t *testing.T) {
-	for _, c := range []struct{ page, want string }{
-		{`<html lang="ar" dir="rtl"><body><p>x</p></body></html>`, `<html lang="ar" dir="rtl">`},
-		{`<html xml:lang="ru"><body><p>x</p></body></html>`, `<html lang="ru">`},
-		{`<html><body><p>x</p></body></html>`, `<html lang="en">`},
+	for _, c := range []struct{ page, bookLang, want string }{
+		{`<html lang="ar" dir="rtl"><body><p>x</p></body></html>`, "", `<html lang="ar" dir="rtl">`},
+		{`<html xml:lang="ru"><body><p>x</p></body></html>`, "", `<html lang="ru">`},
+		{`<html lang="he"><body dir="RTL"><p>x</p></body></html>`, "", `<html lang="he" dir="rtl">`},
+		{`<html><body><p>x</p></body></html>`, "uk", `<html lang="uk">`},
+		{`<html lang="de"><body><p>x</p></body></html>`, "uk", `<html lang="de">`},
+		{`<html><body><p>x</p></body></html>`, "", "<html>\n"},
 	} {
 		dir := t.TempDir()
 		for _, name := range []string{"a.html", "b.html"} {
@@ -259,6 +263,7 @@ func TestGenerateIndexCarriesDocumentLang(t *testing.T) {
 		}
 		book := &epub.Book{
 			Title:    "Book",
+			Language: c.bookLang,
 			Manifest: []epub.ManifestItem{{ID: "a", Href: "a.html"}, {ID: "b", Href: "b.html"}},
 			Spine:    []epub.SpineItem{{IDRef: "a"}, {IDRef: "b"}},
 		}
@@ -268,7 +273,7 @@ func TestGenerateIndexCarriesDocumentLang(t *testing.T) {
 		}
 		data, _ := os.ReadFile(indexPath)
 		if !strings.Contains(string(data), c.want) {
-			t.Errorf("want %s for page %s", c.want, c.page)
+			t.Errorf("want %q for page %s (book lang %q)", c.want, c.page, c.bookLang)
 		}
 	}
 }

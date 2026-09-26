@@ -412,7 +412,9 @@ func buildPDFPageHTML(outputDir, bookTitle string, pageNum, totalPages int, item
 	}
 
 	var sb strings.Builder
-	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
+	// No lang: the PDF's /Lang is not read, and a guessed one can stop Chrome offering
+	// "Translate page"; without it Chrome detects the language itself.
+	sb.WriteString("<!DOCTYPE html>\n<html>\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(bookTitle), pageNum))
@@ -765,7 +767,8 @@ func buildPageHTML(outputDir, bookTitle string, pageNum, totalPages int, text st
 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
-	sb.WriteString("<html lang=\"en\">\n")
+	// No lang, for the reason buildPDFPageHTML gives.
+	sb.WriteString("<html>\n")
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
@@ -884,6 +887,8 @@ func pdfTitle(pdfPath string) string {
 func buildFallbackPDFHTML(title, pdfFileName string) string {
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
+	// This page holds only the app's own English note, not the document's text, so "en" is
+	// what it really is.
 	sb.WriteString("<html lang=\"en\">\n")
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")

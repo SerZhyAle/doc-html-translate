@@ -254,3 +254,41 @@ func readAllPages(t *testing.T, dir string) string {
 	}
 	return sb.String()
 }
+
+// X30: a Russian FB2 declares its language on every page, from <title-info><lang> and not from
+// <src-title-info> (the original's); an FB2 that states none declares none rather than "en".
+func TestExtract_FB2DeclaresTitleInfoLang(t *testing.T) {
+	const withLang = `<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+  <description>
+    <title-info><book-title>Книга</book-title><lang>ru</lang><src-lang>en</src-lang></title-info>
+    <src-title-info><book-title>Book</book-title><lang>en</lang></src-title-info>
+  </description>
+  <body><section><p>Первый абзац.</p></section></body>
+</FictionBook>`
+	for _, c := range []struct {
+		name, src, wantLang, wantRoot string
+	}{
+		{"declared", withLang, "ru", `<html lang="ru">`},
+		{"undeclared", simpleFB2, "", "<html>\n"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			dir := t.TempDir()
+			in := filepath.Join(dir, "book.fb2")
+			if err := os.WriteFile(in, []byte(c.src), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			book, err := fb2.Extract(in, dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if book.Language != c.wantLang {
+				t.Errorf("Language = %q, want %q", book.Language, c.wantLang)
+			}
+			data, _ := os.ReadFile(filepath.Join(dir, "page_001.html"))
+			if !strings.Contains(string(data), c.wantRoot) {
+				t.Errorf("page root: want %q, got:\n%.120s", c.wantRoot, data)
+			}
+		})
+	}
+}

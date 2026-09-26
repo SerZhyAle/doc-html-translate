@@ -1,6 +1,6 @@
 # Converted pages claim English when the source language is unknown or ignored
 
-**Status:** Draft
+**Status:** Implemented
 **Priority:** 65
 **Date:** 2026-09-26
 
@@ -32,3 +32,43 @@ A wrong `<html lang>` can stop Chrome offering "Translate page", which is the pr
 ## 4. Acceptance
 
 - A Russian FB2 converts to `<html lang="ru">`, a Markdown book to a page with no `lang`; tests pin both.
+
+## Implementation (2026-09-26)
+
+- **X30** - FB2 reads `<title-info><lang>` (never `<src-title-info>`) into `fb2Doc.lang`
+  ([`internal/fb2/content.go`](../../internal/fb2/content.go)); `Extract` sets the new `epub.Book.Language`
+  from it and each page opens `<html lang="..">`, or plain `<html>` when the book states none
+  ([`internal/fb2/extract.go`](../../internal/fb2/extract.go)). The declared value is cleaned by the new
+  `textutil.NormalizeLangTag` ([`internal/textutil/lang.go`](../../internal/textutil/lang.go)), the twin of
+  `lang.js` `normalizeLangTag`. TXT, RTF, PDF (both page builders) and comic stop writing `lang="en"`.
+  The PDF "nothing to convert" fallback page keeps `lang="en"` on purpose: its only text is the app's own
+  English note. Tests: `internal/fb2` `TestExtract_FB2DeclaresTitleInfoLang`, `internal/textutil`
+  `TestNormalizeLangTag`.
+- **X33** - image input ([`internal/img/extract.go`](../../internal/img/extract.go)) declares no `lang`,
+  the same one-line change as TXT/RTF/comic; the end-to-end rule "no stated language -> `<html>`" is
+  pinned through the Markdown and TXT paths (`TestConvertedSourceLanguage`, `TestConvertedChromeLanguage`),
+  not by an image-specific test.
+- **E30** - EPUB `dc:language` is read into `Book.Language` (`parseOPF`), and a content page whose
+  `<html>` declares neither `lang` nor `xml:lang` is given it during normalization (`declareBookLang` in
+  [`internal/epub/normalize.go`](../../internal/epub/normalize.go)). The merged page and the TOC index take
+  the first page's language, else `Book.Language`, else none - the `"en"` fallback is gone
+  (`rootLangDir` / `rootAttrs` in [`internal/htmlgen/singlepage.go`](../../internal/htmlgen/singlepage.go),
+  `indexRootAttrs` in [`htmlgen.go`](../../internal/htmlgen/htmlgen.go)). Tests: `internal/epub`
+  `TestExtractDeclaresPackageLanguage`, `internal/htmlgen` `TestGenerateSinglePageDeclaresOnlyAStatedLanguage`
+  and `TestGenerateIndexCarriesDocumentLang`, and the acceptance test
+  [`tests/source_lang_test.go`](../../tests/source_lang_test.go) `TestConvertedSourceLanguage` (Russian FB2
+  -> `<html lang="ru">`, Markdown -> `<html>`, single-page and multi-page each; on the old code it fails
+  with `<html lang="en">` in all four cases).
+- **E33** - the index now reads `dir` through the same `htmlDir` the merge uses (`<html>`, then `<body>`);
+  pinned by the `<body dir="RTL">` case of `TestGenerateIndexCarriesDocumentLang`.
+- **Extension side** - FB2, EPUB and HTML already read the stated language. `normalizeLangTag` gained the
+  word-boundary rule its Go twin has (`russian` no longer reads as `rus`, `zh-Hans` no longer as `zh-HA`),
+  with the same cases in `extension/test/reflow.test.mjs`. The extension still fills an unstated language
+  from PDF `/Lang` and the script heuristic; recorded as an intentional difference in
+  [`docs/PARITY.md`](../../docs/PARITY.md) "Declared source language", and the new pair is in
+  `configs/parity-map.json`.
+- **Rebuild rule** - no format-version bump: the completion record deliberately does not compare the tool
+  version, so existing output is reused until `-force` or an option change, as with earlier
+  output-format fixes.
+- **Left open** - Go does not read PDF `/Lang` (the extension does); a follow-up if wanted. Nothing here
+  needs Windows-only proof.

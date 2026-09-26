@@ -13,6 +13,7 @@ import (
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/textutil"
 )
 
 // paragraphsPerPage controls page splitting.
@@ -75,7 +76,7 @@ func Extract(fb2Path, outputDir string) (*epub.Book, error) {
 		}
 	}
 
-	book := &epub.Book{Title: title, BasePath: ""}
+	book := &epub.Book{Title: title, BasePath: "", Language: textutil.NormalizeLangTag(doc.lang)}
 
 	totalPages := (len(resolved) + paragraphsPerPage - 1) / paragraphsPerPage
 	for pageNum := 1; pageNum <= totalPages; pageNum++ {
@@ -88,7 +89,7 @@ func Extract(fb2Path, outputDir string) (*epub.Book, error) {
 		href := fmt.Sprintf("page_%03d.html", pageNum)
 		id := fmt.Sprintf("page_%03d", pageNum)
 
-		pageHTML := buildPageHTML(title, pageNum, totalPages, resolved[start:end])
+		pageHTML := buildPageHTML(title, book.Language, pageNum, totalPages, resolved[start:end])
 		if err := fsutil.WriteFile(filepath.Join(outputDir, href), []byte(pageHTML), 0o644); err != nil {
 			return nil, fmt.Errorf("write page %d: %w", pageNum, err)
 		}
@@ -124,9 +125,16 @@ type resolvedItem struct {
 
 // ── Rendering ───────────────────────────────────────────────────────
 
-func buildPageHTML(title string, pageNum, totalPages int, items []resolvedItem) string {
+// buildPageHTML renders one page. lang is the book's declared language; with none the page
+// declares none, so Chrome detects the language instead of trusting a guess.
+func buildPageHTML(title, lang string, pageNum, totalPages int, items []resolvedItem) string {
 	var sb strings.Builder
-	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
+	sb.WriteString("<!DOCTYPE html>\n")
+	if lang != "" {
+		sb.WriteString(fmt.Sprintf("<html lang=\"%s\">\n<head>\n", html.EscapeString(lang)))
+	} else {
+		sb.WriteString("<html>\n<head>\n")
+	}
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(title), pageNum))
