@@ -46,9 +46,11 @@ foreach ($p in $Path) {
         Exit-Verdict $check 2 "no file $p"
     }
 
+    $onWindows = if ($PSVersionTable.PSVersion.Major -ge 6) { $IsWindows } else { $env:OS -eq 'Windows_NT' }
+
     # 1. The version resource goversioninfo wrote (FileVersionInfo reads PE resources on Windows only).
     $resource = $null
-    if ($IsWindows) {
+    if ($onWindows) {
         $resource = (Get-Item -LiteralPath $p).VersionInfo.ProductVersion
         if ($resource) { $resource = $resource.Trim() }
     }
@@ -62,17 +64,18 @@ foreach ($p in $Path) {
     #    `-X main.Version=..` value is found the only portable way: as its literal ASCII bytes in the
     #    binary. The resource copy is UTF-16 and cannot produce this match.
     $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $p).Path)
-    $linkedFound = [System.Text.Encoding]::Latin1.GetString($bytes).Contains($stamp)
+    $latin1 = [System.Text.Encoding]::GetEncoding("ISO-8859-1")
+    $linkedFound = $latin1.GetString($bytes).Contains($stamp)
 
     # 3. The CLI can say its own version - the strongest reading, where the OS can run it.
     $reported = $null
-    if ($IsWindows -and (Split-Path -Leaf $p) -like 'doc-html-translate*') {
+    if ($onWindows -and (Split-Path -Leaf $p) -like 'doc-html-translate*') {
         $out = (& $p -version 2>&1 | Out-String).Trim()
         if ($out -match '^doc-html-translate (\S+)$') { $reported = $Matches[1] }
     }
 
     Write-Host ("  {0}: resource={1} linked-stamp={2} reports={3}" -f $p,
-        $(if ($resource) { $resource } elseif ($IsWindows) { '(none)' } else { '(not read on this OS)' }),
+        $(if ($resource) { $resource } elseif ($onWindows) { '(none)' } else { '(not read on this OS)' }),
         $(if ($linkedFound) { 'present' } else { 'ABSENT' }),
         $(if ($reported) { $reported } else { '(not run)' }))
 

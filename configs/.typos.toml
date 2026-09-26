@@ -48,6 +48,7 @@ extend-exclude = [
   "a.ps1",                          # scripts launcher: intentionally short mnemonic aliases (nd/ind/ivn/bd..), not prose
   "go.sum",
   "DEV/COMMIT_LOG.md",              # append-only build log: book filenames + hashes
+  "configs/termbase.json",          # multilingual termbase dictionary (it, fr, es, de, pt)
   "manifests",                      # generated winget community-repo manifests
   "internal/bundledtools",          # vendored third-party binaries (e.g. libgcc_s_seh-1.dll)
   "extension/test/reflow.test.mjs", # multilingual reflow fixtures (German "ist ein", hyphenation)

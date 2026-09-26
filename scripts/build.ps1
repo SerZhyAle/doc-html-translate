@@ -27,7 +27,8 @@ function New-VersionResourceFile {
     $json.FixedFileInfo.ProductVersion.Build = $Build
     $json.StringFileInfo.FileVersion = $VersionString
     $json.StringFileInfo.ProductVersion = $VersionString
-    $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $OutputPath -Encoding utf8
+    $content = $json | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText($OutputPath, $content, [System.Text.UTF8Encoding]::new($false))
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Output) | Out-Null

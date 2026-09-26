@@ -337,8 +337,14 @@ foreach ($set in @($inv.telemetry.dependencySets)) {
     switch ($set.kind) {
         'go-sum' { foreach ($line in ($text -split "`n")) { $mod = ($line.Trim() -split '\s+')[0]; if ($mod) { [void]$depNames.Add($mod) } } }
         'npm-lock' {
-            $lock = $text | ConvertFrom-Json -AsHashtable
-            foreach ($k in @($lock['packages'].Keys)) { if ($k) { [void]$depNames.Add(($k -replace '^.*node_modules/', '')) } }
+            if ($PSVersionTable.PSVersion.Major -ge 6) {
+                $lock = $text | ConvertFrom-Json -AsHashtable
+                foreach ($k in @($lock['packages'].Keys)) { if ($k) { [void]$depNames.Add(($k -replace '^.*node_modules/', '')) } }
+            } else {
+                foreach ($m in [regex]::Matches($text, '"node_modules/([^"]+)"')) {
+                    [void]$depNames.Add($m.Groups[1].Value)
+                }
+            }
         }
         default { Add-Finding "$invPath telemetry: unknown dependency-set kind '$($set.kind)'" }
     }

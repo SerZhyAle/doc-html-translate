@@ -87,7 +87,7 @@ func TestSiteTranslationFreshness(t *testing.T) {
 			if len(m) > 1 {
 				t.Fatalf("%s carries %d l10n-source stamps; leave one before re-stamping", page, len(m))
 			}
-			updated := raw
+			var updated string
 			if len(m) == 1 {
 				updated = strings.Replace(raw, m[0][0], stamp, 1)
 			} else {
