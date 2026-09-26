@@ -1,0 +1,131 @@
+{
+  "shape": 1,
+  "about": "Product termbase for the published site (DOC-EXTERNAL-QUALITY rule 4). Per term and locale: 'use' is the stem the site writes (it must occur in that locale's pages), 'avoid' lists variants that must not occur. Locale '*' holds proper names checked on every page in every language. A term with glossary=true must head a <dt> of the glossary on docs.html, docs.ru.html and docs.uk.html. Checked by tests/site_termbase_test.go.",
+  "locales": ["en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh"],
+  "terms": [
+    {
+      "id": "convert",
+      "concept": "Turning a document into local HTML pages - the product's main verb.",
+      "glossary": true,
+      "forms": {
+        "en": { "use": "convert", "avoid": ["transcode"] },
+        "ru": { "use": "конверт", "avoid": ["транскодир"] },
+        "uk": { "use": "конверт", "avoid": ["транскоду"] },
+        "de": { "use": "konvertier", "avoid": ["transkodier"] },
+        "it": { "use": "conver", "avoid": ["transcodific"] },
+        "es": { "use": "convert", "avoid": ["transcodific"] },
+        "fr": { "use": "convert", "avoid": ["transcod"] },
+        "pt": { "use": "convert", "avoid": ["transcodific"] },
+        "ar": { "use": "حوّل", "avoid": [] },
+        "hi": { "use": "कनवर्ट", "avoid": ["ट्रांसकोड"] },
+        "bn": { "use": "রূপান্তর", "avoid": ["ট্রান্সকোড"] },
+        "ur": { "use": "کنورٹ", "avoid": ["ٹرانسکوڈ"] },
+        "zh": { "use": "转换", "avoid": ["转码"] }
+      }
+    },
+    {
+      "id": "translate",
+      "concept": "Rendering the text in the reader's language - by the browser's own page translation, or by an optional engine.",
+      "glossary": true,
+      "forms": {
+        "en": { "use": "translat", "avoid": ["localise the page", "localize the page"] },
+        "ru": { "use": "перев", "avoid": ["транслир"] },
+        "uk": { "use": "перекла", "avoid": ["транслю", "переводит"] },
+        "de": { "use": "übersetz", "avoid": ["translatier"] },
+        "it": { "use": "tradu", "avoid": ["translare"] },
+        "es": { "use": "tradu", "avoid": ["trasladar"] },
+        "fr": { "use": "tradu", "avoid": ["translater"] },
+        "pt": { "use": "tradu", "avoid": ["transladar"] },
+        "ar": { "use": "ترجم", "avoid": [] },
+        "hi": { "use": "अनुवाद", "avoid": ["ट्रांसलेट"] },
+        "bn": { "use": "অনুবাদ", "avoid": ["ট্রান্সলেট"] },
+        "ur": { "use": "ترجم", "avoid": ["ٹرانسلیٹ"] },
+        "zh": { "use": "翻译", "avoid": ["翻訳"] }
+      }
+    },
+    {
+      "id": "ocr-overlay",
+      "concept": "Text recognised in a picture and laid over it as translatable plates (OCR-OVERLAY).",
+      "glossary": true,
+      "forms": {
+        "en": { "use": "overlay", "avoid": ["searchable PDF", "OCR layer"] },
+        "ru": { "use": "слой", "avoid": ["оверлей"] },
+        "uk": { "use": "шар", "avoid": ["оверлей"] },
+        "de": { "use": "Textebene", "avoid": ["Overlay"] },
+        "it": { "use": "livelli di testo", "avoid": ["overlay"] },
+        "es": { "use": "capas de texto", "avoid": ["overlay", "superposición"] },
+        "fr": { "use": "calques de texte", "avoid": ["overlay", "superposition"] },
+        "pt": { "use": "camadas de texto", "avoid": ["overlay", "sobreposição"] },
+        "ar": { "use": "طبقات", "avoid": ["تراكب"] },
+        "hi": { "use": "परत", "avoid": ["ओवरले"] },
+        "bn": { "use": "স্তর", "avoid": ["ওভারলে"] },
+        "ur": { "use": "تہیں", "avoid": ["اوورلے"] },
+        "zh": { "use": "文字层", "avoid": ["覆盖层"] }
+      }
+    },
+    {
+      "id": "browser-extension",
+      "concept": "The Chromium edition of the product.",
+      "glossary": true,
+      "forms": {
+        "en": { "use": "extension", "avoid": ["plugin", "plug-in", "addon"] },
+        "ru": { "use": "расширени", "avoid": ["плагин", "аддон"] },
+        "uk": { "use": "розширенн", "avoid": ["плагін", "аддон"] },
+        "de": { "use": "Erweiterung", "avoid": ["Plugin", "Plug-in"] },
+        "it": { "use": "estensione", "avoid": ["plugin", "componente aggiuntivo"] },
+        "es": { "use": "extensión", "avoid": ["plugin", "complemento"] },
+        "fr": { "use": "extension", "avoid": ["plugin", "module complémentaire"] },
+        "pt": { "use": "extensão", "avoid": ["plugin", "complemento"] },
+        "ar": { "use": "إضافة", "avoid": ["ملحق"] },
+        "hi": { "use": "एक्सटेंशन", "avoid": ["प्लगइन"] },
+        "bn": { "use": "এক্সটেনশন", "avoid": ["প্লাগইন"] },
+        "ur": { "use": "ایکسٹینشن", "avoid": ["پلگ ان"] },
+        "zh": { "use": "扩展", "avoid": ["插件"] }
+      }
+    },
+    {
+      "id": "desktop-app",
+      "concept": "The Windows edition: the window (doc-html-ui) and the command line (doc-html-translate).",
+      "glossary": true,
+      "forms": {
+        "en": { "use": "desktop app", "avoid": ["desktop client"] },
+        "ru": { "use": "настольн", "avoid": ["десктоп"] },
+        "uk": { "use": "настільн", "avoid": ["десктоп", "додаток"] },
+        "de": { "use": "Desktop-Anwendung", "avoid": ["Desktop-Client"] },
+        "it": { "use": "applicazione desktop", "avoid": ["client desktop"] },
+        "es": { "use": "aplicación de escritorio", "avoid": ["cliente de escritorio"] },
+        "fr": { "use": "application de bureau", "avoid": ["client de bureau"] },
+        "pt": { "use": "aplicação de ambiente de trabalho", "avoid": ["aplicativo"] },
+        "ar": { "use": "تطبيق سطح المكتب", "avoid": [] },
+        "hi": { "use": "डेस्कटॉप एप्लिकेशन", "avoid": [] },
+        "bn": { "use": "ডেস্কটপ অ্যাপ্লিকেশন", "avoid": [] },
+        "ur": { "use": "ڈیسک ٹاپ ایپلیکیشن", "avoid": [] },
+        "zh": { "use": "桌面应用", "avoid": ["桌面客户端"] }
+      }
+    },
+    {
+      "id": "microsoft-store",
+      "concept": "The store that ships the desktop app as a signed MSIX. A proper name in every language.",
+      "glossary": true,
+      "forms": {
+        "*": { "use": "Microsoft Store", "avoid": ["Windows Store", "MS Store"] }
+      }
+    },
+    {
+      "id": "chrome-web-store",
+      "concept": "Where the extension is published for Chrome. A proper name in every language.",
+      "glossary": false,
+      "forms": {
+        "*": { "use": "Chrome Web Store", "avoid": ["Chrome Store", "Chrome Webstore", "Google Web Store"] }
+      }
+    },
+    {
+      "id": "edge-add-ons",
+      "concept": "Where the extension is published for Edge. A proper name in every language.",
+      "glossary": false,
+      "forms": {
+        "*": { "use": "Edge Add-ons", "avoid": ["Edge Addons", "Edge Add-on Store", "Edge Store"] }
+      }
+    }
+  ]
+}

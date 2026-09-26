@@ -73,6 +73,15 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
 .table-wrap{overflow-x:auto}
 .meta{color:var(--muted);font-size:.85rem;margin-bottom:1rem}
 
+/* ---------- DOCS: step captures, subject index, glossary ---------- */
+.shot{margin:.9rem 0 0}
+.shot img{display:block;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.shot figcaption{color:var(--muted);font-size:.8rem;margin-top:.35rem}
+.subject-index{columns:3 14rem;column-gap:1.5rem}
+.subject-index li{break-inside:avoid}
+.glossary dt{font-family:var(--font-heading);color:var(--text);font-weight:600;margin-top:.8rem}
+.glossary dd{color:var(--text-2);margin:.2rem 0 0}
+
 /* ---------- OTHER LANGUAGES / FOOTER ---------- */
 .langs{display:flex;flex-wrap:wrap;gap:.35rem .6rem;font-size:.8rem;opacity:.85;margin:0 0 1rem}
 .langs .cur{font-weight:700;opacity:1}

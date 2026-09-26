@@ -2,6 +2,7 @@
 <html lang="uk" data-lang="ua" data-theme="dark">
 <head>
   <meta charset="utf-8">
+  <!-- l10n-source: docs.html sha256:21667eccb6254fcb -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0f0a">
   <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/docs.uk.html">
@@ -69,7 +70,7 @@
       <span class="eyebrow">Документація</span>
       <h1>Швидке локальне читання книг і безкоштовний переклад у Chrome</h1>
       <p class="lead">Конвертуйте EPUB/PDF та інші формати у локальні HTML-сторінки, потім читайте у Chrome і перекладайте вбудованим перекладачем браузера. Без API-ключа, без підписки і без зайвих церемоній.</p>
-      <p class="meta"><a href="./">Головна</a> · <a href="extension.html">Розширення</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a></p>
+      <p class="meta"><a href="./">Головна</a> · <a href="extension.html">Розширення</a> · <a href="#subject-index">Предметний покажчик</a> · <a href="#glossary">Глосарій</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a></p>
     </section>
 
     <section id="editions">
@@ -78,7 +79,7 @@
       <ul>
         <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, конвертер командного рядка та обробник файлових асоціацій Windows. Його прапорці описані на цій сторінці.</li>
         <li><strong>GUI-застосунок</strong> - <code>doc-html-ui.exe</code>, віконний інтерфейс з усіма прапорцями нижче: вибір файлу, drag &amp; drop і тумблер «обробник за замовчуванням» (за бажанням, типово вимкнено).</li>
-        <li><strong>Застосунок у Microsoft Store</strong> - той самий десктоп (GUI + CLI) як авто-оновлюваний MSIX з підписом Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>.</li>
+        <li><strong>Застосунок у Microsoft Store</strong> - той самий настільний застосунок (GUI + CLI) як авто-оновлюваний MSIX з підписом Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>.</li>
         <li><strong>Розширення для браузера</strong> - перемальовує документи (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT-комікси) у чистий HTML прямо в браузері, щоб вбудований <em>«Перекласти сторінку»</em> працював на них без встановлення застосунку: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> · <a href="extension.html">сторінка розширення</a>.</li>
       </ul>
     </section>
@@ -92,6 +93,8 @@
           <li>Відкриття згенерованого index у Chrome</li>
           <li>Переклад сторінки на потрібну мову через вбудований переклад Chrome</li>
         </ul>
+        <figure class="shot"><img src="tools/store/gui-uk.png" width="1366" height="768" loading="lazy" alt="Вікно doc-html-ui: поле для документа, кнопка «Конвертувати» і вибір перекладу, обрано Chrome (безкоштовно)"><figcaption>Крок 1 - перетягніть файл у вікно застосунку й натисніть «Конвертувати».</figcaption></figure>
+        <figure class="shot"><img src="tools/store/table-of-contents-uk.png" width="1366" height="768" loading="lazy" alt="Сконвертована книжка в браузері: перша сторінка «Аліси в Країні чудес» під панеллю читалки"><figcaption>Крок 2 - сконвертована книжка відкривається в браузері. Крок 3 - у меню самого браузера: «Перекласти сторінку».</figcaption></figure>
         <div class="commands">
           <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Копіювати</button></div>
           <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># або </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Копіювати</button></div>
@@ -124,7 +127,7 @@
         <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 і комікси CBZ/CBR/CB7/CBT. Набір, відверто кажучи, пристойний.</p>
         <div class="pills"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">TXT</span><span class="pill">Markdown</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">HTML</span><span class="pill">MOBI / AZW3</span><span class="pill">CBZ / CBR / CB7 / CBT</span></div>
         <p>А ще <strong>комікси</strong> (CBZ / CBR / CB7 / CBT): це контейнер зі сторінками-картинками без текстового шару, він відкривається сторінка за сторінкою з примусово ввімкненим OCR, тому текст у «бульбашках» розпізнається і лягає перекладними плашками поверх кожної сторінки. CBZ і CBT не потребують нічого додатково; CBR і CB7 потребують встановленого <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> (той самий прийом із зовнішнім інструментом, що й MOBI з Calibre).</p>
-        <p>А ще <strong>одиночна картинка</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): застосунок розпізнає на ній текст і накладає його перекладними плашками поверх зображення, щоб вбудований переклад сторінки в Chrome/Edge працював прямо на картинці - той самий оверлей, що робить розширення для браузера. Потрібен OCR-рушій <strong>Tesseract</strong> (див. <code>-ocr-lang</code>).</p>
+        <p>А ще <strong>одиночна картинка</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): застосунок розпізнає на ній текст і накладає його перекладними плашками поверх зображення, щоб вбудований переклад сторінки в Chrome/Edge працював прямо на картинці - той самий шар тексту, що робить розширення для браузера. Потрібен OCR-рушій <strong>Tesseract</strong> (див. <code>-ocr-lang</code>).</p>
         <p class="small">MOBI та AZW3: потрібен встановлений <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Комікси CBR і CB7: потрібен встановлений <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> (CBZ і CBT не потребують нічого додатково). Файли з DRM не підтримуються - конвертер поважає замки, які не вміє зламувати.</p>
         <p class="small">Звичайний текст (.txt) декодується за провідними байтами - мітка порядку байтів UTF-8/UTF-16, потім коректний UTF-8, потім застаріла кирилична кодова сторінка (Windows-1251, KOI8-R, CP866) за детекцією - тож .txt із часів DOS або збережений у Notepad як «Unicode» читається текстом, а не «кракозябрами». Нечитаний бінарник (.docx, .djvu чи архів коміксу без 7-Zip) відхиляється з назвою формату, а не перетворюється на сміттєвий документ.</p>
       </details>
@@ -243,6 +246,74 @@
           також формат, кількість сторінок і останню помилку останнього документа. Ні тексту документів, ні списку ваших
           сайтів там немає.</p>
       </details>
+    </section>
+
+    <section id="subject-index">
+      <h2>Предметний покажчик</h2>
+      <ul class="subject-index">
+        <li><a href="#external-tools">7-Zip</a></li>
+        <li><a href="#external-tools">Calibre</a></li>
+        <li><a href="#editions">CLI</a></li>
+        <li><a href="#external-tools">ffmpeg</a></li>
+        <li><a href="#flags">Google Cloud, переклад (-google)</a></li>
+        <li><a href="#flags">OCR (-ocr, -ocr-lang)</a></li>
+        <li><a href="#flags">Ollama (-ollama)</a></li>
+        <li><a href="#external-tools">pdftotext</a></li>
+        <li><a href="#glossary">Глосарій</a></li>
+        <li><a href="#flags">Глибина змісту (-toc-depth)</a></li>
+        <li><a href="#logs">Журнали, надсилання авторові</a></li>
+        <li><a href="#external-tools">Зовнішні інструменти</a></li>
+        <li><a href="#formats">Зображення (шар тексту OCR)</a></li>
+        <li><a href="#editions">Іпостасі застосунку</a></li>
+        <li><a href="#formats">Кодування TXT</a></li>
+        <li><a href="#formats">Комікси (CBZ, CBR, CB7, CBT)</a></li>
+        <li><a href="#workflow">Конвертація файлу</a></li>
+        <li><a href="#reading">Ліміт витрат (-max-cost)</a></li>
+        <li><a href="#flags">Мова інтерфейсу (-ui-lang)</a></li>
+        <li><a href="#editions">Настільний застосунок</a></li>
+        <li><a href="#flags">Обробник за замовчуванням (-register)</a></li>
+        <li><a href="#workflow">Переклад книжки безкоштовно</a></li>
+        <li><a href="#links">Посилання і завантаження</a></li>
+        <li><a href="#reading">Позиція читання</a></li>
+        <li><a href="#flags">Прапорці</a></li>
+        <li><a href="#formats">Підтримувані формати</a></li>
+        <li><a href="#flags">Поділ на сторінки (-split)</a></li>
+        <li><a href="#reference">Розділ довідки</a></li>
+        <li><a href="#editions">Розширення для браузера</a></li>
+        <li><a href="#reading">Теми читання</a></li>
+        <li><a href="#editions">Застосунок у Microsoft Store</a></li>
+        <li><a href="#quick-start">Швидкий старт</a></li>
+      </ul>
+    </section>
+
+    <section id="glossary">
+      <h2>Глосарій</h2>
+      <dl class="glossary">
+        <dt>Конвертація</dt>
+        <dd>Перетворення документа (EPUB, PDF, FB2, архіву коміксу, зображення, ..) на теку локальних HTML-сторінок з <code>index.html</code>, навігацією і змістом. Головна робота застосунку; нічого не вивантажується в мережу.</dd>
+        <dt>Переклад сторінки</dt>
+        <dd>Безкоштовний спосіб читати своєю мовою: відкрийте сконвертований <code>index.html</code> у Chrome або Edge і скористайтеся вбудованим перекладом сторінки. Google Cloud і Ollama - необов'язкові рушії, що перекладають уже під час конвертації.</dd>
+        <dt>Шар тексту (OCR)</dt>
+        <dd>Текст, який Tesseract розпізнав на картинці - скані, сторінці коміксу, окремому зображенні, - покладений поверх неї плашками, які можна перекласти, щоб переклад сторінки працював просто на картинці.</dd>
+        <dt>Плашка</dt>
+        <dd>Один блок шару тексту. Вона закриває літери, які замінює; кнопка в шапці ховає всі плашки, щоб побачити малюнок під ними.</dd>
+        <dt>Настільний застосунок</dt>
+        <dd>Версія для Windows: <code>doc-html-ui.exe</code> (вікно) і <code>doc-html-translate.exe</code> (командний рядок), портативно або з Microsoft Store.</dd>
+        <dt>CLI</dt>
+        <dd>Конвертер командного рядка <code>doc-html-translate.exe</code>. Кожне налаштування - прапорець із розділу «Основні прапорці».</dd>
+        <dt>Розширення для браузера</dt>
+        <dd>Версія для Chromium із Chrome Web Store та Edge Add-ons: конвертує документ просто у вкладці браузера, без настільного застосунку.</dd>
+        <dt>Застосунок у Microsoft Store</dt>
+        <dd>Настільний застосунок як пакет MSIX з підписом Store, що оновлюється сам.</dd>
+        <dt>Обробник за замовчуванням</dt>
+        <dd>Програма, яку Windows запускає подвійним клацанням на файлі. Застосунок стає нею для EPUB, PDF та інших підтримуваних файлів лише з вашої згоди.</dd>
+        <dt>Зміст</dt>
+        <dd>Багаторівневий список розділів на <code>index.html</code>, побудований за структурою самої книжки.</dd>
+        <dt>Ліміт витрат</dt>
+        <dd>Межа вартості для платних рушіїв перекладу: якщо оцінка вища, переклад пропускається, а книжка все одно створюється.</dd>
+        <dt>Tesseract</dt>
+        <dd>Відкритий рушій OCR, який застосунок викликає для тексту на картинках; без нього шару тексту немає.</dd>
+      </dl>
     </section>
 
     <section id="links">
