@@ -15,6 +15,7 @@ import (
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
+	"doc-html-translate/internal/textutil"
 )
 
 // Book represents a parsed EPUB structure.
@@ -24,6 +25,11 @@ type Book struct {
 	Spine    []SpineItem
 	BasePath string     // directory within EPUB where content.opf resides (slash path, "." at the root)
 	TOC      []TOCEntry // authored table of contents (NCX navMap / nav.xhtml), nil if none
+
+	// Language is the language the source itself declares (EPUB dc:language, FB2
+	// <title-info><lang>) as a tag for <html lang>, or "" when it declares none. It is never
+	// guessed: a wrong lang can stop Chrome offering "Translate page".
+	Language string
 
 	// ReaderKey namespaces the reader's saved position (htmlgen.ReaderKey). It is
 	// set once, before translation rewrites Title, and never recomputed.
@@ -88,7 +94,8 @@ type packageOPF struct {
 }
 
 type opfMetadata struct {
-	Title []string `xml:"title"`
+	Title    []string `xml:"title"`
+	Language []string `xml:"language"`
 }
 
 type opfManifest struct {
@@ -357,6 +364,11 @@ func parseOPF(baseDir, opfRelPath string) (*Book, error) {
 
 	if len(pkg.Metadata.Title) > 0 {
 		book.Title = pkg.Metadata.Title[0]
+	}
+	for _, l := range pkg.Metadata.Language {
+		if book.Language = textutil.NormalizeLangTag(l); book.Language != "" {
+			break
+		}
 	}
 
 	for _, item := range pkg.Manifest.Items {

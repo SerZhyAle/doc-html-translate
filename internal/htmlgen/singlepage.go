@@ -48,7 +48,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	// Merge chapter bodies in spine order; take the source language and direction from the
 	// first page. Dropping dir turned an RTL book LTR in the default single-page flow.
 	var body strings.Builder
-	lang, dir := "en", ""
+	lang, dir := "", ""
 	chapters := make([]*mergeChapter, 0, len(spineHrefs))
 	for i, href := range spineHrefs {
 		pagePath := bookPath(outputDir, book.BasePath, href)
@@ -61,10 +61,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 			return "", fmt.Errorf("parse %s: %w", href, err)
 		}
 		if i == 0 {
-			if l := htmlLang(doc); l != "" {
-				lang = l
-			}
-			dir = htmlDir(doc)
+			lang, dir = rootLangDir(doc, book.Language)
 		}
 		chapters = append(chapters, &mergeChapter{href: path.Clean(href), doc: doc})
 	}
@@ -114,11 +111,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	var sb strings.Builder
 	sb.WriteString("<!DOCTYPE html>\n")
 	// The book's language stays on <html>: it is what makes Chrome offer "Translate page".
-	if dir == "rtl" || dir == "ltr" || dir == "auto" {
-		sb.WriteString(fmt.Sprintf("<html lang=\"%s\" dir=\"%s\">\n", html.EscapeString(lang), dir))
-	} else {
-		sb.WriteString(fmt.Sprintf("<html lang=\"%s\">\n", html.EscapeString(lang)))
-	}
+	sb.WriteString("<html" + rootAttrs(lang, dir) + ">\n")
 	sb.WriteString("<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
@@ -256,6 +249,31 @@ func isPagedBook(inners []string) bool {
 		}
 	}
 	return true
+}
+
+// rootLangDir returns the language and direction a content page declares, for the <html> of a
+// page generated from it (the merged page, the TOC index). A page that declares no language
+// takes the book's (bookLang, "" when the source states none); nothing is ever guessed, since a
+// wrong lang can stop Chrome offering "Translate page".
+func rootLangDir(doc *gohtml.Node, bookLang string) (lang, dir string) {
+	lang = htmlLang(doc)
+	if lang == "" {
+		lang = bookLang
+	}
+	return lang, htmlDir(doc)
+}
+
+// rootAttrs renders lang and dir as <html> attributes, leaving out an empty lang and any dir
+// HTML does not define.
+func rootAttrs(lang, dir string) string {
+	var attrs string
+	if lang != "" {
+		attrs = fmt.Sprintf(" lang=\"%s\"", html.EscapeString(lang))
+	}
+	if dir == "rtl" || dir == "ltr" || dir == "auto" {
+		attrs += fmt.Sprintf(" dir=\"%s\"", dir)
+	}
+	return attrs
 }
 
 // htmlLang returns the language of the document's <html> element: lang, or xml:lang when

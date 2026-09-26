@@ -211,7 +211,9 @@ func parseByLines(lines []string) []string {
 // buildPageHTML generates an HTML page from a slice of paragraphs.
 func buildPageHTML(title string, pageNum, totalPages int, paragraphs []string) string {
 	var sb strings.Builder
-	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
+	// No lang: the source declares none, and a guessed one can stop Chrome offering
+	// "Translate page"; without it Chrome detects the language itself.
+	sb.WriteString("<!DOCTYPE html>\n<html>\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s — Page %d</title>\n", html.EscapeString(title), pageNum))

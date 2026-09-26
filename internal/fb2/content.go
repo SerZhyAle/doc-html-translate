@@ -42,6 +42,7 @@ type fb2Binary struct {
 // fb2Doc is everything one pass over the file yields.
 type fb2Doc struct {
 	title    string
+	lang     string // <title-info><lang>, the book's own language (src-title-info holds the original's)
 	items    []fb2Item
 	binaries map[string]fb2Binary
 }
@@ -112,6 +113,10 @@ func parseFB2(r io.Reader) (*fb2Doc, error) {
 			case "book-title":
 				if inTitleInfo && doc.title == "" {
 					doc.title, _ = readInline(dec)
+				}
+			case "lang":
+				if inTitleInfo && doc.lang == "" {
+					doc.lang, _ = readInline(dec)
 				}
 			case "binary":
 				readBinary(dec, t, doc.binaries)

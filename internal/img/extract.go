@@ -295,7 +295,9 @@ func buildPageHTML(title, imgName string, pageNum, totalPages int) string {
 		alt = html.EscapeString(fmt.Sprintf("%s - page %d of %d", title, pageNum, totalPages))
 	}
 	var sb strings.Builder
-	sb.WriteString("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n")
+	// No lang: the source declares none, and a guessed one can stop Chrome offering
+	// "Translate page"; without it Chrome detects the language itself.
+	sb.WriteString("<!DOCTYPE html>\n<html>\n<head>\n")
 	sb.WriteString("  <meta charset=\"UTF-8\">\n")
 	sb.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
 	sb.WriteString(fmt.Sprintf("  <title>%s</title>\n", html.EscapeString(title)))

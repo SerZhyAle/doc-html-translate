@@ -54,7 +54,7 @@ func normalizeContent(book *Book, outputDir string) {
 		srcPath := bookPath(outputDir, book.BasePath, item.Href)
 		dstPath := bookPath(outputDir, book.BasePath, r.finalHref)
 		xhtml := item.MediaType == "application/xhtml+xml" || r.htmlHref != item.Href
-		if err := normalizeChapter(srcPath, dstPath, item.Href, xhtml, lookup); err != nil {
+		if err := normalizeChapter(srcPath, dstPath, item.Href, book.Language, xhtml, lookup); err != nil {
 			logging.Errorf("WARNING: normalize %s: %v\n", item.Href, err)
 			continue
 		}
@@ -117,9 +117,10 @@ func samePathFold(a, b string) bool {
 
 // normalizeChapter reads srcPath, applies the DOM normalizations and writes
 // the result to dstPath. fileHref is the chapter's current OPF-relative href,
-// against which its links resolve (renames never change the directory). A
-// file that needs no change is left untouched on disk.
-func normalizeChapter(srcPath, dstPath, fileHref string, xhtml bool, lookup func(string) (string, bool)) error {
+// against which its links resolve (renames never change the directory).
+// bookLang is the package's dc:language, given to a page that declares no
+// language of its own. A file that needs no change is left untouched on disk.
+func normalizeChapter(srcPath, dstPath, fileHref, bookLang string, xhtml bool, lookup func(string) (string, bool)) error {
 	data, err := os.ReadFile(srcPath)
 	if err != nil {
 		return err
@@ -141,6 +142,9 @@ func normalizeChapter(srcPath, dstPath, fileHref string, xhtml bool, lookup func
 		changed = true
 	}
 	if rewriteLinks(doc, fileHref, lookup) {
+		changed = true
+	}
+	if declareBookLang(doc, bookLang) {
 		changed = true
 	}
 	if !changed {
@@ -250,6 +254,26 @@ func mapXMLLang(doc *gohtml.Node) {
 	if xmlLang != "" {
 		root.Attr = append(root.Attr, gohtml.Attribute{Key: "lang", Val: xmlLang})
 	}
+}
+
+// declareBookLang puts the book's language on an <html> that declares none,
+// neither lang nor xml:lang, and reports whether it did. Many EPUBs state the
+// language only in the package; without it on the page Chrome has to guess.
+func declareBookLang(doc *gohtml.Node, lang string) bool {
+	if lang == "" {
+		return false
+	}
+	root := findElement(doc, atom.Html)
+	if root == nil {
+		return false
+	}
+	for _, a := range root.Attr {
+		if (a.Namespace == "" && (a.Key == "lang" || a.Key == "xml:lang")) || (a.Namespace == "xml" && a.Key == "lang") {
+			return false
+		}
+	}
+	root.Attr = append(root.Attr, gohtml.Attribute{Key: "lang", Val: lang})
+	return true
 }
 
 // ensureUTF8Meta replaces any charset declaration in <head> with

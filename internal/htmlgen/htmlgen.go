@@ -129,47 +129,28 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 }
 
 // indexRootAttrs returns the lang (and dir) attributes for the TOC page's <html>, taken
-// from the first content page: the index lists the book's own headings, so it is in the
-// book's language. Falls back to "en" when that page declares none, as the single-page
-// merge does.
+// from the first content page the way the single-page merge takes them (rootLangDir): the
+// index lists the book's own headings, so it is in the book's language.
 func indexRootAttrs(book *epub.Book, outputDir string, spineHrefs []string) string {
-	lang, dir := "en", ""
+	lang, dir := book.Language, ""
 	if len(spineHrefs) > 0 {
-		l, d := pageRootLang(bookPath(outputDir, book.BasePath, spineHrefs[0]))
-		if l != "" {
-			lang = l
-		}
-		dir = d
+		lang, dir = pageRootLangDir(bookPath(outputDir, book.BasePath, spineHrefs[0]), book.Language)
 	}
-	attrs := fmt.Sprintf(" lang=\"%s\"", html.EscapeString(lang))
-	if dir == "rtl" || dir == "ltr" || dir == "auto" {
-		attrs += fmt.Sprintf(" dir=\"%s\"", dir)
-	}
-	return attrs
+	return rootAttrs(lang, dir)
 }
 
-// pageRootLang returns the lang (or xml:lang) and lower-cased dir declared on a page's
-// <html>, "" for whatever it does not declare or cannot be read.
-func pageRootLang(pagePath string) (lang, dir string) {
+// pageRootLangDir is rootLangDir for a page on disk; a page that cannot be read declares
+// nothing, so the book's language stands.
+func pageRootLangDir(pagePath, bookLang string) (lang, dir string) {
 	data, err := os.ReadFile(pagePath)
 	if err != nil {
-		return "", ""
+		return bookLang, ""
 	}
 	doc, err := gohtml.Parse(bytes.NewReader(data))
 	if err != nil {
-		return "", ""
+		return bookLang, ""
 	}
-	for root := doc.FirstChild; root != nil; root = root.NextSibling {
-		if root.Type != gohtml.ElementNode || root.Data != "html" {
-			continue
-		}
-		lang = strings.TrimSpace(nodeAttr(root, "lang"))
-		if lang == "" {
-			lang = strings.TrimSpace(nodeAttr(root, "xml:lang"))
-		}
-		return lang, strings.ToLower(strings.TrimSpace(nodeAttr(root, "dir")))
-	}
-	return "", ""
+	return rootLangDir(doc, bookLang)
 }
 
 // renderFlatSpineTOC renders the legacy one-entry-per-spine-page list, with a

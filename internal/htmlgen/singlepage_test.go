@@ -220,3 +220,33 @@ func readFile(t *testing.T, path string) string {
 	}
 	return string(data)
 }
+
+// The merged page never invents a language (E30): it keeps the first page's, else the one the
+// book declares, else none. dir is read from <html>, then <body>, as the TOC index reads it.
+func TestGenerateSinglePageDeclaresOnlyAStatedLanguage(t *testing.T) {
+	for _, c := range []struct{ page, bookLang, want string }{
+		{`<!DOCTYPE html><html><body><p>x</p></body></html>`, "", "<html>\n"},
+		{`<!DOCTYPE html><html><body><p>x</p></body></html>`, "ru", `<html lang="ru">` + "\n"},
+		{`<!DOCTYPE html><html lang="fr"><body><p>x</p></body></html>`, "ru", `<html lang="fr">` + "\n"},
+		{`<!DOCTYPE html><html><body dir="rtl"><p>x</p></body></html>`, "", `<html dir="rtl">` + "\n"},
+	} {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "a.html"), []byte(c.page), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		book := &epub.Book{
+			Title:    "Book",
+			Language: c.bookLang,
+			Manifest: []epub.ManifestItem{{ID: "a", Href: "a.html", MediaType: "text/html"}},
+			Spine:    []epub.SpineItem{{IDRef: "a"}},
+		}
+		out, err := GenerateSinglePage(book, dir, "book.md")
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, _ := os.ReadFile(out)
+		if !strings.Contains(string(data), c.want) {
+			t.Errorf("want %q for page %s (book lang %q), got head:\n%.120s", c.want, c.page, c.bookLang, data)
+		}
+	}
+}
