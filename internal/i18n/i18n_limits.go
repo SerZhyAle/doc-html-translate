@@ -103,6 +103,20 @@ func init() {
 		"7-Zip نے %s کا کھلا سائز نہیں بتایا، اس لیے آرکائیو کو سائز کی حدود سے جانچا نہیں جا سکتا",
 		"7-Zip 未报告 %s 的解压大小，因此无法按大小上限检查该归档")
 
+	Add("The document is %s, above the limit of %s for a text document",
+		"Документ занимает %s, это больше предела в %s для текстового документа",
+		"Документ займає %s, це більше за межу в %s для текстового документа",
+		"Das Dokument ist %s groß und liegt über der Grenze von %s für ein Textdokument",
+		"Il documento occupa %s, oltre il limite di %s per un documento di testo",
+		"El documento ocupa %s, por encima del límite de %s para un documento de texto",
+		"Le document fait %s, au-delà de la limite de %s pour un document texte",
+		"O documento tem %s, acima do limite de %s para um documento de texto",
+		"حجم المستند %s، وهذا يتجاوز الحد البالغ %s للمستند النصي",
+		"दस्तावेज़ %s का है, जो पाठ दस्तावेज़ के लिए %s की सीमा से अधिक है",
+		"নথিটি %s, যা পাঠ্য নথির জন্য %s-এর সীমার বেশি",
+		"دستاویز %s کی ہے، جو متنی دستاویز کے لیے %s کی حد سے زیادہ ہے",
+		"文档大小为 %s，超过了文本文档 %s 的上限")
+
 	Add("The archive listing is too long to check against the size limits",
 		"Список содержимого архива слишком длинный, чтобы проверить его на пределы размера",
 		"Список вмісту архіву занадто довгий, щоб перевірити його на межі розміру",

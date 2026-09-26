@@ -378,6 +378,9 @@
   "vLimitEntry": {
     "message": "{1} descompactado passa de {2}, o limite para um arquivo"
   },
+  "vLimitText": {
+    "message": "O documento tem {1}, acima do limite de {2} para um documento de texto"
+  },
   "vComicReady": {
     "message": "Pronto - {1} páginas, o texto é reconhecido à medida que percorre"
   },

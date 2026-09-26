@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"os"
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
@@ -14,6 +13,7 @@ import (
 	"doc-html-translate/internal/assets"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 
 	gohtml "golang.org/x/net/html"
@@ -30,7 +30,7 @@ import (
 // stylesheets are kept as files in the book's manifest, so the single-page merge links
 // them too.
 func Extract(htmlPath, outputDir string) (*epub.Book, error) {
-	data, err := os.ReadFile(htmlPath)
+	data, err := limits.ReadTextInput(htmlPath)
 	if err != nil {
 		return nil, fmt.Errorf("open html: %w", err)
 	}

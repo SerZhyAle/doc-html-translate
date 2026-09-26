@@ -15,7 +15,9 @@ import {
   ARCHIVE_MAX_TOTAL_BYTES,
   EPUB_MAX_ENTRY_BYTES,
   COMIC_MAX_PAGE_BYTES,
+  TEXT_MAX_INPUT_BYTES,
   InputLimitError,
+  checkTextInput,
   formatBytes,
   inflateRawCapped,
 } from "../src/limits.js";
@@ -79,6 +81,7 @@ test("limits match the desktop's published numbers", () => {
   assert.equal(formatBytes(ARCHIVE_MAX_TOTAL_BYTES), "4 GB");
   assert.equal(formatBytes(EPUB_MAX_ENTRY_BYTES), "100 MB");
   assert.equal(formatBytes(COMIC_MAX_PAGE_BYTES), "200 MB");
+  assert.equal(formatBytes(TEXT_MAX_INPUT_BYTES), "100 MB");
 });
 
 // Done criterion 4: the bomb EPUB the desktop refuses is refused here too, from the listing.
@@ -136,4 +139,11 @@ test("parseComic skips an oversize page and refuses a page that inflates past it
   assert.deepEqual(pages.map((p) => p.name), ["page2.jpg", "page3.jpg"]);
   assert.equal(Buffer.from(await pages[0].load()).toString(), "TWO");
   await assert.rejects(() => pages[1].load(), (err) => err instanceof InputLimitError);
+});
+
+// E27 (ticket 47): a document read whole is refused over the text budget, before it is parsed.
+test("checkTextInput refuses a document over the text budget", () => {
+  checkTextInput(TEXT_MAX_INPUT_BYTES);
+  assert.throws(() => checkTextInput(TEXT_MAX_INPUT_BYTES + 1),
+    (err) => err instanceof InputLimitError && err.key === "vLimitText" && err.message.includes("100 MB"));
 });

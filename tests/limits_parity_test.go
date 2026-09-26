@@ -26,6 +26,7 @@ func TestParityInputLimits(t *testing.T) {
 		{"archive unpacked total", limits.MaxArchiveTotalBytes, jsConst(t, js, "ARCHIVE_MAX_TOTAL_BYTES")},
 		{"EPUB per-file cap", goShiftConst(t, epubGo, "maxEntryBytes"), jsConst(t, js, "EPUB_MAX_ENTRY_BYTES")},
 		{"comic per-page cap", goShiftConst(t, comicGo, "maxPageBytes"), jsConst(t, js, "COMIC_MAX_PAGE_BYTES")},
+		{"whole-file text input", limits.MaxTextInputBytes, jsConst(t, js, "TEXT_MAX_INPUT_BYTES")},
 	}
 	for _, p := range pairs {
 		if p.goV != p.jsV {
@@ -36,7 +37,8 @@ func TestParityInputLimits(t *testing.T) {
 	// The published numbers are pinned too: a change is an owner decision, and README.md and
 	// docs/PARITY.md state them.
 	if limits.MaxImagePixels != 100_000_000 || limits.MaxImageSide != 32768 ||
-		limits.MaxArchiveEntries != 20000 || limits.MaxArchiveTotalBytes != 4<<30 {
+		limits.MaxArchiveEntries != 20000 || limits.MaxArchiveTotalBytes != 4<<30 ||
+		limits.MaxTextInputBytes != 100<<20 {
 		t.Error("a published input limit changed; update README.md, extension/README.md and docs/PARITY.md with it")
 	}
 }

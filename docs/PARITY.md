@@ -493,6 +493,7 @@ by both editions, so these numbers are one invariant:
 | Archive unpacked total, over the entries that will be unpacked | `4 GB` (`4 << 30`) | `limits.MaxArchiveTotalBytes` | `ARCHIVE_MAX_TOTAL_BYTES` |
 | One EPUB file | `100 MB` | `internal/epub` `maxEntryBytes` | `EPUB_MAX_ENTRY_BYTES` |
 | One comic page | `200 MB` | `internal/comic` `maxPageBytes` | `COMIC_MAX_PAGE_BYTES` |
+| One document read whole (TXT, Markdown, FB2, RTF, HTML) | `100 MB` | `limits.MaxTextInputBytes` | `TEXT_MAX_INPUT_BYTES` |
 | Full image decode (desktop only) | `100` megapixels and `32768` px per side | `limits.MaxImagePixels` / `MaxImageSide` | - (the browser decodes images itself) |
 
 The rules that go with the numbers:
@@ -507,6 +508,11 @@ The rules that go with the numbers:
   (Go: `limits.CopyCapped`, and the zip reader's own size check; JS: `inflateRawCapped` capped at the
   listed size).
 - **Inflation counts bytes.** Neither edition inflates an entry whole and measures afterwards.
+- **A document read whole is sized first** (ticket 47, E27). TXT, Markdown, FB2, RTF and HTML are refused
+  over the text budget with a localized message naming it, before any parse. Go checks the size on disk
+  and caps the read (`limits.ReadTextInput`); JS checks the fetched bytes before the parser runs
+  (`viewer.js` `loadFromData`, `limits.js` `checkTextInput`), because a browser only learns the size
+  once it holds them.
 - **The extension's page raster is capped** (2026-09-25, extension-only): a scanned PDF page rasterized
   for OCR is drawn at scale 2 unless that canvas would pass `RASTER_MAX_PIXELS` (16 MP) or
   `RASTER_MAX_SIDE` (8192 px), in which case the scale shrinks to fit ([`pdf-images.js`](../extension/src/pdf-images.js)

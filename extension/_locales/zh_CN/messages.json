@@ -378,6 +378,9 @@
   "vLimitEntry": {
     "message": "{1} 解压后超过 {2}，即单个文件的上限"
   },
+  "vLimitText": {
+    "message": "文档大小为 {1}，超过了文本文档 {2} 的上限"
+  },
   "vComicReady": {
     "message": "就绪 - 共 {1} 页，滚动时会识别文字"
   },
