@@ -290,21 +290,6 @@ func promptSetDefault() bool {
 	return askYes(i18n.S("  Make DOC-HTML-TRANSLATE the default handler for these file types? [y/N]: "))
 }
 
-// askYes prints prompt and reads one answer. Anything but an explicit yes is treated as no, so
-// pressing Enter declines. Accepted are "y"/"yes" plus the affirmative of the interface
-// language, because someone reading the prompt in Bengali will answer in Bengali.
-func askYes(prompt string) bool {
-	fmt.Print(prompt)
-	var answer string
-	_, _ = fmt.Scanln(&answer)
-	answer = strings.ToLower(strings.TrimSpace(answer))
-	switch answer {
-	case "y", "yes":
-		return true
-	}
-	return answer == i18n.S("y") || answer == i18n.S("yes")
-}
-
 // printPressEnterAndPause prints the closing rule and keeps the console open until Enter.
 // Piped or redirected there is no window to hold open, so the invitation would be a lie and
 // the pause a hang: print the rule and return.
@@ -316,5 +301,5 @@ func printPressEnterAndPause() {
 		return
 	}
 	fmt.Println(i18n.S("  Press Enter to close.. (we both know you'll close the window anyway)"))
-	_, _ = fmt.Scanln() // pause - keep console open until user presses Enter
+	readLine(stdin) // pause - keep console open until user presses Enter
 }
