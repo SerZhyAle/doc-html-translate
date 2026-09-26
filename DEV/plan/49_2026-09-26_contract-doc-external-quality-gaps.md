@@ -124,8 +124,12 @@ PowerShell check and no new `configs/check-placement.jsonl` row. Shared parsing 
   of pages did not change, so `sitemap.xml` needs no regeneration.
 
 Open, for the owner:
-- Run `scripts/check.ps1` on Windows: the `scripts/test.ps1` advisory channel and `doc-registry.ps1` with
-  the two new records were not run here (no pwsh).
+- Run `scripts/check.ps1` on Windows once. Already run on Linux (pwsh 7.4.6, tree `9038e08`):
+  `doc-registry.ps1` with the two new records - `PASS (41 record(s), 247 document file(s) covered,
+  18 page(s) announced)`; `scripts/test.ps1` with `GOOS` left native (the Windows pin cannot execute
+  here) - clean tree `PASS (run=1018 skipped=3)` exit 0, an English edit in `index.html` `PASS WITH
+  ADVISORIES (.. advisories=11)` exit 3. That run found the advisories dropped unnamed when `test_doc/`
+  is absent (exit 2 outranks 3); `scripts/test.ps1` now names them before any non-FAIL verdict.
 - File the proposal in the catalog (`documentation-quality/PROPOSAL-2026-09-26-doc-html-translate.md`)
   and replace the draft with a line in the pointer.
 - The shared registry row cannot be re-verified from this session (catalog not reachable); re-verify it

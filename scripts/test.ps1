@@ -125,6 +125,13 @@ if ($goExit -ne 0 -or $failedTests.Count -gt 0 -or $failedPkgs.Count -gt 0) {
     Exit-Verdict 'test' 1 "$([Math]::Max(1, $failedTests.Count + $pkgOnly.Count))"
 }
 
+# Named before the input-absent verdict too: exit 2 outranks 3, and a stale locale found on a
+# machine without test_doc/ must not vanish just because the corpus run could not happen.
+if ($advisories.Count -gt 0) {
+    Write-Host "advisories ($($advisories.Count)) - found, not charged to this change:" -ForegroundColor Yellow
+    foreach ($a in $advisories) { Write-Host "  - $a" -ForegroundColor Yellow }
+}
+
 if ($inputAbsent.Count -gt 0) {
     Write-Host "declared input absent - these tests inspected nothing:" -ForegroundColor Magenta
     foreach ($s in $inputAbsent) { Write-Host "  - $s" -ForegroundColor Magenta }
@@ -132,8 +139,6 @@ if ($inputAbsent.Count -gt 0) {
 }
 
 if ($advisories.Count -gt 0) {
-    Write-Host "advisories ($($advisories.Count)) - found, not charged to this change:" -ForegroundColor Yellow
-    foreach ($a in $advisories) { Write-Host "  - $a" -ForegroundColor Yellow }
     Exit-Verdict 'test' 3 "run=$passed skipped=$($envSkips.Count) advisories=$($advisories.Count)"
 }
 

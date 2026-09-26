@@ -102,5 +102,5 @@ with fences, code spans and HTML comments blanked; GitHub heading slugs) is in
   the status is `Partial`.
 - Not gated, outside this ticket's checks: the English-only comment rule, and the `docs*.html` flag
   mentions (a curated subset in prose, not a table; the external rules are ticket 49's).
-- `scripts/doc-registry.ps1` was not run here (no PowerShell); the edits add no document and change no
-  registry claim.
+- `scripts/doc-registry.ps1` run later on 2026-09-26 (pwsh 7.4.6, Linux, tree `9038e08`): exit 0,
+  `PASS (41 record(s), 247 document file(s) covered, 18 page(s) announced)`.
