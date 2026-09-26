@@ -893,7 +893,11 @@ their own test where one exists.
   the `divergences` list of `internal/appearance/appearance.json`; the appearance gate is blind to
   names and compares only the declarations.
 - **Default OCR language rule**: Go derives from `-src` (`TessLang`, else `eng`); the extension uses a
-  fixed persisted `eng` (it has no translation source language). Intentional for now.
+  fixed persisted `eng` (it has no translation source language). Intentional for now. `TessLang` derives
+  only catalog languages (`Available`), so a `-src` the catalog cannot read (`nl`, `cs`, `hi`..) gives
+  `eng` and the script check, never a pack no command can install; a region subtag maps to its language
+  (`pt-BR` -> `por`, `zh-CN` -> `chi_sim`). The desktop GUI's OCR language select defaults to an
+  automatic entry that sends no `-ocr-lang`, so the GUI reaches the same rule and the script check.
 - **The script check that corrects an unchosen language is desktop-only.** When `-ocr-lang` is empty
   the Go app puts the book's first image through Tesseract's `--psm 0` script pass and lets the answer
   correct the default - adding a language for the detected script where its data is installed

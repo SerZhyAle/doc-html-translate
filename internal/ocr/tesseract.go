@@ -16,8 +16,6 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"image/png"
-	"io"
 	"math"
 	"os"
 	"os/exec"
@@ -679,67 +677,6 @@ func stageForOCR(imgPath string, orientation int, upscale bool) (path string, st
 	return path, img, cleanup, true
 }
 
-// writeTempPNG encodes an image to a temp PNG on an ASCII path and returns it with a cleanup
-// func, removing a half-written file on failure. Shared by the passes that hand tesseract a
-// derived image rather than the user's file.
-func writeTempPNG(img image.Image) (path string, cleanup func(), ok bool) {
-	f, err := os.CreateTemp("", "docht-ocr-*.png")
-	if err != nil {
-		return "", nil, false
-	}
-	name := f.Name()
-	if err := png.Encode(f, img); err != nil {
-		f.Close()
-		_ = os.Remove(name)
-		return "", nil, false
-	}
-	f.Close()
-	return name, func() { _ = os.Remove(name) }, true
-}
-
-// stageASCIIPath returns a path safe to hand tesseract. A path with non-ASCII bytes is copied to an
-// ASCII temp file (tesseract/leptonica open it via the Windows ANSI codepage and mangle any byte
-// outside it, failing recognition silently); an all-ASCII path is returned unchanged. The cleanup
-// func removes any copy and is never nil. Mirrors internal/pdf's stagePDFForPDFToText.
-func stageASCIIPath(imgPath string) (string, func()) {
-	noop := func() {}
-	if isASCIIPath(imgPath) {
-		return imgPath, noop
-	}
-	ext := filepath.Ext(imgPath)
-	if !isASCIIPath(ext) {
-		ext = "" // tesseract sniffs the format from content; a mangled ext is worse than none
-	}
-	f, err := os.CreateTemp("", "docht-ocr-*"+ext)
-	if err != nil {
-		return imgPath, noop
-	}
-	name := f.Name()
-	src, err := os.Open(imgPath)
-	if err != nil {
-		f.Close()
-		os.Remove(name)
-		return imgPath, noop
-	}
-	_, cerr := io.Copy(f, src)
-	_ = src.Close()
-	f.Close()
-	if cerr != nil {
-		os.Remove(name)
-		return imgPath, noop
-	}
-	return name, func() { os.Remove(name) }
-}
-
-func isASCIIPath(p string) bool {
-	for _, r := range p {
-		if r > 127 {
-			return false
-		}
-	}
-	return true
-}
-
 // scaleDown maps a Result recognized on an s-fold enlarged image back to the original pixel
 // space, dividing every coordinate (and the reported dimensions) by s with rounding.
 func scaleDown(res *Result, s int) {
@@ -766,7 +703,7 @@ func scaleDown(res *Result, s int) {
 // file in dir (so we only pin --tessdata-dir when it can actually satisfy the request).
 func hasLangFile(dir, lang string) bool {
 	for _, code := range strings.Split(lang, "+") {
-		if _, err := os.Stat(filepath.Join(dir, code+".traineddata")); err != nil {
+		if fi, err := os.Stat(filepath.Join(dir, code+".traineddata")); err != nil || !fi.Mode().IsRegular() {
 			return false
 		}
 	}

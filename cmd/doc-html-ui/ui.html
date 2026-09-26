@@ -1091,7 +1091,7 @@ function collectSettings() {
         force:          el('chkForce').checked,
         verbose:        el('chkVerbose').checked,
         ocr:            el('chkOCR').checked,
-        ocrLang:        el('ocrLang').value,
+        ocrLangChoice:  el('ocrLang').value,
         assocPrompted:  assocPrompted,
         theme:          themePref,
     };
@@ -1114,7 +1114,10 @@ function applySettings(s) {
     if (s.force   != null) el('chkForce').checked   = !!s.force;
     if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
     if (s.ocr     != null) el('chkOCR').checked     = !!s.ocr;
-    if (s.ocrLang != null) el('ocrLang').dataset.want = s.ocrLang;
+    // ocrLangChoice is '' for the automatic entry; the older ocrLang key is sorted out in applyOcrWant.
+    if (typeof s.ocrLangChoice === 'string') el('ocrLang').dataset.want = s.ocrLangChoice;
+    else if (typeof s.ocrLang === 'string') el('ocrLang').dataset.legacy = s.ocrLang;
+    applyOcrWant();
     if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
     if (typeof s.theme === 'string') applyTheme(s.theme);
     syncEngineUI();
@@ -1154,41 +1157,58 @@ async function loadOcrLangs() {
         const langs = await (await api('/api/ocr-langs')).json();
         ocrCatalog = langs;
         const sel = el('ocrLang'), dl = el('ocrDownloadSel');
-        const want = sel.dataset.want || sel.value || 'eng';
+        if (sel.dataset.want == null) sel.dataset.want = sel.value;
         sel.innerHTML = ''; dl.innerHTML = '';
+        // The automatic entry sends no -ocr-lang, so the CLI derives the language from -src and
+        // its script check can still correct it; only a language picked below is sent.
+        const auto = document.createElement('option');
+        auto.value = ''; auto.dataset.i18n = 'ocrLangAuto'; auto.textContent = t('ocrLangAuto');
+        sel.appendChild(auto);
         for (const l of langs) {
             const o = document.createElement('option');
             o.value = l.code; o.textContent = l.name;
             (l.installed ? sel : dl).appendChild(o);
         }
-        if (!sel.options.length) {
-            const o = document.createElement('option');
-            o.value = 'eng'; o.textContent = t('ocrEngDefault');
-            sel.appendChild(o);
-        }
-        if ([...sel.options].some(o => o.value === want)) sel.value = want;
+        applyOcrWant();
         syncOcrLangToSource();
         updateCmdPreview();
     } catch (e) { /* leave selects as-is */ }
 }
 
-// The GUI always sends an explicit -ocr-lang, which overrides the CLI default of
-// "OCR in the -src language". Without this, swapping the languages to Russian left
-// the OCR reading a Cyrillic page with English data and finding nothing.
+// Selects the remembered pick once both the catalog and the settings are in, whichever came first.
+// A saved value from before the automatic entry existed is kept only when the page could not have
+// filled it in by itself (English, or the -src language): those look explicit but were not, and
+// sending them would switch the script check off for good.
+function applyOcrWant() {
+    const sel = el('ocrLang');
+    if (!ocrCatalog.length || !sel.options.length) return;
+    if (sel.dataset.legacy != null) {
+        const legacy = sel.dataset.legacy, src = ocrCatalog.find(l => l.iso && l.iso === el('srcLang').value);
+        delete sel.dataset.legacy;
+        sel.dataset.want = (legacy === 'eng' || (src && src.code === legacy)) ? '' : legacy;
+    }
+    const want = sel.dataset.want || '';
+    sel.value = [...sel.options].some(o => o.value === want) ? want : '';
+}
+
+// The automatic choice follows -src in the CLI itself, so nothing is copied into the select; this
+// only says when the -src language has no installed data and offers its download, since the
+// automatic run would otherwise read the page with the wrong data and find nothing.
 function syncOcrLangToSource() {
     if (!ocrCatalog.length) return;
     const row = ocrCatalog.find(l => l.iso && l.iso === el('srcLang').value);
-    if (!row) return; // no OCR data exists for this language - keep the current pick
-    if (row.installed) {
-        const sel = el('ocrLang');
-        sel.value = row.code;
-        sel.dataset.want = row.code;
+    // An explicit pick is the reader's, whatever -src says, and it is always an installed one.
+    if (el('ocrLang').value !== '' || !row || row.installed) {
         setStatus('ocrStatus', 'ocrStatusDefault');
     } else {
         el('ocrDownloadSel').value = row.code;
         setStatus('ocrStatus', 'ocrLangMissing', {lang: row.name});
     }
 }
+el('ocrLang').addEventListener('change', () => {
+    el('ocrLang').dataset.want = el('ocrLang').value;
+    syncOcrLangToSource();
+});
 // The download reports real progress and can be cancelled (APP-BEHAVIOUR rule 3): while it runs
 // the button is its Cancel, and the language list is locked so it cannot be started twice.
 let ocrAbort = null;
@@ -1234,7 +1254,10 @@ el('btnOcrDownload').addEventListener('click', async () => {
     sel.disabled = false;
     if (result && result.ok) {
         setStatus('ocrStatus', 'ocrInstalledMsg', {lang: name}, 'ok');
-        el('ocrLang').dataset.want = lang;
+        // Downloading the -src language's data while on the automatic entry is what that entry
+        // asked for, so it stays automatic; any other download becomes the pick.
+        const pick = el('ocrLang'), src = ocrCatalog.find(l => l.iso && l.iso === el('srcLang').value);
+        if (!(pick.value === '' && src && src.code === lang)) pick.dataset.want = lang;
         await loadOcrLangs();
         saveSettings();
         return;

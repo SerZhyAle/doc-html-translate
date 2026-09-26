@@ -263,8 +263,8 @@ func TestLayeredDataDirs(t *testing.T) {
 		t.Errorf("DataDirs = %v, want [user bundled]", got)
 	}
 	// Only bundled data: an existing install keeps working from next to the exe, nothing copied.
-	if got := DataDir(); got != bundled {
-		t.Errorf("DataDir with only bundled data = %q, want %q", got, bundled)
+	if got, err := DataDirFor("eng"); err != nil || got != bundled {
+		t.Errorf("DataDirFor with only bundled data = %q (%v), want %q", got, err, bundled)
 	}
 	if _, err := os.Stat(user); !os.IsNotExist(err) {
 		t.Error("the per-user folder was created although nothing needed it")
@@ -282,9 +282,9 @@ func TestLayeredDataDirs(t *testing.T) {
 	if !IsInstalled("eng") || !IsInstalled("rus") || IsInstalled("deu") {
 		t.Error("IsInstalled does not see both layers")
 	}
-	dir := DataDir()
-	if dir != user || !hasLangFile(dir, "rus+eng") {
-		t.Errorf("DataDir = %q, want the per-user folder holding rus+eng", dir)
+	dir, err := DataDirFor("rus+eng")
+	if err != nil || dir != user || !hasLangFile(dir, "rus+eng") {
+		t.Errorf("DataDirFor = %q (%v), want the per-user folder holding rus+eng", dir, err)
 	}
 	if files := listTree(t, user); len(files) != 2 {
 		t.Errorf("staging left extra files: %v", files)

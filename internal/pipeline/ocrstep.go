@@ -28,15 +28,23 @@ func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir st
 	if lang == "" {
 		lang = ocr.TessLang(r.cfg.SourceLang)
 	}
-	dataDir := ocr.DataDir()
 	logging.Printf("  OCR overlay: engine %s, language %s\n", bin, ocr.LangLabel(lang))
 
 	// Without its data file the engine fails on every image with the same sentence, so a book
 	// of scans produced hundreds of identical errors that never named the fix. Ask once instead.
 	if missing := ocr.MissingLangs(bin, lang); len(missing) > 0 {
-		logging.Printf("  OCR skipped: no language data for %s. Install it with -ocr-download %s, "+
-			"or choose another language with -ocr-lang (-ocr-langs lists them)\n",
-			strings.Join(missing, ", "), missing[0])
+		logging.Printf("  OCR skipped: no language data for %s. %s\n",
+			strings.Join(missing, ", "), ocr.MissingAdvice(missing))
+		return
+	}
+	// The same holds for data that exists but cannot reach the engine: a bundled pack that could not
+	// be staged beside a downloaded one, or a folder whose path the engine cannot open.
+	dataDir, err := ocr.DataDirFor(lang)
+	if err == nil {
+		dataDir, err = ocr.PrepareEngine(dataDir)
+	}
+	if err != nil {
+		logging.Printf("  OCR skipped: %v\n", err)
 		return
 	}
 

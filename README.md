@@ -213,11 +213,12 @@ and PDF); other formats are unaffected.
   already in the app's own `tessdata\` folder keep working:
   - `doc-html-translate.exe -ocr-langs` - list installed and available languages.
   - `doc-html-translate.exe -ocr-download rus` - download Russian (etc.).
-  - In `doc-html-ui`, use the **Image OCR** section: tick the toggle, pick the OCR language, and use
-    **Download** to add languages.
+  - In `doc-html-ui`, use the **Image OCR** section: tick the toggle, leave the OCR language on
+    **Automatic** (it follows the source language and checks the page's writing system) or pick one,
+    and use **Download** to add languages.
 - **Usage:** `doc-html-translate.exe -ocr -src ja -google "manga.pdf"` (OCR Japanese, then translate).
   `-ocr-lang` overrides the OCR language (accepts Tesseract codes like `eng+rus`); by default it follows
-  `-src`.
+  `-src` where the catalog has that language, and is `eng` otherwise.
 
 ## Behavior Notes
 
