@@ -64,8 +64,10 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 ```
 #   ticket                                              changed     status
 35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked (5767e29) + release guard; awaits a CI build
-36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - working tree gate green 2026-09-26; clean-HEAD gate waits on committing the fixes
 ```
+
+36 reached `Implemented` on 2026-09-26 and moved to [`done/`](done/36_2026-09-26_bugfix-release-gate-evidence-integrity.md):
+the full gate is `check: PASS` on the clean tree of `e96fd2f`.
 
 15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 (the bundled
 pdftotext set shipped without its licences) joined and was implemented the same day and moved to [`done/`](done/).

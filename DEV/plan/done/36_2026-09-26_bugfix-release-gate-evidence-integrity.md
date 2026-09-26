@@ -1,11 +1,11 @@
 # The release gate can be turned green without the full gate having passed
 
-**Status:** In Progress - all six goals implemented and pinned; acceptance 3 (a green gate on a clean HEAD) waits on committing the lint/typo/race fixes, then one run
+**Status:** Implemented - all six goals and all three acceptance checks met; clean-HEAD gate PASS on 2026-09-26
 **Priority:** 90
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 
@@ -74,7 +74,7 @@ Evidence:
 - `./scripts/typo.ps1` -> `typo: PASS` (exit 0).
 - `./scripts/check.ps1` on the working tree -> `check: FAIL (1: test)`, every other child PASS. The one
   failure is `TestExtract_Volume3ImagesOnTheirPages` ("spine has 4 pages, want 10"), red on a clean HEAD
-  worktree too: finding X25, owned by [ticket 43](done/43_2026-09-26_bugfix-pdf-text-and-image-fidelity.md).
+  worktree too: finding X25, owned by [ticket 43](43_2026-09-26_bugfix-pdf-text-and-image-fidelity.md).
   Acceptance 3 is re-run once 43 lands.
 - Re-run 2026-09-26 after 43 landed. Working tree (HEAD `adff4b0` + uncommitted work):
   `check: PASS WITH ADVISORIES (1: parity-check)`, exit 3 - test run=1080, test-extension run=309, lint, typo,
@@ -84,3 +84,6 @@ Evidence:
   `TestExtractSetConcurrent` - a real Windows race in `bundledtools.placeFile` (a rename over a file another
   instance is reading fails "Access is denied"), fixed with bounded retries: `-count=200` fails on `adff4b0`,
   passes with the fix. Acceptance 3 now waits only on those fixes being committed, then one clean-HEAD run.
+- Acceptance 3, 2026-09-26: the fixes committed (`fb8bc47`, `1d1c625`); `./scripts/check.ps1` on the clean tree of
+  `e96fd2f` -> `check: PASS`, exit 0 (test run=1080, test-extension run=309, lint, typo, parity-check, doc-registry,
+  security-posture all PASS).
