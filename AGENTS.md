@@ -182,7 +182,7 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 ## Pitfalls
 
 - scripts/build.ps1 and scripts/build-ui.ps1 copy artifacts to C:/GD/tc/SZA/_APP. This is environment-specific and may fail on other machines.
-- Build scripts rely on goversioninfo for Windows resource embedding - v1.5.0 or later, because `IconPath` lists three ICOs (mark, verb, document type) whose resource indexes internal/windowsreg writes into the registry; an older one fails opening the comma-joined path.
+- Build scripts embed Windows resources with goversioninfo pinned in `scripts/lib/goversioninfo.ps1` (`go run module@v1.7.0`), never the copy on PATH: `IconPath` lists three ICOs (mark, verb, document type) whose resource indexes internal/windowsreg writes into the registry, anything older than v1.5.0 fails opening the comma-joined path, and the shared `%USERPROFILE%\go\bin` copy gets reinstalled at v1.4.1 by another repo on this machine.
 - System-surface icons (the program ICO and its favicon copies, `assets/convert-verb.ico`, `assets/document-type.ico`, `extension/icons/*`, the MSIX assets) are render targets of internal/iconart: redraw them with `scripts/generate-icon.ps1` (`go run ./tools/icongen`), never by hand - tests/icons_test.go compares every pixel.
 - MOBI/AZW3 conversion depends on Calibre at runtime; CBR/CB7 comics depend on 7-Zip at runtime (CBZ/CBT need nothing).
 

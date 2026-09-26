@@ -18,12 +18,13 @@ Description: |-
   Markdown, HTML) in sauberes lokales HTML mit erzeugter Navigation und einem echten mehrstufigen
   Inhaltsverzeichnis umwandelt. Der eingebaute Reader bringt Light-/Sepia-/Dark-/Night-Themes,
   Schriftgröße und Schriftart mit und merkt sich die Leseposition. Text in Bildern kann erkannt werden
-  (OCR - Englisch ist enthalten, weitere Sprachen auf Wunsch), und auf Wunsch übersetzt die App alles
+  (OCR über ein separat installiertes Tesseract - englische Sprachdaten sind enthalten, weitere Sprachen auf Wunsch), und auf Wunsch übersetzt die App alles
   über die Google Cloud Translation API oder ein lokales Ollama-Modell. Die Oberfläche gibt es in 13
   Sprachen. Wahlweise eine lange Einzelseite oder Kapitel mit Inhaltsverzeichnis. Ein bereits
   konvertiertes Buch öffnet sich sofort wieder. Das Paket enthält sowohl die CLI (doc-html-translate)
   als auch eine kleine Oberfläche (doc-html-ui). pdftotext steckt in der Binärdatei; MOBI und AZW3
   brauchen zusätzlich ein installiertes Calibre (nur Dateien ohne DRM).
+  Außerdem öffnet sie Comic-Archive (CBZ/CBR/CB7/CBT) und einzelne Bilder (PNG, JPG, WebP, GIF, BMP, TIFF) und legt den erkannten Text über jede Seite, damit er direkt übersetzt werden kann; CBR und CB7 brauchen 7-Zip.
 Tags:
 - azw3
 - cli

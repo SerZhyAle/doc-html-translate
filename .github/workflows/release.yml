@@ -190,7 +190,11 @@ jobs:
           Copy-Item LICENSE                      $stage/
           Copy-Item README.md                    $stage/
           Copy-Item THIRD-PARTY-NOTICES.txt $stage/
-          $name = "doc-html-translate-$version-windows-x64.zip"
+          # Bundled English OCR data (tessdata/eng.traineddata beside the exes): pinned
+          # tessdata_fast 4.0.0, digest verified, or the job fails - the winget listing says it ships.
+          . ./scripts/lib/tessdata.ps1
+          Install-EngTessdata -DestDir $stage
+          $name ="doc-html-translate-$version-windows-x64.zip"
           $zip  = "dist/$name"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path "$stage/*" -DestinationPath $zip -CompressionLevel Optimal

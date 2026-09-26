@@ -140,6 +140,78 @@ func TestGenerateSinglePageRemovesAbsorbedPages(t *testing.T) {
 	}
 }
 
+// E31: The single-page merge keeps head <style> blocks and <body> attributes from every page,
+// with rules scoped per-chapter so one page cannot restyle another.
+func TestGenerateSinglePagePreservesScopedStylesAndBodyAttrs(t *testing.T) {
+	dir := t.TempDir()
+	book := &epub.Book{Title: "Style Test"}
+
+	ch1 := `<!DOCTYPE html><html lang="en"><head><title>1</title>
+<style>
+  body { font-family: Georgia, serif; line-height: 1.6; }
+  p { color: red; margin: 1em 0; }
+  .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }
+</style></head>
+<body class="chapter-1 intro" style="background-color: #fff;" dir="ltr">
+  <div class="pdf-images"><img src="p1.png" class="pdf-flip-y"></div>
+  <p>Chapter 1 text</p>
+</body></html>`
+
+	ch2 := `<!DOCTYPE html><html lang="en"><head><title>2</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  p { color: blue; margin: 2em 0; }
+  .stanza { font-style: italic; }
+</style></head>
+<body class="chapter-2" dir="rtl">
+  <p class="stanza">Chapter 2 verse</p>
+</body></html>`
+
+	if err := os.WriteFile(filepath.Join(dir, "ch_001.html"), []byte(ch1), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ch_002.html"), []byte(ch2), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	book.Manifest = []epub.ManifestItem{
+		{ID: "ch_001", Href: "ch_001.html", MediaType: "text/html"},
+		{ID: "ch_002", Href: "ch_002.html", MediaType: "text/html"},
+	}
+	book.Spine = []epub.SpineItem{{IDRef: "ch_001"}, {IDRef: "ch_002"}}
+
+	if _, err := GenerateSinglePage(book, dir, "styles.epub"); err != nil {
+		t.Fatalf("GenerateSinglePage: %v", err)
+	}
+
+	merged := readFile(t, filepath.Join(dir, "index.html"))
+
+	// Verify head scoped stylesheet exists and carries scoped rules for both chapters
+	for _, wantRule := range []string{
+		`<style id="dht-scoped-css">`,
+		`.dht-ch-1 { font-family: Georgia, serif; line-height: 1.6; }`,
+		`.dht-ch-1 p { color: red; margin: 1em 0; }`,
+		`.dht-ch-1 .pdf-images img.pdf-flip-y { transform: scaleY(-1); transform-origin: center; }`,
+		`.dht-ch-2 { font-family: Arial, sans-serif; }`,
+		`.dht-ch-2 p { color: blue; margin: 2em 0; }`,
+		`.dht-ch-2 .stanza { font-style: italic; }`,
+	} {
+		if !strings.Contains(merged, wantRule) {
+			t.Errorf("merged HTML missing scoped rule %q", wantRule)
+		}
+	}
+
+	// Verify chapter container divs preserve original <body> classes, style and dir
+	for _, wantAttr := range []string{
+		`class="dht-chapter dht-ch-1 chapter-1 intro" style="background-color: #fff;" dir="ltr"`,
+		`class="dht-chapter dht-ch-2 chapter-2" dir="rtl"`,
+	} {
+		if !strings.Contains(merged, wantAttr) {
+			t.Errorf("merged HTML missing chapter container %q", wantAttr)
+		}
+	}
+}
+
 func readFile(t *testing.T, path string) string {
 	t.Helper()
 	data, err := os.ReadFile(path)

@@ -70,12 +70,16 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	}
 	prepareMerge(chapters)
 	inners := make([]string, 0, len(chapters))
-	for _, ch := range chapters {
-		inner, err := bodyInnerHTML(ch.doc)
+	var allScopedCSS []string
+	for i, ch := range chapters {
+		inner, err := chapterInnerHTML(ch, i+1)
 		if err != nil {
 			return "", fmt.Errorf("extract body %s: %w", ch.href, err)
 		}
 		inners = append(inners, inner)
+		if len(ch.scopedCSS) > 0 {
+			allScopedCSS = append(allScopedCSS, strings.Join(ch.scopedCSS, "\n"))
+		}
 	}
 
 	// A book whose spine entries are image pages (comic, scanned image, multi-frame TIFF)
@@ -128,6 +132,11 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString(singlePageCSS)
 	sb.WriteString(navBarCSS)
 	sb.WriteString(readerCSS)
+	if len(allScopedCSS) > 0 {
+		sb.WriteString("<style id=\"dht-scoped-css\">\n")
+		sb.WriteString(strings.Join(allScopedCSS, "\n\n"))
+		sb.WriteString("\n</style>\n")
+	}
 	sb.WriteString("</head>\n")
 	sb.WriteString("<body>\n")
 	pageCount := 0
@@ -287,17 +296,43 @@ func htmlDir(doc *gohtml.Node) string {
 	return d
 }
 
-// bodyInnerHTML renders the inner HTML of a parsed document's <body>.
-func bodyInnerHTML(doc *gohtml.Node) (string, error) {
-	body := findBodyNode(doc)
+// chapterInnerHTML renders the chapter's content wrapped in a container div with
+// class "dht-chapter dht-ch-<pos>" and any attributes from the original <body>.
+func chapterInnerHTML(ch *mergeChapter, pos int) (string, error) {
+	body := findBodyNode(ch.doc)
 	if body == nil {
 		return "", fmt.Errorf("no <body> element")
 	}
+	scopeClass := fmt.Sprintf("dht-ch-%d", pos)
+	classes := []string{"dht-chapter", scopeClass}
+	var otherAttrs []string
+	for _, a := range body.Attr {
+		if a.Namespace != "" {
+			continue
+		}
+		switch a.Key {
+		case "class":
+			if val := strings.TrimSpace(a.Val); val != "" {
+				classes = append(classes, val)
+			}
+		case "id":
+			// Root body id is mapped to rootIDs / anchor if linked.
+		default:
+			otherAttrs = append(otherAttrs, fmt.Sprintf(`%s="%s"`, a.Key, html.EscapeString(a.Val)))
+		}
+	}
 	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf(`<div class="%s"`, html.EscapeString(strings.Join(classes, " "))))
+	for _, attr := range otherAttrs {
+		buf.WriteString(" ")
+		buf.WriteString(attr)
+	}
+	buf.WriteString(">\n")
 	for c := body.FirstChild; c != nil; c = c.NextSibling {
 		if err := gohtml.Render(&buf, c); err != nil {
 			return "", err
 		}
 	}
+	buf.WriteString("\n</div>")
 	return buf.String(), nil
 }

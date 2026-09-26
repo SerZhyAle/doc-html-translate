@@ -27,12 +27,15 @@ type mergeChapter struct {
 	// book without cross-references merges exactly as before.
 	anchor     string
 	anchorUsed bool
+
+	// scopedCSS holds the scoped CSS rules from this chapter's <style> blocks.
+	scopedCSS []string
 }
 
 // chromeIDs are the ids the merged page's own chrome carries. A book id equal
 // to one of them is renamed, or the reader controls would bind to book content.
 var chromeIDs = []string{
-	"dht-single-css", "dht-nav", "dht-reader-css", "dht-reader", "dht-progress", "dht-page-sel",
+	"dht-single-css", "dht-nav", "dht-reader-css", "dht-scoped-css", "dht-reader", "dht-progress", "dht-page-sel",
 	"dht-font-dec", "dht-font-inc", "dht-ocr-toggle", "dht-family-sel", "dht-theme-sel",
 	"dht-continue", "dht-zoom-sync",
 }
@@ -69,8 +72,8 @@ func prepareMerge(chapters []*mergeChapter) {
 			index[ch.href] = i
 		}
 	}
-	for _, ch := range chapters {
-		ch.rewriteRefs(chapters, index)
+	for i, ch := range chapters {
+		ch.rewriteRefs(chapters, index, i+1)
 	}
 	for _, ch := range chapters {
 		if ch.anchorUsed {
@@ -157,13 +160,13 @@ func (ch *mergeChapter) targetID(frag string) string {
 
 // rewriteRefs points the page's references at what they meant before the
 // merge: rebased paths, renamed ids, in-page anchors for spine pages.
-func (ch *mergeChapter) rewriteRefs(chapters []*mergeChapter, index map[string]int) {
+func (ch *mergeChapter) rewriteRefs(chapters []*mergeChapter, index map[string]int, pos int) {
 	body := findBodyNode(ch.doc)
 	if body == nil {
 		return
 	}
 	dir := path.Dir(ch.href)
-	epub.RewriteURLs(body, func(v string) (string, bool) {
+	epub.RewriteURLs(ch.doc, func(v string) (string, bool) {
 		t := strings.TrimSpace(v)
 		if strings.HasPrefix(t, "#") {
 			return ch.sameDocLink(t[1:])
@@ -188,6 +191,8 @@ func (ch *mergeChapter) rewriteRefs(chapters []*mergeChapter, index map[string]i
 		}
 		return epub.URLPath(target) + suffix, true
 	}
+	scopeClass := fmt.Sprintf(".dht-ch-%d", pos)
+	var styleNodesToRemove []*gohtml.Node
 	var walk func(*gohtml.Node)
 	walk = func(n *gohtml.Node) {
 		if n.Type == gohtml.ElementNode {
@@ -201,18 +206,31 @@ func (ch *mergeChapter) rewriteRefs(chapters []*mergeChapter, index map[string]i
 				}
 			}
 			if n.Data == "style" {
+				var styleText strings.Builder
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
 					if c.Type == gohtml.TextNode {
-						c.Data, _ = epub.RewriteCSSURLs(c.Data, rebaseCSS)
+						styleText.WriteString(c.Data)
 					}
 				}
+				rawCSS := styleText.String()
+				rebasedCSS, _ := epub.RewriteCSSURLs(rawCSS, rebaseCSS)
+				scoped := ScopeCSS(rebasedCSS, scopeClass, ch.ids)
+				if strings.TrimSpace(scoped) != "" {
+					ch.scopedCSS = append(ch.scopedCSS, scoped)
+				}
+				styleNodesToRemove = append(styleNodesToRemove, n)
 			}
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			walk(c)
 		}
 	}
-	walk(body)
+	walk(ch.doc)
+	for _, n := range styleNodesToRemove {
+		if n.Parent != nil {
+			n.Parent.RemoveChild(n)
+		}
+	}
 }
 
 // sameDocLink rewrites "#frag" when the id it names was renamed or was a root id.

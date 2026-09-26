@@ -18,13 +18,14 @@ Description: |-
   RTF, TXT, Markdown, HTML) into clean local HTML with generated navigation and a real
   multi-level table of contents. A built-in reader adds light/sepia/dark/night themes, text
   size and font controls, and remembers your reading position. It can recognize text inside
-  images (OCR - English bundled, more languages on demand) and optionally translate everything
+  images (OCR through Tesseract, installed separately - English language data bundled, more languages on demand) and optionally translate everything
   via the Google Cloud Translation API or a local Ollama model. The interface is available in 13
   languages. Convert to one long single page
   or keep chapters with a table of contents. Re-opening an already-converted book is instant.
   The package ships both the CLI (doc-html-translate) and a small GUI launcher (doc-html-ui).
   pdftotext is bundled inside the binary; MOBI and AZW3 conversion additionally requires
   Calibre to be installed (non-DRM files only).
+  It also opens CBZ/CBR/CB7/CBT comic archives and standalone images (PNG, JPG, WebP, GIF, BMP, TIFF) and lays the recognized text over each page so it can be translated in place; CBR and CB7 need 7-Zip.
 Moniker: doc-html-translate
 Tags:
 - azw3

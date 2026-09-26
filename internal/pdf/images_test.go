@@ -43,11 +43,11 @@ func buildFixturePDF(t *testing.T, pdfPath string, pages int, textPages, imagePa
 	t.Helper()
 	dir := t.TempDir()
 	doc := fpdf.New("P", "mm", "A4", "")
-	doc.SetFont("Helvetica", "", 12)
 	for p := 1; p <= pages; p++ {
 		doc.AddPage()
+		doc.SetFont("Helvetica", "", 12.0+float64(p%2)*0.1)
 		if textPages[p] {
-			doc.Text(20, 30, fmt.Sprintf("Text of page %d", p))
+			doc.Text(20, 30, fmt.Sprintf("Paragraph text on page %d of the document.", p))
 		}
 		if imagePages[p] {
 			imgPath := filepath.Join(dir, fmt.Sprintf("img%d.png", p))

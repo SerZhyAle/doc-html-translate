@@ -17,13 +17,13 @@ Description: |-
   doc-html-translate es una aplicación de Windows que convierte documentos (EPUB, PDF, MOBI, AZW3,
   FB2, RTF, TXT, Markdown, HTML) en HTML local limpio, con navegación generada y un índice real de
   varios niveles. El lector integrado añade los temas light/sepia/dark/night, control del tamaño y la
-  familia de letra, y recuerda la posición de lectura. Puede reconocer el texto de las imágenes (OCR -
-  inglés incluido, más idiomas a petición) y, si quieres, traducirlo todo con la API de Google Cloud
+  familia de letra, y recuerda la posición de lectura. Puede reconocer el texto de las imágenes (OCR mediante Tesseract, que se instala aparte - datos de inglés incluidos, más idiomas a petición) y, si quieres, traducirlo todo con la API de Google Cloud
   Translation o un modelo local de Ollama. La interfaz está disponible en 13 idiomas. Puedes obtener
   una sola página larga o capítulos con índice. Volver a abrir un libro ya convertido es instantáneo.
   El paquete incluye tanto la CLI (doc-html-translate) como una pequeña interfaz (doc-html-ui).
   pdftotext va dentro del binario; MOBI y AZW3 necesitan además Calibre instalado (solo archivos sin
   DRM).
+  También abre archivos de cómic (CBZ/CBR/CB7/CBT) e imágenes sueltas (PNG, JPG, WebP, GIF, BMP, TIFF) y coloca el texto reconocido sobre cada página para traducirlo en su sitio; CBR y CB7 necesitan 7-Zip.
 Tags:
 - azw3
 - cli

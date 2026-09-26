@@ -67,10 +67,8 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked + release guard; awaits commit and a CI build
 36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - implemented; green gate waits on #43 (X25)
 --  (no ticket) installer x86 build does not link     2026-09-26  Evidenced, unfiled - blocks the next setup.exe
-39  39_2026-09-26_bugfix-single-page-merge-drops-page-styles 2026-09-26  Draft - E31 (high): merged page loses page styles
 41  41_2026-09-26_bugfix-translation-scope-and-partial-results 2026-09-26  Draft - T13 (high): reader chrome sent to the paid engine
 43  43_2026-09-26_bugfix-pdf-text-and-image-fidelity     2026-09-26  Draft - X25 (high): PDF short lines dropped, test.ps1 red
-38  38_2026-09-26_bugfix-bundled-ocr-data-per-channel    2026-09-26  Draft - unpinned eng data, OCR claim the zip does not meet
 46  46_2026-09-26_bugfix-ocr-desktop-paths-and-language  2026-09-26  Draft - non-ANSI profile OCR, GUI script check never runs
 40  40_2026-09-26_bugfix-declare-source-language         2026-09-26  Draft - lang="en" guessed on FB2 / merged / index pages
 44  44_2026-09-26_bugfix-extension-viewer-state-and-references 2026-09-26  Draft - stale loads, export alpha, id refs, popup site
@@ -240,6 +238,7 @@ ticket (in done/)                                   check left
 31_2026-09-25_canon-resync-new-duties                  owner reads the rendered privacy texts before main is pushed
 33_2026-09-25_bundled-binaries-notices                 next release: THIRD-PARTY-NOTICES.txt in the zip and as an asset
 37_2026-09-26_bugfix-release-workflow-provenance       next release: the first tag run of release.yml with the pinned actions
+38_2026-09-26_bugfix-bundled-ocr-data-per-channel      next release: tessdata/eng.traineddata inside the zip, MSIX and setup.exe
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

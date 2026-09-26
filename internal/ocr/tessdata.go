@@ -35,10 +35,10 @@ var Available = []LangInfo{
 }
 
 // Bundled languages ship with the app so English OCR works offline out of the box.
-// The eng.traineddata blob is not committed; scripts/build.ps1 provisions it into
-// <exe>/tessdata at build time (copied from the extension's vendored copy, or downloaded
-// from cdnBase). Both sources are tessdata_fast 4.0.0, so the bundled data matches the
-// extension's (see docs/PARITY.md).
+// The eng.traineddata blob is not committed; every packaging path provisions it into
+// <exe>/tessdata at build time through scripts/lib/tessdata.ps1 (the extension's vendored copy,
+// or a download from cdnBase), refusing anything but packDigests["eng"]. Both sources are
+// tessdata_fast 4.0.0, so the bundled data matches the extension's (see docs/PARITY.md).
 var Bundled = []string{"eng"}
 
 // tessdata_fast plain (non-gzipped) files via GitHub raw - no decompression needed.

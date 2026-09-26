@@ -60,7 +60,7 @@ function Get-SdkTool([string]$Name) {
     return $hit.FullName
 }
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
-if (-not (Get-Command goversioninfo -ErrorAction SilentlyContinue)) { throw "goversioninfo not on PATH. Run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest" }
+. (Join-Path $RepoRoot "scripts/lib/goversioninfo.ps1")
 $MakeAppx = Get-SdkTool "makeappx.exe"
 $MakePri  = Get-SdkTool "makepri.exe"
 
@@ -124,8 +124,7 @@ function Build-Exe([string]$CmdDir, [string]$OutExe, [string]$ExtraLdflags) {
     New-VersionResourceFile (Join-Path (Join-Path $RepoRoot $CmdDir) "versioninfo.json") $vinfo $Stamp
     Push-Location (Join-Path $RepoRoot $CmdDir)
     try {
-        & goversioninfo -64 -o resource.syso versioninfo.generated.json
-        if ($LASTEXITCODE -ne 0) { throw "goversioninfo failed for $CmdDir" }
+        Invoke-GoVersionInfo -64 -o resource.syso versioninfo.generated.json
         $env:GOARCH = "amd64"; $env:GOOS = "windows"
         # CWD is the command's package dir, so build "." — this also links resource.syso.
         go build -trimpath -ldflags "-s -w -X main.Version=$Stamp $ExtraLdflags" -o $abs .
@@ -148,6 +147,11 @@ try {
 
 # third-party material inside the binaries (the Material Icons glyphs of the reader chrome and GUI)
 Copy-Item (Join-Path $RepoRoot "THIRD-PARTY-NOTICES.txt") $Staging -Force
+
+# Bundled English OCR data next to the exes (tessdata\eng.traineddata, read in place from the
+# package folder by internal/ocr bundledDataDir): pinned, digest verified, or the build stops.
+. (Join-Path $RepoRoot "scripts/lib/tessdata.ps1")
+Install-EngTessdata -DestDir $Staging
 
 # ── generate the visual assets (ICON-RENDER rule 9, ticket 32) ──
 # internal/iconart draws the product mark and the document-type glyph into the MRT-qualified

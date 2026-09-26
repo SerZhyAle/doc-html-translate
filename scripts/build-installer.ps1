@@ -63,7 +63,7 @@ function Get-Iscc {
 $Iscc = Get-Iscc
 
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
-if (-not (Get-Command goversioninfo -ErrorAction SilentlyContinue)) { throw "goversioninfo not on PATH. Run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest" }
+. (Join-Path $PSScriptRoot "lib/goversioninfo.ps1")
 
 # ── release tree (ticket 37) ─────────────────────────────────
 # -Tag: HEAD must be the tag's commit and nothing may be uncommitted, so the working tree the build
@@ -126,8 +126,7 @@ function Build-Exe([string]$CmdDir, [string]$OutExe, [string]$Arch, [string]$Ext
         # linker does not choke on a mismatched relocation.
         $goverArgs = @()
         if ($Arch -eq "amd64") { $goverArgs += "-64" }
-        & goversioninfo @goverArgs -o resource.syso versioninfo.generated.json
-        if ($LASTEXITCODE -ne 0) { throw "goversioninfo failed for $CmdDir ($Arch)" }
+        Invoke-GoVersionInfo @goverArgs -o resource.syso versioninfo.generated.json
         $env:GOOS = "windows"; $env:GOARCH = $Arch; $env:CGO_ENABLED = "0"
         go build -trimpath -ldflags "-s -w -X main.Version=$Stamp $ExtraLdflags" -o $OutExe .
         if ($LASTEXITCODE -ne 0) { throw "go build failed for $CmdDir ($Arch)" }
@@ -147,21 +146,10 @@ foreach ($arch in "amd64", "386") {
 }
 
 # ── shared payload: tessdata (English), LICENSE, README, notices ──────
-$tessDest = Join-Path $Staging "tessdata"
-New-Item -ItemType Directory -Force -Path $tessDest | Out-Null
-$engDest = Join-Path $tessDest "eng.traineddata"
-$vendored = "extension/vendor/tesseract/lang/eng.traineddata"
-if (Test-Path $vendored) {
-    Copy-Item $vendored $engDest -Force
-    Write-Host "Bundled eng.traineddata (from vendored copy)" -ForegroundColor DarkGray
-} else {
-    try {
-        Invoke-WebRequest -Uri "https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata" -OutFile $engDest -UseBasicParsing
-        Write-Host "Downloaded eng.traineddata" -ForegroundColor DarkGray
-    } catch {
-        Write-Host "NOTE: could not provision eng.traineddata ($_); -ocr will need a system tesseract or a manual download." -ForegroundColor Yellow
-    }
-}
+# Pinned and digest-verified, or the build stops: a setup.exe without it would break the listing's
+# "English OCR data bundled" line.
+. (Join-Path $PSScriptRoot "lib/tessdata.ps1")
+Install-EngTessdata -DestDir $Staging
 Copy-Item (Join-Path $RepoRoot "LICENSE")   $Staging -Force
 Copy-Item (Join-Path $RepoRoot "README.md") $Staging -Force
 # third-party material inside the binaries (the Material Icons glyphs of the reader chrome and GUI)
