@@ -203,6 +203,10 @@
     "message": "Auf dieser Website",
     "description": "Popup per-site switch."
   },
+  "popupNoSite": {
+    "message": "(keine Website)",
+    "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
+  },
   "popupOptions": {
     "message": "Einstellungen",
     "description": "Popup link to the options page."

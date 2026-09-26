@@ -203,6 +203,10 @@
     "message": "এই সাইটে",
     "description": "Popup per-site switch."
   },
+  "popupNoSite": {
+    "message": "(ওয়েবসাইট নয়)",
+    "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
+  },
   "popupOptions": {
     "message": "বিকল্প",
     "description": "Popup link to the options page."

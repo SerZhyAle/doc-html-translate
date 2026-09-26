@@ -74,8 +74,15 @@ function buildRules(options) {
       resourceTypes: ["main_frame"],
     },
   };
+  // A switched-off site means its documents are left alone wherever they are served from: a PDF
+  // on the site itself (the request's domain) and one on a CDN or another host that a page of the
+  // site links to (the navigation's initiator). Keying on only one of them made the switch a
+  // no-op for every cross-host link. See site-host.js for which host the popup stores.
   const excluded = ruleDomains(options.disabledHosts);
-  if (excluded.length) httpsRule.condition.excludedRequestDomains = excluded;
+  if (excluded.length) {
+    httpsRule.condition.excludedRequestDomains = excluded;
+    httpsRule.condition.excludedInitiatorDomains = excluded;
+  }
   const fileRule = {
     id: RULE_FILE,
     priority: 1,

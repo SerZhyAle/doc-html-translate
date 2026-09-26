@@ -12,12 +12,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { register } from "node:module";
-import { parseHTML } from "linkedom";
+import { parseHTML, DOMParser } from "linkedom";
 
 const VENDOR_STUB = `
 export const GlobalWorkerOptions = {};
 export const PasswordResponses = {};
-export function getDocument() { throw new Error("pdf.js is stubbed in this test"); }
+export function getDocument(src) {
+  if (globalThis.__getDocument) return globalThis.__getDocument(src);
+  throw new Error("pdf.js is stubbed in this test");
+}
 export class MOBI {}
 export function unzlibSync() { throw new Error("fflate is stubbed in this test"); }
 export const marked = { parse: () => "", use: () => {} };
@@ -208,4 +211,101 @@ test("a local file picked during a slow URL load is the document that stays show
   assert.match(content.textContent, /local book the reader chose/);
   assert.doesNotMatch(content.textContent, /arrived too late/);
   assert.equal(document.getElementById("doc-title").textContent, "local");
+});
+
+// bootViewer loads a fresh viewer for `search` without waiting for it to settle, for the cases
+// that interleave a second document with a first one still loading.
+async function bootViewer(search, fetchDoc) {
+  const { document, window } = parseHTML(VIEWER_HTML);
+  window.top = window;
+  window.self = window;
+  globalThis.document = document;
+  globalThis.window = window;
+  globalThis.DOMParser = DOMParser;
+  globalThis.location = { search, href: `chrome-extension://test/src/viewer.html${search}` };
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith("chrome-extension://")) return new Response("", { status: 404 });
+    return fetchDoc(String(url));
+  };
+  await import(`../src/viewer.js?case=${++caseSeq}`);
+  for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+  return { document, window, content: document.getElementById("content") };
+}
+
+// pickLocalFile opens `text` as a local file named `name` through the toolbar's file picker.
+async function pickLocalFile(document, window, name, text) {
+  const input = document.getElementById("file-input");
+  input.click = () => {};
+  document.getElementById("btn-open").dispatchEvent(new window.Event("click"));
+  const bytes = new TextEncoder().encode(text);
+  Object.defineProperty(input, "files", { configurable: true, value: [{ name, arrayBuffer: async () => bytes.buffer }] });
+  await input.onchange();
+}
+
+// B39: renderDocument checked the load token once, after the TOC; a PDF superseded while its
+// metadata was still being read went on to set its own language on the newer document.
+test("a PDF superseded while its language is being read leaves the newer document's language alone", async () => {
+  let releaseMeta;
+  const meta = new Promise((r) => { releaseMeta = r; });
+  let destroyed = false;
+  const page = {
+    getTextContent: async () => ({ items: [{ str: "Ein Satz auf Deutsch" }] }),
+    getViewport: () => ({ width: 600, height: 800 }),
+    cleanup() {},
+  };
+  const pdf = {
+    numPages: 1,
+    getPage: async () => page,
+    getMetadata: () => meta,
+    getOutline: async () => [],
+    destroy() { destroyed = true; },
+  };
+  globalThis.__getDocument = () => ({ promise: Promise.resolve(pdf), destroy() {} });
+  try {
+    const pdfBytes = new TextEncoder().encode("%PDF-1.7\n");
+    const { document, window, content } = await bootViewer(
+      "?file=https://books.test/slow.pdf",
+      async () => new Response(pdfBytes, { status: 200 }),
+    );
+    // The PDF load now waits on its metadata; the reader opens an English text meanwhile.
+    await pickLocalFile(document, window, "local.txt", "It was a bright cold day in April, and the clocks were striking thirteen.\n");
+    assert.equal(document.documentElement.lang, "en");
+
+    releaseMeta({ info: { Language: "de" } });
+    for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+    assert.equal(document.documentElement.lang, "en", "the stale PDF must not relabel the text's language");
+    assert.equal(document.querySelector('meta[http-equiv="content-language"]').content, "en");
+    assert.ok(destroyed, "the superseded PDF is released");
+    assert.match(content.textContent, /bright cold day/);
+  } finally {
+    delete globalThis.__getDocument;
+  }
+});
+
+// B41: the TOC button was hidden for a document without a TOC and never shown again, and the
+// OCR layer control, once revealed, stayed on screen for every later document.
+test("toolbar state is reset for each document", async () => {
+  const fb2 = `<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><body>
+<section><title><p>Chapter One</p></title><p>It was a bright cold day in April.</p></section>
+<section><title><p>Chapter Two</p></title><p>The clocks were striking thirteen.</p></section>
+</body></FictionBook>`;
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  const tocBtn = document.getElementById("btn-toc");
+  const ocrGroup = document.getElementById("grp-ocr");
+
+  await pickLocalFile(document, window, "plain.txt", "Just a line of prose without chapters.\n");
+  assert.ok(tocBtn.classList.contains("hidden"), "a document without a TOC hides the button");
+  // The previous document's plates revealed the OCR layer control.
+  ocrGroup.hidden = false;
+
+  await pickLocalFile(document, window, "book.fb2", fb2);
+  assert.match(document.getElementById("content").textContent, /Chapter Two/);
+  assert.ok(!tocBtn.classList.contains("hidden"), "a document with a TOC shows the button again");
+  assert.ok(document.querySelectorAll("#toc-tree a").length >= 2, "and its entries");
+  assert.equal(ocrGroup.hidden, true, "no plates in this document, so no OCR layer control");
+
+  await pickLocalFile(document, window, "plain.txt", "Another line of prose.\n");
+  assert.ok(tocBtn.classList.contains("hidden"));
+  assert.equal(document.querySelectorAll("#toc-tree a").length, 0, "no stale entries from the last book");
 });

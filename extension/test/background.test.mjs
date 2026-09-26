@@ -113,6 +113,18 @@ test("enabling interception installs redirect rules that honour disabled hosts",
   assert.ok(!fileRe.test("file://server/share/a.pdf"), "UNC paths are left to the browser");
 });
 
+// B59: the switch excluded only the request's domain, so a PDF on a CDN linked from a switched-off
+// site was still taken over.
+test("a switched-off site's documents are left alone wherever they are served from", async () => {
+  storedOptions = { enabledByDefault: true, disabledHosts: ["books.test"] };
+  fire("storageChanged", { options: { newValue: storedOptions } }, "local");
+  await settle();
+
+  const [https] = calls.dynamicRules.at(-1).addRules;
+  assert.deepEqual(https.condition.excludedRequestDomains, ["books.test"], "a document on the site itself");
+  assert.deepEqual(https.condition.excludedInitiatorDomains, ["books.test"], "a document opened from the site's pages");
+});
+
 test("interception matches the document extension in the URL path only", async () => {
   const { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX } = await import("../src/background.js");
   const https = new RegExp(HTTPS_INTERCEPT_REGEX);

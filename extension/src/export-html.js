@@ -1,4 +1,4 @@
-// export-html.js - the "save as HTML" document shell. Kept apart from viewer.js so it can be
+// export-html.js - the "save as HTML" document shell and its image encoding. Kept apart from viewer.js so it can be
 // tested without the viewer's page.
 //
 // The saved file leaves the extension, and with it the extension's content policy - the only
@@ -18,6 +18,26 @@ export const EXPORT_CSP = [
   "base-uri 'none'",
   "form-action 'none'",
 ].join("; ");
+
+// Rows read per getImageData call while looking for transparency: a whole comic page at once is
+// tens of megabytes of pixel copy just to learn one bit.
+const ALPHA_SCAN_ROWS = 256;
+
+// exportImageEncoding picks how an image is re-encoded into the saved file. JPEG has no alpha
+// channel, so a transparent picture (a diagram, a formula, line art) turned into a black box;
+// any pixel short of opaque keeps a lossless PNG. An opaque image - a scan, a comic panel, a
+// photo - stays JPEG, which is several times smaller. ctx holds the image drawn at 0,0 on an
+// otherwise untouched canvas.
+export function exportImageEncoding(ctx, width, height) {
+  for (let y = 0; y < height; y += ALPHA_SCAN_ROWS) {
+    const rows = Math.min(ALPHA_SCAN_ROWS, height - y);
+    const data = ctx.getImageData(0, y, width, rows).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 255) return { type: "image/png" };
+    }
+  }
+  return { type: "image/jpeg", quality: 0.85 };
+}
 
 export function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

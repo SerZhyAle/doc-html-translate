@@ -60,8 +60,9 @@ src/
   ebook.js             MOBI + AZW3 (KF8) via vendored foliate-js (replaces the desktop's Calibre)
   comic.js             CBZ (zip) + CBT (tar) comics: natural page order, entry filter, lazy inflate; CBR/CB7 declined
   sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
-  url-policy.js        link/resource URL rules, name removal, remote-content parking (sanitize.js + epub.js)
-  export-html.js       the "save as HTML" shell, with its own script-free content policy
+  url-policy.js        link/resource URL rules, name removal, id namespacing with its references, remote-content parking
+  site-host.js         the viewer's ?file= parameter, and which site the popup's per-site switch acts on
+  export-html.js       the "save as HTML" shell, with its own script-free content policy and image encoding
   lang.js              source-language detection -> <html lang>
   i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
@@ -194,6 +195,10 @@ that forbids script, so it stays inert when opened from disk, outside the extens
   `.pdf` inside a query string (`viewer?file=a.pdf`) is left to the site. DNR can't see the response
   Content-Type before the request; when a document URL answers with a web page (a sign-in wall), the
   viewer says so and offers **Open original**.
+- The popup's **On this site** switch leaves a site's documents alone wherever they are served from: a
+  document on the site itself, and one on another host (a CDN) that a page of the site links to. On the
+  viewer's own tab the switch names, and acts on, the site the shown document came from. A URL typed
+  into the address bar has no page that opened it, so only its own host counts there.
 - PDF.js text extraction is weaker than Poppler on ligatures / non-standard font maps (same caveat the
   desktop app notes for its pure-Go reader - exotic fonts remain a humbling experience).
 - Scanned/image-only PDFs are out of scope (OCR); the viewer detects them and offers the original.

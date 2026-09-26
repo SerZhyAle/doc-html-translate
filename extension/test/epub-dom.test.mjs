@@ -274,6 +274,21 @@ test("renderChapter: exposes a body id as a marker anchor so #id links still res
   assert.ok(html.includes('href="#d1-start"'), "the link resolves to the marker");
 });
 
+// B51: EPUB retargets its own <a> links, and the flag that stops the shared scrub from prefixing
+// them again also stopped it from rewriting every other reference to a namespaced id.
+test("renderChapter: SVG and image-map references follow the namespaced ids", () => {
+  const xhtml = doc(
+    `<svg><defs><linearGradient id="g"/><symbol id="s"/></defs><rect fill="url(#g)"/><use href="#s"/></svg>` +
+    `<img src="pic.png" usemap="#m"/><map name="m"><area href="#top" alt="up"/></map><p id="top">Top</p>`,
+  );
+  const { frag } = renderChapter(xhtml, 3, "OEBPS", pathIndex(), () => "blob:pic");
+  const html = fragHtml(frag);
+  assert.ok(html.includes('fill="url(#d3-g)"'), html);
+  assert.ok(html.includes('href="#d3-s"'), html);
+  assert.ok(html.includes('usemap="#d3-m"') && html.includes('name="d3-m"'), html);
+  assert.ok(html.includes('<area href="#d3-top"'), html);
+});
+
 test("renderChapter: label is empty and text is preserved when there is no heading", () => {
   const { frag, label } = renderChapter(doc(`<p>Just prose.</p>`), 0, "OEBPS", pathIndex(), () => null);
   assert.equal(label, "");

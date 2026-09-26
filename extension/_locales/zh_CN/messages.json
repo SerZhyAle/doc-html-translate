@@ -203,6 +203,10 @@
     "message": "在本站",
     "description": "Popup per-site switch."
   },
+  "popupNoSite": {
+    "message": "（不是网站）",
+    "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
+  },
   "popupOptions": {
     "message": "选项",
     "description": "Popup link to the options page."
