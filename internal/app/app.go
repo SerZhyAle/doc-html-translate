@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
@@ -141,6 +142,8 @@ func (a App) Run() (int, error) {
 		return 0, nil
 	}
 
+	dialog.SetUnattended(unattendedRun(a.cfg.NoOpen, logging.StdoutIsTerminal()))
+
 	for _, n := range a.cfg.Notices {
 		logging.Println(n)
 	}
@@ -153,6 +156,12 @@ func (a App) Run() (int, error) {
 	defer stop()
 	context.AfterFunc(ctx, stop)
 	return pipeline.NewRunner(a.cfg).RunContext(ctx)
+}
+
+// unattendedRun reports whether nobody is expected to click a warning: -noopen is the batch
+// flag, and output piped into a script or a file has no one at a console reading it.
+func unattendedRun(noOpen, stdoutTerminal bool) bool {
+	return noOpen || !stdoutTerminal
 }
 
 // ExitInterrupted is the exit code of a run stopped by Ctrl+C.

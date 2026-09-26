@@ -155,7 +155,7 @@ Why this workflow is popular (besides the obvious):
 | `-unregister` | `false` | Release the default-handler association (leaves the "Convert to HTML" right-click entry and "Open with") |
 | `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI offers the same as a toggle under "Windows integration"; it never adds it on its own) |
 | `-notranslate` | `false` | Convert only, skip translation |
-| `-noopen` | `false` | Do not open browser after conversion |
+| `-noopen` | `false` | Do not open browser after conversion (batch mode: warnings such as missing JPEG2000 support are logged instead of shown in a dialog) |
 | `-google` | `false` | Translate via Google Cloud Translation API |
 | `-ollama` | `false` | Translate via local Ollama |
 | `-free` | `false` | Alias of `-ollama` |
