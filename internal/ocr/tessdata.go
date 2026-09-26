@@ -1,9 +1,12 @@
 package ocr
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -85,37 +88,65 @@ func DataDirs() []string {
 	return []string{user, bundled}
 }
 
-// DataDir returns the one folder to hand Tesseract as --tessdata-dir. Tesseract takes a single
-// folder, so rus+eng cannot load when rus was downloaded into the per-user folder and eng is
-// bundled next to the exe. A folder that already holds every pack is returned as is; only when
-// both hold something is the bundled data copied into the per-user folder (once, a few MB), which
-// then holds the union. A failed copy is logged and the per-user folder is still returned: its
-// packs are the ones the user asked for.
-func DataDir() string {
+// DataDirFor returns the one folder to hand Tesseract as --tessdata-dir for lang. Tesseract takes a
+// single folder, so rus+eng cannot load when rus was downloaded into the per-user folder and eng is
+// bundled next to the exe. A folder that already holds every pack is returned as is; only when both
+// hold something is the bundled data copied into the per-user folder (once, a few MB), which then
+// holds the union - the script check reads that union too, so it is staged whatever lang asks for.
+//
+// A failed copy matters only when lang needs the pack it was for. Then the bundled folder is used
+// when it can serve lang alone, and otherwise the error names the pack and the cause: without it,
+// --tessdata-dir was silently dropped and every image failed with an engine error naming neither.
+func DataDirFor(lang string) (string, error) {
 	user, bundled := userDataDir(), bundledDataDir()
+	dir, failed := stageDataDir(user, bundled)
+	if len(failed) == 0 || hasLangFile(dir, lang) {
+		return dir, nil
+	}
+	if hasLangFile(bundled, lang) {
+		return bundled, nil
+	}
+	var errs []error
+	for _, code := range strings.Split(lang, "+") {
+		if err, ok := failed[strings.TrimSpace(code)]; ok {
+			errs = append(errs, fmt.Errorf("the %s language data could not be copied from %s into %s: %w",
+				LangLabel(code), bundled, user, err))
+		}
+	}
+	return dir, errors.Join(errs...)
+}
+
+// stageDataDir picks the folder DataDirFor starts from and stages the bundled packs into the
+// per-user one when both hold something, returning each pack whose copy failed.
+func stageDataDir(user, bundled string) (string, map[string]error) {
 	userPacks := packsIn(user)
 	if len(userPacks) == 0 {
 		if len(packsIn(bundled)) > 0 {
-			return bundled
+			return bundled, nil
 		}
-		return user
+		return user, nil
 	}
 	if filepath.Clean(user) == filepath.Clean(bundled) {
-		return user
+		return user, nil
 	}
 	have := make(map[string]bool, len(userPacks))
 	for _, c := range userPacks {
 		have[c] = true
 	}
+	var failed map[string]error
 	for _, c := range packsIn(bundled) {
 		if have[c] {
 			continue
 		}
 		if err := copyInto(user, langFile(bundled, c)); err != nil {
 			logging.RunLogf("OCR: could not stage %s into %s: %v\n", filepath.Base(langFile(bundled, c)), user, err)
+			if failed == nil {
+				failed = map[string]error{}
+			}
+			failed[c] = err
 		}
 	}
-	return user
+	return user, failed
 }
 
 func langFile(dir, code string) string { return filepath.Join(dir, code+".traineddata") }
@@ -189,25 +220,60 @@ func IsInstalled(code string) bool {
 	return false
 }
 
-// iso2tess maps common ISO-639-1 codes (as used by the app's -src flag) to Tesseract
-// traineddata names.
+// iso2tess maps the ISO-639-1 codes the app's -src flag takes to the catalog's Tesseract names.
+// Only catalog languages are listed: a -src the catalog cannot read (nl, tr, ar, cs, hi..) derives
+// no pack, because the advice to download it would then be refused by CheckLang.
 var iso2tess = map[string]string{
 	"en": "eng", "ru": "rus", "uk": "ukr", "de": "deu", "fr": "fra",
 	"es": "spa", "it": "ita", "pt": "por", "pl": "pol", "ja": "jpn",
-	"zh": "chi_sim", "ko": "kor", "nl": "nld", "tr": "tur", "ar": "ara",
+	"zh": "chi_sim", "ko": "kor",
 }
 
-// TessLang converts a language code to a Tesseract traineddata name. A code that already
-// looks like a Tesseract name (3+ letters, or contains "+") is returned unchanged.
+// TessLang derives the OCR language from a -src code (OCR-INVOCATION: derive from -src, else eng).
+// A region subtag names the same pack as its language (pt-BR is por, zh-CN is chi_sim), a catalog
+// Tesseract name passes as is, and anything else - a language the catalog does not offer - gives
+// eng, so the script check still gets its chance to correct it. A "+"-joined value keeps the parts
+// that derive a pack.
 func TessLang(code string) string {
-	code = strings.TrimSpace(strings.ToLower(code))
-	if code == "" {
+	var out []string
+	for _, part := range strings.Split(strings.ToLower(code), "+") {
+		if t := catalogLang(strings.TrimSpace(part)); t != "" && !slices.Contains(out, t) {
+			out = append(out, t)
+		}
+	}
+	if len(out) == 0 {
 		return "eng"
 	}
+	return strings.Join(out, "+")
+}
+
+// catalogLang maps one code to its catalog pack, or "" when the catalog has none.
+func catalogLang(code string) string {
 	if t, ok := iso2tess[code]; ok {
 		return t
 	}
-	return code
+	if base, _, ok := strings.Cut(strings.ReplaceAll(code, "_", "-"), "-"); ok {
+		if t, ok := iso2tess[base]; ok {
+			return t
+		}
+	}
+	if CheckLang(code) == nil {
+		return code
+	}
+	return ""
+}
+
+// MissingAdvice says how to get the data for codes the engine cannot load. Only a catalog code is
+// offered to -ocr-download, which refuses every other; a code outside the catalog is said to have
+// no download here rather than sending the reader to a command that will fail.
+func MissingAdvice(missing []string) string {
+	const other = "choose another language with -ocr-lang (-ocr-langs lists them)"
+	for _, code := range missing {
+		if CheckLang(code) == nil {
+			return fmt.Sprintf("Install it with -ocr-download %s, or %s", code, other)
+		}
+	}
+	return "This app offers no download for it; install it into Tesseract's own data folder, or " + other
 }
 
 // ISOFor is the reverse of TessLang: the ISO-639-1 code that selects a Tesseract

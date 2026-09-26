@@ -41,7 +41,11 @@ func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, r
 	}
 	defer func() { _ = os.Setenv("DOCHT_OCR_DIAG", old) }()
 
-	stats, err := ocr.OverlayFile(bin, pagePath, opt.Lang, ocr.DataDir(), nil)
+	dataDir, err := ocr.DataDirFor(opt.Lang)
+	if err != nil {
+		return "", res, err
+	}
+	stats, err := ocr.OverlayFile(bin, pagePath, opt.Lang, dataDir, nil)
 	if err != nil {
 		return "", res, err
 	}
@@ -51,7 +55,7 @@ func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, r
 
 	// Geometry comes from the recognizer's own report of the page, which is what the plates were
 	// positioned against.
-	res, err = ocr.Recognize(bin, imgPath, opt.Lang, ocr.DataDir())
+	res, err = ocr.Recognize(bin, imgPath, opt.Lang, dataDir)
 	if err != nil {
 		return "", res, err
 	}
@@ -87,8 +91,8 @@ func tesseractVersion(bin string) string {
 // observable, is strictly more precise (it distinguishes two builds that both call themselves
 // 4.0.0) and needs no second source of truth.
 func tessdataFingerprint(lang string) string {
-	dir := ocr.DataDir()
-	if dir == "" {
+	dir, err := ocr.DataDirFor(lang)
+	if err != nil || dir == "" {
 		return ""
 	}
 	code := strings.Split(lang, "+")[0]
