@@ -5,14 +5,31 @@
 
 import { sanitizeToFragment } from "./sanitize.js";
 import { normalizeLangTag } from "./lang.js";
+import { decodeHtml } from "./charset.js";
 
-// parseHtml decodes UTF-8 bytes and returns the render-ready book shape.
+// declaredLang is the language the page declares, asked where internal/htmlconv rootAttrs asks:
+// <html> first, then <body> - only the body's content is kept, so its declaration is lifted -
+// each by lang and then xml:lang, a blank value counting as none. The desktop edition copies the
+// tag as found; here it is normalized, because the viewer compares it with its own detection.
+function declaredLang(doc) {
+  for (const el of [doc.documentElement, doc.body]) {
+    if (!el) continue;
+    for (const key of ["lang", "xml:lang"]) {
+      const v = (el.getAttribute(key) || "").trim();
+      if (v) return normalizeLangTag(v);
+    }
+  }
+  return "";
+}
+
+// parseHtml decodes the bytes by their declared or detected encoding (charset.js decodeHtml)
+// and returns the render-ready book shape.
 export async function parseHtml(data) {
-  const source = new TextDecoder("utf-8").decode(data);
+  const source = decodeHtml(data);
   const doc = new DOMParser().parseFromString(source, "text/html");
   const titleEl = doc.querySelector("title");
   const title = titleEl ? titleEl.textContent.trim() : "";
-  const lang = normalizeLangTag(doc.documentElement ? doc.documentElement.getAttribute("lang") || "" : "");
+  const lang = declaredLang(doc);
   const bodyHtml = doc.body ? doc.body.innerHTML : source;
   const { frag, label, remote } = sanitizeToFragment(bodyHtml, 0);
   const sampleText = (frag.textContent || "").slice(0, 8000);

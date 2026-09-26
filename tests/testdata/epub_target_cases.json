@@ -1,0 +1,25 @@
+{
+  "_comment": "Shared EPUB link and TOC target cases over one book: the package is OEBPS/content.opf and its chapters are the paths in chapters. toc cases resolve from the TOC document tocFile, link cases from the chapter file. want is the chapter the target reaches (archive-root path), frag the fragment it keeps, or want null when it reaches no chapter. Read by internal/epub (resolveTOCHref, rewriteLinks) and extension/src/epub.js (resolveTocAnchor, rewriteAnchor). See docs/PARITY.md, EPUB href resolution (audit findings E36, E37).",
+  "opfDir": "OEBPS",
+  "chapters": ["OEBPS/text/ch1.xhtml", "OEBPS/text/ch2.xhtml", "OEBPS/ch3.xhtml", "OEBPS/text/Chapter 4.xhtml"],
+  "tocFile": "OEBPS/nav/toc.xhtml",
+  "toc": [
+    { "href": "../text/ch1.xhtml", "want": "OEBPS/text/ch1.xhtml", "frag": "" },
+    { "href": "../text/ch2.xhtml#s2", "want": "OEBPS/text/ch2.xhtml", "frag": "s2" },
+    { "href": "/OEBPS/ch3.xhtml#x", "want": "OEBPS/ch3.xhtml", "frag": "x", "about": "E36: root-relative" },
+    { "href": "..\\text\\ch2.xhtml", "want": "OEBPS/text/ch2.xhtml", "frag": "", "about": "E36: backslash separators" },
+    { "href": "../ch3.xhtml?v=2#s", "want": "OEBPS/ch3.xhtml", "frag": "s", "about": "E36: a query is cut before lookup" },
+    { "href": "../text/Chapter%204.xhtml", "want": "OEBPS/text/Chapter 4.xhtml", "frag": "" },
+    { "href": "../missing.xhtml", "want": null },
+    { "href": "/../outside.xhtml", "want": null }
+  ],
+  "linkFile": "OEBPS/text/ch1.xhtml",
+  "links": [
+    { "href": "ch2.xhtml#n", "want": "OEBPS/text/ch2.xhtml", "frag": "n" },
+    { "href": "../ch3.xhtml?v=1#top", "want": "OEBPS/ch3.xhtml", "frag": "top" },
+    { "href": "/OEBPS/text/ch2.xhtml#n", "want": "OEBPS/text/ch2.xhtml", "frag": "n", "about": "E37: root-relative" },
+    { "href": "/OEBPS/ch3.xhtml", "want": "OEBPS/ch3.xhtml", "frag": "", "about": "E37: root-relative, up a directory" },
+    { "href": "\\OEBPS\\ch3.xhtml", "want": "OEBPS/ch3.xhtml", "frag": "", "about": "E37: root-relative with backslashes" },
+    { "href": "/OEBPS/text/Chapter%204.xhtml#p", "want": "OEBPS/text/Chapter 4.xhtml", "frag": "p", "about": "E37: an encoded name stays encoded" }
+  ]
+}

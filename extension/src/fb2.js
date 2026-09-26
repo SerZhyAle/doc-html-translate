@@ -90,6 +90,8 @@ export async function parseFb2(data) {
   const title = titleInfo ? textOf(childByLocal(titleInfo, "book-title")) : "";
   const lang = titleInfo ? normalizeLangTag(textOf(childByLocal(titleInfo, "lang"))) : "";
 
+  // imgFor renders an <image>: the picture, or - when no <binary> carries it - the visible
+  // note internal/fb2 writes in its place, so a missing picture is never a silent gap.
   const imgFor = (imageEl) => {
     let href =
       imageEl.getAttributeNS(XLINK, "href") ||
@@ -97,8 +99,15 @@ export async function parseFb2(data) {
       imageEl.getAttribute("xlink:href") ||
       imageEl.getAttribute("href") || "";
     href = href.replace(/^#/, "");
+    if (!href) return null;
     const url = binaries.get(href);
-    if (!url) return null;
+    if (!url) {
+      const p = document.createElement("p");
+      const em = document.createElement("em");
+      em.textContent = `[image not found: ${href}]`;
+      p.appendChild(em);
+      return p;
+    }
     const img = document.createElement("img");
     img.src = url;
     return img;
@@ -142,7 +151,12 @@ export async function parseFb2(data) {
       const img = imgFor(el);
       if (img) frag.appendChild(img);
     } else if (ln === "stanza") {
-      const verses = Array.from(el.children).filter((c) => c.localName === "v");
+      // A stanza's own <title> and <subtitle> come before its verses, as internal/fb2 emits them.
+      const verses = [];
+      for (const c of Array.from(el.children)) {
+        if (c.localName === "v") verses.push(c);
+        else renderBlock(c, frag);
+      }
       addStanza(frag, verses.map(textOf).filter((t) => t));
       for (const v of verses) addImages(v, frag);
     } else if (ln === "v") {
@@ -180,6 +194,18 @@ export async function parseFb2(data) {
 
   const sections = [];
   const toc = [];
+  // The cover lives in <description>, ahead of the body, so it opens the book - the first image
+  // of any <coverpage>, as internal/fb2 picks it.
+  for (const cp of Array.from(doc.getElementsByTagNameNS("*", "coverpage"))) {
+    const im = cp.getElementsByTagNameNS("*", "image")[0];
+    const cover = im && imgFor(im);
+    if (cover) {
+      const frag = document.createDocumentFragment();
+      frag.appendChild(cover);
+      sections.push({ id: `fb2-page-${sections.length}`, label: "", frag });
+      break;
+    }
+  }
   for (const body of Array.from(doc.getElementsByTagNameNS("*", "body"))) {
     // A body's own title and epigraph come before its sections; they get a page of their own
     // rather than being dropped.

@@ -45,18 +45,52 @@ var urlSchemeRe = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9+.-]*:`)
 // the cleaned OPF-relative target path (it may start with ".." when a link
 // escapes the OPF directory - fn decides what to do with it). When fn returns
 // ok with a different path, the attribute is rewritten to a value relative to
-// the same file, keeping the original query and fragment. Links fn declines
-// are left byte-for-byte unchanged.
+// the same file, keeping the original query and fragment. Relative links fn
+// declines are left byte-for-byte unchanged.
 //
-// External links (any scheme, protocol-relative "//", root-relative "/") and
-// same-document links ("#id", "") are never offered. Attributes are visited
-// in document order, so the result is deterministic. Returns whether any
-// attribute changed.
-func rewriteLinks(doc *gohtml.Node, fileHref string, fn func(target string) (string, bool)) bool {
+// A root-relative link ("/OEBPS/ch2.xhtml", or with a backslash) is resolved
+// from the book root, basePath being the OPF directory, and rewritten relative
+// to the file even when fn declines it: under file:// a leading slash names the
+// drive root, so left as written it could never reach the book.
+// External links (any scheme, protocol-relative "//") and same-document links
+// ("#id", "") are never offered. Attributes are visited in document order, so
+// the result is deterministic. Returns whether any attribute changed.
+func rewriteLinks(doc *gohtml.Node, basePath, fileHref string, fn func(target string) (string, bool)) bool {
 	baseDir := path.Dir(fileHref)
 	return RewriteURLs(doc, func(value string) (string, bool) {
+		if v, ok := rewriteRootLink(basePath, baseDir, value, fn); ok {
+			return v, true
+		}
 		return rewriteLinkValue(baseDir, value, fn)
 	})
+}
+
+// rewriteRootLink turns a link written from the book root into one relative to
+// the file under baseDir, following any rename fn reports. The name goes
+// through resolveBookPath, as the extension resolves the same link (docs/PARITY.md,
+// "EPUB href resolution", step 5); a name it refuses is left as written.
+func rewriteRootLink(basePath, baseDir, value string, fn func(string) (string, bool)) (string, bool) {
+	v := strings.TrimSpace(value)
+	if !strings.HasPrefix(v, "/") && !strings.HasPrefix(v, `\`) {
+		return "", false
+	}
+	rootRel, err := resolveBookPath("", v)
+	if err != nil {
+		return "", false
+	}
+	target := relToBase(basePath, rootRel)
+	if renamed, ok := fn(target); ok {
+		target = renamed
+	}
+	rel, err := filepath.Rel(filepath.FromSlash(baseDir), filepath.FromSlash(target))
+	if err != nil {
+		return "", false
+	}
+	suffix := ""
+	if i := strings.IndexAny(v, "?#"); i >= 0 {
+		suffix = v[i:]
+	}
+	return URLPath(filepath.ToSlash(rel)) + suffix, true
 }
 
 // RewriteURLs offers the raw value of every URL-bearing attribute of doc to fn

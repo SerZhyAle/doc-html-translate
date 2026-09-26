@@ -1,0 +1,10 @@
+{
+  "_comment": "Shared Markdown section cases, read by internal/md (splitBySections over goldmark's output) and extension/src/md.js (parseMarkdown over marked's). sections lists each section's opening heading, \"\" for text before the first one. Only a top-level <h1>/<h2> opens a section: one inside a blockquote or a list belongs to that block (audit finding E26). See docs/PARITY.md, Markdown sections.",
+  "cases": [
+    { "name": "top-level headings", "md": "# One\n\ntext\n\n## Two\n\nmore\n", "sections": ["One", "Two"] },
+    { "name": "text before the first heading", "md": "Intro\n\n## A\n\nx\n\n## B\n\ny\n", "sections": ["", "A", "B"] },
+    { "name": "heading in a blockquote", "md": "# One\n\n> ## Quoted\n>\n> more\n\n# Two\n\nend\n", "sections": ["One", "Two"] },
+    { "name": "heading in a list item", "md": "# One\n\n- item\n\n  ## Listed\n\n  body\n\n# Two\n", "sections": ["One", "Two"] },
+    { "name": "h3 never splits", "md": "# One\n\n### Three\n\nx\n", "sections": ["One"] }
+  ]
+}

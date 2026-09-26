@@ -47,9 +47,11 @@ async function bookLinkTarget(href, book) {
 // markers; applyBookLinks turns them into "#.." hrefs after sanitizing.
 export async function retargetBookLinks(html, book) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  // A document-supplied marker would be trusted below as ours.
-  for (const e of Array.from(doc.querySelectorAll(`[${TARGET_ATTR}]`))) e.removeAttribute(TARGET_ATTR);
-  let changed = false;
+  // A document-supplied marker would be trusted by applyBookLinks as ours, so it goes whether or
+  // not the section has a book link of its own - and the document is re-serialized without it.
+  const planted = Array.from(doc.querySelectorAll(`[${TARGET_ATTR}]`));
+  for (const e of planted) e.removeAttribute(TARGET_ATTR);
+  let changed = planted.length > 0;
   for (const a of Array.from(doc.querySelectorAll("a[href]"))) {
     const href = a.getAttribute("href").trim();
     if (!BOOK_LINK.test(href)) continue;

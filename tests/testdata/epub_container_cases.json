@@ -1,0 +1,11 @@
+{
+  "_comment": "Shared META-INF/container.xml cases, read by internal/epub (parseContainer) and extension/src/epub.js (parseContainer). want is the package document path, or null when the book must fail: a container that names no package document is refused by both editions rather than reading some other rendition as one (audit finding B48). See docs/PARITY.md, EPUB container.",
+  "cases": [
+    { "name": "package media type", "rootfiles": [{ "full-path": "OEBPS/content.opf", "media-type": "application/oebps-package+xml" }], "want": "OEBPS/content.opf" },
+    { "name": "opf name, no media type", "rootfiles": [{ "full-path": "book.opf" }], "want": "book.opf" },
+    { "name": "opf name in capitals", "rootfiles": [{ "full-path": "OEBPS/CONTENT.OPF", "media-type": "" }], "want": "OEBPS/CONTENT.OPF" },
+    { "name": "only another rendition", "rootfiles": [{ "full-path": "OEBPS/book.pdf", "media-type": "application/pdf" }], "want": null },
+    { "name": "package after another rendition", "rootfiles": [{ "full-path": "print/book.pdf", "media-type": "application/pdf" }, { "full-path": "OEBPS/content.opf", "media-type": "application/oebps-package+xml" }], "want": "OEBPS/content.opf" },
+    { "name": "package media type with no path", "rootfiles": [{ "full-path": "", "media-type": "application/oebps-package+xml" }, { "full-path": "alt/content.opf", "media-type": "application/oebps-package+xml" }], "want": "alt/content.opf" }
+  ]
+}

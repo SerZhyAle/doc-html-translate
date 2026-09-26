@@ -6,9 +6,12 @@
 
 const PARAS_PER_SECTION = 30;
 
-// splitParagraphs turns raw text into paragraphs. Pure (no DOM) - unit-tested.
+// splitParagraphs turns raw text into paragraphs. Every separator the desktop edition's
+// textutil.NormalizeLineSeparators knows is a line break here too (NEL, LS, PS, vertical tab, form
+// feed), or the same file splits into different paragraphs - the shared fixture
+// tests/testdata/txt_paragraph_cases.json holds both to it. Pure (no DOM) - unit-tested.
 export function splitParagraphs(text) {
-  const norm = String(text).replace(/\r\n?/g, "\n");
+  const norm = String(text).replace(/\r\n?|[\u0085\u2028\u2029\v\f]/g, "\n");
   if (norm.includes("\n\n")) {
     const paras = [];
     let cur = "";

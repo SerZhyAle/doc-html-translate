@@ -1,0 +1,139 @@
+{
+  "_comment": "Shared EPUB and HTML content-fidelity cases (audit finding B46: the extension halves of E6, E12, E14). charset: base64 bytes and the text the reader must find in them - reader chapter is internal/epub decodeToUTF8 / extension/src/charset.js decodeChapter, reader html is internal/htmlconv parseDocument / decodeHtml. xhtml: markup both xhtmlToHTMLSyntax ports must rewrite to want, byte for byte. cover: a chapter body with one SVG - cover true when the SVG must become an <img>, and text any text that must survive. See docs/PARITY.md, EPUB and HTML content fidelity.",
+  "charset": [
+    {
+      "name": "chapter: XML declaration",
+      "reader": "chapter",
+      "want": "Привет, мир",
+      "bytes": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0id2luZG93cy0xMjUxIj8+PGh0bWw+PGJvZHk+PHA+z/Do4uXyLCDs6PA8L3A+PC9ib2R5PjwvaHRtbD4="
+    },
+    {
+      "name": "chapter: meta charset",
+      "reader": "chapter",
+      "want": "Привет, мир",
+      "bytes": "PGh0bWw+PGhlYWQ+PG1ldGEgY2hhcnNldD0id2luZG93cy0xMjUxIi8+PC9oZWFkPjxib2R5PjxwPs/w6OLl8iwg7OjwPC9wPjwvYm9keT48L2h0bWw+"
+    },
+    {
+      "name": "chapter: UTF-16LE with a BOM",
+      "reader": "chapter",
+      "want": "Привет, мир",
+      "bytes": "//48AGgAdABtAGwAPgA8AGIAbwBkAHkAPgA8AHAAPgAfBEAEOAQyBDUEQgQsACAAPAQ4BEAEPAAvAHAAPgA8AC8AYgBvAGQAeQA+ADwALwBoAHQAbQBsAD4A"
+    },
+    {
+      "name": "chapter: undeclared is UTF-8",
+      "reader": "chapter",
+      "want": "Привет, мир",
+      "bytes": "PGh0bWw+PGJvZHk+PHA+0J/RgNC40LLQtdGCLCDQvNC40YA8L3A+PC9ib2R5PjwvaHRtbD4="
+    },
+    {
+      "name": "chapter: a UTF-16 label in ASCII means UTF-8",
+      "reader": "chapter",
+      "want": "Привет, мир",
+      "bytes": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTE2Ij8+PGh0bWw+PGJvZHk+PHA+0J/RgNC40LLQtdGCLCDQvNC40YA8L3A+PC9ib2R5PjwvaHRtbD4="
+    },
+    {
+      "name": "html: http-equiv charset",
+      "reader": "html",
+      "want": "Привет, мир",
+      "bytes": "PGh0bWw+PGhlYWQ+PG1ldGEgaHR0cC1lcXVpdj0iQ29udGVudC1UeXBlIiBjb250ZW50PSJ0ZXh0L2h0bWw7IGNoYXJzZXQ9d2luZG93cy0xMjUxIj48L2hlYWQ+PGJvZHk+PHA+z/Do4uXyLCDs6PA8L3A+PC9ib2R5PjwvaHRtbD4="
+    },
+    {
+      "name": "html: undeclared, not UTF-8, is windows-1252",
+      "reader": "html",
+      "want": "café crème",
+      "bytes": "PGh0bWw+PGJvZHk+PHA+Y2Fm6SBjcuhtZTwvcD48L2JvZHk+PC9odG1sPg=="
+    },
+    {
+      "name": "html: undeclared UTF-8",
+      "reader": "html",
+      "want": "Привет, мир",
+      "bytes": "PGh0bWw+PGJvZHk+PHA+0J/RgNC40LLQtdGCLCDQvNC40YA8L3A+PC9ib2R5PjwvaHRtbD4="
+    },
+    {
+      "name": "html: declared Latin-1 but valid UTF-8",
+      "reader": "html",
+      "want": "Привет, мир",
+      "bytes": "PGh0bWw+PGhlYWQ+PG1ldGEgY2hhcnNldD0iaXNvLTg4NTktMSI+PC9oZWFkPjxib2R5PjxwPtCf0YDQuNCy0LXRgiwg0LzQuNGAPC9wPjwvYm9keT48L2h0bWw+"
+    }
+  ],
+  "xhtml": [
+    {
+      "name": "self-closing non-void elements",
+      "in": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title/><script type=\"text/javascript\" src=\"x.js\"/></head><body><p><a id=\"p1\"/>One<br/>two</p><div/><span/><p>Three</p></body></html>",
+      "want": "\n<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title></title><script type=\"text/javascript\" src=\"x.js\"></script></head><body><p><a id=\"p1\"></a>One<br/>two</p><div></div><span></span><p>Three</p></body></html>"
+    },
+    {
+      "name": "SVG keeps its self-closing tags",
+      "in": "<p>A</p><svg><rect width=\"1\"/><title/></svg><p>B</p>",
+      "want": "<p>A</p><svg><rect width=\"1\"/><title/></svg><p>B</p>"
+    },
+    {
+      "name": "MathML keeps its self-closing tags",
+      "in": "<math><mi/></math><i/>x",
+      "want": "<math><mi/></math><i></i>x"
+    },
+    {
+      "name": "raw text is not markup",
+      "in": "<script>if (a<b/>c) x();</script><a id=\"z\"/>Tail",
+      "want": "<script>if (a<b/>c) x();</script><a id=\"z\"></a>Tail"
+    },
+    {
+      "name": "a quoted value may hold />",
+      "in": "<a title=\"x/>y\" id=\"q\"/>After",
+      "want": "<a title=\"x/>y\" id=\"q\"></a>After"
+    },
+    {
+      "name": "tag name case",
+      "in": "<A ID=\"u\"/>Up",
+      "want": "<A ID=\"u\"></a>Up"
+    },
+    {
+      "name": "comments pass through",
+      "in": "<!-- <a/> --><a id=\"c\"/>End",
+      "want": "<!-- <a/> --><a id=\"c\"></a>End"
+    },
+    {
+      "name": "an empty SVG title does not swallow what follows",
+      "in": "<svg><title/><rect/></svg><a id=\"x\"/>Tail",
+      "want": "<svg><title/><rect/></svg><a id=\"x\"></a>Tail"
+    }
+  ],
+  "cover": [
+    {
+      "name": "one image",
+      "body": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 10 10\"><image xlink:href=\"cover.jpg\"/></svg>",
+      "cover": true,
+      "text": ""
+    },
+    {
+      "name": "one image with a title",
+      "body": "<svg><title>Cover</title><image href=\"cover.jpg\"/></svg>",
+      "cover": true,
+      "text": ""
+    },
+    {
+      "name": "image and text",
+      "body": "<svg><image href=\"cover.jpg\"/><text>The Title</text></svg>",
+      "cover": false,
+      "text": "The Title"
+    },
+    {
+      "name": "two images",
+      "body": "<svg><image href=\"a.jpg\"/><image href=\"b.jpg\"/></svg>",
+      "cover": false,
+      "text": ""
+    },
+    {
+      "name": "image inside a group",
+      "body": "<svg><g><image href=\"c.jpg\"/></g></svg>",
+      "cover": false,
+      "text": ""
+    },
+    {
+      "name": "nested svg",
+      "body": "<svg><svg><image href=\"c.jpg\"/></svg></svg>",
+      "cover": false,
+      "text": ""
+    }
+  ]
+}

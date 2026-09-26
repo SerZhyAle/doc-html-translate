@@ -1,0 +1,17 @@
+{
+  "_comment": "Shared FB2 case, read by internal/fb2 (Extract) and extension/src/fb2.js (parseFb2). The cover (a <coverpage> image in the description) opens the book, before the first body text; order lists texts that must appear in this order; subtitle is text that must carry class=\"subtitle\"; placeholder is the visible note an <image> with no <binary> leaves. Audit findings B34 (a stanza's own title and subtitle) and B35 (cover, missing-image placeholder). See docs/PARITY.md, FB2.",
+  "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<FictionBook xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\" xmlns:l=\"http://www.w3.org/1999/xlink\">\n<description><title-info><book-title>Poems</book-title><lang>en</lang><coverpage><image l:href=\"#cover.png\"/></coverpage></title-info></description>\n<body><section><title><p>Chapter One</p></title>\n<poem><stanza><title><p>Stanza Title</p></title><subtitle>Stanza Subtitle</subtitle><v>First verse line</v><v>Second verse line</v></stanza></poem>\n<p>After the poem</p>\n<image l:href=\"#missing.png\"/>\n<p>The end</p>\n</section></body>\n<binary id=\"cover.png\" content-type=\"image/png\">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</binary>\n</FictionBook>\n",
+  "firstText": "Chapter One",
+  "order": [
+    "Chapter One",
+    "Stanza Title",
+    "Stanza Subtitle",
+    "First verse line",
+    "Second verse line",
+    "After the poem",
+    "[image not found: missing.png]",
+    "The end"
+  ],
+  "subtitle": "Stanza Subtitle",
+  "placeholder": "[image not found: missing.png]"
+}

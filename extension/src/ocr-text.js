@@ -5,7 +5,10 @@
 // whitespace tokens look like real words. Short CJK phrases are kept. Mirrors the desktop
 // app's internal/ocr/text.go isTranslatable - keep the two in sync (see docs/PARITY.md).
 
-const CJK = /[぀-ヿ㐀-鿿가-힯豈-﫿]/; // Kana, CJK, Hangul
+// CJK by Unicode script, as text.go isCJK reads it with Go's script tables - so halfwidth
+// katakana, compatibility jamo and the astral Han planes count, and the Common-script marks that
+// sit in the kana blocks (the prolonged sound mark, the middle dot) do not.
+const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 const VOWEL = /[aeiouyàáâãäåæèéêëìíîïòóôõöøùúûüýÿаеёиоуыэюяєії]/i;
 const ADDRESS = /^(?:https?:\/\/|www\.)\S+$|^\S+@\S+\.\S+$|^[\w-]+(?:\.[\w-]+)+(?:[/?#]\S*)?$|^[a-z]:\\|^\/[\w./-]+$/i;
 const LETTER = /\p{L}/u;

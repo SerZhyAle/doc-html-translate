@@ -1,0 +1,14 @@
+{
+  "_comment": "Shared OCR column-order case, read by internal/ocr (orderColumns) and extension/src/ocr-cluster.js (orderColumns). Two columns cut apart by the line split, plus one wide line at confidence 60 that stitches them. Only a line the pass's own floor keeps may decide where a column is: at the ordinary floor (50) the wide line chains both columns into one, at the rescue floor (80) it is parked and the columns stay apart. The rescue passes must order by the rescue floor on both sides (audit finding B64). See docs/PARITY.md, OCR line integrity.",
+  "runs": [
+    { "text": "L1", "conf": 90, "bbox": { "x0": 0, "y0": 0, "x1": 100, "y1": 20 } },
+    { "text": "R1", "conf": 90, "bbox": { "x0": 300, "y0": 0, "x1": 400, "y1": 20 } },
+    { "text": "L2", "conf": 90, "bbox": { "x0": 0, "y0": 40, "x1": 100, "y1": 60 } },
+    { "text": "R2", "conf": 90, "bbox": { "x0": 300, "y0": 40, "x1": 400, "y1": 60 } },
+    { "text": "WIDE", "conf": 60, "bbox": { "x0": 0, "y0": 20, "x1": 400, "y1": 40 } }
+  ],
+  "orders": [
+    { "floor": 50, "want": ["L1", "R1", "WIDE", "L2", "R2"] },
+    { "floor": 80, "want": ["L1", "L2", "R1", "R2", "WIDE"] }
+  ]
+}

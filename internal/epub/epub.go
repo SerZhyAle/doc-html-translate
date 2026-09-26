@@ -321,8 +321,10 @@ func parseContainer(baseDir string) (string, error) {
 		return "", fmt.Errorf("unmarshal container.xml: %w", err)
 	}
 
+	// The first package document by media type or by an .opf name, in any letter case, as the
+	// extension's parseContainer picks it; a container naming only other renditions fails.
 	for _, rf := range c.RootFiles {
-		if rf.MediaType == "application/oebps-package+xml" || strings.HasSuffix(rf.FullPath, ".opf") {
+		if rf.FullPath != "" && (rf.MediaType == "application/oebps-package+xml" || strings.HasSuffix(strings.ToLower(rf.FullPath), ".opf")) {
 			opfPath, err := resolveBookPath("", rf.FullPath)
 			if err != nil {
 				return "", fmt.Errorf("rootfile %q: %w", rf.FullPath, err)

@@ -20,7 +20,7 @@
 // against the input limits (limits.js, docs/PARITY.md "Input limits") before any
 // page is inflated, and each inflation counts its bytes.
 
-import { COMIC_MAX_PAGE_BYTES, checkArchive, entryTooLarge, inflateRawCapped } from "./limits.js";
+import { COMIC_MAX_PAGE_BYTES, checkArchive, entryTooLarge, inflateRawCapped, zipEntryIsRegular } from "./limits.js";
 
 // PAGE_EXTS are the image extensions that count as a comic page. TIFF is excluded
 // (browsers cannot display it and it is vanishingly rare in comics). This set must
@@ -106,13 +106,21 @@ function compareDigits(x, y) {
   return 0;
 }
 
-// detectContainer classifies the archive bytes by signature: "zip" (CBZ), "rar"
-// (CBR), "7z" (CB7), or "tar" (CBT / unknown fallback - TAR has no leading magic).
-export function detectContainer(u8) {
+// What each extension promises when no signature settles it. Mirrors extKind in
+// internal/comic/container.go.
+const EXT_KIND = { cbz: "zip", cbt: "tar", cbr: "rar", cb7: "7z" };
+
+// detectContainer classifies the archive bytes: "zip" (CBZ), "rar" (CBR), "7z" (CB7) or
+// "tar" (CBT). The signature wins; with none, the file name's extension decides, as
+// internal/comic containerKind does - a ZIP behind a stub (a self-extractor saved as .cbz)
+// has no PK at offset 0 and is still a ZIP. Only a nameless call with no signature falls
+// back to TAR, since an old pre-POSIX TAR carries no magic at all.
+export function detectContainer(u8, name = "") {
   if (u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4b && u8[2] === 0x03 && u8[3] === 0x04) return "zip"; // PK\x03\x04
   if (u8.length >= 6 && u8[0] === 0x52 && u8[1] === 0x61 && u8[2] === 0x72 && u8[3] === 0x21) return "rar"; // Rar!
   if (u8.length >= 6 && u8[0] === 0x37 && u8[1] === 0x7a && u8[2] === 0xbc && u8[3] === 0xaf) return "7z";   // 7z\xBC\xAF
-  return "tar";
+  if (u8.length >= 262 && u8[257] === 0x75 && u8[258] === 0x73 && u8[259] === 0x74 && u8[260] === 0x61 && u8[261] === 0x72) return "tar"; // ustar
+  return EXT_KIND[extOf(String(name))] || "tar";
 }
 
 // DesktopOnlyError signals a CBR/CB7 the browser cannot open; the viewer turns it
@@ -123,10 +131,10 @@ export class DesktopOnlyError extends Error {}
 // Each page is { name, mime, load } where load() inflates just that page's bytes
 // on demand (Uint8Array). Throws DesktopOnlyError for CBR/CB7, InputLimitError for
 // a listing over the input limits, and a plain Error for a container with no page
-// images.
-export async function parseComic(arrayBuffer) {
+// images. name is the file name, the container hint when the bytes carry no signature.
+export async function parseComic(arrayBuffer, name = "") {
   const u8 = new Uint8Array(arrayBuffer);
-  const kind = detectContainer(u8);
+  const kind = detectContainer(u8, name);
   if (kind === "rar" || kind === "7z") {
     throw new DesktopOnlyError(
       `${kind === "rar" ? "CBR (RAR)" : "CB7 (7z)"} comics need the doc-html-translate desktop app - ` +
@@ -173,8 +181,25 @@ function findEOCD(dv, len) {
   return -1;
 }
 
+// zipBaseOffset returns how far the archive starts into the buffer: 0 for a plain ZIP, the
+// length of whatever precedes it (a self-extractor stub) otherwise. The end record's offsets
+// are relative to the archive's own start, so the distance from where the central directory
+// really ends to where the record says it starts is that prefix. Ported from Go's
+// archive/zip readDirectoryEnd, including its preference for 0 when the offsets already
+// land on a central-directory entry - the desktop edition opens the same prefixed .cbz.
+function zipBaseOffset(dv, eocd) {
+  const cdSize = dv.getUint32(eocd + 12, true);
+  const cdOffset = dv.getUint32(eocd + 16, true);
+  const base = eocd - cdSize - cdOffset;
+  if (base <= 0) return 0;
+  if (cdOffset + 4 <= dv.byteLength && dv.getUint32(cdOffset, true) === SIG_CEN) return 0;
+  return base;
+}
+
 // zipEntries lists the regular files with their declared sizes; count is every
-// entry in the central directory, directories included.
+// entry in the central directory, directories and links included. A symlink (or any
+// other non-regular entry) is left out as internal/comic openCBZ leaves it out: a page
+// is a regular file or nothing.
 function zipEntries(arrayBuffer) {
   const u8 = new Uint8Array(arrayBuffer);
   const dv = new DataView(arrayBuffer);
@@ -184,22 +209,25 @@ function zipEntries(arrayBuffer) {
   const count = dv.getUint16(eocd + 10, true);
   const cdOffset = dv.getUint32(eocd + 16, true);
   if (cdOffset === 0xffffffff) throw new Error("ZIP64 archives are not supported");
+  const base = zipBaseOffset(dv, eocd);
 
   const dec = new TextDecoder("utf-8");
   const out = [];
-  let p = cdOffset;
+  let p = base + cdOffset;
   for (let i = 0; i < count; i++) {
     if (p + 46 > u8.length || dv.getUint32(p, true) !== SIG_CEN) break;
+    const madeBy = dv.getUint16(p + 4, true);
     const method = dv.getUint16(p + 10, true);
     const compSize = dv.getUint32(p + 20, true);
     const size = dv.getUint32(p + 24, true);
     const nameLen = dv.getUint16(p + 28, true);
     const extraLen = dv.getUint16(p + 30, true);
     const commentLen = dv.getUint16(p + 32, true);
-    const localOff = dv.getUint32(p + 42, true);
+    const extAttrs = dv.getUint32(p + 38, true);
+    const localOff = base + dv.getUint32(p + 42, true);
     const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
     p += 46 + nameLen + extraLen + commentLen;
-    if (name.endsWith("/")) continue;
+    if (!zipEntryIsRegular(madeBy, extAttrs, name)) continue;
 
     const lhNameLen = dv.getUint16(localOff + 26, true);
     const lhExtraLen = dv.getUint16(localOff + 28, true);
@@ -233,6 +261,7 @@ function zipEntries(arrayBuffer) {
 //   - a GNU 'L' record carries the next entry's full name, 'K' its link name (ignored here);
 //   - a PAX 'x' record's path= and size= override the next header's fields, and a GNU.sparse.*
 //     key marks it sparse - skipped, as its stored bytes are not the page laid out in order;
+//   - with both an 'L' and a path=, the 'L' name wins;
 //   - the ustar prefix field joins the name only in USTAR/PAX headers: a GNU header keeps
 //     other data at that offset;
 //   - '0', or '\0' with no trailing slash, is a regular file.
@@ -296,12 +325,14 @@ export function tarEntries(u8) {
       const prefix = cstr(dec, block.subarray(345, 500));
       if (prefix) name = `${prefix}/${name}`;
     }
-    if (longName !== null) name = longName;
     let sparse = false;
     if (pax) {
       if (pax.has("path")) name = pax.get("path");
       for (const k of pax.keys()) if (k.startsWith("GNU.sparse.")) sparse = true;
     }
+    // Go's reader merges the PAX record first and applies the GNU long name after it, so
+    // the long name wins when an archive carries both.
+    if (longName !== null) name = longName;
     longName = null;
     pax = null;
     count++;
