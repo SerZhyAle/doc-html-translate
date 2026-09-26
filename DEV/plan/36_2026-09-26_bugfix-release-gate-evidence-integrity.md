@@ -74,5 +74,5 @@ Evidence:
 - `./scripts/typo.ps1` -> `typo: PASS` (exit 0).
 - `./scripts/check.ps1` on the working tree -> `check: FAIL (1: test)`, every other child PASS. The one
   failure is `TestExtract_Volume3ImagesOnTheirPages` ("spine has 4 pages, want 10"), red on a clean HEAD
-  worktree too: finding X25, owned by [ticket 43](43_2026-09-26_bugfix-pdf-text-and-image-fidelity.md).
+  worktree too: finding X25, owned by [ticket 43](done/43_2026-09-26_bugfix-pdf-text-and-image-fidelity.md).
   Acceptance 3 is re-run once 43 lands.

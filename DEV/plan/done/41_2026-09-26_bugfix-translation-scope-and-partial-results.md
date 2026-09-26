@@ -1,11 +1,11 @@
 # Translation sends the reader chrome to the paid engine and hides partial results
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: a real `-google` run without a key file exits 4 on Windows
 **Priority:** 85
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 

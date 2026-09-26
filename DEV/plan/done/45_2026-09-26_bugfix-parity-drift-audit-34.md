@@ -1,11 +1,11 @@
 # The Go and JS editions have drifted on eighteen behaviours
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: `go test ./internal/epub/` on Windows; Chrome: Calibre EPUB anchors, windows-1251 chapter, self-extracting .cbz
 **Priority:** 60
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 > docs/PARITY.md is the authority on which side is right.
 
 ## 1. Problem

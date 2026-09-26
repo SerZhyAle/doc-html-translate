@@ -1,11 +1,11 @@
 # Page OCR recognizes any image a web page names, with the extension's access
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: real Chrome: cross-origin image via the public fallback, same-origin from pixels, `file:` image not recognized
 **Priority:** 85
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 

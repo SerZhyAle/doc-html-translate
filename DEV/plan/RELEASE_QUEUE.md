@@ -63,17 +63,9 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-42  42_2026-09-26_bugfix-page-ocr-image-origin            2026-09-26  Draft - B49 (high): page OCR fetches any image a page names
 35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked + release guard; awaits commit and a CI build
-36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - implemented; green gate waits on #43 (X25)
+36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - implemented; #43 (X25) landed, green gate waits on a Windows check.ps1
 --  (no ticket) installer x86 build does not link     2026-09-26  Evidenced, unfiled - blocks the next setup.exe
-41  41_2026-09-26_bugfix-translation-scope-and-partial-results 2026-09-26  Draft - T13 (high): reader chrome sent to the paid engine
-43  43_2026-09-26_bugfix-pdf-text-and-image-fidelity     2026-09-26  Draft - X25 (high): PDF short lines dropped, test.ps1 red
-46  46_2026-09-26_bugfix-ocr-desktop-paths-and-language  2026-09-26  Draft - non-ANSI profile OCR, GUI script check never runs
-40  40_2026-09-26_bugfix-declare-source-language         2026-09-26  Draft - lang="en" guessed on FB2 / merged / index pages
-44  44_2026-09-26_bugfix-extension-viewer-state-and-references 2026-09-26  Draft - stale loads, export alpha, id refs, popup site
-47  47_2026-09-26_bugfix-cli-robustness-audit-34          2026-09-26  Draft - chapter overwrite, blocking dialogs, silent errors
-45  45_2026-09-26_bugfix-parity-drift-audit-34            2026-09-26  Draft - 18 Go/JS drifts and PARITY.md staleness
 ```
 
 15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 (the bundled
@@ -82,7 +74,8 @@ pdftotext set shipped without its licences) joined and was implemented the same 
 35 was found by 33: `pdftotext.exe` was never tracked in git, so the CI-built release assets and the winget zip embed
 the runtime DLLs without the executable. It sits first because it is a known defect in a shipped channel.
 
-36-47 come from the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md), which
+40-47 were implemented on 2026-09-26 and moved to [`done/`](done/) (40 fully; 41-47 wait on the checks listed
+below). 36-47 come from the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md), which
 closed on 2026-09-26 (22 slices, 138 findings: 0 crit, 6 high, 31 med, 101 low; register in its
 [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md)). 42 sits first: it is the one
 finding that can expose a user's local or intranet images to a web page. The five other highs follow 35 -
@@ -155,8 +148,8 @@ rung. Decide, do not leave it unwritten.
 32  32_2026-09-25_icon-system-surfaces                  2026-09-25  In Progress (built 2026-09-25; left: the owner's on-device look - taskbar light/dark, Chrome/Edge toolbar)
 26  26_2026-09-23_contract-product-web-pages-sync       2026-09-25  In Progress - Direction A done in the repo; rendered 360/768/1280 check, catalog row + exceptions and B1-B12 local only
 27  27_2026-09-22_install-trust-page                    2026-09-25  In Progress - page + links done in the repo; left: publish, then the local catalog row
-48  48_2026-09-26_contract-doc-internal-quality-gaps    2026-09-26  Draft - rules 3-6: link/anchor/asset gate, .md typography, flag-list drift
-49  49_2026-09-26_contract-doc-external-quality-gaps    2026-09-26  Draft - after 48: freshness, termbase, glossary, screenshots, SEO lengths
+48  48_2026-09-26_contract-doc-internal-quality-gaps    2026-09-26  Partial - gates and fixes landed; left: shared registry row
+49  49_2026-09-26_contract-doc-external-quality-gaps    2026-09-26  Partial - gates and pages landed; left: file the proposal, shared registry row
 ```
 
 48 and 49 come from the `documentation-quality` adoption run of 2026-09-26: both contracts adopted as a
@@ -239,6 +232,13 @@ ticket (in done/)                                   check left
 33_2026-09-25_bundled-binaries-notices                 next release: THIRD-PARTY-NOTICES.txt in the zip and as an asset
 37_2026-09-26_bugfix-release-workflow-provenance       next release: the first tag run of release.yml with the pinned actions
 38_2026-09-26_bugfix-bundled-ocr-data-per-channel      next release: tessdata/eng.traineddata inside the zip, MSIX and setup.exe
+41_2026-09-26_bugfix-translation-scope-and-partial-results  `-google` without a key exits 4 on Windows
+42_2026-09-26_bugfix-page-ocr-image-origin             real Chrome: public fallback, same-origin pixels, file: image refused
+43_2026-09-26_bugfix-pdf-text-and-image-fidelity       go test ./internal/pdf/ on Windows with the vendored pdftotext
+44_2026-09-26_bugfix-extension-viewer-state-and-references  real Chrome: cross-host PDF, popup host, export alpha
+45_2026-09-26_bugfix-parity-drift-audit-34             go test ./internal/epub/ on Windows; Chrome: anchors, windows-1251, sfx .cbz
+46_2026-09-26_bugfix-ocr-desktop-paths-and-language    non-ANSI profile, 8.3 names on and off, OCR after -ocr-download rus
+47_2026-09-26_bugfix-cli-robustness-audit-34           `n yy` at the first-run prompt; JPEG2000 PDF with -noopen opens no box
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

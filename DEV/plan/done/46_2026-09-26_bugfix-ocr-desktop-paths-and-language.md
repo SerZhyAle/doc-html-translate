@@ -1,11 +1,11 @@
 # Desktop OCR fails under a non-ANSI profile, and the GUI never checks the script
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: non-ANSI Windows profile, 8.3 names on and off, OCR after `-ocr-download rus`
 **Priority:** 70
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 
@@ -43,7 +43,7 @@ the `-src` mapping now yields `eng` where it used to yield a pack the catalog la
 contract's own "else `eng`". The GUI is not part of the invocation. No catalog amendment needed.
 
 **O15 - ASCII-safe Tesseract paths.**
-- New [`internal/ocr/asciipath.go`](../../internal/ocr/asciipath.go) (portable) with
+- New [`internal/ocr/asciipath.go`](../../../internal/ocr/asciipath.go) (portable) with
   `asciipath_windows.go` / `asciipath_nonwindows.go`. A path goes to the engine as is when ASCII, else as
   its 8.3 short name (`GetShortPathNameW`, Windows only) when that is ASCII. Temp images are written under
   a staging root resolved once per process: the system temp folder, then `%PUBLIC%` / `%ProgramData%`
@@ -51,7 +51,7 @@ contract's own "else `eng`". The GUI is not part of the invocation. No catalog a
   `doc-html-translate-ocr`, taking the first that exists, has an ASCII form and is writable.
 - `--tessdata-dir`: `PrepareEngine` returns the data folder, its short name, or a mirror of its packs under
   `<staging root>/doc-html-translate-tessdata` (copied once, reused at the same size).
-- [`internal/pipeline/ocrstep.go`](../../internal/pipeline/ocrstep.go) calls it once per book; when no ASCII
+- [`internal/pipeline/ocrstep.go`](../../../internal/pipeline/ocrstep.go) calls it once per book; when no ASCII
   root exists OCR is skipped with a line naming every folder tried.
 - `writeTempPNG` / `stageASCIIPath` / `isASCIIPath` moved out of `tesseract.go` into the new file, which
   covers the upscale, rotate, rescue, screen and script-detection passes.
@@ -66,7 +66,7 @@ contract's own "else `eng`". The GUI is not part of the invocation. No catalog a
   (`GOOS=windows go vet`) but has not run on Windows here.
 
 **O16 - GUI sends `-ocr-lang` only on an explicit choice.**
-- [`cmd/doc-html-ui/ui.html`](../../cmd/doc-html-ui/ui.html): the OCR select now starts with an
+- [`cmd/doc-html-ui/ui.html`](../../../cmd/doc-html-ui/ui.html): the OCR select now starts with an
   **Automatic (source language)** entry (value `""`, i18n key `ocrLangAuto` replacing the now unused
   `ocrEngDefault` in all 13 dictionaries of `i18n.js`). The `eng` fallback and the copy of the `-src`
   language into the select are gone. `syncOcrLangToSource` now only reports a missing `-src` pack and
@@ -76,7 +76,7 @@ contract's own "else `eng`". The GUI is not part of the invocation. No catalog a
   and is kept (`applyOcrWant`).
 - Tests: `TestAssembleArgsSendsNoOCRLangForTheAutomaticChoice` (the GUI argument test: `-ocr` with no
   `-ocr-lang`, and the CLI parses an empty `OCRLang`) and `TestUIDefaultsTheOCRLanguageToAutomatic`
-  (markup) in [`cmd/doc-html-ui/main_test.go`](../../cmd/doc-html-ui/main_test.go).
+  (markup) in [`cmd/doc-html-ui/main_test.go`](../../../cmd/doc-html-ui/main_test.go).
 - Also checked in headless Chromium: the page was served with stubbed APIs and its `/api/preview` body
   recorded for fresh, legacy and new settings. Pre-fix: 5 of 6 cases sent an explicit language. Post-fix:
   all 6 as intended.
@@ -84,7 +84,7 @@ contract's own "else `eng`". The GUI is not part of the invocation. No catalog a
   itself is a judgement call (a user who deliberately chose `eng` goes back to Automatic once).
 
 **O17 - mapping and advice agree with the catalog.**
-- [`internal/ocr/tessdata.go`](../../internal/ocr/tessdata.go): `iso2tess` lists only catalog languages
+- [`internal/ocr/tessdata.go`](../../../internal/ocr/tessdata.go): `iso2tess` lists only catalog languages
   (`nld` / `tur` / `ara` dropped). `TessLang` maps a region subtag to its language (`pt-BR` -> `por`,
   `zh-CN` / `zh-TW` -> `chi_sim`) and passes a catalog Tesseract name as is. Anything else gives `eng`,
   which the script check can still correct. A `+`-joined value keeps the parts that derive a pack.
@@ -92,7 +92,7 @@ contract's own "else `eng`". The GUI is not part of the invocation. No catalog a
   no download for it.
 - Tests: `TestTessLangDerivesOnlyCatalogLanguages` checks that every derived code passes `CheckLang`.
   `TestMissingAdviceOffersOnlyCatalogDownloads` covers the advice.
-- [`docs/PARITY.md`](../../docs/PARITY.md) ("Default OCR language rule") and `README.md` are updated.
+- [`docs/PARITY.md`](../../../docs/PARITY.md) ("Default OCR language rule") and `README.md` are updated.
 
 **O18 - a pack that could not be staged is named.**
 - `DataDir()` is replaced by `DataDirFor(lang)`. It still stages the bundled packs into the per-user folder

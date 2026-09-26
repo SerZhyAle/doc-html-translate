@@ -1,11 +1,11 @@
 # PDF conversion drops short lines and shows some images wrong or not at all
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: `go test ./internal/pdf/` on Windows with the vendored pdftotext
 **Priority:** 80
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 

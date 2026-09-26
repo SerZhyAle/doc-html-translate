@@ -1,11 +1,11 @@
 # Extension viewer and popup: stale state, broken references, wrong site
 
-**Status:** Implemented
+**Status:** BlockNeedUserTest - implemented 2026-09-26; left: real Chrome: switched-off site cross-host PDF, popup host on the viewer tab, EPUB export keeps PNG alpha
 **Priority:** 65
 **Date:** 2026-09-26
 
-> Filed by the pre-release audit, [ticket 34](done/34_2026-09-25_full-code-audit-pre-release.md). Finding ids
-> refer to its register, [`FINDINGS.md`](done/34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
+> Filed by the pre-release audit, [ticket 34](34_2026-09-25_full-code-audit-pre-release.md). Finding ids
+> refer to its register, [`FINDINGS.md`](34_2026-09-25_full-code-audit-pre-release/FINDINGS.md).
 
 ## 1. Problem
 
