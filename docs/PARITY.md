@@ -222,7 +222,12 @@ RTF unit cases run on both sides (`internal/rtf/parse_test.go`, `extension/test/
   becomes one character, a lone surrogate U+FFFD. After each `\uN` the next `\ucN` characters are the
   fallback and are dropped: a text byte, a `\'XX` escape or a control word each counts as one; `{` or `}`
   ends the fallback. `\ucN` defaults to 1 and is scoped to its group.
-- **Binary.** `\binN` skips N raw bytes by count, braces and backslashes included.
+- **Binary.** `\binN` skips N raw bytes by count, braces and backslashes included; an N past the end
+  skips to the end.
+- **Parameters.** A control word's number keeps its first 10 digits. Go also saturates the magnitude at
+  2^31-1, so the 32-bit build cannot overflow (ticket 47, X29); JS numbers are doubles and need no clamp.
+  The two differ only on values above 2^31-1, which no RTF writer emits and which end at the same place
+  for `\bin` and `\uc`.
 - **Control symbols.** `\~` U+00A0, `\_` U+2011, `\-` dropped, `\{ \} \\` literal, `\<newline>` a paragraph
   break. Symbol words (`\emdash`, `\ldblquote`, `\bullet`, ..) map to their characters; `\par`, `\line`,
   `\sect`, `\page`, `\row` break the paragraph; `\tab` and `\cell` are a tab. Raw CR/LF in the source are

@@ -29,6 +29,7 @@ const cases = [
   ["starred destination skipped", "{\\rtf1{\\*\\generator Riched20;}Body}", "Body"],
   ["picture skipped", "{\\rtf1{\\pict\\wmetafile8 0102abcdef}Body}", "Body"],
   ["bin data skipped even with braces", "{\\rtf1{\\pict\\bin4 {}\\}}Body}", "Body"],
+  ["huge bin parameter skips to the end", "{\\rtf1 a\\bin99999999999 xyz}", "a"],
   ["control symbols", "{\\rtf1 a\\~b\\_c\\-d\\{\\}\\\\}", "a\u{A0}b\u{2011}cd{}\\"],
   ["symbol words", "{\\rtf1\\ldblquote x\\rdblquote\\emdash}", "\u{201C}x\u{201D}\u{2014}"],
   ["paragraph and tab", "{\\rtf1 a\\par b\\tab c}", "a\n\nb\tc"],
