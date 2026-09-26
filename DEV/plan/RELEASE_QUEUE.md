@@ -63,9 +63,8 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 
 ```
 #   ticket                                              changed     status
-35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked + release guard; awaits commit and a CI build
-36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - implemented; #43 (X25) landed, green gate waits on a Windows check.ps1
---  (no ticket) installer x86 build does not link     2026-09-26  Evidenced, unfiled - blocks the next setup.exe
+35  35_2026-09-25_pdftotext-missing-from-ci-builds       2026-09-26  In Progress - exe tracked (5767e29) + release guard; awaits a CI build
+36  36_2026-09-26_bugfix-release-gate-evidence-integrity  2026-09-26  In Progress - working tree gate green 2026-09-26; clean-HEAD gate waits on committing the fixes
 ```
 
 15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 (the bundled
@@ -87,9 +86,13 @@ audit: none regressed.
 37 reached `Implemented` on 2026-09-26 and moved to [`done/`](done/37_2026-09-26_bugfix-release-workflow-provenance.md):
 the release workflow builds only the tag it names, the local installer and MSIX builds take `-Tag` and refuse
 any other tree, the MSIX identity defaults to the frozen `SZA.Doc-HTML-Translate`, and every action is pinned by
-commit. Its scratch-clone run found the unfiled line above: `build-installer.ps1` fails in the x86 link
+commit. Its scratch-clone run found an unfiled defect: `build-installer.ps1` fails in the x86 link
 (`resource.syso: unknown relocation type 3` with `goversioninfo` v1.7.0; the v1.4.1 on this machine's `PATH`
-cannot read the three-ICO `IconPath` at all), so no setup.exe can be built for the next release until it is fixed.
+cannot read the three-ICO `IconPath` at all). Fixed 2026-09-26 without a ticket: the old script called the `PATH`
+goversioninfo with `GOARCH=amd64` left over from the amd64 build, and v1.7.0 defaults `-64` from that `GOARCH`, so
+the 386 resource came out amd64. `scripts/lib/goversioninfo.ps1` now clears `GOARCH` for the call, and
+`build-installer.ps1` passes `-64=false` for 386 explicitly, so an amd64 host cannot reintroduce it.
+`build-installer.ps1 -Stamp 26.0926.0005` exit 0; x86 exes `machine=0x014C`, x64 `0x8664`, both version-stamped.
 
 Reordered 2026-09-25: every remaining defect ticket comes before any instrument, contract or docs work.
 25 (`hygiene`) went first and is done (waiting on a Windows pass, listed below); the pipeline sandbox

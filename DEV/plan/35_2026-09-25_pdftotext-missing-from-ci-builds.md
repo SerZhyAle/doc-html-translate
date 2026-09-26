@@ -1,6 +1,6 @@
 # The CI release build embeds no pdftotext.exe
 
-**Status:** In Progress
+**Status:** In Progress - all code landed (exe tracked in 5767e29, release guard); only the CI-build check is left
 **Priority:** 60
 **Date:** 2026-09-25
 
@@ -31,8 +31,8 @@ Not yet measured: what a user of the portable build loses on a real PDF when no 
 
 ## Done criteria
 
-- [ ] `git ls-files internal/bundledtools/pdftotext` lists all four files. The ignore rule no longer matches
-      (`git check-ignore -q --no-index` exits 1, `git add --dry-run` adds the exe); ticks when the commit lands.
+- [x] `git ls-files internal/bundledtools/pdftotext` lists all four files. The ignore rule no longer matches
+      (`git check-ignore -q --no-index` exits 1, `git add --dry-run` adds the exe). Checked 2026-09-26: tracked since 5767e29, `git check-ignore -v` exits 1.
 - [ ] A CI-built executable unpacks `pdftotext.exe` on first PDF conversion. Needs the next CI release build.
 - [x] A check fails when the set lacks `pdftotext.exe` in a release build.
 

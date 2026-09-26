@@ -1,6 +1,6 @@
 # The release gate can be turned green without the full gate having passed
 
-**Status:** In Progress - all six goals implemented and pinned; acceptance 3 (a green gate) waits on ticket 43 (X25)
+**Status:** In Progress - all six goals implemented and pinned; acceptance 3 (a green gate on a clean HEAD) waits on committing the lint/typo/race fixes, then one run
 **Priority:** 90
 **Date:** 2026-09-26
 
@@ -76,3 +76,11 @@ Evidence:
   failure is `TestExtract_Volume3ImagesOnTheirPages` ("spine has 4 pages, want 10"), red on a clean HEAD
   worktree too: finding X25, owned by [ticket 43](done/43_2026-09-26_bugfix-pdf-text-and-image-fidelity.md).
   Acceptance 3 is re-run once 43 lands.
+- Re-run 2026-09-26 after 43 landed. Working tree (HEAD `adff4b0` + uncommitted work):
+  `check: PASS WITH ADVISORIES (1: parity-check)`, exit 3 - test run=1080, test-extension run=309, lint, typo,
+  doc-registry, security-posture all PASS; the advisory is ticket 32's uncommitted `ui.html`. A clean `adff4b0`
+  worktree: `check: FAIL (3: test, lint, typo)`. lint (`tests/site_l10n_test.go:90` ineffassign) and typo
+  (`configs/termbase.json` foreign-language terms) are fixed only in the uncommitted tree; test was
+  `TestExtractSetConcurrent` - a real Windows race in `bundledtools.placeFile` (a rename over a file another
+  instance is reading fails "Access is denied"), fixed with bounded retries: `-count=200` fails on `adff4b0`,
+  passes with the fix. Acceptance 3 now waits only on those fixes being committed, then one clean-HEAD run.
