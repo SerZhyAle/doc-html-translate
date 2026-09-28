@@ -8,7 +8,7 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, GATE_SCREEN_MERGE, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, GATE_SCREEN_MERGE, markRescueAdmission, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
@@ -355,7 +355,13 @@ async function sampleColors(blob, blocks) {
 // run at OCR_RESCUE_LINE_CONF - and orderColumns forms its columns from the lines that floor keeps,
 // as tesseract.go tsvLines hands it the pass floor. Ordering a rescue pass by the ordinary floor
 // let lines the pass then drops chain columns together, in this edition only.
-function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF) {
+//
+// rescue runs the anchored rescue admission over the finished lines (markRescueAdmission,
+// ocr-cluster.js) before any gate reads them; unordered stamps every line with the pass's
+// unordered-rows mark (the sparse rung), which the clustering reads to tolerate a late row. Both
+// flags are false for every pass that was ever measured without them. Mirrors tesseract.go
+// tsvLines (docs/PARITY.md).
+function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, rescue = false, unordered = false) {
   const out = [];
   const at = (v) => Math.round(v / scale);
   let split = false; // did any line on this page have to be cut?
@@ -421,7 +427,11 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF) 
       for (const l of lines) push(l);
     }
   }
-  // Only a page the split actually cut is regrouped - see orderColumns.
+  // The admission and the unordered stamp run before the regroup, as tesseract.go tsvLines runs
+  // them: an admitted line reaches a plate, so orderColumns must let it form a column like any
+  // other. Only a page the split actually cut is regrouped - see orderColumns.
+  if (rescue) markRescueAdmission(out, minConf);
+  if (unordered) for (const l of out) l.unordered = true;
   return split ? orderColumns(out, minConf) : out;
 }
 
@@ -584,7 +594,9 @@ async function greyRescue(worker, image, scale, imgW, imgH, ink = null) {
       try {
         await worker.setParameters({ thresholding_method: rung.method, tessedit_pageseg_mode: rung.psm });
         const { data } = await worker.recognize(grey, {}, { blocks: true });
-        const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF);
+        // Every grey rung reads with the anchored rescue admission; the sparse rung is also the
+        // pass whose rows arrive unordered (OCR-PIPELINE amendment 1.6 A-B).
+        const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF, true, rung.psm === OCR_SPARSE_PSM);
         const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
         const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped);
         if (strictlyBetter(blocks, best)) {

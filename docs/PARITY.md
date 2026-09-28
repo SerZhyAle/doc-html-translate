@@ -803,6 +803,21 @@ their own test where one exists.
   default `eng` a Cyrillic poster then gets a 782x310 px plate of transliterated debris
   (`TPAXATBCR: 4 y`) over its own lettering where it previously got none, which is the regression
   the floor exists to prevent. Both editions are back at 80 and the gap is left open.
+- **The anchored rescue admission** identical (2026-09-28, ticket 29; OCR-PIPELINE amendment 1.6) -
+  `tesseract.go` `markRescueAdmission` == `ocr-cluster.js` `markRescueAdmission`, and the constants
+  with it: `ocrRescueAnchorConf` **47** == `OCR_RESCUE_ANCHOR_CONF`, `ocrRescueAnchorRun` **4** ==
+  `OCR_RESCUE_ANCHOR_RUN`, `ocrRescueAnchorVotes` **2** == `OCR_RESCUE_ANCHOR_VOTES` (guarded by
+  `TestParityOCRRescueAdmission` and `TestParityOCRGreyRescue`). A rescue rung may keep a sub-floor
+  line when the line clears 47, carries a 4-letter run, and its own pass holds at least two
+  floor-clearing 4-letter-run anchors, one of them at the line's type size. The votes floor is what
+  the 2026-09-25 attempt lacked: both scenes it regressed were read by a pass holding exactly one
+  confident line, and on an English scene read with `rus` that line (`МОТ ЕУЕМ`, 81.4) was itself
+  debris. The grey rungs are the only passes that ask for the admission; the ordinary pass and the
+  screen passes keep their measured floors. Its companion fix: a line of the **unordered sparse
+  rung** that fails the ordinary join but fits inside the open cluster's band - same column, same
+  type size, y-overlapping the span - **joins the open cluster** on both sides
+  (`ocrLine.unordered` == `line.unordered`, stamped by the pass that read it), because PSM 11's
+  rows arrive in no particular order and a late row used to split the cluster it belongs to.
 - **The confidence floor keeps a record of what it rejected** - `tesseract.go` `keepLine` +
   `Result.Dropped` == `ocr-cluster.js` `keepLine` + `droppedLines`, guarded by
   `TestParityOCRDroppedLines`. The floor is the one place the overlay decides against words the

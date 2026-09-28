@@ -158,14 +158,14 @@ func TestParseTSVSplitsBalloonsStitchedAtANarrowGap(t *testing.T) {
 	fill(page, 312, 70, 315, 200, 0) // the left balloon's right side
 	fill(page, 335, 70, 338, 200, 0) // the right balloon's left side
 
-	merged, err := parseTSV([]byte(tsv), ocrMinLineConf, nil)
+	merged, err := parseTSV([]byte(tsv), ocrMinLineConf, nil, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(merged.Blocks) != 1 {
 		t.Fatalf("without pixels: %d block(s), want the one merged plate this test exists to fix", len(merged.Blocks))
 	}
-	res, err := parseTSV([]byte(tsv), ocrMinLineConf, page)
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf, page, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +201,7 @@ func TestParseTSVParksWhatAStrokeCutOff(t *testing.T) {
 	page := paperPage(1000, 1000, 255)
 	fill(page, 630, 700, 636, 950, 0) // the balloon's outline, between the speck and the lettering
 
-	res, err := parseTSV([]byte(tsv), ocrMinLineConf, page)
+	res, err := parseTSV([]byte(tsv), ocrMinLineConf, page, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}

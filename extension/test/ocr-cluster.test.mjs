@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, markRescueAdmission, medianLinePitch, orderColumns, releaseOversized, resultStrength,
   sameTypeSize, splitWideGaps, strictlyBetter, strokeBetween, trimOutlierWords,
-  OCR_BOUNDARY_REACH, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO,
+  OCR_BOUNDARY_REACH, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO, OCR_RESCUE_LINE_CONF,
 } from "../src/ocr-cluster.js";
 import { readFileSync } from "node:fs";
 
@@ -694,4 +694,113 @@ test("clusterLines repairs the lines a coverage release splits a gated cluster i
   const joined = blocks.map((b) => b.text).join(" ");
   assert.ok(joined.includes("Se) I Given Family Family manager"), joined);
   assert.ok(joined.includes("i) I Second I Family Parent"), joined);
+});
+
+// The anchored rescue admission (OCR-PIPELINE amendment 1.6, ticket 29). Mirrors internal/ocr
+// rescue_anchor_test.go case for case: the same poster and balloon fixtures, the same verdicts.
+// A rescue rung keeps a line under OCR_RESCUE_LINE_CONF only when its pass holds at least two
+// floor-clearing 4-letter-run anchors and one stands at the candidate's own type size; the
+// clustering joins a late row of the unordered sparse rung instead of splitting the cluster it
+// fits inside.
+const posterRows = [
+  { bbox: { x0: 76, y0: 79, x1: 780, y1: 366 }, conf: 69.2, text: "ЗАЧЕМ" },
+  { bbox: { x0: 74, y0: 415, x1: 1328, y1: 696 }, conf: 80.7, text: "ТРАХАТЬСЯ:" },
+  { bbox: { x0: 79, y0: 750, x1: 521, y1: 905 }, conf: 96.1, text: "МЫ ЖЕ" },
+  { bbox: { x0: 76, y0: 1131, x1: 456, y1: 1302 }, conf: 92.6, text: "ЛЮДИ," },
+  { bbox: { x0: 79, y0: 1319, x1: 538, y1: 1472 }, conf: 95.9, text: "МОЖЕМ" },
+  { bbox: { x0: 79, y0: 1694, x1: 498, y1: 1836 }, conf: 73.9, text: "ОБ ЗЛОМ" },
+  { bbox: { x0: 80, y0: 1509, x1: 477, y1: 1658 }, conf: 87.2, text: "ПРОСТО" },
+  { bbox: { x0: 80, y0: 1872, x1: 644, y1: 2009 }, conf: 95.0, text: "ПОГОВОРИТЬ" },
+];
+
+test("markRescueAdmission keeps the poster whole once the late row joins", () => {
+  const lines = posterRows.map((l) => ({ ...l, bbox: { ...l.bbox }, unordered: true }));
+  markRescueAdmission(lines, OCR_RESCUE_LINE_CONF);
+  const blocks = clusterLines(lines, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(
+    blocks.map((b) => b.text),
+    ["ЗАЧЕМ ТРАХАТЬСЯ:", "МЫ ЖЕ ЛЮДИ, МОЖЕМ ОБ ЗЛОМ ПРОСТО ПОГОВОРИТЬ"],
+  );
+  // The admitted lines leave the discard record: nothing the record carries changes.
+  assert.deepEqual(droppedLines(lines, OCR_RESCUE_LINE_CONF), []);
+});
+
+test("without the admission the poster's sub-floor lines stay dropped", () => {
+  const lines = posterRows.map((l) => ({ ...l, bbox: { ...l.bbox } }));
+  const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+  assert.deepEqual(
+    dropped.filter((d) => d.gate === GATE_CONFIDENCE).map((d) => d.text).sort(),
+    ["ЗАЧЕМ", "ОБ ЗЛОМ"],
+  );
+  const texts = clusterLines(lines, OCR_RESCUE_LINE_CONF).map((b) => b.text);
+  assert.ok(!texts.some((t) => t.includes("ЗАЧЕМ")), "no headline plate forms");
+});
+
+test("markRescueAdmission needs two anchors: the balloon scene's single confident line vouches for nothing", () => {
+  // An English scene read with Russian data: МОТ ЕУЕМ (81.4) is itself debris, and the 2026-09-25
+  // attempt extended it across the neighbouring balloon onto a protected outline.
+  const rus = [
+    { bbox: { x0: 116, y0: 123, x1: 390, y1: 151 }, conf: 67.2, text: "АКЕ УОЧ УВЕ" },
+    { bbox: { x0: 116, y0: 175, x1: 362, y1: 203 }, conf: 62.0, text: "АВОЧТ ТН1$?" },
+    { bbox: { x0: 118, y0: 259, x1: 298, y1: 287 }, conf: 81.4, text: "МОТ ЕУЕМ" },
+    { bbox: { x0: 117, y0: 311, x1: 308, y1: 339 }, conf: 0.0, text: "$ЫСНТЕУ." },
+  ];
+  markRescueAdmission(rus, OCR_RESCUE_LINE_CONF);
+  assert.ok(!rus[1].rescued, "one anchor admits nothing");
+  const dropped = droppedLines(rus, OCR_RESCUE_LINE_CONF).map((d) => d.text);
+  assert.ok(dropped.includes("АВОЧТ ТН1$?"), "the candidate stays in the discard record");
+});
+
+test("each admission condition refuses its own near-miss", () => {
+  const anchors = [
+    { bbox: { x0: 0, y0: 0, x1: 300, y1: 100 }, conf: 92.0, text: "ANCHORED" },
+    { bbox: { x0: 0, y0: 200, x1: 300, y1: 300 }, conf: 90.0, text: "SECOND ANCHOR" },
+  ];
+  for (const [name, cand] of [
+    ["confidence under 47", { bbox: { x0: 0, y0: 400, x1: 300, y1: 500 }, conf: 46.9, text: "CANDIDATE" }],
+    ["letter run under four", { bbox: { x0: 0, y0: 400, x1: 300, y1: 500 }, conf: 60.0, text: "АВ" }],
+    ["type size no anchor covers", { bbox: { x0: 0, y0: 400, x1: 300, y1: 700 }, conf: 60.0, text: "CANDIDATE" }],
+  ]) {
+    const lines = [...anchors.map((l) => ({ ...l, bbox: { ...l.bbox } })), { ...cand, bbox: { ...cand.bbox } }];
+    markRescueAdmission(lines, OCR_RESCUE_LINE_CONF);
+    assert.ok(!cand.rescued, `${name}: the candidate is not admitted`);
+    assert.ok(droppedLines(lines, OCR_RESCUE_LINE_CONF).some((d) => d.text === cand.text),
+      `${name}: the candidate stays in the discard record`);
+  }
+});
+
+test("an unordered late row inside the open cluster's band joins it", () => {
+  const lines = [
+    { bbox: { x0: 0, y0: 0, x1: 300, y1: 100 }, conf: 95, text: "FIRSTLY", unordered: true },
+    { bbox: { x0: 0, y0: 200, x1: 300, y1: 300 }, conf: 95, text: "SECONDLY", unordered: true },
+    { bbox: { x0: 0, y0: 120, x1: 300, y1: 200 }, conf: 90, text: "LATELY", unordered: true },
+  ];
+  const blocks = clusterLines(lines, 50);
+  assert.equal(blocks.length, 1, "the late row joins");
+  assert.equal(blocks[0].text, "FIRSTLY SECONDLY LATELY");
+  assert.deepEqual([blocks[0].bbox.y0, blocks[0].bbox.y1], [0, 300]);
+});
+
+test("an ordered late row still splits the cluster", () => {
+  const lines = [
+    { bbox: { x0: 0, y0: 0, x1: 300, y1: 100 }, conf: 95, text: "FIRSTLY" },
+    { bbox: { x0: 0, y0: 200, x1: 300, y1: 300 }, conf: 95, text: "SECONDLY" },
+    { bbox: { x0: 0, y0: 120, x1: 300, y1: 200 }, conf: 90, text: "LATELY" },
+  ];
+  assert.equal(clusterLines(lines, 50).length, 2, "the walk is unchanged for ordered passes");
+});
+
+test("an unordered late row outside the band, in another column or at another type size still splits", () => {
+  for (const [name, late] of [
+    ["below the band", { x0: 0, y0: 700, x1: 300, y1: 780 }],
+    ["another column", { x0: 600, y0: 120, x1: 900, y1: 200 }],
+    ["another type size", { x0: 0, y0: 120, x1: 300, y1: 320 }],
+  ]) {
+    const lines = [
+      { bbox: { x0: 0, y0: 0, x1: 300, y1: 100 }, conf: 95, text: "FIRSTLY", unordered: true },
+      { bbox: { x0: 0, y0: 200, x1: 300, y1: 300 }, conf: 95, text: "SECONDLY", unordered: true },
+      { bbox: { ...late }, conf: 90, text: "LATELY", unordered: true },
+    ];
+    assert.equal(clusterLines(lines, 50).length, 2, name);
+  }
 });

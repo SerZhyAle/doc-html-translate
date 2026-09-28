@@ -24,8 +24,10 @@ func TestParityOCRColumnOrderFloor(t *testing.T) {
 		t.Error("ocr-overlay.js: collectLines no longer takes the pass floor and hands it to orderColumns")
 	}
 	// Every pass reads its lines with collectLines and filters them with droppedLines right after;
-	// the floor of the two must be the same.
-	call := regexp.MustCompile(`collectLines\(data, scale, ink(?:, (\w+))?\);\s*\n\s*const dropped = droppedLines\(lines, (\w+)\)`)
+	// the floor of the two must be the same. The rescue rungs hand collectLines two more flags
+	// after the floor - the anchored rescue admission and the unordered-rows mark - so only the
+	// first argument after ink is the floor.
+	call := regexp.MustCompile(`collectLines\(data, scale, ink(?:, (\w+)(?:,[^)]*)?)?\);\s*\n\s*const dropped = droppedLines\(lines, (\w+)\)`)
 	calls := call.FindAllStringSubmatch(js, -1)
 	if len(calls) < 4 {
 		t.Fatalf("ocr-overlay.js: found %d collectLines/droppedLines passes, want the ordinary, rescue, screen rescue and screen sweep passes", len(calls))

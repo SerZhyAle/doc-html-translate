@@ -237,7 +237,7 @@ func Recognize(ctx context.Context, bin, imgPath, lang, dataDir string) (Result,
 	// over unbuilt: recognizePass builds it once the recognizer has returned, which is the moment
 	// the rescue ladder or screenSweep built it before the test existed - every image reaches it
 	// either way - so the worker holds no more memory, for no longer, than it did.
-	res, err := recognizePass(ctx, bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf, frame.grey)
+	res, err := recognizePass(ctx, bin, frame.path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrMinLineConf, frame.grey, false, false)
 	if err != nil {
 		return Result{}, err
 	}
@@ -279,7 +279,11 @@ const (
 // is asked for only after the recognizer has returned, and nil or a nil answer leaves the split to
 // its ratio rule. Every pass reads the picture itself, not the grey or low-passed copy it may have
 // handed the recognizer.
-func recognizePass(ctx context.Context, bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64, ink func() *image.Gray) (Result, error) {
+//
+// rescue turns on the anchored rescue admission for this pass (markRescueAdmission) - the grey
+// rescue rungs only. unordered marks the pass as one whose rows arrive unordered (the sparse rung,
+// PSM 11); the clustering reads the per-line mark to tolerate a late row.
+func recognizePass(ctx context.Context, bin, ocrPath, lang, dataDir string, dpi, thresholding, psm int, minConf float64, ink func() *image.Gray, rescue, unordered bool) (Result, error) {
 	res, err := runTesseract(ctx, procrun.Tesseract, bin, ocrPath, tesseractArgs(ocrPath, lang, dataDir, dpi, thresholding, psm))
 	if err != nil {
 		return Result{}, err
@@ -292,7 +296,7 @@ func recognizePass(ctx context.Context, bin, ocrPath, lang, dataDir string, dpi,
 	if ink != nil {
 		plane = ink()
 	}
-	return parseTSV(res.Stdout, minConf, plane)
+	return parseTSV(res.Stdout, minConf, plane, rescue, unordered)
 }
 
 // known hands recognizePass a luminance plane that already exists.
@@ -394,7 +398,7 @@ func greyRescue(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir 
 	defer cleanup()
 	var best Result
 	for _, rung := range greyRescuePasses {
-		res, err := recognizePass(ctx, bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf, known(grey))
+		res, err := recognizePass(ctx, bin, greyPath, lang, dataDir, dpi, rung.thresholding, rung.psm, ocrRescueLineConf, known(grey), true, rung.psm == ocrSparsePageSegMode)
 		if err != nil {
 			continue
 		}
@@ -441,7 +445,7 @@ func screenRescue(ctx context.Context, bin string, grey *image.Gray, lang, dataD
 		return Result{}, false
 	}
 	defer cleanup()
-	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
+	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey), false, false)
 	if err != nil {
 		return Result{}, false
 	}
@@ -478,9 +482,10 @@ func screenRescue(ctx context.Context, bin string, grey *image.Gray, lang, dataD
 // with. Turning it into a measured number needs annotated whole pages, which the corpus does not yet
 // have (see the ticket's human-owned gate).
 //
-// No relaxed word rule applies here: the 2026-08-15 one was reverted, and the 2026-09-25 size rule
-// never reached this pass - on the corpus its candidates here are mostly half-read masthead lines of
-// a French page (DEV/research/ocr_rescue_third_axis_2026-09-25.md).
+// No relaxed word rule applies here: the 2026-08-15 one was reverted, and the anchored rescue
+// admission (OCR-PIPELINE amendment 1.6) is scoped to the grey rungs - this pass reads a page the
+// reader is already being shown, under a stricter prior, and a relaxation on its blurred rendition
+// has never been measured.
 //
 // The second result is the sweep's own discard record: the lines its floor and its translatability
 // test rejected, and the plates the merge refused as duplicates.
@@ -500,7 +505,7 @@ func screenSweep(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir
 		return kept, nil
 	}
 	defer cleanup()
-	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey))
+	res, err := recognizePass(ctx, bin, path, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey), false, false)
 	if err != nil {
 		return kept, nil
 	}
@@ -560,6 +565,37 @@ const ocrRescueLineConf = 80
 // balloon read with `rus`) the rule extends it across the next balloon onto a protected outline.
 // DEV/research/ocr_rescue_third_axis_2026-09-25.md.
 //
+// **The fourth attempt landed on 2026-09-28 as the anchored rescue admission** (OCR-PIPELINE
+// amendment 1.6): the same type-size anchor, plus a corroboration floor - a pass may vouch for a
+// sub-floor line only when at least two of its own lines cleared the rescue floor with a 4-letter
+// run - and the clustering now tolerates a late row of the unordered sparse rung instead of
+// splitting the cluster it fits inside. The corroboration is what the 2026-09-25 attempt lacked: on
+// both scenes that regressed, the pass held exactly one confident line, and on one of them that line
+// (`МОТ ЕУЕМ` at 81.4) was itself debris from an English scene read with `rus`. Measured in
+// DEV/research/ocr_rescue_anchor_2026-09-28.md.
+
+// ocrRescueAnchorConf is the confidence a sub-floor line must clear before the rescue admission
+// looks at anything else. It is the middle of the empty band the 2026-08-15 populations bracket
+// (36.1 / 58.3) - the same number the rejected 2026-08-15 length rule used, inherited unchanged.
+// OCR-OVERLAY rule 13: inherited - the 2026-08-15 empty band's middle (ocr_rescue_floor_2026-08-15),
+// reused by the anchored rescue admission (OCR-PIPELINE amendment 1.6 A).
+const ocrRescueAnchorConf = 47
+
+// ocrRescueAnchorRun is the run of consecutive letters both a sub-floor candidate and the anchor
+// that vouches for it must carry, so pure punctuation or a lone digit can neither anchor nor be
+// admitted. Inherited from the same band.
+// OCR-OVERLAY rule 13: inherited - the 2026-08-15 band's four-letter run (ocr_rescue_floor_2026-08-15),
+// reused by the anchored rescue admission (OCR-PIPELINE amendment 1.6 A).
+const ocrRescueAnchorRun = 4
+
+// ocrRescueAnchorVotes is how many floor-clearing 4-letter-run lines a pass must hold before it may
+// admit anything under the floor. One confident line is no evidence of the alphabet: measured, the
+// only corpus scene whose winning pass held a single confident line had read an English page with
+// `rus` data and trusted debris (`МОТ ЕУЕМ`, 81.4), and a second scene's single-anchor admission
+// plated wrong-alphabet debris over a real caption position (`арропитеве`, 57.8). Two or more are
+// the pass's evidence that it read the page's own script.
+// OCR-OVERLAY rule 13: derived - ocr_rescue_anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
+const ocrRescueAnchorVotes = 2
 
 // greyRendition returns an 8-bit luminance copy of the image, or nil when it cannot be decoded.
 // What matters is that the channels agree, not the depth: measured, an 8-bit grey PNG and an RGB
@@ -899,6 +935,15 @@ type ocrLine struct {
 	// orphan marks a run a stroke cut off that cannot be a plate on its own (see splitWideGaps):
 	// orderColumns parks it with the lines the confidence floor will drop.
 	orphan bool
+	// rescued marks a line the anchored rescue admission kept (markRescueAdmission, OCR-PIPELINE
+	// amendment 1.6 A): keepLine admits it although its mean confidence is under the pass's floor.
+	// Only a rescue rung's parse ever sets it, so the ordinary pass and the screen passes are
+	// untouched.
+	rescued bool
+	// unordered marks a line of the sparse rung, whose rows Tesseract documents as arriving "in no
+	// particular order" (ocrSparsePageSegMode). The clustering reads it to tolerate a late row
+	// without splitting the cluster it fits inside (OCR-PIPELINE amendment 1.6 B).
+	unordered bool
 }
 
 // ocrWord is one recognized word's box, text and confidence, kept only long enough to decide
@@ -1327,8 +1372,12 @@ func isTSVHeader(row string) bool {
 // words give each line its text and confidence, and clusterLines groups the confident lines
 // into plates by proximity. Block/paragraph boxes are ignored - trusting them makes an opaque
 // plate span imagery the engine folded into a text paragraph (see clusterLines, docs/PARITY.md).
-func parseTSV(data []byte, minConf float64, ink *image.Gray) (Result, error) {
-	lines, w, h, err := tsvLines(data, minConf, ink)
+//
+// rescue runs the anchored rescue admission over the pass's lines before any gate reads them;
+// unordered marks the pass's rows as unordered (the sparse rung). Both are false for every pass
+// that was ever measured without them.
+func parseTSV(data []byte, minConf float64, ink *image.Gray, rescue, unordered bool) (Result, error) {
+	lines, w, h, err := tsvLines(data, minConf, ink, rescue, unordered)
 	if err != nil {
 		return Result{}, err
 	}
@@ -1348,7 +1397,11 @@ func parseTSV(data []byte, minConf float64, ink *image.Gray) (Result, error) {
 // tsvLines reads a TSV page into its lines - split, reordered and trimmed, before any floor is
 // applied - plus the page's own size. minConf only steers orderColumns, which parks the lines the
 // floor will drop.
-func tsvLines(data []byte, minConf float64, ink *image.Gray) (lines []*ocrLine, width, height int, err error) {
+//
+// The anchored rescue admission (rescue) runs once every line of the pass is complete, before
+// orderColumns: an admitted line reaches a plate, so it belongs to a column like any other. The
+// unordered mark is stamped on every line of the pass that declares it.
+func tsvLines(data []byte, minConf float64, ink *image.Gray, rescue, unordered bool) (lines []*ocrLine, width, height int, err error) {
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 
@@ -1424,6 +1477,14 @@ func tsvLines(data []byte, minConf float64, ink *image.Gray) (lines []*ocrLine, 
 		return nil, 0, 0, err
 	}
 	closeLine()
+	if rescue {
+		markRescueAdmission(lines, minConf)
+	}
+	if unordered {
+		for _, l := range lines {
+			l.unordered = true
+		}
+	}
 	if split {
 		lines = orderColumns(lines, minConf)
 	}
@@ -1443,11 +1504,75 @@ func lineDrop(l *ocrLine, floor float64, gate string) DroppedLine {
 // keepLine is the confidence floor, in one place. clusterLines applies it and parseTSV records
 // what it rejected; if the two ever stated it separately, the record would stop describing the
 // decision the first time either moved.
+//
+// A line the anchored rescue admission marked (markRescueAdmission, OCR-PIPELINE amendment 1.6 A)
+// clears the floor by that verdict: only a rescue rung's parse ever sets the mark, so the ordinary
+// pass and the screen passes keep the floor they were measured with.
 func keepLine(l *ocrLine, minConf float64) bool {
 	if l.text.Len() == 0 {
 		return false
 	}
-	return l.meanConf() >= minConf
+	return l.rescued || l.meanConf() >= minConf
+}
+
+// markRescueAdmission is the anchored rescue admission (OCR-PIPELINE amendment 1.6 A), the rescue
+// floor's third axis after confidence and length. It runs once per rescue-rung parse, over that
+// pass's complete lines, and marks the lines that may join despite a sub-floor confidence:
+//
+//   - the line clears ocrRescueAnchorConf and carries a run of ocrRescueAnchorRun letters - the
+//     2026-08-15 band's two conditions, which alone the corpus rejected (under `eng` a Cyrillic
+//     poster then read as transliterated debris);
+//   - some line of the same pass cleared the floor on its own, carries the same letter run, and
+//     stands at the same type size (sameTypeSize) - an anchor. This is the axis that separates the
+//     languages: under the wrong alphabet no real lettering clears the floor, so there is nothing
+//     to vouch, and the rule cannot create a pass's first plate;
+//   - the pass holds at least ocrRescueAnchorVotes such anchors. The 2026-09-25 attempt failed on
+//     exactly the passes that held one: a single confident line read with the wrong language was
+//     itself debris, and it vouched for more debris across a balloon boundary.
+//
+// A marked line is kept, not dropped - it leaves the discard record, and nothing the record carries
+// changes. The ordinary pass and the screen passes never run this: their floors were measured
+// without a relaxation.
+func markRescueAdmission(lines []*ocrLine, minConf float64) {
+	var anchors []*ocrLine
+	for _, l := range lines {
+		if keepLine(l, minConf) && longestLetterRun(l.text.String()) >= ocrRescueAnchorRun {
+			anchors = append(anchors, l)
+		}
+	}
+	if len(anchors) < ocrRescueAnchorVotes {
+		return
+	}
+	for _, l := range lines {
+		if keepLine(l, minConf) {
+			continue
+		}
+		if l.meanConf() < ocrRescueAnchorConf || longestLetterRun(l.text.String()) < ocrRescueAnchorRun {
+			continue
+		}
+		for _, a := range anchors {
+			if sameTypeSize(l.inkHeight(), a.inkHeight()) {
+				l.rescued = true
+				break
+			}
+		}
+	}
+}
+
+// longestLetterRun counts the longest run of consecutive letters in s - the "run of four letters"
+// the 2026-08-15 band and the anchored rescue admission (markRescueAdmission) are stated on.
+// Punctuation, digits and spaces break the run.
+func longestLetterRun(s string) int {
+	best, cur := 0, 0
+	for _, r := range s {
+		if unicode.IsLetter(r) {
+			cur++
+			best = max(best, cur)
+		} else {
+			cur = 0
+		}
+	}
+	return best
 }
 
 // clusterLines drops low-confidence noise lines, then groups the survivors (in reading order)
@@ -1564,6 +1689,23 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 		cmembers = cmembers[:0]
 		open = false
 	}
+	// join adds one line to the open cluster. The plate's box grows by the trimmed line box, never
+	// by the artefact's reach; the span grows by the untrimmed one so the next line is judged as it
+	// was before. Both the ordinary adjacency join and the unordered late-row join (below) share it.
+	join := func(l *ocrLine) {
+		cx0, cy0 = min(cx0, l.inkX0), min(cy0, l.inkY0)
+		cx1, cy1 = max(cx1, l.inkX1), max(cy1, l.inkY1)
+		sx0, sy0 = min(sx0, l.x0), min(sy0, l.y0)
+		sx1, sy1 = max(sx1, l.x1), max(sy1, l.y1)
+		clastY0 = l.y0
+		ctext.WriteByte(' ')
+		ctext.WriteString(strings.TrimSpace(l.text.String()))
+		ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
+		cheights = append(cheights, l.y1-l.y0)
+		cink = append(cink, l.inkHeight())
+		clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
+		cmembers = append(cmembers, l)
+	}
 	for _, l := range kept {
 		if open {
 			gap := float64(l.y0 - sy1)
@@ -1579,20 +1721,21 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 			// means a new column).
 			sameSize := sameTypeSize(l.inkHeight(), median(cink, 0))
 			if adjacent && sameSize && gap >= -float64(medianH) && overlap*10 >= narrower {
-				// The plate's box grows by the trimmed line box, never by the artefact's reach; the
-				// span grows by the untrimmed one so the next line is judged as it was before.
-				cx0, cy0 = min(cx0, l.inkX0), min(cy0, l.inkY0)
-				cx1, cy1 = max(cx1, l.inkX1), max(cy1, l.inkY1)
-				sx0, sy0 = min(sx0, l.x0), min(sy0, l.y0)
-				sx1, sy1 = max(sx1, l.x1), max(sy1, l.y1)
-				clastY0 = l.y0
-				ctext.WriteByte(' ')
-				ctext.WriteString(strings.TrimSpace(l.text.String()))
-				ctexts = append(ctexts, strings.TrimSpace(l.text.String()))
-				cheights = append(cheights, l.y1-l.y0)
-				cink = append(cink, l.inkHeight())
-				clines = append(clines, LineBox{X0: l.inkX0, Y0: l.inkY0, X1: l.inkX1, Y1: l.inkY1})
-				cmembers = append(cmembers, l)
+				join(l)
+				continue
+			}
+			// The sparse rung documents its rows as unordered (ocrSparsePageSegMode), and the walk
+			// above closes the open plate the moment a line does not join it - so a late row used
+			// to split the text it belongs to into two overlapping plates. Measured on
+			// poster-display-type-on-flat-colour: the admitted ОБ ЗЛОМ arrives before ПРОСТО, the
+			// row standing above it, and the body came back as plates [375-918] and [755-1005]
+			// (OCR-PIPELINE amendment 1.6 B). A late row that fits inside the open cluster's band
+			// - same column, same type size, its own y-range overlapping the cluster's span -
+			// joins the cluster instead of closing it. The join is the ordinary join: only the
+			// adjacency test, which assumes ordered rows, is set aside. A row that lands outside
+			// the band, in another column or at another type size still starts a new plate.
+			if l.unordered && sameSize && overlap*10 >= narrower && l.y0 < sy1 && l.y1 > sy0 {
+				join(l)
 				continue
 			}
 			flush()

@@ -91,6 +91,77 @@ import { isTranslatable, repairPipeMisreads } from "./ocr-text.js";
 // and ocr_rescue_third_axis_2026-09-25.
 export const OCR_RESCUE_LINE_CONF = 80;
 
+// The anchored rescue admission's constants (OCR-PIPELINE amendment 1.6 A). A rescue rung may keep
+// a line under OCR_RESCUE_LINE_CONF when its pass holds at least two floor-clearing 4-letter-run
+// anchors and one stands at the candidate's own type size:
+// - OCR_RESCUE_ANCHOR_CONF, the confidence a candidate must clear, is the middle of the empty band
+//   the 2026-08-15 populations bracket (36.1 / 58.3) - the number the rejected 2026-08-15 length
+//   rule used;
+// - OCR_RESCUE_ANCHOR_RUN, the letter run both a candidate and its anchor carry, is the same band's
+//   second condition;
+// - OCR_RESCUE_ANCHOR_VOTES is how many such floor-clearing lines a pass must hold before it may
+//   vouch at all: the one corpus scene whose winning pass held a single confident line had read an
+//   English page with Russian data and trusted debris (`МОТ ЕУЕМ`, 81.4). Two or more are the
+//   pass's evidence that it read the page's own script.
+// Shared invariants - see docs/PARITY.md and tesseract.go ocrRescueAnchorConf / ocrRescueAnchorRun /
+// ocrRescueAnchorVotes.
+// OCR-OVERLAY rule 13: inherited - the 2026-08-15 empty band's middle (ocr_rescue_floor_2026-08-15),
+// reused by the anchored rescue admission (OCR-PIPELINE amendment 1.6 A).
+export const OCR_RESCUE_ANCHOR_CONF = 47;
+// OCR-OVERLAY rule 13: inherited - the 2026-08-15 band's four-letter run (ocr_rescue_floor_2026-08-15),
+// reused by the anchored rescue admission (OCR-PIPELINE amendment 1.6 A).
+export const OCR_RESCUE_ANCHOR_RUN = 4;
+// OCR-OVERLAY rule 13: derived - ocr_rescue_anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
+export const OCR_RESCUE_ANCHOR_VOTES = 2;
+
+// longestLetterRun counts the longest run of consecutive letters in s - the "run of four letters"
+// the 2026-08-15 band and the anchored rescue admission (markRescueAdmission) are stated on.
+// Punctuation, digits and spaces break the run. Mirrors tesseract.go longestLetterRun
+// (docs/PARITY.md).
+export function longestLetterRun(s) {
+  let best = 0, cur = 0;
+  for (const ch of String(s || "")) {
+    if (/\p{L}/u.test(ch)) {
+      cur++;
+      if (cur > best) best = cur;
+    } else {
+      cur = 0;
+    }
+  }
+  return best;
+}
+
+// markRescueAdmission is the anchored rescue admission (OCR-PIPELINE amendment 1.6 A), the rescue
+// floor's third axis after confidence and length. It runs once per rescue-rung recognition, over
+// that pass's complete lines, and marks the lines that may join despite a sub-floor confidence:
+//
+//   - the line clears OCR_RESCUE_ANCHOR_CONF and carries a run of OCR_RESCUE_ANCHOR_RUN letters;
+//   - some line of the same pass cleared the floor on its own, carries the same letter run, and
+//     stands at the same type size (sameTypeSize) - an anchor. Under the wrong alphabet no real
+//     lettering clears the floor, so there is nothing to vouch, and the rule cannot create a pass's
+//     first plate;
+//   - the pass holds at least OCR_RESCUE_ANCHOR_VOTES such anchors - one confident line read with
+//     the wrong language is itself debris, and it vouched for more debris across a balloon boundary
+//     in the 2026-09-25 attempt this guard replaces.
+//
+// A marked line is kept by keepLine and simply leaves the discard record; nothing the record
+// carries changes. The ordinary pass and the screen passes never run this: their floors were
+// measured without a relaxation. Mirrors tesseract.go markRescueAdmission (docs/PARITY.md).
+export function markRescueAdmission(lines, minConf = OCR_RESCUE_LINE_CONF) {
+  const anchors = (lines || []).filter((l) => keepLine(l, minConf) && longestLetterRun(l.text) >= OCR_RESCUE_ANCHOR_RUN);
+  if (anchors.length < OCR_RESCUE_ANCHOR_VOTES) return;
+  for (const l of lines) {
+    if (keepLine(l, minConf)) continue;
+    if (l.conf < OCR_RESCUE_ANCHOR_CONF || longestLetterRun(l.text) < OCR_RESCUE_ANCHOR_RUN) continue;
+    for (const a of anchors) {
+      if (sameTypeSize(lineInkHeight(l), lineInkHeight(a))) {
+        l.rescued = true;
+        break;
+      }
+    }
+  }
+}
+
 // OCR_MAX_WORD_GAP_RATIO is the one rule that runs before any of the others, because it repairs
 // their input rather than their output: a *line* the recognizer handed us that is not one line.
 //
@@ -545,8 +616,17 @@ export function releaseOversized(cur, imgW, imgH) {
 // keepLine is the confidence floor, in one place. clusterLines applies it and droppedLines records
 // what it rejected; stated separately, the record would stop describing the decision the first time
 // either moved. Mirrors tesseract.go keepLine (docs/PARITY.md).
+// keepLine is the confidence floor, in one place. clusterLines applies it and droppedLines records
+// what it rejected; stated separately, the record would stop describing the decision the first time
+// either moved.
+//
+// A line the anchored rescue admission marked (markRescueAdmission, OCR-PIPELINE amendment 1.6 A)
+// clears the floor by that verdict: only a rescue rung's parse ever sets the mark, so the ordinary
+// pass and the screen passes keep the floor they were measured with. Mirrors tesseract.go keepLine
+// (docs/PARITY.md).
 export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
-  return Boolean(l.text) && l.conf >= minConf;
+  if (!l.text) return false;
+  return Boolean(l.rescued) || l.conf >= minConf;
 }
 
 // The gates a discard record names. Mirrors tesseract.go gateConfidence / gateTranslatable /
@@ -591,6 +671,21 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
 
   const blocks = [];
   let cur = null;
+  // joinLine adds one line to the open cluster. The plate's box grows by the trimmed line box,
+  // never by the artefact's reach; the span grows by the untrimmed one so the next line is judged
+  // as it was before. The ordinary adjacency join and the unordered late-row join (below) share it.
+  const joinLine = (l) => {
+    const { x0, y0, x1, y1 } = l.bbox;
+    const ib = l.inkBox || l.bbox;
+    cur.x0 = Math.min(cur.x0, ib.x0); cur.y0 = Math.min(cur.y0, ib.y0);
+    cur.x1 = Math.max(cur.x1, ib.x1); cur.y1 = Math.max(cur.y1, ib.y1);
+    cur.sx0 = Math.min(cur.sx0, x0); cur.sy0 = Math.min(cur.sy0, y0);
+    cur.sx1 = Math.max(cur.sx1, x1); cur.sy1 = Math.max(cur.sy1, y1);
+    cur.lastY0 = y0;
+    cur.texts.push(l.text); cur.heights.push(y1 - y0); cur.ink.push(lineInkHeight(l));
+    cur.lines.push({ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 });
+    cur.members.push(l);
+  };
   const flush = () => {
     if (!cur) return;
     const text = cur.texts.join(" ").trim();
@@ -651,16 +746,19 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
       // page's pitch; a small negative gap tolerates overlapping boxes, a big one means a new
       // column/section).
       if (adjacent && sameSize && gap >= -medianH && overlap * 10 >= narrower) {
-        // The drawn box grows by the trimmed line box, never by the artefact's reach; the span
-        // grows by the untrimmed one so the next line is judged as it was before.
-        cur.x0 = Math.min(cur.x0, ib.x0); cur.y0 = Math.min(cur.y0, ib.y0);
-        cur.x1 = Math.max(cur.x1, ib.x1); cur.y1 = Math.max(cur.y1, ib.y1);
-        cur.sx0 = Math.min(cur.sx0, x0); cur.sy0 = Math.min(cur.sy0, y0);
-        cur.sx1 = Math.max(cur.sx1, x1); cur.sy1 = Math.max(cur.sy1, y1);
-        cur.lastY0 = y0;
-        cur.texts.push(l.text); cur.heights.push(y1 - y0); cur.ink.push(lineInkHeight(l));
-        cur.lines.push({ x0: ib.x0, y0: ib.y0, x1: ib.x1, y1: ib.y1 });
-        cur.members.push(l);
+        joinLine(l);
+        continue;
+      }
+      // The sparse rung documents its rows as unordered (OCR_SPARSE_PSM), and the walk above closes
+      // the open plate the moment a line does not join it - so a late row used to split the text it
+      // belongs to into two overlapping plates. Measured on poster-display-type-on-flat-colour: the
+      // admitted ОБ ЗЛОМ arrives before ПРОСТО, the row standing above it, and the body came back
+      // as two overlapping plates (OCR-PIPELINE amendment 1.6 B). A late row that fits inside the
+      // open cluster's band - same column, same type size, its own y-range overlapping the
+      // cluster's span - joins the cluster instead of closing it. A row that lands outside the
+      // band, in another column or at another type size still starts a new plate.
+      if (l.unordered && sameSize && overlap * 10 >= narrower && y0 < cur.sy1 && y1 > cur.sy0) {
+        joinLine(l);
         continue;
       }
       flush();

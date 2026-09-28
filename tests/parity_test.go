@@ -219,7 +219,7 @@ func TestParityOCRClustering(t *testing.T) {
 		{"ink is the plate contrast from the paper", "ocr-overlay.js", overlaySrc, `minContrast: PLATE_MIN_CONTRAST`},
 		{"paper is read outside the word boxes", "boundary.go", boundarySrc, `\{w\.y0 - 3, w\.y0 - 2, w\.y1 \+ 1, w\.y1 \+ 2\}`},
 		{"paper is read outside the word boxes", "ocr-cluster.js", clusterSrc, `\[w\.y0 - 3, w\.y0 - 2, w\.y1 \+ 1, w\.y1 \+ 2\]`},
-		{"every pass reads the picture's own plane", "tesseract.go", goSrc, `ocrMinLineConf, frame\.grey\)`},
+		{"every pass reads the picture's own plane", "tesseract.go", goSrc, `ocrMinLineConf, frame\.grey, false, false\)`},
 		{"every pass reads the picture's own plane", "ocr-overlay.js", overlaySrc, `const ink = await strokePlane\(image\);`},
 	}
 	for _, m := range meaning {
@@ -260,6 +260,12 @@ func TestParityOCRGreyRescue(t *testing.T) {
 		// The rescue floor lives in ocr-cluster.js on the JS side, beside keepLine which applies it,
 		// so this pair reads it from the combined extension source above.
 		{"rescue line confidence", `ocrRescueLineConf\s*=\s*([\d.]+)`, `OCR_RESCUE_LINE_CONF\s*=\s*([\d.]+)`},
+		// The anchored rescue admission (OCR-PIPELINE amendment 1.6): the candidate's confidence,
+		// the letter run it and its anchor carry, and how many floor-clearing anchors a pass must
+		// hold before it may vouch.
+		{"rescue anchor confidence", `ocrRescueAnchorConf\s*=\s*([\d.]+)`, `OCR_RESCUE_ANCHOR_CONF\s*=\s*([\d.]+)`},
+		{"rescue anchor letter run", `ocrRescueAnchorRun\s*=\s*([\d.]+)`, `OCR_RESCUE_ANCHOR_RUN\s*=\s*([\d.]+)`},
+		{"rescue anchor votes", `ocrRescueAnchorVotes\s*=\s*([\d.]+)`, `OCR_RESCUE_ANCHOR_VOTES\s*=\s*([\d.]+)`},
 		// The sparse rung's mode. It is the rung that recovers display lettering a poster's layout
 		// analysis throws away, and a drift here means one edition reads the poster and the other
 		// shows the reader a picture with nothing on it.
@@ -518,6 +524,54 @@ func TestParityOCRDroppedLines(t *testing.T) {
 	}
 	if !regexp.MustCompile(`lines\.filter\(\(l\) => keepLine\(l, minConf\)\)`).MatchString(jsSrc) {
 		t.Error("ocr-cluster.js: clusterLines no longer asks keepLine - the record can drift from the decision")
+	}
+}
+
+// TestParityOCRRescueAdmission: the anchored rescue admission of OCR-PIPELINE amendment 1.6 has to
+// exist on both sides with the same shape - the admission runs per rescue-rung parse before any
+// gate reads the lines, keepLine admits a marked line, the grey rungs are the only passes that ask
+// for it, and the clustering joins a late row of the unordered sparse rung instead of splitting the
+// cluster it fits inside. A drift in any of these makes one edition keep lettering the other drops,
+// or plate over artwork the other leaves alone. See docs/PARITY.md "OCR".
+func TestParityOCRRescueAdmission(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	jsCluster := readRepoFile(t, "extension", "src", "ocr-cluster.js")
+	jsOverlay := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+
+	for _, c := range []struct{ name, file, src, re, what string }{
+		{"the admission exists", "tesseract.go", goSrc,
+			`func markRescueAdmission\(lines \[\]\*ocrLine, minConf float64\)`, "the admission is one function"},
+		{"the admission exists", "ocr-cluster.js", jsCluster,
+			`export function markRescueAdmission\(lines, minConf`, "the admission is one function"},
+		{"the vote floor guards it", "tesseract.go", goSrc,
+			`len\(anchors\) < ocrRescueAnchorVotes`, "one confident line vouches for nothing"},
+		{"the vote floor guards it", "ocr-cluster.js", jsCluster,
+			`anchors\.length < OCR_RESCUE_ANCHOR_VOTES`, "one confident line vouches for nothing"},
+		{"the anchor is type-size matched", "tesseract.go", goSrc,
+			`sameTypeSize\(l\.inkHeight\(\), a\.inkHeight\(\)\)`, "the anchor vouches at the candidate's own type size"},
+		{"the anchor is type-size matched", "ocr-cluster.js", jsCluster,
+			`sameTypeSize\(lineInkHeight\(l\), lineInkHeight\(a\)\)`, "the anchor vouches at the candidate's own type size"},
+		{"keepLine admits a marked line", "tesseract.go", goSrc,
+			`return l\.rescued \|\| l\.meanConf\(\) >= minConf`, "the marked line clears the floor by the verdict"},
+		{"keepLine admits a marked line", "ocr-cluster.js", jsCluster,
+			`return Boolean\(l\.rescued\) \|\| l\.conf >= minConf`, "the marked line clears the floor by the verdict"},
+		{"the grey rungs ask for the admission", "tesseract.go", goSrc,
+			`ocrRescueLineConf, known\(grey\), true, rung\.psm == ocrSparsePageSegMode`, "the admission rides the grey rungs, the sparse rung also unordered"},
+		{"the grey rungs ask for the admission", "ocr-overlay.js", jsOverlay,
+			`OCR_RESCUE_LINE_CONF, true, rung\.psm === OCR_SPARSE_PSM\)`, "the admission rides the grey rungs, the sparse rung also unordered"},
+		{"the screen passes never admit", "tesseract.go", goSrc,
+			`ocrRescueLineConf, known\(grey\), false, false\)`, "the screen rungs keep their measured floor"},
+		{"the sparse rung's late row joins", "tesseract.go", goSrc,
+			`if l\.unordered && sameSize && overlap\*10 >= narrower && l\.y0 < sy1 && l\.y1 > sy0 \{`,
+			"the unordered late row joins the open cluster's band"},
+		{"the sparse rung's late row joins", "ocr-cluster.js", jsCluster,
+			`if \(l\.unordered && sameSize && overlap \* 10 >= narrower && y0 < cur\.sy1 && y1 > cur\.sy0\) \{`,
+			"the unordered late row joins the open cluster's band"},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s - %s no longer holds (%q) - see docs/PARITY.md OCR and OCR-PIPELINE amendment 1.6",
+				c.file, c.what, c.name, c.re)
+		}
 	}
 }
 
