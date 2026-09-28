@@ -221,12 +221,7 @@ func markdownLang(file string) string {
 // entry whose section is gone fails, so the list never outlives the quote.
 var quotedSections = []struct {
 	file, heading, reason string
-}{
-	{
-		"DEV/plan/26_2026-09-23_contract-product-web-pages-sync.md", "Contract snapshot",
-		"a working copy of the shared catalog's page contracts, quoted verbatim so the ticket runs without the catalog; the catalog owns that text and the section is deleted when the ticket closes",
-	},
-}
+}{}
 
 // TestTypographyMarkdownProse holds the house style in the prose of every Markdown document in the
 // repository (DOC-INTERNAL-QUALITY rule 5). Code spans, fences and HTML comments are blanked

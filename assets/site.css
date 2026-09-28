@@ -38,6 +38,11 @@ html[data-lang="ua"] [data-l]:not([data-l="ua"]){display:none}
 .commands{display:grid;gap:.65rem;align-content:start;min-width:0}
 /* the copy button sits over a scrolling command: keep it opaque so the text never shows through */
 .copybox .copy{background:var(--code-bg)}
+/* the kit raises only .btn, .seg button and .theme-btn to 44 px, and only under pointer:coarse;
+   the page layer covers the two it misses (.copybox .copy, .to-top) for every pointer (ticket 26,
+   the kit defect universal-agent-kit and CyrFlip B4 ask the reference to fix) */
+.copybox .copy,.to-top{min-height:44px}
+.to-top{min-width:44px}
 @media(max-width:1024px){.install-grid{grid-template-columns:1fr}}
 /* the kit draws .demo text in --text on the always-dark --code-bg, which vanishes in the light theme (ticket 26, B14) */
 .demo,.demo code{color:var(--code-ink)}
