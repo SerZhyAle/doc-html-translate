@@ -204,6 +204,12 @@ func TestClusterLinesSurvivesAnOutlineArtefact(t *testing.T) {
 			o.text.WriteString(r.text)
 			if withWords {
 				o.wordH = r.wordH
+				// The artefact line's own word boxes, as the lab scene read them - the pipe repair's
+				// height guard compares the pipe's box against the cluster's type, so the artefact
+				// must carry its box to stay spared.
+				if r.text == "| NOT EVEN" {
+					o.words = []ocrWord{{x0: 78, y0: 259, x1: 88, y1: 333, text: "|"}}
+				}
 			}
 			out = append(out, o)
 		}

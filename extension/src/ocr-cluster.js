@@ -5,7 +5,7 @@
 //
 // Keep this file and tesseract.go in sync (docs/PARITY.md).
 
-import { isTranslatable } from "./ocr-text.js";
+import { isTranslatable, repairPipeMisreads } from "./ocr-text.js";
 
 // Overlay grouping constants, shared verbatim with the desktop app (see docs/PARITY.md and
 // internal/ocr/tesseract.go ocrMinLineConf / ocrClusterPitchFactor / ocrMaxLeadingRatio).
@@ -398,6 +398,72 @@ export function trimOutlierWords(bbox, words, scale = 1) {
   };
 }
 
+// repairLinePipes rewrites one cluster line's bare pipe tokens into "I" - the serif capital I the
+// recognizer read as a pipe (OCR-PIPELINE amendment 1.5) - and returns the text. Two guards spare
+// a token, and both read the token's own word box (pipes, as collectLines kept them): a box taller
+// than ocrTypeSizeRatio x med, the cluster's median ink height, is the outline or rule the outlier
+// trim handles (measured on the corpus balloon scene, the outline's pipe boxes 2.85x its
+// neighbours' height, while a misread I is letter-sized by construction); and a token inside the
+// cluster's pipe grid (see pipeGrid) is a table's column. protected is the line's own slice of
+// that grid decision, in pipe order. A token with no word box behind it has nothing to distrust,
+// and is repaired. Mirrors tesseract.go repairLinePipes (docs/PARITY.md).
+export function repairLinePipes(text, pipes, onGrid, med) {
+  const toks = String(text || "").split(" ");
+  const ats = [];
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i] === "|") ats.push(i);
+  }
+  if (!ats.length) return text;
+  let spared = null;
+  if (pipes && pipes.length === ats.length) {
+    for (let k = 0; k < ats.length; k++) {
+      const p = pipes[k];
+      const tall = p && med > 0 && p.h > med * OCR_TYPE_SIZE_RATIO;
+      const inGrid = k < (onGrid || []).length && onGrid[k];
+      if (tall || inGrid) {
+        if (!spared) spared = new Set();
+        spared.add(ats[k]);
+      }
+    }
+  }
+  return repairPipeMisreads(text, spared);
+}
+
+// pipeGrid decides which of the cluster's bare pipes the repair spares - one boolean per pipe, in
+// the same order as centers. The centres are grouped with their neighbours within med, the jitter
+// a drawn rule survives, and a group is a column when its pipes come from two or more lines. A
+// grid is at least two such columns, each repeating on at least half the lines that carry pipes:
+// every row of a real table carries the rule, while a page of misread I's sprinkles its bars
+// wherever the sentences put them - and even a margin of line-initial misreads is one column, not
+// a grid. A column outside the grid, like a stray bar, is repaired. Mirrors tesseract.go pipeGrid
+// (docs/PARITY.md).
+export function pipeGrid(centers, med) {
+  const marks = [];
+  for (let i = 0; i < centers.length; i++) {
+    (centers[i] || []).forEach((cx, k) => marks.push({ line: i, k, cx }));
+  }
+  const out = centers.map((cs) => new Array((cs || []).length).fill(false));
+  if (!(med > 0) || !marks.length) return out;
+  marks.sort((a, b) => a.cx - b.cx);
+  const columns = [];
+  let cur = { lines: new Set(), marks: [] };
+  for (let n = 0; n < marks.length; n++) {
+    if (n > 0 && marks[n].cx - marks[n - 1].cx > med) {
+      columns.push(cur);
+      cur = { lines: new Set(), marks: [] };
+    }
+    cur.lines.add(marks[n].line);
+    cur.marks.push(marks[n]);
+  }
+  columns.push(cur);
+  const carry = centers.filter((cs) => (cs || []).length > 0).length;
+  for (const c of columns) {
+    if (c.lines.size < 2 || c.lines.size * 2 < carry) continue;
+    for (const m of c.marks) out[m.line][m.k] = true;
+  }
+  return out;
+}
+
 // medianLinePitch estimates the page's line pitch from the tops of successive kept lines, or
 // returns 0 when the page offers none.
 //
@@ -529,6 +595,17 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
     if (!cur) return;
     const text = cur.texts.join(" ").trim();
     if (isTranslatable(text)) {
+      // The gate read the raw text; only now, on a cluster with something to translate, are the
+      // pipes the engine read instead of capital I's repaired (OCR-PIPELINE amendment 1.5). The
+      // guards read each token's own word box: the outline the trim stage handles stays, and so
+      // does a table's column grid. The lines the coverage release splits the cluster into share
+      // the repair: releaseOversized reads cur.texts.
+      const med = medianOf(cur.ink);
+      const centers = cur.members.map((m) => (m.pipes || []).filter((p) => p).map((p) => p.cx));
+      const grid = pipeGrid(centers, med);
+      for (let i = 0; i < cur.texts.length; i++) {
+        cur.texts[i] = repairLinePipes(cur.texts[i], cur.members[i] && cur.members[i].pipes, grid[i], med);
+      }
       const released = releaseOversized(cur, imgW, imgH);
       if (released) {
         // A released plate is one member line; its box finds which (releaseOversized skips
@@ -540,7 +617,7 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
         blocks.push(...released);
       } else {
         blocks.push({
-          text,
+          text: cur.texts.join(" ").trim(),
           bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
           lineHeight: medianOf(cur.heights) || (cur.y1 - cur.y0),
           // The type size - the median of the lines' word-height medians - which only the plate font

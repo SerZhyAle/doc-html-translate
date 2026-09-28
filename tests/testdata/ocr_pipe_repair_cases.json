@@ -1,0 +1,55 @@
+{
+  "_comment": "Shared OCR pipe-repair cases, read by internal/ocr (repairPipeMisreads) and extension/src/ocr-text.js (repairPipeMisreads). This is the token mechanic only: every bare | token of a gated line becomes I. The guards that spare a bar - the outline the outlier trim handles, a table's column grid - live in the cluster flush, where the word boxes are (OCR-PIPELINE amendment 1.5). See docs/PARITY.md, Pipe misread repair.",
+  "cases": [
+    {
+      "line": "| am Andrew.",
+      "want": "I am Andrew.",
+      "about": "the field repro of 2026-09-28: a sentence-initial I read as a pipe"
+    },
+    {
+      "line": "watch TV very seldom, because | have many",
+      "want": "watch TV very seldom, because I have many",
+      "about": "mid-line I"
+    },
+    {
+      "line": "Sometime go for shopping, water the flowers. |",
+      "want": "Sometime go for shopping, water the flowers. I",
+      "about": "trailing I at the line's end, misread at the wrap"
+    },
+    {
+      "line": "school | have 7 lessons.",
+      "want": "school I have 7 lessons.",
+      "about": "the I that follows the wrap carries the sentence's subject"
+    },
+    {
+      "line": "dress. | make a bed. My friend come to me at",
+      "want": "dress. I make a bed. My friend come to me at",
+      "about": "one pipe inside an otherwise ordinary line"
+    },
+    {
+      "line": "|",
+      "want": "I",
+      "about": "a bare pipe alone; a cluster of such lines never reaches the repair, the gate refuses it raw"
+    },
+    {
+      "line": "| a | b |",
+      "want": "I a I b I",
+      "about": "the mechanic repairs every bare pipe; a real table's bars are spared by the column guard in the flush, where the word boxes are"
+    },
+    {
+      "line": "|ike this",
+      "want": "|ike this",
+      "about": "a pipe welded to letters is a different misread with a different answer"
+    },
+    {
+      "line": "no pipes on this line",
+      "want": "no pipes on this line",
+      "about": "nothing to do"
+    },
+    {
+      "line": "",
+      "want": "",
+      "about": "empty line"
+    }
+  ]
+}

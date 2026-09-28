@@ -69,6 +69,12 @@ current-next-release: 1 (reordered 2026-09-25: fixes first)
 36 reached `Implemented` on 2026-09-26 and moved to [`done/`](done/36_2026-09-26_bugfix-release-gate-evidence-integrity.md):
 the full gate is `check: PASS` on the clean tree of `e96fd2f`.
 
+50 was implemented on 2026-09-28 and moved to
+[`done/`](done/50_2026-09-28_ocr-pipe-misread-capital-i.md): the OCR pipe repair - a serif capital I
+the recognizer reads as "|" is restored before translation, both editions, `OCR-PIPELINE` 1.5 - and
+the live repro leaves the run with every bar repaired. What is left is the hands-on pass on the same
+page through the extension edition, listed below.
+
 15, the last line before, moved to [`done/`](done/) on 2026-09-25 with its catalog step closed. 33 (the bundled
 pdftotext set shipped without its licences) joined and was implemented the same day and moved to [`done/`](done/).
 
@@ -249,6 +255,7 @@ ticket (in done/)                                   check left
 45_2026-09-26_bugfix-parity-drift-audit-34             go test ./internal/epub/ on Windows; Chrome: anchors, windows-1251, sfx .cbz
 46_2026-09-26_bugfix-ocr-desktop-paths-and-language    non-ANSI profile, 8.3 names on and off, OCR after -ocr-download rus
 47_2026-09-26_bugfix-cli-robustness-audit-34           `n yy` at the first-run prompt; JPEG2000 PDF with -noopen opens no box
+50_2026-09-28_ocr-pipe-misread-capital-i                 the school page through the extension edition, page translation on
 ```
 
 [`2026-09-19_page-ocr-overlay`](done/2026-09-19_page-ocr-overlay.md) is the first **new user-facing feature**

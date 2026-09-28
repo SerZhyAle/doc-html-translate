@@ -40,10 +40,12 @@ const balloonOnPanel = [
 // balloon became two plates and the taller plate reached onto the protected outline.
 //
 // wordH is what the fix reads - the words' own heights, whose median is the size a reader sees.
+// pipes is what the pipe repair reads - the bare pipe word's own box, scaled like wordH
+// (OCR-PIPELINE amendment 1.5); the artefact's 74 px pipe stays an outline, not a misread I.
 const outlineArtefact = [
   { bbox: { x0: 116, y0: 123, x1: 390, y1: 151 }, conf: 96.4, text: "ARE YOU SURE", wordH: [28, 28, 28] },
   { bbox: { x0: 116, y0: 175, x1: 362, y1: 203 }, conf: 95.7, text: "ABOUT THIS?", wordH: [28, 28] },
-  { bbox: { x0: 78, y0: 259, x1: 298, y1: 333 }, conf: 90.1, text: "| NOT EVEN", wordH: [74, 26, 26] },
+  { bbox: { x0: 78, y0: 259, x1: 298, y1: 333 }, conf: 90.1, text: "| NOT EVEN", wordH: [74, 26, 26], pipes: [{ h: 74, cx: 83 }] },
   { bbox: { x0: 117, y0: 311, x1: 308, y1: 337 }, conf: 95.9, text: "SLIGHTLY.", wordH: [26] },
 ];
 
@@ -621,4 +623,75 @@ test("clusterLines records the lines a refused cluster held", () => {
   }]);
   assert.equal(clusterLines(lines, 50).length, 1, "the record does not change the decision");
   assert.deepEqual(droppedLines([line(0, 0, 9, 9, 10, "noise")], 50).map((d) => d.gate), [GATE_CONFIDENCE]);
+});
+
+// Mirrors internal/ocr/pipe_repair_test.go - the pipe repair of OCR-PIPELINE amendment 1.5, run in
+// the flush after the translatability gate. pipes carries each bare pipe word's own box, scaled
+// like wordH, as collectLines keeps it; lines without it repair unguarded, the field repro's shape.
+test("clusterLines repairs the school page's misread I", () => {
+  const line = (x0, y0, x1, y1, conf, text, pipes) => ({ bbox: { x0, y0, x1, y1 }, conf, text, pipes });
+  const lines = [
+    line(64, 100, 560, 124, 95.0, "I am Andrew. | am a pupil of the", [{ h: 24, cx: 174 }]),
+    line(64, 156, 560, 180, 95.0, "5th form. | get up at seven o'clock.", [{ h: 24, cx: 417 }]),
+  ];
+  const blocks = clusterLines(lines, 50);
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].text, "I am Andrew. I am a pupil of the 5th form. I get up at seven o'clock.");
+});
+
+test("clusterLines never repairs a cluster the gate refused raw", () => {
+  const line = (x0, y0, x1, y1, conf, text) => ({ bbox: { x0, y0, x1, y1 }, conf, text });
+  const lines = [
+    line(116, 123, 390, 151, 95.0, "|"),
+    line(116, 175, 362, 203, 95.0, "|"),
+    line(118, 259, 298, 287, 95.0, "|"),
+    line(117, 311, 308, 339, 95.0, "|"),
+  ];
+  const dropped = [];
+  assert.equal(clusterLines(lines, 50, 0, 0, dropped).length, 0);
+  assert.deepEqual(
+    dropped.map((d) => d.gate),
+    [GATE_TRANSLATABLE, GATE_TRANSLATABLE, GATE_TRANSLATABLE, GATE_TRANSLATABLE],
+  );
+  assert.ok(dropped.every((d) => d.text === "|"), "the record keeps the raw text");
+});
+
+test("clusterLines keeps a table's column bars and repairs a stray one", () => {
+  const line = (x0, y0, x1, y1, conf, text, pipes) => ({ bbox: { x0, y0, x1, y1 }, conf, text, pipes });
+  // The rows' pipes repeat the column centres - a drawn rule is straight - so they survive; a pipe
+  // off the grid is a misread I and goes.
+  const blocks = clusterLines([
+    line(21, 100, 400, 124, 95.0, "Item | Qty | Price", [{ h: 24, cx: 120 }, { h: 24, cx: 240 }]),
+    line(21, 156, 400, 180, 95.0, "Bread | 2 | 3.50", [{ h: 24, cx: 121 }, { h: 24, cx: 242 }]),
+    line(21, 212, 400, 236, 95.0, "Milk | 1 | 2.80", [{ h: 24, cx: 123 }, { h: 24, cx: 239 }]),
+  ], 50);
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].text, "Item | Qty | Price Bread | 2 | 3.50 Milk | 1 | 2.80");
+});
+
+test("the pipe repair reads the token's height: a tall outline pipe stays, a letter-sized one goes", () => {
+  // The corpus balloon scene keeps its outline pipe (the fixture the type-size test runs).
+  assert.equal(clusterLines(outlineArtefact, 80, 1240, 600)[1].text, "| NOT EVEN SLIGHTLY.");
+  // A pipe of the lettering's own size is a misread I.
+  const line = { bbox: { x0: 64, y0: 100, x1: 400, y1: 124 }, conf: 95, text: "he is here. | today", wordH: [24, 24, 24, 24, 24], pipes: [{ h: 24, cx: 200 }] };
+  assert.equal(clusterLines([line], 50)[0].text, "he is here. I today");
+});
+
+test("clusterLines repairs the lines a coverage release splits a gated cluster into", () => {
+  const line = (x0, y0, x1, y1, conf, text) => ({ bbox: { x0, y0, x1, y1 }, conf, text });
+  const lines = [
+    line(15, 17, 290, 38, 90, "Your family group members"),
+    line(15, 51, 339, 66, 90, "View and manage your family group. Learn more"),
+    line(13, 99, 527, 151, 90, "Se) | Given Family Family manager"),
+    line(22, 182, 467, 231, 90, "i) | Second | Family Parent"),
+    line(15, 262, 479, 310, 90, "6 Third Family Member"),
+    line(13, 341, 479, 393, 90, "wi Fourth Family Member"),
+    line(13, 423, 555, 474, 90, "te Fifth Family Supervised member"),
+    line(15, 505, 479, 553, 90, "(c) Sixth Family Member"),
+  ];
+  const blocks = clusterLines(lines, 50, 640, 563);
+  assert.ok(blocks.length >= 6, "the rows are released");
+  const joined = blocks.map((b) => b.text).join(" ");
+  assert.ok(joined.includes("Se) I Given Family Family manager"), joined);
+  assert.ok(joined.includes("i) I Second I Family Parent"), joined);
 });

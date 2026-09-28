@@ -87,3 +87,30 @@ func isTranslatable(raw string) bool {
 	}
 	return true
 }
+
+// repairPipeMisreads rewrites a line's bare "|" tokens into "I", sparing the text-token indexes in
+// protected, and returns the text unchanged when nothing was rewritten.
+//
+// A serif capital I is a bare vertical stroke, and the recognizer reads it as a pipe: on the
+// 2026-09-28 field repro (a photographed school-text page) every one of the page's 15 standalone
+// "I" tokens came back as "|" on an otherwise well recognized page, and the translation kept each
+// bar and lost the subject with it - "I get up at seven o'clock" arrived as the imperative
+// "Вставай в семь". This is the token mechanic; the guards that spare a bar - the outline the
+// outlier trim handles, a table's column grid - live at the caller, in the cluster flush
+// (OCR-PIPELINE amendment 1.5).
+// Mirrors the extension's ocr-text.js repairPipeMisreads - keep the two in sync (docs/PARITY.md).
+func repairPipeMisreads(line string, protected map[int]bool) string {
+	toks := strings.Split(line, " ")
+	changed := false
+	for i, tok := range toks {
+		if tok != "|" || protected[i] {
+			continue
+		}
+		toks[i] = "I"
+		changed = true
+	}
+	if !changed {
+		return line
+	}
+	return strings.Join(toks, " ")
+}

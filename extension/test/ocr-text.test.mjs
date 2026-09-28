@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { isTranslatable } from "../src/ocr-text.js";
+import { isTranslatable, repairPipeMisreads } from "../src/ocr-text.js";
 
 test("keeps real translatable text", () => {
   for (const s of [
@@ -45,5 +45,13 @@ test("isTranslatable: shared Go/JS fixture", () => {
   const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_translatable_cases.json", import.meta.url), "utf8"));
   for (const c of fx.cases) {
     assert.equal(isTranslatable(c.text), c.want, `${JSON.stringify(c.text)} ${c.about || ""}`);
+  }
+});
+
+// internal/ocr TestRepairPipeMisreadsSharedCases runs the same cases (OCR-PIPELINE amendment 1.5).
+test("repairPipeMisreads: shared Go/JS fixture", () => {
+  const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_pipe_repair_cases.json", import.meta.url), "utf8"));
+  for (const c of fx.cases) {
+    assert.equal(repairPipeMisreads(c.line), c.want, `${JSON.stringify(c.line)} ${c.about || ""}`);
   }
 });

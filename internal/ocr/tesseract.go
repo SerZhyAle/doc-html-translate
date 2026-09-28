@@ -1124,6 +1124,122 @@ func (l *ocrLine) trimOutlierWords() {
 	l.inkX0, l.inkY0, l.inkX1, l.inkY1 = x0, y0, x1, y1
 }
 
+// repairLinePipes rewrites one cluster line's bare pipe tokens into "I" - the serif capital I the
+// recognizer read as a pipe (OCR-PIPELINE amendment 1.5) - and returns the text. Two guards spare
+// a token, and both read the token's own word box: a box taller than ocrTypeSizeRatio x med, the
+// cluster's median ink height, is the outline or rule the outlier trim handles (measured on the
+// corpus balloon scene, the outline's pipe boxes 2.85x its neighbours' height, while a misread I is
+// letter-sized by construction); and a token inside the cluster's pipe grid (see pipeGrid) is a
+// table's column. protected is the line's own slice of that grid decision, in pipe order. A token
+// with no word box behind it has nothing to distrust, and is repaired. Mirrors ocr-cluster.js
+// repairLinePipes (docs/PARITY.md).
+func repairLinePipes(line string, words []ocrWord, protected []bool, med int) string {
+	toks := strings.Split(line, " ")
+	ats := make([]int, 0, 2)
+	for i, tok := range toks {
+		if tok == "|" {
+			ats = append(ats, i)
+		}
+	}
+	if len(ats) == 0 {
+		return line
+	}
+	pipes := make([]ocrWord, 0, len(ats))
+	for _, w := range words {
+		if w.text == "|" {
+			pipes = append(pipes, w)
+		}
+	}
+	var spared map[int]bool
+	if len(pipes) == len(ats) {
+		for k, at := range ats {
+			w := pipes[k]
+			tall := med > 0 && float64(w.y1-w.y0) > float64(med)*ocrTypeSizeRatio
+			inGrid := k < len(protected) && protected[k]
+			if tall || inGrid {
+				if spared == nil {
+					spared = map[int]bool{}
+				}
+				spared[at] = true
+			}
+		}
+	}
+	return repairPipeMisreads(line, spared)
+}
+
+// pipeGrid decides which of the cluster's bare pipes the repair spares - one boolean per pipe, in
+// the same order as centers. The centres are grouped with their neighbours within med, the jitter
+// a drawn rule survives, and a group is a column when its pipes come from two or more lines. A
+// grid is at least two such columns, each repeating on at least half the lines that carry pipes:
+// every row of a real table carries the rule, while a page of misread I's sprinkles its bars
+// wherever the sentences put them - and even a margin of line-initial misreads is one column, not
+// a grid. A column outside the grid, like a stray bar, is repaired. Mirrors ocr-cluster.js
+// pipeGrid (docs/PARITY.md).
+func pipeGrid(centers [][]int, med int) [][]bool {
+	type mark struct {
+		line, k, cx int
+	}
+	var all []mark
+	for i, cs := range centers {
+		for k, cx := range cs {
+			all = append(all, mark{i, k, cx})
+		}
+	}
+	out := make([][]bool, len(centers))
+	for i := range out {
+		out[i] = make([]bool, len(centers[i]))
+	}
+	if med <= 0 || len(all) == 0 {
+		return out
+	}
+	slices.SortFunc(all, func(a, b mark) int { return a.cx - b.cx })
+	type column struct {
+		lines map[int]bool
+		marks []mark
+	}
+	var columns []*column
+	cur := &column{lines: map[int]bool{}}
+	for n, m := range all {
+		if n > 0 && m.cx-all[n-1].cx > med {
+			columns = append(columns, cur)
+			cur = &column{lines: map[int]bool{}}
+		}
+		cur.lines[m.line] = true
+		cur.marks = append(cur.marks, m)
+	}
+	columns = append(columns, cur)
+	carry := 0
+	for _, cs := range centers {
+		if len(cs) > 0 {
+			carry++
+		}
+	}
+	for _, c := range columns {
+		if len(c.lines) < 2 || len(c.lines)*2 < carry {
+			continue
+		}
+		for _, m := range c.marks {
+			out[m.line][m.k] = true
+		}
+	}
+	return out
+}
+
+// inkHeight is the line's type size, measured as the median of its words' box heights rather than
+// as the height of the line box.
+
+// pipeCenters lists the word-box centres of the line's bare pipe tokens, in order. A line the
+// engine gave no words for has none - its pipes are repaired without a guard.
+func (l *ocrLine) pipeCenters() []int {
+	var out []int
+	for _, w := range l.words {
+		if w.text == "|" {
+			out = append(out, (w.x0+w.x1)/2)
+		}
+	}
+	return out
+}
+
 // inkHeight is the line's type size, measured as the median of its words' box heights rather than
 // as the height of the line box.
 //
@@ -1399,6 +1515,20 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 			return
 		}
 		if txt := strings.TrimSpace(ctext.String()); isTranslatable(txt) {
+			// The gate read the raw text; only now, on a cluster with something to translate, are
+			// the pipes the engine read instead of capital I's repaired (OCR-PIPELINE amendment
+			// 1.5). The guards read each token's own word box: the outline the trim stage handles
+			// stays, and so does a table's column grid. The lines the coverage release splits the
+			// cluster into share the repair: they are built from ctexts below.
+			med := median(cink, 0)
+			centers := make([][]int, len(cmembers))
+			for i, m := range cmembers {
+				centers[i] = m.pipeCenters()
+			}
+			grid := pipeGrid(centers, med)
+			for i := range ctexts {
+				ctexts[i] = repairLinePipes(ctexts[i], cmembers[i].words, grid[i], med)
+			}
 			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, cink, imgW, imgH); over != nil {
 				// A released plate is one member line; its box finds which (releaseOversized skips
 				// textless lines, so the positions do not line up).
@@ -1414,7 +1544,7 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 					conf += m.meanConf()
 				}
 				blocks = append(blocks, Block{
-					Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
+					Text: strings.Join(ctexts, " "), X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
 					LineH: median(cheights, cy1-cy0),
 					TypeH: median(cink, 0),
 					Lines: append([]LineBox(nil), clines...),

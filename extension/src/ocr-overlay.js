@@ -366,9 +366,19 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF) 
     const wordH = words
       .map((w) => (w.bbox ? at(w.bbox.y1) - at(w.bbox.y0) : 0))
       .filter((h) => h > 0);
+    // The bare pipe tokens' own word boxes, scaled like wordH, feed the repair guard in
+    // ocr-cluster.js: a pipe taller than the text's own type is the outline the trim handles, and
+    // a pipe whose centre another line repeats is a table's column (OCR-PIPELINE amendment 1.5).
+    // Mirrors tesseract.go (*ocrLine) pipeCenters and repairLinePipes. null = the word came with
+    // no box, nothing to distrust.
+    const pipes = words
+      .filter((w) => w && w.text === "|")
+      .map((w) => (w.bbox
+        ? { h: at(w.bbox.y1) - at(w.bbox.y0), cx: (at(w.bbox.x0) + at(w.bbox.x1)) / 2 }
+        : null));
     // inkBox is the box a plate is drawn from; bbox stays what every clustering decision reads, so
     // trimming can never change what reaches the page - see trimOutlierWords and tesseract.go ix0.
-    const line = { bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH };
+    const line = { bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH, pipes };
     // A stroke-cut fragment that cannot be a plate is parked by orderColumns (ocr-cluster.js splitWideGaps).
     if (words.orphan === true) line.orphan = true;
     out.push(line);
