@@ -3,7 +3,8 @@
 - **Id:** `INSTALL-TRUST`
 - **Version:** 1.0
 - **Home:** the shared contracts catalog, `install-trust/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
-- **Role:** producer - bound by the contract; the page ships in the repo (2026-09-25), the catalog row still reads "not adopted" until the site is published
+- **Role:** producer - bound by the contract and adopted (2026-09-28): the page is live on the site and
+  the catalog registry row is closed
 - **Reference rendering:** FMS Companion's trust guide, in the same catalog folder
 
 What a user reads in the thirty seconds after Windows tells them it protected their PC: four sections in
@@ -21,8 +22,9 @@ so a user downloading any of the three meets SmartScreen. No surface answers it:
 the site pages, nor the first-run GUI says the word. The Store build is signed by Microsoft during
 certification and is outside this contract's scope.
 
-The gap is declared in the catalog registry with a dated exception rather than left silent. Ticket:
-[`../../DEV/plan/27_2026-09-22_install-trust-page.md`](../../DEV/plan/27_2026-09-22_install-trust-page.md).
+The gap was declared in the catalog registry with a dated exception on 2026-09-22; the exception is
+closed as of 2026-09-28 (the page is published and the registry row reads adopted). Ticket:
+[`../../DEV/plan/done/27_2026-09-22_install-trust-page.md`](../../DEV/plan/done/27_2026-09-22_install-trust-page.md).
 
 **What this repo owes it**
 

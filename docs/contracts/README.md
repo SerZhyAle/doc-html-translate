@@ -16,7 +16,7 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [OCR-PIPELINE.md](OCR-PIPELINE.md) | `OCR-PIPELINE` | 1.0 | producer & owner - the document describes this product's mechanism |
 | [OCR-INVOCATION.md](OCR-INVOCATION.md) | `OCR-INVOCATION` | 1.0 | producer & owner - the CLI another product calls |
 | [DIAGNOSTIC-REPORT.md](DIAGNOSTIC-REPORT.md) | `DIAGNOSTIC-REPORT` | 0.9 draft | producer - `internal/report` generates diagnostic zip archives and environment summaries |
-| [INSTALL-TRUST.md](INSTALL-TRUST.md) | `INSTALL-TRUST` | 1.0 | producer - bound, not yet adopted |
+| [INSTALL-TRUST.md](INSTALL-TRUST.md) | `INSTALL-TRUST` | 1.0 | producer - bound, adopted (2026-09-28, ticket 27) |
 | [MEDIA-CLASSIFICATION.md](MEDIA-CLASSIFICATION.md) | `MEDIA-CLASSIFICATION` | 0.9 draft | consumer - input format dispatch across books, documents, comics, and images |
 | [UPDATE-MANIFEST.md](UPDATE-MANIFEST.md) | `UPDATE-MANIFEST` | 0.9 draft | consumer - release discovery and winget package synchronization |
 | [SITE-FAMILY-MAP.md](SITE-FAMILY-MAP.md) | `SITE-FAMILY-MAP` | 1.1 | consumer - the footer family grid and the one contact on every site page |

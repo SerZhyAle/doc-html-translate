@@ -258,7 +258,7 @@ Phase order matters: the bug first, the kit before the pages that depend on it.
 8. **Guard** - a repo test over the site pages: family-map URLs, contact string, kit hash, no em dash
    outside a `<title>`. The expected kit hash is the one in the snapshot; the test must hold the hash
    itself, not read the working copy under `DEV/plan/`, which is deleted with this ticket.
-9. The install-trust page of [`27_2026-09-22_install-trust-page`](../27_2026-09-22_install-trust-page.md) is built
+9. The install-trust page of [`27_2026-09-22_install-trust-page`](27_2026-09-22_install-trust-page.md) is built
    to the same child-page rules as 5-7.
 
 ## Direction B - what the contracts need from this product

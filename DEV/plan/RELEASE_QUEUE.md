@@ -152,7 +152,6 @@ rung. Decide, do not leave it unwritten.
 23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  In Progress
 32  32_2026-09-25_icon-system-surfaces                  2026-09-25  In Progress (built 2026-09-25; left: the owner's on-device look - taskbar light/dark, Chrome/Edge toolbar)
 26  26_2026-09-23_contract-product-web-pages-sync       2026-09-25  In Progress - Direction A done in the repo; rendered 360/768/1280 check, catalog row + exceptions and B1-B12 local only
-27  27_2026-09-22_install-trust-page                    2026-09-25  In Progress - page + links done in the repo; left: publish, then the local catalog row
 48  48_2026-09-26_contract-doc-internal-quality-gaps    2026-09-26  Partial - gates and fixes landed; left: shared registry row
 49  49_2026-09-26_contract-doc-external-quality-gaps    2026-09-26  Partial - gates and pages landed; left: file the proposal, shared registry row
 ```
@@ -172,12 +171,11 @@ ticket carries one user-visible bug that should not wait for the rest of it: the
 `ua` on the landing page and `uk` on the extension page, so a language chosen on one shows all three on the
 other - a `/fix` candidate on its own. `WAVE-PARTICLES` was read and does not apply (no canvas backdrop).
 
-[`27_2026-09-22_install-trust-page`](27_2026-09-22_install-trust-page.md) is docs-only work, so rule 5 puts it
-last among the schedulable lines. Three of the four download channels are unsigned - the setup exe and both
-portable exes - and nothing we ship says the word SmartScreen, so a user who meets "Windows protected your
-PC" reads nothing from us. No shipped code is wrong, but it is not `--` either: every
-unanswered warning is a user who does not come back. The contract it closes is
-`INSTALL-TRUST` 1.0, and until it lands the gap is a dated exception in the shared registry.
+[`27_2026-09-22_install-trust-page`](done/27_2026-09-22_install-trust-page.md) reached `Implemented` on
+2026-09-28 and moved to [`done/`](done/): the trust page is live at
+`https://serzhyale.github.io/doc-html-translate/install-trust.html`, linked from the landing page and the
+ten locale pages, the three READMEs and the `docs.*` trio, and the shared registry row for `INSTALL-TRUST`
+reads adopted with the 2026-09-22 exception closed.
 
 [`31_2026-09-25_canon-resync-new-duties`](done/31_2026-09-25_canon-resync-new-duties.md) moved to
 [`done/`](done/) on 2026-09-25 with all four items built on the owner's instruction: the documentation
