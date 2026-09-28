@@ -1,11 +1,11 @@
 # Tactical plan: 16_2026-08-11_ocr-visual-fidelity-lab - ocr-visual-fidelity-lab
 
-**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
+**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Research inputs:** none (strategic §9 items are resolved *by* Phase 06, not before it)
 **Tier:** Complex, cross-edition · **Priority:** 40
-**Status:** In Progress
-**Phases:** 6 / 8 done
-**Last updated:** 2026-09-25
+**Status:** BlockNeedUserTest - every phase built; the completion gate waits on the two human-owned gates below
+**Phases:** 8 / 8 done
+**Last updated:** 2026-09-26
 
 > **Scope:** tactical, English, developer handoff. Every step has a verification predicate.
 > Rationale lives in the strategic spec.
@@ -20,8 +20,8 @@
 | 04 | desktop-runner | 03 | ✅ Done | 6/6 | [PHASE_04__desktop-runner.md](PHASE_04__desktop-runner.md) |
 | 05 | extension-runner | 04 | ✅ Done | 5/5 | [PHASE_05__extension-runner.md](PHASE_05__extension-runner.md) |
 | 06 | baseline-and-thresholds | 04, 05 | ✅ Done | 5/5 | [PHASE_06__baseline-and-thresholds.md](PHASE_06__baseline-and-thresholds.md) |
-| 07 | concealment-and-grouping | 06 | 🚧 In Progress (07.1-07.2 ⛔) | 1/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
-| 08 | docs-cleanup | all | 🚧 In Progress | 5/6 | [PHASE_08__docs-cleanup.md](PHASE_08__docs-cleanup.md) |
+| 07 | concealment-and-grouping | 06 | ✅ Done | 7/7 | [PHASE_07__concealment-and-grouping.md](PHASE_07__concealment-and-grouping.md) |
+| 08 | docs-cleanup | all | ✅ Done | 6/6 | [PHASE_08__docs-cleanup.md](PHASE_08__docs-cleanup.md) |
 
 Legend: ⬜ Not started · 🚧 In Progress · ✅ Done · ⛔ Blocked · ⏭️ Skipped
 
@@ -83,14 +83,15 @@ Two rows of strategic §6 produce no step, and that is a decision rather than an
 
 ## Completion gate
 
-- [ ] All phases ✅ Done.
+- [x] All phases ✅ Done (2026-09-26).
 - [ ] `DEV/ocrlab/corpus.json` passes `ocrlab verify` with every §4.1 category minimum met and a
       stratified holdout ≥ 30%.
 - [ ] `ocrlab run` produces both editions' evidence and one report at a pinned viewport; a missing
       dependency or asset fails the run explicitly.
 - [ ] Holdout report shows zero clipping after the stress cases, zero cross-group plate overlap, zero
       unresolved protected-area damage.
-- [ ] `docs/PARITY.md` carries every new shared constant / mode, each with a drift guard in `tests/`.
+- [x] `docs/PARITY.md` carries every new shared constant / mode, each with a drift guard in `tests/`
+      (`TestParityOCRClustering` for the boundary test, `TestParityOCRConcealment` for the modes).
 - [ ] `./scripts/test.ps1` green, `./scripts/lint.ps1` green, `npm test` green in `extension/`.
 - [ ] Changelog has an entry per modified file.
 - [ ] `/spec-check 16_2026-08-11_ocr-visual-fidelity-lab` returns Verified.
@@ -184,3 +185,15 @@ Two rows of strategic §6 produce no step, and that is a decision rather than an
   scene (`synth-side-by-side-balloons`). The grouping halves of 07.4-07.7 landed with it; 07.1 / 07.2
   stay ⛔ on §9.1 / §9.2. Research: [`DEV/research/ocr_balloon_boundary_2026-09-25.md`](../../research/ocr_balloon_boundary_2026-09-25.md).
   The catalog moved first: `OCR-PIPELINE` 1.1, a dated amendment for the whole line split.
+- 2026-09-26 - **Steps 07.1 / 07.2 done on the owner's decision, and with them phases 07 and 08.** Asked
+  whether to close the ticket around the blocked steps or to do them, the owner chose to do them without
+  the annotated texture batch strategic §9.1 / §9.2 asked for. The bounds come instead from the ring
+  statistics of all 162 blocks the desktop engine plates on the 47-scene corpus, plus the exact synthetic
+  scenes ([`RESEARCH_ocr-concealment-modes_2026-09-26`](../../research/RESEARCH_ocr-concealment-modes_2026-09-26.md)):
+  `fill` on flat paper, `reconstruct` where the ring shows a ramp - not merely two different sides, which
+  is usually a panel rule beside the block - and `mask` (paper over the padded line boxes only) where the
+  ring is busy. Both editions, catalog first (`OCR-OVERLAY` 1.1, `OCR-PIPELINE` 1.3), guarded by
+  `TestParityOCRConcealment`. The lab shows no regression and one gain (the gradient caption); it cannot
+  show the mask's gain, because its damage metric reads plate rectangles. Deviations are in the phase
+  file. **The ticket is not complete:** the completion gate's corpus, holdout and holdout-report items are
+  the two human-owned gates, so the status is `BlockNeedUserTest`, not `Implemented`.

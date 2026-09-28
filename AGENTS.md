@@ -102,7 +102,7 @@ Run from repository root in PowerShell.
   slices a session can read line by line (`-Write` writes the manifest into the audit ticket's folder,
   `-Tail` slices files added since, `-Summary` measures the campaign and exits 0 only when it is closed).
   Hand-run; ticket 34 is its first campaign.
-- OCR visual-fidelity lab: go run ./tools/ocrlab verify | run | score | report (see tools/ocrlab/README.md)
+- OCR visual-fidelity lab: go run ./tools/ocrlab verify | fetch | synth | seed | run | score | report | gate | exchange (see tools/ocrlab/README.md)
 
 Tool bootstrap (when missing):
 
@@ -178,6 +178,13 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - The interface language dresses the **chrome only**. A converted page keeps the *document's* `<html lang>`; the navbar and reader controls carry their own `lang`/`dir` and mirror for `ar`/`ur`. Putting the UI language on `<html lang>` stops Chrome offering "Translate page" - the product's entire free workflow. Guarded by `TestConvertedChromeLanguage` in tests/smoke_test.go and by the RTL assertions in tools/store/make-screenshot.ps1.
 - The canon's house text style (DOCUMENTATION_CONCEPT.md §5) is **scoped by language here**: it binds `en`, `ru` and `uk` only. The other ten interface languages follow their own script and are exempt - tests/typography_test.go enforces that scoping, so do not widen the check to all thirteen.
 - Optional OCR overlay (-ocr): internal/ocr shells out to the external Tesseract binary (parses TSV for bboxes) and rewrites document images into positioned, translatable text plates. It runs in internal/pipeline/pipeline.go after nav injection and before translation (so overlay text is translated too), and is strictly best-effort - a missing tesseract or a failed image never aborts the conversion. English data ships in <exe>/tessdata; other languages download on demand (-ocr-download / GUI) into the per-user folder (os.UserCacheDir()/doc-html-translate/tessdata), catalogue codes only, verified against pinned SHA-256 digests (internal/ocr/download.go). Applies to EPUB and PDF (formats whose images exist at HTML stage).
+- Plate concealment modes: every OCR plate records how it hides the source lettering as
+  `data-ocr-mode` = `fill` / `reconstruct` / `mask` (decided from the colour ring just outside the
+  block), always as CSS over the untouched `<img>` - internal/ocr/conceal.go and
+  extension/src/ocr-conceal.js are a pinned PARITY.md invariant. Every constant of the OCR-PIPELINE
+  section 5 status table also carries a comment `OCR-OVERLAY rule 13: <status> - <source>.`
+  (`derived` / `inherited` / `policy`) above its declaration in both editions;
+  tests/ocr_constant_status_test.go fails on a missing marker or a status that disagrees.
 
 ## Pitfalls
 
@@ -204,8 +211,11 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - **The shared contracts catalog is at `P:/Contracts` on this machine** - this is the only tracked file
   in the repository allowed to name that path. Anything a second product builds against lives there,
   organized by function (`ocr-overlay/`, `install-trust/`, ..), never in this repo: this product owns
-  `OCR-PIPELINE` and `OCR-INVOCATION`, implements `OCR-OVERLAY` as its reference implementation, and is
-  bound by `INSTALL-TRUST`. Read `_meta/RULES.md`, `_meta/VERSIONING.md` and `_meta/REGISTRY.md` before
+  `OCR-INVOCATION`, `DIAGNOSTIC-REPORT` and `REPO-STAMP`, implements `OCR-OVERLAY` as its reference
+  implementation, is bound by `INSTALL-TRUST`, and consumes the rest - the full pointer roster (id,
+  version, this repo's role per contract) is [docs/contracts/README.md](docs/contracts/README.md).
+  `OCR-ACCURACY` and `OCR-EXCHANGE` are records owned by other products that cite this one: a change
+  here that moves a shared constant is announced in their rows, never applied to their documents. Read `_meta/RULES.md`, `_meta/VERSIONING.md` and `_meta/REGISTRY.md` before
   touching any of them. Rules that bind work here: **edit the contract in the catalog, never a copy**;
   the contract changes **before** the code; a breaking change is a new dated section plus a version bump,
   never an in-place rewrite; a deviation is either an amendment or a dated exception in the registry,

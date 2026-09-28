@@ -16,6 +16,8 @@
 // source and the plate grows past its region, colliding with the next plate. Shared with
 // the desktop app's overlay.go fontFitFactor (see docs/PARITY.md). 0.92 keeps plate text close to
 // the source size while leaving headroom for longer translations and word-wrap slack.
+// OCR-OVERLAY rule 13: policy - keeps plate text near the source size with room for wrap slack
+// (OCR-PIPELINE 3.1).
 export const FONT_FIT = 0.92;
 
 // Ceiling for the runtime grow branch, as a multiple of the compile-time size. Shared with the
@@ -24,16 +26,25 @@ export const FONT_FIT = 0.92;
 // on a loosely leaded block "fill the box" would print the translation larger than the words it
 // covers. 1.15 is a little over 1/FONT_FIT, so a plate may reach the measured ink height of the
 // source's own lines and no further.
+// OCR-OVERLAY rule 13: policy - a little over 1/FONT_FIT, part of the fit ladder (OCR-PIPELINE
+// amendment 1.2 L).
 export const FONT_GROW_CAP = 1.15;
 
 // plateSpecs is the one place a recognized block becomes plate geometry. Positions and sizes are
 // in percent of the source image so they survive responsive scaling, and the font size is in
-// container-width units (cqw) derived from the block's median line height, scaled by FONT_FIT.
+// container-width units (cqw) derived from the block's type height (fontBasis), scaled by FONT_FIT.
 //
 // It returns plain data on purpose: the page-OCR broker hands these across a message boundary to
 // an agent running in the reader's document, which has no engine and must not compute plate
 // geometry of its own. A second implementation of this arithmetic anywhere is the drift that
 // docs/PARITY.md exists to prevent.
+// fontBasis is the height a plate's font is sized from: the block's type height - the word-height
+// median (OCR-OVERLAY rule 5, OCR-PIPELINE amendment 1.4 B) - when it has one, else its line height.
+// Mirrors overlay.go fontBasis (docs/PARITY.md).
+export function fontBasis(b) {
+  return b.typeHeight > 0 ? b.typeHeight : b.lineHeight;
+}
+
 export function plateSpecs({ blocks, width, height }) {
   const specs = [];
   if (!width || !height) return specs;
@@ -46,9 +57,13 @@ export function plateSpecs({ blocks, width, height }) {
       top: `${(y0 / height) * 100}%`,
       width: `${((x1 - x0) / width) * 100}%`,
       minHeight: `${((y1 - y0) / height) * 100}%`,
-      fontSize: `${((b.lineHeight / width) * 100 * FONT_FIT).toFixed(2)}cqw`,
+      fontSize: `${((fontBasis(b) / width) * 100 * FONT_FIT).toFixed(2)}cqw`,
       ink: b.colors ? b.colors.ink : "",
       bg: b.colors ? b.colors.bg : "",
+      // The concealment mode (ocr-conceal.js) and the background it paints, "" for the fill.
+      mode: b.conceal ? b.conceal.mode : "",
+      modeConf: b.conceal ? b.conceal.conf.toFixed(2) : "",
+      background: b.conceal ? b.conceal.background : "",
     });
   }
   return specs;
@@ -71,7 +86,9 @@ export function renderPlates(container, specs) {
     // gave it the shape of the rendered words but left a mean 93% of the source lettering showing
     // around short strings against 17% for the box - see ocr-overlay.css and docs/PARITY.md for the
     // measurement, and overlay.go for the desktop mirror.
-    if (s.ink || s.bg) { plate.style.color = s.ink; plate.style.background = s.bg; }
+    if (s.ink || s.bg) { plate.style.color = s.ink; plate.style.background = s.background || s.bg; }
+    // data-ocr-mode is what the lab's probe records. Mirrors overlay.go wrapImage.
+    if (s.mode) { plate.dataset.ocrMode = s.mode; plate.dataset.ocrModeConf = s.modeConf; }
     plate.textContent = s.text;
     container.append(plate);
   }
@@ -125,7 +142,13 @@ export function releaseOverlays(root) {
 // FONT_GROW_CAP x the base and stops one step before the content overflows, so a plate never prints
 // larger than the region it covers. Mirrors the desktop app's ocrScript fit() (see docs/PARITY.md
 // and overlay.go).
+// OCR-OVERLAY rule 13: policy - the fit ladder - shrink 8%, floor 50%, 40 steps; grow 4%, cap 1.15,
+// 20 steps; step minimum 0.3 (OCR-PIPELINE amendment 1.2 L).
 export function fitPlate(b) {
+  // Every fit starts again from the source position, so a lift is undone when the text shrinks back
+  // (OCR-PIPELINE amendment 1.4 A).
+  if (b.dataset.ocrTop === undefined) b.dataset.ocrTop = b.style.top || "";
+  b.style.top = b.dataset.ocrTop;
   if (!b.dataset.ocrCqw) {
     const m = /([0-9.]+)cqw/.exec(b.style.fontSize || "");
     b.dataset.ocrCqw = m ? m[1] : "0";
@@ -152,7 +175,24 @@ export function fitPlate(b) {
       }
     }
   }
-  if (b.scrollHeight > b.clientHeight + 1) b.style.height = "auto";
+  if (b.scrollHeight > b.clientHeight + 1) {
+    b.style.height = "auto";
+    liftPlate(b);
+  }
+}
+
+// liftPlate is the written overflow rule of OCR-OVERLAY rule 9 (OCR-PIPELINE amendment 1.4 A), applied
+// to a released plate: while its bottom stays inside the picture it grows down from its source line;
+// once it would pass the picture's bottom edge, its bottom is pinned there and it grows upward, so it
+// covers the picture and not the page text after it. It never rises above the picture's top - a plate
+// taller than the whole picture starts at the top and runs on past the bottom, opaque and unclipped.
+// Plates are painted in reading order, so where a lifted plate meets another the later one is on top.
+// The container is the plate's parent: the picture's own box. Mirrors the desktop ocrScript lift().
+export function liftPlate(b) {
+  const box = b.parentNode;
+  const h = box ? box.clientHeight : 0;
+  if (!(h > 0)) return;
+  if (b.offsetTop + b.offsetHeight > h) b.style.top = `${Math.max(0, h - b.offsetHeight)}px`;
 }
 
 // scheduleFit fits every plate in a container once it is laid out in the DOM (the caller appends it

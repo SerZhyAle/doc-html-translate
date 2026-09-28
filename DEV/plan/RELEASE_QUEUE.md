@@ -116,21 +116,23 @@ when it lands; what changes is that a blank scene can be told from a discarded o
 
 ```
 #   ticket                                              changed     status
-16  16_2026-08-11_ocr-visual-fidelity-lab               2026-09-25  In Progress (6/8; 07: 07.3 done, 07.1-07.2 ⛔ annotation)
+16  16_2026-08-11_ocr-visual-fidelity-lab               2026-09-26  BlockNeedUserTest (8/8 built; corpus + holdout review are human)
 --  (no ticket) plate box rides over the logo           2026-08-13  Evidenced, unfiled
 --  (no ticket) tesseract.js misses a caption on        2026-08-15  Evidenced, unfiled
     a gradient
 ```
 
-`ocr-visual-fidelity-lab` is 6 of 8 phases. Phase 07 (concealment and grouping) is 1 of 7: Step 07.3
-landed on 2026-09-25 on the owner's machine - the corpus re-measure the reconciliation asked for found
-the balloon merge band still there (1.00-3.46x), and balloons stitched side by side are now cut on a
-stroke crossing the gap between two words, in both editions (`OCR-PIPELINE` 1.1 in the catalog first).
-Its concealment-mode steps 07.1 / 07.2 still need strategic §9.1 / §9.2, which wait on annotated
-`texture` scenes and protected polygons - human-owned work in package `--`. Measured and left open by
-07.3: a balloon pair whose two outlines the recognizer reads as one token (`ff`, `fj`, `|`) stays
-stitched - two plates on `samson-and-delilah-15` - which needs a test through the token, not a
-threshold. Phase 08 is 5 of 6 with its changelog step waiting only on 07's files.
+`ocr-visual-fidelity-lab` has all 8 phases built. Step 07.3 landed on 2026-09-25 (balloons stitched side
+by side are cut on a stroke crossing the gap between two words, `OCR-PIPELINE` 1.1). Steps 07.1 / 07.2
+landed on 2026-09-26 on the owner's decision not to wait for annotated `texture` scenes: each plate now
+conceals as `fill`, `reconstruct` (a gradient where the ring outside the block shows a ramp) or `mask`
+(paper over the padded line boxes only, where the ring is busy), both editions, bounded on the whole
+corpus's ring statistics (`OCR-OVERLAY` 1.1, `OCR-PIPELINE` 1.3 in the catalog first). What keeps it off
+`Implemented` is human-owned: corpus acquisition toward 200 scenes and the holdout annotation review, which
+the completion gate and a re-derived `thresholds.json` need. Left open and measured: a balloon pair whose
+two outlines the recognizer reads as one token (`ff`, `fj`, `|`) stays stitched - two plates on
+`samson-and-delilah-15` - which needs a test through the token, not a threshold; and the lab's damage
+metric reads plate rectangles, so it cannot yet score what the mask leaves unpainted.
 
 **The `First-Earthman` cover plate rides over the `PLANET COMICS` logo.** The plate's text is the
 cover's own top banner line and it sits on that banner, but its box is taller than its line, so it
@@ -148,20 +150,25 @@ rung. Decide, do not leave it unwritten.
 
 ```
 #   ticket                                              changed     status
-21  21_2026-09-23_contract-ocr-pipeline-sync            2026-09-25  In Progress (catalog done 2026-09-25; left: A3 plate font + lab, A5 overflow rule, A7, A11)
-23  23_2026-09-23_contract-desktop-app-ux-sync          2026-09-23  In Progress
 32  32_2026-09-25_icon-system-surfaces                  2026-09-25  In Progress (built 2026-09-25; left: the owner's on-device look - taskbar light/dark, Chrome/Edge toolbar)
-26  26_2026-09-23_contract-product-web-pages-sync       2026-09-25  In Progress - Direction A done in the repo; rendered 360/768/1280 check, catalog row + exceptions and B1-B12 local only
 48  48_2026-09-26_contract-doc-internal-quality-gaps    2026-09-26  Partial - gates and fixes landed; left: shared registry row
 49  49_2026-09-26_contract-doc-external-quality-gaps    2026-09-26  Partial - gates and pages landed; left: file the proposal, shared registry row
 ```
+
+26 reached `Implemented` on 2026-09-28 and moved to
+[`done/`](done/26_2026-09-23_contract-product-web-pages-sync.md): the rendered `PAGE-STYLE` section 11 walk
+ran over eight pages at 360 / 768 / 1280 px, dark and light (31 combinations, one finding class - the kit's
+own 44 px and sub-480 px header rules, answered in the page layer); the catalog registry row now reads
+`1.1 / 1.1 / 1.1` from the finished site with three dated exceptions, and
+`PROPOSAL-2026-09-28-doc-html-translate-page-sync.md` carries the new asks (B4, B6, B7, B10, B11, B14, the
+`PAGE-STYLE` 4.7 vs `ICON-SET` copy confirmation) and the seconds for the points other products filed first.
 
 48 and 49 come from the `documentation-quality` adoption run of 2026-09-26: both contracts adopted as a
 consumer, the rules not met recorded here and as dated exceptions in the shared registry. They sit last in
 the package by rule 5 (docs-only work), 49 below 48 because the external contract requires the internal
 one first.
 
-**The six `2026-09-23_contract-*` tickets** (three left - `automated-checks` reached Implemented on 2026-09-24, `rule-adoption` and `iconography` on 2026-09-25, all moved to `done/`; iconography's system surfaces continue as 32) come out of one contract-sync pass over every catalog domain
+**The six `2026-09-23_contract-*` tickets** (all closed - `automated-checks` reached Implemented on 2026-09-24, `rule-adoption` and `iconography` on 2026-09-25, `ocr-pipeline` on 2026-09-26, `desktop-app-ux` and `product-web-pages` on 2026-09-28, all moved to `done/`; iconography's system surfaces continue as 32) come out of one contract-sync pass over every catalog domain
 that touches this product. Each has two halves: what the repo changes to conform, and what the catalog
 lacks - written as a dated amendment where this product owns the contract (`OCR-PIPELINE`,
 `OCR-INVOCATION`) and as a proposal beside the contract everywhere else. `OCR` leads because this product

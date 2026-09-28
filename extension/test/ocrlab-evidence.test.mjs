@@ -183,5 +183,5 @@ test("makeDiagRecord records placed blocks with their box and line height", () =
     width: 50, height: 50, dropped: [],
     blocks: [{ text: "Hi", bbox: { x0: 1, y0: 2, x1: 30, y1: 12 }, lineHeight: 10, lines: [] }],
   });
-  assert.deepEqual(rec.blocks, [{ text: "Hi", x0: 1, y0: 2, x1: 30, y1: 12, lineH: 10 }]);
+  assert.deepEqual(rec.blocks, [{ text: "Hi", x0: 1, y0: 2, x1: 30, y1: 12, lineH: 10, conf: 0 }]);
 });

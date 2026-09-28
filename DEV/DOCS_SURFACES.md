@@ -80,3 +80,9 @@ touches none of them, so a later reader does not go looking for the missing READ
   exist yet. The one hook into shipped code (`DOCHT_OCR_DIAG`) is off unless set and changes no user
   output, so there is nothing for a user to be told. Revisit if a tuning phase makes a fallback
   visible to a reader - that would be a user-facing feature and would lead the hero like any other.
+  **Phase 07 (2026-09-26) was that revisit, and the answer stays "none".** The concealment modes change
+  how a plate looks over a gradient or a busy picture (a rebuilt gradient, or paper over the line boxes
+  only), in both editions, but they add no control, no setting, no fallback message and no failure a
+  reader is told about - the plate is still the plate, drawn more carefully. Advertising it would be the
+  public quality claim §6 withholds until the holdout exists. Surfaces moved: `docs/PARITY.md`, the
+  catalog (`OCR-OVERLAY` 1.1, `OCR-PIPELINE` 1.3) and their pointers, the research note, the changelog.

@@ -69,12 +69,23 @@ var ocrCSS = appearance.OverlayCSS(OverlayStyleNames)
 // visible while undershooting is not. A translated string is normally longer than its source, so on
 // a translated page this branch does not fire at all.
 //
+// A plate released to height:auto follows the written overflow rule of OCR-OVERLAY rule 9
+// (OCR-PIPELINE amendment 1.4 A): it grows down while its bottom stays inside the picture, and once it
+// would pass the picture's bottom edge lift() pins its bottom there so it grows upward over the
+// picture rather than over the page text after it - never above the picture's top. Plates are in
+// reading order in the document, so where one overlaps another the later one paints on top. Every fit
+// restores the source top first, so a lift is undone when the text shrinks back.
+//
 // Injected once per overlaid page. Without it nothing is clipped either: the plate carries only a
 // min-height, so overflow:hidden has no height to cut against and the box grows at the unfitted
 // size, over whatever lies below (measured, DEV/research/page_ocr_placement_2026-09-25). Mirrors
 // the extension's fitPlate + observer (see docs/PARITY.md and ocr-plates.js).
+// OCR-OVERLAY rule 13: policy - the fit ladder - shrink 8%, floor 50%, 40 steps; grow 4%, cap 1.15,
+// 20 steps; step minimum 0.3 (OCR-PIPELINE amendment 1.2 L).
 const ocrScript = `(function(){
 function fit(b){
+  if(b.dataset.ocrTop===undefined)b.dataset.ocrTop=b.style.top||"";
+  b.style.top=b.dataset.ocrTop;
   if(!b.dataset.ocrCqw){var m=/([0-9.]+)cqw/.exec(b.style.fontSize||"");b.dataset.ocrCqw=m?m[1]:"0";}
   var base=parseFloat(b.dataset.ocrCqw);
   b.style.height="";
@@ -85,8 +96,10 @@ function fit(b){
     if(b.scrollHeight<=b.clientHeight+1){var cap=base*1.15,p=s,n=s,gg=0;
       while(n<cap&&gg<20){n=Math.min(cap,n+Math.max(0.3,n*0.04));b.style.fontSize=n+"cqw";gg++;
         if(b.scrollHeight>b.clientHeight+1){b.style.fontSize=p+"cqw";break;}p=n;}}}
-  if(b.scrollHeight>b.clientHeight+1)b.style.height="auto";
+  if(b.scrollHeight>b.clientHeight+1){b.style.height="auto";lift(b);}
 }
+function lift(b){var p=b.parentNode,h=p?p.clientHeight:0;
+  if(h>0&&b.offsetTop+b.offsetHeight>h)b.style.top=Math.max(0,h-b.offsetHeight)+"px";}
 function fitAll(){var l=document.querySelectorAll(".ocr-box");for(var i=0;i<l.length;i++)fit(l[i]);}
 var t;function go(){clearTimeout(t);t=setTimeout(fitAll,0);}
 if(document.readyState!=="loading")fitAll();else document.addEventListener("DOMContentLoaded",fitAll);
@@ -515,20 +528,30 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 
 	for _, b := range res.Blocks {
 		style := percentStyle(b, res.Width, res.Height)
+		attrs := []gohtml.Attribute{{Key: "class", Val: "ocr-box"}}
 		if srcImg != nil {
+			// How the plate hides the source (conceal.go): the fill below, a gradient rebuilt from
+			// the ring, or paper over the line boxes only. The attributes are what the lab's probe
+			// records; a page without a decoded image has no evidence and keeps the plain plate.
+			ring := measureRing(srcImg, b)
+			mode, conf := decideMode(ring)
+			attrs = append(attrs,
+				gohtml.Attribute{Key: "data-ocr-mode", Val: string(mode)},
+				gohtml.Attribute{Key: "data-ocr-mode-conf", Val: fmt.Sprintf("%.2f", conf)})
 			if paper, ink, ok := blockColors(srcImg, b); ok {
 				// Paper and ink both land on the plate box: the box is what covers the source
 				// region, so it is what has to be opaque (see the plate's background note in
 				// internal/appearance for the measurement that decided this against the string).
-				style += ";background:" + paper + ";color:" + ink
+				bg := plateBackground(mode, ring, b, paper, res.Width)
+				if bg == "" {
+					bg = paper
+				}
+				style += ";background:" + bg + ";color:" + ink
 			}
 		}
 		box := &gohtml.Node{
 			Type: gohtml.ElementNode, Data: "span", DataAtom: atom.Span,
-			Attr: []gohtml.Attribute{
-				{Key: "class", Val: "ocr-box"},
-				{Key: "style", Val: style},
-			},
+			Attr: append(attrs, gohtml.Attribute{Key: "style", Val: style}),
 		}
 		box.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: b.Text})
 		wrap.AppendChild(box)
@@ -542,18 +565,22 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 // with the next plate. 0.92 keeps plate text close to the source size while still absorbing
 // font-metric and word-wrap slack. Shared with the extension's ocr-overlay.js FONT_FIT (see
 // docs/PARITY.md).
+// OCR-OVERLAY rule 13: policy - keeps plate text near the source size with room for wrap slack
+// (OCR-PIPELINE 3.1).
 const fontFitFactor = 0.92
 
 // percentStyle positions a plate as percentages of the image dimensions and sizes its font
-// from the block's line height (in cqw, i.e. percent of the container width), scaled by
-// fontFitFactor so the text fits the block instead of overflowing it.
+// from the block's type height (in cqw, i.e. percent of the container width), scaled by
+// fontFitFactor so the text fits the block instead of overflowing it. The type height is the
+// word-height median, not the line box (OCR-OVERLAY rule 5, OCR-PIPELINE amendment 1.4 B); a block
+// that carries none falls back to its line height.
 func percentStyle(b Block, w, h int) string {
 	if w <= 0 || h <= 0 {
 		return ""
 	}
 	return fmt.Sprintf(
 		"left:%.2f%%;top:%.2f%%;width:%.2f%%;min-height:%.2f%%;font-size:%.2fcqw",
-		pct(b.X0, w), pct(b.Y0, h), pct(b.X1-b.X0, w), pct(b.Y1-b.Y0, h), pct(b.LineH, w)*fontFitFactor,
+		pct(b.X0, w), pct(b.Y0, h), pct(b.X1-b.X0, w), pct(b.Y1-b.Y0, h), pct(fontBasis(b), w)*fontFitFactor,
 	)
 }
 
@@ -710,6 +737,8 @@ func ringNearerInk(img image.Image, x0, y0, x1, y1, lh, bgR, bgG, bgB, inkR, ink
 // ringMinSamples is how many pixels the surrounding band must contribute before it is allowed to
 // swap the pair. Small enough that a block against one edge of the image still decides on the
 // three bands it has, large enough that a sliver is not a vote.
+// OCR-OVERLAY rule 13: policy - votes needed before paper and ink may be swapped (OCR-PIPELINE
+// 3.3).
 const ringMinSamples = 40
 
 // Plate colour sampling, shared verbatim with ocr-overlay.js and held equal by
@@ -717,16 +746,26 @@ const ringMinSamples = 40
 // and Math.floor there - because a rounding difference moves a block across a threshold: the
 // extension once rounded the ring band where this floors it.
 const (
-	inkDeviationMin   = 90  // sum of channel distances from the paper above which a pixel counts as ink
-	inkStripLines     = 1.3 // ink is sampled in the first this-many line heights of the block
-	inkMinPerMille    = 15  // share of that strip, per mille, that must be ink to trust the sample..
-	inkMinSamples     = 6   // ..and never fewer pixels than this
-	plateMinContrast  = 55  // luma distance under which the fallback ink replaces the sampled one
-	ringPadDivisor    = 3   // the ring band is the line height over this, on each side..
-	ringMinPad        = 2   // ..and never thinner than this many pixels
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	inkDeviationMin = 90 // sum of channel distances from the paper above which a pixel counts as ink
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	inkStripLines = 1.3 // ink is sampled in the first this-many line heights of the block
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	inkMinPerMille = 15 // share of that strip, per mille, that must be ink to trust the sample..
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	inkMinSamples = 6 // ..and never fewer pixels than this
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE 3.2.
+	plateMinContrast = 55 // luma distance under which the fallback ink replaces the sampled one
+	// OCR-OVERLAY rule 13: policy - a third of a line (OCR-PIPELINE amendment 1.2 E).
+	ringPadDivisor = 3 // the ring band is the line height over this, on each side..
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE 3.3.
+	ringMinPad = 2 // ..and never thinner than this many pixels
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 	fallbackLumaSplit = 140 // paper lighter than this gets the dark fallback ink, else the light one
-	fallbackDarkInk   = 17
-	fallbackLightInk  = 240
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	fallbackDarkInk = 17
+	// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
+	fallbackLightInk = 240
 )
 
 func fallbackInk(r, g, b int) (int, int, int) {
@@ -921,4 +960,13 @@ func ensureScript(doc *gohtml.Node) {
 		Attr: []gohtml.Attribute{{Key: overlayMarker, Val: "script"}}}
 	script.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: ocrScript})
 	target.AppendChild(script)
+}
+
+// fontBasis is the height a plate's font is sized from: the block's type height when it has one,
+// else its line height. Mirrors ocr-plates.js fontBasis (docs/PARITY.md).
+func fontBasis(b Block) int {
+	if b.TypeH > 0 {
+		return b.TypeH
+	}
+	return b.LineH
 }

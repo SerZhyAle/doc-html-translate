@@ -1,9 +1,12 @@
 # Pointer: OCR-PIPELINE
 
 - **Id:** `OCR-PIPELINE`
-- **Version:** 1.2 (2026-09-25: 1.1 added the line split - word-gap ratio, column regrouping, the stroke test
+- **Version:** 1.4 (2026-09-25: 1.1 added the line split - word-gap ratio, column regrouping, the stroke test
   between two words, orphans; 1.2 brought the document up to the code - eight corrections, the trim stage,
-  the word-height type size and plate font, the grow branch, page OCR, a status column, negative results)
+  the word-height type size and plate font, the grow branch, page OCR, a status column, negative results;
+  2026-09-26: 1.3 added the concealment mode - fill / reconstruct / mask chosen from the ring outside the block;
+  1.4 wrote the overflow rule for a released plate, implemented the plate font from the type height, put
+  the constant statuses at their declarations and named the lab as the section 7 emitter)
 - **Home:** the shared contracts catalog, `ocr-overlay/ocr-pipeline.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - the document describes this product's own mechanism, end to end
 - **Read by:** FastMediaSorter Android and FastMediaSorter_Lite, which port parts of it

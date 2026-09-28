@@ -343,6 +343,64 @@ func TestParityOCRPlateColourOrientation(t *testing.T) {
 	}
 }
 
+// TestParityOCRConcealment: both editions decide a plate's concealment mode from the same ring by
+// the same rule, and paint each mode the same way. The numbers are read from both sources and
+// compared, never copied here, so a stale literal cannot pass; the expressions pin what each number
+// is compared against. See docs/PARITY.md "OCR" (plate concealment mode).
+func TestParityOCRConcealment(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "ocr", "conceal.go")
+	jsSrc := readRepoFile(t, "extension", "src", "ocr-conceal.js")
+	jsOverlay := readRepoFile(t, "extension", "src", "ocr-overlay.js")
+
+	for _, m := range []struct{ goName, jsName string }{
+		{"ModeFill", "MODE_FILL"}, {"ModeReconstruct", "MODE_RECONSTRUCT"}, {"ModeMask", "MODE_MASK"},
+	} {
+		g := regexp.MustCompile(m.goName + `\s+Mode\s*=\s*"(\w+)"`).FindStringSubmatch(goSrc)
+		j := regexp.MustCompile(`export const ` + m.jsName + `\s*=\s*"(\w+)"`).FindStringSubmatch(jsSrc)
+		if g == nil || j == nil {
+			t.Fatalf("mode %s/%s not found (conceal.go=%v ocr-conceal.js=%v)", m.goName, m.jsName, g, j)
+		}
+		if g[1] != j[1] {
+			t.Errorf("mode name drift: conceal.go %s=%q ocr-conceal.js %s=%q", m.goName, g[1], m.jsName, j[1])
+		}
+	}
+	for _, p := range []struct{ name, goRe, jsRe string }{
+		{"busy bound", `modeBusyMax\s*=\s*([\d.]+)`, `MODE_BUSY_MAX\s*=\s*([\d.]+)`},
+		{"flat spread", `modeFlatSpread\s*=\s*([\d.]+)`, `MODE_FLAT_SPREAD\s*=\s*([\d.]+)`},
+		{"mask pad divisor", `modeMaskPadDivisor\s*=\s*([\d.]+)`, `MODE_MASK_PAD_DIVISOR\s*=\s*([\d.]+)`},
+	} {
+		if gv, jv := num(t, p.name+" (conceal.go)", p.goRe, goSrc), num(t, p.name+" (ocr-conceal.js)", p.jsRe, jsSrc); gv != jv {
+			t.Errorf("%s drift: conceal.go=%v ocr-conceal.js=%v (must match - see docs/PARITY.md OCR)", p.name, gv, jv)
+		}
+	}
+	for _, c := range []struct{ name, file, src, re string }{
+		// The ring is ringNearerInk's band, and its constants are the colour sampling's own.
+		{"the ring is the colour ring's band", "conceal.go", goSrc, `pad := max\(lh/ringPadDivisor, ringMinPad\)`},
+		{"the ring is the colour ring's band", "ocr-conceal.js", jsSrc, `const pad = Math\.max\(ring\.minPad, Math\.floor\(lh / ring\.padDivisor\)\)`},
+		{"the ring constants are handed over, not redeclared", "ocr-overlay.js", jsOverlay,
+			`const RING = \{ deviation: INK_DEVIATION_MIN, padDivisor: RING_PAD_DIVISOR, minPad: RING_MIN_PAD, minSamples: RING_MIN_SAMPLES \}`},
+		{"a busy pixel is off its own side's median", "conceal.go", goSrc, `> inkDeviationMin \{\s*s\.busy\+\+`},
+		{"a busy pixel is off its own side's median", "ocr-conceal.js", jsSrc, `> deviation\) side\.busy\+\+`},
+		// Too thin to judge is the mode that paints least.
+		{"a thin ring is a mask at 0", "conceal.go", goSrc, `if r\.n < ringMinSamples \{\s*return ModeMask, 0`},
+		{"a thin ring is a mask at 0", "ocr-conceal.js", jsSrc, `if \(r\.n < r\.minSamples\) return \{ mode: MODE_MASK, conf: 0 \}`},
+		{"busy is the share over the bound", "conceal.go", goSrc, `if busy > modeBusyMax \{`},
+		{"busy is the share over the bound", "ocr-conceal.js", jsSrc, `if \(busy > MODE_BUSY_MAX\)`},
+		// The middle-third test is what tells a ramp from an edge beside the block.
+		{"a ramp shows its middle", "conceal.go", goSrc, `6\*spread\(a, mid\) <= s && 6\*spread\(b, mid\) <= s`},
+		{"a ramp shows its middle", "ocr-conceal.js", jsSrc, `6 \* spread\(a, mid\) <= s && 6 \* spread\(b, mid\) <= s`},
+		{"the mask pad", "conceal.go", goSrc, `pad := max\(lh/modeMaskPadDivisor, ringMinPad\)`},
+		{"the mask pad", "ocr-conceal.js", jsSrc, `const pad = Math\.max\(r\.minPad, Math\.floor\(lh / MODE_MASK_PAD_DIVISOR\)\)`},
+		// Stripes in cqw from the plate's corner, so they do not stretch when the fit grows the plate.
+		{"mask stripes are in cqw", "conceal.go", goSrc, `linear-gradient\(%s,%s\) %\.3fcqw %\.3fcqw/%\.3fcqw %\.3fcqw no-repeat`},
+		{"mask stripes are in cqw", "ocr-conceal.js", jsSrc, `linear-gradient\(\$\{paper\},\$\{paper\}\) \$\{cq\(l\.x0 - pad - bx0\)\}cqw`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: %s no longer holds (%q) - see docs/PARITY.md OCR (plate concealment mode)", c.file, c.name, c.re)
+		}
+	}
+}
+
 // TestParityOCRPlateColourNumbers pins the colour sampling's numbers across editions: the ink
 // deviation, the strip, the minimum ink share, the contrast floor, the ring band and the fallback
 // colours. They are policy rather than measured values (OCR-OVERLAY rule 13 is ticket 21's open
@@ -728,10 +786,11 @@ func TestParityOCRFontFit(t *testing.T) {
 	// shape of the rendered words and leaves the source lettering showing wherever the string is
 	// shorter than the region - measured over 46 lab scenes at a mean 93% residual against 17% for
 	// the box. A side that moved the background back onto the string would still pass every constant
-	// check here, so the carrier is pinned by name on both sides.
+	// check here, so the carrier is pinned by name on both sides. Since the concealment modes the box
+	// carries the mode's background, which is the sampled paper unless the mode painted one.
 	for _, c := range []struct{ what, src, re string }{
-		{"overlay.go writes the sampled paper onto the box", goSrc, `style \+= ";background:" \+ paper`},
-		{"ocr-plates.js writes the sampled paper onto the plate", plateSrc, `plate\.style\.background = s\.bg`},
+		{"overlay.go writes the sampled paper onto the box", goSrc, `bg = paper\s+}\s+style \+= ";background:" \+ bg`},
+		{"ocr-plates.js writes the sampled paper onto the plate", plateSrc, `plate\.style\.background = s\.background \|\| s\.bg`},
 	} {
 		if !regexp.MustCompile(c.re).MatchString(c.src) {
 			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (plate shape)", c.what, c.re)
@@ -747,6 +806,46 @@ func TestParityOCRFontFit(t *testing.T) {
 	} {
 		if strings.Contains(c.src, "ocr-ink") {
 			t.Errorf("%s: the paper belongs on the plate box - see docs/PARITY.md OCR (plate shape)", c.what)
+		}
+	}
+
+	// The font's basis is the block's type height - the word-height median - not its line box
+	// (OCR-OVERLAY rule 5, OCR-PIPELINE amendment 1.4 B), with the line height as the fallback of a
+	// block that carries none. The line box stays the colour's and the ring's basis, so a side that
+	// switched the font back, or moved the colour onto the type height, would change plates without
+	// moving any constant above.
+	clusterGo := readRepoFile(t, "internal", "ocr", "tesseract.go")
+	clusterJS := readRepoFile(t, "extension", "src", "ocr-cluster.js")
+	for _, c := range []struct{ what, src, re string }{
+		{"overlay.go sizes the font from fontBasis", goSrc, `pct\(fontBasis\(b\), w\)\*fontFitFactor`},
+		{"overlay.go fontBasis prefers TypeH", goSrc, `if b\.TypeH > 0 \{\s+return b\.TypeH\s+\}\s+return b\.LineH`},
+		{"ocr-plates.js sizes the font from fontBasis", plateSrc, `\(fontBasis\(b\) / width\) \* 100 \* FONT_FIT`},
+		{"ocr-plates.js fontBasis prefers typeHeight", plateSrc, `b\.typeHeight > 0 \? b\.typeHeight : b\.lineHeight`},
+		{"tesseract.go TypeH is the median of the lines' type sizes", clusterGo, `TypeH: median\(cink, 0\)`},
+		{"ocr-cluster.js typeHeight is the median of the lines' type sizes", clusterJS, `typeHeight: medianOf\(cur\.ink\) \|\| 0`},
+		{"tesseract.go a released plate keeps its own line's type size", clusterGo, `TypeH: typeAt\(types, i\)`},
+		{"ocr-cluster.js a released plate keeps its own line's type size", clusterJS, `typeHeight: \(cur\.ink && cur\.ink\[i\]\) \|\| 0`},
+		{"overlay.go colour still reads the line height", goSrc, `lh := b\.LineH`},
+		{"ocr-overlay.js colour still reads the line height", jsSrc, `blockColors\(ctx, b\.bbox, b\.lineHeight\)`},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (font basis)", c.what, c.re)
+		}
+	}
+
+	// The written overflow rule (OCR-OVERLAY rule 9, OCR-PIPELINE amendment 1.4 A): a released plate
+	// that would pass the picture's bottom is lifted so its bottom sits on that edge, never above the
+	// top, and every fit starts from the source top. Pinned as shapes, since it has no constant.
+	for _, c := range []struct{ what, src, re string }{
+		{"overlay.go restores the source top", goSrc, `b\.style\.top=b\.dataset\.ocrTop;`},
+		{"overlay.go lifts a released plate", goSrc, `b\.style\.height="auto";lift\(b\);`},
+		{"overlay.go lift pins the bottom, never above the top", goSrc, `b\.offsetTop\+b\.offsetHeight>h\)b\.style\.top=Math\.max\(0,h-b\.offsetHeight\)\+"px"`},
+		{"ocr-plates.js restores the source top", plateSrc, `b\.style\.top = b\.dataset\.ocrTop;`},
+		{"ocr-plates.js lifts a released plate", plateSrc, `b\.style\.height = "auto";\s+liftPlate\(b\);`},
+		{"ocr-plates.js lift pins the bottom, never above the top", plateSrc, "b\\.offsetTop \\+ b\\.offsetHeight > h\\) b\\.style\\.top = `\\$\\{Math\\.max\\(0, h - b\\.offsetHeight\\)\\}px`"},
+	} {
+		if !regexp.MustCompile(c.re).MatchString(c.src) {
+			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (overflow rule)", c.what, c.re)
 		}
 	}
 

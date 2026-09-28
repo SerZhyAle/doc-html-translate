@@ -23,15 +23,18 @@ func DiagnosticsPath() string { return os.Getenv(diagEnvVar) }
 
 // diagBlock is one recognized block as it was rendered.
 type diagBlock struct {
-	Text       string `json:"text"`
-	X0         int    `json:"x0"`
-	Y0         int    `json:"y0"`
-	X1         int    `json:"x1"`
-	Y1         int    `json:"y1"`
-	LineH      int    `json:"lineH"`
-	Style      string `json:"style"`
-	Background string `json:"background,omitempty"`
-	Ink        string `json:"ink,omitempty"`
+	Text  string `json:"text"`
+	X0    int    `json:"x0"`
+	Y0    int    `json:"y0"`
+	X1    int    `json:"x1"`
+	Y1    int    `json:"y1"`
+	LineH int    `json:"lineH"`
+	// Conf is the block's mean line confidence, 0..100 - the `confidence` of the OCR-OVERLAY
+	// section 7 record the lab writes from this line (OCR-PIPELINE amendment 1.4 D).
+	Conf       float64 `json:"conf"`
+	Style      string  `json:"style"`
+	Background string  `json:"background,omitempty"`
+	Ink        string  `json:"ink,omitempty"`
 }
 
 // diagDropped is one line a gate rejected: text the engine read that the reader never gets. It is
@@ -83,7 +86,7 @@ func recordDiagnostics(file string, res Result, srcImg image.Image) {
 	rec := diagImage{File: file, Width: res.Width, Height: res.Height, Blocks: []diagBlock{}, Dropped: []diagDropped{}}
 	for _, b := range res.Blocks {
 		db := diagBlock{
-			Text: b.Text, X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1, LineH: b.LineH,
+			Text: b.Text, X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1, LineH: b.LineH, Conf: b.Conf,
 			Style: percentStyle(b, res.Width, res.Height),
 		}
 		if srcImg != nil {

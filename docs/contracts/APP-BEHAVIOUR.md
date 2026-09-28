@@ -35,8 +35,10 @@ wording of the rules is read through that - see ticket 23, Direction B):
 - **Rules 10 and 12** do not apply as written: the window keeps no geometry, and every control saves
   itself (no Save/Cancel settings window).
 
-**Open, recorded in ticket 23:** the right-click verb's own caption ("Convert to HTML") is English in
-Explorer; B1-B8 proposals to the catalog.
+**Open, recorded in the catalog (2026-09-28):** the right-click verb's own caption ("Convert to HTML")
+is English in Explorer - a dated exception in the shared registry (until 2026-12-31). B1-B8 and the
+`APP-STYLE` section 4 `danger` report are filed in the catalog's `desktop-app-ux/` as
+`PROPOSAL-2026-09-28-*`; the domain README's proposal table lists them.
 
 **Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/hardening_test.go`
 (`TestQuestionIsAskedInTheWindow`, the cancel tests), `internal/dialog` tests, and a headless-Edge run of

@@ -36,6 +36,8 @@ import (
 // above that noise - the Russian UI screenshot at 8.24 and a Soviet poster at 8.15. 6.4 is the
 // geometric middle of the worst wrong answer (5.00) and the weaker right one (8.15), about 28% of
 // margin each way, and no scene in the corpus sits between them.
+// OCR-OVERLAY rule 13: derived - geometric middle of 5.00 (worst wrong) and 8.15 (weaker right),
+// ocr_plate_coverage_2026-08-13 section 4.
 const ocrScriptConfidenceFloor = 6.4
 
 // osdScriptLine reads the two lines of `--psm 0` output the script rule needs. Everything else

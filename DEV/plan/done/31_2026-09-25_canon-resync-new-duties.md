@@ -29,7 +29,7 @@ interface) is kept in prose rather than in a form a check can run against.
    `it/`, `pt/`, `ur/`, `zh/`). `sitemap.xml` is tracked and nothing in `scripts/`, `tools/` or `.claude/`
    generates it, against item 7. Item 5 wants the record-shape number in the stamp beside the ledger
    shape; that is a stamp write and goes through the adopt-canon run. The stamp's `site.pages` list belongs
-   to [ticket 26](../26_2026-09-23_contract-product-web-pages-sync.md), which must not collide with this.
+   to [ticket 26](26_2026-09-23_contract-product-web-pages-sync.md), which must not collide with this.
 2. **No security posture inventories** (SECURITY_AND_PRIVACY §7). The facts exist only in prose -
    `privacy.html`, `extension-privacy.html`, `extension/store/PRIVACY.md` - and nothing derives those
    three from one set of rows (item 5). Candidate rows found this date, not yet an inventory:

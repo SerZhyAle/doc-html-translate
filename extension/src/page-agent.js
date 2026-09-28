@@ -25,6 +25,8 @@
   // A picture smaller than this on either side carries no readable text at web resolution - it is
   // an icon, a sprite, a spacer or an avatar. Recognizing them is the bulk of the cost on an
   // ordinary page and none of the value.
+  // OCR-OVERLAY rule 13: policy - smallest picture worth a recognition pass on a live page
+  // (OCR-PIPELINE amendment 1.2 L).
   const MIN_PICTURE_PX = 96;
 
   // A run outlives the browser's patience with an idle background worker, and the worker is what

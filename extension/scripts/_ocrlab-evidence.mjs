@@ -70,6 +70,9 @@ export function makeDiagRecord(file, rec = {}) {
       text: str(b.text),
       ...makeRect(b.bbox),
       lineH: int(b.lineHeight),
+      // The block's mean line confidence - the `confidence` of the OCR-OVERLAY section 7 record the
+      // lab writes from this line. Mirrors diagBlock.Conf.
+      conf: num(b.conf),
     })),
     dropped: (rec.dropped || []).map((d) => ({
       text: str(d.text),

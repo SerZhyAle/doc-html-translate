@@ -1,7 +1,7 @@
 # Balloons drawn side by side are stitched into one line at a gap no ratio can tell from a real line
 
 2026-09-25. Feeds Phase 07 Step 07.3 of
-[`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../plan/16_2026-08-11_ocr-visual-fidelity-lab.md)
+[`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../plan/done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 ([`PHASE_07__concealment-and-grouping.md`](../plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md)).
 Follows [`ocr_word_gap_2026-09-12.md`](ocr_word_gap_2026-09-12.md), which left this band open on purpose.
 

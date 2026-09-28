@@ -13,6 +13,7 @@
 //	ocrlab score <dir>         grade a saved run offline
 //	ocrlab report <dir>        render the reviewable report
 //	ocrlab gate <dir>          judge a scored run against the acceptance thresholds
+//	ocrlab exchange <dir>      write the OCR-OVERLAY section 7 comparison record per scene
 package main
 
 import (
@@ -44,6 +45,7 @@ Commands:
   report <dir>  render report.md and a side-by-side report.html
   gate <dir>    judge a scored run against DEV/ocrlab/thresholds.json
                 (exit 1 on FAIL, 2 when a bound had nothing to judge or an input is missing)
+  exchange <dir> write the OCR-OVERLAY section 7 record per scene from the run's diagnostics
 
 Common flags:
   -manifest <path>      default DEV/ocrlab/corpus.json
@@ -81,6 +83,8 @@ func main() {
 		err = cmdReport(args)
 	case "gate":
 		err = cmdGate(args)
+	case "exchange":
+		err = cmdExchange(args)
 	case "-h", "--help", "help":
 		fmt.Print(usage)
 		return

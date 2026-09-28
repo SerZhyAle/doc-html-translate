@@ -87,6 +87,8 @@ import { isTranslatable } from "./ocr-text.js";
 // distribution did support (a lower gate for a line carrying a run of four letters) was implemented,
 // run over the corpus and **rejected by it**: under the default `eng` a Cyrillic poster then gets a
 // 782x310 px plate of transliterated debris where it previously got none. The floor stays at 80.
+// OCR-OVERLAY rule 13: derived - ocr_grey_rescue_2026-08-11, unmoved in ocr_rescue_floor_2026-08-15
+// and ocr_rescue_third_axis_2026-09-25.
 export const OCR_RESCUE_LINE_CONF = 80;
 
 // OCR_MAX_WORD_GAP_RATIO is the one rule that runs before any of the others, because it repairs
@@ -122,6 +124,7 @@ export const OCR_RESCUE_LINE_CONF = 80;
 // stitch at 1.87-3.04x while real lines run up to 2.57x, and a geometric rule must not pretend
 // otherwise. Those are cut on evidence from the pixels between the two words instead - see
 // strokeBetween and OCR_BOUNDARY_REACH below.
+// OCR-OVERLAY rule 13: derived - ocr_word_gap_2026-09-12 (OCR-PIPELINE amendment 1.1 A).
 export const OCR_MAX_WORD_GAP_RATIO = 3.5;
 
 // OCR_BOUNDARY_REACH is how far past the words' band, above and below, a stroke has to run before the
@@ -136,13 +139,21 @@ export const OCR_MAX_WORD_GAP_RATIO = 3.5;
 // under OCR_MAX_WORD_GAP_RATIO are; at 0.30 the first stitch is lost, at 0.50 a balloon stitch, at
 // 0.75 two more. 0.14 is the geometric middle of 0.07 and 0.30, about 2x of margin each way.
 // Shared invariant - see docs/PARITY.md and tesseract.go ocrBoundaryReach.
+// OCR-OVERLAY rule 13: derived - ocr_balloon_boundary_2026-09-25 (OCR-PIPELINE amendment 1.1 C).
 export const OCR_BOUNDARY_REACH = 0.14;
 
+// OCR-OVERLAY rule 13: policy - top of the band the engine hallucinates in, never bracketed.
 export const OCR_MIN_LINE_CONF = 50;
+// OCR-OVERLAY rule 13: policy - anchored on two balloon scenes (OCR-PIPELINE 2.5), not bracketed.
 export const OCR_CLUSTER_PITCH_FACTOR = 1.2;
+// OCR-OVERLAY rule 13: policy - typographic leading sits near 2.9 line heights.
 export const OCR_MAX_LEADING_RATIO = 3;
+// OCR-OVERLAY rule 13: derived - 1.42x widest spread inside one text / 1.86x narrowest step between
+// two (OCR-PIPELINE 2.5).
 export const OCR_TYPE_SIZE_RATIO = 1.6;
+// OCR-OVERLAY rule 13: derived - ocr_plate_coverage_2026-08-13.
 export const OCR_MAX_PLATE_COVERAGE = 0.52;
+// OCR-OVERLAY rule 13: derived - ocr_plate_coverage_2026-08-13.
 export const OCR_MIN_PLATE_LINE_FILL = 0.72;
 
 export const medianOf = (a) => (a.length ? a.slice().sort((p, q) => p - q)[a.length >> 1] : 0);
@@ -443,6 +454,8 @@ export function releaseOversized(cur, imgW, imgH) {
       text,
       bbox: { x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 },
       lineHeight: l.y1 - l.y0,
+      // Its own line's type size, the plate font's basis. Mirrors Block.TypeH.
+      typeHeight: (cur.ink && cur.ink[i]) || 0,
       lines: [{ x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 }],
     });
   }
@@ -500,6 +513,8 @@ export function droppedLines(lines, minConf = OCR_MIN_LINE_CONF) {
 // dropped, when given, receives every line of a cluster the translatability test refused - recorded
 // where the decision is taken, so the record is the decision and not a second copy of it. Mirrors
 // tesseract.go clusterLinesRecording.
+// OCR-OVERLAY rule 13: policy - its column overlap (0.1 of the narrower line) and negative-gap
+// tolerance (one median line height) are chosen, not measured.
 export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH = 0, dropped = null) {
   const kept = lines.filter((l) => keepLine(l, minConf));
   if (!kept.length) return [];
@@ -528,6 +543,10 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
           text,
           bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
           lineHeight: medianOf(cur.heights) || (cur.y1 - cur.y0),
+          // The type size - the median of the lines' word-height medians - which only the plate font
+          // reads (OCR-OVERLAY rule 5, OCR-PIPELINE amendment 1.4 B); the colour sampling and the
+          // concealment ring keep lineHeight. Mirrors Block.TypeH in the desktop app.
+          typeHeight: medianOf(cur.ink) || 0,
           // The block's own line boxes, in reading order. Mirrors Block.Lines in the desktop app
           // (docs/PARITY.md); the coverage rule reads them, and so does the lab's geometry.
           lines: cur.lines.slice(),

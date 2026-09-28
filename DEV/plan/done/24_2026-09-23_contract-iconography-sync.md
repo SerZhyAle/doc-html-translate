@@ -204,7 +204,7 @@ Each item states the evidence above. Every item here is **⛔ Local only - chang
   touch surfaces; a pointer-first surface takes the platform's published floor). Co-sign and add the web.
 - **⛔ Local only - changes the contract catalog.** **B9 cross-contract conflict:** `PAGE-STYLE` §9 recommends the kit glyphs `◐ ⤓ → ▸`; `ICON-SET` gives
   `⤓` to `nav.scroll-bottom` and `▸` to nothing. One proposal to both owners (`iconography/` and
-  `product-web-pages/`). Linked from [`26_2026-09-23_contract-product-web-pages-sync`](../26_2026-09-23_contract-product-web-pages-sync.md).
+  `product-web-pages/`). Linked from [`26_2026-09-23_contract-product-web-pages-sync`](26_2026-09-23_contract-product-web-pages-sync.md).
   Already raised twice: `PROPOSAL-2026-09-23-filedo-scope.md` §2 (give the kit glyphs ids or declare them
   outside the vocabulary; `▸` rotating is `nav.go-to`'s shape used for `nav.expand`) and
   `PROPOSAL-2026-09-24-fms-page-style-kit-symbols.md`, whose 2026-09-24 update narrows the open part to the

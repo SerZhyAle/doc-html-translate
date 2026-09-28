@@ -1,6 +1,6 @@
 # Phase 01 - Corpus manifest
 
-**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
+**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
 **Status:** ✅ Done
 **Depends on:** none - foundation phase

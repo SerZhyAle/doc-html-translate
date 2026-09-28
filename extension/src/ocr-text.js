@@ -13,6 +13,8 @@ const VOWEL = /[aeiouyàáâãäåæèéêëìíîïòóôõöøùúûüýÿае
 const ADDRESS = /^(?:https?:\/\/|www\.)\S+$|^\S+@\S+\.\S+$|^[\w-]+(?:\.[\w-]+)+(?:[/?#]\S*)?$|^[a-z]:\\|^\/[\w./-]+$/i;
 const LETTER = /\p{L}/u;
 
+// OCR-OVERLAY rule 13: policy - five letters, a vowel, half the lettered tokens word-like, a CJK
+// bypass (OCR-PIPELINE 2.6).
 export function isTranslatable(raw) {
   const t = (raw || "").replace(/\s+/g, " ").trim();
   if (!t) return false;

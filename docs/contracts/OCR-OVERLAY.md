@@ -1,7 +1,9 @@
 # Pointer: OCR-OVERLAY
 
 - **Id:** `OCR-OVERLAY`
-- **Version:** 1.0
+- **Version:** 1.2 (2026-09-26: 1.1 - rule 7 admits a gradient rebuilt from the ring and a backing
+  restricted to the padded line boxes, besides the opaque rectangle; 1.2 - rule 13 admits a third status,
+  `policy`, and section 7's `translation` is optional, emitted from an instrument the product owns)
 - **Home:** the shared contracts catalog, `ocr-overlay/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** reference implementation - this product both produces the overlay and consumes its own output
 - **Other products bound:** FastMediaSorter Android, FastMediaSorter_Lite
@@ -26,10 +28,16 @@ two editions (Go and the browser extension) held to one constant table by the gu
   2026-09-22 - the discard record of rule 12 was not written for an image that produced no plates - was
   closed on 2026-09-25 by
   [`../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md);
-  the registry row is closed.
+  the registry row is closed. Three more closed on 2026-09-26 by
+  [`../../DEV/plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md`](../../DEV/plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md):
+  rule 5 for the plate font (the font now reads the word-height type size), rule 9 (the overflow rule is
+  written in `OCR-PIPELINE` amendment 1.4 A and implemented) and rule 13 (every listed constant is marked
+  with its status in both editions, guarded by `tests/ocr_constant_status_test.go`). The JPEG-only EXIF
+  read of rule 1 stays a dated exception.
 
 **Conformance.** The catalog has no shared vector set for this contract yet; section 6 of its README names
 the ladder. This product holds the first three rungs - the discard record, the per-image diagnostic line
 (`DOCHT_OCR_DIAG`, [`../../internal/ocr/diag.go`](../../internal/ocr/diag.go)) and a scene corpus with
-`bounds` separated from `replaceArea` ([`../../tools/ocrlab/`](../../tools/ocrlab/)) - and does not emit the
-comparison JSON of section 7.
+`bounds` separated from `replaceArea` ([`../../tools/ocrlab/`](../../tools/ocrlab/)) - and since 2026-09-26
+the fourth: `go run ./tools/ocrlab exchange <run-dir>` writes the section 7 comparison record per scene from
+either edition's run, `translation` absent.

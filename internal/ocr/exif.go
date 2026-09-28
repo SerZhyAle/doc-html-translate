@@ -203,3 +203,7 @@ func orientPixel(x, y, w, h, orientation int) (int, int) {
 	}
 	return x, y
 }
+
+// ExifOrientation is exifOrientation for callers outside the package: the lab's OCR-OVERLAY
+// section 7 record names the source's orientation beside the display-space size its boxes are in.
+func ExifOrientation(path string) int { return exifOrientation(path) }

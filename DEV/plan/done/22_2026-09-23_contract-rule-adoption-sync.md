@@ -104,7 +104,7 @@ second instance.
       2026-09-25; registry rows corrected 2026-09-25.*
 - [x] B1-B6 filed or withdrawn in writing here. *See Direction B.*
 - [x] `.sza-canon.json` `site.pages` was left to
-      [`26_2026-09-23_contract-product-web-pages-sync`](../26_2026-09-23_contract-product-web-pages-sync.md);
+      [`26_2026-09-23_contract-product-web-pages-sync`](26_2026-09-23_contract-product-web-pages-sync.md);
       this run did not touch it.
 
 ## Open questions

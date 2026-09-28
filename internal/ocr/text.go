@@ -34,6 +34,8 @@ func hasVowel(s string) bool {
 // soup), text that is wholly an address (URL / email / domain / path), and low-quality
 // "mishmash" where few whitespace tokens look like real words. Short CJK phrases are kept.
 // Mirrors the extension's ocr-text.js isTranslatable - keep the two in sync (docs/PARITY.md).
+// OCR-OVERLAY rule 13: policy - five letters, a vowel, half the lettered tokens word-like, a CJK
+// bypass (OCR-PIPELINE 2.6).
 func isTranslatable(raw string) bool {
 	t := strings.Join(strings.Fields(raw), " ")
 	if t == "" {

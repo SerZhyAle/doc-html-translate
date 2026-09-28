@@ -14,17 +14,25 @@
 // is at or next to the optimum on every screened image measured, at two different pitches and on
 // real material as well as synthetic (DEV/research/ocr_halftone_2026-08-12.md). Shared invariant -
 // see screen.go ocrScreenSigmaDivisor.
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_SIGMA_DIVISOR = 4;
 
 // The detector. A dot lattice repeats at a fixed period, so after a high-pass the residual
 // correlates with itself at that lag - no frequency transform needed, which is what makes the test
 // cheap enough to run inside a rescue. Shared invariants, all of them: see screen.go.
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_TILE = 64; // side of the square the autocorrelation is taken over
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_MIN_PITCH = 3; // below this a "period" is JPEG noise or the sensor
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_MAX_PITCH = 24; // above this the lattice is coarser than any lettering
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_MAX_TILES = 96; // cap the work so a big page costs the same as a panel
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_MIN_ENERGY = 3; // a tile flatter than this is paper or solid ink
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_PEAK_FLOOR = 0.3; // autocorrelation at the winning lag, relative to lag 0
+// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 export const OCR_SCREEN_TILE_FRAC = 0.25; // share of textured tiles that must agree on one pitch
 
 // OCR_SCREEN_TILE_COVER_MAX is how much of a tile an existing plate may cover before the tile stops
@@ -32,6 +40,8 @@ export const OCR_SCREEN_TILE_FRAC = 0.25; // share of textured tiles that must a
 // all": on a dense page a plate clipping a tile's corner would otherwise blind the detector to a
 // screened caption standing right beside a balloon, which is the case the additive sweep exists for.
 // Shared invariant - see screen.go ocrScreenTileCoverMax.
+// OCR-OVERLAY rule 13: policy - chosen with the additive sweep; the sweep's trade was measured,
+// this cut-off was not.
 export const OCR_SCREEN_TILE_COVER_MAX = 0.5;
 
 // tileStep spaces the sampled tiles so no more than OCR_SCREEN_MAX_TILES of them fit, whatever the
@@ -104,6 +114,8 @@ export function screenPitch(grey, width, height, covered = []) {
 // of that plate it occupies. Small because the two outcomes are not symmetric: an untranslated
 // caption is a miss, a second plate over lettering that already has one is visible damage. Shared
 // invariant - see screen.go ocrScreenMergeMaxOverlap.
+// OCR-OVERLAY rule 13: policy - chosen with the additive sweep; the sweep's trade was measured,
+// this cut-off was not.
 export const OCR_SCREEN_MERGE_MAX_OVERLAP = 0.2;
 
 // mergeScreenBlocks returns kept, unchanged and in order, followed by those of found that the plates

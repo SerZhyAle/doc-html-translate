@@ -1,6 +1,6 @@
 # ocrlab - the OCR visual-fidelity lab
 
-The instrument required by [`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../../DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md)
+The instrument required by [`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../../DEV/plan/done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 before any OCR or redraw change is accepted. It measures the shipped program: plate geometry comes
 from the DOM the app produced and from the app's own diagnostics sidecar, never from a
 reimplementation.
@@ -22,6 +22,7 @@ Run from the repository root.
 | `go run ./tools/ocrlab score <run-dir>` | Grade a saved run offline - no browser, no recognizer. |
 | `go run ./tools/ocrlab report <run-dir>` | Render `report.md` and a self-contained `report.html`. |
 | `go run ./tools/ocrlab gate [-against <run-dir>] <run-dir>` | Judge a scored run against `DEV/ocrlab/thresholds.json`. Exits 1 on FAIL. |
+| `go run ./tools/ocrlab exchange <run-dir>` | Write the `OCR-OVERLAY` section 7 comparison record, one `exchange/<scene>.json` per scene, from the run's diagnostics. Offline; works on either edition's run. |
 
 Flags shared by most commands: `-manifest` (default `DEV/ocrlab/corpus.json`), `-root` (default
 `test_doc/ocrlab`), `-annotations` (default `DEV/ocrlab/annotations`).

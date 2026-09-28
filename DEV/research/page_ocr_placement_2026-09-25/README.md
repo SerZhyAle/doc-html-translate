@@ -1,6 +1,6 @@
 # Plates on a live page sit over the picture as drawn; with JS off nothing clips, the box grows
 
-2026-09-25. Feeds [`DEV/plan/21_2026-09-23_contract-ocr-pipeline-sync.md`](../../plan/21_2026-09-23_contract-ocr-pipeline-sync.md)
+2026-09-25. Feeds [`DEV/plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md`](../../plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md)
 (Direction A items 5 and 6). Chromium 1194 (Playwright 1.56), headless, device scale 1.
 
 ## 1. Page-OCR placement (OCR-OVERLAY rule 4)

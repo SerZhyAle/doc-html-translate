@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import "./_dom.mjs";
 import {
-  FONT_FIT, FONT_GROW_CAP, fitPlate, pictureBox, plateSpecs, renderPlates, transformRotates,
+  FONT_FIT, FONT_GROW_CAP, fitPlate, fontBasis, liftPlate, pictureBox, plateSpecs, renderPlates, transformRotates,
 } from "../src/ocr-plates.js";
 
 test("plateSpecs places a block in percent of the image and sizes its font in cqw", () => {
@@ -49,6 +49,23 @@ test("renderPlates puts paper and ink on the plate box", () => {
   assert.equal(plate.textContent, "Hi");
   assert.equal(plate.style.background, "red");
   assert.equal(plate.style.color, "blue");
+  assert.equal(plate.dataset.ocrMode, undefined, "no concealment decision, no mode attribute");
+});
+
+test("renderPlates records the concealment mode and paints its background", () => {
+  const container = document.createElement("div");
+  const background = "linear-gradient(red,red) 0.000cqw 0.000cqw/5.000cqw 2.000cqw no-repeat";
+  renderPlates(container, plateSpecs({
+    width: 100, height: 100,
+    blocks: [{
+      text: "Hi", bbox: { x0: 0, y0: 0, x1: 50, y1: 20 }, lineHeight: 10, colors: { bg: "red", ink: "blue" },
+      conceal: { mode: "mask", conf: 0.5, background },
+    }],
+  }));
+  const plate = container.querySelector(".ocr-plate");
+  assert.equal(plate.dataset.ocrMode, "mask");
+  assert.equal(plate.dataset.ocrModeConf, "0.50");
+  assert.equal(plate.style.background, background);
 });
 
 // fakePlate is a plate whose text needs `perCqw` pixels of height per cqw of font. Its box is the
@@ -223,4 +240,59 @@ test("transformRotates tells turning, skewing and mirroring from moving and scal
   assert.equal(transformRotates("none", "none", "0.5"), false);
   assert.equal(transformRotates("none", "none", "2 0.5"), false);
   assert.equal(transformRotates("none", "none", "-1 1"), true, "the scale property mirrors too");
+});
+
+// ---- the plate font's basis: type height, not the line box (OCR-OVERLAY rule 5) ----------------
+test("plateSpecs sizes the font from the type height when the block carries one", () => {
+  const [s] = plateSpecs({
+    width: 1000, height: 500,
+    blocks: [{ text: "Hi", bbox: { x0: 0, y0: 0, x1: 100, y1: 60 }, lineHeight: 60, typeHeight: 40 }],
+  });
+  assert.equal(s.fontSize, `${(4 * FONT_FIT).toFixed(2)}cqw`, "a tall artefact in the line box does not set the font");
+  assert.equal(fontBasis({ lineHeight: 30 }), 30, "no type height: the line height is the basis");
+  assert.equal(fontBasis({ lineHeight: 30, typeHeight: 0 }), 30);
+});
+
+// ---- liftPlate: the written overflow rule (OCR-OVERLAY rule 9, OCR-PIPELINE amendment 1.4 A) --
+function placedPlate({ top, height, box }) {
+  return { style: { top: "" }, offsetTop: top, offsetHeight: height, parentNode: { clientHeight: box } };
+}
+
+test("liftPlate leaves a released plate that still ends inside the picture where it is", () => {
+  const p = placedPlate({ top: 100, height: 200, box: 400 });
+  liftPlate(p);
+  assert.equal(p.style.top, "", "grows down while its bottom stays inside the picture");
+});
+
+test("liftPlate pins a plate that would pass the bottom edge and lets it grow upward", () => {
+  const p = placedPlate({ top: 300, height: 200, box: 400 });
+  liftPlate(p);
+  assert.equal(p.style.top, "200px", "bottom on the picture's bottom edge");
+});
+
+test("liftPlate never lifts above the picture's top; the tail past the bottom is the remainder", () => {
+  const p = placedPlate({ top: 50, height: 600, box: 400 });
+  liftPlate(p);
+  assert.equal(p.style.top, "0px");
+});
+
+test("liftPlate does nothing without a laid-out container", () => {
+  const p = placedPlate({ top: 300, height: 200, box: 0 });
+  liftPlate(p);
+  assert.equal(p.style.top, "");
+  const q = { style: { top: "" }, offsetTop: 300, offsetHeight: 200, parentNode: null };
+  liftPlate(q);
+  assert.equal(q.style.top, "");
+});
+
+test("fitPlate restores the source top before every fit, so a lift is undone", () => {
+  withComputedStyle(() => {
+    const p = fakePlate({ base: 10, minHeight: 70, perCqw: 10 });
+    p.style.top = "40%";
+    fitPlate(p);
+    assert.equal(p.dataset.ocrTop, "40%");
+    p.style.top = "123px"; // a lift from an earlier fit
+    fitPlate(p);
+    assert.equal(p.style.top, "40%", "the text fits again, so the plate is back on its source line");
+  });
 });

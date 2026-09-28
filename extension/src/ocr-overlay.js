@@ -12,6 +12,7 @@ import {
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
+import { conceal } from "./ocr-conceal.js";
 
 const { createWorker } = Tesseract;
 
@@ -30,6 +31,7 @@ let currentProgress = null;
 // recognized text (stray "< =", "|", digits) and mis-merges regions. Pin PSM 3 (AUTO) so layout
 // analysis isolates real text regions, matching the desktop app's tesseract CLI (whose own default is
 // PSM 3). Shared invariant - see docs/PARITY.md and tesseract.go ocrPageSegMode.
+// OCR-OVERLAY rule 13: policy - layout analysis for a page (OCR-PIPELINE 2.2).
 const OCR_PSM = "3";
 
 // PSM 11 (SPARSE_TEXT): find as much text as possible in no particular order, with no layout
@@ -38,6 +40,8 @@ const OCR_PSM = "3";
 // that is not a page: a poster is a few large words placed for effect, and the layout analysis PSM 3
 // runs finds no page in it and drops them. Shared invariant - see docs/PARITY.md and tesseract.go
 // ocrSparsePageSegMode.
+// OCR-OVERLAY rule 13: policy - sparse reading for input that is not a page, a rescue rung
+// (OCR-PIPELINE 2.7).
 const OCR_SPARSE_PSM = "11";
 
 async function getWorker(lang) {
@@ -163,9 +167,14 @@ async function toBitmap(src) {
 // resolution is declared to Tesseract (clamped to >= OCR_MIN_DECLARED_DPI). Measured: a ~90-DPI
 // newsprint scan gains hugely from the upscale, while a ~150-DPI scan only needs the DPI declared -
 // the upscale over-segments it for no benefit.
+// OCR-OVERLAY rule 13: policy - the enlargement a low-resolution scan gets before recognition
+// (OCR-PIPELINE 2.1).
 const OCR_UPSCALE_FACTOR = 2;
+// OCR-OVERLAY rule 13: policy - US Letter long side, the DPI estimate's denominator.
 const OCR_ASSUMED_PAGE_INCHES = 11; // assumed long-side page size (US Letter) for the DPI estimate
+// OCR-OVERLAY rule 13: policy - chosen with the upscale, not bracketed (OCR-PIPELINE 2.1).
 const OCR_UPSCALE_DPI_FLOOR = 120; // estimated DPI below which an image is upscaled before OCR
+// OCR-OVERLAY rule 13: policy - the engine ignores a declared DPI below 70.
 const OCR_MIN_DECLARED_DPI = 70; // never declare a DPI below this (Tesseract ignores sub-70 anyway)
 
 // estimateDpi approximates an image's resolution from its long side, treating it as one
@@ -207,21 +216,38 @@ function pixelsIn(ctx, x0, y0, w, h) {
 
 // How many pixels the surrounding band must contribute before it may swap the pair. Shared
 // invariant - see docs/PARITY.md and overlay.go ringMinSamples.
+// OCR-OVERLAY rule 13: policy - votes needed before paper and ink may be swapped (OCR-PIPELINE
+// 3.3).
 const RING_MIN_SAMPLES = 40;
 
 // Plate colour sampling, shared verbatim with overlay.go and held equal by
 // TestParityOCRPlateColourNumbers. Every derived count is floored, matching the desktop's integer
 // arithmetic: the ring band used to be rounded here and floored there.
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const INK_DEVIATION_MIN = 90;   // sum of channel distances from the paper above which a pixel counts as ink
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const INK_STRIP_LINES = 1.3;    // ink is sampled in the first this-many line heights of the block
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const INK_MIN_PER_MILLE = 15;   // share of that strip, per mille, that must be ink to trust the sample..
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const INK_MIN_SAMPLES = 6;      // ..and never fewer pixels than this
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE 3.2.
 const PLATE_MIN_CONTRAST = 55;  // luma distance under which the fallback ink replaces the sampled one
+// OCR-OVERLAY rule 13: policy - a third of a line (OCR-PIPELINE amendment 1.2 E).
 const RING_PAD_DIVISOR = 3;     // the ring band is the line height over this, on each side..
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE 3.3.
 const RING_MIN_PAD = 2;         // ..and never thinner than this many pixels
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const FALLBACK_LUMA_SPLIT = 140; // paper lighter than this gets the dark fallback ink, else the light one
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const FALLBACK_DARK_INK = 17;
+// OCR-OVERLAY rule 13: policy - OCR-PIPELINE amendment 1.2 D.
 const FALLBACK_LIGHT_INK = 240;
+
+// The ring constants the concealment-mode decision reads (ocr-conceal.js), handed over rather than
+// redeclared so each has one declaration in this edition. Mirrors conceal.go, which reads the same
+// constants from overlay.go.
+const RING = { deviation: INK_DEVIATION_MIN, padDivisor: RING_PAD_DIVISOR, minPad: RING_MIN_PAD, minSamples: RING_MIN_SAMPLES };
 
 // ringNearerInk reports whether the band just outside the block sits nearer the ink colour than the
 // paper colour - which means the two were assigned the wrong way round. The band is a third of a
@@ -295,7 +321,8 @@ function blockColors(ctx, bbox, lineHeight) {
   return { bg: `rgb(${bg[0]},${bg[1]},${bg[2]})`, ink: `rgb(${ink[0]},${ink[1]},${ink[2]})` };
 }
 
-// Draw the (untainted) source blob to a canvas and attach { bg, ink } to each block.
+// Draw the (untainted) source blob to a canvas and attach { bg, ink } and the concealment mode to
+// each block.
 async function sampleColors(blob, blocks) {
   try {
     const bmp = await createImageBitmap(blob, BITMAP_OPTS);
@@ -304,7 +331,13 @@ async function sampleColors(blob, blocks) {
       : Object.assign(document.createElement("canvas"), { width: bmp.width, height: bmp.height });
     const ctx = cv.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(bmp, 0, 0);
-    for (const b of blocks) b.colors = blockColors(ctx, b.bbox, b.lineHeight);
+    const sample = (x, y, w, h) => pixelsIn(ctx, x, y, w, h);
+    for (const b of blocks) {
+      b.colors = blockColors(ctx, b.bbox, b.lineHeight);
+      // How the plate hides the source - the fill, a gradient rebuilt from the ring, or paper over
+      // the line boxes only. Mirrors overlay.go wrapImage (docs/PARITY.md).
+      b.conceal = conceal(sample, b, cv.width, cv.height, RING, b.colors ? b.colors.bg : "");
+    }
     if (bmp.close) bmp.close();
   } catch { /* best-effort: plates keep the default white/dark CSS */ }
 }

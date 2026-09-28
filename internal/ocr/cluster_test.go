@@ -153,17 +153,17 @@ func TestReleaseOversizedNeedsBothConditions(t *testing.T) {
 	// Too big but tightly packed: samson-and-delilah-03-scroll's caption covers 0.6087 of its crop
 	// in the hand-drawn annotation and its lines fill 0.7921 of that height.
 	tight := []LineBox{{0, 0, 100, 79}, {0, 80, 100, 158}}
-	if got := releaseOversized(0, 0, 100, 200, []string{"a", "b"}, tight, 120, 170); got != nil {
+	if got := releaseOversized(0, 0, 100, 200, []string{"a", "b"}, tight, nil, 120, 170); got != nil {
 		t.Errorf("a tightly packed caption was released into %d lines", len(got))
 	}
 	// Loose but small: synth-uniform-paper's three body lines fill 0.6667 of their box and cover
 	// 0.2141 of the page.
 	loose := []LineBox{{0, 0, 100, 20}, {0, 40, 100, 60}, {0, 80, 100, 100}}
-	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, 500, 500); got != nil {
+	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, nil, 500, 500); got != nil {
 		t.Errorf("an ordinary paragraph was released into %d lines", len(got))
 	}
 	// Both, which is the defect.
-	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, 120, 120); len(got) != 3 {
+	if got := releaseOversized(0, 0, 100, 100, []string{"a", "b", "c"}, loose, nil, 120, 120); len(got) != 3 {
 		t.Errorf("released %d plates, want 3", len(got))
 	}
 }
@@ -215,6 +215,15 @@ func TestClusterLinesSurvivesAnOutlineArtefact(t *testing.T) {
 	}
 	if got := blocks[1].Text; got != "| NOT EVEN SLIGHTLY." {
 		t.Errorf("second plate = %q, want the whole balloon", got)
+	}
+	// The same artefact must not set the plate's font either (OCR-OVERLAY rule 5, OCR-PIPELINE
+	// amendment 1.4 B): the type height is the lettering's 26 px, while the line height the colour
+	// sampling reads stays the line boxes' median.
+	if got := blocks[1].TypeH; got != 26 {
+		t.Errorf("TypeH = %d, want 26 (the word-height median, not the artefact's line box)", got)
+	}
+	if got := blocks[1].LineH; got != 74 {
+		t.Errorf("LineH = %d, want 74 (the line-box median is unchanged)", got)
 	}
 
 	// With no word heights the line box is all there is, so the old, stricter behaviour stands -

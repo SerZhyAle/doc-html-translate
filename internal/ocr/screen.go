@@ -28,18 +28,26 @@ const (
 	// real screened comic caption (pitch 6) sigma 1.5 gives the best confident-word yield of any
 	// kernel tried; on a real screened scroll panel (pitch 12) sigma 2.4-3.0 is the peak. A
 	// divisor near 4 is the only single rule that lands inside all three windows.
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 	ocrScreenSigmaDivisor = 4.0
 
 	// The screen detector. A dot lattice repeats at a fixed period, so after a high-pass the
 	// residual correlates with itself at that lag - no frequency transform needed, which is what
 	// makes the test cheap enough to run inside a rescue.
-	ocrScreenTile      = 64   // side of the square the autocorrelation is taken over
-	ocrScreenMinPitch  = 3    // below this a "period" is JPEG noise or the sensor, not a screen
-	ocrScreenMaxPitch  = 24   // above this the lattice is coarser than any lettering it could hide
-	ocrScreenMaxTiles  = 96   // cap the work so a 20-megapixel page costs the same as a panel
-	ocrScreenMinEnergy = 3.0  // a tile flatter than this is paper or solid ink - nothing to find
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenTile = 64 // side of the square the autocorrelation is taken over
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenMinPitch = 3 // below this a "period" is JPEG noise or the sensor, not a screen
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenMaxPitch = 24 // above this the lattice is coarser than any lettering it could hide
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenMaxTiles = 96 // cap the work so a 20-megapixel page costs the same as a panel
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenMinEnergy = 3.0 // a tile flatter than this is paper or solid ink - nothing to find
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
 	ocrScreenPeakFloor = 0.30 // autocorrelation at the winning lag, relative to lag 0
-	ocrScreenTileFrac  = 0.25 // share of textured tiles that must agree on one pitch
+	// OCR-OVERLAY rule 13: derived - ocr_halftone_2026-08-12.
+	ocrScreenTileFrac = 0.25 // share of textured tiles that must agree on one pitch
 
 	// ocrScreenTileCoverMax is how much of a tile an existing plate may cover before the tile stops
 	// counting as evidence of screened area the reader is not served on. Half rather than "touches
@@ -47,6 +55,8 @@ const (
 	// to a screened caption standing right beside a balloon, which is the case this whole trigger
 	// exists for. Half rather than "covers it entirely" for the mirror reason - a plate that takes
 	// most of a tile leaves too little unserved area for the remainder to mean anything.
+	// OCR-OVERLAY rule 13: policy - chosen with the additive sweep; the sweep's trade was measured,
+	// this cut-off was not.
 	ocrScreenTileCoverMax = 0.5
 )
 
@@ -274,6 +284,8 @@ func clampByte(v float64) uint8 {
 // damage on a page the reader was happy with. A fifth leaves room for the boxes to disagree at their
 // edges - two passes cluster the same lines slightly differently - without letting a real overlap
 // through.
+// OCR-OVERLAY rule 13: policy - chosen with the additive sweep; the sweep's trade was measured,
+// this cut-off was not.
 const ocrScreenMergeMaxOverlap = 0.2
 
 // mergeScreenBlocks returns kept, unchanged and in order, followed by those of found that the plates

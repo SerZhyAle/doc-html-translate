@@ -34,7 +34,11 @@ import (
 )
 
 // Block is a recognized text block with its bounding box in image pixels. LineH is the
-// representative (median) line height in the block, used to size the overlay font.
+// representative (median) line-box height in the block; the colour sampling, the ring and the
+// concealment ring read it. TypeH is the block's type size - the median of its lines' word-height
+// medians - and only the plate font reads it (OCR-OVERLAY rule 5, OCR-PIPELINE amendment 1.4 B): a
+// line box is the union of its words, so one tall artefact would set the font for the whole plate.
+// Zero means unknown, and the font falls back to LineH.
 //
 // Lines carries the block's own line boxes, in reading order. The overlay needs them because a
 // block's bounding box is not the shape of the text it covers: centred copy narrows on its last
@@ -46,6 +50,7 @@ type Block struct {
 	Text           string
 	X0, Y0, X1, Y1 int
 	LineH          int
+	TypeH          int
 	Lines          []LineBox
 	// Conf is the mean confidence of the block's lines. Only the discard record reads it: a plate
 	// the screen merge rejects has no line left to take a confidence from.
@@ -188,6 +193,7 @@ func MissingLangs(ctx context.Context, bin, lang string) []string {
 // extension's tesseract.js otherwise defaults to PSM 6 (single block), which reads an illustrated or
 // scanned page as one text block and folds scene edges into the recognized text; PSM 3 runs layout
 // analysis and isolates real text regions. Mirrored by ocr-overlay.js OCR_PSM (see docs/PARITY.md).
+// OCR-OVERLAY rule 13: policy - layout analysis for a page (OCR-PIPELINE 2.2).
 const ocrPageSegMode = 3
 
 // ocrSparsePageSegMode is Tesseract's PSM 11, "sparse text": find as much text as possible in no
@@ -200,6 +206,8 @@ const ocrPageSegMode = 3
 // rungs at PSM 3 return one line above the rescue floor ("| МОЖЕМ", mean 85.5) while the same
 // rendition at PSM 11 returns six (ТРАХАТЬСЯ: 80.7, МЫ ЖЕ 96.1, ЛЮДИ, 92.6, МОЖЕМ 95.9, ПРОСТО
 // 87.2, ПОГОВОРИТЬ 95.0) with no debris. Mirrored by ocr-overlay.js (see docs/PARITY.md).
+// OCR-OVERLAY rule 13: policy - sparse reading for input that is not a page, a rescue rung
+// (OCR-PIPELINE 2.7).
 const ocrSparsePageSegMode = 11
 
 // Recognize runs tesseract on imgPath for the given language and returns the recognized
@@ -523,6 +531,8 @@ func blockDrops(blocks []Block, floor float64, gate string) []DroppedLine {
 // Measured over the scenes the ladder newly reads: genuine rescued lettering scored 93.1-97.0,
 // while the two Cyrillic posters read with English data - where the correct answer is no text -
 // scored 50.8. The floor separates them with margin on both sides rather than splitting a gap.
+// OCR-OVERLAY rule 13: derived - ocr_grey_rescue_2026-08-11, unmoved in ocr_rescue_floor_2026-08-15
+// and ocr_rescue_third_axis_2026-09-25.
 const ocrRescueLineConf = 80
 
 // **The floor was re-measured on 2026-08-15 and did not move, and the reason is worth keeping.**
@@ -583,10 +593,15 @@ func greyOf(src image.Image) *image.Gray {
 // newsprint scan gains hugely from the upscale, while a ~150-DPI scan only needs the DPI declared -
 // the upscale over-segments it for no benefit.
 const (
-	ocrUpscaleFactor     = 2
+	// OCR-OVERLAY rule 13: policy - the enlargement a low-resolution scan gets before recognition
+	// (OCR-PIPELINE 2.1).
+	ocrUpscaleFactor = 2
+	// OCR-OVERLAY rule 13: policy - US Letter long side, the DPI estimate's denominator.
 	ocrAssumedPageInches = 11.0 // assumed long-side page size (US Letter) for the DPI estimate
-	ocrUpscaleDPIFloor   = 120  // estimated DPI below which an image is upscaled before OCR
-	ocrMinDeclaredDPI    = 70   // never declare a DPI below this (Tesseract ignores sub-70 anyway)
+	// OCR-OVERLAY rule 13: policy - chosen with the upscale, not bracketed (OCR-PIPELINE 2.1).
+	ocrUpscaleDPIFloor = 120 // estimated DPI below which an image is upscaled before OCR
+	// OCR-OVERLAY rule 13: policy - the engine ignores a declared DPI below 70.
+	ocrMinDeclaredDPI = 70 // never declare a DPI below this (Tesseract ignores sub-70 anyway)
 )
 
 // estimateDPI approximates an image's resolution from its long side, treating it as one
@@ -687,6 +702,7 @@ func scaleDown(res *Result, s int) {
 		bl := &res.Blocks[i]
 		bl.X0, bl.Y0, bl.X1, bl.Y1 = div(bl.X0), div(bl.Y0), div(bl.X1), div(bl.Y1)
 		bl.LineH = div(bl.LineH)
+		bl.TypeH = div(bl.TypeH)
 		for j := range bl.Lines {
 			ln := &bl.Lines[j]
 			ln.X0, ln.Y0, ln.X1, ln.Y1 = div(ln.X0), div(ln.Y0), div(ln.X1), div(ln.Y1)
@@ -843,14 +859,25 @@ func hasLangFile(dir, lang string) bool {
 //
 // Shared invariant - see docs/PARITY.md and ocr-cluster.js OCR_MAX_WORD_GAP_RATIO.
 const (
-	ocrMinLineConf        = 50
+	// OCR-OVERLAY rule 13: policy - top of the band the engine hallucinates in, never bracketed.
+	ocrMinLineConf = 50
+	// OCR-OVERLAY rule 13: policy - anchored on two balloon scenes (OCR-PIPELINE 2.5), not
+	// bracketed.
 	ocrClusterPitchFactor = 1.2
-	ocrMaxLeadingRatio    = 3
-	ocrTypeSizeRatio      = 1.6
-	ocrMaxPlateCoverage   = 0.52
-	ocrMinPlateLineFill   = 0.72
-	ocrMaxWordGapRatio    = 3.5
-	ocrBoundaryReach      = 0.14
+	// OCR-OVERLAY rule 13: policy - typographic leading sits near 2.9 line heights.
+	ocrMaxLeadingRatio = 3
+	// OCR-OVERLAY rule 13: derived - 1.42x widest spread inside one text / 1.86x narrowest step
+	// between two (OCR-PIPELINE 2.5).
+	ocrTypeSizeRatio = 1.6
+	// OCR-OVERLAY rule 13: derived - ocr_plate_coverage_2026-08-13.
+	ocrMaxPlateCoverage = 0.52
+	// OCR-OVERLAY rule 13: derived - ocr_plate_coverage_2026-08-13.
+	ocrMinPlateLineFill = 0.72
+	// OCR-OVERLAY rule 13: derived - ocr_word_gap_2026-09-12 (OCR-PIPELINE amendment 1.1 A).
+	ocrMaxWordGapRatio = 3.5
+	// OCR-OVERLAY rule 13: derived - ocr_balloon_boundary_2026-09-25 (OCR-PIPELINE amendment 1.1
+	// C).
+	ocrBoundaryReach = 0.14
 )
 
 // ocrLine is one recognized text line: its bounding box, the concatenated word text, and the
@@ -1329,6 +1356,8 @@ func clusterLines(lines []*ocrLine, minConf float64, imgW, imgH int) []Block {
 // clusterLinesRecording is clusterLines that also appends to *dropped, when given, every line of a
 // cluster the translatability test refused - recorded where the decision is taken, so the record
 // is the decision and not a second copy of it.
+// OCR-OVERLAY rule 13: policy - its column overlap (0.1 of the narrower line) and negative-gap
+// tolerance (one median line height) are chosen, not measured.
 func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dropped *[]DroppedLine) []Block {
 	var kept []*ocrLine
 	var heights []int
@@ -1360,7 +1389,7 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 		ctext              strings.Builder
 		ctexts             []string // the same text, still split by line, for the coverage release
 		cheights           []int
-		cink               []int // the same lines' ink heights, for the type-size test only
+		cink               []int // the same lines' type sizes: the type-size test, and the plate font (TypeH)
 		clines             []LineBox
 		cmembers           []*ocrLine // the lines themselves, for their confidences
 		open               bool
@@ -1370,7 +1399,7 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 			return
 		}
 		if txt := strings.TrimSpace(ctext.String()); isTranslatable(txt) {
-			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, imgW, imgH); over != nil {
+			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, cink, imgW, imgH); over != nil {
 				// A released plate is one member line; its box finds which (releaseOversized skips
 				// textless lines, so the positions do not line up).
 				for i := range over {
@@ -1387,6 +1416,7 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 				blocks = append(blocks, Block{
 					Text: txt, X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
 					LineH: median(cheights, cy1-cy0),
+					TypeH: median(cink, 0),
 					Lines: append([]LineBox(nil), clines...),
 					Conf:  conf / float64(len(cmembers)),
 				})
@@ -1464,7 +1494,9 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 //
 // A single-line cluster is never released: its box is its line, so there is nothing to release it
 // into and the coverage is a fact about the picture rather than about the grouping.
-func releaseOversized(x0, y0, x1, y1 int, texts []string, lines []LineBox, imgW, imgH int) []Block {
+// types holds each line's type size, in the same order as lines, so a released plate keeps its own
+// line's font basis rather than the cluster's.
+func releaseOversized(x0, y0, x1, y1 int, texts []string, lines []LineBox, types []int, imgW, imgH int) []Block {
 	if imgW <= 0 || imgH <= 0 || len(lines) < 2 || len(texts) != len(lines) {
 		return nil
 	}
@@ -1489,6 +1521,7 @@ func releaseOversized(x0, y0, x1, y1 int, texts []string, lines []LineBox, imgW,
 		out = append(out, Block{
 			Text: txt, X0: ln.X0, Y0: ln.Y0, X1: ln.X1, Y1: ln.Y1,
 			LineH: ln.Y1 - ln.Y0,
+			TypeH: typeAt(types, i),
 			Lines: []LineBox{ln},
 		})
 	}
@@ -1554,4 +1587,13 @@ func median(vals []int, fallback int) int {
 	s := append([]int(nil), vals...)
 	sort.Ints(s)
 	return s[len(s)/2]
+}
+
+// typeAt is the type size at index i, or 0 (unknown - the font falls back to the line box) when the
+// caller has none for that line.
+func typeAt(types []int, i int) int {
+	if i < 0 || i >= len(types) {
+		return 0
+	}
+	return types[i]
 }

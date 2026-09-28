@@ -193,6 +193,16 @@ func TestPercentStyle(t *testing.T) {
 	}
 }
 
+// TestPercentStyleUsesTypeHeight: the font reads the type height when the block carries one, so a
+// tall artefact in the line box does not enlarge the plate text (OCR-OVERLAY rule 5).
+func TestPercentStyleUsesTypeHeight(t *testing.T) {
+	got := percentStyle(Block{X0: 10, Y0: 20, X1: 110, Y1: 60, LineH: 40, TypeH: 20}, 200, 100)
+	want := "left:5.00%;top:20.00%;width:50.00%;min-height:40.00%;font-size:9.20cqw"
+	if got != want {
+		t.Errorf("percentStyle = %q, want %q", got, want)
+	}
+}
+
 func TestPercentStyleZeroDims(t *testing.T) {
 	if got := percentStyle(Block{X1: 10, Y1: 10}, 0, 0); got != "" {
 		t.Errorf("percentStyle with zero dims = %q, want empty", got)

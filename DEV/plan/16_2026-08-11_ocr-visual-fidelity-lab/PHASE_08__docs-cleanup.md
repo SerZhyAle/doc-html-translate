@@ -1,10 +1,10 @@
 # Phase 08 - Docs cleanup
 
-**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
+**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** 🚧 In Progress (5 of 6; 08.6 waits on phases 05-07)
+**Status:** ✅ Done 2026-09-26
 **Depends on:** all phases
-**Steps done:** 5 / 6
+**Steps done:** 6 / 6
 
 ## Objective
 
@@ -12,7 +12,7 @@ Every surface that must know about the lab knows about it, and no public quality
 
 ## Prerequisites
 
-- [ ] Phases 01-07 are ✅ Done.
+- [x] Phases 01-07 are ✅ Done.
 
 ## Files touched
 
@@ -126,15 +126,16 @@ Every surface that must know about the lab knows about it, and no public quality
 - Every file listed in any phase's "Files touched" appears in the changelog.
 - No entry claims a corpus size or a quality result that the baseline report does not show.
 
-**Status:** `[~]` in progress - every phase 01-06 and 08 file is in `DEV/CHANGELOG.md` (checked
+**Status:** `[x]` done 2026-09-26 - every phase 01-06 and 08 file is in `DEV/CHANGELOG.md` (checked
 2026-09-25; phases 01-06 under their brace-list entries of 2026-08-11 - 2026-08-12, phase 08's docs in
 the entry of 2026-09-25). `test_doc/CORPUS.md` lives under the gitignored `test_doc/` and was not
-checkable from a fresh clone. Step 07.3's files are in the entry of 2026-09-25 15:43:25; the rest of
-phase 07's wait on 07.1 / 07.2, which are ⛔ Blocked.
+checkable from a fresh clone. Step 07.3's files are in the entry of 2026-09-25 15:43:25, and the rest of
+phase 07's in the entry of 2026-09-26. The entries claim no corpus size or holdout result: the corpus is
+47 scenes with no holdout, and the modes' evidence is stated as a non-regression on the 14 annotated ones.
 
 ## Phase done criteria
 
-- [ ] Every `Step 08.*` is `[x] done`.
+- [x] Every `Step 08.*` is `[x] done`.
 - [ ] `./scripts/check.ps1` green.
 - [ ] See INDEX.md Completion gate.
 

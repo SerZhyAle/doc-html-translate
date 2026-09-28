@@ -1,17 +1,17 @@
 # The OCR contracts describe the mechanism that ships, and the mechanism holds them
 
-**Status:** In Progress - Direction B done on 2026-09-25 (OCR-PIPELINE 1.2, OCR-INVOCATION 1.1, OCR-OVERLAY row + proposal, registry; see "Implementation record (2026-09-25, owner machine - Direction B)"); Direction A items 3, 5 (first half), 7 and 11 remain.
+**Status:** Implemented - 2026-09-26. Direction B done 2026-09-25; the rest closed 2026-09-26: `OCR-OVERLAY` 1.2 folds in the constant-status and exchange proposal, `OCR-PIPELINE` 1.4 writes the overflow rule, and Direction A items 3, 5, 7 and 11 landed in both editions with a lab run (see "Implementation record (2026-09-26, owner machine - closing)").
 **Priority:** 49
 **Date:** 2026-09-23
 
 > Contract sync ticket, both directions.
 > Contracts: `OCR-PIPELINE` 1.0 (owned by this product), `OCR-OVERLAY` 1.0 (shared owner, this product is
 > the reference implementation), `OCR-INVOCATION` 1.0 (owned by this product). Domain `ocr-overlay/`.
-> Pointers: [`OCR-PIPELINE`](../../docs/contracts/OCR-PIPELINE.md),
-> [`OCR-OVERLAY`](../../docs/contracts/OCR-OVERLAY.md), [`OCR-INVOCATION`](../../docs/contracts/OCR-INVOCATION.md).
+> Pointers: [`OCR-PIPELINE`](../../../docs/contracts/OCR-PIPELINE.md),
+> [`OCR-OVERLAY`](../../../docs/contracts/OCR-OVERLAY.md), [`OCR-INVOCATION`](../../../docs/contracts/OCR-INVOCATION.md).
 > Related tickets, not duplicated here:
-> [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md) (done),
-> [`17_2026-09-22_tsv-columns-read-by-position`](done/17_2026-09-22_tsv-columns-read-by-position.md) (done).
+> [`15_2026-09-22_ocr-discard-record-missing-for-blank-images`](15_2026-09-22_ocr-discard-record-missing-for-blank-images.md) (done),
+> [`17_2026-09-22_tsv-columns-read-by-position`](17_2026-09-22_tsv-columns-read-by-position.md) (done).
 
 > **Remote execution (2026-09-25):** the contract text this ticket needs is quoted in "Contract snapshot" below, so every step not marked ⛔ runs in a cloud session from this repository alone. Steps marked **⛔ Local only** edit the shared contracts catalog (or another repository) and can run only on the owner's machine, where the catalog is mounted.
 
@@ -542,22 +542,22 @@ B decision or amendment first, because the pointers' "catalog first, then code" 
 
 ## Done criteria
 
-- [ ] **⛔ Local only - changes the contract catalog.** `OCR-PIPELINE` in the catalog describes every stage and constant both editions run; every §5 row
+- [x] **⛔ Local only - changes the contract catalog.** `OCR-PIPELINE` in the catalog describes every stage and constant both editions run; every §5 row
       carries a status; its log has the correction rows and the 1.1 row.
-- [ ] **⛔ Local only - changes the contract catalog.** `OCR-INVOCATION` 1.1 in the catalog.
-- [ ] **⛔ Local only - changes the contract catalog.** Registry: `OCR-PIPELINE` verified with a date; `OCR-OVERLAY` row carries the per-rule result for all
+- [x] **⛔ Local only - changes the contract catalog.** `OCR-INVOCATION` 1.1 in the catalog.
+- [x] **⛔ Local only - changes the contract catalog.** Registry: `OCR-PIPELINE` verified with a date; `OCR-OVERLAY` row carries the per-rule result for all
       17 rules; each open deviation is a dated exception.
       (Partly done 2026-09-24: the `OCR-PIPELINE` row carries a verified date, but its "No deviation" note
       predates this read - see B6. The `OCR-OVERLAY` row is unchanged since 2026-09-22.)
-- [ ] **⛔ Local only - changes the contract catalog.** Both consumer rows carry the notice.
-- [ ] Code items 1-10 landed, or each carried by a dated exception; `scripts/test.ps1` and the extension
+- [x] **⛔ Local only - changes the contract catalog.** Both consumer rows carry the notice. (Carried in the 1.2 amendment and this product's row, as B7 records: the registry allows no edit to another product's row.)
+- [x] Code items 1-10 landed, or each carried by a dated exception; `scripts/test.ps1` and the extension
       tests green, output cited. (Items 3, 5, 7 wait on local steps; a "dated exception" is itself a
       local registry edit.)
-- [ ] **⛔ Waits on B2 / B4 (local).** Pointer files updated to 1.1 where the version moved. (The edit is
+- [x] **⛔ Waits on B2 / B4 (local).** Pointer files updated to 1.1 where the version moved. (The edit is
       in this repo - `docs/contracts/OCR-PIPELINE.md`, `OCR-INVOCATION.md`, `OCR-OVERLAY.md`, all at 1.0
       on 2026-09-25 - but only after the catalog version moved.)
-- [ ] `docs/PARITY.md` handled for every behaviour change.
-- [ ] **⛔ Local only - changes the FastMediaSorter_Lite repository.** The FastMediaSorter Lite spec sync
+- [x] `docs/PARITY.md` handled for every behaviour change.
+- [x] **⛔ Local only - changes the FastMediaSorter_Lite repository.** The FastMediaSorter Lite spec sync
       obligation (standing practice: OCR changes are mirrored into its overlay-accuracy spec) handled for
       every behaviour change.
 
@@ -598,7 +598,7 @@ a rerun that passes is not a regression.
 | A1 | `scaleDown` scales `Result.Dropped` with the plates; `TestScaleDownScalesTheDiscardRecord`. |
 | A2 | Every gate is recorded with a `gate` field in both editions: `confidence` (`keepLine`), `translatable` (each line of a cluster `isTranslatable` refused, recorded inside `clusterLinesRecording` / `clusterLines(.., dropped)` where the decision is taken), `screen-merge` (a sweep plate `mergeScreenBlocks` refused, with its lines' mean confidence - new `Block.Conf` / block `conf`). The sweep's own floor drops are recorded too. Merge semantic (open question 4), decided and written into `docs/PARITY.md`: the ordinary pass's drops, then the ladder's or the sweep's - the extension used to replace the ordinary pass's drops with the ladder's. The diag line gains `"gate"`; both pinned literals moved. Guarded by `TestParityOCRDiscardGates`. |
 | A4 | Already done before this session (commit `c2cfa21`, `stageForDetection`, `detect_stage_test.go`). |
-| A5 (browser half) | The "JS disabled -> clipped" claim of `OCR-PIPELINE` §3.4 is **false in the reassuring direction**: nothing clips, the plate carries only `min-height` so `overflow:hidden` never engages, and the box grows at the unfitted size - 244 px over a 39 px source region. Evidence: [`DEV/research/page_ocr_placement_2026-09-25`](../research/page_ocr_placement_2026-09-25/README.md) §2. The catalog correction joins step B1 (local); the code comment in `overlay.go` and `docs/PARITY.md` are corrected. |
+| A5 (browser half) | The "JS disabled -> clipped" claim of `OCR-PIPELINE` §3.4 is **false in the reassuring direction**: nothing clips, the plate carries only `min-height` so `overflow:hidden` never engages, and the box grows at the unfitted size - 244 px over a 39 px source region. Evidence: [`DEV/research/page_ocr_placement_2026-09-25`](../../research/page_ocr_placement_2026-09-25/README.md) §2. The catalog correction joins step B1 (local); the code comment in `overlay.go` and `docs/PARITY.md` are corrected. |
 | A6 (code) | The page agent places the layer over the picture as drawn (`ocr-plates.js` `pictureBox`: border, padding, `object-fit`, `object-position`, a scaled ancestor, `clip-path` to what the element shows) and clears it for a picture rotated, skewed or mirrored by itself or an ancestor (`transformRotates`). Measured in Chromium against the real agent: every placeable case clean, where HEAD left half a `cover` picture's text uncovered and put a mirrored picture's plate on the other half (evidence §1). The registry half - "says so in its registry row" - stays local. |
 | A8 | Colour numbers are named constants on both sides and pinned by `TestParityOCRPlateColourNumbers`; the fit ladder by `TestParityOCRFitLadder`; the column test by `TestParityOCRColumnTest`. Two real drifts fixed in the extension to the desktop's integer arithmetic: the ring band and the ink strip were rounded (now floored), and `luma` was fractional against `140` / `55` (now truncated). The extension also clamped the line height to the box, which the desktop does not. |
 | A9 | `extension/test/ocr-plates.test.mjs`: `plateSpecs`, `renderPlates`, `fitPlate` (grow to the cap, stop a step before overflow, shrink above the floor, release instead of clip, re-fit from the base), `pictureBox`, `transformRotates`. |
@@ -639,3 +639,27 @@ Checks: `go test ./tests/ -run TestParityOCR` 18 PASS / 0 FAIL; `go test ./inter
 - A11 - emit the §7 record from `tools/ocrlab`. This waits on the proposal's fate, but the owner's answer
   already names the emitter.
 - The FastMediaSorter_Lite spec sync, which is another repository.
+
+## Implementation record (2026-09-26, owner machine - closing)
+
+The owner's decisions of 2026-09-25 (open questions 1, 2, 5, 6) were already taken, so the catalog moved
+first and the code followed, in that order.
+
+| Item | Result |
+|---|---|
+| Catalog, `OCR-OVERLAY` 1.2 | "Amendment 2026-09-26 (1.2)" folds in `PROPOSAL-2026-09-25-constant-status-and-exchange.md`: rule 13 admits `policy` (A), section 7's `translation` is optional and absent means not translated (B), the record comes from an instrument the product owns (C). The proposal's status line says it was folded in. Section 8's row for this product corrected; two log rows. |
+| Catalog, `OCR-PIPELINE` 1.4 | "Amendment 2026-09-26 (1.4)": the written overflow rule for 3.4 (A), item J implemented with the lab evidence (B), where the status markers live (C), the section 7 emitter and the diagnostic line's `conf` (D). Log row. |
+| A3 | `Block.TypeH` / `typeHeight` - the median of the block's lines' word-height medians, a released line keeping its own - and `fontBasis` in both editions; colour, ring and concealment keep `LineH`. `TestClusterLinesSurvivesAnOutlineArtefact` now checks TypeH 26 against LineH 74 on the artefact line; `TestPercentStyleUsesTypeHeight`; two JS cases. Lab run against a named baseline: [`RESEARCH_ocr-plate-font-type-height_2026-09-26`](../../research/RESEARCH_ocr-plate-font-type-height_2026-09-26.md). |
+| A5 | The rule is `OCR-PIPELINE` 1.4 A; `lift()` in `ocrScript` and `liftPlate` in `ocr-plates.js`, both restoring the source top before every fit. Five JS cases; the shapes are pinned in `TestParityOCRFontFit`. |
+| A7 | 89 markers `OCR-OVERLAY rule 13: <status> - <source>.` directly above each constant of the section 5 status table, both editions, statuses as the catalog table gives them. `tests/ocr_constant_status_test.go` holds the table; a flipped status fails it (checked). Plate padding and radius carry their status in the catalog table only - they are data in `internal/appearance/appearance.json`, whose notes ship as CSS comments. |
+| A11 | Both editions' diagnostic line gains `conf` per block. `tools/ocrlab/exchange` and `go run ./tools/ocrlab exchange <run-dir>` write one section 7 record per scene; 47 records from each edition's run of this date, confidences present, `translation` absent. |
+| Registry | Catalog rows `OCR-OVERLAY` 1.2, `OCR-PIPELINE` 1.4; this product's two adoption rows re-verified this date; the rule 5, 9 and 13 exceptions closed. Open: rule 1 (JPEG-only EXIF) and rule 10 (extension edition), both until 2026-12-31. |
+| Pointers | `docs/contracts/OCR-OVERLAY.md` 1.2, `OCR-PIPELINE.md` 1.4, the index table rows corrected (they still said 1.0). |
+| PARITY | Plate re-fit row (the overflow rule), the diagnostic line (`conf`), the font-fit bullet (type height) and a new bullet on the status markers. |
+| FastMediaSorter_Lite spec sync | Nothing to mirror into that repository: its old overlay-accuracy spec file is gone and the catalog is now the one place it ports from, so the obligation is met by the two catalog amendments. |
+
+Checks, this date:
+- `go test ./internal/ocr/` exit 0; `go test ./tests/ -run 'Parity|PlateRules|TestOCRConstantsCarryTheirRule13Status'` exit 0; `go test ./tools/ocrlab/...` exit 0 apart from the runner item below.
+- Extension `npm test`: 323 pass, 0 fail.
+- `scripts/test.ps1`: FAIL (2), neither from this change. `TestDocLinks` failed on ticket 16's tactical files, whose parent ticket another session was moving to `done/` during the run, and on this ticket's own `done/` links before the move. `TestProbeCollectsPlatesAndExits` passes its body and fails in `t.TempDir` cleanup, because the browser still holds `browser-stderr.log`; `tools/ocrlab/runner` is untouched here.
+- Lab: `ocrlab gate -against` fails the same stale checks as each baseline (desktop 6, extension 5). Hard gates stay 0.

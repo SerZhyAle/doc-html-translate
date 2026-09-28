@@ -12,9 +12,9 @@ pointer that grows a second page has become a copy, and two copies drift - which
 
 | Pointer | Id | Version | Role |
 | --- | --- | --- | --- |
-| [OCR-OVERLAY.md](OCR-OVERLAY.md) | `OCR-OVERLAY` | 1.0 | reference implementation (producer + consumer) |
-| [OCR-PIPELINE.md](OCR-PIPELINE.md) | `OCR-PIPELINE` | 1.0 | producer & owner - the document describes this product's mechanism |
-| [OCR-INVOCATION.md](OCR-INVOCATION.md) | `OCR-INVOCATION` | 1.0 | producer & owner - the CLI another product calls |
+| [OCR-OVERLAY.md](OCR-OVERLAY.md) | `OCR-OVERLAY` | 1.2 | reference implementation (producer + consumer) |
+| [OCR-PIPELINE.md](OCR-PIPELINE.md) | `OCR-PIPELINE` | 1.4 | producer & owner - the document describes this product's mechanism |
+| [OCR-INVOCATION.md](OCR-INVOCATION.md) | `OCR-INVOCATION` | 1.1 | producer & owner - the CLI another product calls |
 | [DIAGNOSTIC-REPORT.md](DIAGNOSTIC-REPORT.md) | `DIAGNOSTIC-REPORT` | 0.9 draft | producer - `internal/report` generates diagnostic zip archives and environment summaries |
 | [INSTALL-TRUST.md](INSTALL-TRUST.md) | `INSTALL-TRUST` | 1.0 | producer - bound, adopted (2026-09-28, ticket 27) |
 | [MEDIA-CLASSIFICATION.md](MEDIA-CLASSIFICATION.md) | `MEDIA-CLASSIFICATION` | 0.9 draft | consumer - input format dispatch across books, documents, comics, and images |
@@ -36,6 +36,7 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [HARNESS-PROFILE.md](HARNESS-PROFILE.md) | `HARNESS-PROFILE` | 0.9 draft | not applicable - the shipped harness is never run here, no `.sza-profile.json` |
 | [RULE-DELIVERY.md](RULE-DELIVERY.md) | `RULE-DELIVERY` | 0.9 draft | consumer - canon rule set via the `sza` plugin; stamp current at `2026.09.24.1` |
 | [DOC-QUALITY.md](DOC-QUALITY.md) | `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY` | 0.9 draft | consumer - the documentation registry and its gates; gaps in tickets 48, 49 |
+| [CAPTURE-OUTPUT.md](CAPTURE-OUTPUT.md) | `CAPTURE-OUTPUT` | 0.1 draft | consumer - a reader of the `documents` kinds (`text`, `ocr_text`, `translation`) through the TXT input; writes no file of rule 1 |
 
 Read and **not applicable**: `WAVE-PARTICLES` 0.10 (`animated-backdrop/`, checked 2026-09-25). No site page and no
 GUI surface draws a canvas or runs `requestAnimationFrame`; the only background is the kit's CSS blobs. The

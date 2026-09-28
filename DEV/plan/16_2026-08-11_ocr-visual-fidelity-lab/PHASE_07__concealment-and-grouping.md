@@ -1,11 +1,12 @@
 # Phase 07 - Concealment and grouping
 
-**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../16_2026-08-11_ocr-visual-fidelity-lab.md)
+**Strategic spec:** [`../16_2026-08-11_ocr-visual-fidelity-lab.md`](../done/16_2026-08-11_ocr-visual-fidelity-lab.md)
 **Tactical index:** [`INDEX.md`](INDEX.md)
-**Status:** 🚧 In Progress - 07.3 done 2026-09-25 with the grouping halves of 07.4-07.7 (see "Step 07.3
-landed" below); 07.1 / 07.2 and the concealment halves of 07.4-07.7 stay ⛔ Blocked on strategic §9.1 / §9.2
+**Status:** ✅ Done 2026-09-26 - 07.3 on 2026-09-25 (see "Step 07.3 landed"), 07.1 / 07.2 and the
+concealment halves of 07.4-07.7 on 2026-09-26 **on the owner's decision to proceed without the annotated
+batch** strategic §9.1 / §9.2 asked for (see "Steps 07.1 / 07.2 landed")
 **Depends on:** Phase 06
-**Steps done:** 1 / 7 (07.3), four more in part
+**Steps done:** 7 / 7
 
 ## Objective
 
@@ -14,9 +15,11 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 
 ## Prerequisites
 
-- [ ] Phase 06 is ✅ Done and `thresholds.json` exists.
-- [ ] Every step below cites the baseline table that motivates it. A step with no measured cause does
-      not run - strategic §5.4 forbids tuning several things in one unmeasured move.
+- [x] Phase 06 is ✅ Done and `thresholds.json` exists.
+- [x] Every step below cites the baseline table that motivates it. A step with no measured cause does
+      not run - strategic §5.4 forbids tuning several things in one unmeasured move. *07.1 / 07.2 ran on the
+      owner's instruction of 2026-09-26 with their cause measured on unannotated pixels (the whole corpus's
+      ring statistics) rather than on annotated texture scenes - recorded as a deviation below.*
 
 ## Files touched
 
@@ -36,7 +39,12 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 | `extension/src/ocr-cluster.js` | Modified (07.4) | - |
 | `extension/test/ocr-cluster.test.mjs` | Modified (07.4, 07.7) | - |
 | `tools/ocrlab/synth/synth.go`, `DEV/ocrlab/corpus.json`, `DEV/ocrlab/annotations/synth-side-by-side-balloons.json` | Modified / New (07.7) | - |
-| `docs/contracts/OCR-PIPELINE.md` | Modified (catalog 1.1) | - |
+| `docs/contracts/OCR-PIPELINE.md` | Modified (catalog 1.1, 1.3) | - |
+| `docs/contracts/OCR-OVERLAY.md` | Modified (catalog 1.1, 07.1-07.2) | - |
+| `extension/src/ocr-conceal.js`, `extension/test/ocr-conceal.test.mjs` | New (07.4, 07.7) | - |
+| `extension/src/ocr-plates.js`, `extension/test/ocr-plates.test.mjs` | Modified (07.4) | - |
+| `configs/parity-map.json` | Modified (07.4, the new module) | - |
+| `DEV/research/RESEARCH_ocr-concealment-modes_2026-09-26.md` | New (07.1) | - |
 
 ## Steps
 
@@ -59,7 +67,7 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - Unit tests on the Phase 02 synthetic scenes assert uniform paper gives `ModeFill` and the
   bordered-balloon-over-panel scene gives `ModeMask`.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done 2026-09-26, with three deviations - see "Steps 07.1 / 07.2 landed".
 
 ---
 
@@ -80,7 +88,7 @@ respects balloon boundaries, and both editions moving together with a guarded sh
 - `internal/ocr/overlay_test.go` asserts the source image bytes are unchanged after an overlay.
 - A test asserts a `mask`-mode plate's painted area is strictly smaller than its block rectangle.
 
-**Status:** `[ ]` not done
+**Status:** `[x]` done 2026-09-26 - see "Steps 07.1 / 07.2 landed".
 
 ---
 
@@ -123,9 +131,14 @@ the evidence against each verification item.
 - The extension's emitted plates carry `data-ocr-mode`.
 - The ported constants match the Go values character for character.
 
-**Status:** `[~]` the clustering boundary test is ported (`ocr-cluster.js` `strokeBetween`, `paperLuma`,
-`OCR_BOUNDARY_REACH`, orphans; `ocr-overlay.js` `strokePlane`), `npm test` 271/271; the mode decision waits
-on 07.1.
+**Status:** `[x]` done - the boundary test on 2026-09-25 (`ocr-cluster.js` `strokeBetween`, `paperLuma`,
+`OCR_BOUNDARY_REACH`, orphans; `ocr-overlay.js` `strokePlane`); the mode decision on 2026-09-26 in a new
+module, `ocr-conceal.js`, rather than in `ocr-overlay.js` (it is pure arithmetic over a pixel sampler, so
+node can test it without a canvas; `ocr-overlay.js` hands it the ring constants as `RING` so they keep one
+declaration). No CSS class was needed: each mode is an inline background, so `ocr-overlay.css` and
+`internal/appearance` are untouched. Plates carry `data-ocr-mode` (the lab's extension run records
+fill / reconstruct / mask with no special case); constants character for character equal to Go
+(`TestParityOCRConcealment`); `npm test` 317/317.
 
 ---
 
@@ -143,10 +156,12 @@ on 07.1.
 - `docs/PARITY.md` names all three modes and the new constant.
 - The OCR table row for plate granularity mentions the boundary test.
 
-**Status:** `[~]` the boundary test is in `docs/PARITY.md` (the "Line integrity" row and the word-gap note:
-`OCR_BOUNDARY_REACH`, the reused `PLATE_MIN_CONTRAST`, the paper ring, orphans, the one uncovered case);
-the three modes wait on 07.1. The `DOCHT_OCR_DIAG` note is moot - since ticket 15 the extension writes
-the same `ocr-diag.jsonl`.
+**Status:** `[x]` done - the boundary test is in `docs/PARITY.md` (the "Line integrity" row and the
+word-gap note); the modes are the new "Plate concealment mode (2026-09-26)" row of the OCR table (all three
+modes, the ring inputs, the confidence, the three constants, the painting) and a port-map row. None of the
+modes is a hard visual gate of its own: the existing hard gates (protected damage, merges, clipping,
+cross-group) are what they must not regress. The `DOCHT_OCR_DIAG` note is moot - since ticket 15 the
+extension writes the same `ocr-diag.jsonl`.
 
 ---
 
@@ -167,8 +182,12 @@ the same `ocr-diag.jsonl`.
 **Status:** `[~]` the boundary constant is guarded in the existing `TestParityOCRClustering` rather than a
 new test (it is a clustering constant, and that test already reads both sources): the value pair plus
 nine expression pins. Proven to fail on a one-sided change (`OCR_BOUNDARY_REACH = 0.15` in the extension
-only: `boundary reach drift: tesseract.go=0.14 ocr-cluster.js=0.15`). `TestParityOCRConcealment` waits on
-the modes of 07.1.
+only: `boundary reach drift: tesseract.go=0.14 ocr-cluster.js=0.15`). `TestParityOCRConcealment` landed
+2026-09-26: the three mode names, the three constants and fifteen expression pins, read from both sources.
+Proven to fail on a one-sided change (`MODE_BUSY_MAX = 0.07` in the extension only:
+`busy bound drift: conceal.go=0.06 ocr-conceal.js=0.07`). There is no separate "mode-confidence floor"
+constant: the floor is `modeBusyMax` itself, the point where the confidence of the fill reaches 0 and the
+mask takes over.
 
 ---
 
@@ -190,17 +209,27 @@ the modes of 07.1.
 
 **Status:** `[~]` for the grouping class: scene `synth-side-by-side-balloons` (exact by construction, in
 `corpus.json` and `DEV/ocrlab/annotations/`) and the deterministic tests `internal/ocr/boundary_test.go`
-(8) and their mirrors in `extension/test/ocr-cluster.test.mjs` (8). `ocrlab verify` reports only the
-pre-existing gaps. The concealment classes wait on 07.1 / 07.2.
+(8) and their mirrors in `extension/test/ocr-cluster.test.mjs` (8). `[x]` for the concealment classes
+(2026-09-26): no new scene was needed - the defect each mode answers is already an exact synthetic scene
+(`synth-caption-on-gradient` for the reconstruction, `synth-text-on-halftone` for the mask), so the fixture
+is the deterministic test over those scenes, `internal/ocr/conceal_test.go` (6 tests, including the edge
+beside a white caption that must not become a gradient) and `extension/test/ocr-conceal.test.mjs` (7, the
+same constructed pictures and the same expected mask string as Go). `ocrlab verify` reports only the
+pre-existing gaps.
 
 ## Phase done criteria
 
-- [ ] Every `Step 07.*` is `[x] done`.
-- [ ] `./scripts/check.ps1` green (test + lint + typos).
-- [ ] `npm test` green in `extension/`.
-- [ ] `ocrlab gate` PASSes against the Phase 06 summary for both editions.
-- [ ] Grep for `TODO(phase-07)` returns zero hits.
-- [ ] Changelog entry added for every file in "Files touched".
+- [x] Every `Step 07.*` is `[x] done`.
+- [x] `./scripts/check.ps1` green (test + lint + typos) - see the ticket's changelog entry of 2026-09-26.
+- [x] `npm test` green in `extension/` - 317/317.
+- [ ] `ocrlab gate` PASSes against the Phase 06 summary for both editions. **Not met, and not by this
+      phase:** the gate fails the same stale checks before and after it (desktop 6 = 6 against
+      `p16m-base`; extension 5 after against 6 before) - recall, residual and review bounds set on the
+      2026-08-12 baseline that the no-plate scenes and the extension's missing gradient caption already
+      break - while every hard gate stays 0 on the desktop and the extension's one cross-group plate is in
+      its base run too. Re-deriving `thresholds.json` needs the holdout (the human gate).
+- [x] Grep for `TODO(phase-07)` returns zero hits.
+- [x] Changelog entry added for every file in "Files touched".
 
 ## Out-of-order work already landed (2026-08-11)
 
@@ -323,6 +352,52 @@ second design, not a follow-on threshold.
 **Catalog first:** `OCR-PIPELINE` 1.1 - a dated amendment in the catalog's `ocr-overlay/ocr-pipeline.md`
 covering the whole line split (the 2026-09-12 word-gap stage was never written there), both registry rows
 and `docs/contracts/OCR-PIPELINE.md` bumped.
+
+## Steps 07.1 / 07.2 landed (2026-09-26)
+
+**On the owner's decision.** Asked on 2026-09-26 whether to close the ticket around the blocked steps, to
+leave it open, or to do 07.1 / 07.2 now against the reconciliation's own "a step with no measured cause
+does not run", the owner chose to do them now. So the unblock condition above (annotated `texture` scenes
+with protected polygons) was **not** met; what replaced it is a measurement that needs no annotation - the
+ring statistics of every block the desktop engine plates on the whole corpus, plus the exact synthetic
+scenes. Research: [`DEV/research/RESEARCH_ocr-concealment-modes_2026-09-26.md`](../../research/RESEARCH_ocr-concealment-modes_2026-09-26.md).
+Strategic §9.1 / §9.2 stay open for the annotated re-derivation.
+
+**What landed.** `internal/ocr/conceal.go` (`measureRing`, `decideMode`, `gradientAxis`,
+`plateBackground`) and its mirror `extension/src/ocr-conceal.js`; `wrapImage` and `sampleColors` /
+`plateSpecs` / `renderPlates` emit `data-ocr-mode` / `data-ocr-mode-conf` and paint the mode. Catalog first:
+`OCR-OVERLAY` 1.1 (rule 7 admits the two modes besides the rectangle) and `OCR-PIPELINE` 1.3 (the
+mechanism, three constant rows, one negative result), registry rows and both pointers bumped.
+
+**Deviations from the prompts, and why.**
+
+- *`chooseMode(img, b) (Mode, float64)` does not exist as one function.* The decision is
+  `decideMode(measureRing(img, b))`, because `wrapImage` needs the ring a second time to paint the
+  gradient; a wrapper used only by tests would be dead code to the linter.
+- *The balloon-over-panel scene is `fill`, not `mask`.* Its interior is flat white all round the text and
+  the outline lies outside the block rectangle, which the fill never leaves. The mask case is the halftone
+  scene; the test asserts both.
+- *The mask is not "the line boxes inset to the ink extent".* Line boxes are already ink extents; the
+  stripes are those boxes **grown** by `max(2 px, lh/6)` so a glyph's antialiased edge is covered, placed
+  in `cqw` from the plate's corner so they neither drift with the viewport nor stretch when the fit grows
+  the plate.
+- *A gradient needs a ramp, not just a difference.* Most ring sides that differ are an edge beside the
+  block (a panel rule next to a white caption, spread 515), so `reconstruct` also requires both cross
+  sides in the middle third of the ramp; without it the plate would run white to black across a caption.
+
+**Against the verification items.** 07.1: the three `Mode` constants declared once each (and pinned
+against the JS names); `TestConcealmentModeOnSyntheticScenes` - uniform paper, two columns, RTL, both
+balloon scenes `fill`, the gradient caption `reconstruct`, the halftone `mask`. 07.2: `data-ocr-mode`
+in the rendered plate (`TestWrapImageEmitsTheModeAndLeavesTheSourceAlone`, which also compares the
+source file's bytes before and after); `TestMaskPaintsLessThanTheBlock` - the painted area of a two-line
+mask with a short last line is strictly less than its block rectangle.
+
+**The lab, both editions, the 14 annotated scenes against the 2026-09-25 code.** Every hard gate unchanged;
+residual identical except the gradient caption on the desktop (0.1431 -> 0.1385, halo 0.087 -> 0.081);
+the two editions pick the same mode on every scene both plate. **What the lab cannot show:** its damage and
+overlay-area metrics read plate *rectangles*, not painted pixels, so the mask's purpose - the scroll's
+outline and the halftone between short lines reappearing - is visible in the screenshots and in no
+number. A painted-area metric is lab work for the next iteration.
 
 ## Handoff notes
 

@@ -1,11 +1,11 @@
 # Strategic spec: 16_2026-08-11_ocr-visual-fidelity-lab - OCR that replaces image text convincingly
 
 **Ticket:** 16_2026-08-11_ocr-visual-fidelity-lab
-**Status:** In Progress (6 / 8 phases; phase 07 1 / 7 - Step 07.3 done 2026-09-25, 07.1 / 07.2 ⛔ blocked on human-owned annotation - see the tactical INDEX, which is the authority on phase state)
+**Status:** BlockNeedUserTest (8 / 8 phases built 2026-09-26 - Steps 07.1 / 07.2 on the owner's decision to proceed without the annotated texture batch; what is left is the two human-owned gates: corpus acquisition toward §4.1 and holdout annotation review per §4.3, which the §8 done criteria and the completion gate need - see the tactical INDEX, which is the authority on phase state)
 **Priority:** 40
 **Date:** 2026-08-11
 **Tier:** Complex
-**Tactical plan:** [`16_2026-08-11_ocr-visual-fidelity-lab/INDEX.md`](16_2026-08-11_ocr-visual-fidelity-lab/INDEX.md)
+**Tactical plan:** [`16_2026-08-11_ocr-visual-fidelity-lab/INDEX.md`](../16_2026-08-11_ocr-visual-fidelity-lab/INDEX.md)
 
 > **Scope:** STRATEGIC. This is the quality contract and the experimental method. The tactical
 > plan will name code, scripts, schemas and thresholds only after the baseline is measured.
@@ -288,6 +288,14 @@ gate, it is not hidden behind aggregate parity; it is a failing edition with a n
 2. **Background reconstruction:** compare local colour sampling, directional interpolation and
    texture-aware reconstruction on the same protected-area annotations. Select the simplest method that
    passes the damage gate in both editions.
+
+   > **Answered provisionally, 2026-09-26, for items 1 and 2.** On the owner's decision the modes were
+   > built before the annotated batch existed: line boxes grown by a pad seed the mask (no segmentation
+   > pass), and the reconstruction is a two-colour gradient from the ring, taken only where the ring shows
+   > a ramp. Both are bounded on the unannotated ring statistics of the whole corpus
+   > ([`RESEARCH_ocr-concealment-modes_2026-09-26`](../../research/RESEARCH_ocr-concealment-modes_2026-09-26.md)).
+   > The annotated re-derivation this item asks for is still owed, and the lab needs a painted-area
+   > damage measure before it can judge the mask at all.
 3. **Typography:** measure whether font-family/style classification materially improves the visual
    outcome versus a robust readable fallback. Do not add a font-recognition dependency unless the corpus
    shows that geometry and concealment are already sufficient.
