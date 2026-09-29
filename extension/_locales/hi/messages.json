@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"पढ़ना पृष्ठ {1} से जारी रखें?"},
   "vResumeContinue": {"message":"पढ़ना जारी रखें"},
-  "vResumeReset": {"message":"फिर से शुरू करें"}
+  "vResumeReset": {"message":"फिर से शुरू करें"},
+  "ariaNightMode": {
+    "message": "नाइट मोड",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "टेक्स्ट का आकार रीसेट करें",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "पंक्ति अंतराल",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "कॉलम की चौड़ाई",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "डिफ़ॉल्ट",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "संकरी",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "सामान्य",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "चौड़ी",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "पूरी चौड़ाई",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

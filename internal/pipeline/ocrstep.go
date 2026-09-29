@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
@@ -15,9 +16,11 @@ import (
 // positioned container with translatable text plates. Best-effort: a missing tesseract or
 // a failed page is logged and skipped, never aborting the conversion.
 func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir string) {
+	dialog.Progress("recognizing", 0, 0)
 	bin, err := ocr.Locate()
 	if err != nil {
 		logging.Printf("  OCR skipped: %v\n", err)
+		dialog.Progress("warning", 0, 0)
 		return
 	}
 	// Which language is read is decided here and nowhere else: -ocr-lang when given, else the
@@ -35,6 +38,7 @@ func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir st
 	if missing := ocr.MissingLangs(ctx, bin, lang); len(missing) > 0 {
 		logging.Printf("  OCR skipped: no language data for %s. %s\n",
 			strings.Join(missing, ", "), ocr.MissingAdvice(missing))
+		dialog.Progress("warning", 0, 0)
 		return
 	}
 	// The same holds for data that exists but cannot reach the engine: a bundled pack that could not
@@ -45,6 +49,7 @@ func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir st
 	}
 	if err != nil {
 		logging.Printf("  OCR skipped: %v\n", err)
+		dialog.Progress("warning", 0, 0)
 		return
 	}
 
@@ -59,9 +64,15 @@ func (r Runner) overlayImages(ctx context.Context, book *epub.Book, outputDir st
 		filePaths = append(filePaths, contentFilePath(book, outputDir, item))
 	}
 	tick := logging.NewTicker("OCR overlay", "images")
-	stats := ocr.OverlayBook(ctx, bin, filePaths, lang, dataDir, r.cfg.OCRLang != "", tick.Report)
+	stats := ocr.OverlayBook(ctx, bin, filePaths, lang, dataDir, r.cfg.OCRLang != "", func(done, total int) {
+		tick.Report(done, total)
+		dialog.Progress("recognizing", done, total)
+	})
 	if stats.Cancelled {
 		return
+	}
+	if len(stats.Failed) > 0 {
+		dialog.Progress("warning", 0, 0)
 	}
 	reportOverlay(stats, lang)
 }

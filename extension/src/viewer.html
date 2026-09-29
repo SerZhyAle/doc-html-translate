@@ -17,12 +17,27 @@
     <div class="group" data-i18n-title="ttFontSize" title="Font size">
       <button id="btn-font-dec" type="button" data-i18n-aria="ariaSmallerText" aria-label="Smaller text" data-i18n-title="ariaSmallerText" title="Smaller text"><span data-glyph="action.text-smaller"></span></button>
       <button id="btn-font-inc" type="button" data-i18n-aria="ariaLargerText" aria-label="Larger text" data-i18n-title="ariaLargerText" title="Larger text"><span data-glyph="action.text-larger"></span></button>
+      <button id="btn-font-reset" type="button" data-i18n-aria="ariaResetTextSize" aria-label="Reset text size" data-i18n-title="ariaResetTextSize" title="Reset text size"><span data-glyph="action.reset"></span></button>
     </div>
     <div class="group">
       <select id="sel-family" data-i18n-aria="ariaFont" aria-label="Font">
         <option value="serif" data-i18n="fontSerif">Serif</option>
         <option value="sans" data-i18n="fontSans">Sans</option>
         <option value="mono" data-i18n="fontMono">Mono</option>
+      </select>
+      <select id="sel-leading" data-i18n-aria="ariaLineSpacing" aria-label="Line spacing" data-i18n-title="ariaLineSpacing" title="Line spacing">
+        <option value="" data-i18n="optDefault">Default</option>
+        <option value="1.4">1.4</option>
+        <option value="1.6">1.6</option>
+        <option value="1.9">1.9</option>
+        <option value="2.2">2.2</option>
+      </select>
+      <select id="sel-width" data-i18n-aria="ariaColumnWidth" aria-label="Column width" data-i18n-title="ariaColumnWidth" title="Column width">
+        <option value="" data-i18n="optDefault">Default</option>
+        <option value="36em" data-i18n="optWidthNarrow">Narrow</option>
+        <option value="46em" data-i18n="optWidthNormal">Normal</option>
+        <option value="64em" data-i18n="optWidthWide">Wide</option>
+        <option value="none" data-i18n="optWidthFull">Full width</option>
       </select>
       <span data-glyph="app.theme"></span>
       <select id="sel-theme" data-i18n-aria="ariaTheme" aria-label="Theme">
@@ -31,6 +46,10 @@
         <option value="dark" data-i18n="themeDark">Dark</option>
         <option value="night" data-i18n="themeNight">Night</option>
       </select>
+      <!-- Quick night-mode toggle: swaps between the day themes (light, sepia) and the night
+           themes (dark, night), remembering the last of each; pressed = a night theme is on.
+           Mirrors the app's #dht-night-toggle (docs/PARITY.md). -->
+      <button id="btn-night" type="button" aria-pressed="false" data-i18n-aria="ariaNightMode" aria-label="Night mode" data-i18n-title="ariaNightMode" title="Night mode"><span data-glyph="app.night-mode"></span></button>
     </div>
     <!-- Revealed by viewer.js only on a document that carries OCR plates; mirrors the app's
          #dht-ocr-toggle (docs/PARITY.md). -->

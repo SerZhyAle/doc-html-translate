@@ -24,9 +24,11 @@ What this repo does to stay conformant:
   (`tests/site_l10n_test.go`, rule 3); the termbase `configs/termbase.json` with forbidden variants
   (`tests/site_termbase_test.go`, rule 4); subject index, glossary and workflow captures on the docs trio
   (`tests/site_docs_test.go`, rules 1 and 6).
-- Where a rule reads as if it assumed a portal, a proposal is drafted in [`proposals/`](proposals/) until
-  it can be filed in the catalog: `PROPOSAL-2026-09-26-doc-html-translate-doc-external-quality.md`.
+- The portal-shaped rule questions are filed with the owner in the shared catalog as
+  `documentation-quality/PROPOSAL-2026-09-26-doc-html-translate.md`.
 
-**Adopted 2026-09-26 with gaps**, each a ticket and a dated exception in the shared registry:
-internal rules 3-6 in [ticket 48](../../DEV/plan/48_2026-09-26_contract-doc-internal-quality-gaps.md),
-external rules 1-7 in [ticket 49](../../DEV/plan/49_2026-09-26_contract-doc-external-quality-gaps.md).
+**Adopted 2026-09-26; re-verified 2026-09-28.** Internal rules 3-6 were closed in
+[ticket 48](../../DEV/plan/done/48_2026-09-26_contract-doc-internal-quality-gaps.md). External rules
+1-7 were implemented in [ticket 49](../../DEV/plan/done/49_2026-09-26_contract-doc-external-quality-gaps.md).
+Both dated exceptions in the shared registry are closed; the contract owner has the proposal above for
+the single-page site questions.

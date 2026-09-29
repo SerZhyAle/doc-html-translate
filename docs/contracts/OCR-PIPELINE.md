@@ -13,7 +13,12 @@
   2026-09-28: 1.6 added the anchored rescue admission - a rescue rung keeps a sub-floor line that
   clears 47 with a 4-letter run when its pass holds at least two floor-clearing 4-letter-run anchors
   and one stands at the line's own type size, and the clustering joins a late row of the unordered
-  sparse rung into the open cluster it fits inside)
+  sparse rung into the open cluster it fits inside;
+  2026-09-29: 1.7 added the tall-token cut - the split also cuts before a word whose box stands more
+  than the type-size ratio above the line's median word height, the touching outlines of two adjacent
+  balloons being read as tokens of the stitched line - and the grey sweep, the grey rung spent
+  additively on a page that already read, fired by the layout analysis' wordless text regions
+  standing outside the plates)
 - **Home:** the shared contracts catalog, `ocr-overlay/ocr-pipeline.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - the document describes this product's own mechanism, end to end
 - **Read by:** FastMediaSorter Android and FastMediaSorter_Lite, which port parts of it

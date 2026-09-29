@@ -67,3 +67,63 @@ func TestParityDocChunkConstants(t *testing.T) {
 		}
 	}
 }
+
+// TestParityReaderComfortControls: the reading-comfort steps (ticket 59) are the same on both
+// sides and are the ones docs/PARITY.md "Reader comfort controls" prints. The desktop reader
+// script and the extension's prefs hold one line-spacing ladder and one column-width ladder;
+// the day/night families of the quick toggle agree; the fit-width zoom mode is desktop-only
+// (declined for the extension, whose viewer has no percentage zoom to sit beside - see the
+// PARITY section).
+func TestParityReaderComfortControls(t *testing.T) {
+	goSrc := readRepoFile(t, "internal", "htmlgen", "navbar.go")
+	jsSrc := readRepoFile(t, "extension", "src", "viewer.js")
+	// The extension's ladders live in the select options (viewer.html); its script copies the
+	// chosen value into the pref.
+	jsUI := readRepoFile(t, "extension", "src", "viewer.html")
+	doc := between(readRepoFile(t, "docs", "PARITY.md"), "### Reader comfort controls", "\n### ")
+	if doc == "" {
+		t.Fatal("docs/PARITY.md has no Reader comfort controls section")
+	}
+	// One line-spacing ladder: option text on the desktop, values on the extension.
+	leading := []string{"1.4", "1.6", "1.9", "2.2"}
+	for _, v := range leading {
+		if !strings.Contains(goSrc, "<option>"+v+"</option>") {
+			t.Errorf("navbar.go does not carry line-spacing step %q", v)
+		}
+		if !strings.Contains(jsUI, `value="`+v+`"`) {
+			t.Errorf("viewer.html does not carry line-spacing step %q", v)
+		}
+	}
+	// One column-width ladder in em, plus the no-cap value.
+	for _, v := range []string{"36em", "46em", "64em", "none"} {
+		if !strings.Contains(goSrc, `"`+v+`"`) {
+			t.Errorf("navbar.go does not carry column-width step %q", v)
+		}
+		if !strings.Contains(jsUI, `value="`+v+`"`) {
+			t.Errorf("viewer.html does not carry column-width step %q", v)
+		}
+	}
+	// The quick toggle names the night family the same way on both sides; everything else is
+	// the day family (the doc states the members).
+	for _, src := range map[string]string{"navbar.go": goSrc, "viewer.js": jsSrc} {
+		for _, theme := range []string{"dark", "night"} {
+			if !strings.Contains(src, `"`+theme+`"`) {
+				t.Errorf("%s does not name night-family theme %q", src, theme)
+			}
+		}
+	}
+	// The doc states the ladders and the scoping the code holds.
+	for _, want := range []string{
+		"`1.4`, `1.6`, `1.9`, `2.2`",
+		"`36em`", "`46em`", "`64em`", "`none`",
+		"dht_leading", "dht_width", "dht_fitw",
+	} {
+		if !strings.Contains(doc, want) {
+			t.Errorf("docs/PARITY.md Reader comfort controls does not state %q", want)
+		}
+	}
+	// Fit width stays desktop-only: the extension viewer names no fit-width control.
+	if strings.Contains(jsSrc, "fit-width") || strings.Contains(jsSrc, "fitWidth") {
+		t.Errorf("viewer.js grew a fit-width control; docs/PARITY.md declines it for the extension")
+	}
+}

@@ -40,6 +40,11 @@ const singlePageCSS = `
 // translation steps operate on the one file (and the post-translation TOC step, keyed off
 // len(Spine) > 1, is skipped). Returns the entry-point path to open in the browser.
 func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, error) {
+	return GenerateSinglePageWithDepth(book, outputDir, sourceName, 0)
+}
+
+// GenerateSinglePageWithDepth also applies the requested contents nesting limit.
+func GenerateSinglePageWithDepth(book *epub.Book, outputDir, sourceName string, depth int) (string, error) {
 	spineHrefs := book.SpineHrefs()
 	if len(spineHrefs) == 0 {
 		return "", fmt.Errorf("book has no spine entries")
@@ -66,6 +71,15 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 		chapters = append(chapters, &mergeChapter{href: path.Clean(href), doc: doc})
 	}
 	prepareMerge(chapters)
+	contents := singlePageContents(book.TOC, chapters)
+	if len(contents) == 0 && !isPagedChapters(chapters) {
+		contents = singlePageHeadingContents(chapters)
+	}
+	for _, ch := range chapters {
+		if ch.anchorUsed && !hasChapterAnchor(ch) {
+			ch.insertAnchor()
+		}
+	}
 	inners := make([]string, 0, len(chapters))
 	var allScopedCSS []string
 	for i, ch := range chapters {
@@ -123,6 +137,9 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 		sb.WriteString(strings.Join(cssLinks, "\n") + "\n")
 	}
 	sb.WriteString(singlePageCSS)
+	if len(contents) > 0 {
+		sb.WriteString(singleContentsCSS)
+	}
 	sb.WriteString(navBarCSS)
 	sb.WriteString(readerCSS)
 	if len(allScopedCSS) > 0 {
@@ -136,11 +153,17 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	if isPagedBook(inners) {
 		pageCount = len(inners)
 	}
-	sb.WriteString(buildSinglePageHeader(sourceName, title, pageCount))
+	sb.WriteString(buildSinglePageHeader(sourceName, title, pageCount, len(contents) > 0))
+	if len(contents) > 0 {
+		sb.WriteString(renderSingleContents(contents, depth))
+	}
 	sb.WriteString("\n<main class=\"dht-single\">\n")
 	sb.WriteString(body.String())
 	sb.WriteString("\n</main>\n")
 	sb.WriteString(navBarScript)
+	if len(contents) > 0 {
+		sb.WriteString(singleContentsScript)
+	}
 	sb.WriteString(readerScript(readerKey(book), "index.html", 1, 1))
 	sb.WriteString(searchScript(readerKey(book), "index.html", ""))
 	sb.WriteString("</body>\n</html>\n")
@@ -204,7 +227,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 // pageCount > 0 adds a page jump box for an image-page book (comic, scan). The merged
 // document is one long scroll of dozens of pages, so without it a reader cannot reach page
 // 30 except by dragging the scrollbar, and cannot link to it at all.
-func buildSinglePageHeader(sourceName, title string, pageCount int) string {
+func buildSinglePageHeader(sourceName, title string, pageCount int, hasContents bool) string {
 	var fileEl, titleEl string
 	if strings.TrimSpace(sourceName) != "" {
 		fileEl = fmt.Sprintf(`<span class="nav-file" title="%s">%s</span>`,
@@ -219,6 +242,11 @@ func buildSinglePageHeader(sourceName, title string, pageCount int) string {
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
 	var pageSel string
+	var contentsButton string
+	if hasContents {
+		label := html.EscapeString(i18n.S("Table of contents"))
+		contentsButton = fmt.Sprintf(`<button id="dht-contents-button" class="dht-btn" type="button" aria-controls="dht-contents" aria-expanded="false" aria-label="%s" title="%s">%s</button>`, label, label, glyphSVG("nav.contents"))
+	}
 	if pageCount > 1 {
 		var opts strings.Builder
 		for i := 1; i <= pageCount; i++ {
@@ -231,8 +259,8 @@ func buildSinglePageHeader(sourceName, title string, pageCount int) string {
 	}
 
 	// lang/dir on the bar itself, never on <html> - see buildNavBarHTML for why.
-	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>`,
-		i18n.Language(), chromeDirAttr(), fileEl, titleEl, pageSel, readerControlsHTML(), versionLink)
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s</div>%s</div>`,
+		i18n.Language(), chromeDirAttr(), fileEl, titleEl, contentsButton, pageSel, readerControlsHTML(), versionLink, progressBarHTML())
 }
 
 // isPagedBook reports whether the merged bodies are image pages rather than text

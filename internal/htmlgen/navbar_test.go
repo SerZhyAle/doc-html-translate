@@ -223,3 +223,64 @@ func TestReaderChromeAccessibilityFloor(t *testing.T) {
 		}
 	}
 }
+
+// TestReaderComfortControls pins the reading-comfort additions of ticket 59 to the chrome of
+// both output modes: the chapter navbar and the single-page header carry the same controls,
+// the progress bar is readable as a number as well as a bar, and the keyboard handler owns
+// page turning with the focus guard the ticket's boundary demands.
+func TestReaderComfortControls(t *testing.T) {
+	navHTML := buildNavBarHTML(NavInfo{PrevHref: "ch01.xhtml", NextHref: "ch03.xhtml", IndexHref: "../index.html", Current: 2, Total: 5})
+	singleHTML := buildSinglePageHeader("book.epub", "Test", 3, true)
+	for name, html := range map[string]string{"navbar": navHTML, "single page": singleHTML} {
+		for _, want := range []string{
+			`id="dht-size-reset"`,                     // text-size reset
+			`id="dht-night-toggle"`,                   // day/night quick toggle
+			`aria-pressed="false" title="Night mode"`, // pressed state carried in markup
+			`id="dht-leading-sel"`,                    // line spacing select
+			`id="dht-width-sel"`,                      // column width select
+			`value="36em"`, `value="46em"`, `value="64em"`, `value="none"`,
+			`id="dht-fitw-toggle"`,  // fit width, hidden until image pages
+			`role="progressbar"`,    // progress readable as a number
+			`id="dht-progress-tip"`, // the hover/focus readout
+		} {
+			if !strings.Contains(html, want) {
+				t.Errorf("%s header lost %q", name, want)
+			}
+		}
+	}
+
+	for _, want := range []string{
+		// Keyboard page turning: the arrows and the space bar at the edges, next to the
+		// PageUp/PageDown behavior, with the focused-control guard.
+		`e.key === "ArrowDown"`, `e.key === "ArrowRight"`,
+		`e.key === "ArrowUp"`, `e.key === "ArrowLeft"`,
+		`e.key === " "`, `e.shiftKey`,
+		`t !== document.body`, // never fight a focused control or an in-book link
+		// Fit width: per-session like the zoom, applied as a class + zoom-compensated width.
+		`"dht_fitw"`, `classList.toggle("dht-fitw"`, `--dht-fitw`,
+	} {
+		if !strings.Contains(navBarScript, want) {
+			t.Errorf("zoom/edge-nav script lost %q", want)
+		}
+	}
+	for _, want := range []string{
+		`"dht_leading"`, `"dht_width"`, // appearance scope: localStorage, like the theme
+		`dht-night-toggle`, `lastFamilyTheme`, // the toggle remembers each family's last theme
+		`applySize(DEFSZ, true)`, // the reset returns the shipped size, persisted
+		`aria-valuenow`,          // the number form of the bar
+	} {
+		if !strings.Contains(readerScript("k", "c01.xhtml", 1, 3), want) {
+			t.Errorf("reader script lost %q", want)
+		}
+	}
+
+	// The comfort CSS gates on the reader's own choices - nothing applied before one is made.
+	for _, want := range []string{
+		"html[data-dht-leading] body", "html[data-dht-width] body",
+		"html.dht-fitw .pdf-page-scan", "#dht-progress:hover .dht-progress-tip",
+	} {
+		if !strings.Contains(readerCSS, want) {
+			t.Errorf("reader CSS lost %q", want)
+		}
+	}
+}

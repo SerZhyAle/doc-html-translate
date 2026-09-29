@@ -203,14 +203,20 @@ function beginLoad() {
 const isCurrent = (gen) => gen === docGen;
 
 // ---- Preferences -----------------------------------------------------------
-// size must match viewer.css's --reader-size fallback, which styles the document before
-// this runs. A+/A- move it and persist; nothing is stored until the reader asks for a
+// DEFAULT_PREFS.size must match viewer.css's --reader-size fallback, which styles the document
+// before this runs. A+/A- move it and persist; nothing is stored until the reader asks for a
 // change, so this default reaches everyone who never expressed a preference.
+// leading / width: the reading-comfort choices (ticket 59). null means "the shipped measure":
+// body line-height 1.6 and the 46em column of viewer.css. The steps and the em values are the
+// desktop reader's own (docs/PARITY.md "Reader comfort controls") and persist like the theme.
+// dayTheme / nightTheme: the last theme picked from each family, so the night-mode toggle's
+// round trip lands where it left - the same two slots the desktop reader keeps in localStorage.
 // ocrLayer: whether the recognized-text plates are shown over the artwork. On by default -
 // the plates are what makes a comic or a scan translatable - but a reader looking at the art
 // wants them out of the way, so the choice persists like the theme does. Mirrors the app's
 // dht_ocr toggle (docs/PARITY.md).
-const DEFAULT_PREFS = { size: 28, family: "serif", theme: null, ocrLayer: true };
+const DEFAULT_PREFS = { size: 28, family: "serif", theme: null, ocrLayer: true, leading: null, width: null, dayTheme: null, nightTheme: null };
+const NIGHT_THEMES = new Set(["dark", "night"]);
 let prefs = { ...DEFAULT_PREFS };
 let options = { ...DEFAULT_OPTIONS };
 
@@ -234,10 +240,19 @@ async function savePrefs() {
 function applyPrefs() {
   document.documentElement.style.setProperty("--reader-size", `${prefs.size}px`);
   document.documentElement.style.setProperty("--reader-font", FAMILIES[prefs.family] || FAMILIES.serif);
+  // Comfort choices apply only when the reader picked one; removing the property hands the
+  // measure back to the shipped value in the var() fallback.
+  if (prefs.leading) document.documentElement.style.setProperty("--reader-leading", prefs.leading);
+  else document.documentElement.style.removeProperty("--reader-leading");
+  if (prefs.width) document.documentElement.style.setProperty("--reader-width", prefs.width);
+  else document.documentElement.style.removeProperty("--reader-width");
   const theme = prefs.theme || options.theme || "light";
   document.documentElement.setAttribute("data-theme", theme);
   $("sel-family").value = prefs.family;
+  $("sel-leading").value = prefs.leading || "";
+  $("sel-width").value = prefs.width || "";
   $("sel-theme").value = theme;
+  $("btn-night").setAttribute("aria-pressed", NIGHT_THEMES.has(theme) ? "true" : "false");
   const ocrOn = prefs.ocrLayer !== false;
   document.documentElement.classList.toggle("ocr-layer-off", !ocrOn);
   $("btn-ocr").setAttribute("aria-pressed", ocrOn ? "true" : "false");
@@ -994,6 +1009,8 @@ async function saveExportHtml() {
   const styleVars = [
     cssVar("--reader-size"),
     cssVar("--reader-font"),
+    cssVar("--reader-leading"),
+    cssVar("--reader-width"),
   ].filter(Boolean).join(";");
 
   const doc = buildExportHtml({ title, theme, lang, styleVars, css, body: clone.outerHTML });
@@ -2225,11 +2242,35 @@ function wireToolbar() {
     prefs.size = Math.max(12, prefs.size - 1);
     applyPrefs(); savePrefs();
   });
+  $("btn-font-reset").addEventListener("click", () => {
+    prefs.size = DEFAULT_PREFS.size;
+    applyPrefs(); savePrefs();
+  });
   $("sel-family").addEventListener("change", (e) => {
     prefs.family = e.target.value; applyPrefs(); savePrefs();
   });
+  $("sel-leading").addEventListener("change", (e) => {
+    prefs.leading = e.target.value || null; applyPrefs(); savePrefs();
+  });
+  $("sel-width").addEventListener("change", (e) => {
+    prefs.width = e.target.value || null; applyPrefs(); savePrefs();
+  });
+  // A theme picked from the select is remembered as its family's last word, so the
+  // night-mode toggle can return the reader exactly where the round trip started.
+  const rememberFamilyTheme = (theme) => {
+    if (NIGHT_THEMES.has(theme)) prefs.nightTheme = theme;
+    else prefs.dayTheme = theme;
+  };
   $("sel-theme").addEventListener("change", (e) => {
-    prefs.theme = e.target.value; applyPrefs(); savePrefs();
+    prefs.theme = e.target.value;
+    rememberFamilyTheme(prefs.theme);
+    applyPrefs(); savePrefs();
+  });
+  $("btn-night").addEventListener("click", () => {
+    const night = NIGHT_THEMES.has(prefs.theme || options.theme || "light");
+    prefs.theme = (night ? prefs.dayTheme : prefs.nightTheme) || (night ? "light" : "night");
+    rememberFamilyTheme(prefs.theme);
+    applyPrefs(); savePrefs();
   });
   $("btn-ocr").addEventListener("click", () => {
     prefs.ocrLayer = prefs.ocrLayer === false; applyPrefs(); savePrefs();

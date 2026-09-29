@@ -78,9 +78,9 @@ type DroppedLine struct {
 	// sweep at ocrRescueLineConf - and a distribution derived from them mixed together would be a
 	// distribution of nothing.
 	Floor float64
-	// Gate names the test that dropped it (gateConfidence, gateTranslatable, gateScreenMerge):
-	// OCR-OVERLAY rule 12 asks which threshold failed, and three gates can drop a line that
-	// cleared the same floor.
+	// Gate names the test that dropped it (gateConfidence, gateTranslatable, gateScreenMerge,
+	// gateGreyMerge): OCR-OVERLAY rule 12 asks which threshold failed, and the gates can drop a
+	// line that cleared the same floor.
 	Gate           string
 	X0, Y0, X1, Y1 int
 }
@@ -90,6 +90,7 @@ const (
 	gateConfidence   = "confidence"   // the line's mean confidence is under the pass's floor (keepLine)
 	gateTranslatable = "translatable" // its cluster has nothing to translate (isTranslatable)
 	gateScreenMerge  = "screen-merge" // a screen-sweep plate over lettering already plated (mergeScreenBlocks)
+	gateGreyMerge    = "grey-merge"   // a grey-sweep plate over lettering already plated (mergeScreenBlocks)
 )
 
 // Result is the OCR output for a single image.
@@ -100,6 +101,12 @@ type Result struct {
 	// the rendering path reads it, and strictlyBetter does not weigh it - a rung's strength is
 	// still the words it placed.
 	Dropped []DroppedLine
+	// unread holds the rectangles of text regions the layout analysis isolated but recognition
+	// returned no words for. It is the evidence the grey sweep (greySweep) spends its second
+	// pass on, and nothing else: unexported so it stays out of the diagnostic record, where a
+	// region that produced no words is not a rejection the reader can weigh (OCR-OVERLAY rule 12
+	// names thresholds, and no threshold failed here - the analyser found nothing to say).
+	unread []image.Rectangle
 }
 
 // ErrNoTesseract is returned by Locate when no tesseract binary can be found.
@@ -257,6 +264,11 @@ func Recognize(ctx context.Context, bin, imgPath, lang, dataDir string) (Result,
 		var swept []DroppedLine
 		res.Blocks, swept = screenSweep(ctx, bin, frame, lang, dataDir, dpi, res.Blocks)
 		res.Dropped = append(res.Dropped, swept...)
+		// The grey sweep runs last, on everything the passes before it have already plated, so a
+		// region the screen sweep served is not read a third time.
+		var greyed []DroppedLine
+		res.Blocks, greyed = greySweep(ctx, bin, frame, lang, dataDir, dpi, res.Blocks, res.unread)
+		res.Dropped = append(res.Dropped, greyed...)
 	}
 	if scale > 1 {
 		scaleDown(&res, scale)
@@ -513,6 +525,65 @@ func screenSweep(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir
 	return merged, append(res.Dropped, blockDrops(rejected, ocrRescueLineConf, gateScreenMerge)...)
 }
 
+// unreadOutside reports whether any region the layout analysis marked unread stands where the
+// plates already accepted leave it mostly uncovered - the grey sweep's trigger, one question:
+// is there marked area a candidate plate could actually reach without crossing the merge bar?
+func unreadOutside(unread, covered []image.Rectangle) bool {
+	for _, r := range unread {
+		if coveredFraction(r, covered) <= ocrScreenMergeMaxOverlap {
+			return true
+		}
+	}
+	return false
+}
+
+// greySweep is the grey rung (the rescue ladder's first, OCR-PIPELINE 2.7) for a page that already
+// read - the additive shape of screenSweep, spent on a different blindness (OCR-PIPELINE 2.10,
+// amendment 1.7 B). The rescue ladder fires
+// only for an image that produced no plates at all, and the screen sweep only where a halftone
+// screen is measured; between them stands the page whose lettering the colour thresholder kills
+// outright: display lettering and captions whose ink and paper agree in one RGB channel and split
+// in another, which greyscale reads at once (see greyRescuePasses for the mechanism). Tesseract's
+// own layout analysis marks those regions - it isolates a text region and returns no words for it -
+// and parseTSV keeps the mark (Result.unread). That mark is the trigger: the second recognition is
+// spent only when a marked region stands where no plate covers, which is the same question
+// screenPitchOutside asks of screened area. A page where every isolated region already has a plate
+// pays nothing, which keeps the sweep off the ordinary text page entirely.
+//
+// Everything else is screenSweep's trade, inherited rather than re-derived: the pass reads the grey
+// rendition at ocrRescueLineConf (a lower bound - the page was already good enough to show, and a
+// wrong plate on it costs more than a missing one), merges only candidates the accepted plates leave
+// mostly uncovered (ocrScreenMergeMaxOverlap of the candidate's own area, the union measure), records
+// what it refused, and returns the input untouched on every failure. The pass never runs the anchored
+// rescue admission: like the screen passes, its prior and its rendition were never measured with a
+// relaxation, and the floor alone is what admitted the real lettering when this was measured
+// (DEV/research/ocr_comic_coverage_2026-09-29.md).
+//
+// The second result is the sweep's own discard record.
+func greySweep(ctx context.Context, bin string, frame *ocrFrame, lang, dataDir string, dpi int, kept []Block, unread []image.Rectangle) ([]Block, []DroppedLine) {
+	if len(unread) == 0 {
+		return kept, nil
+	}
+	if !unreadOutside(unread, blockRects(kept)) {
+		return kept, nil
+	}
+	grey := frame.grey()
+	if grey == nil {
+		return kept, nil
+	}
+	greyPath, cleanup, ok := writeTempPNG(grey)
+	if !ok {
+		return kept, nil
+	}
+	defer cleanup()
+	res, err := recognizePass(ctx, bin, greyPath, lang, dataDir, dpi, thresholdEngineDefault, ocrPageSegMode, ocrRescueLineConf, known(grey), false, false)
+	if err != nil {
+		return kept, nil
+	}
+	merged, rejected := mergeScreenBlocks(kept, res.Blocks)
+	return merged, append(res.Dropped, blockDrops(rejected, ocrRescueLineConf, gateGreyMerge)...)
+}
+
 // blockDrops records whole plates a gate refused, one entry per plate: by then the lines are
 // merged into it and the plate is what was lost.
 func blockDrops(blocks []Block, floor float64, gate string) []DroppedLine {
@@ -750,6 +821,12 @@ func scaleDown(res *Result, s int) {
 		d := &res.Dropped[i]
 		d.X0, d.Y0, d.X1, d.Y1 = div(d.X0), div(d.Y0), div(d.X1), div(d.Y1)
 	}
+	// The unread regions are in that same space too.
+	for i := range res.unread {
+		r := &res.unread[i]
+		r.Min.X, r.Min.Y = div(r.Min.X), div(r.Min.Y)
+		r.Max.X, r.Max.Y = div(r.Max.X), div(r.Max.Y)
+	}
 }
 
 // hasLangFile reports whether every code in a "+"-joined lang string has a traineddata
@@ -960,9 +1037,11 @@ type ocrWord struct {
 }
 
 // splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
-// horizontal step wider than ocrMaxWordGapRatio times the line's own median word height, and at any
-// narrower step a stroke crosses (strokeBetween). It returns the line itself when there is nothing to
-// cut, which is the answer on every ordinary line.
+// horizontal step wider than ocrMaxWordGapRatio times the line's own median word height, at any
+// narrower step a stroke crosses (strokeBetween), and before any word whose own box stands more
+// than ocrTypeSizeRatio above that same median - a box that tall reaches into a neighbouring row,
+// and no lettering of this line does. It returns the line itself when there is nothing to cut,
+// which is the answer on every ordinary line.
 //
 // The step is measured between the two boxes and not from left to right, so a right-to-left line is
 // read the same way round as a left-to-right one instead of producing a negative gap on every pair
@@ -988,7 +1067,18 @@ func (l *ocrLine) splitWideGaps(ink *image.Gray) []*ocrLine {
 	for _, w := range l.words[1:] {
 		prev := cur[len(cur)-1]
 		wide := float64(max(w.x0-prev.x1, prev.x0-w.x1)) > maxGap
-		if wide || strokeBetween(ink, prev, w, reach) {
+		// The tall-token cut is the third evidence, and it exists for the stitch the other two
+		// cannot see: balloons drawn close enough to touch have their touching outlines read as
+		// a token of the stitched line, so no gap between words holds the boundary stroke - it
+		// runs INSIDE that token's box. Measured on a public-service Superman page (ticket 67):
+		// the boundary tokens stand 2.1-2.3x the line's 15 px word height ("“J", a lone "A")
+		// because their boxes span two line rows, which real lettering of one line never does -
+		// the same judgement trimOutlierWords makes about a line's artefact, applied at the cut
+		// stage where it separates the two regions instead of only hiding the box. The cut goes
+		// before the token: the token is the boundary itself, so it leads the next region's run.
+		// OCR-PIPELINE amendment 1.7 A.
+		tall := float64(w.y1-w.y0) > float64(med)*ocrTypeSizeRatio
+		if wide || tall || strokeBetween(ink, prev, w, reach) {
 			runs = append(runs, cur)
 			byStroke = append(byStroke, !wide)
 			cur = nil
@@ -1388,6 +1478,13 @@ func parseTSV(data []byte, minConf float64, ink *image.Gray, rescue, unordered b
 	for _, l := range lines {
 		if l.text.Len() > 0 && !keepLine(l, minConf) {
 			res.Dropped = append(res.Dropped, lineDrop(l, minConf, gateConfidence))
+			continue
+		}
+		// A line with no words is the opposite record: layout analysis isolated a text region and
+		// recognition read nothing in it - the title banner of a comic page, a caption printed as
+		// a tint. Where the reader lost words, this is where the app may look again.
+		if l.text.Len() == 0 && l.x1 > l.x0 && l.y1 > l.y0 {
+			res.unread = append(res.unread, image.Rect(l.x0, l.y0, l.x1, l.y1))
 		}
 	}
 	res.Blocks = clusterLinesRecording(lines, minConf, res.Width, res.Height, &res.Dropped)

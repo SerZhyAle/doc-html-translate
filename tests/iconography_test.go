@@ -219,6 +219,16 @@ func TestEditionsNameSharedControlsAlike(t *testing.T) {
 		"Text layer":        "ttOcrLayer",
 		"Go to page":        "ttGoToPage",
 		"Continue reading":  "vResumeContinue",
+		// Ticket 59's reading-comfort controls, shared by both editions.
+		"Night mode":      "ariaNightMode",
+		"Reset text size": "ariaResetTextSize",
+		"Line spacing":    "ariaLineSpacing",
+		"Column width":    "ariaColumnWidth",
+		"Default":         "optDefault",
+		"Narrow":          "optWidthNarrow",
+		"Normal":          "optWidthNormal",
+		"Wide":            "optWidthWide",
+		"Full width":      "optWidthFull",
 	}
 	for _, lang := range i18n.Codes {
 		dir := lang

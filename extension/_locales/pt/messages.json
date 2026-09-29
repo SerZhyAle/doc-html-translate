@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"Continuar a leitura na página {1}?"},
   "vResumeContinue": {"message":"Continuar a leitura"},
-  "vResumeReset": {"message":"Começar do início"}
+  "vResumeReset": {"message":"Começar do início"},
+  "ariaNightMode": {
+    "message": "Modo noturno",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "Redefinir o tamanho do texto",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "Espaçamento entre linhas",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "Largura da coluna",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "Padrão",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "Estreita",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "Normal",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "Larga",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "Largura total",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

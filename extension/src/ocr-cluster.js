@@ -266,7 +266,14 @@ export function splitWideGaps(words, scale = 1, ink = null) {
     if (w.bbox && prev && cur.length) {
       const gap = Math.max(at(w.bbox.x0) - at(prev.x1), at(prev.x0) - at(w.bbox.x1));
       const wide = gap > maxGap;
-      if (wide || strokeBetween(ink, prev, w.bbox, reach)) { parts.push(cur); byStroke.push(!wide); cur = []; }
+      // A word box taller than OCR_TYPE_SIZE_RATIO x the line's own median word height reaches
+      // into a neighbouring row, which no lettering of one line does. Balloons drawn close enough
+      // to touch have their touching outlines read as a token of the stitched line, so no gap
+      // between words holds the boundary stroke - it runs INSIDE that token's box (ticket 67, a
+      // public-service Superman page). The token is the boundary itself: the cut goes before it,
+      // and it leads the next region's run. Mirrors tesseract.go splitWideGaps.
+      const tall = w.bbox.y1 - w.bbox.y0 > rawMed * OCR_TYPE_SIZE_RATIO;
+      if (wide || tall || strokeBetween(ink, prev, w.bbox, reach)) { parts.push(cur); byStroke.push(!wide); cur = []; }
     }
     cur.push(w);
     if (w.bbox) prev = w.bbox;
@@ -630,11 +637,12 @@ export function keepLine(l, minConf = OCR_MIN_LINE_CONF) {
 }
 
 // The gates a discard record names. Mirrors tesseract.go gateConfidence / gateTranslatable /
-// gateScreenMerge (docs/PARITY.md): OCR-OVERLAY rule 12 asks which threshold failed, and three
-// gates can drop a line that cleared the same floor.
+// gateScreenMerge / gateGreyMerge (docs/PARITY.md): OCR-OVERLAY rule 12 asks which threshold
+// failed, and the gates can drop a line that cleared the same floor.
 export const GATE_CONFIDENCE = "confidence";
 export const GATE_TRANSLATABLE = "translatable";
 export const GATE_SCREEN_MERGE = "screen-merge";
+export const GATE_GREY_MERGE = "grey-merge";
 
 // lineDrop is one discard-record entry. floor is the confidence floor of the pass that read the
 // line: one image can be read several times at two floors - the ordinary pass, then the rescue

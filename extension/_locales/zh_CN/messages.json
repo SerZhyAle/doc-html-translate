@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"从第 {1} 页继续阅读？"},
   "vResumeContinue": {"message":"继续阅读"},
-  "vResumeReset": {"message":"从头开始"}
+  "vResumeReset": {"message":"从头开始"},
+  "ariaNightMode": {
+    "message": "夜间模式",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "重置文字大小",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "行距",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "栏宽",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "默认",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "窄",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "标准",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "宽",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "全宽",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

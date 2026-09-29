@@ -136,11 +136,12 @@
         <p>The generated HTML carries a small, fully client-side reader layer - no server to babysit, works happily on <code>file://</code>:</p>
         <ul>
           <li><strong>Reading themes</strong> - a toggle in the navbar (and on <code>index.html</code>) cycles Light / Sepia / Dark / Night. Your choice is stored in <code>localStorage</code> and applied on every page.</li>
-          <li><strong>Reading position</strong> - your scroll is saved per book, so the app remembers where you stopped even when you don't. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book.</li>
+          <li><strong>Reading position</strong> - your scroll is saved per book, so the app remembers where you stopped even when you don't. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book - one that reads as a percentage on hover or keyboard focus.</li>
+          <li><strong>Reading comfort</strong> - line spacing and column width are selects in the same navbar, remembered with your theme and applied only once you pick one. A night-mode button swaps the light and dark themes in one click, a reset button returns the text size to its default, and the arrow keys and space bar turn pages at the scroll edges, just like PageUp/PageDown. Comics and scanned pages gain a per-session <strong>Fit width</strong> mode beside the Ctrl+wheel zoom, so a page fills the window without hand-tuning a percentage.</li>
           <li><strong>Search</strong> - the navbar's search panel finds a phrase on this page or across the whole book; multi-page output ships a local text index, so whole-book search works on <code>file://</code>. Results list context lines and the chosen match is highlighted; recognized OCR text over images is searchable where recognition produced it - image-only pages have no text to match.</li>
           <li><strong>Spending guard</strong> - for paid engines, <code>-max-cost N</code> turns the cost estimate (chars / 1e6 * $20) into a hard pre-flight limit: if the estimate exceeds N, translation is skipped and the book is still produced untranslated.</li>
         </ul>
-        <p class="small">Single-page documents have no navbar and therefore no reader layer.</p>
+        <p class="small">Single-page documents keep a continuous reading view and show a compact contents panel when authored navigation, PDF bookmarks, or headings are available.</p>
       </details>
 
       <details class="sec" id="external-tools">
@@ -215,6 +216,7 @@
           </table>
         </div>
         <p class="small">Every option above is also available in the <strong>doc-html-ui</strong> graphical app - file picker, drag &amp; drop, TOC depth, spending guard and a default-handler toggle (opt-in, off by default; the app always adds the "Convert to HTML" right-click entry). On the Microsoft Store build the GUI is the launchable entry point, while double-clicking a file still runs the command-line converter.</p>
+        <p class="small">During conversion, the GUI shows the current stage beside Convert and Cancel. It shows page or image counts when known, without guessing a percentage or remaining time. The log retains details, and the final status distinguishes reuse, warnings, cancellation and failure.</p>
       </details>
 
       <details class="sec" id="logs">

@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"পৃষ্ঠা {1} থেকে পড়া চালিয়ে যাবেন?"},
   "vResumeContinue": {"message":"পড়া চালিয়ে যান"},
-  "vResumeReset": {"message":"শুরু থেকে আবার পড়ুন"}
+  "vResumeReset": {"message":"শুরু থেকে আবার পড়ুন"},
+  "ariaNightMode": {
+    "message": "নাইট মোড",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "টেক্সটের আকার রিসেট করুন",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "লাইন স্পেসিং",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "কলামের প্রস্থ",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "ডিফল্ট",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "সরু",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "সাধারণ",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "চওড়া",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "পুরো প্রস্থ",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

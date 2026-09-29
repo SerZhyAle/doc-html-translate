@@ -804,3 +804,16 @@ test("an unordered late row outside the band, in another column or at another ty
     assert.equal(clusterLines(lines, 50).length, 2, name);
   }
 });
+
+// internal/ocr TestSplitWideGapsCutsWhereTheOutlineIsTheToken runs the same cases: two touching
+// balloons whose stitched rows carry the outlines as tokens - no gap between words holds the
+// boundary stroke, it runs inside the boundary token's box - and a real line of one size, never cut
+// (ticket 67; tests/testdata/ocr_balloon_stitch_cases.json).
+test("splitWideGaps: shared Go/JS fixture, the outline taken for a token", () => {
+  const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_balloon_stitch_cases.json", import.meta.url), "utf8"));
+  for (const tc of fx.cases) {
+    const words = tc.words.map((w) => ({ text: w.text, confidence: w.conf, bbox: { ...w.bbox } }));
+    const parts = splitWideGaps(words, 1, null);
+    assert.deepEqual(parts.map((p) => p.map((w) => w.text).join(" ")), tc.want, tc.name);
+  }
+});

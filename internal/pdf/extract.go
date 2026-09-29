@@ -18,6 +18,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
 	"doc-html-translate/internal/logging"
@@ -145,6 +146,7 @@ func extractWithPDFToText(ctx context.Context, pdftotextBin, pdfPath, outputDir 
 		pageTexts = append(pageTexts, "")
 	}
 	totalPages := len(pageTexts)
+	dialog.Progress("extracting", 0, totalPages)
 
 	// Map each emitted page's source PDF page number to its generated href, so
 	// PDF bookmarks (which reference 1-based PDF pages) can be linked even when
@@ -154,6 +156,7 @@ func extractWithPDFToText(ctx context.Context, pdftotextBin, pdfPath, outputDir 
 	generated := 0
 	withText := 0
 	for i, rawPage := range pageTexts {
+		dialog.Progress("extracting", i, totalPages)
 		pdfPageNum := i + 1
 		imgs := pageImages[pdfPageNum]
 
@@ -183,6 +186,7 @@ func extractWithPDFToText(ctx context.Context, pdftotextBin, pdfPath, outputDir 
 	if generated == 0 {
 		return nil, fmt.Errorf("pdftotext: no text content found (scanned/image-only PDF?)")
 	}
+	dialog.Progress("extracting", totalPages, totalPages)
 
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 
@@ -516,6 +520,7 @@ func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *ep
 	if totalPages == 0 {
 		return nil, fmt.Errorf("pdf has no pages: %s", pdfPath)
 	}
+	dialog.Progress("extracting", 0, totalPages)
 
 	title := pdfTitle(pdfPath)
 
@@ -536,6 +541,7 @@ func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *ep
 	// from the root on every Page(i) call.
 	textTick := logging.NewTicker("Reading text", "pages")
 	for i := 1; i <= totalPages; i++ {
+		dialog.Progress("extracting", i-1, totalPages)
 		textTick.Report(i-1, totalPages)
 		pageContent, skip, pageErr := extractPage(reader, i)
 		if pageErr != nil {
@@ -612,6 +618,7 @@ func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *ep
 	if !textTick.Quiet() {
 		textTick.Report(totalPages, totalPages)
 	}
+	dialog.Progress("extracting", totalPages, totalPages)
 
 	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
 

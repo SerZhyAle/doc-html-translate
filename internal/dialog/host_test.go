@@ -66,3 +66,35 @@ func TestHostedWarningIsANoteLine(t *testing.T) {
 		t.Errorf("stdout = %q, want one note marker line", out)
 	}
 }
+
+func TestProgressUsesHostedMarkerOnly(t *testing.T) {
+	t.Setenv(HostEnv, HostStdio)
+	out := withHostPipes(t, "", func() {
+		Progress("extracting", 0, 12)
+		Progress("extracting", 12, 12)
+	})
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("progress lines = %q", out)
+	}
+	for _, line := range lines {
+		if !strings.HasPrefix(line, ProgressPrefix) {
+			t.Fatalf("not a progress marker: %q", line)
+		}
+		var event struct {
+			Stage string `json:"stage"`
+			Done  int    `json:"done"`
+			Total int    `json:"total"`
+		}
+		if err := json.Unmarshal([]byte(strings.TrimPrefix(line, ProgressPrefix)), &event); err != nil {
+			t.Fatal(err)
+		}
+		if event.Stage != "extracting" || event.Total != 12 {
+			t.Fatalf("unexpected progress: %+v", event)
+		}
+	}
+	t.Setenv(HostEnv, "")
+	if out := withHostPipes(t, "", func() { Progress("saving", 0, 0) }); out != "" {
+		t.Fatalf("console run received marker: %q", out)
+	}
+}

@@ -8,10 +8,10 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, GATE_SCREEN_MERGE, markRescueAdmission, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, GATE_GREY_MERGE, GATE_SCREEN_MERGE, markRescueAdmission, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
-import { screenPitch, mergeScreenBlocks, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
+import { screenPitch, mergeScreenBlocks, coveredFraction, OCR_SCREEN_MERGE_MAX_OVERLAP, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
 import { conceal } from "./ocr-conceal.js";
 
 const { createWorker } = Tesseract;
@@ -388,6 +388,13 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, 
     // A stroke-cut fragment that cannot be a plate is parked by orderColumns (ocr-cluster.js splitWideGaps).
     if (words.orphan === true) line.orphan = true;
     out.push(line);
+    // A line the layout analysis isolated and recognition returned no words for is the grey
+    // sweep's evidence (tesseract.go Result.unread): the analyser saw a text region and the
+    // thresholder read nothing in it. Collected on the array the caller already holds; never
+    // reaches a plate or a drop record - no threshold failed here. Whether the engine surfaces
+    // such units at all is its own business: one that never does leaves the array empty and the
+    // sweep unfired, which is the honest reading of the same rule.
+    if (!text && bbox) (out.unread || (out.unread = [])).push(bbox);
   };
   const textOf = (words, fallback) => (words.length ? words.map((w) => w.text).join(" ") : (fallback || ""))
     .replace(/\s+/g, " ").trim();
@@ -564,6 +571,11 @@ export async function recognize(imageSource, { lang = "eng", onProgress, isCance
         const swept = await screenSweep(worker, image, scale, blocks, bitmap.width, bitmap.height, ink);
         blocks = swept.blocks;
         dropped.push(...swept.dropped);
+        // The grey sweep runs last, on everything the passes before it have already plated, so a
+        // region the screen sweep served is not read a third time. Mirrors tesseract.go Recognize.
+        const greyed = await greySweep(worker, image, scale, blocks, bitmap.width, bitmap.height, ink, lines.unread);
+        blocks = greyed.blocks;
+        dropped.push(...greyed.dropped);
       }
       await sampleColors(bitmap.source, blocks);
       return { blocks, dropped, width: bitmap.width, height: bitmap.height };
@@ -685,6 +697,49 @@ async function screenSweep(worker, image, scale, kept, imgW, imgH, ink = null) {
     const blocks = mergeScreenBlocks(kept, clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), rejected);
     for (const b of rejected) {
       dropped.push({ text: b.text, conf: b.conf, floor: OCR_RESCUE_LINE_CONF, gate: GATE_SCREEN_MERGE, bbox: { ...b.bbox } });
+    }
+    return { blocks, dropped };
+  } catch {
+    return untouched;
+  }
+}
+
+// The grey rung (the rescue ladder's first, GREY_RESCUE_PASSES[0]) for a page that already read -
+// the additive shape of screenSweep, spent on the blindness neither the ladder nor the screen sweep
+// reaches: the page whose lettering the colour thresholder kills outright. Display lettering and
+// captions whose ink and paper agree in one RGB channel and split in another come back from the
+// ordinary pass as text regions with no words in them, and greyscale reads them at once - that is
+// greyRescuePasses' own mechanism, on a page too good to unseat. The trigger rides on the analyser's
+// own mark: collectLines keeps those wordless line boxes as `unread`, and the second recognition is
+// spent only when one stands where no plate covers - the same question screenSweep's trigger asks of
+// screened area, at the same merge bound. A page whose marked regions are all served pays nothing.
+// Whether the engine surfaces wordless line units at all is its own business: one that never does
+// leaves `unread` empty and the sweep unfired, which is the honest reading of the same rule on that
+// engine. Mirrors tesseract.go greySweep (docs/PARITY.md); every rectangle here is already in
+// collectLines' divided space, so - unlike the screen detector, which measures the undivided pixels -
+// nothing is multiplied back up.
+//
+// Everything else is screenSweep's trade, inherited rather than re-derived: the rescue floor, the
+// union-overlap merge, the record of what was refused, and the input returned untouched on every
+// failure. The pass never runs the anchored rescue admission: like the screen passes, its prior and
+// its rendition were never measured with a relaxation.
+//
+// Returns { blocks, dropped }: the sweep's own discard record.
+async function greySweep(worker, image, scale, kept, imgW, imgH, ink = null, unread = []) {
+  const untouched = { blocks: kept, dropped: [] };
+  if (!unread.length) return untouched;
+  const covered = kept.map(({ bbox: b }) => b);
+  if (!unread.some((r) => coveredFraction(r, covered) <= OCR_SCREEN_MERGE_MAX_OVERLAP)) return untouched;
+  const grey = await greyRendition(image);
+  if (!grey) return untouched;
+  try {
+    const { data } = await worker.recognize(grey, {}, { blocks: true });
+    const lines = collectLines(data, scale, ink, OCR_RESCUE_LINE_CONF);
+    const dropped = droppedLines(lines, OCR_RESCUE_LINE_CONF);
+    const rejected = [];
+    const blocks = mergeScreenBlocks(kept, clusterLines(lines, OCR_RESCUE_LINE_CONF, imgW, imgH, dropped), rejected);
+    for (const b of rejected) {
+      dropped.push({ text: b.text, conf: b.conf, floor: OCR_RESCUE_LINE_CONF, gate: GATE_GREY_MERGE, bbox: { ...b.bbox } });
     }
     return { blocks, dropped };
   } catch {

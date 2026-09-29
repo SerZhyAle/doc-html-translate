@@ -5,6 +5,9 @@
 :root {
   --reader-font: Georgia, "Times New Roman", serif;
   --reader-size: 28px; /* keep in step with viewer.js DEFAULT_PREFS.size */
+  /* The comfort vars get no values here on purpose: the reader applies one only once a
+     choice is made, and removing the property hands the measure back to these shipped
+     ones (ticket 59; steps shared with the desktop, docs/PARITY.md). */
 }
 
 /* The four theme palettes are generated from internal/appearance/appearance.json, the source the
@@ -69,7 +72,7 @@ body {
   color: var(--fg);
   font-family: var(--reader-font);
   font-size: var(--reader-size);
-  line-height: 1.6;
+  line-height: var(--reader-leading, 1.6);
 }
 
 /* ---- Toolbar ---- */
@@ -195,7 +198,7 @@ body {
 #content {
   flex: 1 1 auto;
   width: 95%;
-  max-width: 46em;
+  max-width: var(--reader-width, 46em);
   margin: 1.5em auto 6em;
   padding: 0 1.2em;
 }

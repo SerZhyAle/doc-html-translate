@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
+	"time"
 )
 
 // When the GUI runs the converter, a native box would open behind the GUI's window, owned by
@@ -15,11 +17,12 @@ import (
 // stdout, which the GUI turns into an in-page dialog, and for a question one answer line back
 // on stdin. The markers start with an ASCII record separator, which no log line begins with.
 const (
-	HostEnv    = "DOCHT_DIALOG_HOST"
-	HostStdio  = "stdio"
-	AskPrefix  = "\x1edht:ask "
-	NotePrefix = "\x1edht:note "
-	AnswerYes  = "yes"
+	HostEnv        = "DOCHT_DIALOG_HOST"
+	HostStdio      = "stdio"
+	AskPrefix      = "\x1edht:ask "
+	NotePrefix     = "\x1edht:note "
+	ProgressPrefix = "\x1edht:progress "
+	AnswerYes      = "yes"
 )
 
 // hostedByGUI reports whether a GUI is answering the dialogs.
@@ -48,4 +51,32 @@ func askHost(title, message string) bool {
 // noteHost hands a notice to the GUI. Nothing waits for it to be read.
 func noteHost(title, message string) {
 	writeHostLine(os.Stdout, NotePrefix, title, message)
+}
+
+var progressState struct {
+	sync.Mutex
+	stage string
+	total int
+	last  time.Time
+}
+
+// Progress reports a stable stage and, when known, completed units to the GUI.
+// It is silent for console runs; their existing log remains the progress display.
+func Progress(stage string, done, total int) {
+	if !hostedByGUI() {
+		return
+	}
+	progressState.Lock()
+	defer progressState.Unlock()
+	now := time.Now()
+	if stage == progressState.stage && total == progressState.total && done < total && now.Sub(progressState.last) < 300*time.Millisecond {
+		return
+	}
+	progressState.stage, progressState.total, progressState.last = stage, total, now
+	b, _ := json.Marshal(struct {
+		Stage string `json:"stage"`
+		Done  int    `json:"done,omitempty"`
+		Total int    `json:"total,omitempty"`
+	}{stage, done, total})
+	fmt.Fprintf(os.Stdout, "%s%s\n", ProgressPrefix, b)
 }

@@ -200,8 +200,8 @@ func TestParityOCRClustering(t *testing.T) {
 		// plate colours' own contrast from a paper read outside the word boxes; and every pass reads
 		// the plane of the picture itself. A side that dropped any one of these would pass the value
 		// check above and cut real lines, or none.
-		{"a stroke cuts a gap the ratio keeps", "tesseract.go", goSrc, `wide := float64\(max\(w\.x0-prev\.x1, prev\.x0-w\.x1\)\) > maxGap\s*if wide \|\| strokeBetween\(ink, prev, w, reach\)`},
-		{"a stroke cuts a gap the ratio keeps", "ocr-cluster.js", clusterSrc, `const wide = gap > maxGap;\s*if \(wide \|\| strokeBetween\(ink, prev, w\.bbox, reach\)\)`},
+		{"a stroke cuts a gap the ratio keeps", "tesseract.go", goSrc, `tall := float64\(w\.y1-w\.y0\) > float64\(med\)\*ocrTypeSizeRatio\s*if wide \|\| tall \|\| strokeBetween\(ink, prev, w, reach\)`},
+		{"a stroke cuts a gap the ratio keeps", "ocr-cluster.js", clusterSrc, `const tall = w\.bbox\.y1 - w\.bbox\.y0 > rawMed \* OCR_TYPE_SIZE_RATIO;\s*if \(wide \|\| tall \|\| strokeBetween\(ink, prev, w\.bbox, reach\)\)`},
 		// And what a stroke cuts off is not always text: a run it separates that could not be a plate
 		// on its own is the outline or the artwork beside it, and both sides park it rather than let it
 		// sit in a column between two lines of one balloon (atomicwar0401, 2026-09-25).
@@ -595,7 +595,7 @@ func TestParityOCRDiscardGates(t *testing.T) {
 	for _, m := range regexp.MustCompile(`export const (GATE_\w+) = "([a-z-]+)";`).FindAllStringSubmatch(jsCluster, -1) {
 		jsGates[strings.ToLower(strings.ReplaceAll(m[1], "_", ""))] = m[2]
 	}
-	if len(goGates) != 3 || !reflect.DeepEqual(goGates, jsGates) {
+	if len(goGates) != 4 || !reflect.DeepEqual(goGates, jsGates) {
 		t.Errorf("the editions name the discard gates differently:\n go %v\n js %v", goGates, jsGates)
 	}
 
@@ -606,6 +606,8 @@ func TestParityOCRDiscardGates(t *testing.T) {
 		{"ocr-screen.js", jsScreen, `if \(rejected\) rejected\.push\(b\);`, "the merge hands back what it refused"},
 		{"tesseract.go", goSrc, `blockDrops\(rejected, ocrRescueLineConf, gateScreenMerge\)`, "the sweep records the merge's refusals"},
 		{"ocr-overlay.js", jsOverlay, `gate: GATE_SCREEN_MERGE`, "the sweep records the merge's refusals"},
+		{"tesseract.go", goSrc, `blockDrops\(rejected, ocrRescueLineConf, gateGreyMerge\)`, "the grey sweep records the merge's refusals"},
+		{"ocr-overlay.js", jsOverlay, `gate: GATE_GREY_MERGE`, "the grey sweep records the merge's refusals"},
 		{"tesseract.go", goSrc, `res\.Dropped = append\(primary, alt\.Dropped\.\.\.\)`, "primary and ladder drops are merged"},
 		{"ocr-overlay.js", jsOverlay, `dropped\.push\(\.\.\.rescued\.dropped\)`, "primary and ladder drops are merged"},
 		{"tesseract.go", goSrc, `(?s)func scaleDown\(.*?for i := range res\.Dropped \{`, "the record is scaled back with the plates"},

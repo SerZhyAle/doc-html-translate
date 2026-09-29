@@ -82,6 +82,9 @@ func (o translationOutcome) partialError() error {
 // translate runs the configured engine over the book. It never fails the conversion: an engine
 // problem is reported in the outcome, and a cancelled ctx stops it between pages.
 func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string) translationOutcome {
+	if (r.cfg.UseGoogle || r.cfg.UseOllama) && !r.cfg.NoTranslate {
+		dialog.Progress("translating", 0, 0)
+	}
 	none := translationOutcome{state: outputpath.TranslationNone}
 
 	// Advisory: when a translation engine is on, warn once if a language code looks
@@ -148,9 +151,11 @@ func (r Runner) translateContent(ctx context.Context, book *epub.Book, client tr
 	}
 
 	logging.Printf("[3/4] Translating %d pages..\n", total)
+	dialog.Progress("translating", 0, total)
 	out.snippets = make(map[string]string, total)
 
 	for i, page := range pages {
+		dialog.Progress("translating", i, total)
 		if ctx.Err() != nil {
 			return out
 		}
@@ -175,6 +180,7 @@ func (r Runner) translateContent(ctx context.Context, book *epub.Book, client tr
 	if ctx.Err() != nil {
 		return out
 	}
+	dialog.Progress("translating", total, total)
 
 	if out.err == nil {
 		r.translateLabels(ctx, book, client, &out)

@@ -40,6 +40,7 @@ var chromeIDs = []string{
 	"dht-continue", "dht-zoom-sync",
 	"dht-search-button", "dht-search-panel", "dht-search-input", "dht-search-scope", "dht-search-close",
 	"dht-search-status", "dht-search-results", "dht-search-css", "dht-search-script",
+	"dht-contents", "dht-contents-button", "dht-contents-close", "dht-contents-css", "dht-contents-script",
 }
 
 // idRefAttrs hold space-separated id references that must follow a renamed id.

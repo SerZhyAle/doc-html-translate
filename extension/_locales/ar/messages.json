@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"متابعة القراءة من الصفحة {1}؟"},
   "vResumeContinue": {"message":"متابعة القراءة"},
-  "vResumeReset": {"message":"البدء من جديد"}
+  "vResumeReset": {"message":"البدء من جديد"},
+  "ariaNightMode": {
+    "message": "الوضع الليلي",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "إعادة تعيين حجم النص",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "تباعد الأسطر",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "عرض العمود",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "افتراضي",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "ضيقة",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "عادية",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "واسعة",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "العرض الكامل",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

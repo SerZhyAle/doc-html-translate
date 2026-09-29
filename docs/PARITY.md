@@ -324,6 +324,7 @@ same floor, verified in ticket 57's checklist; the book's own content is out of 
   per stage - never per log line or per OCR event.
 - Right-to-left interface languages mirror the chrome through logical properties
   (`margin-inline-start`, `border-inline-end`), never `left`/`right`.
+
 ### Reader search (2026-09-29)
 
 Both editions match a literal phrase without changing the document language. Case folding uses
@@ -341,7 +342,6 @@ single page searches its live DOM. The extension searches its rendered document 
 PDF search first renders the remaining pages, while a current-page search stays in the visible section.
 The two implementations live in [`internal/htmlgen/search.go`](../internal/htmlgen/search.go) and
 [`extension/src/reader-search.js`](../extension/src/reader-search.js).
-
 
 ### Reading position (resume) (2026-09-29)
 
@@ -376,6 +376,51 @@ Sources: [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerS
 [`extension/src/reading-position.js`](../extension/src/reading-position.js),
 [`viewer.js`](../extension/src/viewer.js) `maybeOfferResume`.
 
+### Reader comfort controls (2026-09-29)
+
+**Guard:** Guarded by `TestParityReaderComfortControls`
+([`tests/reader_parity_test.go`](../tests/reader_parity_test.go)) for the ladders, storage keys and
+scoping below, and by `TestEditionsNameSharedControlsAlike`
+([`tests/iconography_test.go`](../tests/iconography_test.go)) for the words; the glyphs ride
+[`GLYPH-MAP.md`](GLYPH-MAP.md).
+
+The reading-comfort additions of ticket 59 are one design on both editions:
+
+- **Line spacing** and **column width** are adjustable from the reader controls and are global
+  appearance choices: they persist across sessions (the desktop's `localStorage` keys
+  `dht_leading` / `dht_width`, the extension's `viewerPrefs` in `chrome.storage.local`). Nothing is
+  applied until the reader picks one - the shipped measure differs by surface, so no default is
+  stamped on load - and the select's first option, **Default**, hands the measure back to the
+  surface. The ladders are identical on both sides: line spacing `1.4`, `1.6`, `1.9`, `2.2`; column
+  width `36em` (Narrow), `46em` (Normal), `64em` (Wide) and `none` (Full width). On the desktop the
+  width applies to the text column of every surface (body, `main.dht-single`, `section.dht-page`);
+  in the extension it is `#content`'s cap.
+- **The night-mode quick toggle** (`app.night-mode`, `aria-pressed`) swaps between the day family -
+  `light`, `sepia` - and the night family - `dark`, `night` - remembering the last theme picked
+  from each family (the desktop's `dht_theme_day` / `dht_theme_night`, the extension's `dayTheme` /
+  `nightTheme` inside `viewerPrefs`), defaulting to `light` / `night` when a family was never
+  chosen. **Reset text size** (`action.reset`) returns the size to the shipped default and persists
+  the choice, exactly as the A-/A+ buttons would.
+- **Zoom stays per session** on both sides, and so does the desktop's **fit-width** mode for
+  image-page books (comics, scans): a class on the root plus a zoom-compensated width variable,
+  carried like the zoom percent itself (sessionStorage `dht_fitw`, and the `w` query parameter that
+  rides the same link rewriting as `z`). The toggle button appears only where image pages exist.
+- **Storage scoping is unchanged**: appearance choices survive sessions, zoom-class state does not,
+  and nothing here migrates values saved by earlier versions.
+
+What is intentionally desktop-only: **keyboard page turning** (the arrows and the space/shift-space
+bar at the scroll edges, with the same behavior as PageUp/PageDown, and a guard that yields every
+key to a focused control or an in-book link - one keyboard owner in `navBarScript`, coordinated with
+the accessibility pass), because the extension's viewer is one scrolling document the browser
+already keys through; the **fit-width zoom mode**, because the extension has no percentage zoom for
+it to sit beside and its page images already fill the reading column; and the **progress-bar
+readout** (a focusable `progressbar` whose percentage shows on hover or focus), because the
+extension states progress as numbers in its own status bar.
+
+Sources: `readerScript` / `navBarScript` in
+[`navbar.go`](../internal/htmlgen/navbar.go), `DEFAULT_PREFS` / `applyPrefs` / `wireToolbar` in
+[`viewer.js`](../extension/src/viewer.js), `viewer.html` / `viewer.css`.
+
 ### Reader fonts
 
 **Guard:** Guarded by `TestParityReaderFonts` ([`tests/reader_parity_test.go`](../tests/reader_parity_test.go)),
@@ -400,9 +445,13 @@ glyph: the table of contents is `nav.contents` under the words "Table of content
 extension's `ttToc`, per language). Text size is `action.text-smaller` / `action.text-larger`, the text
 layer `view.text-layer`, the theme select `app.theme` and the page jump `nav.go-to-page` (`ICON-SET` 0.15),
 each named alike on both sides (Go "Smaller text" / "Larger text" / "Text layer" / "Theme" / "Go to page" = the
-extension's `ariaSmallerText` / `ariaLargerText` / `ttOcrLayer` / `ariaTheme` / `ttGoToPage`). The text
+extension's `ariaSmallerText` / `ariaLargerText` / `ttOcrLayer` / `ariaTheme` / `ttGoToPage`). The
+reading-comfort controls joined them on 2026-09-29 (ticket 59): the night-mode toggle is `app.night-mode`
+("Night mode" = `ariaNightMode`) and the size reset is `action.reset` ("Reset text size" = `ariaResetTextSize`,
+the record's name qualified by its object as the catalog qualifies `action.convert` by its target). The text
 layer shows its state the same way in both - `aria-pressed` and a pressed look, since the record has no off
-form yet. The theme options are words on either side. Colour is `currentColor`, never a literal
+form yet; the night toggle carries `aria-pressed` the same way. The theme options are words on either
+side. Colour is `currentColor`, never a literal
 (`ICON-RENDER` rule 2).
 
 Glyphs one edition has and the other does not, by surface rather than by drift: the paging pair
@@ -614,6 +663,7 @@ Checked against the extension on the same date:
 | `chapter.html#note` and bare `chapter.html` links | in-page `#<id>` / `#dht-ch-N` chapter marker; a root (`<body>`) id lands on the marker | `rewriteAnchor`: `#d<idx>-<frag>` / `#epub-sec-<idx>`; root ids re-exposed as marker anchors - same model |
 | Reading-position key | `epub.Book.ReaderKey` from source name + size + original title + page count, set once before translation | the same four inputs through `reading-position.js` `readerKey` (FNV-1a 64), bound once in `setPageTotal`, before any translation can rewrite the title - see [Reading position (resume)](#reading-position-resume-2026-09-29) |
 | Restore vs URL fragment | restore only when `location.hash` is empty | same rule: the resume offer is skipped when `location.hash` is set; a TOC click scrolls to the anchor directly (`scrollToAnchor`) |
+| Single-page contents | [`singlecontents.go`](../internal/htmlgen/singlecontents.go) maps EPUB navigation and PDF bookmarks through merge anchors; heading fallback injects unique ids; a compact, closable panel tracks the visible section. Untitled image pages retain the page selector. | [`viewer.js`](../extension/src/viewer.js) provides a collapsible contents panel for authored EPUB navigation and PDF outlines, with in-page anchors and visible-section tracking. It overlays narrow screens and closes with Escape; image-only pages have no manufactured entry. |
 | Script literals / hrefs | `jsString` (JSON) for script values, `epub.URLPath` for every generated path | links stay DOM attributes set through `setAttribute` - nothing is spliced into script text |
 
 ### Comic archive page order and entry filter
@@ -733,7 +783,7 @@ their own test where one exists.
 | Bundled language | `eng` only, provisioned at build time (not committed) | `scripts/lib/tessdata.ps1` `Install-EngTessdata` (every desktop package: build, installer, MSIX, release zip) -> `<exe>/tessdata/eng.traineddata`, same size + SHA-256 as `download.go` `packDigests["eng"]` and `build.mjs` `ENG_TRAINEDDATA_SHA256` (`tests/tessdata_pin_test.go`) | `npm run vendor` -> `vendor/tesseract/lang/` |
 | traineddata filename | `<code>.traineddata`, `code` = Tesseract name | [`tessdata.go`](../internal/ocr/tessdata.go) | [`ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Plate granularity | one plate per **proximity cluster of confident text lines** (not per paragraph - the engine folds imagery into text paragraphs and splits uniform prose arbitrarily). Flatten the recognition to lines, drop noise (below), then grow a plate while the next line keeps the **line pitch** - top of one line to top of the next - within `OCR_CLUSTER_PITCH_FACTOR (1.2) x` the page's reference pitch and the lines share an x-extent; a bigger step - a figure, a section break, a new column - starts a new plate. The reference is the **median pitch over the image**, taken over successive kept lines that share a column and sit no further apart than `OCR_MAX_LEADING_RATIO (3) x` the median ink height (beyond that it is a section break, not leading); a page that yields no pitch at all falls back to the ink-box gap. The factor multiplies the pitch and **never the height of the recognized ink box** - all-caps lettering boxes far shorter than its own line, and measuring against the ink split one balloon into three plates. Proximity is not the whole test: a line also has to be the **same type size** as the cluster it would join - its ink height within `OCR_TYPE_SIZE_RATIO (1.6)` of the cluster's own median, either way round - because a page with separated regions gives the page-wide pitch estimate steps that belong to no single text, and a headline can then sit closer to the body than the body's own missing lines do. A fourth rule then looks at the page instead of at the neighbours: a finished cluster that covers more than `OCR_MAX_PLATE_COVERAGE (0.52)` of the image **and** whose own line boxes fill less than `OCR_MIN_PLATE_LINE_FILL (0.72)` of its height is **released into one plate per line** - a form, a list or an application window carries one type at one pitch, so nothing in its typography separates its regions, and the whole page arrives as one plate. Released, not refused: every recognized word still reaches a plate | [`tesseract.go`](../internal/ocr/tesseract.go) `clusterLines` / `medianLinePitch` / `sameTypeSize` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `clusterLines` / `medianLinePitch` / `sameTypeSize` |
-| Line integrity (before clustering) | A recognizer "line" is not always one line: PSM 3's layout analysis can walk across a picture and return a phrase from the left of the page and a phrase from the right as **one line box**. Every grouping rule below then reads them as one text and none can recover - the stitched box genuinely spans both columns, so the column test sees a real overlap, and the coverage release does not fire either because the plate is wide but short. So before anything else, a line is **cut between two consecutive words whose boxes stand more than `OCR_MAX_WORD_GAP_RATIO (3.5) x` the line's median word height apart**, each run boxed to its own words and carrying its own mean confidence - and **also at any narrower gap a stroke crosses**: a path of ink through the strip between the two boxes from `OCR_BOUNDARY_REACH (0.14) x` the median word height above the words' band to the same distance below it, ink being `PLATE_MIN_CONTRAST` (55) from a paper read in the rows just outside the word boxes. That is a balloon outline or a panel rule; a letter the recognizer left out of its box stays inside the band. A run a stroke cut off that cannot be a plate on its own (`isTranslatable`) is an **orphan** - the outline or artwork read as text - and is parked with the lines the confidence floor drops. The gap is measured **between the boxes**, not left-to-right, so a right-to-left line is judged the same way round. Cutting alone is not enough: the runs then interleave left, right, left, right down the page, and the clustering closes a plate on the first line that does not belong to it - so the runs of a **page** that was cut are **regrouped into columns** (x-overlap, the clustering's own test) and handed over column by column, top to bottom. The scope is the page and not the paragraph, because the clustering deliberately merges across the paragraph boundaries the engine invents and the engine invents them mid-column. A page nothing was cut on keeps the engine's order untouched. Columns are formed from the lines the **pass's own** confidence floor keeps - `OCR_RESCUE_LINE_CONF` on a rescue or screen pass, `OCR_MIN_LINE_CONF` on the ordinary one - in both editions (the extension ordered every pass by the ordinary floor, audit finding B64; pinned by `TestParityOCRColumnOrderFloor` and the shared case [`tests/testdata/ocr_column_order_cases.json`](../tests/testdata/ocr_column_order_cases.json)) | [`tesseract.go`](../internal/ocr/tesseract.go) `(*ocrLine).splitWideGaps` / `lineFromWords` / `orderColumns`, [`boundary.go`](../internal/ocr/boundary.go) `strokeBetween` / `paperLuma` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `splitWideGaps` / `strokeBetween` / `paperLuma` / `orderColumns`, [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `collectLines` / `strokePlane` |
+| Line integrity (before clustering) | A recognizer "line" is not always one line: PSM 3's layout analysis can walk across a picture and return a phrase from the left of the page and a phrase from the right as **one line box**. Every grouping rule below then reads them as one text and none can recover - the stitched box genuinely spans both columns, so the column test sees a real overlap, and the coverage release does not fire either because the plate is wide but short. So before anything else, a line is **cut between two consecutive words whose boxes stand more than `OCR_MAX_WORD_GAP_RATIO (3.5) x` the line's median word height apart**, each run boxed to its own words and carrying its own mean confidence - and **also at any narrower gap a stroke crosses**: a path of ink through the strip between the two boxes from `OCR_BOUNDARY_REACH (0.14) x` the median word height above the words' band to the same distance below it, ink being `PLATE_MIN_CONTRAST` (55) from a paper read in the rows just outside the word boxes. That is a balloon outline or a panel rule; a letter the recognizer left out of its box stays inside the band. And where two balloons stand close enough to touch, the outlines may never appear **between** the words at all: the recognizer reads their touching arcs as tokens of the stitched line, so the stroke runs *inside* the boundary token's box (2026-09-29, a public-service Superman page). The third piece of evidence is the outlier trim's own comparison applied at the cut: a line is **also cut before any word whose own box stands more than `OCR_TYPE_SIZE_RATIO (1.6) x` the line's median word height tall** - a box that tall reaches into a neighbouring row, which no lettering of one line does - the token leading the next region's run, where the orphan rule answers for it. Pinned by the shared split fixture [`tests/testdata/ocr_balloon_stitch_cases.json`](../tests/testdata/ocr_balloon_stitch_cases.json) and the engine's own captured page TSV (`internal/ocr/testdata/superman_stitch.tsv`). A run a stroke cut off that cannot be a plate on its own (`isTranslatable`) is an **orphan** - the outline or artwork read as text - and is parked with the lines the confidence floor drops. The gap is measured **between the boxes**, not left-to-right, so a right-to-left line is judged the same way round. Cutting alone is not enough: the runs then interleave left, right, left, right down the page, and the clustering closes a plate on the first line that does not belong to it - so the runs of a **page** that was cut are **regrouped into columns** (x-overlap, the clustering's own test) and handed over column by column, top to bottom. The scope is the page and not the paragraph, because the clustering deliberately merges across the paragraph boundaries the engine invents and the engine invents them mid-column. A page nothing was cut on keeps the engine's order untouched. Columns are formed from the lines the **pass's own** confidence floor keeps - `OCR_RESCUE_LINE_CONF` on a rescue or screen pass, `OCR_MIN_LINE_CONF` on the ordinary one - in both editions (the extension ordered every pass by the ordinary floor, audit finding B64; pinned by `TestParityOCRColumnOrderFloor` and the shared case [`tests/testdata/ocr_column_order_cases.json`](../tests/testdata/ocr_column_order_cases.json)) | [`tesseract.go`](../internal/ocr/tesseract.go) `(*ocrLine).splitWideGaps` / `lineFromWords` / `orderColumns`, [`boundary.go`](../internal/ocr/boundary.go) `strokeBetween` / `paperLuma` | [`ocr-cluster.js`](../extension/src/ocr-cluster.js) `splitWideGaps` / `strokeBetween` / `paperLuma` / `orderColumns`, [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `collectLines` / `strokePlane` |
 | Plate geometry | percent of natural image size; plate bbox = **union of the cluster's line boxes**; font-size in `cqw` from the cluster's median line height x `0.92` fit factor (the starting size); block-level container `display:block; width:100%; aspect-ratio:W/H; container-type:inline-size; line-height:1.1` with the image at `width:100%; margin:0; max-height:none` on the image role itself, on both editions (a page-level `img` reset must not offset or shrink the overlay image, or the percent-positioned plates drift vertically - up above the image centre, down below it); the container and image CSS come from [`internal/appearance`](../internal/appearance/appearance.json); plates **centre their text** (`align-items:center`) inside their source region (`min-height`) with `overflow:hidden` | [`overlay.go`](../internal/ocr/overlay.go), [`tesseract.go`](../internal/ocr/tesseract.go) | [`ocr-plates.js`](../extension/src/ocr-plates.js) `plateSpecs` / `buildOverlay` |
 | Plate runtime re-fit | The compile-time font size is computed from the **source** geometry and cannot know the reflowed - or later translator-swapped - text length, so a fixed size clips a third of plates. After layout each plate's font is shrunk (down to `0.5 x` the starting `cqw`) until the text fits its source-region box; if it still overflows at that floor the box is allowed to grow (`height:auto`) so **nothing is ever clipped**. A released plate follows the written overflow rule (OCR-OVERLAY rule 9, OCR-PIPELINE amendment 1.4 A, since 2026-09-26): it grows down while its bottom stays inside the picture, and once it would pass the picture's bottom edge it is lifted - bottom pinned to that edge, growing upward, never above the picture's top; plates are in reading order in the document, so where two overlap the later one is on top; every fit restores the source top first, so a lift is undone when the text shrinks back (`lift` / `liftPlate`, pinned by `TestParityOCRFontFit`). Re-runs on window resize and whenever a `MutationObserver` sees the page translator swap a plate's text. If the script does not run nothing is clipped either - the plate sets only `min-height`, so `overflow:hidden` never engages and the box grows at the unfitted size, measured 244 px for a 39 px source region with JS disabled in Chromium ([`DEV/research/page_ocr_placement_2026-09-25`](../DEV/research/page_ocr_placement_2026-09-25/README.md)) | [`overlay.go`](../internal/ocr/overlay.go) `ocrScript` / `ensureScript` | [`ocr-plates.js`](../extension/src/ocr-plates.js) `fitPlate` / `scheduleFit` |
 | Plate colours | adaptive, sampled from the source image (best-effort; falls back to white `#fff` / dark `#111`): background = median colour over the whole block ("paper"); text = **median** of pixels standing out from bg (L1 dist > `90`) within the first line (`1.3 x` line height), else near-black/near-white; contrast floor `55` luma; `15` per mille / `6`-px min-ink threshold. Median and not mean on both counts: a glyph's edge is a ramp of antialiased pixels running from the ink to the paper and the deviation test admits most of that ramp, so averaging lands between the two by construction - measured on a caption of rgb(17,17,17) on rgb(253,253,253), mean rgb(61,61,61) against median rgb(7,7,7). **Which of the two is the paper is then decided by the band just outside the block** (`1/3` of a **line height** - not of the 1.3-line ink strip - on each side, floor 2 px, deciding only on `>= RING_MIN_SAMPLES (40)` sampled pixels), and the pair is swapped when that band sits nearer the ink: the median assumes the text is the minority of its own box, which holds for body text in a balloon and fails for heavy display capitals, whose strokes fill more of a tight box than the paper between them - measured, a poster's word came out as cream lettering on a near-black ground, the exact inverse of the poster. **Integer arithmetic on both** (2026-09-25): the ring band, the ink strip and the min-ink count are floored and luma is truncated, as the desktop's integer division does; before that the extension rounded the band and the strip and compared a fractional luma against `140` and `55`, so a block near a threshold got a different ink per edition. The numbers are named constants on both sides (`inkDeviationMin` .. `fallbackLightInk` == `INK_DEVIATION_MIN` .. `FALLBACK_LIGHT_INK`), pinned by `TestParityOCRPlateColourNumbers` | [`overlay.go`](../internal/ocr/overlay.go) `blockColors` | [`ocr-overlay.js`](../extension/src/ocr-overlay.js) `blockColors` |
@@ -912,8 +962,9 @@ their own test where one exists.
   - **every gate, named** (2026-09-25, OCR-OVERLAY rule 12 "which threshold it failed"). Each entry
     carries `gate`: `confidence` (the floor, `keepLine`), `translatable` (a cluster
     `isTranslatable` refused - each of its lines, recorded inside `clusterLines` where the decision
-    is taken) or `screen-merge` (a sweep plate `mergeScreenBlocks` refused as a duplicate - the
-    plate, with its lines' mean confidence, `Block.Conf` / block `conf`). `floor` is the floor of
+    is taken), `screen-merge` (a screen-sweep plate `mergeScreenBlocks` refused as a duplicate) or
+    `grey-merge` (the same refusal in the grey sweep, 2026-09-29) - a plate, with its lines' mean
+    confidence, `Block.Conf` / block `conf`. `floor` is the floor of
     the pass that read the line, so a translatable drop from the ladder still says it was read at
     80. The sweep's own floor drops are recorded too. Guarded by `TestParityOCRDiscardGates`.
   - **display space** (OCR-OVERLAY rule 2). The desktop builds the record in the upscaled image's
@@ -982,6 +1033,22 @@ their own test where one exists.
   by the upscale factor before the detector sees them, because `collectLines` has already divided its
   blocks by it while the prepared image has not been downscaled. The Go app downscales after the
   sweep, so there every rectangle is already in prepared-image coordinates.
+- **Additive grey sweep** (2026-09-29, `OCR-PIPELINE` amendment 1.7) identical: the rescue ladder's
+  first rung - the plain grey rendition, engine-default thresholder, page segmentation - spent
+  additively on a page that already read, for the lettering the colour thresholder kills outright
+  (display lettering and captions whose ink and paper agree in one RGB channel and split in another)
+  while everything around it reads fine. `tesseract.go` `greySweep` == `ocr-overlay.js` `greySweep`:
+  - **Trigger:** the ordinary pass's own layout analysis marks the regions it isolated and
+    recognition returned no words for - the desktop keeps them as `Result.unread` from the raw TSV's
+    wordless line rows; the extension's `collectLines` gathers wordless line units onto the array it
+    returns. The sweep fires only when a marked region stands where the accepted plates leave at
+    most `OCR_SCREEN_MERGE_MAX_OVERLAP` of it covered - the same bar a candidate must clear. A page
+    whose marked regions are all served pays nothing. **Intentional edition difference:** an engine
+    that never surfaces a wordless line unit leaves the extension's array empty and the sweep
+    unfired; the desktop reads the raw TSV, where the rows always exist.
+  - **Merge, confidence, record:** the screen sweep's, unchanged - rescue floor, union-overlap
+    merge, refusals recorded under the gate `grey-merge`, input untouched on every failure. No
+    rescue admission: the pass's prior and rendition were never measured with one.
 - **The opaque paper is on the plate box** - identical on both sides, and this is a decision taken
   against the corpus rather than a default. The box carries the sampled paper (the plate role's
   `background:#fff` in `internal/appearance/appearance.json`, overridden per plate by the sampled
@@ -1300,6 +1367,8 @@ desktop run. The browser extension uses its own parsers and OCR engine and has n
 or local model dependency, so this readiness surface is intentionally desktop-only.
 
 These are by design. Do not "sync" them without a decision - document changes here instead.
+
+- **Conversion progress.** The desktop GUI and MSIX window receive structured stages and known page/image counts from the Go CLI over the existing stdio marker stream. The console keeps its human-readable log. The browser extension already reports conversion status in its viewer and does not use this desktop stream.
 
 - **EPUB output model.** Go extracts a **multi-file book to disk** and does **not** sanitize chapter
   HTML (it opens local files in the user's own browser). The extension merges the whole spine into **one

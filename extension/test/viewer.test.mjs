@@ -80,8 +80,14 @@ globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
   const get = Object.getOwnPropertyDescriptor(selectProto, "value").get;
   Object.defineProperty(selectProto, "value", {
     configurable: true,
-    get,
+    get() {
+      // linkedom's own getter cannot read a selected option, so the setter records the
+      // assigned value and this getter returns it.
+      if (this.__value !== undefined) return this.__value;
+      return get.call(this);
+    },
     set(v) {
+      this.__value = String(v);
       for (const o of this.querySelectorAll("option")) o.selected = o.getAttribute("value") === String(v);
     },
   });
@@ -698,3 +704,48 @@ test("a saved place past the rendered edge is still offered for a chunked PDF", 
 function seedPositionKey(key, pos) {
   storedData.readingPositions = { [key]: { at: 1, ...pos } };
 }
+
+test("reading-comfort choices persist and a reopen applies them (ticket 59)", async () => {
+  const body = "Chapter One\n\nIt was a bright cold day in April.\n\nThe clocks were striking thirteen.\n";
+  const first = await openViewer(
+    "?file=https%3A%2F%2Fbooks.test%2Flib%2Fcomfort.txt",
+    async () => new Response(body, { status: 200 }),
+  );
+  const w1 = globalThis.window;
+  // Pick a line spacing, a column width and a night theme, and nudge the size off default.
+  const leading = first.document.getElementById("sel-leading");
+  leading.value = "1.9";
+  leading.dispatchEvent(new w1.Event("change"));
+  const width = first.document.getElementById("sel-width");
+  width.value = "64em";
+  width.dispatchEvent(new w1.Event("change"));
+  first.document.getElementById("btn-night").dispatchEvent(new w1.Event("click"));
+  first.document.getElementById("btn-font-inc").dispatchEvent(new w1.Event("click"));
+  assert.ok(await waitFor(() => storedData.viewerPrefs && storedData.viewerPrefs.leading === "1.9"),
+    "the spacing choice is saved");
+  assert.equal(storedData.viewerPrefs.width, "64em");
+  assert.equal(storedData.viewerPrefs.theme, "night", "the toggle switches to the night family");
+  assert.equal(storedData.viewerPrefs.nightTheme, "night", "the family's last theme is remembered");
+  assert.equal(storedData.viewerPrefs.size, 29);
+  assert.equal(first.document.documentElement.getAttribute("data-theme"), "night");
+
+  // A fresh module instance is the close-and-reopen: same profile store, choices applied.
+  const second = await openViewer(
+    "?file=https%3A%2F%2Fbooks.test%2Flib%2Fcomfort2.txt",
+    async () => new Response(body, { status: 200 }),
+  );
+  assert.equal(second.document.getElementById("sel-leading").value, "1.9");
+  assert.equal(second.document.getElementById("sel-width").value, "64em");
+  assert.equal(second.document.documentElement.getAttribute("data-theme"), "night");
+  assert.equal(second.document.getElementById("btn-night").getAttribute("aria-pressed"), "true",
+    "pressed names the night family the reader is in");
+
+  // The reset returns the shipped size; Default hands the measures back to the shipped ones.
+  const w2 = globalThis.window;
+  second.document.getElementById("btn-font-reset").dispatchEvent(new w2.Event("click"));
+  assert.ok(await waitFor(() => storedData.viewerPrefs.size === 28), "the size reset lands in storage");
+  const width2 = second.document.getElementById("sel-width");
+  width2.value = "";
+  width2.dispatchEvent(new w2.Event("change"));
+  assert.ok(await waitFor(() => storedData.viewerPrefs.width === null), "Default clears the width choice");
+});

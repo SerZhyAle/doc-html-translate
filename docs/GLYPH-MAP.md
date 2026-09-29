@@ -31,6 +31,8 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Text smaller | `A−` | `action.text-smaller` | Smaller text / Мельче / Дрібніше | conforms |
 | Text larger | `A+` | `action.text-larger` | Larger text / Крупнее / Більше | conforms |
 | Recognized text layer toggle | `▤` | `view.text-layer` | Text layer / Текстовый слой / Текстовий шар | conforms in glyph and name; its state is an exception (`ICON-RENDER` rule 4: the record's off form is owed, so `aria-pressed` and a pressed look carry it) |
+| Night mode quick toggle | - (new 2026-09-29, ticket 59) | `app.night-mode` | Night mode / Ночной режим / Нічний режим | conforms; its state rides `aria-pressed` like the text layer's (pressed = a night-family theme is on) |
+| Reset text size | - (new 2026-09-29, ticket 59) | `action.reset` | Reset text size / Сбросить размер текста / Скинути розмір тексту | conforms - the record's name qualified by its object, as the catalog qualifies `action.convert` by its target |
 | Theme select | `☀ ◑ ☾ ●` on the options | `app.theme` | Theme / Тема / Тема; options Light / Sepia / Dark / Night as words | conforms (the record's choices are words) |
 | Page jump select | - (text) | `nav.go-to-page` | Go to page / Перейти к странице / Перейти до сторінки | conforms |
 | Index TOC disclosure | browser's `<details>` marker | `nav.expand` / `nav.collapse` | branch title | conforms (CSS mask, `rtl: fixed`, symmetric) |
@@ -47,6 +49,8 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Popup external links | `↗` | `nav.open-external` | (link text) | conforms, mirrors in RTL |
 | Text smaller / larger | `A−` / `A+`, English aria-label | `action.text-smaller` / `action.text-larger` | `ariaSmallerText` / `ariaLargerText`, the desktop's words | conforms |
 | Recognized text layer toggle | `▤`, English aria-label | `view.text-layer` | Text layer (`ttOcrLayer`) | conforms; state as in the book (exception) |
+| Night mode quick toggle | - (new 2026-09-29, ticket 59) | `app.night-mode` | Night mode (`ariaNightMode`, the desktop's words) | conforms; `aria-pressed` carries the state |
+| Reset text size | - (new 2026-09-29, ticket 59) | `action.reset` | Reset text size (`ariaResetTextSize`, the desktop's words) | conforms |
 | Theme select | - (text) | `app.theme` | Theme (`ariaTheme`) | conforms |
 | Page jump | - (text) | `nav.go-to-page` | Go to page (`ttGoToPage`) | conforms |
 | Resume-reading offer | - (new 2026-09-29, ticket 53) | `feature.continue-reading` | Continue reading (`vResumeContinue`, the desktop's words) | conforms |

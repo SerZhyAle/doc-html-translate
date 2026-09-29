@@ -43,6 +43,10 @@ func init() {
 		"Оглавление", "Зміст", "Inhaltsverzeichnis", "Indice", "Índice", "Table des matières",
 		"Sumário",
 		"المحتويات", "विषय-सूची", "সূচিপত্র", "فہرست", "目录")
+	Add("Close contents",
+		"Закрыть оглавление", "Закрити зміст", "Inhaltsverzeichnis schließen", "Chiudi indice",
+		"Cerrar índice", "Fermer la table des matières", "Fechar sumário",
+		"إغلاق المحتويات", "विषय-सूची बंद करें", "সূচিপত্র বন্ধ করুন", "فہرست بند کریں", "关闭目录")
 
 	Add("Smaller text",
 		"Мельче", "Дрібніше", "Kleinerer Text", "Testo più piccolo", "Texto más pequeño",
@@ -112,4 +116,67 @@ func init() {
 		"Глав: %d", "Розділів: %d", "Kapitel: %d", "Capitoli: %d", "Capítulos: %d",
 		"Chapitres : %d", "Capítulos: %d",
 		"الفصول: %d", "अध्याय: %d", "অধ্যায়: %d", "ابواب: %d", "章节：%d")
+
+	// Reading-comfort controls (ticket 59). app.night-mode's name: the quick day/night
+	// toggle beside the theme select, whose choices stay words.
+	Add("Night mode",
+		"Ночной режим", "Нічний режим", "Nachtmodus", "Modalità notte", "Modo nocturno",
+		"Mode nuit", "Modo noturno",
+		"الوضع الليلي", "नाइट मोड", "নাইট মোড", "نائٹ موڈ", "夜间模式")
+
+	// action.reset qualified by its object (the catalog qualifies by target the same way):
+	// the button returns the text size to the shipped default, not every setting.
+	Add("Reset text size",
+		"Сбросить размер текста", "Скинути розмір тексту", "Textgröße zurücksetzen",
+		"Reimposta dimensione testo", "Restablecer el tamaño del texto",
+		"Réinitialiser la taille du texte", "Redefinir o tamanho do texto",
+		"إعادة تعيين حجم النص", "टेक्स्ट का आकार रीसेट करें", "টেক্সটের আকার রিসেট করুন",
+		"ٹیکسٹ کا سائز ری سیٹ کریں", "重置文字大小")
+
+	Add("Line spacing",
+		"Межстрочный интервал", "Міжрядковий інтервал", "Zeilenabstand", "Interlinea",
+		"Interlineado", "Interligne", "Espaçamento entre linhas",
+		"تباعد الأسطر", "पंक्ति अंतराल", "লাইন স্পেসিং", "سطروں کا فاصلہ", "行距")
+
+	Add("Column width",
+		"Ширина колонки", "Ширина колонки", "Spaltenbreite", "Larghezza della colonna",
+		"Ancho de columna", "Largeur de colonne", "Largura da coluna",
+		"عرض العمود", "कॉलम की चौड़ाई", "কলামের প্রস্থ", "کالم کی چوڑائی", "栏宽")
+
+	// The first option of the spacing and width selects: each surface's own shipped measure.
+	Add("Default",
+		"По умолчанию", "Типово", "Standard", "Predefinito", "Predeterminado",
+		"Par défaut", "Padrão",
+		"افتراضي", "डिफ़ॉल्ट", "ডিফল্ট", "ڈیفالٹ", "默认")
+
+	// Column width options; they agree with "column" where the language marks gender.
+	Add("Narrow",
+		"Узкая", "Вузька", "Schmal", "Stretta", "Estrecha", "Étroite", "Estreita",
+		"ضيقة", "संकरी", "সরু", "تنگ", "窄")
+
+	Add("Normal",
+		"Обычная", "Звичайна", "Normal", "Normale", "Normal", "Normale", "Normal",
+		"عادية", "सामान्य", "সাধারণ", "عام", "标准")
+
+	Add("Wide",
+		"Широкая", "Широка", "Breit", "Larga", "Ancha", "Large", "Larga",
+		"واسعة", "चौड़ी", "চওড়া", "چوڑی", "宽")
+
+	Add("Full width",
+		"Во всю ширину", "На всю ширину", "Volle Breite", "A tutta larghezza",
+		"Ancho completo", "Pleine largeur", "Largura total",
+		"العرض الكامل", "पूरी चौड़ाई", "পুরো প্রস্থ", "مکمل چوڑائی", "全宽")
+
+	// The image-page zoom mode (comics, scans): the page fills the window's width.
+	Add("Fit width",
+		"По ширине окна", "За шириною вікна", "An Fensterbreite anpassen",
+		"Adatta alla larghezza", "Ajustar al ancho", "Ajuster à la largeur",
+		"Ajustar à largura",
+		"ملاءمة العرض", "चौड़ाई पर फ़िट करें", "প্রস্থে ফিট করুন", "چوڑائی پر فٹ کریں", "适应窗口宽度")
+
+	// The progress bar's accessible name; the readout on hover or focus is its number form.
+	Add("Reading progress",
+		"Прогресс чтения", "Прогрес читання", "Lesefortschritt", "Avanzamento della lettura",
+		"Progreso de lectura", "Progression de la lecture", "Progresso da leitura",
+		"تقدم القراءة", "पढ़ने की प्रगति", "পড়ার অগ্রগতি", "پڑھنے کی پیش رفت", "阅读进度")
 }

@@ -180,7 +180,7 @@ func (c *Copier) noteRefused(ref string) {
 func reserved(name string) bool {
 	low := strings.ToLower(name)
 	switch low {
-	case "index.html", strings.ToLower(htmlgen.FaviconName), strings.ToLower(outputpath.MarkerName):
+	case "index.html", strings.ToLower(htmlgen.FaviconName), strings.ToLower(htmlgen.SearchIndexName), strings.ToLower(outputpath.MarkerName):
 		return true
 	}
 	return pageNamePattern.MatchString(low)

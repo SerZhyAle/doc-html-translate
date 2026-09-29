@@ -11,6 +11,7 @@ import (
 	"doc-html-translate/internal/browser"
 	"doc-html-translate/internal/comic"
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fb2"
 	"doc-html-translate/internal/htmlconv"
@@ -56,6 +57,7 @@ func NewRunner(cfg config.Config) Runner {
 // completion record, so the next run rebuilds it instead of opening it.
 // Steps: [1] Check existing / Extract -> [2] Build HTML -> [3] Translate -> [4] Open browser.
 func (r Runner) run(ctx context.Context) (int, error) {
+	dialog.Progress("checking", 0, 0)
 	inputPath, err := filepath.Abs(r.cfg.InputFile)
 	if err != nil {
 		return ExitIOError, fmt.Errorf("resolve input path: %w", err)
@@ -108,6 +110,7 @@ func (r Runner) run(ctx context.Context) (int, error) {
 			return r.build(ctx, inputPath, target)
 		}
 		logging.Printf("Book already extracted: %s\n", outputDir)
+		dialog.Progress("reused", 0, 0)
 		if r.cfg.NoOpen {
 			logging.Println("[4/4] Browser open skipped (-noopen)")
 			logging.Println("Done.")
@@ -128,6 +131,7 @@ func (r Runner) run(ctx context.Context) (int, error) {
 
 // build converts inputPath into target.Dir from scratch.
 func (r Runner) build(ctx context.Context, inputPath string, target outputpath.Target) (int, error) {
+	dialog.Progress("extracting", 0, 0)
 	outputDir := target.Dir
 	ext := strings.ToLower(filepath.Ext(inputPath))
 
@@ -275,22 +279,26 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 
 	// Step 2: Inject navigation bars (must happen before translation).
 	logging.Println("[2/4] Building HTML structure..")
+	dialog.Progress("building", 0, 0)
 	var generatedIndex string
 	switch {
 	case r.cfg.SinglePage:
-		// Merge the whole document into one HTML page; no TOC, no navigation bars.
-		generatedIndex, err = htmlgen.GenerateSinglePage(book, outputDir, filepath.Base(inputPath))
+		// Merge the whole document into one HTML page with an in-page contents panel.
+		generatedIndex, err = htmlgen.GenerateSinglePageWithDepth(book, outputDir, filepath.Base(inputPath), r.cfg.TOCDepth)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate single page: %w", err)
 		}
-		logging.Println("  Single-page mode - all content merged, TOC skipped.")
+		logging.Println("  Single-page mode - all content merged with in-page navigation.")
 	case len(book.Spine) == 1:
-		// Single page - no TOC, no navigation bars needed.
+		// A one-chapter result still needs the reader controls on its content page.
 		generatedIndex, err = htmlgen.GenerateSinglePageIndex(book, outputDir)
 		if err != nil {
 			return ExitIOError, fmt.Errorf("generate single-page index: %w", err)
 		}
-		logging.Println("  Single page - TOC and navigation skipped.")
+		if err := htmlgen.InjectNavBars(book, outputDir, filepath.Base(inputPath)); err != nil {
+			return ExitIOError, fmt.Errorf("inject reader controls: %w", err)
+		}
+		logging.Println("  Single page - reader controls added; TOC and page turns skipped.")
 	default:
 		if err := htmlgen.InjectNavBars(book, outputDir, filepath.Base(inputPath)); err != nil {
 			return ExitIOError, fmt.Errorf("inject navbars: %w", err)
@@ -314,6 +322,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	}
 
 	// Generate TOC after translation so snippets reflect translated text.
+	dialog.Progress("saving", 0, 0)
 	if len(book.Spine) > 1 {
 		// No authored TOC (NCX/nav for EPUB, bookmarks for PDF)? Synthesize a
 		// multi-level TOC from the headings on the now-final pages, injecting
@@ -341,6 +350,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 		Translation: outcome.state,
 	}); err != nil {
 		logging.Errorf("  WARNING: could not record the finished output: %v\n", err)
+		dialog.Progress("warning", 0, 0)
 	}
 
 	// Step 4: Open in browser - a partial translation is still opened, it is the book the

@@ -363,11 +363,12 @@
       "kind": "outbound",
       "surface": "HTTP to localhost:11434, the Ollama server the user runs",
       "defaultOn": false,
-      "turnedOnBy": "-ollama, or Ollama (local) as the engine in the GUI",
-      "lifetime": "the conversion run",
-      "leaves": "the extracted text, to the user's own machine only; the address is fixed at localhost",
+      "turnedOnBy": "-ollama for translation, or selecting Ollama (local) in the GUI for a read-only model catalog check",
+      "lifetime": "the GUI readiness check or the conversion run",
+      "leaves": "the readiness check sends no document text; conversion sends extracted text to the user's own machine only; the address is fixed at localhost",
       "evidence": [
-        { "file": "internal/translator/ollama.go", "contains": "http://localhost:11434/api/generate" }
+        { "file": "internal/translator/ollama.go", "contains": "http://localhost:11434/api/generate" },
+        { "file": "internal/translator/ollama_readiness.go", "contains": "http://localhost:11434/api/tags" }
       ],
       "public": {
         "en": "**A local Ollama server** - only if you choose the Ollama option: the text is sent to the translation server on your own machine (`localhost:11434`), nowhere else.",

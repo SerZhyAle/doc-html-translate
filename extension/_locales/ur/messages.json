@@ -627,5 +627,41 @@
 
   "vResumeAt": {"message":"پڑھنا صفحہ {1} سے جاری رکھیں؟"},
   "vResumeContinue": {"message":"پڑھنا جاری رکھیں"},
-  "vResumeReset": {"message":"دوبارہ شروع کریں"}
+  "vResumeReset": {"message":"دوبارہ شروع کریں"},
+  "ariaNightMode": {
+    "message": "نائٹ موڈ",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "ٹیکسٹ کا سائز ری سیٹ کریں",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "سطروں کا فاصلہ",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "کالم کی چوڑائی",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "ڈیفالٹ",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "تنگ",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "عام",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "چوڑی",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "مکمل چوڑائی",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }

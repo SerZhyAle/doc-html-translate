@@ -46,7 +46,7 @@ func TestClassify(t *testing.T) {
 }
 
 func TestReservedAndSanitize(t *testing.T) {
-	for _, name := range []string{"favicon.ico", "FAVICON.ICO", "index.html", "page_001.html", ".doc-html-translate.json"} {
+	for _, name := range []string{"favicon.ico", "FAVICON.ICO", "index.html", "dht-search-index.js", "page_001.html", ".doc-html-translate.json"} {
 		if !reserved(name) {
 			t.Errorf("%s should be reserved", name)
 		}

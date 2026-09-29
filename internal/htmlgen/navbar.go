@@ -167,6 +167,7 @@ const navBarScript = `
 		} catch (e) {
 			// ignore storage errors
 		}
+		syncFitwWidth(zoom);
 		return zoom;
 	}
 
@@ -174,10 +175,55 @@ const navBarScript = `
 		try {
 			var url = new URL(rawHref, window.location.href);
 			url.searchParams.set("z", String(zoom));
+			// The fit-width choice rides the same link rewriting as the zoom percent, so a
+			// multi-file image book keeps its mode from page to page.
+			url.searchParams.set("w", document.documentElement.classList.contains("dht-fitw") ? "1" : "0");
 			return url.href;
 		} catch (e) {
 			return rawHref;
 		}
+	}
+
+	// --- Fit width (image-page books, ticket 59) ---
+	// A zoom mode beside the percentage zoom: a comic or a scanned page fills the window's
+	// width without hand-tuning a percent. The choice is per-session like the zoom itself
+	// (sessionStorage, plus the w parameter above) - never a persisted appearance setting.
+	// The toggle button is revealed only where image pages exist (.pdf-page-scan,
+	// section.dht-page); a text book never sees a control that would do nothing.
+	function syncFitwWidth(zoomValue) {
+		if (!document.documentElement.classList.contains("dht-fitw")) return;
+		var z = (zoomValue || 100) / 100;
+		if (!z || z <= 0) z = 1;
+		document.documentElement.style.setProperty("--dht-fitw", Math.round(window.innerWidth / z) + "px");
+	}
+
+	function readFitw() {
+		var params = new URLSearchParams(window.location.search);
+		var fromQuery = params.get("w");
+		if (fromQuery === "1") return true;
+		if (fromQuery === "0") return false;
+		try {
+			return sessionStorage.getItem("dht_fitw") === "1";
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function applyFitw(on) {
+		document.documentElement.classList.toggle("dht-fitw", on);
+		if (on) {
+			syncFitwWidth(zoom);
+		} else {
+			document.documentElement.style.removeProperty("--dht-fitw");
+		}
+		try {
+			sessionStorage.setItem("dht_fitw", on ? "1" : "0");
+		} catch (e) {
+			// ignore storage errors
+		}
+		var btn = document.getElementById("dht-fitw-toggle");
+		if (btn) btn.setAttribute("aria-pressed", on ? "true" : "false");
+		return on;
 	}
 
 	// An image carrying an OCR overlay is off limits: its plates are positioned in percent of
@@ -260,6 +306,19 @@ const navBarScript = `
 
 	var zoom = applyZoom(readZoom());
 	installImageAspectGuards();
+
+	var fitw = applyFitw(readFitw());
+	var fitwBtn = document.getElementById("dht-fitw-toggle");
+	if (fitwBtn && document.querySelector(".pdf-page-scan, section.dht-page")) {
+		fitwBtn.hidden = false;
+		fitwBtn.addEventListener("click", function () {
+			fitw = applyFitw(!fitw);
+		});
+	}
+	// A fit-width page tracks the window, not one measured moment.
+	window.addEventListener("resize", function () {
+		syncFitwWidth(zoom);
+	});
 
 	// Legacy guard: if a chapter .xhtml is opened directly, redirect to index.html.
 	if (isLegacyXHTMLHref(window.location.pathname)) {
@@ -351,10 +410,24 @@ const navBarScript = `
 		}, { passive: true });
 
 		document.addEventListener("keydown", function (e) {
-			if (e.key === "PageDown" && isAtBottom()) {
+			if (e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+			// Never fight a focused control or an in-book link: with the focus anywhere but
+			// the page itself - a navbar button, the search panel, a link mid-book - the
+			// browser's own key behavior owns the event. This is the one keyboard handler
+			// for page turning, shared with the accessibility pass's rules (ticket 57).
+			var t = e.target;
+			if (t && t !== document.body && t !== document.documentElement) return;
+			var dir = 0;
+			if (e.key === "PageDown" || e.key === "ArrowDown" || e.key === "ArrowRight") dir = 1;
+			else if (e.key === "PageUp" || e.key === "ArrowUp" || e.key === "ArrowLeft") dir = -1;
+			else if (e.key === " ") dir = e.shiftKey ? -1 : 1;
+			else return;
+			// The arrows and the space bar turn pages exactly where PageUp and PageDown do:
+			// at the edge, after their native scrolling has nothing left to move.
+			if (dir > 0 && isAtBottom()) {
 				e.preventDefault();
 				tryNavigate(1);
-			} else if (e.key === "PageUp" && isAtTop()) {
+			} else if (dir < 0 && isAtTop()) {
 				e.preventDefault();
 				tryNavigate(-1);
 			}
@@ -401,6 +474,26 @@ var readerCSS = `
   }
   .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
   .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
+  /* The bar's readable companion (ticket 59): the same number as a tooltip on hover or on
+     keyboard focus - the bar is a focusable progressbar - so it stays a 3px line. The tip
+     anchors to the bar's inline start, so its place does not move with the width, and
+     mirrors with the interface's direction. */
+  .dht-progress-tip { display:none; position:absolute; bottom:8px; inset-inline-start:8px;
+    padding:2px 8px; border:1px solid var(--dht-border); border-radius:6px;
+    background:var(--dht-bar-bg); color:var(--dht-bar-fg); font-size:12px; line-height:1.4;
+    white-space:nowrap; }
+  #dht-progress:hover .dht-progress-tip, #dht-progress:focus-visible .dht-progress-tip { display:block; }
+  /* Reading comfort (ticket 59): line spacing and column width apply only once the reader
+     picks one - the shipped measure differs by surface (46em single page, 1400px generated
+     pages, a book's own styles), so no default is stamped on load. Both persist globally
+     with the other appearance settings. */
+  html[data-dht-leading] body { line-height:var(--dht-leading); }
+  html[data-dht-width] body, html[data-dht-width] main.dht-single { max-width:var(--dht-width); }
+  html[data-dht-width] section.dht-page { max-width:var(--dht-width); }
+  /* Fit width (ticket 59): an image-page book's pages span the window; --dht-fitw is the
+     zoom-compensated window width the zoom script keeps in sync. The overlay container
+     fills whatever its section measures (width:100%), so plates stay pinned to the art. */
+  html.dht-fitw .pdf-page-scan, html.dht-fitw section.dht-page { max-width:none; width:var(--dht-fitw, 100vw); }
   .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
   /* Button ink is the theme's own paper colour: white passes 4.5:1 on the light and sepia
      accents but lands at 3.1:1 on the dark and night accents, while --dht-bg clears it on
@@ -450,15 +543,39 @@ func readerScript(bookKey, self string, idx, total int) string {
 	// clear of DEFSZ, or A+ would have nowhere to go.
 	var MINSZ = 70, MAXSZ = 300, STEPSZ = 10, DEFSZ = 175;
 
-	// Theme (dropdown, 4 themes; global, localStorage).
+	// Theme (dropdown, 4 themes; global, localStorage). The quick night-mode toggle swaps
+	// between the reader's day family (light, sepia) and night family (dark, night),
+	// remembering the last theme of each so a toggle round trip lands where it left. The
+	// applied theme is mirrored in themeNow, so the toggle and its pressed state read what
+	// is on screen even where storage throws.
+	var DAY_KEY = "dht_theme_day", NIGHT_KEY = "dht_theme_night";
+	function isNightTheme(t){ return t === "dark" || t === "night"; }
 	function getTheme(){ try { return localStorage.getItem(THEME_KEY) || "light"; } catch(e){ return "light"; } }
+	var themeNow = getTheme();
 	function applyTheme(t){
 		document.documentElement.setAttribute("data-dht-theme", t);
 		var s = document.getElementById("dht-theme-sel");
 		if (s && s.value !== t) s.value = t;
 	}
-	function setTheme(t){ try { localStorage.setItem(THEME_KEY, t); } catch(e){} applyTheme(t); }
-	applyTheme(getTheme());
+	function setTheme(t){
+		themeNow = t;
+		try { localStorage.setItem(THEME_KEY, t); localStorage.setItem(isNightTheme(t) ? NIGHT_KEY : DAY_KEY, t); } catch(e){}
+		applyTheme(t);
+		syncNightBtn();
+	}
+	var nightBtn = document.getElementById("dht-night-toggle");
+	function syncNightBtn(){
+		if (nightBtn) nightBtn.setAttribute("aria-pressed", isNightTheme(themeNow) ? "true" : "false");
+	}
+	function lastFamilyTheme(night){
+		try { return localStorage.getItem(night ? NIGHT_KEY : DAY_KEY) || ""; } catch(e){ return ""; }
+	}
+	applyTheme(themeNow);
+	syncNightBtn();
+	if (nightBtn) nightBtn.addEventListener("click", function(){
+		var night = isNightTheme(themeNow);
+		setTheme(lastFamilyTheme(!night) || (!night ? "night" : "light"));
+	});
 	var tsel = document.getElementById("dht-theme-sel");
 	if (tsel) tsel.addEventListener("change", function(){ setTheme(tsel.value); });
 
@@ -478,6 +595,46 @@ func readerScript(bookKey, self string, idx, total int) string {
 	if (dec) dec.addEventListener("click", function(){ sizeNow = applySize(sizeNow - STEPSZ, true); });
 	var inc = document.getElementById("dht-font-inc");
 	if (inc) inc.addEventListener("click", function(){ sizeNow = applySize(sizeNow + STEPSZ, true); });
+	var rst = document.getElementById("dht-size-reset");
+	if (rst) rst.addEventListener("click", function(){ sizeNow = applySize(DEFSZ, true); });
+
+	// Line spacing and column width (ticket 59): global appearance choices, persisted like
+	// the theme. Nothing is applied until the reader picks one - the shipped measure differs
+	// by surface (46em single page, 1400px generated pages, a book's own styles), so no
+	// default is stamped on load; "Default" hands the measure back to the surface.
+	var LEAD_KEY = "dht_leading", WIDTH_KEY = "dht_width";
+	function applyLeading(v){
+		var root = document.documentElement;
+		if (v) {
+			root.setAttribute("data-dht-leading", "");
+			root.style.setProperty("--dht-leading", v);
+		} else {
+			root.removeAttribute("data-dht-leading");
+			root.style.removeProperty("--dht-leading");
+		}
+		var s = document.getElementById("dht-leading-sel");
+		if (s && s.value !== v) s.value = v;
+	}
+	function applyWidth(v){
+		var root = document.documentElement;
+		if (v) {
+			root.setAttribute("data-dht-width", "");
+			root.style.setProperty("--dht-width", v);
+		} else {
+			root.removeAttribute("data-dht-width");
+			root.style.removeProperty("--dht-width");
+		}
+		var s = document.getElementById("dht-width-sel");
+		if (s && s.value !== v) s.value = v;
+	}
+	function readStored(k){ try { return localStorage.getItem(k) || ""; } catch(e){ return ""; } }
+	function storeSetting(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+	applyLeading(readStored(LEAD_KEY));
+	applyWidth(readStored(WIDTH_KEY));
+	var lsel = document.getElementById("dht-leading-sel");
+	if (lsel) lsel.addEventListener("change", function(){ storeSetting(LEAD_KEY, lsel.value); applyLeading(lsel.value); });
+	var wsel = document.getElementById("dht-width-sel");
+	if (wsel) wsel.addEventListener("change", function(){ storeSetting(WIDTH_KEY, wsel.value); applyWidth(wsel.value); });
 
 	// Font family (dropdown).
 	function getFam(){ try { return localStorage.getItem(FAM_KEY) || "serif"; } catch(e){ return "serif"; } }
@@ -556,7 +713,13 @@ func readerScript(bookKey, self string, idx, total int) string {
 		var bar = document.getElementById("dht-progress");
 		if (!bar) return;
 		var overall = TOTAL > 0 ? ((IDX - 1 + f) / TOTAL) : f;
+		var pct = Math.round(overall * 100);
 		bar.style.width = (overall * 100).toFixed(2) + "%%";
+		// The number form of the bar: assistive tech reads aria-valuenow; sighted readers
+		// get the same figure as a tooltip on hover or keyboard focus (ticket 59).
+		bar.setAttribute("aria-valuenow", String(pct));
+		var tip = document.getElementById("dht-progress-tip");
+		if (tip) tip.textContent = pct + "%%";
 	}
 
 	if (SELF) {
@@ -566,7 +729,7 @@ func readerScript(bookKey, self string, idx, total int) string {
 		if (!location.hash && saved && saved.href === SELF && typeof saved.frac === "number") {
 			window.addEventListener("load", function(){
 				var h = document.documentElement.scrollHeight - window.innerHeight;
-				if (h > 0) window.scrollTo(0, saved.frac * h);
+				if (!location.hash && h > 0) window.scrollTo(0, saved.frac * h);
 			});
 		}
 		var ticking = false;
@@ -593,6 +756,14 @@ func readerScript(bookKey, self string, idx, total int) string {
 })();
 //]]></script>
 `, jsString(bookKey), jsString(self), idx, total)
+}
+
+// progressBarHTML is the reading-progress bar as both the chapter navbar and the single-page
+// header emit it: a focusable progressbar whose number form (aria-valuenow, and the tooltip
+// the readerCSS shows on hover or focus) the reader script keeps in step with the width.
+func progressBarHTML() string {
+	return fmt.Sprintf(`<div id="dht-progress" class="dht-progress" role="progressbar" tabindex="0" aria-label="%s" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="dht-progress-tip" class="dht-progress-tip" aria-hidden="true"></span></div>`,
+		html.EscapeString(i18n.S("Reading progress")))
 }
 
 // buildNavBarHTML generates the HTML for the navigation bar.
@@ -644,9 +815,9 @@ func buildNavBarHTML(nav NavInfo) string {
 	// language - that is what makes Chrome offer "Translate page", the product's free flow - so
 	// interface words in a different language must be attributed to themselves here, or the
 	// detector can be pulled towards the chrome and the offer never appears.
-	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s%s`,
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s%s</div>%s</div>%s%s%s`,
 		i18n.Language(), chromeDirAttr(),
-		fileEl, titleEl, indexLink, readerControlsHTML(), versionLink, info, turn, navBarScript,
+		fileEl, titleEl, indexLink, readerControlsHTML(), versionLink, info, turn, progressBarHTML(), navBarScript,
 		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total), searchScript(nav.BookKey, nav.SelfHref, searchIndexHref))
 }
 
@@ -666,27 +837,49 @@ func chromeDirAttr() string {
 func readerControlsHTML() string {
 	titleSmaller := i18n.S("Smaller text")
 	titleLarger := i18n.S("Larger text")
+	titleReset := i18n.S("Reset text size")
+	titleNight := i18n.S("Night mode")
 	titleFont, titleTheme := i18n.S("Font"), i18n.S("Theme")
 	tLight, tSepia := i18n.S("Light"), i18n.S("Sepia")
 	tDark, tNight := i18n.S("Dark"), i18n.S("Night")
 	fSerif, fSans, fMono := i18n.S("Serif"), i18n.S("Sans"), i18n.S("Mono")
+	titleLeading := i18n.S("Line spacing")
+	titleWidth := i18n.S("Column width")
+	tDefault := i18n.S("Default")
+	tNarrow, tNormal := i18n.S("Narrow"), i18n.S("Normal")
+	tWide, tFull := i18n.S("Wide"), i18n.S("Full width")
+	titleFitw := i18n.S("Fit width")
 	// The OCR toggle is rendered on every page but hides itself when the page carries no
 	// plates (see the reader script), so the chrome stays identical across editions and a
 	// text book never shows a control that would do nothing.
 	titleOCR := i18n.S("Text layer")
 	// Each glyph-only button draws its vocabulary meaning (action.text-smaller / -larger,
-	// view.text-layer) and carries that meaning's localized name as its accessible name
-	// (ICON-RENDER rule 8). The text layer has one drawing for both states until the catalog
-	// draws its off form, so aria-pressed and the pressed look carry the state. The theme select
-	// shows app.theme once; its choices are words, never the sun or the moon of other meanings.
+	// view.text-layer, app.night-mode, action.reset) and carries that meaning's localized
+	// name as its accessible name (ICON-RENDER rule 8). The text layer has one drawing for
+	// both states until the catalog draws its off form, so aria-pressed and the pressed look
+	// carry the state - as on the night toggle, where pressed means a night-family theme is
+	// on. The theme select shows app.theme once; its choices are words, never the sun or the
+	// moon of other meanings. Fit width draws no glyph: the vocabulary names no such meaning,
+	// and a private picture is not an option (ICON-SET rule 5), so it is a word-only button.
+	// Spacing steps and width steps are shared constants on both editions (docs/PARITY.md).
 	controls := fmt.Sprintf(
-		`<button id="dht-font-dec" class="dht-btn" type="button" title="%[1]s" aria-label="%[1]s">%[13]s</button>`+
-			`<button id="dht-font-inc" class="dht-btn" type="button" title="%[2]s" aria-label="%[2]s">%[14]s</button>`+
-			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%[3]s" aria-label="%[3]s">%[15]s</button>`+
-			`<select id="dht-family-sel" title="%[4]s" aria-label="%[4]s"><option value="serif">%[5]s</option><option value="sans">%[6]s</option><option value="mono">%[7]s</option></select>`+
-			`<span class="dht-sel">%[16]s<select id="dht-theme-sel" title="%[8]s" aria-label="%[8]s"><option value="light">%[9]s</option><option value="sepia">%[10]s</option><option value="dark">%[11]s</option><option value="night">%[12]s</option></select></span>`,
-		titleSmaller, titleLarger, titleOCR, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight,
-		glyphSVG("action.text-smaller"), glyphSVG("action.text-larger"), glyphSVG("view.text-layer"), glyphSVG("app.theme"))
+		`<button id="dht-font-dec" class="dht-btn" type="button" title="%[1]s" aria-label="%[1]s">%[14]s</button>`+
+			`<button id="dht-font-inc" class="dht-btn" type="button" title="%[2]s" aria-label="%[2]s">%[15]s</button>`+
+			`<button id="dht-size-reset" class="dht-btn" type="button" title="%[3]s" aria-label="%[3]s">%[16]s</button>`+
+			`<button id="dht-night-toggle" class="dht-btn" type="button" aria-pressed="false" title="%[4]s" aria-label="%[4]s">%[17]s</button>`+
+			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%[5]s" aria-label="%[5]s">%[18]s</button>`+
+			`<select id="dht-family-sel" title="%[6]s" aria-label="%[6]s"><option value="serif">%[7]s</option><option value="sans">%[8]s</option><option value="mono">%[9]s</option></select>`+
+			`<select id="dht-leading-sel" title="%[10]s" aria-label="%[10]s"><option value="">%[11]s</option><option>1.4</option><option>1.6</option><option>1.9</option><option>2.2</option></select>`+
+			`<select id="dht-width-sel" title="%[12]s" aria-label="%[12]s"><option value="">%[11]s</option><option value="36em">%[19]s</option><option value="46em">%[20]s</option><option value="64em">%[21]s</option><option value="none">%[22]s</option></select>`+
+			`<span class="dht-sel">%[23]s<select id="dht-theme-sel" title="%[13]s" aria-label="%[13]s"><option value="light">%[24]s</option><option value="sepia">%[25]s</option><option value="dark">%[26]s</option><option value="night">%[27]s</option></select></span>`+
+			`<button id="dht-fitw-toggle" class="dht-btn" type="button" hidden aria-pressed="false" title="%[28]s" aria-label="%[28]s">%[28]s</button>`,
+		titleSmaller, titleLarger, titleReset, titleNight, titleOCR, titleFont, fSerif, fSans, fMono,
+		titleLeading, tDefault, titleWidth, titleTheme,
+		glyphSVG("action.text-smaller"), glyphSVG("action.text-larger"), glyphSVG("action.reset"),
+		glyphSVG("app.night-mode"), glyphSVG("view.text-layer"),
+		tNarrow, tNormal, tWide, tFull,
+		glyphSVG("app.theme"), tLight, tSepia, tDark, tNight,
+		titleFitw)
 	return controls + searchControlsHTML()
 }
 

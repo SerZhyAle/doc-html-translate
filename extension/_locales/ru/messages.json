@@ -643,5 +643,41 @@
 
   "vResumeAt": {"message":"Продолжить чтение со страницы {1}?"},
   "vResumeContinue": {"message":"Продолжить чтение"},
-  "vResumeReset": {"message":"Начать сначала"}
+  "vResumeReset": {"message":"Начать сначала"},
+  "ariaNightMode": {
+    "message": "Ночной режим",
+    "description": "Accessible name of the night-mode quick toggle. Same words as the desktop reader."
+  },
+  "ariaResetTextSize": {
+    "message": "Сбросить размер текста",
+    "description": "Accessible name of the reset-text-size button. Same words as the desktop reader."
+  },
+  "ariaLineSpacing": {
+    "message": "Межстрочный интервал",
+    "description": "Accessible name of the line-spacing select. Same words as the desktop reader."
+  },
+  "ariaColumnWidth": {
+    "message": "Ширина колонки",
+    "description": "Accessible name of the column-width select. Same words as the desktop reader."
+  },
+  "optDefault": {
+    "message": "По умолчанию",
+    "description": "First option of the spacing and width selects: each surface's own shipped measure."
+  },
+  "optWidthNarrow": {
+    "message": "Узкая",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthNormal": {
+    "message": "Обычная",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthWide": {
+    "message": "Широкая",
+    "description": "Column width option. Same words as the desktop reader."
+  },
+  "optWidthFull": {
+    "message": "Во всю ширину",
+    "description": "Column width option: no width cap. Same words as the desktop reader."
+  }
 }
