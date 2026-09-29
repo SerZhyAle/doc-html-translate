@@ -64,15 +64,18 @@ function voteLatin(text) {
   return best;
 }
 
-// detectLang returns a BCP-47 primary language subtag for a text sample.
+// detectLang returns a BCP-47 primary language subtag for a text sample, or "" when the
+// sample carries nothing to speak from: an image-only scan states no language, and an
+// invented "en" would be exactly the false label a wrong <html lang> produces (ticket 76).
 export function detectLang(text) {
-  if (!text || !text.trim()) return "en";
-  const sample = text.slice(0, 8000);
+  if (!text || !text.trim()) return "";
+  const sample = text.slice(0, SAMPLE_CHARS);
   const { script } = dominantScript(sample);
   switch (script) {
     case "cyrillic":
-      // Ukrainian-specific letters distinguish uk from ru.
-      return /[іїєґІЇЄҐ]/u.test(sample) ? "uk" : "ru";
+      // Ukrainian-only letters distinguish uk from ru. і is not one of them: pre-1918
+      // Russian orthography used it constantly, so one і does not make Cyrillic Ukrainian.
+      return /[їєґЇЄҐ]/u.test(sample) ? "uk" : "ru";
     case "greek": return "el";
     case "arabic": return "ar";
     case "hebrew": return "he";
@@ -83,8 +86,45 @@ export function detectLang(text) {
     case "devanagari": return "hi";
     case "thai": return "th";
     case "latin": return voteLatin(sample);
-    default: return "en";
+    default: return "";
   }
+}
+
+// How far into the text the heuristics read. detectLang and declarationContradicted look
+// at the same first SAMPLE_CHARS characters, and internal/textutil reads the same window.
+const SAMPLE_CHARS = 8000;
+
+// The script(s) each known primary subtag is written in, over the blocks dominantScript
+// counts. A subtag absent from the table (bn, ta, ka..) says nothing provable, so the
+// guard below never drops it. internal/textutil DeclarationContradicted keeps the same
+// table on the desktop.
+const DECLARED_SCRIPTS = {
+  en: ["latin"], fr: ["latin"], de: ["latin"], es: ["latin"], it: ["latin"],
+  pt: ["latin"], nl: ["latin"],
+  ru: ["cyrillic"], uk: ["cyrillic"], bg: ["cyrillic"], sr: ["cyrillic"],
+  mk: ["cyrillic"], be: ["cyrillic"],
+  el: ["greek"],
+  ar: ["arabic"], ur: ["arabic"], fa: ["arabic"], ps: ["arabic"],
+  he: ["hebrew"], yi: ["hebrew"],
+  zh: ["han"],
+  ja: ["han", "hiragana", "katakana"],
+  ko: ["hangul", "han"],
+  hi: ["devanagari"], mr: ["devanagari"], ne: ["devanagari"],
+  th: ["thai"],
+};
+
+// declarationContradicted says whether a text sample proves a declared language wrong
+// (ticket 76): the sample's dominant script is known and is not a script the language is
+// written in - the authoring template's "en-GB" over a Han sample. Without a sample, or
+// for a language the table cannot speak for, nothing is provable and the declaration
+// stands. Shared with the desktop: internal/textutil DeclarationContradicted must decide
+// the same cases (tests/testdata/pdf_lang_cases.json).
+export function declarationContradicted(tag, text) {
+  const expected = DECLARED_SCRIPTS[normalizeLangTag(tag).split("-")[0]];
+  if (!expected || !text || !text.trim()) return false;
+  const { script, letters } = dominantScript(text.slice(0, SAMPLE_CHARS));
+  if (letters === 0 || script === "unknown") return false;
+  return !expected.includes(script);
 }
 
 // normalizeLangTag keeps only a sane BCP-47 primary subtag (and optional region)

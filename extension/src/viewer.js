@@ -11,7 +11,7 @@
 import * as pdfjsLib from "../vendor/pdf.mjs";
 import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
-import { detectLang, normalizeLangTag } from "./lang.js";
+import { detectLang, normalizeLangTag, declarationContradicted } from "./lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { glyph, applyGlyphs } from "./glyphs.js";
 import { loadEpub } from "./epub.js";
@@ -25,7 +25,7 @@ import { parseComic, DesktopOnlyError } from "./comic.js";
 import { InputLimitError, checkTextInput, formatBytes } from "./limits.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang, releaseOverlays } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
-import { extractPageImages, rasterizePage } from "./pdf-images.js";
+import { extractPageImages, NO_OCR_MARK, ocrWorthy, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { recordRun } from "./diagnostics.js";
 import { buildExportHtml, exportImageEncoding, exportPlan, EXPORT_PREPARE_MAX_FILE_BYTES } from "./export-html.js";
@@ -540,7 +540,8 @@ function registerImagesForOcr(root, force = false) {
   const obs = getOcrObserver();
   for (const img of imgs) {
     // A parked remote image has no src yet; it is registered when the reader allows it.
-    if (ocrQueued.has(img) || img.hasAttribute(REMOTE_MARK)) continue;
+    // An icon-sized PDF raster is shown but never recognized (NO_OCR_MARK).
+    if (ocrQueued.has(img) || img.hasAttribute(REMOTE_MARK) || img.hasAttribute(NO_OCR_MARK)) continue;
     ocrQueued.add(img);
     ocrPending.push(img);
     ocrTotal += 1;
@@ -598,9 +599,12 @@ function getPdfImageObserver() {
 }
 
 // deferPageImages marks a rendered section as "images still to come" and reserves their
-// space. No-op when OCR is off, which is also the only time page images are extracted.
+// space. It runs whether OCR is on or off: the page's pictures are content, and the desktop
+// keeps them on its default path too. Only their recognition waits on the OCR option
+// (registerImagesForOcr). Gating the extraction on OCR as well left the default path - OCR
+// off - with the text alone: no illustration, and a scanned comic reduced to its garbled
+// text layer (ticket 77).
 function deferPageImages(section, pageNum, pageChars, width, height) {
-  if (!options.ocrImages) return;
   section.dataset.pdfPage = String(pageNum);
   section.dataset.pdfChars = String(pageChars);
   pdfImagesDeferred++;
@@ -652,9 +656,11 @@ async function appendPdfImages(page, section, pageChars, gen = docGen) {
   let appended = 0;
   try {
     imgs = await extractPageImages(page);
-    if (!imgs.length && pageChars < 20 && isCurrent(gen)) {
+    // A text-less page with no picture of real size is a scan pdf.js could not hand over as
+    // one image: render it whole. A lone spacer or icon on it does not count as its picture.
+    if (!imgs.some(ocrWorthy) && pageChars < 20 && isCurrent(gen)) {
       const raster = await rasterizePage(page);
-      if (raster) imgs = [raster];
+      if (raster) imgs = [...imgs, raster];
     }
   } catch (err) {
     console.warn("PDF image extraction failed", err);
@@ -675,6 +681,7 @@ async function appendPdfImages(page, section, pageChars, gen = docGen) {
       imgEl.width = im.width;
       imgEl.height = im.height;
     }
+    if (!ocrWorthy(im)) imgEl.setAttribute(NO_OCR_MARK, "");
     imgEl.src = url;
     section.append(imgEl);
   }
@@ -1990,8 +1997,8 @@ async function renderPages(from, to) {
     let pageChars = 0;
     for (const b of blocks) pageChars += b.text.length;
 
-    // Images are pulled out later, on the same scroll trigger that drives OCR. No-op
-    // when OCR is off - nothing extracts page images then anyway.
+    // Images are pulled out later, on the same scroll trigger that drives OCR - with OCR
+    // on or off; only their recognition depends on the option.
     deferPageImages(section, n, pageChars, width, height);
     if (page) { try { page.cleanup(); } catch { /* ignore */ } }
 
@@ -2250,7 +2257,12 @@ async function collectSample(pdf, pages) {
 // pdfDocumentLang only decides the language; the caller applies it once it knows the load is
 // still current.
 async function pdfDocumentLang(pdf, sampleText) {
-  // Priority: explicit options hint -> PDF /Lang metadata -> text heuristic.
+  // Priority: explicit options hint -> PDF /Lang metadata -> text heuristic. The /Lang
+  // declaration is trusted only while the text does not contradict it: the sample's
+  // dominant script must be one the declared language is written in (docs/PARITY.md,
+  // "Declared source language"), so a PDF carrying its authoring template's "en-GB" over
+  // Han text is not labelled English (ticket 76). The options hint is the user's own
+  // word and outranks any sample.
   let lang = "";
   if (options.sourceLang && options.sourceLang !== "auto") {
     lang = normalizeLangTag(options.sourceLang);
@@ -2259,7 +2271,7 @@ async function pdfDocumentLang(pdf, sampleText) {
     try {
       const meta = await pdf.getMetadata();
       const raw = (meta && meta.info && (meta.info.Language || meta.info.Lang)) || "";
-      lang = normalizeLangTag(raw);
+      if (raw && !declarationContradicted(raw, sampleText)) lang = normalizeLangTag(raw);
     } catch { /* ignore */ }
   }
   if (!lang) lang = detectLang(sampleText);
@@ -2268,8 +2280,16 @@ async function pdfDocumentLang(pdf, sampleText) {
 
 // applyLang sets <html lang> and a content-language meta so Chrome offers
 // "Translate page" with the right source language. Shared by the PDF and EPUB paths.
+// An empty lang - the document stated nothing and the sample proved nothing - removes
+// both instead: the page then states no language and Chrome detects it itself, rather
+// than the viewer's static lang="en" standing in as a false declaration (ticket 76).
 function applyLang(lang) {
-  if (!lang) return;
+  if (!lang) {
+    document.documentElement.removeAttribute("lang");
+    const stale = document.querySelector('meta[http-equiv="content-language"]');
+    if (stale) stale.remove();
+    return;
+  }
   document.documentElement.lang = lang;
   let metaTag = document.querySelector('meta[http-equiv="content-language"]');
   if (!metaTag) {

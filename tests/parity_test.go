@@ -957,6 +957,7 @@ func TestParityReflowConstants(t *testing.T) {
 		{"ligature min words", `ligatureMinWords\s+=\s+([\d.]+)`, `LIGATURE_MIN_WORDS\s*=\s*([\d.]+)`},
 		{"ligature fragment max length", `ligatureFragmentMaxLen\s+=\s+([\d.]+)`, `LIGATURE_FRAGMENT_MAX_LEN\s*=\s*([\d.]+)`},
 		{"ligature max distinct ratio", `ligatureMaxDistinctRatio\s+=\s+([\d.]+)`, `LIGATURE_MAX_DISTINCT_RATIO\s*=\s*([\d.]+)`},
+		{"cjk runes per word", `cjkRunesPerWord\s+=\s+([\d.]+)`, `CJK_RUNES_PER_WORD\s*=\s*([\d.]+)`},
 	}
 	for _, p := range pairs {
 		gv := num(t, p.name+" (extract.go)", p.goRe, goSrc)
@@ -965,12 +966,18 @@ func TestParityReflowConstants(t *testing.T) {
 			t.Errorf("%s drift: extract.go=%v reflow.js=%v (must match - see docs/PARITY.md)", p.name, gv, jv)
 		}
 	}
-	// The constants alone do not fix the rule: the shared case table does, and each edition's
-	// unit test must keep reading it.
-	const cases = "ligature_artifact_cases.json"
+	// The constants alone do not fix the rule: the shared case tables do, and each edition's
+	// unit tests must keep reading them.
+	const ligatureCases = "ligature_artifact_cases.json"
 	for _, f := range [][]string{{"internal", "pdf", "ligature_test.go"}, {"extension", "test", "reflow.test.mjs"}} {
-		if !strings.Contains(readRepoFile(t, f...), cases) {
-			t.Errorf("%s no longer runs the shared %s (see docs/PARITY.md)", strings.Join(f, "/"), cases)
+		if !strings.Contains(readRepoFile(t, f...), ligatureCases) {
+			t.Errorf("%s no longer runs the shared %s (see docs/PARITY.md)", strings.Join(f, "/"), ligatureCases)
+		}
+	}
+	const headingCases = "pdf_heading_cases.json"
+	for _, f := range [][]string{{"internal", "pdf", "cjk_heading_test.go"}, {"extension", "test", "reflow.test.mjs"}} {
+		if !strings.Contains(readRepoFile(t, f...), headingCases) {
+			t.Errorf("%s no longer runs the shared %s (see docs/PARITY.md)", strings.Join(f, "/"), headingCases)
 		}
 	}
 }

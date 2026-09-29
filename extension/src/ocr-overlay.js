@@ -8,11 +8,12 @@
 import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
 import { workerOptions } from "./ocr-lang.js";
 import {
-  clusterLines, droppedLines, GATE_GREY_MERGE, GATE_SCREEN_MERGE, markRescueAdmission, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
+  clusterLines, droppedLines, GATE_GREY_MERGE, GATE_SCREEN_MERGE, longestLetterRun, markRescueAdmission, medianOf, orderColumns, splitWideGaps, strictlyBetter, trimOutlierWords,
   OCR_MIN_LINE_CONF, OCR_RESCUE_LINE_CONF,
 } from "./ocr-cluster.js";
 import { screenPitch, mergeScreenBlocks, coveredFraction, OCR_SCREEN_MERGE_MAX_OVERLAP, OCR_SCREEN_SIGMA_DIVISOR } from "./ocr-screen.js";
 import { conceal } from "./ocr-conceal.js";
+import { joinLineWords } from "./ocr-text.js";
 
 const { createWorker } = Tesseract;
 
@@ -384,7 +385,19 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, 
         : null));
     // inkBox is the box a plate is drawn from; bbox stays what every clustering decision reads, so
     // trimming can never change what reaches the page - see trimOutlierWords and tesseract.go ix0.
-    const line = { bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH, pipes };
+    // tokens is the recognizer's word count, which resultStrength weighs a rung by: the text no longer
+    // says it once CJK words are joined without a space (OCR-PIPELINE amendment 1.8). Counted as the
+    // words' own whitespace fields, so an empty word counts for nothing - exactly what the spaced
+    // text's fields counted before the join; a unit with no words keeps the engine's own text, and
+    // its fields are the count. Mirrors the desktop Block.tokens.
+    const fields = (s) => String(s || "").split(/\s+/).filter(Boolean).length;
+    const tokens = words.length ? words.reduce((n, w) => n + fields(w && w.text), 0) : fields(text);
+    // The longest letter run word by word, which the rescue admission reads (ocr-cluster.js
+    // lineLetterRun): a joined CJK line would otherwise read as one run. Mirrors (*ocrLine) letterRun.
+    const letterRun = words.length
+      ? words.reduce((m, w) => Math.max(m, longestLetterRun(w && w.text)), 0)
+      : longestLetterRun(text);
+    const line = { bbox, inkBox: trimOutlierWords(bbox, words, scale), text, conf, wordH, pipes, tokens, letterRun };
     // A stroke-cut fragment that cannot be a plate is parked by orderColumns (ocr-cluster.js splitWideGaps).
     if (words.orphan === true) line.orphan = true;
     out.push(line);
@@ -396,7 +409,9 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, 
     // sweep unfired, which is the honest reading of the same rule.
     if (!text && bbox) (out.unread || (out.unread = [])).push(bbox);
   };
-  const textOf = (words, fallback) => (words.length ? words.map((w) => w.text).join(" ") : (fallback || ""))
+  // The words are joined by the CJK-aware rule of OCR-PIPELINE amendment 1.8 A (ocr-text.js
+  // joinLineWords, tesseract.go joinLineWords); a unit with no words keeps the engine's own text.
+  const textOf = (words, fallback) => (words.length ? joinLineWords(words, scale) : (fallback || ""))
     .replace(/\s+/g, " ").trim();
   const confOf = (words, unit) => (words.length
     ? words.reduce((s, w) => s + (w.confidence || 0), 0) / words.length

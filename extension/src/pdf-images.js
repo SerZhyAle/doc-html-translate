@@ -1,4 +1,4 @@
-// pdf-images.js - pull raster images out of a PDF page for OCR. The primary path walks
+// pdf-images.js - pull raster images out of a PDF page for display (and OCR). The primary path walks
 // the page operator list for image XObjects and decodes them to PNG blobs; when a page
 // yields no usable image but is image-dominant (a scanned page), rasterizePage() renders
 // the whole page as one fallback image. All failures are swallowed - a page that can't be
@@ -82,21 +82,39 @@ function applyFlips(ctx, width, height, { flipX, flipY }) {
 
 const NO_FLIPS = { flipX: false, flipY: false };
 
-async function bitmapToBlob(bitmap, flips) {
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+async function bitmapToBlob(bitmap, width, height, flips) {
+  const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
-  applyFlips(ctx, bitmap.width, bitmap.height, flips);
-  ctx.drawImage(bitmap, 0, 0);
+  applyFlips(ctx, width, height, flips);
+  ctx.drawImage(bitmap, 0, 0, width, height);
   return canvas.convertToBlob({ type: "image/png" });
+}
+
+// isDrawable reports whether o is a decoded picture a canvas can draw directly. pdf.js hands
+// over two kinds: an ImageBitmap, and - for a JPEG it decoded through the browser's
+// ImageDecoder, which is most photographs and illustrations - a VideoFrame. Recognizing only
+// the first dropped every such JPEG without a word: its `data` is null, so nothing else matched
+// (ticket 77, measured on en-illpdf-little-nemo: 10 of its 11 content images were dropped).
+function isDrawable(o) {
+  return !!o && ((typeof ImageBitmap !== "undefined" && o instanceof ImageBitmap)
+    || (typeof VideoFrame !== "undefined" && o instanceof VideoFrame));
+}
+
+// drawableSize reads a drawable's pixel size: ImageBitmap has width/height, VideoFrame has
+// displayWidth/displayHeight. The image object's own width/height win when present.
+export function drawableSize(imgObj, src) {
+  return {
+    width: imgObj.width || src.width || src.displayWidth || 0,
+    height: imgObj.height || src.height || src.displayHeight || 0,
+  };
 }
 
 async function imageObjToBlob(imgObj, flips = NO_FLIPS) {
   if (!imgObj) return null;
-  if (typeof ImageBitmap !== "undefined" && imgObj instanceof ImageBitmap) {
-    return bitmapToBlob(imgObj, flips);
-  }
-  if (imgObj.bitmap && typeof ImageBitmap !== "undefined" && imgObj.bitmap instanceof ImageBitmap) {
-    return bitmapToBlob(imgObj.bitmap, flips);
+  const src = isDrawable(imgObj) ? imgObj : isDrawable(imgObj.bitmap) ? imgObj.bitmap : null;
+  if (src) {
+    const { width, height } = drawableSize(imgObj, src);
+    return width && height ? bitmapToBlob(src, width, height, flips) : null;
   }
   if (imgObj.data && imgObj.width && imgObj.height) {
     const rgba = toRGBA(imgObj.data, imgObj.width, imgObj.height);
@@ -157,9 +175,35 @@ export function dedupeSameShape(imgs) {
   return kept;
 }
 
-// Extract embedded raster images from a page as { blob, width, height }. Images smaller
-// than minSize on a side are skipped (icons, bullets, rules).
-export async function extractPageImages(page, { minSize = 64 } = {}) {
+// A same-shape pair at roughly 3x resolution is how the IA MRC scans present
+// their background and masked foreground. pdf.js has already applied the stencil
+// to the foreground pixels, but extracting that XObject loses the background.
+// Rendering the PDF page preserves the paint order and the mask on either path.
+export function needsPageComposite(imgs) {
+  if (imgs.length !== 2 || !sameShapeRaster(imgs[0], imgs[1])) return false;
+  const a = imgs[0].width * imgs[0].height;
+  const b = imgs[1].width * imgs[1].height;
+  return Math.min(a, b) > 0 && Math.max(a, b) / Math.min(a, b) >= 4;
+}
+
+// OCR_MIN_SIDE is the smallest side a picture needs for recognition to be worth running:
+// below it a raster is an icon, a bullet or a rule, never a line of text. It gates OCR only,
+// not display - the desktop keeps every page raster, so the viewer shows them all too
+// (docs/PARITY.md, "PDF page-image selection").
+export const OCR_MIN_SIDE = 64;
+
+// NO_OCR_MARK is set on a page image the viewer shows but does not queue for recognition.
+export const NO_OCR_MARK = "data-dht-no-ocr";
+
+// ocrWorthy reports whether a picture of this size is worth recognizing.
+export function ocrWorthy({ width, height }) {
+  return width >= OCR_MIN_SIDE && height >= OCR_MIN_SIDE;
+}
+
+// Extract embedded raster images from a page as { blob, width, height }. Every painted
+// raster is kept, whatever its size, as the desktop does; images smaller than minSize on a
+// side are skipped (0 keeps all).
+export async function extractPageImages(page, { minSize = 0 } = {}) {
   const out = [];
   let opList;
   try {
@@ -196,6 +240,10 @@ export async function extractPageImages(page, { minSize = 64 } = {}) {
     } catch {
       /* skip this image */
     }
+  }
+  if (needsPageComposite(out)) {
+    const composite = await rasterizePage(page);
+    if (composite) return [composite];
   }
   return dedupeSameShape(out);
 }

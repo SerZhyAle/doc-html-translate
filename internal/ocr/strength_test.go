@@ -39,6 +39,15 @@ func TestResultStrengthCountsWhatAReaderWouldSee(t *testing.T) {
 			}},
 			want: 7,
 		},
+		{
+			// OCR-PIPELINE amendment 1.8: the Japanese plate's text carries no space, but the
+			// recognizer returned seven words for it, and those are what the rung found.
+			name: "a joined CJK plate counts the recognizer's words, not its text's fields",
+			res: Result{Blocks: []Block{
+				{Text: "コモナ市長の私が", tokens: 7},
+			}},
+			want: 7,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

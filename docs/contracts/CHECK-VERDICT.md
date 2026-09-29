@@ -1,7 +1,7 @@
 # Pointer: CHECK-VERDICT
 
 - **Id:** `CHECK-VERDICT`
-- **Version:** 0.9 (draft)
+- **Version:** 0.10 (draft)
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 2 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - this repo's checks produce verdicts in the contract's vocabulary, and its own
   aggregator and release checklist read them
@@ -9,7 +9,9 @@
 
 What a check hands to whoever reads its result: four exit codes (`0` pass, `1` fail, `2` could not
 verify, `3` advisory), one machine-readable verdict line at the end of every run, advisories named rather
-than counted, and no stopping at the first failure.
+than counted, and no stopping at the first failure. 0.10 reserves `4` as a non-verdict (not looked at yet
+- a shared lock held by another run, wait for the turn and rerun); no script here emits it, so the closed
+set this repo's callers branch on is unchanged, and only `PASS` not followed by `WITH ADVISORIES` is clean.
 
 **Scope here.** The gate and check scripts under [`../../scripts/`](../../scripts/) and the judging
 subcommands of `tools/ocrlab` (`verify`, `gate`). **Not** the app's own CLI: `doc-html-translate.exe`

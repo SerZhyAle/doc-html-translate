@@ -58,7 +58,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
 | Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
-| Source-language detection | (none - Go declares only a stated language, see "Declared source language") | [`extension/src/lang.js`](../extension/src/lang.js) |
+| Source-language detection | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`DominantScript`, `DeclarationContradicted` - the guard half only; Go declares only a stated language, see "Declared source language") | [`extension/src/lang.js`](../extension/src/lang.js) |
 | Declared-language tag | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`NormalizeLangTag`) | [`extension/src/lang.js`](../extension/src/lang.js) (`normalizeLangTag`) |
 | Settings / options surface | [`internal/config/flags.go`](../internal/config/flags.go), [`ui.html`](../cmd/doc-html-ui/ui.html) | [`popup.js`](../extension/src/popup.js), [`options.js`](../extension/src/options.js), [`background.js`](../extension/src/background.js) |
 
@@ -478,11 +478,23 @@ in both, drawn differently by surface: a button in the extension's table of cont
 | Left-margin baseline | 25th percentile of first-word X | `extract.go` | `reflow.js` |
 | Median line-spacing fallback | `12` | `extract.go` | `reflow.js` |
 | Ligature-artifact filter | `>= 4` tokens, every one a letters-only fragment of `<= 2` letters, distinct fragments `<= 0.5` x tokens | `isLigaturesArtifact`, `ligature*` | `isLigaturesArtifact`, `LIGATURE_*` in [`reflow.js`](../extension/src/reflow.js) |
-| Heading word caps | "short" `<= 8`, "medium" `<= 14` | `classifyBlock` | [`reflow.js:36,41`](../extension/src/reflow.js#L36-L41) |
+| Heading word caps | "short" `<= 8`, "medium" `<= 14` **script-aware words** | `classifyBlock`, `scriptWords` | `classifyBlock`, `countWords` [`reflow.js`](../extension/src/reflow.js) |
+| CJK word estimate | a run of Han / Hiragana / Katakana counts as `ceil(runes / 2)` words; every other run (Hangul included - Korean spaces its words) counts as one; whitespace ends a run, a token mixing scripts counts each run on its own | `cjkRunesPerWord`, `scriptWords` | `CJK_RUNES_PER_WORD`, `countWords` |
+| Heading centring baseline | centred = more than `headingCenterSpaces` (8) past **the page's own left margin** - the smallest leading-space count of the page's text lines - not past column 0 | `pageLeftMargin`, `headingCenterSpaces` | the geometric `isCentered` already measures against the 25th/75th-percentile text column, so no constant |
 
 Both sides now name these constants (Go: a documented `const` block in `extract.go`; JS: the
-`*_FACTOR`/`*_THRESHOLD`/`LIGATURE_*` consts in `reflow.js`) and `tests/parity_test.go` asserts the values match. See
+`*_FACTOR`/`*_THRESHOLD`/`LIGATURE_*`/`CJK_RUNES_PER_WORD` consts in `reflow.js`) and `tests/parity_test.go` asserts the values match. See
 the JS-only additions under [Intentional divergences](#intentional-divergences-do-not-fix).
+
+The word caps count **script-aware words**, not whitespace tokens (ticket 73, corpus case
+`zh-textpdf-un-a-res-70-1`): Chinese and Japanese write without spaces, so whitespace alone counted a
+whole paragraph as one or two "words" - always short, and on a page whose every line read as centred,
+every paragraph became a heading (400 of them on 32 pages). Both editions now count a Han / Hiragana /
+Katakana run as `ceil(runes / 2)` words; the centring signal is measured from the page's own left margin
+so a whole-column indent stops faking centreing. The shared case table
+[`tests/testdata/pdf_heading_cases.json`](../tests/testdata/pdf_heading_cases.json) drives both editions'
+`classifyBlock` unit tests (Go: `TestClassifyBlockSharedCases`; JS: the shared heading fixture in
+`reflow.test.mjs`), and `TestParityReflowConstants` fails if either stops reading it.
 
 The ligature-artifact filter drops a row only when all three parts of the signature hold - enough tokens,
 each a short letters-only fragment, and mostly repeats - because each part alone matches real text. Its
@@ -507,6 +519,19 @@ distinct images would be wrong as often as right.
 
 Go: `internal/pdf/images.go` `selectPageImages` / `sameShapeRaster` / `betterPageRaster` / `aspectRatioTolerance`.
 JS: `extension/src/pdf-images.js` `dedupeSameShape` / `sameShapeRaster` / `ASPECT_RATIO_TOLERANCE`.
+
+**Which rasters reach the reader - the same rule on every path.** Both editions show every raster a page
+paints, whatever its size, and whether OCR is on or off; the dedupe above is the only filter. The desktop
+extracts them during conversion; the extension extracts a page's rasters lazily, as the reader scrolls near
+the page (`viewer.js` `deferPageImages`), on the default path as well as with OCR on. What the OCR option
+decides is only whether the shown pictures are recognized. One named difference sits on that side: the
+extension does not queue a raster under **`OCR_MIN_SIDE = 64`** px on a side for recognition (`pdf-images.js`
+`ocrWorthy`, marked `data-dht-no-ocr`) - an icon or a bullet carries no line of text - while the desktop has no
+such gate. It changes recognition cost, never what is displayed. Ticket 77 measured both halves of the old
+gap on the corpus: extraction used to run only with OCR on, and even then pdf.js hands over a JPEG it decoded
+through the browser's `ImageDecoder` as a `VideoFrame`, which the extractor did not recognize, so most
+illustrations were dropped silently (`en-illpdf-little-nemo`: 1 of the desktop's 15 images; 10 of the
+other 14 were `VideoFrame` JPEGs, 4 were icons under the old 64 px display floor).
 
 **Known divergence - the stencil `/Mask` preference is desktop-only.** Inside a same-shape group the Go side
 keeps a raster *without* a stencil `/Mask` over a larger one painted through it (`betterPageRaster`): a mixed
@@ -918,7 +943,10 @@ their own test where one exists.
   the number of words the rung placed and a tie keeps the earlier rung - `tesseract.go`
   `resultStrength` / `strictlyBetter` == `ocr-cluster.js` `resultStrength` / `strictlyBetter`
   (guarded by `TestParityOCRRungComparator`). It replaces a first-non-empty-wins rule that let a rung
-  recovering one word end the search before a later rung could recover six.
+  recovering one word end the search before a later rung could recover six. A word is one the
+  recognizer returned - the plate carries the count (`Block.tokens` == the block's `tokens`), and only a
+  plate without one is counted by its text's fields - because the CJK word join below leaves a Japanese
+  plate one field per line (2026-09-29, `OCR-PIPELINE` amendment 1.8 C).
 - **The rescue floor was re-measured and did not move** - `ocrRescueLineConf` **80** ==
   `OCR_RESCUE_LINE_CONF`, guarded by `TestParityOCRGreyRescue`. It is recorded here because the
   re-measurement is the reason the number is now trustworthy rather than inherited, and because it
@@ -1158,6 +1186,19 @@ their own test where one exists.
   `rtl-arabic` translation-stress case (1.8x length in `tools/ocrlab/runner/stress.go` == `STRESS_CASES`
   in `ocrlab.mjs`), ensuring no clipping or drift occurs.
 
+- **CJK word join** identical (2026-09-29, ticket 75; `OCR-PIPELINE` amendment 1.8) - a line's words
+  join with no space where they meet on Han, kana or CJK punctuation (U+3000-U+303F, U+30FB-U+30FC,
+  U+FF00-U+FFEF), and where Hangul is involved only when the gap between their boxes is under
+  `OCR_HANGUL_JOIN_GAP_RATIO = 0.33` x the median height of the line's words; a space beside a Latin
+  word, a digit or ASCII punctuation is kept. A plate's lines join the same way on Han, kana and CJK
+  punctuation, while a Hangul line break keeps its space. `text.go` `joinLineWords` / `joinPlateLines` /
+  `ocrHangulJoinGapRatio` == `ocr-text.js` `joinLineWords` / `joinPlateLines` /
+  `OCR_HANGUL_JOIN_GAP_RATIO`; the desktop builds a line's text once the line is complete
+  (`tsvLines`, and `lineFromWords` for a run the split cut), the extension in `collectLines` through
+  the recognizer scale. Guarded by the shared fixture `tests/testdata/ocr_cjk_join_cases.json`
+  (`TestCJKJoinSharedCases`, `ocr-text.test.mjs`), `TestParityOCRCJKJoin` (value and call sites) and
+  the constant status markers. Measured in `DEV/research/RESEARCH_cjk-word-join_2026-09-29.md`.
+
 - **Positioning acceptance gates absolute IoU floor, not drift alone** - `DEV/ocrlab/thresholds.json`
   and `tools/ocrlab/report/gate.go` gate the `position` dimension on mean IoU against ground truth
   (overall floor `0.77`, category floors for comic `0.75` and texture `0.74`) rather than on drift alone.
@@ -1345,8 +1386,17 @@ from what the source states. Both editions read the same declarations:
   Markdown -> no `lang`) and `internal/htmlgen` `TestGenerateIndexCarriesDocumentLang`.
 - **Intentional difference:** where nothing is stated the extension still fills in a language - PDF
   `/Lang` metadata, then the `lang.js` script heuristic - because its viewer has the text sample in hand
-  and sets `lang` at view time. The Go app leaves `lang` off and lets Chrome detect the language; it does
-  not read PDF `/Lang` yet. The one Go page that keeps `lang="en"` is the "nothing to convert" PDF fallback
+  and sets `lang` at view time. **A declaration is trusted only when the text does not contradict it**
+  (ticket 76, the shared `tests/testdata/pdf_lang_cases.json` fixture): with a text sample in hand, a
+  declared language whose script (Latin for `en-GB`) does not include the sample's dominant script (Han
+  for a Simplified Chinese UN resolution carrying its template's `/Lang (en-GB)`) is dropped and the
+  script heuristic decides; a language the script table cannot speak for (`bn`, `ta`, `ka`..) is never
+  dropped. The heuristic itself states nothing when the sample has nothing to say: empty text means no
+  `lang`, never an invented `en`, and a Cyrillic sample is Ukrainian only on the Ukrainian-only letters
+  `ї є ґ` - not `і`, which pre-1918 Russian used constantly. The Go app leaves `lang` off and lets Chrome
+  detect the language; it does not read PDF `/Lang` yet, and `textutil.DeclarationContradicted` (same
+  script table, same block counter, same fixture) is the guard its future reader must apply before
+  trusting a declaration. The one Go page that keeps `lang="en"` is the "nothing to convert" PDF fallback
   page, whose only text is the app's own English note.
 
 ### Interface language set, and what the interface language must never touch

@@ -412,16 +412,25 @@ func isDoubleSpacedLayout(blocks []layoutBlock) bool {
 // Centering heuristic: pdftotext -layout right-pads lines to the page width.
 // A centered heading like "LITTLE TOKYO" gets ~20 spaces of left indent.
 // Body paragraph first lines get ~1 space (first-line indent).
-// leadingSpaces > 8 = centered = heading candidate.
+// leadingSpaces more than headingCenterSpaces past the page's own left margin
+// (pageLeftMargin) = centered = heading candidate.
 // PDF reflow heuristic constants. These paragraph/heading thresholds are shared,
 // value-for-value, with the browser extension's reflow.js (a hand port). A change here
 // must be mirrored there and in docs/PARITY.md ("PDF reflow heuristics").
 const (
-	paraGapFactor      = 1.5  // paragraph break when a Y-gap exceeds this * median line spacing (reflow.js PARA_GAP_FACTOR)
-	indentThreshold    = 8.0  // points; first-line indent past the left margin starts a paragraph (reflow.js INDENT_THRESHOLD)
-	medianGapFallback  = 12.0 // fallback median line spacing when it can't be measured
-	headingShortWords  = 8    // "short" line word cap for an h2 heading candidate
-	headingMediumWords = 14   // "medium" line word cap for an h3 heading candidate
+	paraGapFactor       = 1.5  // paragraph break when a Y-gap exceeds this * median line spacing (reflow.js PARA_GAP_FACTOR)
+	indentThreshold     = 8.0  // points; first-line indent past the left margin starts a paragraph (reflow.js INDENT_THRESHOLD)
+	medianGapFallback   = 12.0 // fallback median line spacing when it can't be measured
+	headingShortWords   = 8    // "short" line word cap for an h2 heading candidate
+	headingMediumWords  = 14   // "medium" line word cap for an h3 heading candidate
+	headingCenterSpaces = 8    // spaces past the page's own left margin that read as centred (reflow.js measures this geometrically)
+
+	// A run of Han / Hiragana / Katakana counts as ceil(n / cjkRunesPerWord) words: Chinese and
+	// Japanese write without spaces, so whitespace alone counted a whole CJK paragraph as one
+	// or two "words" - always "short", always a heading on a centred page (corpus case
+	// zh-textpdf-un-a-res-70-1, ticket 73). Korean writes spaces between words, so Hangul stays
+	// a one-word token like Latin script. (reflow.js CJK_RUNES_PER_WORD)
+	cjkRunesPerWord = 2
 
 	// The ligature-artifact signature (isLigaturesArtifact), mirrored by reflow.js LIGATURE_*.
 	ligatureMinWords         = 4   // fewer tokens than this is never an artifact
@@ -429,9 +438,9 @@ const (
 	ligatureMaxDistinctRatio = 0.5 // distinct fragments / tokens at or below this = a repeated fragment run
 )
 
-func classifyBlock(text string, leadingSpaces int) string {
-	words := strings.Fields(text)
-	if len(words) == 0 {
+func classifyBlock(text string, leadingSpaces, pageMargin int) string {
+	words := scriptWords(text)
+	if words == 0 {
 		return "p"
 	}
 
@@ -442,17 +451,55 @@ func classifyBlock(text string, leadingSpaces int) string {
 	// digit/punctuation-only lines (which lower-case to themselves). See docs/PARITY.md.
 	upper := strings.ToUpper(text)
 	isAllCaps := upper == text && text != strings.ToLower(text)
-	isCentered := leadingSpaces > 8
-	isShort := len(words) <= headingShortWords
+	isCentered := leadingSpaces-pageMargin > headingCenterSpaces
+	isShort := words <= headingShortWords
 
 	switch {
 	case (isAllCaps || isCentered) && isShort:
 		return "h2"
-	case isCentered && len(words) <= headingMediumWords:
+	case isCentered && words <= headingMediumWords:
 		return "h3"
 	default:
 		return "p"
 	}
+}
+
+// scriptWords counts the words the heading shortness test should see: a run of Han /
+// Hiragana / Katakana characters is ceil(n / cjkRunesPerWord) words, every other run of
+// non-space characters is one word. Whitespace ends a run. A token may mix scripts
+// ("2015年9月") - each maximal run counts on its own, so that token is four words.
+func scriptWords(text string) int {
+	total := 0
+	cjkRunes := 0
+	otherRun := false
+	flushOther := func() {
+		if otherRun {
+			total++
+			otherRun = false
+		}
+	}
+	flushCJK := func() {
+		if cjkRunes > 0 {
+			total += (cjkRunes + cjkRunesPerWord - 1) / cjkRunesPerWord
+			cjkRunes = 0
+		}
+	}
+	for _, r := range text {
+		switch {
+		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
+			flushOther()
+			flushCJK()
+		case unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hiragana, r) || unicode.Is(unicode.Katakana, r):
+			flushOther()
+			cjkRunes++
+		default:
+			flushCJK()
+			otherRun = true
+		}
+	}
+	flushOther()
+	flushCJK()
+	return total
 }
 
 // isLigaturesArtifact reports whether a row is ligature garbage - "if lf if if if if if" - that a

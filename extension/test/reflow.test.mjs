@@ -7,12 +7,15 @@ import { readFileSync } from "node:fs";
 
 import {
   classifyBlock,
+  countWords,
   isLigaturesArtifact,
   extractRows,
   reflowPage,
 } from "../src/reflow.js";
 import { resolveOutline, destToPageIndex, buildToc } from "../src/toc.js";
-import { detectLang, normalizeLangTag } from "../src/lang.js";
+import { detectLang, normalizeLangTag, declarationContradicted } from "../src/lang.js";
+
+const fixture = (name) => JSON.parse(readFileSync(new URL(`../../tests/testdata/${name}`, import.meta.url), "utf8"));
 
 // transform = [fontSize,0,0,fontSize, x, y]; one item per word/line.
 const item = (str, x, y, width, fontSize = 12) => ({
@@ -65,6 +68,29 @@ test("isLigaturesArtifact: shared Go/JS fixture", () => {
   assert.ok(fixture.cases.length > 0);
   for (const c of fixture.cases) {
     assert.equal(isLigaturesArtifact(c.text), c.artifact, `isLigaturesArtifact(${JSON.stringify(c.text)}): ${c.why}`);
+  }
+});
+
+test("countWords: CJK runs halve, other runs count one, Hangul is not halved", () => {
+  assert.equal(countWords("人类"), 1);
+  assert.equal(countWords("个健康的环境中充分发挥自己的潜能。"), 9);
+  assert.equal(countWords("2015年9月可持续发展议程与宣言"), 9);
+  assert.equal(countWords("제1조 ① 대한민국은 민주공화국이다"), 4);
+  assert.equal(countWords("We are determined to end poverty and hunger"), 8);
+  assert.equal(countWords("   "), 0);
+});
+
+// The same fixture drives internal/pdf TestClassifyBlockSharedCases, so the two editions classify
+// the same blocks alike (docs/PARITY.md, "PDF reflow heuristics"; ticket 73). centered is derived
+// from the pdftotext geometry the desktop sees - leadingSpaces - pageMargin > 8 - which is the
+// spaces proxy of this edition's geometric test.
+test("classifyBlock: shared Go/JS heading fixture", () => {
+  const fixture = JSON.parse(readFileSync(new URL("../../tests/testdata/pdf_heading_cases.json", import.meta.url), "utf8"));
+  assert.ok(fixture.cases.length > 0);
+  for (const c of fixture.cases) {
+    const centered = c.leadingSpaces - c.pageMargin > 8;
+    assert.equal(classifyBlock(c.text, { centered }), c.tag,
+      `classifyBlock(${JSON.stringify(c.text)}): ${c.why}`);
   }
 });
 
@@ -206,6 +232,30 @@ test("detectLang: scripts", () => {
   assert.equal(detectLang("これは日本語のテキストのサンプルです"), "ja");
   assert.equal(detectLang("这是一段用于语言检测的中文文本示例内容"), "zh");
   assert.equal(detectLang("der die das und ist ein mit nicht auch auf eine"), "de");
+});
+
+test("detectLang: nothing to speak from states no language (ticket 76)", () => {
+  assert.equal(detectLang(""), "");
+  assert.equal(detectLang("   \n\t  "), "");
+  // An image-only scan's "sample" is page separators, not English.
+  assert.equal(detectLang("     "), "");
+  // Letters of no counted block say nothing either - never an invented "en".
+  assert.equal(detectLang("12345 ... ??? _"), "");
+  // One pre-1918 Russian і does not make Cyrillic Ukrainian; the Ukrainian-only
+  // letters ї є ґ do.
+  assert.equal(detectLang("сіи сказанія были записаны въ старинныхъ книгахъ"), "ru");
+  assert.equal(detectLang("у цього оповідання є їжачок і ґудзик"), "uk");
+});
+
+// The viewer's pdfDocumentLang order: options hint -> /Lang (guarded) -> heuristic. The
+// desktop runs the guard half of the same cases in internal/textutil
+// TestDeclarationContradicted.
+test("pdfDocumentLang: declaration guard, shared Go/JS fixture", () => {
+  for (const c of fixture("pdf_lang_cases.json").cases) {
+    const declared = normalizeLangTag(c.declared);
+    const lang = declared && !declarationContradicted(c.declared, c.text) ? declared : detectLang(c.text);
+    assert.equal(lang, c.want, c.name);
+  }
 });
 
 test("normalizeLangTag", () => {

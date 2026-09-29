@@ -319,6 +319,8 @@ async function walk(b, budgetMs, stepFactor) {
   let y = 0;
   let last = "";
   let still = 0;
+  let stalled = 0;
+  let rewalks = 0;
   let p = await probe(b);
   while (Date.now() < deadline) {
     const h = p.scrollHeight;
@@ -343,6 +345,13 @@ async function walk(b, budgetMs, stepFactor) {
     const sig = signature(p);
     if (y >= p.scrollHeight && !ocrBusy && p.imagesPending === 0 && sig === last) still += 1;
     else still = 0;
+    // Recognition waits for a picture to be seen, and a page's pictures are extracted on the
+    // same scroll: one that lands after the walk has passed it stays unrecognized until the
+    // reader comes back. A reader would; so does the walk - once, from the top - when OCR
+    // stands still at the bottom.
+    if (y >= p.scrollHeight && ocrBusy && sig === last) stalled += 1;
+    else stalled = 0;
+    if (stalled >= 5 && rewalks < 1) { rewalks += 1; stalled = 0; y = -Math.round(VIEWPORT.height * stepFactor); }
     last = sig;
     if (still >= 3) return { probe: p, truncated: false };
   }

@@ -55,6 +55,11 @@ type Block struct {
 	// Conf is the mean confidence of the block's lines. Only the discard record reads it: a plate
 	// the screen merge rejects has no line left to take a confidence from.
 	Conf float64
+	// tokens is how many words the recognizer returned for the block's lines, for resultStrength
+	// only. The plate's text no longer says it: CJK words are joined without a space
+	// (OCR-PIPELINE amendment 1.8), so counting the text's fields would weigh a Japanese pass by
+	// its line breaks. Zero means unknown, and the text's fields are counted instead.
+	tokens int
 }
 
 // LineBox is one recognized line's rectangle in image pixels.
@@ -1113,10 +1118,6 @@ func lineFromWords(words []ocrWord) *ocrLine {
 	for _, w := range words {
 		l.x0, l.y0 = min(l.x0, w.x0), min(l.y0, w.y0)
 		l.x1, l.y1 = max(l.x1, w.x1), max(l.y1, w.y1)
-		if l.text.Len() > 0 {
-			l.text.WriteByte(' ')
-		}
-		l.text.WriteString(w.text)
 		if h := w.y1 - w.y0; h > 0 {
 			l.wordH = append(l.wordH, h)
 		}
@@ -1126,6 +1127,7 @@ func lineFromWords(words []ocrWord) *ocrLine {
 		}
 		l.words = append(l.words, w)
 	}
+	l.text.WriteString(joinLineWords(words))
 	return l
 }
 
@@ -1512,6 +1514,10 @@ func tsvLines(data []byte, minConf float64, ink *image.Gray, rescue, unordered b
 		if cur == nil {
 			return
 		}
+		// The line's text is built once its words are all known: the Hangul join reads their median
+		// height (joinLineWords, OCR-PIPELINE amendment 1.8 A). A run the split cuts rebuilds its own
+		// text from its own words (lineFromWords).
+		cur.text.WriteString(joinLineWords(cur.words))
 		runs := cur.splitWideGaps(ink)
 		if len(runs) > 1 {
 			split = true
@@ -1554,10 +1560,6 @@ func tsvLines(data []byte, minConf float64, ink *image.Gray, rescue, unordered b
 			if cur == nil || strings.TrimSpace(text) == "" {
 				continue
 			}
-			if cur.text.Len() > 0 {
-				cur.text.WriteByte(' ')
-			}
-			cur.text.WriteString(text)
 			if h > 0 {
 				cur.wordH = append(cur.wordH, h)
 			}
@@ -1633,7 +1635,7 @@ func keepLine(l *ocrLine, minConf float64) bool {
 func markRescueAdmission(lines []*ocrLine, minConf float64) {
 	var anchors []*ocrLine
 	for _, l := range lines {
-		if keepLine(l, minConf) && longestLetterRun(l.text.String()) >= ocrRescueAnchorRun {
+		if keepLine(l, minConf) && l.letterRun() >= ocrRescueAnchorRun {
 			anchors = append(anchors, l)
 		}
 	}
@@ -1644,7 +1646,7 @@ func markRescueAdmission(lines []*ocrLine, minConf float64) {
 		if keepLine(l, minConf) {
 			continue
 		}
-		if l.meanConf() < ocrRescueAnchorConf || longestLetterRun(l.text.String()) < ocrRescueAnchorRun {
+		if l.meanConf() < ocrRescueAnchorConf || l.letterRun() < ocrRescueAnchorRun {
 			continue
 		}
 		for _, a := range anchors {
@@ -1654,6 +1656,22 @@ func markRescueAdmission(lines []*ocrLine, minConf float64) {
 			}
 		}
 	}
+}
+
+// letterRun is the line's longest letter run measured word by word, as the recognizer returned the
+// words, not across the line's text: since CJK words are joined without a space (OCR-PIPELINE
+// amendment 1.8) the text would hand a Japanese line one long run where the admission was measured
+// on many short ones. A line with no words (a test fixture) is read from its text. Mirrors
+// ocr-cluster.js lineLetterRun.
+func (l *ocrLine) letterRun() int {
+	if len(l.words) == 0 {
+		return longestLetterRun(l.text.String())
+	}
+	best := 0
+	for _, w := range l.words {
+		best = max(best, longestLetterRun(w.text))
+	}
+	return best
 }
 
 // longestLetterRun counts the longest run of consecutive letters in s - the "run of four letters"
@@ -1757,21 +1775,26 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 				for i := range over {
 					if j := slices.Index(clines, over[i].Lines[0]); j >= 0 {
 						over[i].Conf = cmembers[j].meanConf()
+						over[i].tokens = len(cmembers[j].words)
 					}
 				}
 				blocks = append(blocks, over...)
 			} else {
 				conf := 0.0
+				tokens := 0
 				for _, m := range cmembers {
 					conf += m.meanConf()
+					tokens += len(m.words)
 				}
-				blocks = append(blocks, Block{
-					Text: strings.Join(ctexts, " "), X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
+				b := Block{
+					Text: joinPlateLines(ctexts), X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
 					LineH: median(cheights, cy1-cy0),
 					TypeH: median(cink, 0),
 					Lines: append([]LineBox(nil), clines...),
 					Conf:  conf / float64(len(cmembers)),
-				})
+				}
+				b.tokens = tokens
+				blocks = append(blocks, b)
 			}
 		} else if dropped != nil {
 			for _, m := range cmembers {

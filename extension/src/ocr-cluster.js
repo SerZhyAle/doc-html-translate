@@ -5,7 +5,7 @@
 //
 // Keep this file and tesseract.go in sync (docs/PARITY.md).
 
-import { isTranslatable, repairPipeMisreads } from "./ocr-text.js";
+import { isTranslatable, joinPlateLines, repairPipeMisreads } from "./ocr-text.js";
 
 // Overlay grouping constants, shared verbatim with the desktop app (see docs/PARITY.md and
 // internal/ocr/tesseract.go ocrMinLineConf / ocrClusterPitchFactor / ocrMaxLeadingRatio).
@@ -131,6 +131,15 @@ export function longestLetterRun(s) {
   return best;
 }
 
+// lineLetterRun is the line's longest letter run measured word by word, as the recognizer returned the
+// words (collectLines records it as letterRun), not across the line's text: since CJK words are joined
+// without a space (OCR-PIPELINE amendment 1.8) the text would hand a Japanese line one long run where
+// the admission was measured on many short ones. A line with no recorded run is read from its text.
+// Mirrors tesseract.go (*ocrLine) letterRun.
+export function lineLetterRun(l) {
+  return typeof l.letterRun === "number" ? l.letterRun : longestLetterRun(l.text);
+}
+
 // markRescueAdmission is the anchored rescue admission (OCR-PIPELINE amendment 1.6 A), the rescue
 // floor's third axis after confidence and length. It runs once per rescue-rung recognition, over
 // that pass's complete lines, and marks the lines that may join despite a sub-floor confidence:
@@ -148,11 +157,11 @@ export function longestLetterRun(s) {
 // carries changes. The ordinary pass and the screen passes never run this: their floors were
 // measured without a relaxation. Mirrors tesseract.go markRescueAdmission (docs/PARITY.md).
 export function markRescueAdmission(lines, minConf = OCR_RESCUE_LINE_CONF) {
-  const anchors = (lines || []).filter((l) => keepLine(l, minConf) && longestLetterRun(l.text) >= OCR_RESCUE_ANCHOR_RUN);
+  const anchors = (lines || []).filter((l) => keepLine(l, minConf) && lineLetterRun(l) >= OCR_RESCUE_ANCHOR_RUN);
   if (anchors.length < OCR_RESCUE_ANCHOR_VOTES) return;
   for (const l of lines) {
     if (keepLine(l, minConf)) continue;
-    if (l.conf < OCR_RESCUE_ANCHOR_CONF || longestLetterRun(l.text) < OCR_RESCUE_ANCHOR_RUN) continue;
+    if (l.conf < OCR_RESCUE_ANCHOR_CONF || lineLetterRun(l) < OCR_RESCUE_ANCHOR_RUN) continue;
     for (const a of anchors) {
       if (sameTypeSize(lineInkHeight(l), lineInkHeight(a))) {
         l.rescued = true;
@@ -715,12 +724,15 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
         // textless lines, so the positions do not line up).
         for (const b of released) {
           const i = cur.lines.findIndex((l) => sameBox(l, b.lines[0]));
-          if (i >= 0) b.conf = cur.members[i].conf;
+          if (i >= 0) {
+            b.conf = cur.members[i].conf;
+            b.tokens = cur.members[i].tokens || 0;
+          }
         }
         blocks.push(...released);
       } else {
         blocks.push({
-          text: cur.texts.join(" ").trim(),
+          text: joinPlateLines(cur.texts).trim(),
           bbox: { x0: cur.x0, y0: cur.y0, x1: cur.x1, y1: cur.y1 },
           lineHeight: medianOf(cur.heights) || (cur.y1 - cur.y0),
           // The type size - the median of the lines' word-height medians - which only the plate font
@@ -733,6 +745,8 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
           // Mean line confidence, for the discard record only: a plate the screen merge refuses
           // has no line left to take one from. Mirrors Block.Conf.
           conf: cur.members.reduce((sum, m) => sum + m.conf, 0) / cur.members.length,
+          // The recognizer's word count, for resultStrength only. Mirrors Block.tokens.
+          tokens: cur.members.reduce((sum, m) => sum + (m.tokens || 0), 0),
         });
       }
     } else if (dropped) {
@@ -792,10 +806,15 @@ function sameBox(a, b) {
 // placed on the image. The count is over the plates a pass produced, so the confidence floor that
 // pass ran under is already applied - a word here is a word the reader would see. Word count rather
 // than plated area, because area is a statement about image size as much as about what was read.
+// A word is one the recognizer returned (the block's tokens), not a space-separated field of its
+// text: CJK words are joined without a space (OCR-PIPELINE amendment 1.8), so the text would count a
+// Japanese plate as one word per line. The fields are counted only for a block with no token count.
 // Mirrors tesseract.go resultStrength (docs/PARITY.md).
 export function resultStrength(blocks) {
   let n = 0;
-  for (const b of blocks || []) n += (b.text || "").split(/\s+/).filter(Boolean).length;
+  for (const b of blocks || []) {
+    n += b.tokens > 0 ? b.tokens : (b.text || "").split(/\s+/).filter(Boolean).length;
+  }
   return n;
 }
 

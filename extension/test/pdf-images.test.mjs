@@ -1,5 +1,5 @@
 // Unit tests for the pure transform helpers in pdf-images.js. Run: npm test.
-// The canvas/blob paths need a browser; only the CTM math is covered here.
+// The canvas/blob paths are covered against a stubbed canvas at the bottom.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -91,4 +91,63 @@ test("the page raster keeps ordinary pages at full scale and caps outsized ones"
   const strip = rasterScale(500, 40000, 2);
   assert.ok(40000 * strip <= RASTER_MAX_SIDE + 1e-6);
   assert.equal(rasterScale(0, 0, 2), 2);
+});
+
+// ---- extractPageImages over a stub page -------------------------------------------
+// The canvas is stubbed down to what the draw path touches, so the test can see which
+// image objects become blobs. VideoFrame stands in for the object pdf.js hands over for a
+// JPEG it decoded through ImageDecoder.
+class StubVideoFrame {
+  constructor(w, h) { this.displayWidth = w; this.displayHeight = h; }
+}
+class StubCanvas {
+  constructor(w, h) { this.width = w; this.height = h; this.drawn = []; }
+  getContext() {
+    const c = this;
+    return { translate() {}, scale() {}, drawImage(src) { c.drawn.push(src); }, putImageData() {} };
+  }
+  convertToBlob() { return Promise.resolve({ size: this.width * this.height, drawn: this.drawn }); }
+}
+globalThis.VideoFrame ??= StubVideoFrame;
+globalThis.OffscreenCanvas ??= StubCanvas;
+globalThis.ImageData ??= class ImageData { constructor(d, w, h) { this.data = d; this.width = w; this.height = h; } };
+
+const { OPS } = await import("../vendor/pdf.mjs");
+const { extractPageImages, ocrWorthy, OCR_MIN_SIDE } = await import("../src/pdf-images.js");
+
+function stubPage(objs) {
+  const names = Object.keys(objs);
+  return {
+    getOperatorList: async () => ({
+      fnArray: names.map(() => OPS.paintImageXObject),
+      argsArray: names.map((n) => [n, objs[n].width, objs[n].height]),
+    }),
+    objs: { get: (name, cb) => cb(objs[name]) },
+    commonObjs: { get: (_name, cb) => cb(null) },
+  };
+}
+
+test("extractPageImages: a JPEG pdf.js decoded to a VideoFrame becomes an image (ticket 77)", async () => {
+  // The measured shape: data null, bitmap a VideoFrame. Only an ImageBitmap used to count, so
+  // every such picture was dropped without a word.
+  const frame = new globalThis.VideoFrame(500, 166);
+  const imgs = await extractPageImages(stubPage({ img_p1_1: { data: null, width: 500, height: 166, bitmap: frame } }));
+  assert.equal(imgs.length, 1);
+  assert.equal(imgs[0].width, 500);
+  assert.equal(imgs[0].blob.drawn[0], frame);
+});
+
+test("extractPageImages: icon-sized rasters are kept, as the desktop keeps them", async () => {
+  const imgs = await extractPageImages(stubPage({
+    photo: { data: new Uint8Array(250 * 333 * 3), width: 250, height: 333 },
+    icon: { data: new Uint8Array(20 * 27 * 3), width: 20, height: 27 },
+  }));
+  assert.deepEqual(imgs.map((i) => `${i.width}x${i.height}`), ["250x333", "20x27"]);
+});
+
+test("ocrWorthy: only a picture of real size is queued for recognition", () => {
+  assert.equal(ocrWorthy({ width: 250, height: 333 }), true);
+  assert.equal(ocrWorthy({ width: 20, height: 27 }), false);
+  assert.equal(ocrWorthy({ width: 767, height: OCR_MIN_SIDE - 1 }), false);
+  assert.equal(ocrWorthy({ width: OCR_MIN_SIDE, height: OCR_MIN_SIDE }), true);
 });

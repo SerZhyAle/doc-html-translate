@@ -57,7 +57,7 @@ type pdfImages struct {
 // each image is the loop's own, recorded as the file is written: reading it back out of
 // the file name took the first number found, and a PDF named Volume_3.pdf put every
 // image on page 3.
-func writePDFImages(pdfPath, imagesDir string) (byPage map[int][]string, pageCount int) {
+func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage map[int][]string, pageCount int) {
 	f, err := os.Open(pdfPath)
 	if err != nil {
 		logging.Printf("  WARNING: could not open PDF for image extraction: %v\n", err)
@@ -86,10 +86,26 @@ func writePDFImages(pdfPath, imagesDir string) (byPage map[int][]string, pageCou
 	tick := logging.NewTicker("Extracting images", "pages")
 	for pageNum := 1; pageNum <= pageCount; pageNum++ {
 		tick.Report(pageNum-1, pageCount)
-		kept, thumbs, dups, err := pageImagesSafe(ctx, pageNum)
+		imgs, err := pageImagesSafe(ctx, pageNum)
 		if err != nil {
 			continue // expected for pages with no (or unreadable) images
 		}
+		if bg, fg, ok := mrcPair(imgs); ok {
+			name := fmt.Sprintf("%s_%d_mrc.jpg", prefix, pageNum)
+			if err := writeMRCComposite(runCtx, ctx, bg, fg, imagesDir, name); err == nil {
+				byPage[pageNum] = append(byPage[pageNum], name)
+				written++
+				continue
+			} else {
+				logging.Printf("  WARNING: could not compose MRC layers on page %d: %v\n", pageNum, err)
+				// Extraction readers were consumed during the failed attempt.
+				imgs, err = pageImagesSafe(ctx, pageNum)
+				if err != nil {
+					continue
+				}
+			}
+		}
+		kept, thumbs, dups := selectPageImages(imgs)
 		skippedThumbs += thumbs
 		skippedDups += dups
 		for _, img := range kept {
@@ -125,17 +141,17 @@ func writePDFImages(pdfPath, imagesDir string) (byPage map[int][]string, pageCou
 
 // pageImagesSafe extracts and filters one page's images. A panic inside pdfcpu on one
 // malformed image stream costs that page its pictures, not the conversion.
-func pageImagesSafe(ctx *model.Context, pageNum int) (kept []model.Image, thumbs, dups int, err error) {
+func pageImagesSafe(ctx *model.Context, pageNum int) (imgs map[int]model.Image, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logging.Printf("  WARNING: PDF image extraction panicked on page %d: %v\n", pageNum, r)
 			logging.RunLogf("%s\n", debug.Stack())
-			kept, thumbs, dups, err = nil, 0, 0, fmt.Errorf("panic on page %d: %v", pageNum, r)
+			imgs, err = nil, fmt.Errorf("panic on page %d: %v", pageNum, r)
 		}
 	}()
-	imgs, err := pdfcpulib.ExtractPageImages(ctx, pageNum, false)
+	imgs, err = pdfcpulib.ExtractPageImages(ctx, pageNum, false)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, err
 	}
 	// The real (non-stub) extraction leaves Width/Height zero and never looks at the
 	// dictionary's mask entries; a stub pass fills both from the image dict without
@@ -153,8 +169,7 @@ func pageImagesSafe(ctx *model.Context, pageNum int) (kept []model.Image, thumbs
 			}
 		}
 	}
-	kept, thumbs, dups = selectPageImages(imgs)
-	return kept, thumbs, dups, nil
+	return imgs, nil
 }
 
 // imageFileName names one extracted image. used holds the lower-cased names already
@@ -285,7 +300,7 @@ func extractImages(ctx context.Context, pdfPath, outputDir string) pdfImages {
 		return pdfImages{}
 	}
 
-	byName, pageCount := writePDFImagesSafe(pdfPath, imagesDir)
+	byName, pageCount := writePDFImagesSafe(ctx, pdfPath, imagesDir)
 	if len(byName) == 0 {
 		logging.Printf("  NOTE: no images extracted from PDF\n")
 		return pdfImages{pageCount: pageCount}
@@ -321,7 +336,7 @@ func extractImages(ctx context.Context, pdfPath, outputDir string) pdfImages {
 // writePDFImagesSafe runs the image pass with a panic guard around the parts that are not
 // per page (reading and validating the whole document). The pass is best-effort: a pdfcpu
 // panic there costs the book its pictures, never its text.
-func writePDFImagesSafe(pdfPath, imagesDir string) (byPage map[int][]string, pageCount int) {
+func writePDFImagesSafe(runCtx context.Context, pdfPath, imagesDir string) (byPage map[int][]string, pageCount int) {
 	defer func() {
 		if r := recover(); r != nil {
 			logging.Printf("  WARNING: PDF image extraction panicked: %v\n", r)
@@ -329,7 +344,7 @@ func writePDFImagesSafe(pdfPath, imagesDir string) (byPage map[int][]string, pag
 			byPage, pageCount = nil, 0
 		}
 	}()
-	return writePDFImages(pdfPath, imagesDir)
+	return writePDFImages(runCtx, pdfPath, imagesDir)
 }
 
 // normalizeExtractedPDFImages makes the written images displayable in a browser, updating

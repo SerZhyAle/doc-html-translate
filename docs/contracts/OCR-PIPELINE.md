@@ -1,7 +1,7 @@
 # Pointer: OCR-PIPELINE
 
 - **Id:** `OCR-PIPELINE`
-- **Version:** 1.6 (2026-09-25: 1.1 added the line split - word-gap ratio, column regrouping, the stroke test
+- **Version:** 1.8 (2026-09-25: 1.1 added the line split - word-gap ratio, column regrouping, the stroke test
   between two words, orphans; 1.2 brought the document up to the code - eight corrections, the trim stage,
   the word-height type size and plate font, the grow branch, page OCR, a status column, negative results;
   2026-09-26: 1.3 added the concealment mode - fill / reconstruct / mask chosen from the ring outside the block;
@@ -18,7 +18,11 @@
   than the type-size ratio above the line's median word height, the touching outlines of two adjacent
   balloons being read as tokens of the stitched line - and the grey sweep, the grey rung spent
   additively on a page that already read, fired by the layout analysis' wordless text regions
-  standing outside the plates)
+  standing outside the plates;
+  2026-09-29: 1.8 joined CJK words without the space the recognizer's cut implies - on Han, kana and
+  CJK punctuation always, on Hangul only when the boxes stand closer than 0.33 of the median word
+  height; a plate's CJK lines join the same way, and the rescue comparator counts the recognizer's
+  words instead of the plate text's fields)
 - **Home:** the shared contracts catalog, `ocr-overlay/ocr-pipeline.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - the document describes this product's own mechanism, end to end
 - **Read by:** FastMediaSorter Android and FastMediaSorter_Lite, which port parts of it

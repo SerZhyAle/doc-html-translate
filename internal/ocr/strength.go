@@ -12,9 +12,18 @@ import "strings"
 // not survive the comparison either: the same scene plates 3.9% of its image while a poster's one
 // recovered word plates 1.7% of a much larger one, which is a difference in image size rather than
 // in how much was found. Counting words is what the two ends of that range have in common.
+//
+// A word is one the recognizer returned (Block.tokens), not a space-separated field of the plate's
+// text: since CJK words are joined without a space (OCR-PIPELINE amendment 1.8) the text would count
+// a Japanese plate as one word per line, and a rung that read more of the page could lose to one
+// that read less. The fields are counted only for a block that carries no token count.
 func resultStrength(res Result) int {
 	n := 0
 	for _, b := range res.Blocks {
+		if b.tokens > 0 {
+			n += b.tokens
+			continue
+		}
 		n += len(strings.Fields(b.Text))
 	}
 	return n

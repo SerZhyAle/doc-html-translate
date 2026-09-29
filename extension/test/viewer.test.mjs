@@ -474,10 +474,12 @@ test("a comic with a page that will not inflate is labeled partial before and af
 });
 
 // makePdfStub answers a PDF of `total` text pages; page `stallAt` blocks on `gate` so a
-// test can hold a preparation mid-chunk and stop it there.
-function makePdfStub(total, { stallAt = 0, gate } = {}) {
+// test can hold a preparation mid-chunk and stop it there. `language` puts a /Lang value
+// in the metadata and `text` replaces the page's text layer, so a test can stage the
+// declaration-vs-text conflicts of ticket 76.
+function makePdfStub(total, { stallAt = 0, gate, language = "", text = "Ordinary prose on a text page, plenty of it." } = {}) {
   const page = {
-    getTextContent: async () => ({ items: [{ str: "Ordinary prose on a text page, plenty of it." }] }),
+    getTextContent: async () => ({ items: [{ str: text }] }),
     getViewport: () => ({ width: 600, height: 800 }),
     cleanup() {},
   };
@@ -487,11 +489,51 @@ function makePdfStub(total, { stallAt = 0, gate } = {}) {
       if (stallAt && n >= stallAt) await gate;
       return page;
     },
-    getMetadata: async () => ({ info: {} }),
+    getMetadata: async () => ({ info: language ? { Language: language } : {} }),
     getOutline: async () => [],
     destroy() {},
   };
 }
+
+// Ticket 76: a PDF whose /Lang is its authoring template's "en-GB" over Simplified Chinese
+// text must not label the page English - the contradicted declaration is dropped and the
+// script heuristic decides.
+test("a PDF whose /Lang contradicts its text is labelled by the text", async () => {
+  globalThis.__getDocument = () => ({
+    promise: Promise.resolve(makePdfStub(1, { language: "en-GB", text: "消除贫穷和饥饿，确保所有人享有尊严。大会通过了一项方案，并呼吁各国政府采取具体措施。" })),
+    destroy() {},
+  });
+  try {
+    const { document } = await bootViewer(
+      "?file=https://books.test/zh-un.pdf",
+      async () => new Response(new TextEncoder().encode("%PDF-1.7\n").buffer, { status: 200 }),
+    );
+    assert.ok(await waitFor(() => document.documentElement.lang === "zh"), "the Han text decides the language");
+    assert.equal(document.querySelector('meta[http-equiv="content-language"]').content, "zh");
+  } finally {
+    delete globalThis.__getDocument;
+  }
+});
+
+// Ticket 76: an image-only scan has no text layer and no /Lang, so the page must state no
+// language at all - not the viewer's static lang="en" standing in as a false declaration.
+test("a scanned PDF with no text layer and no /Lang states no language", async () => {
+  globalThis.__getDocument = () => ({
+    promise: Promise.resolve(makePdfStub(1, { text: "" })),
+    destroy() {},
+  });
+  try {
+    const { document, content } = await bootViewer(
+      "?file=https://books.test/scan.pdf",
+      async () => new Response(new TextEncoder().encode("%PDF-1.7\n").buffer, { status: 200 }),
+    );
+    assert.ok(await waitFor(() => content.querySelector("section")), "the page renders");
+    assert.equal(document.documentElement.hasAttribute("lang"), false, "no lang is claimed");
+    assert.equal(document.querySelector('meta[http-equiv="content-language"]'), null);
+  } finally {
+    delete globalThis.__getDocument;
+  }
+});
 
 test("a chunk-rendered PDF offers to prepare the rest, and preparing saves a complete file", async () => {
   ioAutoFire = false; // chunk two must wait for the preparation, not for the stubbed scroll

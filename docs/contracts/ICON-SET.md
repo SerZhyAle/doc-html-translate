@@ -1,10 +1,13 @@
 # Pointer: ICON-SET
 
 - **Id:** `ICON-SET`
-- **Version:** 0.15 (draft)
+- **Version:** 0.16 (draft)
 - **Home:** the shared contracts catalog, `iconography/README.md` section 2, data in `iconography/vocabulary.jsonl` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25 - every edition (converted book, GUI, extension, site)
 - **Wire carrier:** none - a vocabulary read by people; the drawings this product ships are vendored under `assets/glyphs/`
+
+0.16 (2026-09-27) added one meaning, `content.disk-container` (a `.fdd` container, FileDO's surface);
+no surface of this product draws a `.fdd` file, so nothing here changes. Re-read with ticket 69.
 
 What this repo owes it:
 - One meaning, one glyph, one name (rules 1-3): the inventory is [`../GLYPH-MAP.md`](../GLYPH-MAP.md), every row

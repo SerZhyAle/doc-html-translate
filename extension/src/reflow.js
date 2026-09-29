@@ -21,6 +21,46 @@ const PARA_GAP_FACTOR = 1.5;
 // (isolates a heading set in a different size from the body it precedes).
 const FONT_BREAK_RATIO = 0.25;
 
+// A run of Han / Hiragana / Katakana characters counts as ceil(n / CJK_RUNES_PER_WORD) words:
+// Chinese and Japanese write without spaces, so whitespace alone counted a whole CJK paragraph
+// as one or two "words" - always "short", always a heading candidate (corpus case
+// zh-textpdf-un-a-res-70-1, 400 headings on 32 pages, ticket 73). Korean writes spaces between
+// words, so Hangul stays a one-word token like Latin script. Mirrors Go's cjkRunesPerWord +
+// scriptWords in internal/pdf/extract.go; both are pinned by tests/testdata/pdf_heading_cases.json.
+const CJK_RUNES_PER_WORD = 2;
+const CJK_RUN = /\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}/u;
+
+// countWords counts the words the heading shortness test should see: a maximal run of CJK
+// characters is ceil(n / CJK_RUNES_PER_WORD) words, every other run of non-space characters is
+// one word. Whitespace ends a run; a token may mix scripts ("2015年9月") - each run counts on
+// its own.
+export function countWords(text) {
+  let total = 0;
+  let cjkRunes = 0;
+  let otherRun = false;
+  const flushOther = () => {
+    if (otherRun) { total++; otherRun = false; }
+  };
+  const flushCJK = () => {
+    if (cjkRunes > 0) { total += Math.ceil(cjkRunes / CJK_RUNES_PER_WORD); cjkRunes = 0; }
+  };
+  for (const ch of text) {
+    if (/\s/u.test(ch)) {
+      flushOther();
+      flushCJK();
+    } else if (CJK_RUN.test(ch)) {
+      flushOther();
+      cjkRunes++;
+    } else {
+      flushCJK();
+      otherRun = true;
+    }
+  }
+  flushOther();
+  flushCJK();
+  return total;
+}
+
 // classifyBlock assigns an HTML tag from text content and layout, mirroring
 // internal/pdf/extract.go:classifyBlock. `centered` and `fontRatio` (this block's
 // font height / the page body mode height) replace pdftotext's leadingSpaces proxy.
@@ -29,16 +69,16 @@ const FONT_BREAK_RATIO = 0.25;
 // promoted to a heading - the Go classifier has no size trigger at all, so this
 // keeps the JS port from over-tagging.
 export function classifyBlock(text, { centered = false, fontRatio = 1, notWide = false } = {}) {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "p";
+  const words = countWords(text);
+  if (words === 0) return "p";
 
   const isAllCaps = text.toUpperCase() === text && /[A-ZА-ЯЁ]/u.test(text);
-  const isShort = words.length <= 8;
+  const isShort = words <= 8;
   const big = fontRatio >= 1.25 && notWide;
   const veryBig = fontRatio >= 1.6 && notWide;
 
   if ((isAllCaps || centered || veryBig) && isShort) return "h2";
-  if ((centered || big) && words.length <= 14) return "h3";
+  if ((centered || big) && words <= 14) return "h3";
   return "p";
 }
 
@@ -228,7 +268,7 @@ export function reflowPage(textContent, viewport) {
   for (const para of paragraphs) {
     const text = para.map((r) => r.text).join(" ").replace(/\s+/g, " ").trim();
     if (text === "") continue;
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const wordCount = countWords(text);
     const maxH = para.reduce((m, r) => Math.max(m, r.h || 0), 0);
     const fontRatio = bodyHeight > 0 ? maxH / bodyHeight : 1;
     // Headings may wrap onto a couple of lines (the Go pdftotext path keeps such a

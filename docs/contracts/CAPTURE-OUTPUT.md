@@ -1,9 +1,13 @@
 # Pointer: CAPTURE-OUTPUT
 
 - **Id:** `CAPTURE-OUTPUT`
-- **Version:** 0.1 draft
+- **Version:** 0.2 draft
 - **Home:** the shared contracts catalog, `capture-output/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - a reader of the `documents` kinds (`text`, `ocr_text`, `translation`) through the TXT input path; produces no file of any kind in rule 1's table
+
+0.2 (2026-09-29) added the `stream_video` / `stream_audio` kinds, the grow-in-place rule 12 and the
+source-container rule 13; nothing of it touches a producer that writes no capture, so the obligations
+below are unchanged. Re-read with ticket 69.
 
 What this repo owes, and where it is held:
 - **Rule 14, second sentence** (a reader accepts CRLF and a byte-order mark on input): the Go reader strips the UTF-8 and both UTF-16 marks and normalizes CR / CRLF (`internal/txt/extract.go`, `decodeText` and `parseParagraphs`); the extension does the same (`extension/src/txt.js`, `decodeText` and `splitParagraphs`). Both editions decode by the one ladder [`../PARITY.md`](../PARITY.md) pins.

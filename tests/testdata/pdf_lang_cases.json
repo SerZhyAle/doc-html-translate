@@ -1,0 +1,17 @@
+{
+  "_comment": "Shared PDF-language cases, ticket 76, read by extension/test/reflow.test.mjs (normalizeLangTag + declarationContradicted + detectLang, the viewer's pdfDocumentLang order) and internal/textutil TestDeclarationContradicted (DeclarationContradicted only - the desktop does not read PDF /Lang yet and never guesses a language). declared is the raw /Lang value; agree says whether the text leaves the declaration standing (the guard's answer); want is the language the extension viewer ends up putting on <html lang> (empty string when it puts none). A declaration is trusted only when the text does not contradict it: the sample's dominant script must be one the declared language is written in. See docs/PARITY.md, 'Declared source language'.",
+  "cases": [
+    { "name": "declared en-GB over Han text (zh-textpdf-un-a-res-70-1)", "declared": "en-GB", "text": "消除贫穷和饥饿，确保所有人享有尊严。大会通过了一项关于在全世界消除一切形式贫穷的方案，并呼吁各国政府为此采取具体措施。", "agree": false, "want": "zh" },
+    { "name": "declared en-GB over English text keeps the region", "declared": "en-GB", "text": "The general assembly adopted the programme with the support of the countries in the union, and the plan was put into practice for the good of all.", "agree": true, "want": "en-GB" },
+    { "name": "declared fr over French text", "declared": "fr", "text": "Le programme comprend des mesures pour les pays en development, et une declaration commune a ete adoptee dans le cadre de la reunion, avec le soutien des membres.", "agree": true, "want": "fr" },
+    { "name": "declared ru over Russian text", "declared": "ru", "text": "это пример русского текста для определения языка, в котором программа была принята на общем собрании", "agree": true, "want": "ru" },
+    { "name": "no declaration, Japanese text", "declared": "", "text": "これは日本語のテキストのサンプルです。言語検査のために書かれた文章です。", "agree": true, "want": "ja" },
+    { "name": "no declaration, Korean text", "declared": "", "text": "이것은 언어 감지를 위한 한국어 텍스트 예제입니다. 프로그램이 총회에서 채택되었습니다.", "agree": true, "want": "ko" },
+    { "name": "image-only scan without metadata states no language (ja-scanpdf-senryu-manga)", "declared": "", "text": "", "agree": true, "want": "" },
+    { "name": "whitespace-only text layer states no language", "declared": "", "text": "  \n\t ", "agree": true, "want": "" },
+    { "name": "pre-1918 Russian orthography is not Ukrainian (ru-scanpdf-folk-tales-1838)", "declared": "", "text": "сіи сказанія были записаны въ старинныхъ книгахъ и перепечатаны въ 1838 году", "agree": true, "want": "ru" },
+    { "name": "Ukrainian-only letters carry uk", "declared": "", "text": "у цього оповідання є їжачок і ґудзик, тому зрозуміло, якою мовою воно написане", "agree": true, "want": "uk" },
+    { "name": "declaration with no text sample stands (nothing contradicts it)", "declared": "en-GB", "text": "", "agree": true, "want": "en-GB" },
+    { "name": "declared zh over Latin text", "declared": "zh", "text": "The general assembly adopted the programme with the support of the countries in the union, and the plan was put into practice for the good of all.", "agree": false, "want": "en" }
+  ]
+}

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, markRescueAdmission, medianLinePitch, orderColumns, releaseOversized, resultStrength,
+  clusterLines, droppedLines, GATE_CONFIDENCE, GATE_TRANSLATABLE, keepLine, lineLetterRun, markRescueAdmission, medianLinePitch, orderColumns, releaseOversized, resultStrength,
   sameTypeSize, splitWideGaps, strictlyBetter, strokeBetween, trimOutlierWords,
   OCR_BOUNDARY_REACH, OCR_MAX_PLATE_COVERAGE, OCR_MAX_WORD_GAP_RATIO, OCR_RESCUE_LINE_CONF,
 } from "../src/ocr-cluster.js";
@@ -562,6 +562,17 @@ test("resultStrength counts the words a reader would see", () => {
     7,
     "several plates count together",
   );
+  // OCR-PIPELINE amendment 1.8: the joined Japanese plate counts the recognizer's seven words.
+  assert.equal(resultStrength([{ text: "コモナ市長の私が", tokens: 7 }]), 7, "a joined CJK plate counts its tokens");
+});
+
+test("clusterLines carries the recognizer's word count onto the plate", () => {
+  const line = (y, text, tokens) => ({ bbox: { x0: 0, y0: y, x1: 200, y1: y + 30 }, text, conf: 90, wordH: [30], tokens });
+  const blocks = clusterLines([line(0, "コモナ市長の私が", 7), line(36, "魔法薬コンテストの", 6)]);
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].text, "コモナ市長の私が魔法薬コンテストの", "the plate joins its Japanese lines unspaced");
+  assert.equal(blocks[0].tokens, 13);
+  assert.equal(resultStrength(blocks), 13);
 });
 
 test("strictlyBetter keeps the incumbent on a tie", () => {
@@ -749,6 +760,20 @@ test("markRescueAdmission needs two anchors: the balloon scene's single confiden
   assert.ok(!rus[1].rescued, "one anchor admits nothing");
   const dropped = droppedLines(rus, OCR_RESCUE_LINE_CONF).map((d) => d.text);
   assert.ok(dropped.includes("АВОЧТ ТН1$?"), "the candidate stays in the discard record");
+});
+
+// Mirrors internal/ocr TestLetterRunReadsTheRecognizersWords (OCR-PIPELINE amendment 1.8): the
+// admission reads the longest recognized word's run, not the joined CJK text's.
+test("markRescueAdmission reads a joined CJK line's run word by word", () => {
+  const anchors = [
+    { bbox: { x0: 0, y0: 0, x1: 300, y1: 100 }, conf: 92.0, text: "ANCHORED" },
+    { bbox: { x0: 0, y0: 200, x1: 300, y1: 300 }, conf: 90.0, text: "SECOND ANCHOR" },
+  ];
+  const cjk = { bbox: { x0: 0, y0: 400, x1: 300, y1: 500 }, conf: 60.0, text: "コモナ市長", letterRun: 2 };
+  assert.equal(lineLetterRun(cjk), 2, "the recorded run wins over the text's 5");
+  assert.equal(lineLetterRun({ text: "PROSTO WORD" }), 6, "a line with no recorded run reads its text");
+  markRescueAdmission([...anchors, cjk], OCR_RESCUE_LINE_CONF);
+  assert.ok(!cjk.rescued, "short recognized words stay under the anchor run, as when 1.6 was measured");
 });
 
 test("each admission condition refuses its own near-miss", () => {

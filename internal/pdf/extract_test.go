@@ -543,23 +543,28 @@ func TestClassifyBlock(t *testing.T) {
 		name          string
 		text          string
 		leadingSpaces int
+		pageMargin    int
 		want          string
 	}{
-		{"latin all-caps short", "LITTLE TOKYO", 0, "h2"},
-		{"cyrillic all-caps short", "ГЛАВА ПЕРВАЯ", 0, "h2"},
-		{"cyrillic all-caps with digit", "ГЛАВА 1", 0, "h2"},
-		{"mixed case not heading", "Little Tokyo", 0, "p"},
-		{"cyrillic mixed case not heading", "Глава первая", 0, "p"},
-		{"digits only not heading", "12345", 0, "p"},
-		{"centered short heading", "A Quiet Chapter", 12, "h2"},
-		{"centered medium heading", "A Somewhat Longer Centered Title Line That Runs Here Now", 12, "h3"},
-		{"plain body", "This is an ordinary body line of text.", 0, "p"},
-		{"all-caps but long stays body", "THIS ALL CAPS LINE HAS FAR TOO MANY WORDS TO BE A HEADING LINE", 0, "p"},
+		{"latin all-caps short", "LITTLE TOKYO", 0, 0, "h2"},
+		{"cyrillic all-caps short", "ГЛАВА ПЕРВАЯ", 0, 0, "h2"},
+		{"cyrillic all-caps with digit", "ГЛАВА 1", 0, 0, "h2"},
+		{"mixed case not heading", "Little Tokyo", 0, 0, "p"},
+		{"cyrillic mixed case not heading", "Глава первая", 0, 0, "p"},
+		{"digits only not heading", "12345", 0, 0, "p"},
+		{"centered short heading", "A Quiet Chapter", 12, 0, "h2"},
+		{"centered medium heading", "A Somewhat Longer Centered Title Line That Runs Here Now", 12, 0, "h3"},
+		{"plain body", "This is an ordinary body line of text.", 0, 0, "p"},
+		{"all-caps but long stays body", "THIS ALL CAPS LINE HAS FAR TOO MANY WORDS TO BE A HEADING LINE", 0, 0, "p"},
+		// Centring is measured from the page's own left margin, not from column 0: the same 12
+		// leading spaces are a heading on a flush page and body text on a page inset to 12.
+		{"inset page column is not centred", "A Quiet Chapter", 12, 12, "p"},
+		{"past the inset page margin is centred", "A Quiet Chapter", 24, 12, "h2"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := classifyBlock(c.text, c.leadingSpaces); got != c.want {
-				t.Errorf("classifyBlock(%q, %d) = %q, want %q", c.text, c.leadingSpaces, got, c.want)
+			if got := classifyBlock(c.text, c.leadingSpaces, c.pageMargin); got != c.want {
+				t.Errorf("classifyBlock(%q, %d, %d) = %q, want %q", c.text, c.leadingSpaces, c.pageMargin, got, c.want)
 			}
 		})
 	}

@@ -1,0 +1,22 @@
+{
+  "_comment": "Shared PDF heading-classification cases, read by internal/pdf (classifyBlock with scriptWords + pageLeftMargin) and extension/src/reflow.js (classifyBlock with countWords). tag is what the block must be classified as. leadingSpaces/pageMargin are the pdftotext -layout geometry the desktop sees; the extension receives centered = leadingSpaces - pageMargin > 8, the spaces proxy of its geometric test. Script-aware word counting: a run of Han / Hiragana / Katakana counts as ceil(runes / 2) words, any other run counts as one, so Chinese and Japanese paragraphs stop being 'short'. See docs/PARITY.md, PDF reflow heuristics, and DEV/plan/73_2026-09-29_cjk-pdf-paragraphs-become-headings.md.",
+  "cases": [
+    { "text": "人类", "leadingSpaces": 12, "pageMargin": 0, "tag": "h2", "why": "a two-glyph Han heading is one word: short and centred" },
+    { "text": "我们决心消除一切形式和表现的贫困与饥饿，让所有人平等和有尊严地在一个健康的环境中充分发挥自己的潜能。", "leadingSpaces": 18, "pageMargin": 0, "tag": "p", "why": "a 49-glyph Han paragraph is 26 words, not the single whitespace token the old count saw; this is the ticket 73 body-paragraph case" },
+    { "text": "个健康的环境中充分发挥自己的潜能。", "leadingSpaces": 12, "pageMargin": 0, "tag": "h3", "why": "16 Han glyphs plus the full stop are 9 words: over the short cap, inside the centred medium cap" },
+    { "text": "2015 年 9 月 25 日大会决议", "leadingSpaces": 31, "pageMargin": 0, "tag": "h2", "why": "digits split the Han runs; exactly 8 words at the short cap - the zh title-page line" },
+    { "text": "3. 我们决心在现在到 2030 年的这一段时间内，在世界各地消除贫困与饥饿；消除各个国家内和各个国家之间的不平等；建立和平、公正和包容的社会；保护人权和促进性别平等，增强妇女和女童的权能；永久保护地球及其自然资源。我们还决心创造条件，实现可持续、包容和持久的经济增长，让所有人分享繁荣并拥有体面工作，同时顾及各国不同的发展程度和能力。", "leadingSpaces": 14, "pageMargin": 0, "tag": "p", "why": "a numbered zh body paragraph: dozens of words once Han runs count" },
+    { "text": "＜全体の構成、基本的考え方について＞", "leadingSpaces": 9, "pageMargin": 0, "tag": "h3", "why": "a ja heading of 15 kana/kanji glyphs plus brackets is 11 words: medium, not short" },
+    { "text": "はじめに", "leadingSpaces": 9, "pageMargin": 0, "tag": "h2", "why": "four hiragana glyphs are two words: short and centred" },
+    { "text": "제1조 ① 대한민국은 민주공화국이다 ② 대한민국의 주권은 국민에게 있고 모든 권력은 국민으로부터 나온다", "leadingSpaces": 57, "pageMargin": 0, "tag": "h3", "why": "Korean spaces its words, so Hangul is one word per token: 13 words, medium - ceil-per-glyph counting would call it 20 and drop it to p" },
+    { "text": "2015年9月可持续发展议程与宣言", "leadingSpaces": 20, "pageMargin": 0, "tag": "h3", "why": "one whitespace token mixing digits and Han counts each run on its own: 9 words" },
+    { "text": "2015年9月可持续发展议程", "leadingSpaces": 20, "pageMargin": 0, "tag": "h2", "why": "the same mixed-script shape at exactly 8 words: short" },
+    { "text": "Preamble", "leadingSpaces": 19, "pageMargin": 0, "tag": "h2", "why": "the en baseline heading: short and centred" },
+    { "text": "We are determined to end poverty and hunger everywhere in all their forms and dimensions, and to ensure that all human beings can fulfil their potential in dignity and equality", "leadingSpaces": 19, "pageMargin": 0, "tag": "p", "why": "a Latin centred paragraph opener is not short" },
+    { "text": "ГЛАВА ПЕРВАЯ", "leadingSpaces": 0, "pageMargin": 0, "tag": "h2", "why": "all-caps Cyrillic: the caps path needs no centring" },
+    { "text": "Комитет", "leadingSpaces": 12, "pageMargin": 12, "tag": "p", "why": "12 spaces on a page whose own margin is 12 are the body column, not centring" },
+    { "text": "Комитет", "leadingSpaces": 12, "pageMargin": 0, "tag": "h2", "why": "the same 12 spaces on a flush page are centring" },
+    { "text": "3/32   15-16301 (C)", "leadingSpaces": 14, "pageMargin": 0, "tag": "h2", "why": "a page-number footer: three tokens, short and centred - the baseline noise both editions already counted, inside the ticket 73 acceptance range" },
+    { "text": "", "leadingSpaces": 0, "pageMargin": 0, "tag": "p", "why": "empty" }
+  ]
+}
