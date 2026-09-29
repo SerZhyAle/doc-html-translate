@@ -116,8 +116,8 @@ h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
 .byline .dot { color: var(--text-muted); margin: 0 3px; }
 /* theme and language switches, pushed to the far right of the header row */
 /* 13 endonyms do not fit a button row, so the switcher is a select */
-.switches { margin-left: auto; align-self: center; display: flex; gap: 6px; }
-.langsw { padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; }
+.switches { margin-inline-start: auto; align-self: center; display: flex; gap: 6px; }
+.langsw { padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; min-height: 24px; }
 .hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
 .hint.ok { color: var(--success); }
 .hint.warn { color: var(--danger); }
@@ -307,16 +307,52 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
 /* "previous result" hint: appears under the drop zone when the current input already
    has a converted output, with an inline button to clear it. */
-.hint .inline-btn { padding: 2px 9px; font-size: 11px; margin-left: 6px; }
+/* The compact inline buttons ride in 11px hint lines; the 24px floor is WCAG 2.2's
+   target-size minimum (2.5.8), which a line-height-sized button misses. */
+.inline-btn { min-height: 24px; }
+.hint .inline-btn { padding: 2px 9px; font-size: 11px; margin-inline-start: 6px; }
 /* The output path, shown so a result is never lost, and clickable to reveal its folder.
    The path is the long part, so it - and only it - is allowed to ellipsize. */
 .hint .prev-dir { display: flex; align-items: baseline; gap: 5px; margin-top: 4px; min-width: 0; }
 .hint .path-btn {
-    background: none; border: none; padding: 0; min-width: 0; cursor: pointer;
+    background: none; border: none; padding: 0; min-width: 0; min-height: 24px; cursor: pointer;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .hint .path-btn code { color: var(--link); text-decoration: underline; cursor: pointer; }
 .hint .path-btn:hover code { color: var(--accent-hover); }
+.conversion-progress { margin: 6px 0 12px; min-height: 20px; display: flex; flex-wrap: wrap; gap: 5px 10px; align-items: baseline; }
+.conversion-progress .count { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* batch queue: an ordered list of documents with each one's outcome. The list scrolls on
+   its own so a long queue cannot push the settings off screen; the row is a flex line -
+   the file name takes what it needs and ellipsizes, the state stays readable. */
+.queue-head { display: flex; align-items: baseline; gap: 10px; margin-top: 12px; }
+.queue-head .stitle { margin: 0; }
+.queue-head .count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.queue-head .inline-btn { margin-left: auto; padding: 2px 9px; font-size: 11px; }
+#queueList {
+    list-style: none; margin: 6px 0 2px; padding: 2px 0;
+    border: 1px solid var(--border); border-radius: 7px; background: var(--surface-sunken);
+    max-height: 216px; overflow-y: auto;
+}
+.qitem { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 12px; min-width: 0; }
+.qitem + .qitem { border-top: 1px solid var(--border); }
+.qsel {
+    flex: 1 1 auto; min-width: 0; background: none; border: none; padding: 2px 4px;
+    font: inherit; color: var(--text-primary); text-align: left; cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 4px;
+}
+.qsel:hover { background: var(--control-hover); }
+.qsel.selected { color: var(--accent); font-weight: 600; }
+.qstate { flex: none; font-size: 11px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.qitem.is-running .qstate { color: var(--accent); }
+.qitem.is-done .qstate { color: var(--success); }
+.qitem.is-failed .qstate, .qitem.is-blocked .qstate { color: var(--danger); }
+.qitem .inline-btn { flex: none; padding: 2px 9px; font-size: 11px; }
+.queue-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 2px 0; }
+.queue-foot select { padding: 3px 8px; font-size: 12px; width: 64px; }
+.queue-foot .hint { margin: 0; flex: 1 1 220px; }
+.queue-foot .inline-btn { padding: 2px 9px; font-size: 11px; }
 
 /* About section: label/value lines and the report controls. */
 .about-row { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
@@ -398,11 +434,15 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
             <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
         </span>
     </button>
-    <button class="btn-run" id="btnRun" onclick="runConvert()" data-i18n="btnConvert">Convert</button>
-    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelConvert()" style="display:none" data-i18n="btnCancel">Cancel</button>
+    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n="btnConvert">Convert</button>
+    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n="btnCancel">Cancel</button>
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="readiness" role="status" aria-live="polite" style="display:none"></div>
+<div class="conversion-progress" id="conversionProgress" style="display:none">
+    <span id="progressStage" role="status" aria-live="polite"></span>
+    <span id="progressCount" class="count"></span>
+</div>
 <div class="hint" id="dropStatus" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
@@ -414,6 +454,33 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <span data-i18n="prevResultIn">Saved in:</span>
         <button type="button" class="path-btn" id="btnOpenPrevFolder"
                 data-i18n-title="ttOpenFolder" data-i18n-aria="ttOpenFolder" title="Open the containing folder" aria-label="Open the containing folder"><code id="prevResultDir"></code></button>
+    </div>
+</div>
+
+<!-- The batch queue: several documents converted in one go. Shown once two or more files
+     are queued; one file keeps the single-document flow above untouched. Rows carry the
+     file (a button - clicking it previews that file's command and settings), its outcome,
+     and, when there is one, a result action. Settings stay shared: they are read once per
+     item when its run is prepared, so a change never silently alters an item already
+     running (ticket 56). -->
+<div id="queueSection" style="display:none">
+    <div class="queue-head">
+        <span class="stitle" data-i18n="secQueue">Queue</span>
+        <span class="count" id="queueProgress" role="status" aria-live="polite"></span>
+        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n="queueClear" data-i18n-title="ttQueueClear" data-i18n-aria="ttQueueClear" title="Remove every file from the queue" aria-label="Remove every file from the queue">Clear</button>
+    </div>
+    <ol id="queueList" data-i18n-aria="ariaQueueList" aria-label="Files queued for conversion"></ol>
+    <div class="queue-foot">
+        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n="btnRetryFailed" data-i18n-title="ttRetryFailed" data-i18n-aria="ttRetryFailed" title="Convert again only the files that did not" aria-label="Convert again only the files that did not" disabled>Retry failed</button>
+        <button type="button" class="inline-btn" id="btnCancelQueue" style="display:none" data-i18n="btnCancelQueue">Cancel queue</button>
+        <label class="chk" for="queueConcurrency"><span data-i18n="queueParallel">Parallel:</span></label>
+        <select id="queueConcurrency" data-i18n-aria="queueParallel" aria-label="Parallel conversions">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+        <span class="hint" data-i18n="queueParallelHint">One at a time keeps OCR and translation helpers from competing.</span>
     </div>
 </div>
 
@@ -482,7 +549,7 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
 </details>
 
 <div class="toggles">
-    <label class="chk"><input type="checkbox" id="chkSingle" checked> <span data-i18n="chkSingle">Single page (no table of contents)</span></label>
+    <label class="chk"><input type="checkbox" id="chkSingle" checked> <span data-i18n="chkSingle">Single page (contents available)</span></label>
     <label class="chk"><input type="checkbox" id="chkNoOpen"> <span data-i18n="chkNoOpen">Don't open browser</span></label>
     <label class="chk"><input type="checkbox" id="chkForce"> <span data-i18n="chkForce">Force re-process</span></label>
     <label class="chk"><input type="checkbox" id="chkVerbose"> <span data-i18n="chkVerbose">Verbose log</span></label>
@@ -532,7 +599,10 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
     </div>
     <div class="stitle" data-i18n="secLog">Log</div>
-    <div class="log console" id="logArea" role="log"></div>
+    <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
+         region would read out every appended chunk of a long conversion. The stage line
+         (#progressStage) and the end outcome announce what matters, so the flood is off. -->
+    <div class="log console" id="logArea" role="log" aria-live="off"></div>
 </div><!-- /col-log -->
 
 </div><!-- /app -->
@@ -580,6 +650,15 @@ function t(key, params) {
 // Dynamic status lines: remember the (key, params, cls) so a language switch
 // re-renders them in the new language.
 const liveStatus = {};
+let progressCountData = null;
+function renderProgressCount() {
+    const node = document.getElementById('progressCount');
+    if (!node) return;
+    const p = progressCountData;
+    node.textContent = p ? t('progressCount', {
+        done: p.done, total: p.total, unit: t(p.stage === 'recognizing' ? 'progressImages' : 'progressPages')
+    }) : '';
+}
 function setStatus(elId, key, params, cls) {
     liveStatus[elId] = { key: key, params: params || null, cls: cls || '' };
     renderStatus(elId);
@@ -605,7 +684,11 @@ function applyLang(lang) {
     document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
     for (const id in liveStatus) renderStatus(id);
     if (typeof lastReadiness !== 'undefined' && lastReadiness) renderReadiness(lastReadiness);
+    renderProgressCount();
     renderAbout();
+    // The queue words its rows and its head line from data, so a switch re-renders them.
+    updateQueueProgress();
+    if (queue.length) renderQueue();
     document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
     document.body.style.fontFamily = FONT_STACKS[lang] || '';
     const sw = document.getElementById('langSwitch');
@@ -767,6 +850,7 @@ function setInputPath(p) {
     document.getElementById('dropZone').classList.add('has-file');
     updateCmdPreview();
     scheduleOutputStatus();
+    renderQueue();
 }
 
 // ── drag & drop into the window ─────────────────────────
@@ -780,56 +864,52 @@ function fileUriToPath(uri) {
     if (/^\/[A-Za-z]:\//.test(u)) u = u.slice(1);
     return u.replaceAll('/', '\\');
 }
-function extractDroppedPath(ev) {
+// Every dropped path is taken, not just the first: several files at once are the queue's
+// whole point. uri-list first (one path per line), then plain text, then the path
+// property that webview-like hosts expose on each file.
+function extractDroppedPaths(ev) {
     const dt = ev.dataTransfer;
-    if (!dt) return '';
-    const uriList = dt.getData('text/uri-list');
-    if (uriList) {
-        const first = uriList.split(/\r?\n/).find(x => x && !x.startsWith('#')) || '';
-        const p = fileUriToPath(first);
-        if (p) return p;
+    if (!dt) return [];
+    const out = [];
+    const push = (p) => { if (p && !out.includes(p)) out.push(p); };
+    const uris = dt.getData('text/uri-list');
+    if (uris) for (const line of uris.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue;
+        push(fileUriToPath(line));
     }
-    const text = dt.getData('text/plain');
-    const p = fileUriToPath(text);
-    if (p) return p;
-    if (dt.files && dt.files.length && typeof dt.files[0].path === 'string' && dt.files[0].path) {
-        return dt.files[0].path;
+    if (!out.length) push(fileUriToPath(dt.getData('text/plain')));
+    if (dt.files) for (const f of dt.files) {
+        if (typeof f.path === 'string' && f.path) push(f.path);
     }
-    return '';
+    return out;
 }
-// Only one document is converted per run, so a multi-file drop says which one was used
-// rather than leaving the others to vanish silently.
-function droppedCount(ev) {
-    const dt = ev.dataTransfer;
-    if (!dt) return 0;
-    if (dt.files && dt.files.length) return dt.files.length;
-    const uris = (dt.getData('text/uri-list') || '').split(/\r?\n/).filter(x => x && !x.startsWith('#'));
-    return uris.length;
-}
-function noteFirstOnly(count, path) {
-    if (count > 1) setStatus('dropStatus', 'dropFirstOnly', {n: count, name: path.split(/[\\/]/).pop() || path}, 'warn');
-}
-async function uploadDropped(file, count) {
+
+// Uploads one dropped file and returns its server-side path, or '' when it failed.
+async function uploadDropped(file) {
     setStatus('dropStatus', 'statusLoading', {name: file.name});
     try {
         const r = await api('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
-        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', null, 'warn'); return; }
+        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', null, 'warn'); return ''; }
         const d = await r.json();
-        if (d.path) {
-            setInputPath(d.path);
-            setStatus('dropStatus', 'statusLoadedCopy');
-            noteFirstOnly(count, d.path);
-        }
+        if (d.path) { setStatus('dropStatus', 'statusLoadedCopy'); return d.path; }
     } catch(e) {
         serviceGone(e);
     }
+    return '';
 }
+
 async function handleDrop(ev) {
-    const count = droppedCount(ev);
-    const p = extractDroppedPath(ev);
-    if (p) { setInputPath(p); setStatus('dropStatus', ''); noteFirstOnly(count, p); return; }
+    const paths = extractDroppedPaths(ev);
+    if (paths.length) { addPickedPaths(paths); return; }
     const dt = ev.dataTransfer;
-    if (dt && dt.files && dt.files.length) await uploadDropped(dt.files[0], count);
+    if (dt && dt.files && dt.files.length) {
+        const uploaded = [];
+        for (const f of dt.files) {
+            const p = await uploadDropped(f);
+            if (p) uploaded.push(p);
+        }
+        if (uploaded.length) addPickedPaths(uploaded);
+    }
 }
 
 ['dragenter','dragover','dragleave','drop'].forEach(name => {
@@ -900,7 +980,9 @@ async function browseFile() {
         const r = await api('/api/browse-file?title=' + encodeURIComponent(t('dlgPickFile')), {method:'POST'});
         if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'warn'); return; }
         const d = await r.json();
-        if (d.path) { setInputPath(d.path); setStatus('dropStatus', ''); }
+        const paths = (d.paths && d.paths.length) ? d.paths : (d.path ? [d.path] : []);
+        if (!paths.length) return;
+        addPickedPaths(paths);
     } catch(e) { serviceGone(e); }
 }
 async function browseFolder() {
@@ -1098,6 +1180,7 @@ function collectSettings() {
         verbose:        el('chkVerbose').checked,
         ocr:            el('chkOCR').checked,
         ocrLangChoice:  el('ocrLang').value,
+        queueParallel:  el('queueConcurrency').value,
         assocPrompted:  assocPrompted,
         theme:          themePref,
     };
@@ -1124,6 +1207,10 @@ function applySettings(s) {
     if (typeof s.ocrLangChoice === 'string') el('ocrLang').dataset.want = s.ocrLangChoice;
     else if (typeof s.ocrLang === 'string') el('ocrLang').dataset.legacy = s.ocrLang;
     applyOcrWant();
+    // A stray saved value falls back to 1: the concurrency select only ever holds 1..4.
+    if (s.queueParallel != null && [...el('queueConcurrency').options].some(o => o.value === String(s.queueParallel))) {
+        el('queueConcurrency').value = String(s.queueParallel);
+    }
     if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
     if (typeof s.theme === 'string') applyTheme(s.theme);
     syncEngineUI();
@@ -1357,12 +1444,21 @@ function scheduleReadiness() {
         if (generation === readinessGeneration) renderReadiness(result);
     }, 250);
 }
-async function fetchReadiness() {
-    if (!el('inputFile').value.trim()) return null;
+async function fetchReadiness(cfg) {
+    cfg = cfg || collectRunConfig();
+    if (!cfg.input) return null;
     try {
-        const response = await api('/api/readiness', {method:'POST', body:JSON.stringify(collectRunConfig())});
+        const response = await api('/api/readiness', {method:'POST', body:JSON.stringify(cfg)});
         return response.ok ? await response.json() : null;
     } catch (e) { return null; }
+}
+// The readiness issue codes and the keys that word them, shared by the readiness box and
+// the queue's blocked rows: the same problem says the same words in both places.
+const READINESS_ISSUE_KEYS = {input:'readinessInput', calibre:'readinessCalibre', sevenzip:'readinessSevenzip',
+    tesseract:'readinessTesseract', ocrData:'readinessOcrData', googleKey:'readinessGoogleKey',
+    ollamaService:'readinessOllamaService', ollamaModel:'readinessOllamaModel'};
+function readinessIssueText(issue) {
+    return t(READINESS_ISSUE_KEYS[issue.code] || 'readinessInput', {detail: issue.detail});
 }
 function renderReadiness(result) {
     lastReadiness = result;
@@ -1373,12 +1469,9 @@ function renderReadiness(result) {
     const heading = document.createElement('strong');
     heading.textContent = t({ready:'readinessReady', action:'readinessAction', optional:'readinessOptional'}[result.state]);
     box.appendChild(heading);
-    const issueKeys = {input:'readinessInput', calibre:'readinessCalibre', sevenzip:'readinessSevenzip',
-        tesseract:'readinessTesseract', ocrData:'readinessOcrData', googleKey:'readinessGoogleKey',
-        ollamaService:'readinessOllamaService', ollamaModel:'readinessOllamaModel'};
     for (const issue of result.issues || []) {
         const row = document.createElement('div');
-        row.textContent = t(issueKeys[issue.code], {detail:issue.detail});
+        row.textContent = readinessIssueText(issue);
         const action = {ocrData:['readinessDownload', () => {el('ocrDetails').open=true; const code = issue.detail.split(',')[0].trim(); if (el('ocrDownloadSel').querySelector(`option[value="${code}"]`)) el('ocrDownloadSel').value = code; el('ocrDownloadSel').focus();}],
             googleKey:['readinessSaveKey', () => {el('googleKeySection').scrollIntoView(); el('googleKey').focus();}],
             ollamaModel:['readinessChooseModel', () => {el('ollamaDetails').open=true; el('ollamaModel').focus();}]}[issue.code];
@@ -1581,6 +1674,118 @@ el('btnClearLogs').addEventListener('click', async () => {
 });
 
 // ── run ─────────────────────────────────────────────────
+// runPressed is the one Convert button's dispatch: several queued files run the queue,
+// everything else keeps the single-document flow.
+function runPressed() {
+    if (queueBusy || runAbort) return;
+    if (queue.length >= 2) runQueue();
+    else runConvert();
+}
+
+// makeLogAppender returns a log's writer. It follows new output only while the reader is
+// already at the bottom, so scrolling up to read an earlier line is not undone by the
+// next chunk. appendChild is O(chunk); "textContent +=" re-reads the whole log each time
+// (O(n^2)) and can freeze the page on a long conversion.
+function makeLogAppender(log) {
+    return (text, cls) => {
+        const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
+        if (cls) {
+            const s = document.createElement('span');
+            s.className = cls;
+            s.textContent = text;
+            log.appendChild(s);
+        } else {
+            log.appendChild(document.createTextNode(text));
+        }
+        if (atBottom) log.scrollTop = log.scrollHeight;
+    };
+}
+
+// streamRun starts one conversion and relays its stream until the run ends. It is the one
+// place that knows the marker protocol (run.go): plain log lines, progress markers, a
+// note to show, a question to ask in this window, and the end line carrying the outcome.
+// It reports through hooks, so the single-document flow and the queue word what they
+// need: onLog(text, cls), onStage(key), onCount(p or null), onRefused(key), and
+// onAbort(ctl|null) handing out the run's AbortController while it lives. It resolves to
+// {end, warning, reused, refused}; end is the end marker's payload, or null when the
+// stream died without saying.
+async function streamRun(cfg, hooks) {
+    let runWarning = false, runReused = false, end = null;
+    let progressStage = 'checking';
+    const showProgress = (data) => {
+        const keys = {checking:'progressChecking', extracting:'progressExtracting', building:'progressBuilding', recognizing:'progressRecognizing', translating:'progressTranslating', saving:'progressSaving', reused:'progressReused'};
+        if (!keys[data.stage]) return;
+        if (data.stage === 'reused') runReused = true;
+        if (data.stage !== progressStage) {
+            progressStage = data.stage;
+            hooks.onStage(keys[data.stage]);
+        }
+        hooks.onCount(Number.isInteger(data.total) && data.total > 0 && Number.isInteger(data.done)
+            ? {stage:data.stage, done:data.done, total:data.total} : null);
+    };
+
+    // The stream is the converter's log plus marker lines: a question to ask in this
+    // window, a notice to show, and the run's outcome. Markers never reach the log; text
+    // before one on the same line does.
+    let pendingLine = '';
+    const handleMarker = (line) => {
+        const sp = line.indexOf(' ');
+        const kind = line.slice(MARK.length, sp);
+        let data = {};
+        try { data = JSON.parse(line.slice(sp + 1)); } catch (e) { return; }
+        if (kind === 'end') { end = data; return; }
+        if (kind === 'progress') { if (data.stage === 'warning') runWarning = true; else showProgress(data); return; }
+        if (kind === 'note') { informDialog(data.title, data.message); return; }
+        if (kind === 'ask') askForTheRun(cfg, data);
+    };
+    const feed = (text) => {
+        pendingLine += text;
+        let nl;
+        while ((nl = pendingLine.indexOf('\n')) >= 0) {
+            const line = pendingLine.slice(0, nl + 1);
+            pendingLine = pendingLine.slice(nl + 1);
+            const m = line.indexOf(MARK);
+            if (m < 0) { hooks.onLog(line); if (/\bWARNING:/.test(line)) runWarning = true; continue; }
+            if (m > 0) hooks.onLog(line.slice(0, m) + '\n');
+            handleMarker(line.slice(m).trimEnd());
+        }
+        // A partial line shows at once, unless it may be the start of a marker.
+        const cut = pendingLine.indexOf('\x1e');
+        if (cut < 0) { hooks.onLog(pendingLine); pendingLine = ''; }
+        else if (cut > 0) { hooks.onLog(pendingLine.slice(0, cut)); pendingLine = pendingLine.slice(cut); }
+    };
+
+    try {
+        const ctl = new AbortController();
+        hooks.onAbort(ctl);
+        const resp = await api('/api/run', {
+            method: 'POST',
+            body: JSON.stringify(cfg),
+            signal: ctl.signal,
+        });
+        if (!resp.ok) {
+            const key = resp.status === 409 ? 'runBusy' : 'runRefused';
+            hooks.onRefused(key);
+            return {end: null, warning: false, reused: false, refused: true};
+        }
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+        while (true) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            feed(dec.decode(value, {stream: true}));
+        }
+        if (pendingLine) feed('\n');
+    } catch(e) {
+        if (e.name !== 'AbortError') console.error(e);
+    } finally {
+        hooks.onAbort(null);
+        // A question the run asked and nobody answered goes with the run.
+        if (dlgOpen && dlgOpen.tag === 'run') dlgOpen.close();
+    }
+    return {end, warning: runWarning, reused: runReused, refused: false};
+}
+
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
     if (!input) { setStatus('dropStatus', 'alertChooseFirst', null, 'warn'); el('dropZone').focus(); return; }
@@ -1610,98 +1815,42 @@ async function runConvert() {
 
     const btn = document.getElementById('btnRun');
     const cancelBtn = document.getElementById('btnCancel');
-    const log = document.getElementById('logArea');
     btn.disabled = true;
     btn.style.display = 'none';
     cancelBtn.style.display = '';
     cancelBtn.disabled = false;
     cancelBtn.focus();
+    const log = document.getElementById('logArea');
     log.textContent = '';
     runTarget = {input: cfg.input, output: cfg.output};
-
-    // Follow new output only while the reader is already at the bottom, so scrolling up to
-    // read an earlier line is not undone by the next chunk.
-    const append = (text, cls) => {
-        const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
-        // appendChild is O(chunk); "textContent +=" re-reads the whole log each
-        // time (O(n^2)) and can freeze the page on a long conversion.
-        if (cls) {
-            const s = document.createElement('span');
-            s.className = cls;
-            s.textContent = text;
-            log.appendChild(s);
-        } else {
-            log.appendChild(document.createTextNode(text));
-        }
-        if (atBottom) log.scrollTop = log.scrollHeight;
-    };
-
-    // The stream is the converter's log plus marker lines (see handleRun and internal/dialog):
-    // a question to ask in this window, a notice to show, and the run's outcome. Markers never
-    // reach the log; text before one on the same line does.
-    let pending = '', end = null;
-    const handleMarker = (line) => {
-        const sp = line.indexOf(' ');
-        const kind = line.slice(MARK.length, sp);
-        let data = {};
-        try { data = JSON.parse(line.slice(sp + 1)); } catch (e) { return; }
-        if (kind === 'end') { end = data; return; }
-        if (kind === 'note') { informDialog(data.title, data.message); return; }
-        if (kind === 'ask') askForTheRun(cfg, data);
-    };
-    const feed = (text) => {
-        pending += text;
-        let nl;
-        while ((nl = pending.indexOf('\n')) >= 0) {
-            const line = pending.slice(0, nl + 1);
-            pending = pending.slice(nl + 1);
-            const m = line.indexOf(MARK);
-            if (m < 0) { append(line); continue; }
-            if (m > 0) append(line.slice(0, m) + '\n');
-            handleMarker(line.slice(m).trimEnd());
-        }
-        // A partial line shows at once, unless it may be the start of a marker.
-        const cut = pending.indexOf('\x1e');
-        if (cut < 0) { append(pending); pending = ''; }
-        else if (cut > 0) { append(pending.slice(0, cut)); pending = pending.slice(cut); }
-    };
-
-    let refused = false;
+    el('conversionProgress').style.display = '';
+    progressCountData = null;
+    renderProgressCount();
+    setStatus('progressStage', 'progressChecking');
+    const append = makeLogAppender(log);
+    let res = null;
     try {
-        runAbort = new AbortController();
-        const resp = await api('/api/run', {
-            method: 'POST',
-            body: JSON.stringify(cfg),
-            signal: runAbort.signal,
+        res = await streamRun(cfg, {
+            onLog: append,
+            onStage: key => setStatus('progressStage', key),
+            onCount: p => { progressCountData = p; renderProgressCount(); },
+            onRefused: key => { setStatus('progressStage', key, null, 'warn'); informDialog(t('dlgFailTitle'), t(key)); },
+            onAbort: c => { runAbort = c; },
         });
-        if (!resp.ok) {
-            refused = true;
-            informDialog(t('dlgFailTitle'), t(resp.status === 409 ? 'runBusy' : 'runRefused'));
-            return;
-        }
-        const reader = resp.body.getReader();
-        const dec = new TextDecoder();
-        while (true) {
-            const {value, done} = await reader.read();
-            if (done) break;
-            feed(dec.decode(value, {stream: true}));
-        }
-        if (pending) feed('\n');
-    } catch(e) {
-        if (e.name !== 'AbortError') console.error(e);
     } finally {
         runAbort = null;
         runTarget = null;
-        // A question the run asked and nobody answered goes with the run.
-        if (dlgOpen && dlgOpen.tag === 'run') dlgOpen.close();
         btn.disabled = false;
         btn.style.display = '';
         cancelBtn.style.display = 'none';
-        if (!refused) reportRunEnd(end, append);
         // The run just created (or replaced) the result, so re-read its status: this is
         // what puts "Open result" and the output path on screen the moment it is ready,
         // rather than leaving the reader to hunt for where it landed.
         await checkOutputStatus();
+        if (!res || !res.refused) {
+            reportRunEnd(res ? res.end : null, append, {warning: res ? res.warning : false, reused: res ? res.reused : false, usable: outputStatus.exists});
+        }
+        if (queue.length) renderQueue();
     }
 }
 
@@ -1724,15 +1873,29 @@ async function askForTheRun(cfg, q) {
 // reportRunEnd words the outcome in the window's language. Done and cancelled are outcomes with
 // their own line (APP-BEHAVIOUR rule 3); a failure is a set of actions - send the log, try again,
 // leave - not an exit status (rule 6). No end line means the service behind the window went away.
-function reportRunEnd(end, append) {
+function reportRunEnd(end, append, result) {
     if (!end) {
+        setStatus('progressStage', 'runLost', null, 'warn');
+        progressCountData = null;
+        renderProgressCount();
         append('\n' + t('runLost') + '\n', 'end failed');
         informDialog(t('serviceGoneTitle'), t('serviceGone'));
         return;
     }
-    if (end.state === 'done') { append(t('runDone') + '\n', 'end'); return; }
-    if (end.state === 'cancelled') { append(t('runCancelled') + '\n', 'end'); return; }
+    progressCountData = null;
+    renderProgressCount();
+    if (end.state === 'done') {
+        const key = result.reused ? 'progressReusedDone' : result.warning ? 'progressDoneWarnings' : 'progressDone';
+        setStatus('progressStage', key);
+        append(t(key) + '\n', 'end'); return;
+    }
+    if (end.state === 'cancelled') { setStatus('progressStage', 'runCancelled'); append(t('runCancelled') + '\n', 'end'); return; }
+    if (end.code === 4 && result.usable) {
+        setStatus('progressStage', 'progressDoneWarnings');
+        append(t('progressDoneWarnings') + '\n', 'end'); return;
+    }
     const msg = end.code ? t('runFailedCode', {code: end.code}) : t('runFailed');
+    setStatus('progressStage', 'runFailedTitle', null, 'warn');
     append(msg + '\n', 'end failed');
     openDialog({
         title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'),
@@ -1749,6 +1912,10 @@ function reportRunEnd(end, append) {
 // stays in the output folder; without a completion record the next run rebuilds it. If the
 // server cannot be reached, dropping the request stops the run too.
 let runAbort = null, runTarget = null;
+function cancelPressed() {
+    if (queueBusy) cancelRunningItems();
+    else cancelConvert();
+}
 async function cancelConvert() {
     const cancelBtn = document.getElementById('btnCancel');
     cancelBtn.disabled = true;
@@ -1758,6 +1925,397 @@ async function cancelConvert() {
     } catch (e) { /* fall through */ }
     if (runAbort) runAbort.abort();
 }
+
+// ── the batch queue ─────────────────────────────────────
+// Several documents converted in one go (ticket 56). The queue holds the files; the form
+// holds the settings, which each item's run freezes when that item is prepared - so a
+// change made later never silently alters an item already running or still waiting. Every
+// item goes through the same /api/run as the single flow, so it keeps the source identity,
+// ownership, completion record, cost guard and output reuse rules of a lone conversion.
+// The paid-engine question is asked once for the queue up front, and each item's own cost
+// limit and cost dialog still apply when it runs: a queue is never an approval for the
+// whole library.
+//
+// One item keeps the single-document flow above, right down to its failure dialog; the
+// queue machinery wakes up from two files on.
+//
+//   item.state: pending → running → done | failed | cancelled, or blocked (an action is
+//   needed first - the row says which) or skipped (an existing result was kept rather
+//   than rebuilt).
+let queue = [];
+let queueSeq = 0;
+let queueBusy = false;      // a queue run is in flight
+let queueCancelAll = false; // Cancel queue: stop the running items, run nothing further
+
+// The states Retry failed exists for: everything that did not produce a result this run.
+const QUEUE_RETRY_STATES = ['failed', 'blocked', 'cancelled'];
+
+// addPickedPaths routes a file choice into the input model. With no queue yet, a lone
+// file stays the one-document flow; anything else joins the queue - and a lone pick joins
+// an existing queue, so adding to a batch stays one gesture.
+function addPickedPaths(paths) {
+    if (paths.length === 1 && !queue.length) {
+        setInputPath(paths[0]);
+        setStatus('dropStatus', '');
+        return;
+    }
+    const added = addFilesToQueue(paths);
+    if (added.length) { setInputPath(added[0].input); setStatus('dropStatus', ''); }
+}
+
+// addFilesToQueue appends paths not already queued, in the order given, and returns the
+// items it added. The path is the identity: the same file twice is one item.
+function addFilesToQueue(paths) {
+    const added = [];
+    for (const p of paths) {
+        const key = p.toLowerCase();
+        if (queue.some(it => it.input.toLowerCase() === key)) continue;
+        const it = {id: ++queueSeq, input: p, name: p.split(/[\\/]/).pop() || p, state: 'pending', cfg: null, issue: null, needsRebuild: false};
+        queue.push(it);
+        added.push(it);
+    }
+    if (added.length) { renderQueue(); fitWindow(); }
+    return added;
+}
+
+el('btnQueueClear').addEventListener('click', () => {
+    if (queueBusy) return;
+    queue = [];
+    renderQueue();
+    fitWindow();
+});
+
+// renderQueue redraws the list. It is shown from two files on; one file keeps the window
+// exactly as it was. Rebuilding takes the focus with it, so whoever was inside a row gets
+// it back - the queue must stay drivable from the keyboard while it updates.
+function renderQueue() {
+    el('queueSection').style.display = queue.length >= 2 ? '' : 'none';
+    if (queue.length >= 2) {
+        const focusRow = document.activeElement && document.activeElement.closest ? document.activeElement.closest('.qitem') : null;
+        const focusId = focusRow ? focusRow.dataset.qid : null;
+        const list = el('queueList');
+        list.replaceChildren();
+        const sel = el('inputFile').value.trim().toLowerCase();
+        for (const it of queue) list.appendChild(queueRow(it, sel));
+        if (focusId != null) {
+            const again = list.querySelector('li[data-qid="' + focusId + '"] .qsel');
+            if (again) again.focus();
+        }
+    }
+    updateQueueProgress();
+    setQueueControls();
+}
+
+function queueRow(it, sel) {
+    const li = document.createElement('li');
+    li.className = 'qitem is-' + it.state;
+    li.dataset.qid = it.id;
+
+    // The file name is the row's selector: it previews that file's command, readiness and
+    // previous result in the single-document area above.
+    const name = document.createElement('button');
+    name.type = 'button';
+    name.className = 'qsel' + (it.input.toLowerCase() === sel ? ' selected' : '');
+    name.textContent = it.name;
+    name.title = it.input;
+    name.addEventListener('click', () => { setInputPath(it.input); });
+    li.appendChild(name);
+
+    const st = document.createElement('span');
+    st.className = 'qstate';
+    st.textContent = itemStateText(it);
+    if (it.state === 'blocked' && it.issue) st.title = readinessIssueText(it.issue);
+    li.appendChild(st);
+
+    if (it.state === 'done') {
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'inline-btn';
+        open.textContent = t('btnOpenPrev');
+        open.dataset.i18n = 'btnOpenPrev';
+        open.addEventListener('click', () => openQueueResult(it));
+        li.appendChild(open);
+    }
+    if (it.state !== 'running') {
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'inline-btn qdel';
+        del.textContent = t('queueRemoveItem');
+        del.dataset.i18n = 'queueRemoveItem';
+        del.title = t('ttQueueRemove');
+        del.setAttribute('aria-label', t('ttQueueRemove') + ': ' + it.name);
+        del.disabled = queueBusy;
+        del.addEventListener('click', () => {
+            if (queueBusy) return;
+            queue = queue.filter(x => x !== it);
+            renderQueue();
+            fitWindow();
+        });
+        li.appendChild(del);
+    }
+    return li;
+}
+
+// itemStateText words one row's state. A running item shows its stage and, when the total
+// is known, the page/image count; the other states have their own short words.
+function itemStateText(it) {
+    switch (it.state) {
+    case 'running': {
+        let s = it.stage ? t(it.stage) : t('stateRunning');
+        if (it.count) {
+            s += ' ' + t('progressCount', {done: it.count.done, total: it.count.total,
+                unit: t(it.count.stage === 'recognizing' ? 'progressImages' : 'progressPages')});
+        }
+        return s;
+    }
+    case 'done': return t('stateDone');
+    case 'failed': return t('stateFailed');
+    case 'cancelled': return t('stateCancelled');
+    case 'blocked': return t('stateBlocked');
+    case 'skipped': return t('stateSkipped');
+    }
+    return t('statePending');
+}
+
+// updateQueueProgress words the queue head: what is ready before a run, how far a running
+// one has got, and the count-up of each outcome afterwards - the line a reader scans to
+// see where a many-file queue stands.
+function updateQueueProgress() {
+    const node = el('queueProgress');
+    if (!node) return;
+    if (!queue.length) { node.textContent = ''; return; }
+    if (queueBusy) {
+        node.textContent = t('queueProgressCount', {done: queue.filter(it => it.state === 'done').length, total: queue.length});
+        return;
+    }
+    if (queue.every(it => it.state === 'pending')) {
+        node.textContent = t('queueReadyCount', {n: queue.length});
+        return;
+    }
+    const c = summaryCounts();
+    node.textContent = t('queueSummary', c);
+}
+
+function summaryCounts() {
+    return {
+        done: queue.filter(it => it.state === 'done' || it.state === 'skipped').length,
+        failed: queue.filter(it => it.state === 'failed' || it.state === 'blocked').length,
+        stopped: queue.filter(it => it.state === 'cancelled').length,
+    };
+}
+
+// setQueueControls matches the controls to the queue's phase: while it runs the queue
+// cannot be edited, Cancel becomes "Cancel current", and Cancel queue appears. Retry
+// failed wakes up only when there is something it would touch.
+function setQueueControls() {
+    el('btnCancelQueue').style.display = queueBusy ? '' : 'none';
+    el('btnRetryFailed').disabled = queueBusy || !queue.some(it => QUEUE_RETRY_STATES.includes(it.state));
+    el('btnQueueClear').disabled = queueBusy;
+    el('queueConcurrency').disabled = queueBusy;
+    el('btnRun').disabled = queueBusy;
+    for (const b of document.querySelectorAll('.qdel')) b.disabled = queueBusy;
+    const cancelBtn = el('btnCancel');
+    const key = queueBusy ? 'btnCancelCurrent' : 'btnCancel';
+    cancelBtn.dataset.i18n = key;
+    cancelBtn.textContent = t(key);
+    if (queueBusy) {
+        cancelBtn.disabled = false;
+        cancelBtn.style.display = '';
+    }
+}
+
+function makeItemConfig(it) {
+    const cfg = collectRunConfig();
+    cfg.input = it.input;
+    return cfg;
+}
+
+// prepareItem freezes the current form into the item's run config and asks, in their
+// queue form, what a lone run asks at the click: a file whose readiness blocks (a helper
+// the conversion needs is missing) is marked instead of failing mid-queue, and an
+// existing result built with other options is flagged for the one rebuild question - so
+// nothing is silently overwritten and nothing silently kept either.
+async function prepareItem(it) {
+    it.cfg = makeItemConfig(it);
+    try {
+        const rd = await fetchReadiness(it.cfg);
+        if (rd && rd.state === 'action') {
+            it.state = 'blocked';
+            it.issue = (rd.issues && rd.issues[0]) || null;
+            return false;
+        }
+    } catch (e) { /* the run itself reports what it hits */ }
+    try {
+        const st = await (await api('/api/output-status', {method: 'POST', body: JSON.stringify(it.cfg)})).json();
+        it.needsRebuild = !!(st && st.exists && st.paramsChanged);
+    } catch (e) { it.needsRebuild = false; }
+    return true;
+}
+
+async function runQueue() {
+    if (queueBusy || runAbort || queue.length < 2) return;
+    queueBusy = true;
+    queueCancelAll = false;
+    setQueueControls();
+    renderQueue();
+    el('conversionProgress').style.display = 'none';
+    const logArea = document.getElementById('logArea');
+    logArea.textContent = '';
+    const log = makeLogAppender(logArea);
+
+    // One paid-engine question for the whole queue; declining starts nothing.
+    if (currentEngine() === 'google') {
+        try {
+            const d = await (await api('/api/google-key')).json();
+            if (!d.exists && !await confirmDialog(t('confirmNoKey'), 'btnConvertAnyway', 'primary', true)) {
+                queueBusy = false;
+                setQueueControls();
+                return;
+            }
+        } catch (e) { /* let the CLI report it */ }
+    }
+
+    // Preflight every waiting item before anything runs, so the list says what will
+    // happen - and what cannot - while it can still be changed at a glance.
+    for (const it of queue) {
+        if (queueCancelAll) break;
+        if (it.state !== 'pending') continue;
+        await prepareItem(it);
+        renderQueue();
+    }
+    const rebuild = queue.filter(it => it.state === 'pending' && it.needsRebuild);
+    if (rebuild.length && !queueCancelAll) {
+        const yes = await confirmDialog(t('queueConfirmRebuild', {n: rebuild.length}), 'btnRebuild', 'danger', false);
+        for (const it of rebuild) {
+            if (yes) it.cfg.force = true;
+            else it.state = 'skipped';
+        }
+        renderQueue();
+    }
+    if (queueCancelAll) {
+        for (const it of queue) if (it.state === 'pending') it.state = 'cancelled';
+        queueBusy = false;
+        setQueueControls();
+        renderQueue();
+        return;
+    }
+
+    const limit = Math.max(1, Math.min(4, parseInt(el('queueConcurrency').value, 10) || 1));
+    const workers = [];
+    for (let i = 0; i < limit; i++) workers.push(queueWorker(log));
+    await Promise.all(workers);
+    queueBusy = false;
+    queueCancelAll = false;
+    setQueueControls();
+    renderQueue();
+    log('\n' + t('queueSummary', summaryCounts()) + '\n', 'end');
+    fitWindow();
+}
+
+// queueWorker takes the next waiting item until none is left or the queue was cancelled.
+// An item is claimed synchronously, so two workers can never take the same one. Its
+// bounded count is the queue's concurrency: one at a time by default, so OCR helpers and
+// translation engines never compete unpredictably.
+async function queueWorker(log) {
+    for (;;) {
+        if (queueCancelAll) return;
+        const it = queue.find(x => x.state === 'pending');
+        if (!it) return;
+        it.state = 'running';
+        it.stage = null;
+        it.count = null;
+        renderQueue();
+        if (!it.cfg) await prepareItem(it); // a file added while the queue was already running
+        if (it.state === 'blocked') { renderQueue(); continue; }
+        log('\n--- ' + (queue.indexOf(it) + 1) + '/' + queue.length + ' - ' + it.name + ' ---\n');
+        const res = await streamRun(it.cfg, {
+            onLog: log,
+            onStage: key => { it.stage = key; it.count = null; renderQueue(); },
+            onCount: p => { it.count = p; renderQueue(); },
+            onRefused: key => { log(t(key) + '\n', 'end failed'); },
+            onAbort: c => { it.abort = c; },
+        });
+        it.abort = null;
+        if (res.end && res.end.state === 'done') it.state = 'done';
+        else if (res.end && res.end.state === 'cancelled') it.state = 'cancelled';
+        else it.state = 'failed';
+        log(t(itemStateText(it)) + '\n', it.state === 'done' ? 'end' : 'end failed');
+        renderQueue();
+    }
+}
+
+// cancelOneItem stops one running conversion: the server kills the converter and
+// everything it started, what it already wrote stays, and the run's stream ends with a
+// cancelled outcome. If the server cannot be reached, dropping the request stops it too.
+async function cancelOneItem(it) {
+    try {
+        const r = await api('/api/cancel', {method: 'POST', body: JSON.stringify({input: it.cfg.input, output: it.cfg.output})});
+        if (r.ok) return;
+    } catch (e) { /* fall through */ }
+    if (it.abort) it.abort.abort();
+}
+
+function cancelRunningItems() {
+    for (const it of queue) if (it.state === 'running') cancelOneItem(it);
+}
+
+// Cancel queue stops what is running and runs nothing further. Everything already
+// converted stays converted - a cancellation is a stop, never a cleanup.
+async function cancelQueueRun() {
+    if (!queueBusy) return;
+    queueCancelAll = true;
+    for (const it of queue) if (it.state === 'pending') it.state = 'cancelled';
+    renderQueue();
+    cancelRunningItems();
+}
+el('btnCancelQueue').addEventListener('click', cancelQueueRun);
+
+// Retry failed resets only the items that did not produce a result this run and runs them
+// again with the settings as they are now. Converted items are not touched, and the reuse
+// rules apply as always - including the rebuild question when a kept result was built
+// with other options.
+el('btnRetryFailed').addEventListener('click', () => {
+    if (queueBusy) return;
+    let any = false;
+    for (const it of queue) {
+        if (!QUEUE_RETRY_STATES.includes(it.state)) continue;
+        it.state = 'pending';
+        it.cfg = null;
+        it.issue = null;
+        it.needsRebuild = false;
+        any = true;
+    }
+    if (!any) return;
+    renderQueue();
+    runQueue();
+});
+
+// openQueueResult opens a finished item's page, through the same owned-result check the
+// single flow's "Open result" uses, pointed at this item's input and output.
+async function openQueueResult(it) {
+    try {
+        const r = await (await api('/api/open-output', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({input: it.input, output: it.cfg ? it.cfg.output : el('outputFolder').value.trim(), folder: false}),
+        })).json();
+        if (!r.ok) informDialog(t('dlgFailTitle'), t('openPrevFail'));
+    } catch (e) {
+        serviceGone(e);
+    }
+}
+
+// Arrow keys walk the queue's file buttons, so a long queue is drivable without tabbing
+// through every control of every row.
+el('queueList').addEventListener('keydown', ev => {
+    if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+    const buttons = [...el('queueList').querySelectorAll('.qsel')];
+    const i = buttons.indexOf(document.activeElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    const next = ev.key === 'ArrowDown' ? Math.min(i + 1, buttons.length - 1) : Math.max(i - 1, 0);
+    buttons[next].focus();
+});
 </script>
 </body>
 </html>

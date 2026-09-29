@@ -169,15 +169,23 @@ func busy() func() {
 	return func() { activeRuns.Add(-1) }
 }
 
+// handleBrowseFile opens the document picker. The dialog always allows several picks: one
+// selection keeps the single-document flow, several fill the conversion queue.
+//
+//	POST → {"paths": ["..", ".."], "path": first}
 func handleBrowseFile(w http.ResponseWriter, r *http.Request) {
 	defer busy()()
-	path, err := browseFile(r.Context(), dialogTitle(r, "Select input file"))
+	paths, err := browseFile(r.Context(), dialogTitle(r, "Select input file"))
 	if err != nil {
 		logFailure("browse file", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	_ = json.NewEncoder(w).Encode(map[string]string{"path": path})
+	resp := map[string]any{"paths": paths}
+	if len(paths) > 0 {
+		resp["path"] = paths[0]
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func handleBrowseFolder(w http.ResponseWriter, r *http.Request) {
@@ -1098,19 +1106,22 @@ func psString(s string) string {
 	return "[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + base64.StdEncoding.EncodeToString([]byte(s)) + "'))"
 }
 
-func browseFile(ctx context.Context, title string) (string, error) {
+// browseFile opens the document picker with several selection allowed and returns the
+// picked paths in dialog order. An empty result means the dialog was cancelled.
+func browseFile(ctx context.Context, title string) ([]string, error) {
 	script := `Add-Type -AssemblyName System.Windows.Forms
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
+$f.Multiselect = $true
 $f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.cbz;*.cbr;*.cb7;*.cbt|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Comics|*.cbz;*.cbr;*.cb7;*.cbt|All files|*.*"
 $f.Title = ` + psString(title) + `
 $res = $f.ShowDialog($owner)
-if ($res -eq 'OK') { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($f.FileName)) }`
+if ($res -eq 'OK') { $f.FileNames | ForEach-Object { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($_)) } }`
 	out, err := runPowershell(ctx, script)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return decodeDialogPath(out)
+	return decodeDialogPaths(out)
 }
 
 func browseFolder(ctx context.Context, title string) (string, error) {
@@ -1171,6 +1182,25 @@ func decodeDialogPath(out string) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+// decodeDialogPaths decodes the multi-select dialog's answer: one base64 path per
+// line, in pick order. A blank line is skipped; anything undecodable fails the lot,
+// since a half-answered queue is worse than an error the page can show.
+func decodeDialogPaths(out string) ([]string, error) {
+	var paths []string
+	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		p, err := decodeDialogPath(line)
+		if err != nil {
+			return nil, err
+		}
+		paths = append(paths, p)
+	}
+	return paths, nil
 }
 
 // ── browser / app window ────────────────────────────────────

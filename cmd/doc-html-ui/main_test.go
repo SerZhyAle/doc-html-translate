@@ -253,6 +253,50 @@ func TestUIMarkupExposesOCRControls(t *testing.T) {
 	}
 }
 
+// The batch queue (ticket 56) is unreachable if its section, its controls or its runner
+// are missing: these ids and functions are the whole multi-file flow's anchors.
+func TestUIMarkupExposesQueueControls(t *testing.T) {
+	for _, id := range []string{
+		`id="queueSection"`, `id="queueList"`, `id="queueProgress"`, `id="queueConcurrency"`,
+		`id="btnRetryFailed"`, `id="btnCancelQueue"`, `id="btnQueueClear"`,
+	} {
+		if !strings.Contains(uiHTML, id) {
+			t.Errorf("ui.html has no %s - the batch queue cannot render", id)
+		}
+	}
+	for _, snippet := range []string{
+		"function runQueue()",
+		"function queueWorker(",
+		"function cancelQueueRun(",
+		"function addFilesToQueue(",
+		"function prepareItem(",
+		"function cancelPressed()",
+		`onclick="runPressed()"`,
+	} {
+		if !strings.Contains(uiHTML, snippet) {
+			t.Errorf("ui.html is missing %q - the queue runner is incomplete", snippet)
+		}
+	}
+	// Several files at once are the queue's whole point; the old "only the first is used"
+	// path must be gone, dictionary included.
+	if strings.Contains(uiHTML, "dropFirstOnly") {
+		t.Error("ui.html still references dropFirstOnly - the queue replaced the first-file-only drop")
+	}
+}
+
+// The queue-wide concurrency lives with every other persisted form value, and a saved
+// value the page cannot reproduce must fall back to 1 rather than break the queue.
+func TestUIQueueSettingsPersist(t *testing.T) {
+	for _, snippet := range []string{
+		"queueParallel:  el('queueConcurrency').value",
+		"el('queueConcurrency').value = String(s.queueParallel)",
+	} {
+		if !strings.Contains(uiHTML, snippet) {
+			t.Errorf("ui.html is missing %q - the queue concurrency is not persisted", snippet)
+		}
+	}
+}
+
 func TestAssembleArgsOmitsDefaultTOCDepthAndMaxCost(t *testing.T) {
 	// 0 is the CLI default for both (unlimited TOC / no cost limit), so the GUI
 	// should not clutter the command line with them.
@@ -478,6 +522,39 @@ func TestDecodeDialogPathEmptyMeansCancelled(t *testing.T) {
 	got, err := decodeDialogPath("  \r\n")
 	if err != nil || got != "" {
 		t.Fatalf("decodeDialogPath(empty) = %q, %v; want \"\", nil", got, err)
+	}
+}
+
+// The multi-select dialog answers one base64 path per line, in pick order; the queue
+// lists them exactly in that order. Blank lines are separators, not paths.
+func TestDecodeDialogPathsRoundTripsSeveral(t *testing.T) {
+	want := []string{`C:\Users\serzh\OneDrive\Документы\first.pdf`, `D:\books\second.epub`}
+	var lines []string
+	for _, p := range want {
+		lines = append(lines, base64.StdEncoding.EncodeToString([]byte(p)))
+	}
+	got, err := decodeDialogPaths(strings.Join(lines, "\r\n") + "\r\n")
+	if err != nil {
+		t.Fatalf("decodeDialogPaths: %v", err)
+	}
+	if !slices.Equal(got, want) {
+		t.Fatalf("decodeDialogPaths = %q, want %q", got, want)
+	}
+}
+
+func TestDecodeDialogPathsEmptyMeansCancelled(t *testing.T) {
+	got, err := decodeDialogPaths("  \r\n")
+	if err != nil || got != nil {
+		t.Fatalf("decodeDialogPaths(empty) = %q, %v; want nil, nil", got, err)
+	}
+}
+
+// A half-answered queue is worse than an error the page can show, so one garbled line
+// fails the whole answer instead of quietly dropping files the user did pick.
+func TestDecodeDialogPathsRejectsGarbledLine(t *testing.T) {
+	enc := base64.StdEncoding.EncodeToString([]byte(`C:\ok.epub`))
+	if _, err := decodeDialogPaths(enc + "\n!!!not base64!!!\n"); err == nil {
+		t.Fatal("a line that does not decode passed")
 	}
 }
 
