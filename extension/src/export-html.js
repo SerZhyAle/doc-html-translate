@@ -1,5 +1,5 @@
-// export-html.js - the "save as HTML" document shell and its image encoding. Kept apart from viewer.js so it can be
-// tested without the viewer's page.
+// export-html.js - the "save as HTML" document shell, its image encoding, and the completeness
+// decision behind the export. Kept apart from viewer.js so it can be tested without the viewer's page.
 //
 // The saved file leaves the extension, and with it the extension's content policy - the only
 // thing that kept a stray script URL inert in the viewer (ADR-1 of
@@ -7,6 +7,8 @@
 // policy: no script of any kind, no plugins, no forms, no base rewrite. Images and media may be
 // remote because the reader may have allowed remote content in the viewer, and a parked
 // (unallowed) URL sits in a data- attribute that no policy needs to cover.
+
+import { formatBytes } from "./limits.js";
 export const EXPORT_CSP = [
   "default-src 'none'",
   "img-src data: http: https:",
@@ -65,4 +67,77 @@ ${body}
 </body>
 </html>
 `;
+}
+
+// ---- Completeness planning -------------------------------------------------
+// A paged document - a chunk-rendered PDF or a scroll-inflated comic - may hold fewer pages in
+// the live #content than the source declares, and the export serializes exactly what is on
+// screen. exportPlan turns the viewer's counters into one of three decisions:
+//
+//   direct        - every page is materialized; save at once (the short path).
+//   offer-prepare - the export would be partial, but preparing the rest here in the viewer
+//                   stays within the budget below, so the reader is offered it.
+//   partial-only  - the export would be partial and a complete one is refused for this
+//                   document; the reason travels so the dialog can explain before any file
+//                   is written.
+//
+// The budget is deliberately conservative. Nothing here loads a whole document at once - the
+// viewer's own chunked rendering and per-page inflation stay in charge - and a preparation is
+// additionally stopped the moment its accumulated image bytes pass the file budget (the
+// viewer counts them as pages hand them over). Pure (no DOM) - unit-tested under node.
+
+// Most pages a preparation may still have to render. Past this, finishing the book in the tab
+// is exactly the unbounded render the chunking exists to avoid (PAGE_CHUNK in viewer.js), so
+// only the partial export is offered.
+export const EXPORT_PREPARE_MAX_PAGES = 1000;
+
+// Largest estimated complete file a preparation may aim at. Every image rides in the saved
+// file as a data: URI, and the export holds about three copies of that in the tab (the map of
+// encoded images, the serialized clone, the final document string), so past this size the
+// complete export is what would fall over, not the reading.
+export const EXPORT_PREPARE_MAX_FILE_BYTES = 150 * 1024 * 1024;
+
+// base64 grows bytes by a factor of 4/3; the rest is slack for the HTML around the images.
+const DATA_URI_GROWTH = 1.37;
+
+export function estimateExportBytes(imageBytes) {
+  return Math.ceil(imageBytes * DATA_URI_GROWTH);
+}
+
+// partialOnlyReason shapes the refusal the dialog shows the reader. Key/fallback/args mirror
+// InputLimitError (limits.js) so the viewer renders it with the same t() call.
+function partialOnlyReason(key, fallback, args) {
+  return { key, fallback, args };
+}
+
+export function exportPlan({ total = 0, rendered = 0, imageBytes = 0 } = {}) {
+  if (total > 0 && rendered < total) {
+    const remaining = total - rendered;
+    if (remaining > EXPORT_PREPARE_MAX_PAGES) {
+      return {
+        action: "partial-only",
+        reason: partialOnlyReason(
+          "vExportReasonPages",
+          "preparing the remaining {1} pages is above the limit of {2}",
+          [remaining, EXPORT_PREPARE_MAX_PAGES],
+        ),
+      };
+    }
+    // Comic pages declare their inflated size in the archive listing, so the complete file's
+    // size is known before anything is prepared. A 0 means "unknown here" (a PDF's rasters are
+    // counted during preparation instead) and never refuses on its own.
+    const estimated = estimateExportBytes(imageBytes);
+    if (imageBytes > 0 && estimated > EXPORT_PREPARE_MAX_FILE_BYTES) {
+      return {
+        action: "partial-only",
+        reason: partialOnlyReason(
+          "vExportReasonBytes",
+          "the complete file would be about {1}, more than a browser tab holds reliably",
+          [formatBytes(estimated)],
+        ),
+      };
+    }
+    return { action: "offer-prepare", remaining };
+  }
+  return { action: "direct" };
 }

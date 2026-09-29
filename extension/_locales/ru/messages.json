@@ -276,10 +276,10 @@
     "message": "страницы 1-{1} из {2}"
   },
   "vSavedComic": {
-    "message": "Сохранено {1} из {2} страниц - прокрутите дальше и сохраните снова, чтобы добавить остальные"
+    "message": "Частичный экспорт: {1} из {2} страниц - подготовьте оставшиеся, чтобы добавить их"
   },
   "vSavedPdf": {
-    "message": "Сохранены страницы 1-{1} из {2} - прокрутите дальше и сохраните снова, чтобы добавить остальные"
+    "message": "Частичный экспорт: страницы 1-{1} из {2} - подготовьте оставшиеся, чтобы добавить их"
   },
   "vTocSection": {
     "message": "Раздел"
@@ -611,5 +611,33 @@
   "ariaCollapse": {
     "message": "Свернуть",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"Поиск"},
+  "vSearchText": {"message":"Искать текст"},
+  "vSearchScope": {"message":"Область"},
+  "vSearchPage": {"message":"Эта страница"},
+  "vSearchBook": {"message":"Вся книга"},
+  "vSearchClose": {"message":"Закрыть"},
+  "vSearchPrompt": {"message":"Введите текст для поиска"},
+  "vSearchWorking": {"message":"Поиск…"},
+  "vSearchCount": {"message":"Найдено: {1} — {2}"},
+  "vSearchPlates": {"message":"Текстовые блоки OCR"},
+  "vSearchNoText": {"message":"Для поиска в сканах нужен распознанный текст"},
+  "vExportPartialLine": {"message":"Частичный экспорт: в документе {1} страниц, и файл будет содержать страницы 1-{2}."},
+  "vExportPrepareHint": {"message":"Сначала подготовит оставшиеся страницы прямо в просмотрщике, затем сохранит полный файл. В любой момент можно остановить."},
+  "vExportPrepareBtn": {"message":"Подготовить все {1} страниц"},
+  "vExportPartialBtn": {"message":"Частичный экспорт ({1} стр.)"},
+  "vExportCancel": {"message":"Отмена"},
+  "vExportImpossibleLine": {"message":"Полный экспорт для этого документа невозможен: {1}."},
+  "vExportReasonPages": {"message":"подготовка оставшихся {1} страниц превышает предел в {2}"},
+  "vExportReasonBytes": {"message":"полный файл будет занимать около {1} - больше, чем вкладка браузера надёжно удерживает"},
+  "vExportReasonStalled": {"message":"оставшиеся страницы не смогли отрисоваться"},
+  "vExportPreparing": {"message":"Подготовка страницы {1} из {2}.."},
+  "vExportStop": {"message":"Остановить"},
+  "vExportStopped": {"message":"Подготовка остановлена - ничего не сохранено"},
+  "vStatusSaving": {"message":"Сохранение HTML.."},
+  "vSavedCompletePages": {"message":"Сохранено - полностью, все {1} страниц"},
+  "vSavedCompleteDoc": {"message":"Сохранено - весь документ"},
+
+  "vExportPartialLineComic": {"message":"Частичный экспорт: файл будет содержать {1} из {2} страниц."}
 }

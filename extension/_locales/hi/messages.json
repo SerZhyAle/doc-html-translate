@@ -260,10 +260,10 @@
     "message": "पृष्ठ 1-{1} / {2}"
   },
   "vSavedComic": {
-    "message": "{2} में से {1} पृष्ठ सहेजे गए - और आगे स्क्रॉल करके फिर सहेजें ताकि बाकी भी जुड़ें"
+    "message": "आंशिक निर्यात: {1} / {2} पृष्ठ - बाकी पृष्ठ जोड़ने के लिए उन्हें तैयार करें"
   },
   "vSavedPdf": {
-    "message": "पृष्ठ 1-{1} / {2} सहेजे गए - और आगे स्क्रॉल करके फिर सहेजें ताकि बाकी भी जुड़ें"
+    "message": "आंशिक निर्यात: पृष्ठ 1-{1} / {2} - बाकी पृष्ठ जोड़ने के लिए उन्हें तैयार करें"
   },
   "vTocSection": {
     "message": "अनुभाग"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "संक्षिप्त करें",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"खोजें"},
+  "vSearchText": {"message":"पाठ खोजें"},
+  "vSearchScope": {"message":"दायरा"},
+  "vSearchPage": {"message":"यह पृष्ठ"},
+  "vSearchBook": {"message":"पूरी किताब"},
+  "vSearchClose": {"message":"बंद करें"},
+  "vSearchPrompt": {"message":"खोजने के लिए पाठ दर्ज करें"},
+  "vSearchWorking": {"message":"खोज जारी है…"},
+  "vSearchCount": {"message":"{1} परिणाम — {2}"},
+  "vSearchPlates": {"message":"OCR पाठ"},
+  "vSearchNoText": {"message":"स्कैन किए गए पृष्ठों के लिए OCR पाठ चाहिए"},
+  "vExportPartialLine": {"message":"आंशिक निर्यात: दस्तावेज़ में {1} पृष्ठ हैं, और फ़ाइल में पृष्ठ 1-{2} आएँगे।"},
+  "vExportPrepareHint": {"message":"पहले शेष पृष्ठों को व्यूअर में ही तैयार करता है, फिर पूरी फ़ाइल सहेजता है। आप इसे कभी भी रोक सकते हैं।"},
+  "vExportPrepareBtn": {"message":"सभी {1} पृष्ठ तैयार करें"},
+  "vExportPartialBtn": {"message":"आंशिक निर्यात ({1} पृष्ठ)"},
+  "vExportCancel": {"message":"रद्द करें"},
+  "vExportImpossibleLine": {"message":"इस दस्तावेज़ का पूर्ण निर्यात संभव नहीं है: {1}."},
+  "vExportReasonPages": {"message":"शेष {1} पृष्ठ तैयार करना {2} की सीमा से अधिक है"},
+  "vExportReasonBytes": {"message":"पूरी फ़ाइल लगभग {1} की होगी - जो ब्राउज़र टैब भरोसेमंद ढंग से सँभालता है उससे अधिक"},
+  "vExportReasonStalled": {"message":"शेष पृष्ठ बनाए नहीं जा सके"},
+  "vExportPreparing": {"message":"पृष्ठ {1} / {2} तैयार हो रहा है.."},
+  "vExportStop": {"message":"रोकें"},
+  "vExportStopped": {"message":"तैयारी रुक गई - कुछ नहीं सहेजा गया"},
+  "vStatusSaving": {"message":"HTML सहेजा जा रहा है.."},
+  "vSavedCompletePages": {"message":"सहेजा गया - पूर्ण, सभी {1} पृष्ठ"},
+  "vSavedCompleteDoc": {"message":"सहेजा गया - पूरा दस्तावेज़"},
+
+  "vExportPartialLineComic": {"message":"आंशिक निर्यात: फ़ाइल में {2} में से {1} पृष्ठ आएँगे।"}
 }

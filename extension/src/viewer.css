@@ -144,6 +144,7 @@ body {
 #toc li { margin: 0.1em 0; }
 #toc a { color: var(--link); text-decoration: none; display: block; padding: 0.15em 0.2em; border-radius: 4px; }
 #toc a:hover { background: rgba(127, 127, 127, 0.12); }
+#toc a[aria-current="location"] { background: rgba(127, 127, 127, 0.16); font-weight: 600; }
 #toc .toc-toggle {
   cursor: pointer; user-select: none; color: var(--muted);
   display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em;
@@ -156,7 +157,18 @@ body {
 /* The text layer has one drawing for both states (view.text-layer, off form owed): the state is
    aria-pressed and this pressed look, as in the desktop reader. */
 #toolbar button[aria-pressed="true"] { background: var(--border); border-color: var(--accent); }
+#search-panel { position:fixed;z-index:30;inset-block-start:3.5em;inset-inline-end:1em;width:min(30em,calc(100vw - 2em));max-height:75vh;overflow:auto;padding:1em;background:var(--bar-bg);color:var(--bar-fg);border:1px solid var(--border);box-shadow:0 8px 24px #0005;font:14px/1.4 system-ui,sans-serif; }
+#search-panel[hidden] { display:none; }
+#search-panel input { display:block;width:100%;box-sizing:border-box;padding:.5em;background:var(--bg);color:var(--fg);border:1px solid var(--border); }
+#search-panel ol { padding-inline-start:1.5em; }
+#search-panel li { margin:.4em 0; }
+#search-panel li button { background:none;border:0;color:var(--link);text-align:start;font:inherit;cursor:pointer; }
+#content mark.reader-search-hit { background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00; }
+#content mark.reader-search-current { background:#ff8b46!important;outline:3px solid #3156c9; }
 #toc .collapsed > ul { display: none; }
+@media (max-width: 700px) {
+  #toc:not(.hidden) { position: fixed; z-index: 20; inset-block-start: 3.1em; inset-inline-start: 0; width: min(19em, calc(100vw - 1em)); max-height: calc(100dvh - 3.4em); box-sizing: border-box; background: var(--bg); box-shadow: 0 6px 20px #0003; }
+}
 
 #content {
   flex: 1 1 auto;
@@ -285,6 +297,39 @@ body {
 img[data-dht-remote] {
   display: inline-block; min-width: 3em; min-height: 2em;
   border: 1px dashed var(--border); border-radius: 4px;
+}
+
+/* ---- HTML export dialog (completeness before saving) ---- */
+/* A fixed card under the toolbar, like the search panel: the reader can reach Export from deep
+   in a long document, so the question about what the file would hold must be reachable there
+   too, not at the top of a scrolled-away page. */
+.export-dialog {
+  position: fixed; z-index: 30; inset-block-start: 3.5em; inset-inline-start: 50%;
+  transform: translateX(-50%);
+  width: min(36em, calc(100vw - 2em));
+  max-height: 75vh; overflow: auto;
+  padding: 1em 1.2em;
+  background: var(--bar-bg); color: var(--bar-fg);
+  border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 24px #0005;
+  font: 14px/1.4 system-ui, sans-serif;
+}
+.export-dialog p { margin: 0 0 0.6em; text-indent: 0; }
+.export-dialog .export-hint { color: var(--muted); font-size: 0.95em; }
+.export-dialog .export-actions { display: flex; flex-wrap: wrap; gap: 0.5em 0.6em; margin-top: 0.8em; }
+.export-dialog button {
+  padding: 0.35em 0.9em; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; cursor: pointer; font: inherit;
+}
+.export-dialog button.secondary { background: var(--bar-bg); color: inherit; border-color: var(--border); }
+
+/* The Stop button rides in the status bar while a preparation runs (a page render or a
+   recognition pass between yields is never interrupted - only the gaps are). */
+#status-stop {
+  margin-inline-start: 0.8em; padding: 0.05em 0.7em;
+  font: inherit; color: inherit;
+  background: var(--bar-bg); border: 1px solid var(--border); border-radius: 6px;
+  cursor: pointer;
 }
 
 .hidden { display: none !important; }

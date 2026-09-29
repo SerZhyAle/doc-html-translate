@@ -11,8 +11,9 @@
     <span class="title" id="doc-title" data-i18n="loading">Loading..</span>
     <span class="spacer"></span>
     <div class="group" data-i18n-title="ttToc" title="Table of contents">
-      <button id="btn-toc" type="button" aria-controls="toc"><span data-glyph="nav.contents"></span> <span data-i18n="ttToc">Table of contents</span></button>
+      <button id="btn-toc" type="button" aria-controls="toc" aria-expanded="false"><span data-glyph="nav.contents"></span> <span data-i18n="ttToc">Table of contents</span></button>
     </div>
+    <div class="group"><button id="btn-search" type="button" aria-controls="search-panel" aria-expanded="false" data-i18n="vSearch" title="Search">Search</button></div>
     <div class="group" data-i18n-title="ttFontSize" title="Font size">
       <button id="btn-font-dec" type="button" data-i18n-aria="ariaSmallerText" aria-label="Smaller text" data-i18n-title="ariaSmallerText" title="Smaller text"><span data-glyph="action.text-smaller"></span></button>
       <button id="btn-font-inc" type="button" data-i18n-aria="ariaLargerText" aria-label="Larger text" data-i18n-title="ariaLargerText" title="Larger text"><span data-glyph="action.text-larger"></span></button>
@@ -53,7 +54,16 @@
   </div>
   <input id="file-input" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub,.txt,.rtf,.html,.htm,.md,.markdown,.fb2,.mobi,.azw3,image/png,.png,image/jpeg,.jpg,.jpeg,image/gif,.gif,image/bmp,.bmp,image/webp,.webp,.cbz,.cbr,.cb7,.cbt" class="hidden">
 
-  <div id="status"><div id="progress-bar"></div><span id="status-text" data-i18n="loading">Loading..</span></div>
+  <div id="status"><div id="progress-bar"></div><span id="status-text" data-i18n="loading">Loading..</span><button id="status-stop" type="button" hidden>Stop</button></div>
+
+  <section id="search-panel" hidden data-i18n-aria="vSearch" aria-label="Search">
+    <label for="search-input" data-i18n="vSearchText">Search text</label>
+    <input id="search-input" type="search" autocomplete="off">
+    <label for="search-scope" data-i18n="vSearchScope">Scope</label>
+    <select id="search-scope"><option value="page" data-i18n="vSearchPage">This page</option><option value="book" data-i18n="vSearchBook">Whole book</option></select>
+    <button id="search-close" type="button" data-i18n="vSearchClose">Close</button>
+    <p id="search-status" role="status" aria-live="polite"></p><ol id="search-results"></ol>
+  </section>
 
   <div id="layout">
     <nav id="toc" class="hidden" aria-label="Table of contents">

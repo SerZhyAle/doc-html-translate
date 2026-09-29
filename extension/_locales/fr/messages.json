@@ -260,10 +260,10 @@
     "message": "pages 1-{1} sur {2}"
   },
   "vSavedComic": {
-    "message": "{1} pages sur {2} enregistrées - faites défiler puis enregistrez à nouveau pour en inclure davantage"
+    "message": "Export partiel : {1} pages sur {2} - préparez les pages restantes pour les ajouter"
   },
   "vSavedPdf": {
-    "message": "Pages 1-{1} sur {2} enregistrées - faites défiler puis enregistrez à nouveau pour en inclure davantage"
+    "message": "Export partiel : pages 1-{1} sur {2} - préparez les pages restantes pour les ajouter"
   },
   "vTocSection": {
     "message": "Section"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "Replier",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"Rechercher"},
+  "vSearchText": {"message":"Rechercher du texte"},
+  "vSearchScope": {"message":"Portée"},
+  "vSearchPage": {"message":"Cette page"},
+  "vSearchBook": {"message":"Livre entier"},
+  "vSearchClose": {"message":"Fermer"},
+  "vSearchPrompt": {"message":"Saisissez le texte à rechercher"},
+  "vSearchWorking": {"message":"Recherche…"},
+  "vSearchCount": {"message":"{1} résultats — {2}"},
+  "vSearchPlates": {"message":"Texte OCR"},
+  "vSearchNoText": {"message":"Les pages numérisées nécessitent du texte OCR"},
+  "vExportPartialLine": {"message":"Export partiel : le document compte {1} pages et le fichier contiendrait les pages 1-{2}."},
+  "vExportPrepareHint": {"message":"Prépare d'abord les pages restantes directement dans le lecteur, puis enregistre le fichier complet. Vous pouvez l'arrêter à tout moment."},
+  "vExportPrepareBtn": {"message":"Préparer les {1} pages"},
+  "vExportPartialBtn": {"message":"Export partiel ({1} pages)"},
+  "vExportCancel": {"message":"Annuler"},
+  "vExportImpossibleLine": {"message":"Un export complet est impossible pour ce document : {1}."},
+  "vExportReasonPages": {"message":"préparer les {1} pages restantes dépasse la limite de {2}"},
+  "vExportReasonBytes": {"message":"le fichier complet ferait environ {1} - plus que ce qu'un onglet du navigateur gère de façon fiable"},
+  "vExportReasonStalled": {"message":"les pages restantes n'ont pas pu être affichées"},
+  "vExportPreparing": {"message":"Préparation de la page {1} sur {2}.."},
+  "vExportStop": {"message":"Arrêter"},
+  "vExportStopped": {"message":"Préparation arrêtée - rien n'a été enregistré"},
+  "vStatusSaving": {"message":"Enregistrement du HTML.."},
+  "vSavedCompletePages": {"message":"Enregistré - complet, les {1} pages"},
+  "vSavedCompleteDoc": {"message":"Enregistré - le document complet"},
+
+  "vExportPartialLineComic": {"message":"Export partiel : le fichier contiendrait {1} pages sur {2}."}
 }

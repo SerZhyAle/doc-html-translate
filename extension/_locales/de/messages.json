@@ -260,10 +260,10 @@
     "message": "Seiten 1-{1} von {2}"
   },
   "vSavedComic": {
-    "message": "{1} von {2} Seiten gespeichert - weiter scrollen und erneut speichern, um mehr aufzunehmen"
+    "message": "Teilexport: {1} von {2} Seiten - bereite die übrigen Seiten vor, um sie hinzuzufügen"
   },
   "vSavedPdf": {
-    "message": "Seiten 1-{1} von {2} gespeichert - weiter scrollen und erneut speichern, um mehr aufzunehmen"
+    "message": "Teilexport: Seiten 1-{1} von {2} - bereite die übrigen Seiten vor, um sie hinzuzufügen"
   },
   "vTocSection": {
     "message": "Abschnitt"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "Zuklappen",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"Suche"},
+  "vSearchText": {"message":"Text suchen"},
+  "vSearchScope": {"message":"Bereich"},
+  "vSearchPage": {"message":"Diese Seite"},
+  "vSearchBook": {"message":"Ganzes Buch"},
+  "vSearchClose": {"message":"Schließen"},
+  "vSearchPrompt": {"message":"Suchtext eingeben"},
+  "vSearchWorking": {"message":"Suche läuft…"},
+  "vSearchCount": {"message":"{1} Treffer — {2}"},
+  "vSearchPlates": {"message":"OCR-Textfelder"},
+  "vSearchNoText": {"message":"Gescannte Seiten benötigen OCR-Textfelder"},
+  "vExportPartialLine": {"message":"Teilexport: das Dokument hat {1} Seiten, und die Datei würde die Seiten 1-{2} enthalten."},
+  "vExportPrepareHint": {"message":"Bereitet zuerst die übrigen Seiten direkt im Viewer vor, speichert dann die vollständige Datei. Lässt sich jederzeit stoppen."},
+  "vExportPrepareBtn": {"message":"Alle {1} Seiten vorbereiten"},
+  "vExportPartialBtn": {"message":"Teilexport ({1} Seiten)"},
+  "vExportCancel": {"message":"Abbrechen"},
+  "vExportImpossibleLine": {"message":"Ein vollständiger Export ist für dieses Dokument nicht möglich: {1}."},
+  "vExportReasonPages": {"message":"das Vorbereiten der übrigen {1} Seiten übersteigt die Grenze von {2}"},
+  "vExportReasonBytes": {"message":"die vollständige Datei würde etwa {1} groß - mehr als ein Browser-Tab zuverlässig hält"},
+  "vExportReasonStalled": {"message":"die übrigen Seiten ließen sich nicht rendern"},
+  "vExportPreparing": {"message":"Seite {1} von {2} wird vorbereitet.."},
+  "vExportStop": {"message":"Stoppen"},
+  "vExportStopped": {"message":"Vorbereitung gestoppt - nichts gespeichert"},
+  "vStatusSaving": {"message":"HTML wird gespeichert.."},
+  "vSavedCompletePages": {"message":"Gespeichert - vollständig, alle {1} Seiten"},
+  "vSavedCompleteDoc": {"message":"Gespeichert - das vollständige Dokument"},
+
+  "vExportPartialLineComic": {"message":"Teilexport: die Datei würde {1} von {2} Seiten enthalten."}
 }

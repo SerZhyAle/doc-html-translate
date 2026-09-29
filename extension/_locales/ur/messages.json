@@ -260,10 +260,10 @@
     "message": "صفحات 1-{1} از {2}"
   },
   "vSavedComic": {
-    "message": "{2} میں سے {1} صفحات محفوظ - مزید سکرول کر کے دوبارہ محفوظ کریں تاکہ باقی بھی شامل ہوں"
+    "message": "جزوی برآمد: {1} / {2} صفحات - باقی شامل کرنے کے لیے انہیں تیار کریں"
   },
   "vSavedPdf": {
-    "message": "صفحات 1-{1} از {2} محفوظ - مزید سکرول کر کے دوبارہ محفوظ کریں تاکہ باقی بھی شامل ہوں"
+    "message": "جزوی برآمد: صفحات 1-{1} / {2} - باقی شامل کرنے کے لیے انہیں تیار کریں"
   },
   "vTocSection": {
     "message": "حصہ"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "سمیٹیں",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"تلاش"},
+  "vSearchText": {"message":"متن تلاش کریں"},
+  "vSearchScope": {"message":"دائرہ"},
+  "vSearchPage": {"message":"یہ صفحہ"},
+  "vSearchBook": {"message":"پوری کتاب"},
+  "vSearchClose": {"message":"بند کریں"},
+  "vSearchPrompt": {"message":"تلاش کے لیے متن لکھیں"},
+  "vSearchWorking": {"message":"تلاش جاری ہے…"},
+  "vSearchCount": {"message":"{1} نتائج — {2}"},
+  "vSearchPlates": {"message":"OCR متن"},
+  "vSearchNoText": {"message":"اسکین شدہ صفحات کے لیے OCR متن درکار ہے"},
+  "vExportPartialLine": {"message":"جزوی برآمد: دستاویز میں {1} صفحات ہیں، اور فائل میں صفحات 1-{2} شامل ہوں گے۔"},
+  "vExportPrepareHint": {"message":"پہلے باقی صفحات کو ناظر میں ہی تیار کرتا ہے، پھر مکمل فائل محفوظ کرتا ہے۔ آپ اسے کسی بھی وقت روک سکتے ہیں۔"},
+  "vExportPrepareBtn": {"message":"تمام {1} صفحات تیار کریں"},
+  "vExportPartialBtn": {"message":"جزوی برآمد ({1} صفحات)"},
+  "vExportCancel": {"message":"منسوخ کریں"},
+  "vExportImpossibleLine": {"message":"اس دستاویز کی مکمل برآمد ممکن نہیں: {1}۔"},
+  "vExportReasonPages": {"message":"باقی {1} صفحات کی تیاری {2} کی حد سے زیادہ ہے"},
+  "vExportReasonBytes": {"message":"مکمل فائل تقریباً {1} کی ہوگی - جو براؤزر ٹیب بھروسے سے سنبھالتا ہے اس سے زیادہ"},
+  "vExportReasonStalled": {"message":"باقی صفحات تیار نہ ہو سکے"},
+  "vExportPreparing": {"message":"صفحہ {1} / {2} تیار ہو رہا ہے.."},
+  "vExportStop": {"message":"روکیں"},
+  "vExportStopped": {"message":"تیاری رک گئی - کچھ محفوظ نہیں ہوا"},
+  "vStatusSaving": {"message":"HTML محفوظ ہو رہا ہے.."},
+  "vSavedCompletePages": {"message":"محفوظ ہو گیا - مکمل، تمام {1} صفحات"},
+  "vSavedCompleteDoc": {"message":"محفوظ ہو گیا - پوری دستاویز"},
+
+  "vExportPartialLineComic": {"message":"جزوی برآمد: فائل میں {2} میں سے {1} صفحات شامل ہوں گے۔"}
 }

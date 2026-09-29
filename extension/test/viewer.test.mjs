@@ -89,6 +89,7 @@ async function openViewer(search, network, { framed = false } = {}) {
   const { document, window } = parseHTML(VIEWER_HTML);
   window.top = framed ? {} : window;
   window.self = window;
+  window.matchMedia = window.matchMedia || (() => ({ matches: false }));
   globalThis.document = document;
   globalThis.window = window;
   globalThis.location = { search, href: `chrome-extension://test/src/viewer.html${search}` };
@@ -219,6 +220,7 @@ async function bootViewer(search, fetchDoc) {
   const { document, window } = parseHTML(VIEWER_HTML);
   window.top = window;
   window.self = window;
+  window.matchMedia = window.matchMedia || (() => ({ matches: false }));
   globalThis.document = document;
   globalThis.window = window;
   globalThis.DOMParser = DOMParser;
@@ -308,4 +310,250 @@ test("toolbar state is reset for each document", async () => {
   await pickLocalFile(document, window, "plain.txt", "Another line of prose.\n");
   assert.ok(tocBtn.classList.contains("hidden"));
   assert.equal(document.querySelectorAll("#toc-tree a").length, 0, "no stale entries from the last book");
+});
+
+// ---- Ticket 55: the export states what it holds ------------------------------
+// Every lazy surface the export touches - comic page inflation, page-image OCR, the PDF
+// chunk sentinel - rides IntersectionObservers that a real reading scroll would fire.
+// linkedom has none, so this stub stands in; whether it fires on observe() is decided by
+// ioAutoFire, because the comic tests want "the reader is looking at everything" while the
+// PDF test wants chunk two to wait for its preparation.
+class StubIO {
+  constructor(cb) { this.cb = cb; }
+  observe(target) { if (ioAutoFire) this.cb([{ isIntersecting: true, target }], this); }
+  unobserve() {}
+  disconnect() {}
+}
+let ioAutoFire = true;
+globalThis.IntersectionObserver = globalThis.IntersectionObserver || StubIO;
+
+// The saved file leaves through an object URL; node's own createObjectURL is replaced so
+// the tests can see every download (comic page images included - they go through it too).
+const savedExports = [];
+URL.createObjectURL = (blob) => { savedExports.push(blob); return `blob:export-${savedExports.length}`; };
+URL.revokeObjectURL = () => {};
+
+// letOcrSettle waits out the forced comic-page recognition attempts (they fail fast under
+// the vendored stub, but land as status ticks a moment after their image is restored), so a
+// test's own status assertion is not overwritten mid-flight.
+async function letOcrSettle(content) {
+  await waitFor(() => !content.querySelector(".ocr-pending"));
+  await new Promise((r) => setTimeout(r, 300));
+}
+
+// cbzBytes builds a minimal stored CBZ. comic.js's reader only walks the central directory,
+// so a blank checksum is fine; a page with broken: true carries a compression method the
+// reader refuses, which is how a page fails to inflate in the wild.
+function cbzBytes(pages) {
+  const locals = [];
+  const central = [];
+  let offset = 0;
+  for (const p of pages) {
+    const data = Buffer.from(p.data || "PG", "utf8");
+    const method = p.broken ? 5 : 0;
+    const lh = Buffer.alloc(30);
+    lh.writeUInt32LE(0x04034b50, 0);
+    lh.writeUInt16LE(20, 4);
+    lh.writeUInt16LE(method, 8);
+    lh.writeUInt32LE(data.length, 18);
+    lh.writeUInt32LE(data.length, 22);
+    lh.writeUInt16LE(p.name.length, 26);
+    locals.push(lh, Buffer.from(p.name, "utf8"), data);
+    const ch = Buffer.alloc(46);
+    ch.writeUInt32LE(0x02014b50, 0);
+    ch.writeUInt16LE(20, 4);
+    ch.writeUInt16LE(20, 6);
+    ch.writeUInt16LE(method, 10);
+    ch.writeUInt32LE(data.length, 20);
+    ch.writeUInt32LE(data.length, 24);
+    ch.writeUInt16LE(p.name.length, 28);
+    ch.writeUInt32LE(offset, 42);
+    central.push(ch, Buffer.from(p.name, "utf8"));
+    offset += 30 + p.name.length + data.length;
+  }
+  const cd = Buffer.concat(central);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(pages.length, 8);
+  eocd.writeUInt16LE(pages.length, 10);
+  eocd.writeUInt32LE(cd.length, 12);
+  eocd.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, cd, eocd]);
+}
+
+// pickComic hands the archive to the toolbar's file picker the way a reader would.
+async function pickComic(document, window, name, buf) {
+  const input = document.getElementById("file-input");
+  input.click = () => {};
+  document.getElementById("btn-open").dispatchEvent(new window.Event("click"));
+  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  Object.defineProperty(input, "files", { configurable: true, value: [{ name, arrayBuffer: async () => ab }] });
+  await input.onchange();
+}
+
+async function waitFor(fn, ms = 5000) {
+  for (let i = 0; i < Math.ceil(ms / 5); i++) {
+    const v = fn();
+    if (v) return v;
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  return null;
+}
+
+const comicImages = (content) => content.querySelectorAll('section[id^="comic-page-"] img').length;
+
+test("a fully inflated comic exports at once through the short direct path", async () => {
+  const { document, window, content } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickComic(document, window, "book.cbz", cbzBytes([
+    { name: "page1.jpg", data: "ONE" },
+    { name: "page2.jpg", data: "TWO" },
+  ]));
+  assert.ok(await waitFor(() => comicImages(content) === 2), "both pages inflate");
+  await letOcrSettle(content);
+
+  const before = savedExports.length;
+  document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+  // No dialog: every page is on screen, so the export goes straight to the file.
+  assert.equal(document.querySelector(".export-dialog"), null);
+  const blob = await waitFor(() => savedExports.length > before && savedExports[savedExports.length - 1]);
+  assert.ok(blob, "the export downloaded");
+  assert.match(document.getElementById("status-text").textContent, /Saved - complete, all 2 pages/);
+});
+
+test("a comic with a page that will not inflate is labeled partial before and after the export", async () => {
+  const { document, window, content } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickComic(document, window, "book.cbz", cbzBytes([
+    { name: "page1.jpg", data: "ONE" },
+    { name: "page2.jpg", data: "TWO", broken: true },
+    { name: "page3.jpg", data: "THREE" },
+  ]));
+  assert.ok(await waitFor(() => comicImages(content) === 2), "the sound pages inflate, the broken one leaves its box");
+  await letOcrSettle(content);
+
+  document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+  const dialog = await waitFor(() => document.querySelector(".export-dialog"));
+  assert.ok(dialog, "a partial view asks before writing anything");
+  assert.match(dialog.textContent, /Partial export: the file would hold 2 of 3 pages/);
+  const buttons = [...dialog.querySelectorAll("button")].map((b) => b.textContent);
+  assert.ok(buttons.some((t) => t === "Prepare all 3 pages"), "preparation is offered within the budget");
+  assert.ok(buttons.some((t) => t === "Export partial (2 pages)"), "the partial export keeps its explicit name");
+  assert.ok(buttons.includes("Cancel"));
+
+  // Cancel decides nothing: the dialog goes, no file is written.
+  const before = savedExports.length;
+  [...dialog.querySelectorAll("button")].find((b) => b.textContent === "Cancel").dispatchEvent(new window.Event("click"));
+  assert.equal(document.querySelector(".export-dialog"), null);
+  assert.equal(savedExports.length, before);
+
+  // The named partial export writes exactly what is on screen and says so.
+  document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+  const again = await waitFor(() => document.querySelector(".export-dialog"));
+  [...again.querySelectorAll("button")].find((b) => b.textContent === "Export partial (2 pages)").dispatchEvent(new window.Event("click"));
+  await waitFor(() => savedExports.length > before);
+  assert.match(document.getElementById("status-text").textContent,
+    /Partial export: 2 of 3 pages - prepare the remaining pages to add them/);
+});
+
+// makePdfStub answers a PDF of `total` text pages; page `stallAt` blocks on `gate` so a
+// test can hold a preparation mid-chunk and stop it there.
+function makePdfStub(total, { stallAt = 0, gate } = {}) {
+  const page = {
+    getTextContent: async () => ({ items: [{ str: "Ordinary prose on a text page, plenty of it." }] }),
+    getViewport: () => ({ width: 600, height: 800 }),
+    cleanup() {},
+  };
+  return {
+    numPages: total,
+    getPage: async (n) => {
+      if (stallAt && n >= stallAt) await gate;
+      return page;
+    },
+    getMetadata: async () => ({ info: {} }),
+    getOutline: async () => [],
+    destroy() {},
+  };
+}
+
+test("a chunk-rendered PDF offers to prepare the rest, and preparing saves a complete file", async () => {
+  ioAutoFire = false; // chunk two must wait for the preparation, not for the stubbed scroll
+  try {
+    const pdf = makePdfStub(150);
+    globalThis.__getDocument = () => ({ promise: Promise.resolve(pdf), destroy() {} });
+    const { document, window, content } = await bootViewer(
+      "?file=https://books.test/big.pdf",
+      async () => new Response(new TextEncoder().encode("%PDF-1.7\n").buffer, { status: 200 }),
+    );
+    try {
+      // reportRenderIdle's line is the honest "chunk landed" signal - the sections stream
+      // into the DOM a macrotask before pdfRendered catches up, so counting them races.
+      assert.ok(await waitFor(() => /Pages 1-100 of 150/.test(document.getElementById("status-text").textContent)), "the first chunk renders");
+      assert.equal(document.getElementById("page-total").textContent, "/ 150");
+
+      document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+      const dialog = await waitFor(() => document.querySelector(".export-dialog"));
+      assert.ok(dialog, "100 of 150 pages is partial, and the reader is told before any file");
+      assert.match(dialog.textContent, /pages 1-100/);
+      assert.match(dialog.textContent, /150/);
+
+      // Prepare: the remaining chunks render right here, then the complete file saves itself.
+      [...dialog.querySelectorAll("button")].find((b) => b.textContent === "Prepare all 150 pages")
+        .dispatchEvent(new window.Event("click"));
+      const done = await waitFor(() => /Saved - complete, all 150 pages/.test(document.getElementById("status-text").textContent), 20000);
+      assert.ok(done, "the preparation ends in a complete save");
+      assert.equal(content.querySelectorAll("section").length, 150, "every declared page is in the artifact");
+    } finally {
+      delete globalThis.__getDocument;
+    }
+  } finally {
+    ioAutoFire = true;
+  }
+});
+
+test("a stopped preparation writes nothing, labels no file, and leaves the reader usable", async () => {
+  ioAutoFire = false;
+  try {
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    const pdf = makePdfStub(150, { stallAt: 130, gate });
+    globalThis.__getDocument = () => ({ promise: Promise.resolve(pdf), destroy() {} });
+    const { document, window, content } = await bootViewer(
+      "?file=https://books.test/stall.pdf",
+      async () => new Response(new TextEncoder().encode("%PDF-1.7\n").buffer, { status: 200 }),
+    );
+    try {
+      assert.ok(await waitFor(() => /Pages 1-100 of 150/.test(document.getElementById("status-text").textContent)));
+      document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+      const dialog = await waitFor(() => document.querySelector(".export-dialog"));
+      [...dialog.querySelectorAll("button")].find((b) => b.textContent === "Prepare all 150 pages")
+        .dispatchEvent(new window.Event("click"));
+
+      // Hold the chunk mid-render and stop the preparation there, then let the pages through.
+      // The chunk in flight always finishes - only the gaps between pages are interruptible -
+      // so this lands after it completes; the outcome is still "stopped, nothing written".
+      assert.ok(await waitFor(() => !document.getElementById("status-stop").hidden), "the status bar carries a Stop control");
+      const before = savedExports.length;
+      document.getElementById("status-stop").dispatchEvent(new window.Event("click"));
+      release();
+      for (let i = 0; i < 10; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+        console.log("POLL", i, "sections:", content.querySelectorAll("section").length,
+          "status:", JSON.stringify(document.getElementById("status-text").textContent),
+          "stopHidden:", document.getElementById("status-stop").hidden);
+      }
+      const stopped = await waitFor(() => /Preparation stopped - nothing was saved/.test(document.getElementById("status-text").textContent), 15000);
+      assert.ok(stopped, "the stop is named, and no completeness is claimed");
+      assert.equal(savedExports.length, before, "no file was written by the stopped preparation");
+      assert.equal(content.querySelectorAll("section").length, 150, "the reader keeps what rendered");
+      assert.equal(document.querySelector(".export-dialog"), null, "a fully rendered document needs no partial decision");
+
+      // Exporting again takes the direct path - the stop lost nothing.
+      document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+      const saved = await waitFor(() => /Saved - complete, all 150 pages/.test(document.getElementById("status-text").textContent), 15000);
+      assert.ok(saved, "the follow-up export goes straight to the file and says complete");
+    } finally {
+      delete globalThis.__getDocument;
+    }
+  } finally {
+    ioAutoFire = true;
+  }
 });

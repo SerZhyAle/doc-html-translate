@@ -62,7 +62,7 @@ src/
   sanitize.js          shared HTML -> safe id-namespaced fragment for the new formats
   url-policy.js        link/resource URL rules, name removal, id namespacing with its references, remote-content parking
   site-host.js         the viewer's ?file= parameter, and which site the popup's per-site switch acts on
-  export-html.js       the "save as HTML" shell, with its own script-free content policy and image encoding
+  export-html.js       the "save as HTML" shell: script-free content policy, image encoding, and the completeness plan (partial vs prepare-all) behind the export
   lang.js              source-language detection -> <html lang>
   i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
   popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
@@ -135,8 +135,9 @@ The pure heuristics are covered by `npm test`. The end-to-end gates are manual:
   the next 50 without a jump or a flicker. Then the part that pays for the whole design: run
   **Translate page** while sitting on page 10, scroll past 48, and confirm the newly appended pages
   arrive translated and the existing translation survives. Jump to a far page via the page box and
-  the TOC - both must land on real text, not an empty section. Finally "&#8595; HTML" must save the
-  pages reached and say so in the status bar.
+  the TOC - both must land on real text, not an empty section. Finally "&#8595; HTML" must ask what
+  the file would hold ("pages 1-50 of N"), offer the named partial export and **Prepare all pages**,
+  and - after preparing - save the whole book and say "Saved - complete, all N pages".
 - **Step 7 (content security).** A Markdown file with `[x](javascript:alert(1))`, saved with "&#8595; HTML"
   and opened from disk, does nothing on click. An EPUB with a remote image makes no request (DevTools
   Network) until **Load them**. A Markdown footnote link scrolls to its note. `https://site/viewer?file=a.pdf`
@@ -187,6 +188,25 @@ itself (EPUB, MOBI, FB2, comics) are never affected.
 Links keep only `http`, `https`, `mailto`, `tel` and in-document targets; anything else (`javascript:`,
 `data:`, `file:` ..) becomes plain text. A file saved with "&#8595; HTML" carries its own content policy
 that forbids script, so it stays inert when opened from disk, outside the extension.
+
+## Saving the document
+
+The toolbar's second download, "&#8595; HTML", saves the current on-screen view as one self-contained
+`.html` - text, images, OCR plates, and the translation if you ran the browser's "Translate page".
+What the file holds is stated before and after the save:
+
+- A document that is fully on screen (most formats, a short PDF, a comic you have scrolled through)
+  saves straight away, and the status bar says so: "Saved - complete, all N pages" (or "the complete
+  document" for formats without pages).
+- A long PDF renders 100 pages at a time and a comic inflates its pages as you scroll, so the export
+  asks first: it names the extent ("pages 1-100 of 150"), and offers either **Export partial** - the
+  pages reached, honestly labeled partial in the file-confirmation message - or **Prepare all pages**.
+  Preparation renders and recognizes the rest right here in the viewer, exactly as scrolling there
+  would, one page at a time with a **Stop** button; when it finishes, the complete file saves itself.
+  A document too large to prepare safely (over 1000 remaining pages, or a complete file the tab cannot
+  hold) says so instead of offering it.
+- A stopped preparation writes no file and labels nothing complete - export again afterwards and you
+  get exactly what is on screen.
 
 ## Known limitations
 

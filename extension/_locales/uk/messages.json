@@ -276,10 +276,10 @@
     "message": "сторінки 1-{1} з {2}"
   },
   "vSavedComic": {
-    "message": "Збережено {1} з {2} сторінок - прогорніть далі та збережіть знову, щоб додати решту"
+    "message": "Частковий експорт: {1} з {2} сторінок - підготуйте решту, щоб додати їх"
   },
   "vSavedPdf": {
-    "message": "Збережено сторінки 1-{1} з {2} - прогорніть далі та збережіть знову, щоб додати решту"
+    "message": "Частковий експорт: сторінки 1-{1} з {2} - підготуйте решту, щоб додати їх"
   },
   "vTocSection": {
     "message": "Розділ"
@@ -611,5 +611,33 @@
   "ariaCollapse": {
     "message": "Згорнути",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"Пошук"},
+  "vSearchText": {"message":"Шукати текст"},
+  "vSearchScope": {"message":"Область"},
+  "vSearchPage": {"message":"Ця сторінка"},
+  "vSearchBook": {"message":"Уся книга"},
+  "vSearchClose": {"message":"Закрити"},
+  "vSearchPrompt": {"message":"Введіть текст для пошуку"},
+  "vSearchWorking": {"message":"Пошук…"},
+  "vSearchCount": {"message":"Знайдено: {1} — {2}"},
+  "vSearchPlates": {"message":"Текстові блоки OCR"},
+  "vSearchNoText": {"message":"Для пошуку в сканах потрібен розпізнаний текст"},
+  "vExportPartialLine": {"message":"Частковий експорт: у документі {1} сторінок, і файл міститиме сторінки 1-{2}."},
+  "vExportPrepareHint": {"message":"Спочатку підготує решту сторінок просто у переглядачі, потім збереже повний файл. У будь-який момент можна зупинити."},
+  "vExportPrepareBtn": {"message":"Підготувати всі {1} сторінок"},
+  "vExportPartialBtn": {"message":"Частковий експорт ({1} стор.)"},
+  "vExportCancel": {"message":"Скасувати"},
+  "vExportImpossibleLine": {"message":"Повний експорт для цього документа неможливий: {1}."},
+  "vExportReasonPages": {"message":"підготовка решти {1} сторінок перевищує межу в {2}"},
+  "vExportReasonBytes": {"message":"повний файл займав би близько {1} - більше, ніж вкладка браузера надійно втримує"},
+  "vExportReasonStalled": {"message":"решта сторінок не змогла відмалюватися"},
+  "vExportPreparing": {"message":"Підготовка сторінки {1} з {2}.."},
+  "vExportStop": {"message":"Зупинити"},
+  "vExportStopped": {"message":"Підготовку зупинено - нічого не збережено"},
+  "vStatusSaving": {"message":"Збереження HTML.."},
+  "vSavedCompletePages": {"message":"Збережено - повністю, всі {1} сторінок"},
+  "vSavedCompleteDoc": {"message":"Збережено - весь документ"},
+
+  "vExportPartialLineComic": {"message":"Частковий експорт: файл міститиме {1} з {2} сторінок."}
 }

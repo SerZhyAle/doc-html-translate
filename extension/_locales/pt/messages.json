@@ -260,10 +260,10 @@
     "message": "páginas 1-{1} de {2}"
   },
   "vSavedComic": {
-    "message": "Guardadas {1} de {2} páginas - percorra mais e guarde de novo para incluir mais"
+    "message": "Exportação parcial: {1} de {2} páginas - prepare as páginas restantes para incluí-las"
   },
   "vSavedPdf": {
-    "message": "Guardadas as páginas 1-{1} de {2} - percorra mais e guarde de novo para incluir mais"
+    "message": "Exportação parcial: páginas 1-{1} de {2} - prepare as páginas restantes para incluí-las"
   },
   "vTocSection": {
     "message": "Secção"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "Recolher",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"Pesquisar"},
+  "vSearchText": {"message":"Pesquisar texto"},
+  "vSearchScope": {"message":"Âmbito"},
+  "vSearchPage": {"message":"Esta página"},
+  "vSearchBook": {"message":"Livro inteiro"},
+  "vSearchClose": {"message":"Fechar"},
+  "vSearchPrompt": {"message":"Digite o texto a pesquisar"},
+  "vSearchWorking": {"message":"Pesquisando…"},
+  "vSearchCount": {"message":"{1} resultados — {2}"},
+  "vSearchPlates": {"message":"Texto OCR"},
+  "vSearchNoText": {"message":"Páginas digitalizadas precisam de texto OCR"},
+  "vExportPartialLine": {"message":"Exportação parcial: o documento tem {1} páginas e o arquivo conteria as páginas 1-{2}."},
+  "vExportPrepareHint": {"message":"Primeiro prepara as páginas restantes no próprio leitor e depois salva o arquivo completo. Você pode pará-lo a qualquer momento."},
+  "vExportPrepareBtn": {"message":"Preparar todas as {1} páginas"},
+  "vExportPartialBtn": {"message":"Exportação parcial ({1} páginas)"},
+  "vExportCancel": {"message":"Cancelar"},
+  "vExportImpossibleLine": {"message":"Não é possível uma exportação completa para este documento: {1}."},
+  "vExportReasonPages": {"message":"preparar as {1} páginas restantes ultrapassa o limite de {2}"},
+  "vExportReasonBytes": {"message":"o arquivo completo teria cerca de {1} - mais do que uma aba do navegador aguenta com confiabilidade"},
+  "vExportReasonStalled": {"message":"as páginas restantes não puderam ser renderizadas"},
+  "vExportPreparing": {"message":"Preparando página {1} de {2}.."},
+  "vExportStop": {"message":"Parar"},
+  "vExportStopped": {"message":"Preparação parada - nada foi salvo"},
+  "vStatusSaving": {"message":"Salvando HTML.."},
+  "vSavedCompletePages": {"message":"Salvo - completo, todas as {1} páginas"},
+  "vSavedCompleteDoc": {"message":"Salvo - o documento completo"},
+
+  "vExportPartialLineComic": {"message":"Exportação parcial: o arquivo conteria {1} de {2} páginas."}
 }

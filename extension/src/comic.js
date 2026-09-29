@@ -128,10 +128,13 @@ export function detectContainer(u8, name = "") {
 export class DesktopOnlyError extends Error {}
 
 // parseComic reads a comic archive and returns its page list in natural order.
-// Each page is { name, mime, load } where load() inflates just that page's bytes
-// on demand (Uint8Array). Throws DesktopOnlyError for CBR/CB7, InputLimitError for
-// a listing over the input limits, and a plain Error for a container with no page
-// images. name is the file name, the container hint when the bytes carry no signature.
+// Each page is { name, mime, size, load } where load() inflates just that page's bytes
+// on demand (Uint8Array) and size is the page's inflated byte size as declared by the
+// container - known from the listing alone, which is what lets the HTML export judge a
+// complete file's size before any page is inflated (export-html.js). Throws
+// DesktopOnlyError for CBR/CB7, InputLimitError for a listing over the input limits, and
+// a plain Error for a container with no page images. name is the file name, the container
+// hint when the bytes carry no signature.
 export async function parseComic(arrayBuffer, name = "") {
   const u8 = new Uint8Array(arrayBuffer);
   const kind = detectContainer(u8, name);
@@ -160,7 +163,7 @@ export async function parseComic(arrayBuffer, name = "") {
     throw new Error("no page images found in this comic archive");
   }
   pages.sort((a, b) => naturalCompare(a.name, b.name));
-  return pages.map((e) => ({ name: e.name, mime: MIME_BY_EXT[extOf(e.name)] || "image/jpeg", load: e.load }));
+  return pages.map((e) => ({ name: e.name, mime: MIME_BY_EXT[extOf(e.name)] || "image/jpeg", size: e.size, load: e.load }));
 }
 
 // ---- ZIP reader (lazy) -----------------------------------------------------

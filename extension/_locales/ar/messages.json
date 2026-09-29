@@ -260,10 +260,10 @@
     "message": "الصفحات 1-{1} من {2}"
   },
   "vSavedComic": {
-    "message": "تم حفظ {1} من {2} صفحة - تابع التمرير ثم احفظ مرة أخرى لتضمين المزيد"
+    "message": "تصدير جزئي: {1} من أصل {2} صفحة - جهّز الصفحات المتبقية لإضافتها"
   },
   "vSavedPdf": {
-    "message": "تم حفظ الصفحات 1-{1} من {2} - تابع التمرير ثم احفظ مرة أخرى لتضمين المزيد"
+    "message": "تصدير جزئي: الصفحات من 1 إلى {1} من أصل {2} - جهّز الصفحات المتبقية لإضافتها"
   },
   "vTocSection": {
     "message": "قسم"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "طي",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"بحث"},
+  "vSearchText": {"message":"البحث في النص"},
+  "vSearchScope": {"message":"النطاق"},
+  "vSearchPage": {"message":"هذه الصفحة"},
+  "vSearchBook": {"message":"الكتاب كله"},
+  "vSearchClose": {"message":"إغلاق"},
+  "vSearchPrompt": {"message":"أدخل النص للبحث"},
+  "vSearchWorking": {"message":"جارٍ البحث…"},
+  "vSearchCount": {"message":"{1} نتيجة — {2}"},
+  "vSearchPlates": {"message":"نص التعرف الضوئي"},
+  "vSearchNoText": {"message":"تحتاج الصفحات الممسوحة إلى نص التعرف الضوئي"},
+  "vExportPartialLine": {"message":"تصدير جزئي: المستند فيه {1} صفحة، والملف سيشمل الصفحات من 1 إلى {2}."},
+  "vExportPrepareHint": {"message":"يجهّز الصفحات المتبقية في العارض أولاً ثم يحفظ ملفاً كاملاً. يمكنك إيقافه في أي وقت."},
+  "vExportPrepareBtn": {"message":"تجهيز كل الصفحات ({1})"},
+  "vExportPartialBtn": {"message":"تصدير جزئي ({1} صفحة)"},
+  "vExportCancel": {"message":"إلغاء"},
+  "vExportImpossibleLine": {"message":"لا يمكن التصدير الكامل لهذا المستند: {1}."},
+  "vExportReasonPages": {"message":"تجهيز الصفحات المتبقية البالغ عددها {1} يتجاوز الحد {2}"},
+  "vExportReasonBytes": {"message":"سيبلغ الملف الكامل نحو {1} - وهو أكثر مما تحتمله علامة التبويب موثوقاً"},
+  "vExportReasonStalled": {"message":"تعذّر عرض الصفحات المتبقية"},
+  "vExportPreparing": {"message":"تجهيز الصفحة {1} من {2}.."},
+  "vExportStop": {"message":"إيقاف"},
+  "vExportStopped": {"message":"توقف التجهيز - لم يُحفظ شيء"},
+  "vStatusSaving": {"message":"جارٍ حفظ HTML.."},
+  "vSavedCompletePages": {"message":"تم الحفظ - كامل، كل الصفحات ({1})"},
+  "vSavedCompleteDoc": {"message":"تم الحفظ - المستند كاملاً"},
+
+  "vExportPartialLineComic": {"message":"تصدير جزئي: الملف سيشمل {1} من أصل {2} صفحة."}
 }

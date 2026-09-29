@@ -260,10 +260,10 @@
     "message": "第 1-{1} 页，共 {2} 页"
   },
   "vSavedComic": {
-    "message": "已保存 {2} 页中的 {1} 页 - 继续滚动后再次保存可包含更多"
+    "message": "部分导出：{1}/{2} 页 - 准备其余页面即可加入"
   },
   "vSavedPdf": {
-    "message": "已保存第 1-{1} 页，共 {2} 页 - 继续滚动后再次保存可包含更多"
+    "message": "部分导出：第 1-{1} 页，共 {2} 页 - 准备其余页面即可加入"
   },
   "vTocSection": {
     "message": "章节"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "折叠",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"搜索"},
+  "vSearchText": {"message":"搜索文字"},
+  "vSearchScope": {"message":"范围"},
+  "vSearchPage": {"message":"本页"},
+  "vSearchBook": {"message":"整本书"},
+  "vSearchClose": {"message":"关闭"},
+  "vSearchPrompt": {"message":"输入搜索文字"},
+  "vSearchWorking": {"message":"正在搜索…"},
+  "vSearchCount": {"message":"{1} 个匹配 — {2}"},
+  "vSearchPlates": {"message":"OCR 文字"},
+  "vSearchNoText": {"message":"扫描页面需要 OCR 文字"},
+  "vExportPartialLine": {"message":"部分导出：文档共有 {1} 页，文件将只包含第 1-{2} 页。"},
+  "vExportPrepareHint": {"message":"先在查看器中准备其余页面，然后保存完整文件。可随时停止。"},
+  "vExportPrepareBtn": {"message":"准备全部 {1} 页"},
+  "vExportPartialBtn": {"message":"部分导出（{1} 页）"},
+  "vExportCancel": {"message":"取消"},
+  "vExportImpossibleLine": {"message":"无法为此文档导出全部页面：{1}。"},
+  "vExportReasonPages": {"message":"准备其余 {1} 页超出了 {2} 页的上限"},
+  "vExportReasonBytes": {"message":"完整文件约有 {1} - 超出了浏览器标签页能可靠承载的大小"},
+  "vExportReasonStalled": {"message":"其余页面无法渲染"},
+  "vExportPreparing": {"message":"正在准备第 {1}/{2} 页.."},
+  "vExportStop": {"message":"停止"},
+  "vExportStopped": {"message":"准备已停止 - 未保存任何文件"},
+  "vStatusSaving": {"message":"正在保存 HTML.."},
+  "vSavedCompletePages": {"message":"已保存 - 完整，共 {1} 页"},
+  "vSavedCompleteDoc": {"message":"已保存 - 完整文档"},
+
+  "vExportPartialLineComic": {"message":"部分导出：文件将包含 {2} 页中的 {1} 页。"}
 }

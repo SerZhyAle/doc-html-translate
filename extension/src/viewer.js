@@ -22,15 +22,16 @@ import { parseMarkdown } from "./md.js";
 import { parseFb2 } from "./fb2.js";
 import { parseEbook, isMobiBytes } from "./ebook.js";
 import { parseComic, DesktopOnlyError } from "./comic.js";
-import { InputLimitError, checkTextInput } from "./limits.js";
+import { InputLimitError, checkTextInput, formatBytes } from "./limits.js";
 import { overlayImage, makeBadge, ocrLangToHtmlLang, releaseOverlays } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
 import { extractPageImages, rasterizePage } from "./pdf-images.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { recordRun } from "./diagnostics.js";
-import { buildExportHtml, exportImageEncoding } from "./export-html.js";
+import { buildExportHtml, exportImageEncoding, exportPlan, EXPORT_PREPARE_MAX_FILE_BYTES } from "./export-html.js";
 import { restoreRemote, REMOTE_MARK } from "./url-policy.js";
 import { parseFileParam } from "./site-host.js";
+import { setupReaderSearch } from "./reader-search.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -121,8 +122,12 @@ function imageMime(data, name) {
 // the observers, the OCR overlays' fit listeners, and every blob: URL minted for its images.
 let revokeCurrent = null;
 let pdfTask = null; // the pdf.js loading task of the document being opened, until it settles
+let readerSearch = null;
 function teardownCurrent() {
+  if (readerSearch) readerSearch.reset();
   clearRemoteNotice();
+  hideExportDialog();
+  stopExportPreparation();
   resetToolbar();
   releaseOverlays($("content"));
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
@@ -139,7 +144,7 @@ function teardownCurrent() {
   pdfImagesDeferred = 0;
   if (comicImageObserver) { comicImageObserver.disconnect(); comicImageObserver = null; }
   comicTotal = 0;
-  comicRendered = 0;
+  comicPagesBytes = 0;
   chunkPending = null;
   pdfDoc = null;
   pdfTotal = 0;
@@ -147,6 +152,9 @@ function teardownCurrent() {
   ocrTotal = 0;
   ocrDone = 0;
   ocrWithText = 0;
+  ocrPending.length = 0;
+  ocrStarted = new WeakSet();
+  prepareBlocked = null;
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
   pdfImageUrls = [];
 }
@@ -234,6 +242,13 @@ let ocrTotal = 0;
 let ocrDone = 0;
 let ocrWithText = 0; // recognized images that actually carried a plate - see ocrUpdateStatus
 const ocrQueued = new WeakSet();
+// ocrPending lists the registered images the shared observer has not processed yet, in
+// register order; the HTML export's preparation drains it directly so pages the reader never
+// scrolled to still get their plates before being saved (drainOcrQueue). ocrStarted guards
+// against the same image entering recognition twice - the scroll observer and the drain can
+// both reach for it.
+const ocrPending = [];
+let ocrStarted = new WeakSet();
 let pdfImageUrls = []; // object URLs for PDF-extracted images, revoked on teardown
 
 function ensureOcrCss() {
@@ -297,8 +312,11 @@ function getOcrObserver() {
 
 // The document generation guards the counters: a picture still in the recognition queue when its
 // document was replaced is skipped, and one that finishes anyway does not count toward the new
-// document's progress.
+// document's progress. ocrStarted makes the function idempotent per image: the scroll observer
+// and the export preparation can both reach for the same picture, and only the first wins.
 async function ocrProcessImage(img) {
+  if (ocrStarted.has(img)) return;
+  ocrStarted.add(img);
   const gen = docGen;
   const wrapper = el("div", "ocr-pending");
   const badge = makeBadge("OCR..");
@@ -321,6 +339,8 @@ async function ocrProcessImage(img) {
     console.warn("OCR failed for image", err);
     wrapper.replaceWith(img); // restore the plain image
   } finally {
+    const at = ocrPending.indexOf(img);
+    if (at >= 0) ocrPending.splice(at, 1);
     if (isCurrent(gen)) {
       ocrDone += 1;
       ocrUpdateStatus();
@@ -342,6 +362,7 @@ function registerImagesForOcr(root, force = false) {
     // A parked remote image has no src yet; it is registered when the reader allows it.
     if (ocrQueued.has(img) || img.hasAttribute(REMOTE_MARK)) continue;
     ocrQueued.add(img);
+    ocrPending.push(img);
     ocrTotal += 1;
     obs.observe(img);
   }
@@ -365,11 +386,22 @@ let pdfImagesDeferred = 0;
 // ---- Comic page state ------------------------------------------------------
 // A comic archive renders like a scanned PDF: placeholder sections up front, each
 // page's image inflated and inserted only as it scrolls near view (comicImageObserver),
-// then OCR'd by the shared lazy-OCR observer. comicTotal/comicRendered drive the
-// partial-save warning, mirroring the PDF counters.
+// then OCR'd by the shared lazy-OCR observer. comicTotal and comicRenderedCount() drive
+// the export's completeness statement, mirroring the PDF counters. comicPagesBytes is
+// the pages' inflated size as declared by the archive listing - known before any page
+// is inflated, which is what lets the export judge a complete file's size up front
+// (export-html.js).
 let comicImageObserver = null;
 let comicTotal = 0;
-let comicRendered = 0;
+let comicPagesBytes = 0;
+
+// comicRenderedCount reads what the reader has actually reached from the DOM: a comic
+// page exists once its <img> is inside its section, so counting images is the honest
+// rendered count - a page whose bytes failed to inflate leaves the reserved box and is
+// not a page, however many the archive lists.
+function comicRenderedCount() {
+  return document.querySelectorAll('#content section[id^="comic-page-"] img').length;
+}
 
 function getPdfImageObserver() {
   if (pdfImageObserver) return pdfImageObserver;
@@ -408,30 +440,36 @@ function deferPageImages(section, pageNum, pageChars, width, height) {
 
 // extractSectionImages runs the image pass for one section, re-opening its page (the
 // render loop released it) and dropping the reserved box once the real images land.
+// Returns the byte size of the images it appended - the export preparation adds these up
+// against the file budget as it goes. 0 when the pass found nothing usable.
 async function extractSectionImages(section) {
   const pageNum = Number(section.dataset.pdfPage);
-  if (!pdfDoc || !pageNum) return;
+  if (!pdfDoc || !pageNum) return 0;
   delete section.dataset.pdfPage;
   const gen = docGen;
   const pageChars = Number(section.dataset.pdfChars) || 0;
   let page = null;
+  let added = 0;
   try {
     page = await pdfDoc.getPage(pageNum);
-    if (gen !== docGen) return;
-    await appendPdfImages(page, section, pageChars, gen);
+    if (gen !== docGen) return 0;
+    added = await appendPdfImages(page, section, pageChars, gen);
   } catch {
     /* a page that will not yield its images just stays text-only */
   } finally {
     if (page) { try { page.cleanup(); } catch { /* ignore */ } }
     if (gen === docGen) section.querySelector(".pdf-page-pending")?.remove();
   }
+  return added;
 }
 
 // Extract raster images from a PDF page (scanned pages fall back to a full-page raster),
 // append them to the page section as <img>, and register them for lazy OCR. Must run
-// before page.cleanup(). No-op unless it finds usable images.
+// before page.cleanup(). Returns the byte size of what was appended (0 when it found
+// nothing usable) - see extractSectionImages.
 async function appendPdfImages(page, section, pageChars, gen = docGen) {
   let imgs = [];
+  let appended = 0;
   try {
     imgs = await extractPageImages(page);
     if (!imgs.length && pageChars < 20 && isCurrent(gen)) {
@@ -440,13 +478,14 @@ async function appendPdfImages(page, section, pageChars, gen = docGen) {
     }
   } catch (err) {
     console.warn("PDF image extraction failed", err);
-    return;
+    return 0;
   }
   // Nothing minted yet: an old document's images are only Blobs, and go with this frame.
-  if (!imgs.length || !isCurrent(gen)) return;
+  if (!imgs.length || !isCurrent(gen)) return 0;
   for (const im of imgs) {
     const url = URL.createObjectURL(im.blob);
     pdfImageUrls.push(url);
+    appended += im.blob.size;
     const imgEl = el("img");
     // Publish the intrinsic size so the browser reserves the box from the aspect ratio
     // before the blob decodes. Without it a blob: image is zero-height until decoded, so
@@ -460,6 +499,7 @@ async function appendPdfImages(page, section, pageChars, gen = docGen) {
     section.append(imgEl);
   }
   registerImagesForOcr(section);
+  return appended;
 }
 
 // ---- Notices / fallbacks ---------------------------------------------------
@@ -567,11 +607,263 @@ function downloadOriginal() {
 // Save the current view as a standalone HTML file: captures translated text when the
 // page has been translated in place, inlines blob: images as data URIs, and unwraps the
 // translator's <font> wrappers so the result is portable and clean.
+//
+// The click first asks what the file would contain. A fully rendered document saves at
+// once; a chunk-rendered PDF or a scroll-inflated comic holds only the pages reached, so
+// the export dialog says so before anything is written, offers a bounded "prepare all
+// pages" pass (render + recognize the rest here in the viewer, then save complete) next
+// to a clearly named partial export, and explains itself when the budget refuses a
+// complete file. Rendering the remainder silently - the pre-ticket behavior was only to
+// mutter "partial" after the fact - would either reimpose the freeze chunking exists to
+// avoid or hand over a file the reader took for the whole book.
 async function downloadHtml() {
   const content = $("content");
   if (!content || !content.children.length) return;
+  if (readerSearch) readerSearch.reset(); // search marks are navigation, never exported annotations
+  if (prepareCtx) return; // a preparation is already running - the status bar owns the moment
 
-  const imgMap = await buildImageDataMap(content); // read decoded live images once
+  const extent = exportExtent();
+  const plan = prepareBlocked
+    ? { action: "partial-only", reason: prepareBlocked }
+    : exportPlan({ total: extent.total, rendered: extent.rendered, imageBytes: extent.imageBytes });
+  if (plan.action === "direct") {
+    await saveExportHtml();
+    return;
+  }
+  showExportDialog(extent, plan);
+}
+
+// exportExtent reads the one thing the export decision needs: how many pages the document
+// declares and how many the live view holds. Paged formats only - anything else is complete
+// by construction (the whole DOM is what serializes).
+function exportExtent() {
+  if (comicTotal > 0) return { kind: "comic", total: comicTotal, rendered: comicRenderedCount(), imageBytes: comicPagesBytes };
+  if (pdfDoc) return { kind: "pdf", total: pdfTotal, rendered: pdfRendered, imageBytes: 0 };
+  return { kind: "static", total: 0, rendered: 0, imageBytes: 0 };
+}
+
+// ---- Export dialog ----------------------------------------------------------
+// One card at a time, fixed under the toolbar so it is reachable from wherever in a long
+// document the reader clicked Export. Every path out of it either saves or removes the
+// card; a cancelled preparation reopens it with fresh counters rather than leaving the
+// reader with a decision already made for them.
+let exportDialog = null;
+
+function hideExportDialog() {
+  if (exportDialog) { exportDialog.remove(); exportDialog = null; }
+}
+
+function showExportDialog(extent, plan) {
+  hideExportDialog();
+  const card = el("div", "export-dialog");
+  card.setAttribute("role", "dialog");
+  card.setAttribute("aria-label", t("btnSaveHtml", "Export HTML"));
+
+  const line = el("p", "export-line");
+  // A PDF's rendered pages are the contiguous run 1..N; a comic's are whatever the reader
+  // reached, holes included - so only the PDF may say "pages 1-N".
+  line.textContent = extent.kind === "comic"
+    ? t("vExportPartialLineComic", "Partial export: the file would hold {1} of {2} pages.", extent.rendered, extent.total)
+    : t("vExportPartialLine", "Partial export: the document has {1} pages, and the file would hold pages 1-{2}.", extent.total, extent.rendered);
+  card.append(line);
+
+  const row = el("div", "export-actions");
+  const close = () => hideExportDialog();
+  const partial = el("button", "primary");
+  partial.type = "button";
+  partial.textContent = t("vExportPartialBtn", "Export partial ({1} pages)", extent.rendered);
+  partial.addEventListener("click", async () => {
+    close();
+    await saveExportHtml();
+  });
+  row.append(partial);
+
+  if (plan.action === "offer-prepare") {
+    const hint = el("p", "export-hint");
+    hint.textContent = t("vExportPrepareHint",
+      "Prepares the remaining pages here in the viewer first, then saves a complete file. You can stop it at any time.");
+    card.append(hint);
+    const prepare = el("button", "primary");
+    prepare.type = "button";
+    prepare.textContent = t("vExportPrepareBtn", "Prepare all {1} pages", extent.total);
+    prepare.addEventListener("click", () => {
+      close();
+      runExportPreparation(extent);
+    });
+    row.prepend(prepare);
+  } else if (plan.reason) {
+    const why = el("p", "export-hint");
+    why.textContent = t("vExportImpossibleLine",
+      "A complete export is not possible for this document: {1}.",
+      t(plan.reason.key, plan.reason.fallback, ...plan.reason.args));
+    card.append(why);
+  }
+
+  const cancel = el("button", "secondary");
+  cancel.type = "button";
+  cancel.textContent = t("vExportCancel", "Cancel");
+  cancel.addEventListener("click", close);
+  row.append(cancel);
+
+  card.append(row);
+  $("content").before(card);
+  exportDialog = card;
+  partial.focus();
+}
+
+// ---- Preparation ------------------------------------------------------------
+// "Prepare all pages" materializes the rest of the document exactly the way scrolling to
+// it would - chunk by chunk, one page image and one recognition at a time - so the export
+// that follows is the whole book and the reader's tab never holds more than a chunk of
+// new work at once. Three ways out, all leaving the reader usable and no file written:
+// the reader stops it, a new document replaces this one (the docGen checks), or the
+// accumulated image bytes pass the export budget (a resource-limit stop, whose reason is
+// remembered so the dialog offers only the partial export afterwards).
+let prepareCtx = null;      // in-flight preparation - the Stop button talks to it
+let prepareBlocked = null;  // reason a complete export was refused for this document
+
+function stopExportPreparation() {
+  if (prepareCtx) prepareCtx.cancelled = true;
+  prepareCtx = null;
+  $("status-stop").hidden = true;
+}
+
+async function runExportPreparation(extent) {
+  const ctx = { cancelled: false, gen: docGen, imageBytes: extent.imageBytes };
+  prepareCtx = ctx;
+  prepareBlocked = null;
+  $("status").classList.remove("done");
+  $("status-stop").hidden = false;
+  $("status-stop").textContent = t("vExportStop", "Stop");
+  try {
+    const outcome = extent.kind === "comic"
+      ? await prepareComicPages(ctx)
+      : await preparePdfPages(ctx);
+    if (ctx.cancelled || !isCurrent(ctx.gen)) {
+      if (isCurrent(ctx.gen)) {
+        // The dialog that reopens right after carries the exact counts; this line only has to
+        // say what happened to the file - nothing was written. If the preparation had in fact
+        // reached the last page before the stop landed, there is nothing left to decide: the
+        // reader clicks Export again and takes the direct path.
+        setStatus(t("vExportStopped", "Preparation stopped - nothing was saved"));
+        setTimeout(hideStatus, 4000);
+        const fresh = exportExtent();
+        const plan = exportPlan({ total: fresh.total, rendered: fresh.rendered, imageBytes: fresh.imageBytes });
+        if (plan.action !== "direct") showExportDialog(fresh, plan);
+      }
+      return;
+    }
+    if (outcome.limit) {
+      prepareBlocked = outcome.limit;
+      const fresh = exportExtent();
+      setStatus(t("vExportImpossibleLine",
+        "A complete export is not possible for this document: {1}.",
+        t(outcome.limit.key, outcome.limit.fallback, ...outcome.limit.args)));
+      setTimeout(hideStatus, 6000);
+      showExportDialog(fresh, { action: "partial-only", reason: prepareBlocked });
+      return;
+    }
+    await saveExportHtml();
+  } finally {
+    if (prepareCtx === ctx) prepareCtx = null;
+    $("status-stop").hidden = true;
+  }
+}
+
+// preparePdfPages renders the remaining chunks, then runs the deferred image pass and the
+// recognition queue over the pages the reader never reached - the same work the scroll
+// observers would have done, just without the scroll.
+async function preparePdfPages(ctx) {
+  while (pdfDoc && pdfRendered < pdfTotal) {
+    if (ctx.cancelled || !isCurrent(ctx.gen)) return {};
+    setStatus(t("vExportPreparing", "Preparing page {1} of {2}..", pdfRendered + 1, pdfTotal));
+    setProgress(pdfRendered / pdfTotal);
+    const before = pdfRendered;
+    await renderChunk();
+    if (pdfRendered === before) { // no forward progress - do not spin
+      return { limit: prepareNoProgressReason() };
+    }
+    await yieldToUI();
+  }
+  const sections = [...document.querySelectorAll("#content section[data-pdf-page]")];
+  for (const section of sections) {
+    if (ctx.cancelled || !isCurrent(ctx.gen)) return {};
+    if (!section.dataset.pdfPage) continue; // reached by the reader's own scrolling meanwhile
+    setStatus(t("vExportPreparing", "Preparing page {1} of {2}..", Number(section.dataset.page), pdfTotal));
+    ctx.imageBytes += await extractSectionImages(section) || 0;
+    if (ctx.imageBytes > EXPORT_PREPARE_MAX_FILE_BYTES) {
+      return { limit: prepareBytesReason(ctx.imageBytes) };
+    }
+    await drainOcrQueue(ctx);
+    await yieldToUI();
+  }
+  await drainOcrQueue(ctx);
+  return {};
+}
+
+// prepareComicPages inflates and recognizes every page still carrying its loader, in page
+// order - the archive budget was checked before the offer, so no byte guard runs here.
+async function prepareComicPages(ctx) {
+  const sections = [...document.querySelectorAll('#content section[id^="comic-page-"]')];
+  for (const section of sections) {
+    if (ctx.cancelled || !isCurrent(ctx.gen)) return {};
+    if (!comicLoaders.has(section)) continue; // reached by the reader's own scrolling meanwhile
+    setStatus(t("vExportPreparing", "Preparing page {1} of {2}..", Number(section.dataset.page), comicTotal));
+    await insertComicPage(section);
+    await drainOcrQueue(ctx);
+    await yieldToUI();
+  }
+  await drainOcrQueue(ctx);
+  return {};
+}
+
+// drainOcrQueue recognizes the pages' images now instead of leaving them to the scroll
+// observer the reader may never trigger again. One image at a time, cancellable between
+// each; ocrProcessImage's own guard keeps this and the observer from ever doubling up.
+async function drainOcrQueue(ctx) {
+  while (ocrPending.length) {
+    if (ctx.cancelled || !isCurrent(ctx.gen)) return;
+    await ocrProcessImage(ocrPending[0]);
+    if (ctx.cancelled || !isCurrent(ctx.gen)) return;
+    await yieldToUI();
+  }
+}
+
+function prepareBytesReason(bytes) {
+  return {
+    key: "vExportReasonBytes",
+    fallback: "the complete file would be about {1}, more than a browser tab holds reliably",
+    args: [formatBytes(bytes)],
+  };
+}
+
+// A chunk that renders no pages means the pdfjs worker stopped handing them over - a
+// concrete, if unusual, reason the declared page count cannot be reached.
+function prepareNoProgressReason() {
+  return {
+    key: "vExportReasonStalled",
+    fallback: "the remaining pages would not render",
+    args: [],
+  };
+}
+
+// The serialization half of the export, once the dialog has settled what the file will hold
+// (or on the direct path, with no dialog at all). Decoding is awaited first: a freshly
+// prepared - or freshly scrolled-to - image may still be inflating, and an image with no
+// decoded size drops out of the export, which would make a "complete" file quietly miss the
+// very pages preparation just rendered.
+async function saveExportHtml() {
+  const content = $("content");
+  if (!content || !content.children.length) return;
+  // Entry is gated in downloadHtml: a click while a preparation runs is ignored there, and
+  // the preparation itself calls this when it finishes.
+
+  setStatus(t("vStatusSaving", "Saving HTML.."));
+  await Promise.all([...content.querySelectorAll("img")].map((img) => (
+    img.decode ? img.decode().catch(() => {}) : Promise.resolve()
+  )));
+
+  const imgMap = await buildImageDataMap(content);
   const clone = content.cloneNode(true);
   unwrapTranslateFonts(clone);
   applyImageDataMap(clone, imgMap);
@@ -590,8 +882,8 @@ async function downloadHtml() {
   const url = URL.createObjectURL(blob);
   triggerDownload(url, `${safeBase(title)}.html`);
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  if (blob.size >= EXPORT_WARN_BYTES) reportLargeSave(blob.size);
-  else reportPartialSave();
+  reportSaveCompleteness();
+  if (blob.size >= EXPORT_WARN_BYTES) setTimeout(() => reportLargeSave(blob.size), 2500);
 }
 
 // Every image rides inside the saved file as a data: URI, so an image-heavy book saves as a file
@@ -605,23 +897,21 @@ function reportLargeSave(bytes) {
   setTimeout(hideStatus, 6000);
 }
 
-// A chunk-rendered PDF holds only the pages the reader has reached, so the export is
-// as long as the read. Say so instead of handing over a quietly truncated book.
-// Rendering the remainder here would cost exactly the long freeze the chunking exists
-// to avoid, and would bury untranslated pages under the ones Chrome already
-// translated - so the honest partial file wins over the confusing complete one.
-function reportPartialSave() {
-  // A comic inflates its pages on scroll, so the export holds only the pages reached.
-  if (comicTotal > 0) {
-    if (comicRendered >= comicTotal) return;
-    $("status").classList.remove("done");
-    setStatus(t("vSavedComic", "Saved {1} of {2} pages - scroll further and save again to include more", comicRendered, comicTotal));
-    setTimeout(hideStatus, 5000);
-    return;
-  }
-  if (!pdfDoc || pdfRendered >= pdfTotal) return;
+// The final statement after a save, agreed with the artifact that just left: what the reader
+// saved is what the live view held, so a partially rendered PDF or a comic with pages still
+// un-inflated is labeled partial here exactly as the dialog labeled it before the save.
+function reportSaveCompleteness() {
+  const extent = exportExtent();
   $("status").classList.remove("done");
-  setStatus(t("vSavedPdf", "Saved pages 1-{1} of {2} - scroll further and save again to include more", pdfRendered, pdfTotal));
+  if (extent.kind === "comic") {
+    if (extent.rendered >= extent.total) setStatus(t("vSavedCompletePages", "Saved - complete, all {1} pages", extent.total));
+    else setStatus(t("vSavedComic", "Partial export: {1} of {2} pages - prepare the remaining pages to add them", extent.rendered, extent.total));
+  } else if (extent.kind === "pdf") {
+    if (extent.rendered >= extent.total) setStatus(t("vSavedCompletePages", "Saved - complete, all {1} pages", extent.total));
+    else setStatus(t("vSavedPdf", "Partial export: pages 1-{1} of {2} - prepare the remaining pages to add them", extent.rendered, extent.total));
+  } else {
+    setStatus(t("vSavedCompleteDoc", "Saved - the complete document"));
+  }
   setTimeout(hideStatus, 5000);
 }
 
@@ -722,9 +1012,44 @@ function renderToc(entries) {
   $("btn-toc").classList.toggle("hidden", empty);
   if (empty) {
     $("toc").classList.add("hidden"); // an open panel would be left showing nothing
+    $("btn-toc").setAttribute("aria-expanded", "false");
     return;
   }
   tree.append(buildTocList(entries));
+  updateCurrentTocEntry();
+}
+
+function updateCurrentTocEntry() {
+  const links = [...$("toc-tree").querySelectorAll("a[href^='#']")];
+  let current = null;
+  for (const link of links) {
+    const id = link.getAttribute("href").slice(1);
+    const target = document.getElementById(id) ||
+      (id.startsWith("page-") ? document.querySelector(`#content section[data-page="${Number(id.slice(5))}"]`) : null);
+    if (target && target.getBoundingClientRect().top <= 90) current = link;
+  }
+  if (!current) current = links.find((link) => document.getElementById(link.getAttribute("href").slice(1))) || null;
+  for (const link of links) {
+    if (link === current) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
+  }
+  for (let node = current?.parentElement; node && node !== $("toc"); node = node.parentElement) {
+    if (node.classList?.contains("collapsed")) {
+      node.classList.remove("collapsed");
+      const toggle = node.querySelector(":scope > .toc-toggle");
+      if (toggle) {
+        toggle.replaceChildren(glyph("nav.collapse"));
+        toggle.setAttribute("aria-expanded", "true");
+        toggle.setAttribute("aria-label", t("ariaCollapse", "Collapse"));
+      }
+    }
+  }
+}
+
+function setTocOpen(open, focusButton = false) {
+  $("toc").classList.toggle("hidden", !open);
+  $("btn-toc").setAttribute("aria-expanded", open ? "true" : "false");
+  if (focusButton) $("btn-toc").focus();
 }
 
 function buildTocList(entries) {
@@ -758,6 +1083,8 @@ function buildTocList(entries) {
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
         scrollToAnchor(e.anchor);
+        setTocOpen(false);
+        updateCurrentTocEntry();
       });
       li.append(a);
     } else if (e.page != null) {
@@ -767,6 +1094,8 @@ function buildTocList(entries) {
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
         scrollToPage(e.page);
+        setTocOpen(false);
+        updateCurrentTocEntry();
       });
       li.append(a);
     } else {
@@ -816,6 +1145,8 @@ const yieldToUI = () => new Promise((r) => setTimeout(r, 0));
 function applyViewerChromeI18n() {
   applyI18n(document.getElementById("toolbar"));
   applyI18n(document.getElementById("toc"));
+  applyI18n(document.getElementById("search-panel"));
+  document.getElementById("search-panel").lang = uiLang();
   applyGlyphs(document.getElementById("toolbar"));
   document.title = t("viewerTitle", document.title);
 }
@@ -831,6 +1162,13 @@ async function main() {
   await loadPrefs();
   applyPrefs();
   wireToolbar();
+  readerSearch = setupReaderSearch({
+    root: $("content"),
+    beforeWholeBook: async () => { if (pdfDoc) await ensurePageRendered(pdfTotal); },
+    scopeLabel: (scope) => scope === "book"
+      ? t("vSearchBook", "whole book") : t("vSearchPage", "this page"),
+    translate: t,
+  });
 
   // The viewer fetches arbitrary URLs with the extension's host access, so it must
   // only run as a top-level page. Refuse to run framed to close an SSRF-style
@@ -1112,7 +1450,7 @@ function showLimitNotice(err) {
 function renderComic(pages) {
   applyLang(ocrLangToHtmlLang(options.ocrLang || "eng"));
   comicTotal = pages.length;
-  comicRendered = 0;
+  comicPagesBytes = pages.reduce((sum, pg) => sum + (pg.size || 0), 0);
   setPageTotal(comicTotal);
   $("page-jump").max = String(comicTotal);
   renderToc(null); // comics carry no authored table of contents
@@ -1176,7 +1514,6 @@ async function insertComicPage(section) {
   const url = URL.createObjectURL(new Blob([bytes], { type: pg.mime }));
   pdfImageUrls.push(url); // revoked on the next teardownCurrent()
   const img = el("img");
-  img.addEventListener("load", () => { comicRendered++; }, { once: true });
   img.src = url;
   section.append(img);
   section.querySelector(".comic-page-pending")?.remove();
@@ -1736,8 +2073,20 @@ function applyLang(lang) {
 // ---- Toolbar ---------------------------------------------------------------
 function wireToolbar() {
   $("btn-toc").addEventListener("click", () => {
-    $("toc").classList.toggle("hidden");
+    setTocOpen($("toc").classList.contains("hidden"));
   });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("toc").classList.contains("hidden")) setTocOpen(false, true);
+  });
+  document.addEventListener("click", (event) => {
+    if (window.matchMedia("(max-width: 700px)").matches && !$("toc").contains(event.target) && !$("btn-toc").contains(event.target)) setTocOpen(false);
+  });
+  let tocScrollQueued = false;
+  window.addEventListener("scroll", () => {
+    if (tocScrollQueued) return;
+    tocScrollQueued = true;
+    requestAnimationFrame(() => { tocScrollQueued = false; updateCurrentTocEntry(); });
+  }, { passive: true });
   $("btn-font-inc").addEventListener("click", () => {
     prefs.size = Math.min(40, prefs.size + 1);
     applyPrefs(); savePrefs();
@@ -1763,6 +2112,9 @@ function wireToolbar() {
   $("btn-original").addEventListener("click", openOriginal);
   $("btn-save-src").addEventListener("click", downloadOriginal);
   $("btn-save-html").addEventListener("click", downloadHtml);
+  $("status-stop").addEventListener("click", () => {
+    if (prepareCtx) prepareCtx.cancelled = true;
+  });
 
   // Keep the page-jump box in sync with scroll position.
   let ticking = false;

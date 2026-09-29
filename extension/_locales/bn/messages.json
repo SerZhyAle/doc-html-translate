@@ -260,10 +260,10 @@
     "message": "পৃষ্ঠা 1-{1} / {2}"
   },
   "vSavedComic": {
-    "message": "{2}টির মধ্যে {1}টি পৃষ্ঠা সংরক্ষিত - আরও স্ক্রল করে আবার সংরক্ষণ করলে বাকিগুলিও যুক্ত হবে"
+    "message": "আংশিক এক্সপোর্ট: {1} / {2}টি পৃষ্ঠা - বাকিগুলি যোগ করতে সেগুলি প্রস্তুত করুন"
   },
   "vSavedPdf": {
-    "message": "পৃষ্ঠা 1-{1} / {2} সংরক্ষিত - আরও স্ক্রল করে আবার সংরক্ষণ করলে বাকিগুলিও যুক্ত হবে"
+    "message": "আংশিক এক্সপোর্ট: পৃষ্ঠা 1-{1} / {2} - বাকিগুলি যোগ করতে সেগুলি প্রস্তুত করুন"
   },
   "vTocSection": {
     "message": "বিভাগ"
@@ -595,5 +595,33 @@
   "ariaCollapse": {
     "message": "সংকুচিত করুন",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  }
+  },
+  "vSearch": {"message":"অনুসন্ধান"},
+  "vSearchText": {"message":"পাঠ খুঁজুন"},
+  "vSearchScope": {"message":"পরিসর"},
+  "vSearchPage": {"message":"এই পৃষ্ঠা"},
+  "vSearchBook": {"message":"সম্পূর্ণ বই"},
+  "vSearchClose": {"message":"বন্ধ করুন"},
+  "vSearchPrompt": {"message":"খোঁজার পাঠ লিখুন"},
+  "vSearchWorking": {"message":"খোঁজা হচ্ছে…"},
+  "vSearchCount": {"message":"{1} ফলাফল — {2}"},
+  "vSearchPlates": {"message":"OCR পাঠ"},
+  "vSearchNoText": {"message":"স্ক্যান করা পৃষ্ঠায় OCR পাঠ প্রয়োজন"},
+  "vExportPartialLine": {"message":"আংশিক এক্সপোর্ট: নথিতে {1}টি পৃষ্ঠা আছে, এবং ফাইলে পৃষ্ঠা 1-{2} থাকবে।"},
+  "vExportPrepareHint": {"message":"প্রথমে ভিউয়ারেই বাকি পৃষ্ঠাগুলি প্রস্তুত করে, তারপর সম্পূর্ণ ফাইল সংরক্ষণ করে। যেকোনো সময় থামাতে পারবেন।"},
+  "vExportPrepareBtn": {"message":"সব {1}টি পৃষ্ঠা প্রস্তুত করুন"},
+  "vExportPartialBtn": {"message":"আংশিক এক্সপোর্ট ({1}টি পৃষ্ঠা)"},
+  "vExportCancel": {"message":"বাতিল"},
+  "vExportImpossibleLine": {"message":"এই নথির সম্পূর্ণ এক্সপোর্ট সম্ভব নয়: {1}।"},
+  "vExportReasonPages": {"message":"বাকি {1}টি পৃষ্ঠা প্রস্তুত করা {2}-এর সীমা ছাড়িয়ে যায়"},
+  "vExportReasonBytes": {"message":"সম্পূর্ণ ফাইল প্রায় {1} হবে - যা একটি ব্রাউজার ট্যাব নির্ভরযোগ্যভাবে ধরে রাখতে পারে তার চেয়ে বেশি"},
+  "vExportReasonStalled": {"message":"বাকি পৃষ্ঠাগুলি তৈরি করা যায়নি"},
+  "vExportPreparing": {"message":"পৃষ্ঠা {1} / {2} প্রস্তুত হচ্ছে.."},
+  "vExportStop": {"message":"থামান"},
+  "vExportStopped": {"message":"প্রস্তুতি থেমেছে - কিছু সংরক্ষিত হয়নি"},
+  "vStatusSaving": {"message":"HTML সংরক্ষণ হচ্ছে.."},
+  "vSavedCompletePages": {"message":"সংরক্ষিত - সম্পূর্ণ, সব {1}টি পৃষ্ঠা"},
+  "vSavedCompleteDoc": {"message":"সংরক্ষিত - সম্পূর্ণ নথি"},
+
+  "vExportPartialLineComic": {"message":"আংশিক এক্সপোর্ট: ফাইলে {2}-এর মধ্যে {1}টি পৃষ্ঠা থাকবে।"}
 }

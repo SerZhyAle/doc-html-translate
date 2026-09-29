@@ -1284,9 +1284,17 @@ These are by design. Do not "sync" them without a decision - document changes he
   browser's built-in translator has swapped in - the extension's way of "keeping the translation" without
   a translation API. The Go app has no equivalent: it never translates in place and already writes HTML to
   disk, so both downloads are extension-only by design ([`viewer.js`](../extension/src/viewer.js)).
-  Consequently "&#8595; HTML" on a chunk-rendered PDF (below) exports only the pages reached so far, and
-  says so in the status bar rather than rendering the remainder: finishing the render would reimpose the
-  freeze chunking removes *and* mix untranslated pages under translated ones.
+  Consequently "&#8595; HTML" on a chunk-rendered PDF or a scroll-inflated comic says what the file
+  would hold *before* writing it (ticket 55): the export dialog names the partial extent ("pages 1-100
+  of 150"), offers a **bounded prepare-all-pages pass** - rendering and recognizing the rest in the
+  viewer exactly as scrolling would, chunk by chunk, with a Stop button and page/byte budgets
+  (`EXPORT_PREPARE_MAX_*` in [`export-html.js`](../extension/src/export-html.js)) - next to a clearly
+  named **partial export**, and ends every save with a completeness statement that matches the
+  artifact ("Saved - complete, all 150 pages" / "Partial export: pages 1-100 of 150"). A fully
+  rendered document skips the dialog and saves through the short direct path. The automatic
+  remainder-render stays refused: finishing the render unasked would reimpose the freeze chunking
+  removes *and* mix untranslated pages under translated ones - so preparation is always an explicit,
+  interruptible choice.
 - **Chunked PDF rendering is extension-only.** The viewer renders a PDF forward `PAGE_CHUNK = 100` pages at
   a time, building the next chunk when the reader reaches `CHUNK_LEAD = 5` pages from the edge
   ([`viewer.js`](../extension/src/viewer.js); the two numbers here are held to the code by
