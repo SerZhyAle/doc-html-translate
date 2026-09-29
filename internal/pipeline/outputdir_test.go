@@ -144,6 +144,59 @@ func TestRunMarksReusesAndSeparatesOutputs(t *testing.T) {
 	}
 }
 
+// Ticket 80: a user folder whose index.html merely mentions dht- (a saved DHT-22 page)
+// used to read as a legacy output of ours, and a normal run emptied it. It is foreign:
+// the run converts into a sibling and the folder survives, force included, because
+// Resolve skips foreign content before -force is ever consulted.
+func TestRunKeepsUserFolderMentioningDht(t *testing.T) {
+	dir := t.TempDir()
+	in := filepath.Join(dir, "book.txt")
+	writeFile(t, in, "First paragraph.\n\nSecond paragraph.\n")
+	out := filepath.Join(dir, "book")
+	writeFile(t, filepath.Join(out, "index.html"),
+		`<!DOCTYPE html><html><body><p>dht-22 wiring notes and a photo</p></body></html>`)
+	sentinel := filepath.Join(out, "wiring-photo.jpg")
+	writeFile(t, sentinel, "keep")
+
+	for _, force := range []bool{false, true} {
+		if code, err := runOn(t, in, force); err != nil || code != ExitOK {
+			t.Fatalf("force=%v: code=%d err=%v", force, code, err)
+		}
+		mustExist(t, sentinel)
+		data, err := os.ReadFile(filepath.Join(out, "index.html"))
+		if err != nil {
+			t.Fatalf("force=%v: user page removed: %v", force, err)
+		}
+		if strings.Contains(string(data), "First paragraph") {
+			t.Fatalf("force=%v: the run wrote into the user folder", force)
+		}
+		mustExist(t, filepath.Join(dir, "book (txt)", "index.html"))
+	}
+}
+
+// A real legacy output (pre-marker, generator-shaped) is still recognised and rebuilt
+// in place by a normal run: the stale pages are cleared and the marker appears.
+func TestRunRebuildsLegacyOutput(t *testing.T) {
+	dir := t.TempDir()
+	in := filepath.Join(dir, "book.txt")
+	writeFile(t, in, "First paragraph.\n\nSecond paragraph.\n")
+	out := filepath.Join(dir, "book")
+	writeFile(t, filepath.Join(out, "index.html"),
+		`<html><head><style>nav a{color:var(--dht-link)}</style></head>`+
+			`<body><nav><span class="nav-file" title="book.txt">book.txt</span></nav></body></html>`)
+	stale := filepath.Join(out, "part-2.html")
+	writeFile(t, stale, "old page")
+
+	if code, err := runOn(t, in, false); err != nil || code != ExitOK {
+		t.Fatalf("rebuild: code=%d err=%v", code, err)
+	}
+	mustNotExist(t, stale)
+	mustExist(t, filepath.Join(out, outputpath.MarkerName))
+	if data, _ := os.ReadFile(filepath.Join(out, "index.html")); !strings.Contains(string(data), "First paragraph") {
+		t.Fatal("legacy output not rebuilt")
+	}
+}
+
 // A run that cannot take the lock must neither write nor delete anything.
 func TestRunRefusesLockedOutputWithoutTouchingIt(t *testing.T) {
 	dir := t.TempDir()

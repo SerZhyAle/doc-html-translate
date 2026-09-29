@@ -134,12 +134,31 @@ func Inspect(dir, source string) State {
 	return inspectLegacy(dir, source)
 }
 
-// legacySignature marks pages our generator writes: every reader layer, navbar and
-// merged page carries dht- prefixed ids/classes. A saved website or a user folder that
-// merely has an index.html does not.
-const legacySignature = "dht-"
+// legacySignatures mark pages our generator writes, by constructs a third-party page does
+// not carry. The bare "dht-" prefix is deliberately not one of them: prose or a slug that
+// merely mentions dht- (a saved DHT-22 sensor page, a URL slug) matched it, the folder read
+// as a legacy output of ours, and a normal run emptied it (ticket 80). Every generated page
+// carries the dht- namespace only inside generator constructs, all of them in the head.
+var legacySignatures = []string{
+	"--dht-",           // CSS custom properties (index, navbar, reader, search CSS)
+	`data-dht-`,        // reader theme/leading/width attributes
+	`class="dht-`,      // navbar, single-page, search panel blocks
+	`id="dht-`,         // single/scoped style and script ids
+	`class="nav-file"`, // the navbar's source-file label
+}
 
-// legacyScanBytes bounds how much of index.html is read: the signature and the navbar's
+// hasLegacySignature reports whether head carries a generator construct. Prose "dht-"
+// matches none of the tokens, so it never reads as our output.
+func hasLegacySignature(head string) bool {
+	for _, s := range legacySignatures {
+		if strings.Contains(head, s) {
+			return true
+		}
+	}
+	return false
+}
+
+// legacyScanBytes bounds how much of index.html is read: the signatures and the navbar's
 // source-file label both sit in the head/first header, and merged pages can be huge.
 const legacyScanBytes = 256 << 10
 
@@ -156,14 +175,14 @@ func inspectLegacy(dir, source string) State {
 	}
 	// An EPUB with a base folder gets a redirect stub at the root; the real page is one
 	// hop away and must stay inside dir.
-	if m := redirectTarget.FindStringSubmatch(head); m != nil && !strings.Contains(head, legacySignature) {
+	if m := redirectTarget.FindStringSubmatch(head); m != nil && !hasLegacySignature(head) {
 		target := filepath.Join(dir, filepath.FromSlash(m[1]))
 		if !containsOrEqual(dir, target) || samePath(dir, target) {
 			return StateForeign
 		}
 		head = readHead(target)
 	}
-	if !strings.Contains(head, legacySignature) {
+	if !hasLegacySignature(head) {
 		return StateForeign
 	}
 	// The navbar names the source file. When it is present and names another document,

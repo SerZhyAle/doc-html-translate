@@ -122,6 +122,35 @@ func TestInspectLegacyOutput(t *testing.T) {
 	}
 }
 
+// Ticket 80: a user page that merely mentions dht- (a saved DHT-22 sensor note, a URL
+// slug) used to read as a legacy output of ours, and a normal run then emptied the folder.
+// Prose matches none of the generator constructs, so the folder stays foreign.
+func TestInspectProseDhtIsForeign(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "dht22-notes")
+	write(t, filepath.Join(out, "index.html"),
+		`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DHT-22 hookup guide</title>`+
+			`<style>body{font-family:sans-serif}</style></head><body>`+
+			`<p>The dht-22 sensor talks one-wire; the full log lives at <a href="/blog/dht-22-log">/blog/dht-22-log</a>.</p>`+
+			`</body></html>`)
+	if st := Inspect(out, filepath.Join(dir, "dht22-notes.html")); st != StateForeign {
+		t.Fatalf("prose dht- page taken for our output: %v", st)
+	}
+}
+
+// The common legacy shape - a head stylesheet on the generator's --dht- variables - is
+// still recognised without any navbar markup.
+func TestInspectLegacyCssVarsRecognised(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "book")
+	write(t, filepath.Join(out, "index.html"),
+		`<html><head><style>nav a{color:var(--dht-link)}h1{border-bottom:1px solid var(--dht-border)}</style></head>`+
+			`<body><h1>book</h1></body></html>`)
+	if st := Inspect(out, filepath.Join(dir, "book.epub")); st != StateLegacy {
+		t.Fatalf("legacy output with --dht- CSS variables: %v", st)
+	}
+}
+
 func TestInspectLegacyFollowsRedirectStub(t *testing.T) {
 	dir := t.TempDir()
 	out := filepath.Join(dir, "book")
