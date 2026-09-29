@@ -714,5 +714,15 @@
   "popupInDisablelist": {"message": "У списку вимкнених"},
   "popupNotInDisablelist": {"message": "Немає в списку вимкнених"},
   "optAllowedSites": {"message": "Сайти з обробкою в режимі вибраних сайтів"},
-  "optAllowedSitesHint": {"message": "Керуйте списком перемикачем «На цьому сайті» у спливному вікні."}
+  "optAllowedSitesHint": {"message": "Керуйте списком перемикачем «На цьому сайті» у спливному вікні."},
+  "optSettingsHeading": {"message": "Файл налаштувань"},
+  "optSettingsHint": {"message": "Експортуються налаштування розширення, мова інтерфейсу й обидва списки сайтів. Позиції читання, вміст документів, результати OCR та історія не включаються. Розмір і шрифт тексту залишаються в цьому профілі браузера."},
+  "optSettingsExport": {"message": "Експорт налаштувань"},
+  "optSettingsImport": {"message": "Імпорт налаштувань"},
+  "optSettingsReset": {"message": "Скинути налаштування"},
+  "optSettingsExported": {"message": "Файл налаштувань завантажено."},
+  "optSettingsImported": {"message": "Імпортовано. Змінено: {1}"},
+  "optSettingsNone": {"message": "нічого"},
+  "optSettingsResetConfirm": {"message": "Скинути всі налаштування розширення?"},
+  "optSettingsResetDone": {"message": "Налаштування скинуто."}
 }

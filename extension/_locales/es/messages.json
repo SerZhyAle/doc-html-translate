@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "En la lista de desactivados"},
   "popupNotInDisablelist": {"message": "Fuera de la lista de desactivados"},
   "optAllowedSites": {"message": "Sitios activos en el modo de lista"},
-  "optAllowedSitesHint": {"message": "Gestiona estos sitios con el interruptor «En este sitio» de la ventana emergente."}
+  "optAllowedSitesHint": {"message": "Gestiona estos sitios con el interruptor «En este sitio» de la ventana emergente."},
+  "optSettingsHeading": {"message": "Archivo de ajustes"},
+  "optSettingsHint": {"message": "Exporta las opciones de la extensión, el idioma de la interfaz y ambas listas de sitios. No incluye posiciones de lectura, contenido, resultados OCR ni historial. El tamaño y la fuente permanecen en este perfil."},
+  "optSettingsExport": {"message": "Exportar ajustes"},
+  "optSettingsImport": {"message": "Importar ajustes"},
+  "optSettingsReset": {"message": "Restablecer ajustes"},
+  "optSettingsExported": {"message": "Archivo de ajustes descargado."},
+  "optSettingsImported": {"message": "Importado. Cambios: {1}"},
+  "optSettingsNone": {"message": "ninguno"},
+  "optSettingsResetConfirm": {"message": "¿Restablecer todos los ajustes de la extensión?"},
+  "optSettingsResetDone": {"message": "Ajustes restablecidos."}
 }

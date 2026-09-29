@@ -4,6 +4,7 @@
 import { renderOcrLangs } from "./ocr-lang-ui.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { reportText } from "./diagnostics.js";
+import { makeSettingsFile, validateSettingsFile, changedSettings } from "./settings-transfer.js";
 import { t, initI18n, applyI18n, loadMessages, setUiLang, uiLang } from "./i18n.js";
 
 // UI languages the extension ships, by endonym - the only label that helps a reader who cannot
@@ -141,6 +142,82 @@ async function init() {
 
   initDiagnostics();
   await initUiLanguage();
+  initSettingsTransfer();
+}
+
+function showTransferStatus(message, error = false) {
+  const status = document.getElementById("settings-status");
+  status.textContent = message;
+  status.classList.toggle("error", error);
+}
+
+async function currentSettings() {
+  const stored = await chrome.storage.local.get(["options", "uiLang"]);
+  return makeSettingsFile(stored.options, stored.uiLang || "");
+}
+
+function initSettingsTransfer() {
+  const input = document.getElementById("import-file");
+  document.getElementById("export-settings").addEventListener("click", async () => {
+    try {
+      const file = await currentSettings();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2) + "\n"], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "doc-html-translate-settings.json";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showTransferStatus(msg("optSettingsExported", "Settings file downloaded."));
+    } catch (error) { showTransferStatus(error.message, true); }
+  });
+  document.getElementById("import-settings").addEventListener("click", () => input.click());
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    try {
+      if (file.size > 1024 * 1024) throw new Error("Settings file is too large");
+      let parsed;
+      try { parsed = JSON.parse(await file.text()); }
+      catch { throw new Error("Invalid JSON in settings file"); }
+      const next = validateSettingsFile(parsed);
+      const changed = changedSettings(await currentSettings(), next);
+      if (changed.length) {
+        await chrome.storage.local.set({ options: next.options, uiLang: next.uiLang });
+        await initI18n();
+        await loadMessages(next.uiLang);
+        applyI18n(document);
+        await renderSettings();
+      }
+      showTransferStatus(msg("optSettingsImported", "Imported. Changed: {1}", changed.length ? changed.join(", ") : msg("optSettingsNone", "none")));
+    } catch (error) { showTransferStatus(error.message, true); }
+  });
+  document.getElementById("reset-settings").addEventListener("click", async () => {
+    if (!confirm(msg("optSettingsResetConfirm", "Reset all extension settings to their defaults?"))) return;
+    try {
+      await chrome.storage.local.set({ options: structuredClone(DEFAULT_OPTIONS), uiLang: "" });
+      await initI18n();
+      applyI18n(document);
+      await renderSettings();
+      showTransferStatus(msg("optSettingsResetDone", "Settings reset to defaults."));
+    } catch (error) { showTransferStatus(error.message, true); }
+  });
+}
+
+async function renderSettings() {
+  const o = await getOptions();
+  enabledEl.checked = o.enabledByDefault;
+  siteModeEl.value = o.siteMode;
+  themeEl.value = o.theme;
+  langEl.value = o.sourceLang;
+  ocrImagesEl.checked = o.ocrImages;
+  allowRemoteEl.checked = o.allowRemoteContent;
+  document.getElementById("ui-lang").value = (await chrome.storage.local.get("uiLang")).uiLang || "";
+  renderHosts(o.disabledHosts, hostsEl, "disabledHosts");
+  renderHosts(o.allowedHosts, allowedHostsEl, "allowedHosts");
+  renderLangList();
 }
 
 // initDiagnostics wires the About block's one action: put a short English summary on the
@@ -185,6 +262,7 @@ async function initUiLanguage() {
 
   const follow = document.createElement("option");
   follow.value = "";
+  follow.dataset.i18n = "optFollowBrowser";
   follow.textContent = msg("optFollowBrowser", "Follow the browser");
   sel.appendChild(follow);
   for (const [code, name] of UI_LANGUAGES) {

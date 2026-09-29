@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "বন্ধ তালিকায় আছে"},
   "popupNotInDisablelist": {"message": "বন্ধ তালিকায় নেই"},
   "optAllowedSites": {"message": "শুধু তালিকাভুক্ত সাইট মোডে চালু সাইট"},
-  "optAllowedSitesHint": {"message": "পপআপের «এই সাইটে» সুইচ দিয়ে এগুলো পরিচালনা করুন।"}
+  "optAllowedSitesHint": {"message": "পপআপের «এই সাইটে» সুইচ দিয়ে এগুলো পরিচালনা করুন।"},
+  "optSettingsHeading": {"message": "সেটিংস ফাইল"},
+  "optSettingsHint": {"message": "এক্সটেনশনের বিকল্প, ইন্টারফেসের ভাষা এবং দুইটি সাইট তালিকা রপ্তানি হয়। পড়ার অবস্থান, নথির বিষয়বস্তু, OCR ফল ও ইতিহাস থাকে না। পাঠের আকার ও ফন্ট এই ব্রাউজার প্রোফাইলে থাকে।"},
+  "optSettingsExport": {"message": "সেটিংস রপ্তানি"},
+  "optSettingsImport": {"message": "সেটিংস আমদানি"},
+  "optSettingsReset": {"message": "সেটিংস রিসেট"},
+  "optSettingsExported": {"message": "সেটিংস ফাইল ডাউনলোড হয়েছে।"},
+  "optSettingsImported": {"message": "আমদানি হয়েছে। পরিবর্তন: {1}"},
+  "optSettingsNone": {"message": "কিছুই নয়"},
+  "optSettingsResetConfirm": {"message": "সব এক্সটেনশন সেটিংস রিসেট করবেন?"},
+  "optSettingsResetDone": {"message": "সেটিংস রিসেট হয়েছে।"}
 }

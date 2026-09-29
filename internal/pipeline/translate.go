@@ -103,10 +103,12 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 		apiKey, keyErr := r.engines.googleKey()
 		if keyErr != nil {
 			logging.Printf("[3/4] Google Translate skipped - API key not available.\n")
-			logging.Printf("       To enable: save your Google Cloud Translation API key as 'google_api.key' in either:\n")
-			for _, p := range translator.GoogleAPIKeyPaths() {
-				logging.Printf("         %s\n", p)
+			if errors.Is(keyErr, translator.ErrGoogleKeyUnusable) {
+				logging.Printf("       Paste and save the Google API key again in the desktop app. CLI-only: remove the unusable saved file, then place a new google_api.key next to the executable for migration.\n")
+			} else {
+				logging.Printf("       To enable: save your Google Cloud Translation API key in the desktop app, or provide a legacy plaintext key for one-time migration.\n")
 			}
+			logging.Printf("       Saved key location: %s\n", translator.GoogleAPIKeyPath())
 			logging.Printf("       Details: %v\n", keyErr)
 			// The requested engine is unavailable, as with an Ollama that is not running: the
 			// book is still produced, and the exit code says the translation was not.

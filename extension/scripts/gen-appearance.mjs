@@ -79,6 +79,13 @@ export function paletteCSS(src, names = PALETTE_NAMES) {
   )).join("\n\n");
 }
 
+export function chromePaletteCSS(src) {
+  const decls = (theme) => Object.entries(src.themes[theme]).map(([token, value]) =>
+    ({ property: `--${tokenProperty(token)}`, value }));
+  return [rule("chrome light", ":root", decls("light")),
+    `@media (prefers-color-scheme: dark) {\n${rule("chrome dark", ":root", decls("dark"))}\n}`].join("\n\n");
+}
+
 // replaceRegion swaps the content between the one marker pair in css for body. Throws when the
 // pair is missing, duplicated or out of order.
 export function replaceRegion(css, body, file) {
@@ -93,6 +100,7 @@ export function replaceRegion(css, body, file) {
 export const TARGETS = [
   { file: "src/ocr-overlay.css", build: overlayCSS },
   { file: "src/viewer.css", build: paletteCSS },
+  { file: "src/chrome-palette.css", build: chromePaletteCSS },
 ];
 
 async function main() {

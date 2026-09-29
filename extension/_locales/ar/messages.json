@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "ضمن قائمة التعطيل"},
   "popupNotInDisablelist": {"message": "خارج قائمة التعطيل"},
   "optAllowedSites": {"message": "المواقع المفعلة في وضع المواقع المدرجة فقط"},
-  "optAllowedSitesHint": {"message": "أدر هذه المواقع من مفتاح «على هذا الموقع» في النافذة المنبثقة."}
+  "optAllowedSitesHint": {"message": "أدر هذه المواقع من مفتاح «على هذا الموقع» في النافذة المنبثقة."},
+  "optSettingsHeading": {"message": "ملف الإعدادات"},
+  "optSettingsHint": {"message": "يصدّر خيارات الإضافة ولغة الواجهة وقائمتي المواقع. لا يشمل مواضع القراءة أو محتوى المستندات أو نتائج التعرف الضوئي أو السجل. يبقى حجم النص والخط في ملف المتصفح هذا."},
+  "optSettingsExport": {"message": "تصدير الإعدادات"},
+  "optSettingsImport": {"message": "استيراد الإعدادات"},
+  "optSettingsReset": {"message": "إعادة ضبط الإعدادات"},
+  "optSettingsExported": {"message": "تم تنزيل ملف الإعدادات."},
+  "optSettingsImported": {"message": "تم الاستيراد. التغييرات: {1}"},
+  "optSettingsNone": {"message": "لا شيء"},
+  "optSettingsResetConfirm": {"message": "إعادة جميع إعدادات الإضافة إلى الافتراضي؟"},
+  "optSettingsResetDone": {"message": "تمت إعادة ضبط الإعدادات."}
 }

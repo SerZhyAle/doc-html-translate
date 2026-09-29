@@ -88,6 +88,7 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/i18n.js", getOnly(handleI18nJS))
 	mux.HandleFunc("/favicon.ico", getOnly(handleFavicon))
 	mux.HandleFunc("/api/version", getOnly(handleVersion))
+	mux.HandleFunc("/api/update-check", jsonPost(handleUpdateCheck))
 	mux.HandleFunc("/api/initial", getOnly(handleInitial))
 	mux.HandleFunc("/api/env", getOnly(handleEnv))
 	mux.HandleFunc("/api/assoc-status", getOnly(handleAssocStatus))
@@ -369,8 +370,7 @@ func handleRecentStatus(w http.ResponseWriter, r *http.Request) {
 //	POST → {"key": "..."} saves the key to the writable per-user location and
 //	       returns {"exists": bool, "path": "..."}.
 //
-// The key is stored at %LOCALAPPDATA%\doc-html-translate\google_api.key so it
-// also works under the read-only Microsoft Store (MSIX) install directory.
+// The per-user location also works under the read-only Microsoft Store install directory.
 func handleGoogleKey(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
@@ -395,40 +395,19 @@ func handleGoogleKey(w http.ResponseWriter, r *http.Request) {
 
 	_, err := translator.LoadGoogleAPIKey()
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"exists": err == nil,
-		"path":   writableGoogleKeyPath(),
+		"exists":   err == nil,
+		"unusable": errors.Is(err, translator.ErrGoogleKeyUnusable),
+		"path":     writableGoogleKeyPath(),
 	})
 }
 
-// writableGoogleKeyPath returns the per-user, writable key location. It mirrors
-// translator.GoogleAPIKeyPaths by picking the %LOCALAPPDATA% candidate (the only
-// one guaranteed writable under MSIX); falls back to the last candidate.
+// writableGoogleKeyPath returns the per-user key location.
 func writableGoogleKeyPath() string {
-	paths := translator.GoogleAPIKeyPaths()
-	for _, p := range paths {
-		if appData := os.Getenv("LOCALAPPDATA"); appData != "" && strings.HasPrefix(p, appData) {
-			return p
-		}
-	}
-	if len(paths) > 0 {
-		return paths[len(paths)-1]
-	}
-	return ""
+	return translator.GoogleAPIKeyPath()
 }
 
 func saveGoogleAPIKey(key string) error {
-	key = strings.TrimSpace(key)
-	if key == "" {
-		return fmt.Errorf("key is empty")
-	}
-	path := writableGoogleKeyPath()
-	if path == "" {
-		return fmt.Errorf("cannot determine a writable key location")
-	}
-	if err := writeFileAtomic(path, []byte(key), 0o600); err != nil {
-		return fmt.Errorf("write key file: %w", err)
-	}
-	return nil
+	return translator.SaveGoogleAPIKey(key)
 }
 
 type runRequest struct {

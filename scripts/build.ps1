@@ -83,18 +83,10 @@ Write-Host "Build completed: $Output (icon embedded)"
 & "$PSScriptRoot/verify-exe-version.ps1" -Path $absOutput -Expect $version
 if ($LASTEXITCODE -ne 0) { throw "version assertion failed for $Output (exit $LASTEXITCODE)" }
 
-# Step 5: Copy exe + key file to deploy folder
+# Step 5: Copy exe to deploy folder
 $deployDir = "C:\GD\tc\SZA\_APP"
 New-Item -ItemType Directory -Force -Path $deployDir | Out-Null
 Copy-Item -Path $absOutput -Destination $deployDir -Force
-
-$keyFile = "DEV/private/google_api.key"
-if (Test-Path $keyFile) {
-    Copy-Item -Path $keyFile -Destination $deployDir -Force
-    Write-Host "Copied google_api.key to $deployDir"
-} else {
-    Write-Host "NOTE: DEV/private/google_api.key not found - Google Translate will be disabled in the deployed build."
-}
 
 Write-Host "Copied to $deployDir"
 

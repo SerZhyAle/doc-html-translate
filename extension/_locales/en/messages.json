@@ -797,5 +797,15 @@
   "popupInDisablelist": {"message": "In the disable list"},
   "popupNotInDisablelist": {"message": "Not in the disable list"},
   "optAllowedSites": {"message": "Sites where reflow is on in only listed sites mode"},
-  "optAllowedSitesHint": {"message": "Manage these from the toolbar popup's \"On this site\" switch while only listed sites mode is selected."}
+  "optAllowedSitesHint": {"message": "Manage these from the toolbar popup's \"On this site\" switch while only listed sites mode is selected."},
+  "optSettingsHeading": {"message": "Settings file"},
+  "optSettingsHint": {"message": "Exports extension options, interface language and both site lists. Reading positions, document content, OCR output and history are excluded. Reader text size and font remain in this browser profile."},
+  "optSettingsExport": {"message": "Export settings"},
+  "optSettingsImport": {"message": "Import settings"},
+  "optSettingsReset": {"message": "Reset settings"},
+  "optSettingsExported": {"message": "Settings file downloaded."},
+  "optSettingsImported": {"message": "Imported. Changed: {1}"},
+  "optSettingsNone": {"message": "none"},
+  "optSettingsResetConfirm": {"message": "Reset all extension settings to their defaults?"},
+  "optSettingsResetDone": {"message": "Settings reset to defaults."}
 }

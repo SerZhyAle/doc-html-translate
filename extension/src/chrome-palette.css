@@ -1,0 +1,28 @@
+/* Popup and options palette follows the browser. Generated from the same themes as the reader. */
+/* >>> generated from internal/appearance - do not edit by hand */
+/* chrome light */
+:root {
+  --bg: #faf9f7;
+  --fg: #1b1b1b;
+  --muted: #6b6b6b;
+  --bar-bg: #ffffff;
+  --bar-fg: #222222;
+  --border: #e2e0db;
+  --accent: #2563eb;
+  --link: #1a4fb4;
+}
+
+@media (prefers-color-scheme: dark) {
+/* chrome dark */
+:root {
+  --bg: #1a1a1c;
+  --fg: #e6e4df;
+  --muted: #aaa79f;
+  --bar-bg: #232327;
+  --bar-fg: #e6e4df;
+  --border: #36363b;
+  --accent: #5b8dff;
+  --link: #8fb4ff;
+}
+}
+/* <<< generated */

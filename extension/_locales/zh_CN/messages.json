@@ -697,5 +697,15 @@
   "popupInDisablelist": {"message": "在禁用列表中"},
   "popupNotInDisablelist": {"message": "不在禁用列表中"},
   "optAllowedSites": {"message": "仅列表网站模式下启用的网站"},
-  "optAllowedSitesHint": {"message": "在弹出窗口中使用“在此网站上”开关管理。"}
+  "optAllowedSitesHint": {"message": "在弹出窗口中使用“在此网站上”开关管理。"},
+  "optSettingsHeading": {"message": "设置文件"},
+  "optSettingsHint": {"message": "导出扩展选项、界面语言和两个站点列表。不包含阅读位置、文档内容、OCR 结果或历史记录。文字大小和字体仍保留在此浏览器配置文件中。"},
+  "optSettingsExport": {"message": "导出设置"},
+  "optSettingsImport": {"message": "导入设置"},
+  "optSettingsReset": {"message": "重置设置"},
+  "optSettingsExported": {"message": "设置文件已下载。"},
+  "optSettingsImported": {"message": "已导入。更改：{1}"},
+  "optSettingsNone": {"message": "无"},
+  "optSettingsResetConfirm": {"message": "重置所有扩展设置？"},
+  "optSettingsResetDone": {"message": "设置已重置。"}
 }

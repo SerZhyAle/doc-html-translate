@@ -1,7 +1,7 @@
 {
   "$comment": "The security posture inventories (canon SECURITY_AND_PRIVACY section 7): what each edition can touch and what it can send. The one source every public form of the privacy promise renders from - privacy.html, extension-privacy.html, extension/store/PRIVACY.md, the permission justifications in extension/store/LISTING.md, the runFullTrust justification in msix/README.md and docs/SECURITY_POSTURE.md. Edit here, then run scripts/security-posture.ps1 -Render; scripts/security-posture.ps1 (in scripts/check.ps1) fails while any render is stale, a declared permission has no row or a row no declaration, a named consumer or shown string is not in the code, a network call site has no row, or the dependency set contradicts the telemetry claim. Public texts use **bold**, *emphasis* and `code` only.",
   "shape": 1,
-  "lastReconciled": "2026-09-25",
+  "lastReconciled": "2026-09-29",
 
   "permissions": [
     {
@@ -296,7 +296,7 @@
       "declares": "capability:per-user-app-folder",
       "declaredIn": "no permission manifest: %LOCALAPPDATA%\\doc-html-translate (redirected into the package container under MSIX)",
       "consumers": [
-        "the GUI settings and the optional saved Google API key",
+        "the GUI settings, update-check cache and the optional Google API key protected at rest with per-user Windows DPAPI",
         "the recent run logs and the report archives",
         "downloaded OCR language data",
         "the unpacked copy of the bundled pdftotext"
@@ -304,14 +304,15 @@
       "evidence": [
         { "file": "internal/report/store.go", "contains": "LOCALAPPDATA" },
         { "file": "internal/ocr/tessdata.go", "contains": "os.UserCacheDir()" },
-        { "file": "internal/translator/translator.go", "contains": "LOCALAPPDATA" }
+        { "file": "internal/translator/translator.go", "contains": "LOCALAPPDATA" },
+        { "file": "internal/translator/key_windows.go", "contains": "CryptProtectData" }
       ],
       "shownAtRequest": false,
       "shownWhere": "no prompt: the GUI names the key's path when it saves it",
       "public": {
-        "en": "**Your per-user app folder** (`%LOCALAPPDATA%\\doc-html-translate`) - your settings, the optional Google API key you save, the recent run logs, downloaded OCR languages and an unpacked copy of the bundled pdftotext.",
-        "ru": "**Папка приложения вашей учётной записи** (`%LOCALAPPDATA%\\doc-html-translate`) - ваши настройки, необязательный ключ Google API, который вы сохраняете, журналы последних запусков, скачанные языки OCR и распакованная копия встроенного pdftotext.",
-        "uk": "**Тека застосунку вашого облікового запису** (`%LOCALAPPDATA%\\doc-html-translate`) - ваші налаштування, необов'язковий ключ Google API, який ви зберігаєте, журнали останніх запусків, завантажені мови OCR і розпакована копія вбудованого pdftotext."
+        "en": "**Your per-user app folder** (`%LOCALAPPDATA%\\doc-html-translate`) - your settings, cached update-check result, the optional Google API key stored with per-user Windows DPAPI protection, the recent run logs, downloaded OCR languages and an unpacked copy of the bundled pdftotext.",
+        "ru": "**Папка приложения вашей учётной записи** (`%LOCALAPPDATA%\\doc-html-translate`) - ваши настройки, сохранённый результат проверки обновлений, необязательный ключ Google API, защищённый DPAPI текущего пользователя Windows, журналы последних запусков, скачанные языки OCR и распакованная копия встроенного pdftotext.",
+        "uk": "**Тека застосунку вашого облікового запису** (`%LOCALAPPDATA%\\doc-html-translate`) - ваші налаштування, збережений результат перевірки оновлень, необов'язковий ключ Google API, захищений DPAPI поточного користувача Windows, журнали останніх запусків, завантажені мови OCR й розпакована копія вбудованого pdftotext."
       }
     }
   ],
@@ -398,6 +399,29 @@
         "en": "**GitHub, for extra OCR languages** - only when you download one (*Download* in the app, or `-ocr-download`): the language's data file is fetched from the Tesseract project's public `tessdata_fast` repository and checked against a pinned SHA-256 digest. The request names the language; nothing of yours is sent. English is built in.",
         "ru": "**GitHub, для дополнительных языков OCR** - только когда вы скачиваете язык (*Скачать* в приложении или `-ocr-download`): файл данных языка загружается из открытого репозитория `tessdata_fast` проекта Tesseract и сверяется с закреплённым отпечатком SHA-256. Запрос называет только язык; ничего вашего не отправляется. Английский встроен.",
         "uk": "**GitHub, для додаткових мов OCR** - лише коли ви завантажуєте мову (*Завантажити* в застосунку або `-ocr-download`): файл даних мови завантажується з відкритого репозиторію `tessdata_fast` проєкту Tesseract і звіряється із закріпленим відбитком SHA-256. Запит називає лише мову; нічого вашого не надсилається. Англійська вбудована."
+      }
+    },
+    {
+      "id": "net-app-update-check",
+      "edition": "app",
+      "kind": "outbound",
+      "surface": "HTTPS GET to api.github.com for the latest published doc-html-translate release",
+      "defaultOn": false,
+      "turnedOnBy": "Check for updates in the desktop GUI, or its optional automatic check (off by default); never by the CLI or Microsoft Store edition",
+      "lifetime": "one check, with a six-hour release cache and at most one automatic attempt per day",
+      "leaves": "a request for public release information; no document content, running version, install identifier or account data",
+      "evidence": [
+        { "file": "cmd/doc-html-ui/update.go", "contains": "https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest" },
+        { "file": "cmd/doc-html-ui/update.go", "contains": "http.NewRequestWithContext(r.Context(), http.MethodGet, latestReleaseAPI" }
+      ],
+      "shownText": [
+        { "file": "cmd/doc-html-ui/i18n.js", "contains": "btnUpdateCheck: \"Check for updates\"" },
+        { "file": "cmd/doc-html-ui/i18n.js", "contains": "autoUpdateCheck: \"Check automatically (once a day)\"" }
+      ],
+      "public": {
+        "en": "**GitHub, for update checks** - only when you press *Check for updates* in the desktop GUI or turn on its optional automatic daily check (off by default): the app requests public release information from GitHub and compares the version on your device. No document content, running version, install identifier or account data is sent. The result is cached; an offline check shows a quiet note. Microsoft Store manages updates for its edition.",
+        "ru": "**GitHub, для проверки обновлений** - только если вы нажмёте *Проверить обновления* в настольном приложении или включите необязательную ежедневную проверку (по умолчанию выключена): приложение запрашивает общедоступные сведения о выпуске и сравнивает версии на вашем устройстве. Содержимое документов, текущая версия, идентификатор установки и данные учётной записи не отправляются. Результат сохраняется в кэше; при отсутствии сети показывается короткое сообщение. Издание Microsoft Store обновляется через Store.",
+        "uk": "**GitHub, для перевірки оновлень** - лише якщо ви натиснете *Перевірити оновлення* в настільному застосунку або ввімкнете необов'язкову щоденну перевірку (типово вимкнена): застосунок запитує відкриті відомості про випуск і порівнює версії на вашому пристрої. Вміст документів, поточна версія, ідентифікатор встановлення й дані облікового запису не надсилаються. Результат зберігається в кеші; без мережі з'являється коротка примітка. Видання Microsoft Store оновлюється через Store."
       }
     },
     {
@@ -551,7 +575,7 @@
       "target": "privacy.html",
       "block": "app-access",
       "format": "html-lists",
-      "rows": ["app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "app-explorer-registration", "app-run-helpers", "net-app-report-mail"],
+      "rows": ["app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "net-app-report-mail"],
       "after": {
         "en": "With the default free browser translation, the app sends nothing at all.",
         "ru": "При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.",

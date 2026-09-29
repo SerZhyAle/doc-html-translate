@@ -603,6 +603,11 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
     <div class="body">
         <div class="about-row"><span data-i18n="aboutVersion">Version:</span> <code id="aboutVer"></code></div>
         <div class="about-row"><span data-i18n="aboutEdition">Edition:</span> <span id="aboutEd"></span></div>
+        <div class="about-row" id="updateControls">
+            <button type="button" class="inline-btn" id="btnUpdateCheck" data-i18n="btnUpdateCheck">Check for updates</button>
+            <label class="chk"><input type="checkbox" id="chkAutoUpdates"> <span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label>
+        </div>
+        <div class="about-row" id="updateStatus" role="status"></div>
         <div class="about-row"><span data-i18n="aboutEngine">Converter engine:</span> <span id="aboutEng"></span></div>
         <div class="about-row"><span id="aboutLogs"></span></div>
         <div class="about-row">
@@ -987,8 +992,41 @@ function renderAbout() {
     if (logs && aboutFacts.logs) {
         logs.textContent = t('aboutLogsHeld', {1: aboutFacts.logs.count, 2: formatBytes(aboutFacts.logs.bytes)});
     }
+    document.getElementById('updateControls').style.display = aboutFacts.packaged ? 'none' : '';
+    renderUpdateStatus();
     renderReportMsg();
 }
+
+let updateState = null;
+function renderUpdateStatus() {
+    const node = document.getElementById('updateStatus');
+    node.textContent = '';
+    if (aboutFacts.packaged) { node.textContent = t('updateStore'); return; }
+    if (!updateState) return;
+    const key = {checking:'updateChecking', current:'updateCurrent', newer:'updateNewer', unavailable:'updateUnavailable'}[updateState.status];
+    if (!key) return;
+    node.append(document.createTextNode(t(key, {version: updateState.version || ''})));
+    if (updateState.status === 'newer' && updateState.url) {
+        const link = document.createElement('a');
+        link.href = updateState.url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = t('updateOpenRelease');
+        node.append(' ', link);
+    }
+}
+async function checkUpdates(automatic = false) {
+    if (aboutFacts.packaged || (automatic && !document.getElementById('chkAutoUpdates').checked)) return;
+    if (!automatic) { updateState = {status:'checking'}; renderUpdateStatus(); }
+    document.getElementById('btnUpdateCheck').disabled = true;
+    try {
+        const r = await api('/api/update-check', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({automatic})});
+        updateState = r.ok ? await r.json() : {status:'unavailable'};
+    } catch (_) { updateState = {status:'unavailable'}; }
+    document.getElementById('btnUpdateCheck').disabled = false;
+    renderUpdateStatus();
+}
+document.getElementById('btnUpdateCheck').addEventListener('click', () => checkUpdates());
 
 // ── version / initial file / environment ────────────────
 api('/api/version').then(r=>r.json()).then(d=>{
@@ -1059,7 +1097,9 @@ async function refreshGoogleKeyStatus() {
     try {
         const r = await api('/api/google-key');
         const d = await r.json();
-        if (d.exists) {
+        if (d.unusable) {
+            setStatus('googleKeyStatus', 'googleKeyUnusable', null, 'warn');
+        } else if (d.exists) {
             setStatus('googleKeyStatus', 'googleKeyFound', null, 'ok');
         } else {
             setStatus('googleKeyStatus', 'googleKeyNone', {path: d.path || t('googleKeyPathFallback')}, 'warn');
@@ -1227,6 +1267,7 @@ function collectSettings() {
         ocrLangChoice:  el('ocrLang').value,
         queueParallel:  el('queueConcurrency').value,
         assocPrompted:  assocPrompted,
+        autoUpdates:    el('chkAutoUpdates').checked,
         // Session context (ticket 63): the recent documents and the last window geometry
         // ride the same blob, so they get the same atomic write and corruption set-aside.
         recent:         recentDocs,
@@ -1261,6 +1302,7 @@ function applySettings(s) {
         el('queueConcurrency').value = String(s.queueParallel);
     }
     if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
+    if (s.autoUpdates === true) el('chkAutoUpdates').checked = true;
     // Recent documents (ticket 63): keep plain strings only, capped at the list's size -
     // the saved blob is the page's business, but it is still outside data the page trusts.
     if (Array.isArray(s.recent)) {
@@ -1299,6 +1341,7 @@ api('/api/settings').then(r => {
     restoreWindow(); // the saved size and position, clamped to the screen it opens on
     updateCmdPreview();
     maybeShowAssocPrompt();
+    if (el('chkAutoUpdates').checked) checkUpdates(true);
 });
 document.addEventListener('change', saveSettings);
 

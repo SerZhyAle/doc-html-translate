@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "बंद सूची में"},
   "popupNotInDisablelist": {"message": "बंद सूची में नहीं"},
   "optAllowedSites": {"message": "केवल सूचीबद्ध साइटों वाले मोड में चालू साइटें"},
-  "optAllowedSitesHint": {"message": "पॉपअप में «इस साइट पर» स्विच से इन्हें प्रबंधित करें।"}
+  "optAllowedSitesHint": {"message": "पॉपअप में «इस साइट पर» स्विच से इन्हें प्रबंधित करें।"},
+  "optSettingsHeading": {"message": "सेटिंग फ़ाइल"},
+  "optSettingsHint": {"message": "एक्सटेंशन विकल्प, इंटरफ़ेस भाषा और दोनों साइट सूचियाँ निर्यात होती हैं। पढ़ने की स्थिति, दस्तावेज़ सामग्री, OCR परिणाम और इतिहास शामिल नहीं हैं। पाठ आकार और फ़ॉन्ट इसी ब्राउज़र प्रोफ़ाइल में रहते हैं।"},
+  "optSettingsExport": {"message": "सेटिंग निर्यात करें"},
+  "optSettingsImport": {"message": "सेटिंग आयात करें"},
+  "optSettingsReset": {"message": "सेटिंग रीसेट करें"},
+  "optSettingsExported": {"message": "सेटिंग फ़ाइल डाउनलोड हुई।"},
+  "optSettingsImported": {"message": "आयात हुआ। बदला: {1}"},
+  "optSettingsNone": {"message": "कुछ नहीं"},
+  "optSettingsResetConfirm": {"message": "सभी एक्सटेंशन सेटिंग रीसेट करें?"},
+  "optSettingsResetDone": {"message": "सेटिंग रीसेट हुई।"}
 }

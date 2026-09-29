@@ -102,7 +102,7 @@ func TestGUIAboutKeysPresent(t *testing.T) {
 	langs := guiLangObjects(t)
 	for _, code := range i18n.Codes {
 		keys := langs[code]
-		for _, k := range []string{"secAbout", "btnSendLogs", "sendLogsAttachHint", "mailBody"} {
+		for _, k := range []string{"secAbout", "btnSendLogs", "sendLogsAttachHint", "mailBody", "btnUpdateCheck", "autoUpdateCheck", "updateChecking", "updateCurrent", "updateNewer", "updateOpenRelease", "updateUnavailable", "updateStore"} {
 			if !keys[k] {
 				t.Errorf("%s: missing About key %q", code, k)
 			}

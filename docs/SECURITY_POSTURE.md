@@ -2,7 +2,7 @@
 
 <!-- Rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render. Do not edit by hand. -->
 
-**Last reconciled:** 2026-09-25
+**Last reconciled:** 2026-09-29
 **Contract:** canon `SECURITY_AND_PRIVACY` section 7 - the permission and network-surface inventories.
 **Checked by:** `scripts/security-posture.ps1`, run by `scripts/check.ps1`, whose evidence `scripts/release.ps1` requires before the tag step.
 
@@ -26,7 +26,7 @@ One row per declared permission, and, for the app, which has no permission manif
 | `app-run-helpers` | app | `capability:run-helper-programs` | no permission manifest: child processes through internal/procrun | the bundled pdftotext for PDF text; Tesseract for OCR, Calibre for MOBI and AZW3, 7-Zip for CBR and CB7, ffmpeg or ImageMagick for some PDF images - each only where the user installed it | no | no prompt: a missing helper is named in the run's own message |
 | `app-explorer-registration` | app | `capability:explorer-registration` | no permission manifest: per-user keys under HKCU\Software\Classes (internal/windowsreg); the MSIX declares its own file types instead | the default-handler association for the supported document types; the right-click Convert to HTML verb and the Open with entry | yes | the no-argument registration prompts in the console, and the Windows integration section of the GUI |
 | `app-write-output` | app | `capability:write-output-folder` | no permission manifest: the output folder beside the source or chosen with -folder | the converted pages, their assets and index.html; the completion record that decides whether an unchanged book is reopened or rebuilt | no | no prompt: the run prints the output path |
-| `app-user-folder` | app | `capability:per-user-app-folder` | no permission manifest: %LOCALAPPDATA%\doc-html-translate (redirected into the package container under MSIX) | the GUI settings and the optional saved Google API key; the recent run logs and the report archives; downloaded OCR language data; the unpacked copy of the bundled pdftotext | no | no prompt: the GUI names the key's path when it saves it |
+| `app-user-folder` | app | `capability:per-user-app-folder` | no permission manifest: %LOCALAPPDATA%\doc-html-translate (redirected into the package container under MSIX) | the GUI settings, update-check cache and the optional Google API key protected at rest with per-user Windows DPAPI; the recent run logs and the report archives; downloaded OCR language data; the unpacked copy of the bundled pdftotext | no | no prompt: the GUI names the key's path when it saves it |
 
 ## 2. Network-surface inventory
 
@@ -38,6 +38,7 @@ One row per surface that opens a listening port, initiates an outbound connectio
 | `net-app-google` | app | outbound | HTTPS to translation.googleapis.com (Google Cloud Translation API v2) | no | -google, or Google Cloud as the engine in the GUI, with the user's own API key; a set -max-cost is checked before any request, and without one a dialog asks above 1000 characters | the conversion run | the extracted text of the book (pages, title, table-of-contents labels), to Google, with the user's key in the X-Goog-Api-Key header |
 | `net-app-ollama` | app | outbound | HTTP to localhost:11434, the Ollama server the user runs | no | -ollama for translation, or selecting Ollama (local) in the GUI for a read-only model catalog check | the GUI readiness check or the conversion run | the readiness check sends no document text; conversion sends extracted text to the user's own machine only; the address is fixed at localhost |
 | `net-app-ocr-languages` | app | outbound | HTTPS GET to github.com/tesseract-ocr/tessdata_fast (raw files, tag 4.0.0) | no | -ocr-download with a language code, or Download beside a language in the GUI; catalogue codes only | one download; the file is verified against a pinned SHA-256 digest and kept in the per-user folder | a request naming one language data file; no user content |
+| `net-app-update-check` | app | outbound | HTTPS GET to api.github.com for the latest published doc-html-translate release | no | Check for updates in the desktop GUI, or its optional automatic check (off by default); never by the CLI or Microsoft Store edition | one check, with a six-hour release cache and at most one automatic attempt per day | a request for public release information; no document content, running version, install identifier or account data |
 | `net-app-report-mail` | app | hand-off | a mailto: link opened in the user's mail program, with the archive's path on the clipboard | no | Send logs to the author in the GUI; -report on the command line only writes the archive | one action | nothing by itself: the mail program shows an unsent message to the author; the redacted archive stays on disk until the user attaches it and presses Send |
 | `net-ext-document` | extension | outbound | a fetch of the opened document from its own URL (http, https or file) | yes | opening a supported document while the viewer is on for that site | the viewer tab | an ordinary request for that document to the site that serves it, with the reader's cookies for that site |
 | `net-ext-images` | extension | outbound | fetches of the pictures the reader asks the extension to recognize | no | OCR & translate this image, or OCR every image on this page, from the right-click menu | that recognition run | requests for those images to the sites that serve them - for OCR every image on this page, only a picture on a public http(s) host that the page showed but could not read itself; the others are read from the pixels the page already shows; the recognition itself runs on the device |
@@ -67,7 +68,7 @@ It is proven against the dependency set, not against the wording of a page: `go.
 
 ## 4. The public forms rendered from these rows
 
-- `privacy.html`, block `app-access` (html-lists): `app-read-documents`, `app-open-browser`, `net-app-gui-server`, `net-app-google`, `net-app-ollama`, `net-app-ocr-languages`, `app-explorer-registration`, `app-run-helpers`, `net-app-report-mail`
+- `privacy.html`, block `app-access` (html-lists): `app-read-documents`, `app-open-browser`, `net-app-gui-server`, `net-app-google`, `net-app-ollama`, `net-app-ocr-languages`, `net-app-update-check`, `app-explorer-registration`, `app-run-helpers`, `net-app-report-mail`
 - `privacy.html`, block `app-writes` (html-lists): `app-write-output`, `app-user-folder`
 - `extension-privacy.html`, block `ext-network` (html-lists): `net-ext-document`, `net-ext-images`, `net-ext-remote-content`, `net-ext-ocr-languages`
 - `extension-privacy.html`, block `ext-permissions` (html-lists): `ext-declarativenetrequest`, `ext-host-all-urls`, `ext-scripting`, `ext-offscreen`, `ext-contextmenus`, `ext-storage`

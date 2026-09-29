@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "بند فہرست میں"},
   "popupNotInDisablelist": {"message": "بند فہرست میں نہیں"},
   "optAllowedSites": {"message": "صرف درج شدہ سائٹس کے موڈ میں فعال سائٹس"},
-  "optAllowedSitesHint": {"message": "پاپ اپ میں «اس سائٹ پر» سوئچ سے ان کا نظم کریں۔"}
+  "optAllowedSitesHint": {"message": "پاپ اپ میں «اس سائٹ پر» سوئچ سے ان کا نظم کریں۔"},
+  "optSettingsHeading": {"message": "ترتیبات کی فائل"},
+  "optSettingsHint": {"message": "ایکسٹینشن کے اختیارات، انٹرفیس کی زبان اور دونوں سائٹ فہرستیں برآمد ہوتی ہیں۔ پڑھنے کی جگہ، دستاویز کا متن، OCR نتائج اور تاریخ شامل نہیں۔ متن کا سائز اور فونٹ اسی براؤزر پروفائل میں رہتے ہیں۔"},
+  "optSettingsExport": {"message": "ترتیبات برآمد کریں"},
+  "optSettingsImport": {"message": "ترتیبات درآمد کریں"},
+  "optSettingsReset": {"message": "ترتیبات بحال کریں"},
+  "optSettingsExported": {"message": "ترتیبات کی فائل ڈاؤن لوڈ ہوگئی۔"},
+  "optSettingsImported": {"message": "درآمد ہوگیا۔ تبدیلیاں: {1}"},
+  "optSettingsNone": {"message": "کچھ نہیں"},
+  "optSettingsResetConfirm": {"message": "تمام ایکسٹینشن ترتیبات بحال کریں؟"},
+  "optSettingsResetDone": {"message": "ترتیبات بحال ہوگئیں۔"}
 }

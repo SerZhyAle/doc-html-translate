@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "In der Sperrliste"},
   "popupNotInDisablelist": {"message": "Nicht in der Sperrliste"},
   "optAllowedSites": {"message": "Websites mit Textumbruch im Modus „Nur aufgeführte Websites“"},
-  "optAllowedSitesHint": {"message": "Verwalten Sie diese über den Schalter „Auf dieser Website“ im Popup."}
+  "optAllowedSitesHint": {"message": "Verwalten Sie diese über den Schalter „Auf dieser Website“ im Popup."},
+  "optSettingsHeading": {"message": "Einstellungsdatei"},
+  "optSettingsHint": {"message": "Exportiert Erweiterungsoptionen, Oberflächensprache und beide Websitelisten. Lesepositionen, Dokumentinhalt, OCR-Ergebnisse und Verlauf sind ausgeschlossen. Textgröße und Schrift bleiben in diesem Browserprofil."},
+  "optSettingsExport": {"message": "Einstellungen exportieren"},
+  "optSettingsImport": {"message": "Einstellungen importieren"},
+  "optSettingsReset": {"message": "Einstellungen zurücksetzen"},
+  "optSettingsExported": {"message": "Einstellungsdatei heruntergeladen."},
+  "optSettingsImported": {"message": "Importiert. Geändert: {1}"},
+  "optSettingsNone": {"message": "keine"},
+  "optSettingsResetConfirm": {"message": "Alle Erweiterungseinstellungen zurücksetzen?"},
+  "optSettingsResetDone": {"message": "Einstellungen zurückgesetzt."}
 }

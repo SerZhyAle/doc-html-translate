@@ -58,6 +58,14 @@ The desktop app and the extension are independent and complementary: the app con
 
 ## Installation
 
+### FAQ: How do I check for updates?
+
+Open **About the program** in the desktop GUI and select **Check for updates**. The app compares its
+version with the latest published GitHub release and links to that release when a newer one exists.
+You can enable **Check automatically (once a day)** there; it is off by default and can be turned off
+at any time. The check requests only public release information, sends no document or install ID,
+and never downloads or starts an installer. Microsoft Store installs updates for its edition.
+
 Build from source:
 
 ```powershell
@@ -188,18 +196,7 @@ Why this workflow is popular (besides the obvious):
 
 ## Google API Key
 
-For `-google`, the key is read from the first available of:
-
-1. `google_api.key` next to the executable (unpackaged build), then
-2. `%LOCALAPPDATA%\doc-html-translate\google_api.key` (a writable per-user path that also works under the read-only Microsoft Store/MSIX install directory).
-
-Example file contents:
-
-```text
-AIzaSy...your_key_here...
-```
-
-In `doc-html-ui`, tick **Google Translate** to reveal a key field - paste your key and click **Save** to write it to the per-user path above (no manual file editing needed).
+For `-google` on Windows, save the key in `doc-html-ui`: tick **Google Translate**, paste the key and click **Save**. The app stores an encrypted DPAPI blob at `%LOCALAPPDATA%\doc-html-translate\google_api.key.dpapi` for the current Windows user. CLI and MSIX use the same per-user location. An older plaintext `google_api.key` next to the executable or in that app folder is migrated on first use and deleted. CLI-only users can put the key in that plaintext file for one-time migration. If Windows cannot open the protected key, paste and save it again; CLI-only users must remove the unusable blob before repeating the migration. DPAPI protects the file at rest; software already running as your user can still access the key. Non-Windows builds retain plaintext file behavior.
 
 If no usable key is found, the app logs a warning and skips translation - it would rather say so than guess.
 

@@ -714,5 +714,15 @@
   "popupInDisablelist": {"message": "В списке отключённых"},
   "popupNotInDisablelist": {"message": "Нет в списке отключённых"},
   "optAllowedSites": {"message": "Сайты с обработкой в режиме выбранных сайтов"},
-  "optAllowedSitesHint": {"message": "Управляйте списком переключателем «На этом сайте» во всплывающем окне."}
+  "optAllowedSitesHint": {"message": "Управляйте списком переключателем «На этом сайте» во всплывающем окне."},
+  "optSettingsHeading": {"message": "Файл настроек"},
+  "optSettingsHint": {"message": "Экспортируются настройки расширения, язык интерфейса и оба списка сайтов. Позиции чтения, содержимое документов, результаты OCR и история не включаются. Размер и шрифт текста остаются в этом профиле браузера."},
+  "optSettingsExport": {"message": "Экспорт настроек"},
+  "optSettingsImport": {"message": "Импорт настроек"},
+  "optSettingsReset": {"message": "Сброс настроек"},
+  "optSettingsExported": {"message": "Файл настроек загружен."},
+  "optSettingsImported": {"message": "Импортировано. Изменено: {1}"},
+  "optSettingsNone": {"message": "ничего"},
+  "optSettingsResetConfirm": {"message": "Сбросить все настройки расширения?"},
+  "optSettingsResetDone": {"message": "Настройки сброшены."}
 }

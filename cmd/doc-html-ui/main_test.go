@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -319,7 +320,7 @@ func TestSaveGoogleAPIKeyRoundTrip(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("LOCALAPPDATA", tmp)
 
-	want := filepath.Join(tmp, "doc-html-translate", "google_api.key")
+	want := translator.GoogleAPIKeyPath()
 	if got := writableGoogleKeyPath(); got != want {
 		t.Fatalf("writableGoogleKeyPath() = %q, want %q", got, want)
 	}
@@ -332,8 +333,15 @@ func TestSaveGoogleAPIKeyRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read saved key: %v", err)
 	}
-	if string(data) != "AIzaSyTEST123" {
-		t.Fatalf("saved key = %q, want trimmed %q", string(data), "AIzaSyTEST123")
+	if runtime.GOOS == "windows" {
+		if strings.Contains(string(data), "AIzaSyTEST123") {
+			t.Fatal("saved file contains plaintext key")
+		}
+		if _, err := os.Stat(filepath.Join(tmp, "doc-html-translate", "google_api.key")); !os.IsNotExist(err) {
+			t.Fatalf("plaintext key file remains: %v", err)
+		}
+	} else if string(data) != "AIzaSyTEST123" {
+		t.Fatalf("saved key = %q, want trimmed key", string(data))
 	}
 
 	key, err := translator.LoadGoogleAPIKey()

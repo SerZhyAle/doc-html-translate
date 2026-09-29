@@ -140,6 +140,9 @@ func TestBuildNeverArchivesTheAPIKeyFile(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(Dir(), "google_api.key"), []byte("AIzaSyA1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r"), 0o600); err != nil {
 		t.Fatalf("write key file: %v", err)
 	}
+	if err := os.WriteFile(filepath.Join(Dir(), "google_api.key.dpapi"), []byte("protected-key-blob"), 0o600); err != nil {
+		t.Fatalf("write protected key file: %v", err)
+	}
 
 	path, _, err := Build(buildOpts())
 	if err != nil {

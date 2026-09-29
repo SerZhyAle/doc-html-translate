@@ -46,6 +46,14 @@ has an explicit override. `ar` and `ur` mirror the **chrome only** - the rendere
 `lang` and direction, because carrying the interface language on the document would stop Chrome offering
 "Translate page", which is the whole point of the extension. `test/i18n.test.mjs` guards the key sets.
 
+**Settings transfer.** Options offers Export settings, Import settings and Reset settings. The JSON
+file contains the extension's documented options, including both site lists and the interface-language
+choice. It excludes document content, addresses read, OCR output, diagnostics and reading positions.
+Reader text size, font, spacing, width and the last day/night choices stay in the browser profile.
+Import checks the file format, version and every field before replacing options, then reports the
+changed fields. Reset asks once and restores the documented extension-option defaults and browser
+language selection. Copy diagnostics remains a separate action.
+
 ## Layout
 
 ```text

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// googleAPIKeyFile is the filename of the Google API key.
+// googleAPIKeyFile is the legacy plaintext filename.
 const googleAPIKeyFile = "google_api.key"
 
 // appDataDirName is the per-user folder under %LOCALAPPDATA% where a writable
@@ -45,6 +45,9 @@ func (e *PartialError) Unwrap() error { return e.Err }
 // the text itself stays in the source language and the result is partial.
 var ErrNoTranslation = errors.New("the engine returned no translation")
 
+// ErrGoogleKeyUnusable asks the user to replace an unreadable protected key.
+var ErrGoogleKeyUnusable = errors.New("saved Google API key cannot be opened; paste and save the key again")
+
 // ProgressReporter is an optional interface for clients that support per-batch progress callbacks.
 // done and total are segment counts (done <= total).
 type ProgressReporter interface {
@@ -66,13 +69,11 @@ func GoogleAPIKeyPaths() []string {
 	return paths
 }
 
-// LoadGoogleAPIKey reads the API key from the first of GoogleAPIKeyPaths that
-// holds a non-empty key. Returns an error if no location has a usable key, so the
-// caller can inform the user and skip translation gracefully.
-func LoadGoogleAPIKey() (string, error) {
+// loadPlainGoogleAPIKey reads a legacy key for migration (and for non-Windows).
+func loadPlainGoogleAPIKey() (string, string, error) {
 	candidates := GoogleAPIKeyPaths()
 	if len(candidates) == 0 {
-		return "", fmt.Errorf("cannot locate executable or %%LOCALAPPDATA%%")
+		return "", "", fmt.Errorf("cannot locate executable or %%LOCALAPPDATA%%")
 	}
 	var lastErr error
 	for _, keyPath := range candidates {
@@ -82,14 +83,14 @@ func LoadGoogleAPIKey() (string, error) {
 				lastErr = fmt.Errorf("key file not found: %s", keyPath)
 				continue
 			}
-			return "", fmt.Errorf("read key file: %w", err)
+			return "", "", fmt.Errorf("read key file: %w", err)
 		}
 		key := strings.TrimSpace(string(data))
 		if key == "" {
 			lastErr = fmt.Errorf("key file is empty: %s", keyPath)
 			continue
 		}
-		return key, nil
+		return key, keyPath, nil
 	}
-	return "", lastErr
+	return "", "", lastErr
 }

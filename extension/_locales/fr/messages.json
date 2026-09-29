@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "Dans la liste des sites désactivés"},
   "popupNotInDisablelist": {"message": "Absent de la liste des sites désactivés"},
   "optAllowedSites": {"message": "Sites actifs en mode sites répertoriés"},
-  "optAllowedSitesHint": {"message": "Gérez ces sites avec l'interrupteur « Sur ce site » de la fenêtre contextuelle."}
+  "optAllowedSitesHint": {"message": "Gérez ces sites avec l'interrupteur « Sur ce site » de la fenêtre contextuelle."},
+  "optSettingsHeading": {"message": "Fichier de paramètres"},
+  "optSettingsHint": {"message": "Exporte les options de l'extension, la langue et les deux listes de sites. Les positions de lecture, le contenu, les résultats OCR et l'historique sont exclus. La taille et la police restent dans ce profil."},
+  "optSettingsExport": {"message": "Exporter les paramètres"},
+  "optSettingsImport": {"message": "Importer les paramètres"},
+  "optSettingsReset": {"message": "Réinitialiser les paramètres"},
+  "optSettingsExported": {"message": "Fichier de paramètres téléchargé."},
+  "optSettingsImported": {"message": "Importé. Modifié : {1}"},
+  "optSettingsNone": {"message": "aucun"},
+  "optSettingsResetConfirm": {"message": "Réinitialiser tous les paramètres de l'extension ?"},
+  "optSettingsResetDone": {"message": "Paramètres réinitialisés."}
 }

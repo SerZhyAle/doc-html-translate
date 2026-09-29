@@ -3,36 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <title>doc-html-translate - options</title>
+  <link rel="stylesheet" href="chrome-palette.css">
   <style>
-    body { font-family: "Segoe UI", system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1.2rem; color: #1b1b1b; line-height: 1.5; }
+    html { background: var(--bg); }
+    body { font-family: "Segoe UI", system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1.2rem; background: var(--bg); color: var(--fg); line-height: 1.5; color-scheme: light dark; }
     h1 { font-size: 1.4rem; }
     .field { margin: 1.2rem 0; }
     label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
-    .hint { color: #666; font-size: 0.85rem; margin-top: 0.25rem; }
-    select, input[type="text"] { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid #ccc; border-radius: 6px; min-width: 14rem; }
+    .hint { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+    select, input[type="text"] { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; min-width: 14rem; background: var(--bar-bg); color: var(--bar-fg); }
     input[type="checkbox"] { transform: scale(1.2); margin-right: 0.5rem; }
-    .saved { color: #16803c; font-size: 0.85rem; margin-left: 0.6rem; opacity: 0; transition: opacity 0.2s; }
+    .saved { color: var(--fg); font-size: 0.85rem; margin-left: 0.6rem; opacity: 0; transition: opacity 0.2s; }
     .saved.show { opacity: 1; }
-    :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     ul.hosts { padding-left: 1.1rem; }
-    code { background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 4px; }
+    code { background: var(--bar-bg); padding: 0.1em 0.35em; border-radius: 4px; }
     .ocr-langs.disabled { opacity: 0.5; }
     .ocr-lang { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0; }
     .ocr-lang label { font-weight: 400; margin: 0; display: inline; }
-    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid #2563eb;
-      color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
+    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--accent);
+      color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
     /* A failed download says so where it happened, with its own retry action. */
     .ocr-error { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0;
-      color: #c5221f; font-size: 0.85rem; }
-    .ocr-error button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid #c5221f;
-      color: #c5221f; background: #fff; border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
+      color: var(--fg); font-size: 0.85rem; }
+    .ocr-error button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--border);
+      color: var(--fg); background: var(--bar-bg); border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
     /* The per-host remove button gets the same treatment as the OCR-language buttons: a real
        target size (WCAG 2.2, 2.5.8) and the page's own link blue. */
     ul.hosts button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; margin-inline-start: 0.6rem;
-      border: 1px solid #2563eb; color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
-    #copy-diag { font: inherit; font-size: 0.85rem; padding: 0.25rem 0.7rem; border: 1px solid #2563eb;
-      color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
+      border: 1px solid var(--accent); color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; }
+    #copy-diag, .settings-action { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--accent);
+      color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; margin: 0.2rem; }
+    #settings-status { min-height: 1.5em; color: var(--fg); }
+    #settings-status.error { color: var(--fg); font-weight: 600; }
+    a { color: var(--link); }
   </style>
 </head>
 <body>
@@ -118,7 +123,17 @@
     <div class="hint" data-i18n="optAllowedSitesHint">Manage these from the toolbar popup's "On this site" switch while only listed sites mode is selected.</div>
   </div>
 
-  <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
+  <section class="field" aria-labelledby="settings-heading">
+    <h2 id="settings-heading" data-i18n="optSettingsHeading">Settings file</h2>
+    <p class="hint" data-i18n="optSettingsHint">Exports extension options, interface language and both site lists. Reading positions, document content, OCR output and history are excluded. Reader text size and font remain in this browser profile.</p>
+    <button class="settings-action" id="export-settings" type="button" data-i18n="optSettingsExport">Export settings</button>
+    <button class="settings-action" id="import-settings" type="button" data-i18n="optSettingsImport">Import settings</button>
+    <input id="import-file" type="file" accept=".json,application/json" hidden>
+    <button class="settings-action" id="reset-settings" type="button" data-i18n="optSettingsReset">Reset settings</button>
+    <p id="settings-status" role="status" aria-live="polite"></p>
+  </section>
+
+  <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted);">
     <span id="ver" style="float: right;"></span>
     <div class="field">
       <label data-i18n="optAbout">About</label>

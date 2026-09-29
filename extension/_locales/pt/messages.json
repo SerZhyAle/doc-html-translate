@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "Na lista de desativados"},
   "popupNotInDisablelist": {"message": "Fora da lista de desativados"},
   "optAllowedSites": {"message": "Sites ativos no modo de lista"},
-  "optAllowedSitesHint": {"message": "Gerencie estes sites com o botão «Neste site» no menu da extensão."}
+  "optAllowedSitesHint": {"message": "Gerencie estes sites com o botão «Neste site» no menu da extensão."},
+  "optSettingsHeading": {"message": "Ficheiro de definições"},
+  "optSettingsHint": {"message": "Exporta as opções da extensão, o idioma e ambas as listas de sites. Posições de leitura, conteúdo, resultados OCR e histórico ficam de fora. O tamanho e o tipo de letra permanecem neste perfil."},
+  "optSettingsExport": {"message": "Exportar definições"},
+  "optSettingsImport": {"message": "Importar definições"},
+  "optSettingsReset": {"message": "Repor definições"},
+  "optSettingsExported": {"message": "Ficheiro de definições descarregado."},
+  "optSettingsImported": {"message": "Importado. Alterado: {1}"},
+  "optSettingsNone": {"message": "nenhum"},
+  "optSettingsResetConfirm": {"message": "Repor todas as definições da extensão?"},
+  "optSettingsResetDone": {"message": "Definições repostas."}
 }

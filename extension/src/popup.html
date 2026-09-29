@@ -3,48 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <title>PDF reflow</title>
+  <link rel="stylesheet" href="chrome-palette.css">
   <style>
-    body { font-family: "Segoe UI", system-ui, sans-serif; width: 270px; margin: 0; padding: 12px 14px; color: #1b1b1b; }
+    html { background: var(--bg); }
+    body { font-family: "Segoe UI", system-ui, sans-serif; width: 270px; margin: 0; padding: 12px 14px; background: var(--bg); color: var(--fg); color-scheme: light dark; }
     h1 { font-size: 14px; margin: 0 0 10px; }
-    .ver { color: #888; font-size: 11px; font-weight: normal; }
+    .ver { color: var(--muted); font-size: 11px; font-weight: normal; }
     .row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 8px; }
     .row label { font-size: 13px; }
-    .host { color: #555; font-size: 12px; word-break: break-all; }
-    .note { color: #666; font-size: 11px; margin: -2px 0 6px; line-height: 1.35; }
+    .host { color: var(--muted); font-size: 12px; word-break: break-all; }
+    .note { color: var(--muted); font-size: 11px; margin: -2px 0 6px; line-height: 1.35; }
     .switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; }
     .switch input { opacity: 0; width: 0; height: 0; }
     /* The checkbox itself is a zero-size hidden input, so the focus ring goes on the slider
        it drives - without this a keyboard user cannot see the switch has focus. */
-    .switch input:focus-visible + .slider { outline: 2px solid #2563eb; outline-offset: 2px; }
-    :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 22px; transition: 0.2s; cursor: pointer; }
-    .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
-    input:checked + .slider { background: #2563eb; }
+    .switch input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: 0.2s; cursor: pointer; }
+    .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: var(--bar-fg); border-radius: 50%; transition: 0.2s; }
+    input:checked + .slider { background: var(--accent); }
     input:checked + .slider::before { transform: translateX(16px); }
     input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
-    hr { border: 0; border-top: 1px solid #eee; margin: 12px 0; }
-    a { color: #2563eb; font-size: 12px; text-decoration: none; }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
+    a { color: var(--link); font-size: 12px; text-decoration: none; }
     a:hover { text-decoration: underline; }
     .glyph { width: 1.1em; height: 1.1em; vertical-align: -0.2em; }
     [dir="rtl"] .glyph-mirror { transform: scaleX(-1); }
     .links { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
     .cta { display: block; width: 100%; margin: 4px 0 12px; padding: 9px 12px; font: inherit; font-weight: 600;
-           color: #fff; background: #2563eb; border: 0; border-radius: 8px; cursor: pointer; }
-    .cta:hover { background: #1d4fd0; }
+           color: var(--bg); background: var(--accent); border: 0; border-radius: 8px; cursor: pointer; }
+    .cta:hover { filter: brightness(1.1); }
     .ocr-langs { margin: 2px 0 10px; }
-    .ocr-langs summary { color: #2563eb; cursor: pointer; font-size: 12px; }
-    .ocr-langs-content { margin-top: 6px; padding-left: 8px; border-left: 2px solid #eee; }
-    .ocr-langs .hint { color: #666; font-size: 11px; margin: 2px 0 6px; }
+    .ocr-langs summary { color: var(--link); cursor: pointer; font-size: 12px; }
+    .ocr-langs-content { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--border); }
+    .ocr-langs .hint { color: var(--muted); font-size: 11px; margin: 2px 0 6px; }
     .ocr-lang { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
     .ocr-lang label, .ocr-lang > span { font-size: 13px; }
-    .ocr-lang button { font: inherit; font-size: 12px; padding: 3px 8px; min-height: 24px; border: 1px solid #2563eb; color: #2563eb;
-           background: #fff; border-radius: 6px; cursor: pointer; }
+    .ocr-lang button { font: inherit; font-size: 12px; padding: 3px 8px; min-height: 24px; border: 1px solid var(--accent); color: var(--link);
+           background: var(--bar-bg); border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
     /* A failed download says so where it happened, with its own retry action. */
     .ocr-error { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 6px;
-           color: #c5221f; font-size: 11px; line-height: 1.35; }
-    .ocr-error button { font: inherit; font-size: 12px; padding: 3px 8px; min-height: 24px; border: 1px solid #c5221f; color: #c5221f;
-           background: #fff; border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
+           color: var(--fg); font-size: 11px; line-height: 1.35; }
+    .ocr-error button { font: inherit; font-size: 12px; padding: 3px 8px; min-height: 24px; border: 1px solid var(--border); color: var(--fg);
+           background: var(--bar-bg); border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
     #tab-state { margin: 0 0 6px; }
   </style>
 </head>

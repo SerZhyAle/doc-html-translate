@@ -698,5 +698,15 @@
   "popupInDisablelist": {"message": "Nell'elenco disattivati"},
   "popupNotInDisablelist": {"message": "Non nell'elenco disattivati"},
   "optAllowedSites": {"message": "Siti attivi nella modalità solo siti elencati"},
-  "optAllowedSitesHint": {"message": "Gestiscili con l'interruttore «Su questo sito» nel popup."}
+  "optAllowedSitesHint": {"message": "Gestiscili con l'interruttore «Su questo sito» nel popup."},
+  "optSettingsHeading": {"message": "File delle impostazioni"},
+  "optSettingsHint": {"message": "Esporta le opzioni dell'estensione, la lingua dell'interfaccia e gli elenchi dei siti. Posizioni di lettura, contenuti, risultati OCR e cronologia sono esclusi. Dimensione e carattere restano in questo profilo."},
+  "optSettingsExport": {"message": "Esporta impostazioni"},
+  "optSettingsImport": {"message": "Importa impostazioni"},
+  "optSettingsReset": {"message": "Ripristina impostazioni"},
+  "optSettingsExported": {"message": "File delle impostazioni scaricato."},
+  "optSettingsImported": {"message": "Importato. Modifiche: {1}"},
+  "optSettingsNone": {"message": "nessuna"},
+  "optSettingsResetConfirm": {"message": "Ripristinare tutte le impostazioni dell'estensione?"},
+  "optSettingsResetDone": {"message": "Impostazioni ripristinate."}
 }

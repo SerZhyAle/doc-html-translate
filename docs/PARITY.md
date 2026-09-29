@@ -308,6 +308,10 @@ both `bg` and `bar-bg` of their theme and stay visibly dimmer than `fg`.
 
 Emitted by [`navbar.go`](../internal/htmlgen/navbar.go) `readerCSS` (`--dht-*`, `data-dht-theme`) and the
 generated region of [`viewer.css`](../extension/src/viewer.css) (`--*`, `data-theme`).
+The extension popup and options pages also derive their light and dark browser appearance from
+the same source through generated [`chrome-palette.css`](../extension/src/chrome-palette.css).
+They use the light theme for a light browser and the dark theme for a dark browser; this choice
+does not change the reader's selected theme.
 
 ### Reader chrome accessibility floor (2026-09-29)
 
@@ -1365,6 +1369,11 @@ Chrome offering "Translate page", which is the product's entire free workflow. G
 [`make-screenshot.ps1`](../tools/store/make-screenshot.ps1).
 
 ## Intentional divergences (do NOT "fix")
+
+- **Update checks.** The desktop GUI offers a manual GitHub release check and an optional daily check,
+  off by default. The CLI has no update request. The MSIX GUI reports that Microsoft Store handles
+  its updates, and the browser extension relies on its browser store. No update checker is ported
+  between the Go and JavaScript editions (ticket 64).
 
 Desktop conversion readiness (ticket 54) checks the installed Calibre, 7-Zip and Tesseract
 helpers, OCR language data, the saved Google key, and the local Ollama service/model before a
