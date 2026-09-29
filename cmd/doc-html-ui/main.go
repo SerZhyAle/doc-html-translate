@@ -105,6 +105,7 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/settings", getOrPostJSON(handleSettings))
 	mux.HandleFunc("/api/google-key", getOrPostJSON(handleGoogleKey))
 	mux.HandleFunc("/api/preview", jsonPost(handlePreview))
+	mux.HandleFunc("/api/readiness", jsonPost(handleReadiness))
 	mux.HandleFunc("/api/output-status", jsonPost(handleOutputStatus))
 	mux.HandleFunc("/api/open-output", jsonPost(handleOpenOutput))
 	mux.HandleFunc("/api/delete-output", jsonPost(handleDeleteOutput))

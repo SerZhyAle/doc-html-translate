@@ -1221,6 +1221,11 @@ Chrome offering "Translate page", which is the product's entire free workflow. G
 
 ## Intentional divergences (do NOT "fix")
 
+Desktop conversion readiness (ticket 54) checks the installed Calibre, 7-Zip and Tesseract
+helpers, OCR language data, the saved Google key, and the local Ollama service/model before a
+desktop run. The browser extension uses its own parsers and OCR engine and has no desktop helper
+or local model dependency, so this readiness surface is intentionally desktop-only.
+
 These are by design. Do not "sync" them without a decision - document changes here instead.
 
 - **EPUB output model.** Go extracts a **multi-file book to disk** and does **not** sanitize chapter

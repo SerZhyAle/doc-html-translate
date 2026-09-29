@@ -402,6 +402,7 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
     <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelConvert()" style="display:none" data-i18n="btnCancel">Cancel</button>
 </div>
 <input type="hidden" id="inputFile">
+<div class="hint" id="readiness" role="status" aria-live="polite" style="display:none"></div>
 <div class="hint" id="dropStatus" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
@@ -603,6 +604,7 @@ function applyLang(lang) {
     // A glyph-only control's accessible name follows the language (APP-BEHAVIOUR rule 9).
     document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
     for (const id in liveStatus) renderStatus(id);
+    if (typeof lastReadiness !== 'undefined' && lastReadiness) renderReadiness(lastReadiness);
     renderAbout();
     document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
     document.body.style.fontFamily = FONT_STACKS[lang] || '';
@@ -954,6 +956,7 @@ async function saveGoogleKey() {
         const d = await r.json();
         if (d.exists) setStatus('googleKeyStatus', 'googleKeySaved', null, 'ok');
         else setStatus('googleKeyStatus', 'googleKeySavedUnverified', null, 'warn');
+        scheduleReadiness();
     } catch(e) {
         serviceGone(e);
     }
@@ -1263,6 +1266,7 @@ el('btnOcrDownload').addEventListener('click', async () => {
         if (!(pick.value === '' && src && src.code === lang)) pick.dataset.want = lang;
         await loadOcrLangs();
         saveSettings();
+        scheduleReadiness();
         return;
     }
     const cause = result ? result.cause : '';
@@ -1339,8 +1343,57 @@ function updateCmdPreview() {
             });
             const d = await r.json();
             el('cmdLine').textContent = d.cmd || '';
+            scheduleReadiness();
         } catch (e) { /* leave the last preview in place */ }
     }, 150);
+}
+let readinessTimer = null, readinessGeneration = 0;
+var lastReadiness = null;
+function scheduleReadiness() {
+    clearTimeout(readinessTimer);
+    const generation = ++readinessGeneration;
+    readinessTimer = setTimeout(async () => {
+        const result = await fetchReadiness();
+        if (generation === readinessGeneration) renderReadiness(result);
+    }, 250);
+}
+async function fetchReadiness() {
+    if (!el('inputFile').value.trim()) return null;
+    try {
+        const response = await api('/api/readiness', {method:'POST', body:JSON.stringify(collectRunConfig())});
+        return response.ok ? await response.json() : null;
+    } catch (e) { return null; }
+}
+function renderReadiness(result) {
+    lastReadiness = result;
+    const box = el('readiness');
+    box.replaceChildren();
+    box.style.display = result ? '' : 'none';
+    if (!result) return;
+    const heading = document.createElement('strong');
+    heading.textContent = t({ready:'readinessReady', action:'readinessAction', optional:'readinessOptional'}[result.state]);
+    box.appendChild(heading);
+    const issueKeys = {input:'readinessInput', calibre:'readinessCalibre', sevenzip:'readinessSevenzip',
+        tesseract:'readinessTesseract', ocrData:'readinessOcrData', googleKey:'readinessGoogleKey',
+        ollamaService:'readinessOllamaService', ollamaModel:'readinessOllamaModel'};
+    for (const issue of result.issues || []) {
+        const row = document.createElement('div');
+        row.textContent = t(issueKeys[issue.code], {detail:issue.detail});
+        const action = {ocrData:['readinessDownload', () => {el('ocrDetails').open=true; const code = issue.detail.split(',')[0].trim(); if (el('ocrDownloadSel').querySelector(`option[value="${code}"]`)) el('ocrDownloadSel').value = code; el('ocrDownloadSel').focus();}],
+            googleKey:['readinessSaveKey', () => {el('googleKeySection').scrollIntoView(); el('googleKey').focus();}],
+            ollamaModel:['readinessChooseModel', () => {el('ollamaDetails').open=true; el('ollamaModel').focus();}]}[issue.code];
+        if (action) {
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'inline-btn'; button.textContent = t(action[0]);
+            button.addEventListener('click', action[1]); row.append(' ', button);
+        }
+        box.appendChild(row);
+    }
+    if (result.googleLimit !== undefined && result.googleLimit !== '') {
+        const cost = document.createElement('div');
+        cost.textContent = t('readinessCost', {limit:result.googleLimit});
+        box.appendChild(cost);
+    }
 }
 document.addEventListener('change', updateCmdPreview);
 document.addEventListener('input', updateCmdPreview);
@@ -1531,6 +1584,11 @@ el('btnClearLogs').addEventListener('click', async () => {
 async function runConvert() {
     const input = document.getElementById('inputFile').value.trim();
     if (!input) { setStatus('dropStatus', 'alertChooseFirst', null, 'warn'); el('dropZone').focus(); return; }
+
+    // Recheck services, files and packs at the click; the displayed summary may be stale.
+    const readiness = await fetchReadiness();
+    renderReadiness(readiness);
+    if (readiness && readiness.state === 'action') { el('readiness').scrollIntoView(); return; }
 
     const engine = currentEngine();
     if (engine === 'google') {

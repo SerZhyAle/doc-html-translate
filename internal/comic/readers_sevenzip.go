@@ -46,6 +46,9 @@ func find7Zip() string {
 	return ""
 }
 
+// SevenZipAvailable reports the same helper lookup used for CBR and CB7.
+func SevenZipAvailable() bool { return find7Zip() != "" }
+
 // sevenZipItem is one entry of a `7z l -slt` listing.
 type sevenZipItem struct {
 	path      string

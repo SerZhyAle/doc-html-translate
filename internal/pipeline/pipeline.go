@@ -300,7 +300,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 
 	// Optional: OCR document images and overlay translatable text plates. Runs before
 	// translation so the overlay text is translated too. Best-effort - never fatal.
-	if (r.cfg.OCR || forceOCR) && ctx.Err() == nil {
+	if ((r.cfg.OCR && SupportsImageOCR(ext)) || forceOCR) && ctx.Err() == nil {
 		r.overlayImagesSafe(ctx, book, outputDir)
 	}
 	if ctx.Err() != nil {

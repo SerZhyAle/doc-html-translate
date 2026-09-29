@@ -38,6 +38,9 @@ func findEbookConvert() string {
 	return ""
 }
 
+// Available reports the same Calibre lookup used by Extract.
+func Available() bool { return findEbookConvert() != "" }
+
 // Extract converts a MOBI or AZW3 file to EPUB via Calibre's ebook-convert,
 // then extracts the result using the EPUB pipeline.
 // Returns an error if Calibre is not installed or if the file is DRM-protected.
