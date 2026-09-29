@@ -76,6 +76,21 @@ test("content fidelity: shared Go/JS XHTML syntax cases", () => {
   }
 });
 
+// With no ">" anywhere, no position can open a tag, so the rewrite emits the
+// chapter verbatim in one pass. It used to restart at every "<" and re-read the
+// whole tail instead - 240 KB took half a minute, and a ~1 MB corrupt chapter
+// (the cap is 100 MB) froze the viewer tab for minutes (audit finding B74,
+// ticket 86). The bound keeps the old code's ~16 minutes far above the limit
+// while a linear pass lands in tens of milliseconds.
+test("xhtmlToHtmlSyntax: a chapter of unclosed tags normalizes in linear time", () => {
+  const src = "<b ".repeat(Math.ceil(1024 * 1024 / 3));
+  const t0 = performance.now();
+  const out = xhtmlToHtmlSyntax(src);
+  const ms = performance.now() - t0;
+  assert.equal(out, src, "with no > in the input the text passes through verbatim");
+  assert.ok(ms < 2000, `1 MB of unclosed tags took ${ms.toFixed(0)} ms`);
+});
+
 test("content fidelity: shared Go/JS cover SVG cases", () => {
   for (const c of fixture("content_fidelity_cases.json").cover) {
     const { frag } = renderChapter(`<html><body>${c.body}</body></html>`, 0, "OEBPS", new Map(), (p) => `blob:${p}`);

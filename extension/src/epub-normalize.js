@@ -59,6 +59,14 @@ export function xhtmlToHtmlSyntax(src) {
       END_TAG.lastIndex = i;
       const m = END_TAG.exec(src);
       if (!m) {
+        // A tag token ends at its ">", so when the rest of the input holds none,
+        // no later position can open one either: emit the rest as-is and stop.
+        // Without this, a chapter of unclosed tags sends every "<" through a
+        // fresh scan of the whole tail - quadratic, minutes on a 1 MB chapter.
+        if (src.indexOf(">", i) < 0) {
+          out += src.slice(i);
+          break;
+        }
         out += "<";
         i++;
         continue;
@@ -72,6 +80,11 @@ export function xhtmlToHtmlSyntax(src) {
     START_TAG.lastIndex = i;
     const m = START_TAG.exec(src);
     if (!m) {
+      // Same bound as the end-tag miss: no ">" ahead, no tag ahead.
+      if (src.indexOf(">", i) < 0) {
+        out += src.slice(i);
+        break;
+      }
       out += "<";
       i++;
       continue;
