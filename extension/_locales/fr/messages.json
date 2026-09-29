@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "Replier",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Rechercher"},
   "vSearchText": {"message":"Rechercher du texte"},
   "vSearchScope": {"message":"Portée"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "Pleine largeur",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Mode des sites"},
+  "siteModeAll": {"message": "Tous les sites sauf ceux désactivés"},
+  "siteModeAllowlist": {"message": "Sites répertoriés uniquement"},
+  "siteModeHint": {"message": "La mise en page automatique est désactivée par défaut. Activez-la ci-dessus et choisissez les sites. Les deux listes sont conservées lors du changement de mode."},
+  "popupInAllowlist": {"message": "Dans la liste autorisée"},
+  "popupNotInAllowlist": {"message": "Absent de la liste autorisée"},
+  "popupInDisablelist": {"message": "Dans la liste des sites désactivés"},
+  "popupNotInDisablelist": {"message": "Absent de la liste des sites désactivés"},
+  "optAllowedSites": {"message": "Sites actifs en mode sites répertoriés"},
+  "optAllowedSitesHint": {"message": "Gérez ces sites avec l'interrupteur « Sur ce site » de la fenêtre contextuelle."}
 }

@@ -635,7 +635,8 @@
   "ariaCollapse": {
     "message": "Свернуть",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Поиск"},
   "vSearchText": {"message":"Искать текст"},
   "vSearchScope": {"message":"Область"},
@@ -703,5 +704,15 @@
   "optWidthFull": {
     "message": "Во всю ширину",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Режим сайтов"},
+  "siteModeAll": {"message": "Все сайты, кроме отключённых"},
+  "siteModeAllowlist": {"message": "Только сайты из списка"},
+  "siteModeHint": {"message": "Автоматическая обработка по умолчанию выключена. Включите её выше и выберите сайты. При смене режима оба списка сохраняются."},
+  "popupInAllowlist": {"message": "В списке разрешённых"},
+  "popupNotInAllowlist": {"message": "Нет в списке разрешённых"},
+  "popupInDisablelist": {"message": "В списке отключённых"},
+  "popupNotInDisablelist": {"message": "Нет в списке отключённых"},
+  "optAllowedSites": {"message": "Сайты с обработкой в режиме выбранных сайтов"},
+  "optAllowedSitesHint": {"message": "Управляйте списком переключателем «На этом сайте» во всплывающем окне."}
 }

@@ -1,4 +1,4 @@
-// popup.js - global on/off and per-site disable. Writes the shared `options`
+// popup.js - global on/off and the active per-site mode. Writes the shared `options`
 // object to storage; background.js rebuilds the DNR rules on the storage change.
 // The popup also reflects the active tab: a supported document gets a one-click
 // open in the reader, and a site whose documents are left alone says so.
@@ -8,11 +8,14 @@ import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { applyGlyphs } from "./glyphs.js";
 import { siteHost } from "./site-host.js";
+import { allowlistMode, hostInList, siteEnabled, setSiteEnabled } from "./site-mode.js";
 import { isInterceptableUrl } from "./intercept.js";
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
 const hostEl = document.getElementById("host");
+const modeEl = document.getElementById("site-mode");
+const membershipEl = document.getElementById("site-membership");
 const ocrImagesEl = document.getElementById("ocr-images");
 const ocrLangsDetailsEl = document.getElementById("ocr-langs-details");
 const ocrLangsEl = document.getElementById("ocr-langs");
@@ -61,6 +64,17 @@ async function init() {
   const host = tabUrl ? siteHost(tabUrl, chrome.runtime.getURL("src/viewer.html")) : "";
 
   globalEl.checked = opts.enabledByDefault;
+  modeEl.textContent = allowlistMode(opts)
+    ? msg("siteModeAllowlist", "Only listed sites")
+    : msg("siteModeAll", "All sites except disabled sites");
+  const showMembership = (o) => {
+    membershipEl.textContent = !host ? "" : allowlistMode(o)
+      ? hostInList(o.allowedHosts, host)
+        ? msg("popupInAllowlist", "In the allowlist") : msg("popupNotInAllowlist", "Not in the allowlist")
+      : hostInList(o.disabledHosts, host)
+        ? msg("popupInDisablelist", "In the disable list") : msg("popupNotInDisablelist", "Not in the disable list");
+  };
+  showMembership(opts);
 
   ocrImagesEl.checked = opts.ocrImages;
   ocrImagesEl.addEventListener("change", async () => {
@@ -82,7 +96,7 @@ async function init() {
     tabStateEl.hidden = false;
     tabStateEl.textContent = msg("popupTabDocument", "The current tab is a supported document.");
     ctaEl.textContent = msg("popupOpenInReader", "Open it in the reader");
-  } else if (host && opts.enabledByDefault && (opts.disabledHosts || []).includes(host)) {
+  } else if (host && opts.enabledByDefault && !siteEnabled(opts, host)) {
     tabStateEl.hidden = false;
     tabStateEl.textContent = msg("popupTabOff", "Reflow is off on {1} - documents open as usual.", host);
   }
@@ -101,7 +115,7 @@ async function init() {
   if (host) {
     hostEl.textContent = host;
     siteEl.disabled = !opts.enabledByDefault;
-    siteEl.checked = opts.enabledByDefault && !opts.disabledHosts.includes(host);
+    siteEl.checked = siteEnabled(opts, host);
   } else {
     hostEl.textContent = msg("popupNoSite", "(not a website)");
     siteEl.disabled = true;
@@ -112,17 +126,15 @@ async function init() {
     o.enabledByDefault = globalEl.checked;
     await setOptions(o);
     siteEl.disabled = !o.enabledByDefault || !host;
-    siteEl.checked = o.enabledByDefault && host && !o.disabledHosts.includes(host);
+    siteEl.checked = siteEnabled(o, host);
   });
 
   siteEl.addEventListener("change", async () => {
     if (!host) return;
     const o = await getOptions();
-    const set = new Set(o.disabledHosts);
-    if (siteEl.checked) set.delete(host);
-    else set.add(host);
-    o.disabledHosts = [...set];
+    setSiteEnabled(o, host, siteEl.checked);
     await setOptions(o);
+    showMembership(o);
   });
 
   document.getElementById("opts").addEventListener("click", (e) => {

@@ -9,7 +9,9 @@ export const DEFAULT_OPTIONS = {
   // doc-html-translate" right-click menu (background.js). Mirrors the desktop app, where
   // the default-handler association is likewise an explicit opt-in. See docs/PARITY.md.
   enabledByDefault: false,
+  siteMode: "all",
   disabledHosts: [],
+  allowedHosts: [],
   sourceLang: "auto",
   theme: "light",
   ocrImages: false,

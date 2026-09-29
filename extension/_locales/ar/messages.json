@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "طي",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"بحث"},
   "vSearchText": {"message":"البحث في النص"},
   "vSearchScope": {"message":"النطاق"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "العرض الكامل",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "وضع المواقع"},
+  "siteModeAll": {"message": "كل المواقع باستثناء المعطلة"},
+  "siteModeAllowlist": {"message": "المواقع المدرجة فقط"},
+  "siteModeHint": {"message": "إعادة التنسيق التلقائية معطلة افتراضيًا. فعّلها أعلاه ثم اختر المواقع. يبقى كلا القائمتين عند تغيير الوضع."},
+  "popupInAllowlist": {"message": "ضمن قائمة السماح"},
+  "popupNotInAllowlist": {"message": "خارج قائمة السماح"},
+  "popupInDisablelist": {"message": "ضمن قائمة التعطيل"},
+  "popupNotInDisablelist": {"message": "خارج قائمة التعطيل"},
+  "optAllowedSites": {"message": "المواقع المفعلة في وضع المواقع المدرجة فقط"},
+  "optAllowedSitesHint": {"message": "أدر هذه المواقع من مفتاح «على هذا الموقع» في النافذة المنبثقة."}
 }

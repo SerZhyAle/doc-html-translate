@@ -94,6 +94,43 @@ test("on the viewer tab the switch acts on the shown document's site", async () 
   assert.equal(local.document.getElementById("site").disabled, true);
 });
 
+test("allowlist popup shows membership and changes only the allowlist", async () => {
+  const { document, window, store } = await openPopup("https://books.test/shelf/", {
+    enabledByDefault: true, siteMode: "allowlist", disabledHosts: ["books.test"], allowedHosts: [],
+  });
+  assert.match(document.getElementById("site-mode").textContent, /Only listed sites/);
+  assert.match(document.getElementById("site-membership").textContent, /Not in the allowlist/);
+  const site = document.getElementById("site");
+  assert.equal(site.checked, false);
+  site.checked = true;
+  site.dispatchEvent(new window.Event("change"));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.deepEqual(store.options.allowedHosts, ["books.test"]);
+  assert.deepEqual(store.options.disabledHosts, ["books.test"]);
+  assert.match(document.getElementById("site-membership").textContent, /In the allowlist/);
+});
+
+test("a listed parent domain covers its subdomains in the popup", async () => {
+  const { document, window, store } = await openPopup("https://reader.books.test/shelf/", {
+    enabledByDefault: true, siteMode: "allowlist", allowedHosts: ["books.test"], disabledHosts: [],
+  });
+  const site = document.getElementById("site");
+  assert.equal(site.checked, true);
+  site.checked = false;
+  site.dispatchEvent(new window.Event("change"));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.deepEqual(store.options.allowedHosts, []);
+});
+
+test("the popup finds membership in a long allowlist", async () => {
+  const allowedHosts = Array.from({ length: 500 }, (_, i) => `site${i}.test`);
+  const { document } = await openPopup("https://site499.test/shelf/", {
+    enabledByDefault: true, siteMode: "allowlist", allowedHosts, disabledHosts: [],
+  });
+  assert.equal(document.getElementById("site").checked, true);
+  assert.match(document.getElementById("site-membership").textContent, /In the allowlist/);
+});
+
 // The popup speaks for the tab it was opened on: a supported document gets the one-click
 // open instead of routing its reader through the empty viewer state.
 test("a tab holding a supported document is named, and its button opens it in the reader", async () => {

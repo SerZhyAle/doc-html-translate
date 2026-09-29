@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "Recolher",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Pesquisar"},
   "vSearchText": {"message":"Pesquisar texto"},
   "vSearchScope": {"message":"Âmbito"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "Largura total",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Modo de sites"},
+  "siteModeAll": {"message": "Todos os sites exceto os desativados"},
+  "siteModeAllowlist": {"message": "Apenas sites da lista"},
+  "siteModeHint": {"message": "A reformatação automática vem desativada por padrão. Ative-a acima e escolha os sites. As duas listas são mantidas ao mudar de modo."},
+  "popupInAllowlist": {"message": "Na lista de permitidos"},
+  "popupNotInAllowlist": {"message": "Fora da lista de permitidos"},
+  "popupInDisablelist": {"message": "Na lista de desativados"},
+  "popupNotInDisablelist": {"message": "Fora da lista de desativados"},
+  "optAllowedSites": {"message": "Sites ativos no modo de lista"},
+  "optAllowedSitesHint": {"message": "Gerencie estes sites com o botão «Neste site» no menu da extensão."}
 }

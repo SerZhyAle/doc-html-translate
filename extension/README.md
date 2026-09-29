@@ -209,7 +209,7 @@ the content of unrelated pages:
 | `3/7` (blue) | Progress of a job that counts: pages rendered, or images OCR'd. |
 | `✓` (green) | The job finished; clears itself after a few seconds, or on the next navigation. |
 | `!` (red) | The last job failed (a document that would not load or run). Clears on the next navigation or the next document. |
-| `off` (grey) | Reflow is switched off for this tab's site; its documents open as usual. |
+| `off` (grey) | Reflow is switched off for this tab's site under the active site mode; its documents open as usual. |
 | *(none)* | Nothing happening on this tab. |
 
 Two keyboard shortcuts are built in (change them in the browser's own
@@ -261,7 +261,15 @@ What the file holds is stated before and after the save:
   `.pdf` inside a query string (`viewer?file=a.pdf`) is left to the site. DNR can't see the response
   Content-Type before the request; when a document URL answers with a web page (a sign-in wall), the
   viewer says so and offers **Open original**.
-- The popup's **On this site** switch leaves a site's documents alone wherever they are served from: a
+- Automatic interception is off on a fresh install. After enabling it, **Site mode** in Options chooses
+  **All sites except disabled sites** (the default) or **Only listed sites**. Both lists are preserved
+  when switching modes; the popup shows the active mode and the current site's membership. In only
+  listed sites mode, an empty list intercepts nothing. A listed domain also covers its subdomains.
+  Local `file://` documents have no website to list, so their existing interception rule applies in
+  either mode when global automatic interception is enabled.
+- The popup's **On this site** switch controls the active mode's list. In all-sites mode it leaves a
+  site's documents alone; in only listed sites mode it adds or removes that site. This applies wherever
+  a site's documents are served from: a
   document on the site itself, and one on another host (a CDN) that a page of the site links to. On the
   viewer's own tab the switch names, and acts on, the site the shown document came from. A URL typed
   into the address bar has no page that opened it, so only its own host counts there.

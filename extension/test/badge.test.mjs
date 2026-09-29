@@ -93,6 +93,15 @@ test("a site switched off in the options wears the grey off badge; a site that i
   assert.equal(lastText(7), "");
 });
 
+test("allowlist mode shows off only outside its list", async () => {
+  const badge = await fresh();
+  const options = { enabledByDefault: true, siteMode: "allowlist", allowedHosts: ["books.test"], disabledHosts: ["books.test"] };
+  badge.tabBase(41, "https://books.test/", options);
+  assert.equal(lastText(41), "");
+  badge.tabBase(42, "https://other.test/", options);
+  assert.equal(lastText(42), "off");
+});
+
 test("a new job drops the previous job's flash, and re-enabling a site drops its off badge", async () => {
   const badge = await fresh();
   const options = { enabledByDefault: true, disabledHosts: ["www.quiet.test"] };

@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "Zuklappen",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Suche"},
   "vSearchText": {"message":"Text suchen"},
   "vSearchScope": {"message":"Bereich"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "Volle Breite",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Website-Modus"},
+  "siteModeAll": {"message": "Alle Websites außer deaktivierten"},
+  "siteModeAllowlist": {"message": "Nur aufgeführte Websites"},
+  "siteModeHint": {"message": "Automatischer Textumbruch ist standardmäßig aus. Aktivieren Sie ihn oben und wählen Sie die Websites. Beide Listen bleiben beim Wechsel erhalten."},
+  "popupInAllowlist": {"message": "In der Zulassungsliste"},
+  "popupNotInAllowlist": {"message": "Nicht in der Zulassungsliste"},
+  "popupInDisablelist": {"message": "In der Sperrliste"},
+  "popupNotInDisablelist": {"message": "Nicht in der Sperrliste"},
+  "optAllowedSites": {"message": "Websites mit Textumbruch im Modus „Nur aufgeführte Websites“"},
+  "optAllowedSitesHint": {"message": "Verwalten Sie diese über den Schalter „Auf dieser Website“ im Popup."}
 }

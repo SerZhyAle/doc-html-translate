@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "سمیٹیں",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"تلاش"},
   "vSearchText": {"message":"متن تلاش کریں"},
   "vSearchScope": {"message":"دائرہ"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "مکمل چوڑائی",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "سائٹ موڈ"},
+  "siteModeAll": {"message": "بند سائٹس کے علاوہ تمام سائٹس"},
+  "siteModeAllowlist": {"message": "صرف فہرست میں شامل سائٹس"},
+  "siteModeHint": {"message": "خودکار ری فلو پہلے سے بند ہے۔ اسے اوپر فعال کریں اور سائٹس منتخب کریں۔ موڈ بدلنے سے دونوں فہرستیں محفوظ رہتی ہیں۔"},
+  "popupInAllowlist": {"message": "اجازت کی فہرست میں"},
+  "popupNotInAllowlist": {"message": "اجازت کی فہرست میں نہیں"},
+  "popupInDisablelist": {"message": "بند فہرست میں"},
+  "popupNotInDisablelist": {"message": "بند فہرست میں نہیں"},
+  "optAllowedSites": {"message": "صرف درج شدہ سائٹس کے موڈ میں فعال سائٹس"},
+  "optAllowedSitesHint": {"message": "پاپ اپ میں «اس سائٹ پر» سوئچ سے ان کا نظم کریں۔"}
 }

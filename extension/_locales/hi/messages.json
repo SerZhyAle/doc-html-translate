@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "संक्षिप्त करें",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"खोजें"},
   "vSearchText": {"message":"पाठ खोजें"},
   "vSearchScope": {"message":"दायरा"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "पूरी चौड़ाई",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "साइट मोड"},
+  "siteModeAll": {"message": "अक्षम साइटों को छोड़कर सभी साइटें"},
+  "siteModeAllowlist": {"message": "केवल सूचीबद्ध साइटें"},
+  "siteModeHint": {"message": "स्वचालित रीफ़्लो डिफ़ॉल्ट रूप से बंद है। इसे ऊपर चालू करें और साइटें चुनें। मोड बदलने पर दोनों सूचियाँ बनी रहती हैं।"},
+  "popupInAllowlist": {"message": "अनुमति सूची में"},
+  "popupNotInAllowlist": {"message": "अनुमति सूची में नहीं"},
+  "popupInDisablelist": {"message": "बंद सूची में"},
+  "popupNotInDisablelist": {"message": "बंद सूची में नहीं"},
+  "optAllowedSites": {"message": "केवल सूचीबद्ध साइटों वाले मोड में चालू साइटें"},
+  "optAllowedSitesHint": {"message": "पॉपअप में «इस साइट पर» स्विच से इन्हें प्रबंधित करें।"}
 }

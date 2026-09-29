@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "Contraer",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Buscar"},
   "vSearchText": {"message":"Buscar texto"},
   "vSearchScope": {"message":"Ámbito"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "Ancho completo",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Modo de sitios"},
+  "siteModeAll": {"message": "Todos los sitios excepto los desactivados"},
+  "siteModeAllowlist": {"message": "Solo los sitios de la lista"},
+  "siteModeHint": {"message": "El reajuste automático está desactivado de forma predeterminada. Actívalo arriba y elige los sitios. Al cambiar de modo se conservan ambas listas."},
+  "popupInAllowlist": {"message": "En la lista de permitidos"},
+  "popupNotInAllowlist": {"message": "Fuera de la lista de permitidos"},
+  "popupInDisablelist": {"message": "En la lista de desactivados"},
+  "popupNotInDisablelist": {"message": "Fuera de la lista de desactivados"},
+  "optAllowedSites": {"message": "Sitios activos en el modo de lista"},
+  "optAllowedSitesHint": {"message": "Gestiona estos sitios con el interruptor «En este sitio» de la ventana emergente."}
 }

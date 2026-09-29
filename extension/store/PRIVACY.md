@@ -31,7 +31,8 @@ None. We have no servers and receive no data from the extension.
 
 ## Data stored on your device
 The extension uses the browser's local extension storage only to remember your settings - whether the
-viewer is on (globally and per site), your reading preferences (font size, font family, theme), the
+viewer is on (globally and per site), which site mode you chose and both its disable and allow lists,
+your reading preferences (font size, font family, theme), the
 interface language and whether remote images may load - which OCR languages you have downloaded, and the
 short summary of the most recent document that "Copy diagnostics" reads. The recognition data of a
 downloaded language is cached in the browser's storage for reuse. None of it leaves your device, and it
@@ -44,6 +45,11 @@ settings, and the format, page count and last error of the most recent document.
 text, no file name and no URL, and your per-site exceptions are reported as a count rather than as host
 names. The button adds no permission and sends nothing anywhere - it writes to the clipboard only, and
 you decide whether to paste it into a mail to the author.
+
+Automatic document interception is off on a fresh install. If you enable it, it applies to all sites
+except those you disable by default. You can instead choose only listed sites in Options; switching
+modes keeps both lists on your device. Local file URLs keep their existing interception behavior in
+either site mode when automatic interception is enabled.
 
 ## Network access
 <!-- security-posture:begin ext-network (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->

@@ -718,7 +718,8 @@
   "ariaCollapse": {
     "message": "Collapse",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Search"},
   "vSearchText": {"message":"Search text"},
   "vSearchScope": {"message":"Scope"},
@@ -786,5 +787,15 @@
   "optWidthFull": {
     "message": "Full width",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Site mode"},
+  "siteModeAll": {"message": "All sites except disabled sites"},
+  "siteModeAllowlist": {"message": "Only listed sites"},
+  "siteModeHint": {"message": "Automatic reflow is off by default. Turn it on above, then choose which sites it applies to. Switching modes keeps both lists."},
+  "popupInAllowlist": {"message": "In the allowlist"},
+  "popupNotInAllowlist": {"message": "Not in the allowlist"},
+  "popupInDisablelist": {"message": "In the disable list"},
+  "popupNotInDisablelist": {"message": "Not in the disable list"},
+  "optAllowedSites": {"message": "Sites where reflow is on in only listed sites mode"},
+  "optAllowedSitesHint": {"message": "Manage these from the toolbar popup's \"On this site\" switch while only listed sites mode is selected."}
 }

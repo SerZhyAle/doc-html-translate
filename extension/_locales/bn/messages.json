@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "সংকুচিত করুন",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"অনুসন্ধান"},
   "vSearchText": {"message":"পাঠ খুঁজুন"},
   "vSearchScope": {"message":"পরিসর"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "পুরো প্রস্থ",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "সাইট মোড"},
+  "siteModeAll": {"message": "বন্ধ করা সাইট ছাড়া সব সাইট"},
+  "siteModeAllowlist": {"message": "শুধু তালিকাভুক্ত সাইট"},
+  "siteModeHint": {"message": "স্বয়ংক্রিয় রিফ্লো ডিফল্টভাবে বন্ধ থাকে। উপরে চালু করে সাইট বেছে নিন। মোড বদলালেও দুটি তালিকা থাকে।"},
+  "popupInAllowlist": {"message": "অনুমোদিত তালিকায় আছে"},
+  "popupNotInAllowlist": {"message": "অনুমোদিত তালিকায় নেই"},
+  "popupInDisablelist": {"message": "বন্ধ তালিকায় আছে"},
+  "popupNotInDisablelist": {"message": "বন্ধ তালিকায় নেই"},
+  "optAllowedSites": {"message": "শুধু তালিকাভুক্ত সাইট মোডে চালু সাইট"},
+  "optAllowedSitesHint": {"message": "পপআপের «এই সাইটে» সুইচ দিয়ে এগুলো পরিচালনা করুন।"}
 }

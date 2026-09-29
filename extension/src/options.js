@@ -1,5 +1,5 @@
 // options.js - default on/off, reading theme, source-language hint, image OCR + language
-// downloads, and a view of the per-site disable list. Persists the shared `options` object.
+// downloads, the site mode and both site lists. Persists the shared `options` object.
 
 import { renderOcrLangs } from "./ocr-lang-ui.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
@@ -18,6 +18,8 @@ const enabledEl = document.getElementById("enabled");
 const themeEl = document.getElementById("theme");
 const langEl = document.getElementById("lang");
 const hostsEl = document.getElementById("hosts");
+const allowedHostsEl = document.getElementById("allowed-hosts");
+const siteModeEl = document.getElementById("site-mode");
 const ocrImagesEl = document.getElementById("ocr-images");
 const allowRemoteEl = document.getElementById("allow-remote");
 const ocrLangsEl = document.getElementById("ocr-langs");
@@ -56,13 +58,13 @@ function flash(id) {
   e._hideTimer = setTimeout(() => { e.classList.remove("show"); e.textContent = ""; }, 900);
 }
 
-function renderHosts(hosts) {
-  hostsEl.replaceChildren();
+function renderHosts(hosts, element, key) {
+  element.replaceChildren();
   if (!hosts.length) {
     const li = document.createElement("li");
     li.className = "hint";
     li.textContent = "None";
-    hostsEl.append(li);
+    element.append(li);
     return;
   }
   for (const h of hosts) {
@@ -71,22 +73,29 @@ function renderHosts(hosts) {
     btn.textContent = msg("optHostRemove", "Remove");
     btn.addEventListener("click", async () => {
       const o = await getOptions();
-      o.disabledHosts = o.disabledHosts.filter((x) => x !== h);
+      o[key] = (o[key] || []).filter((x) => x !== h);
       await setOptions(o);
-      renderHosts(o.disabledHosts);
+      renderHosts(o[key], element, key);
     });
     li.textContent = h;
     li.append(btn);
-    hostsEl.append(li);
+    element.append(li);
   }
 }
 
 async function init() {
   const o = await getOptions();
   enabledEl.checked = o.enabledByDefault;
+  siteModeEl.value = o.siteMode === "allowlist" ? "allowlist" : "all";
   themeEl.value = o.theme;
   langEl.value = o.sourceLang;
-  renderHosts(o.disabledHosts);
+  renderHosts(o.disabledHosts || [], hostsEl, "disabledHosts");
+  renderHosts(o.allowedHosts || [], allowedHostsEl, "allowedHosts");
+  siteModeEl.addEventListener("change", async () => {
+    const opts = await getOptions();
+    opts.siteMode = siteModeEl.value;
+    await setOptions(opts);
+  });
 
   ocrImagesEl.checked = o.ocrImages;
   ocrImagesEl.addEventListener("change", async () => {
@@ -122,7 +131,12 @@ async function init() {
   });
 
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.options) renderHosts((changes.options.newValue || {}).disabledHosts || []);
+    if (area === "local" && changes.options) {
+      const next = changes.options.newValue || {};
+      siteModeEl.value = next.siteMode === "allowlist" ? "allowlist" : "all";
+      renderHosts(next.disabledHosts || [], hostsEl, "disabledHosts");
+      renderHosts(next.allowedHosts || [], allowedHostsEl, "allowedHosts");
+    }
   });
 
   initDiagnostics();

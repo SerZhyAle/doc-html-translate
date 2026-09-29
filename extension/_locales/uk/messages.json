@@ -635,7 +635,8 @@
   "ariaCollapse": {
     "message": "Згорнути",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Пошук"},
   "vSearchText": {"message":"Шукати текст"},
   "vSearchScope": {"message":"Область"},
@@ -703,5 +704,15 @@
   "optWidthFull": {
     "message": "На всю ширину",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Режим сайтів"},
+  "siteModeAll": {"message": "Усі сайти, крім вимкнених"},
+  "siteModeAllowlist": {"message": "Лише сайти зі списку"},
+  "siteModeHint": {"message": "Автоматичну обробку за замовчуванням вимкнено. Увімкніть її вище та виберіть сайти. Обидва списки зберігаються при зміні режиму."},
+  "popupInAllowlist": {"message": "У списку дозволених"},
+  "popupNotInAllowlist": {"message": "Немає в списку дозволених"},
+  "popupInDisablelist": {"message": "У списку вимкнених"},
+  "popupNotInDisablelist": {"message": "Немає в списку вимкнених"},
+  "optAllowedSites": {"message": "Сайти з обробкою в режимі вибраних сайтів"},
+  "optAllowedSitesHint": {"message": "Керуйте списком перемикачем «На цьому сайті» у спливному вікні."}
 }

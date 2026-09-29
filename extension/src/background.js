@@ -2,15 +2,16 @@
 // toggle.
 //
 // Interception uses declarativeNetRequest *dynamic* rules built at runtime from
-// chrome.runtime.getURL(), so the extension id is never hardcoded. Two redirect
-// rules send main_frame requests for supported document extensions (http/https and
-// file://) to the reflow viewer. DNR matches the *request* URL, so documents served without
+// chrome.runtime.getURL(), so the extension id is never hardcoded. In all-sites mode two
+// redirect rules cover http(s) and file URLs; allowlist mode adds a second http(s) rule for
+// the initiator's domain. DNR matches the *request* URL, so documents served without
 // a matching extension in the URL are not intercepted - a documented limitation
 // (spec sec 4/7).
 
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX, isInterceptableUrl } from "./intercept.js";
 import { siteHost } from "./site-host.js";
+import { allowlistMode, siteEnabled, setSiteEnabled } from "./site-mode.js";
 import * as badge from "./badge.js";
 // The whole-page OCR broker attaches its own message and tab listeners on import; this file only
 // owns the menu entry that starts it. See DEV/plan/done/2026-09-19_page-ocr-overlay.md.
@@ -18,6 +19,7 @@ import { startRun as startPageOcr } from "./page-ocr.js";
 
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
+const RULE_INITIATOR = 3;
 
 // The intercept patterns live in intercept.js, shared with the popup and the command handler;
 // re-exported here for the worker's own tests.
@@ -41,17 +43,18 @@ function viewerBase() {
   return chrome.runtime.getURL("src/viewer.html");
 }
 
-// ruleDomains keeps the disabled-host entries DNR accepts: lower-case ASCII (punycode) domain
+// ruleDomains keeps the site-list entries DNR accepts: lower-case ASCII (punycode) domain
 // names. The popup stores location.hostname, which for an IPv6 page is "[::1]" and for an IDN is
 // already punycode, but a single entry DNR rejects fails the whole atomic update - interception
 // then silently keeps the previous rules. An entry that cannot be a DNR domain is dropped instead.
 export function ruleDomains(hosts) {
   const out = [];
+  const seen = new Set();
   for (const h of Array.isArray(hosts) ? hosts : []) {
     let host;
     try { host = new URL(`http://${String(h).trim()}/`).hostname; } catch { continue; }
     if (!host || !/^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(host)) continue;
-    if (!out.includes(host)) out.push(host);
+    if (!seen.has(host)) { seen.add(host); out.push(host); }
   }
   return out;
 }
@@ -71,15 +74,6 @@ function buildRules(options) {
       resourceTypes: ["main_frame"],
     },
   };
-  // A switched-off site means its documents are left alone wherever they are served from: a PDF
-  // on the site itself (the request's domain) and one on a CDN or another host that a page of the
-  // site links to (the navigation's initiator). Keying on only one of them made the switch a
-  // no-op for every cross-host link. See site-host.js for which host the popup stores.
-  const excluded = ruleDomains(options.disabledHosts);
-  if (excluded.length) {
-    httpsRule.condition.excludedRequestDomains = excluded;
-    httpsRule.condition.excludedInitiatorDomains = excluded;
-  }
   const fileRule = {
     id: RULE_FILE,
     priority: 1,
@@ -89,6 +83,25 @@ function buildRules(options) {
       resourceTypes: ["main_frame"],
     },
   };
+  // A switched-off site means its documents are left alone wherever they are served from: a PDF
+  // on the site itself (the request's domain) and one on a CDN or another host that a page of the
+  // site links to (the navigation's initiator). Keying on only one of them made the switch a
+  // no-op for every cross-host link. See site-host.js for which host the popup stores.
+  const excluded = ruleDomains(options.disabledHosts);
+  if (allowlistMode(options)) {
+    const allowed = ruleDomains(options.allowedHosts);
+    if (!allowed.length) return [fileRule];
+    httpsRule.condition.requestDomains = allowed;
+    const initiatorRule = structuredClone(httpsRule);
+    initiatorRule.id = RULE_INITIATOR;
+    delete initiatorRule.condition.requestDomains;
+    initiatorRule.condition.initiatorDomains = allowed;
+    return [httpsRule, fileRule, initiatorRule];
+  }
+  if (excluded.length) {
+    httpsRule.condition.excludedRequestDomains = excluded;
+    httpsRule.condition.excludedInitiatorDomains = excluded;
+  }
   return [httpsRule, fileRule];
 }
 
@@ -101,7 +114,7 @@ function syncRules() {
   const run = syncTail.then(async () => {
     const options = await getOptions();
     await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [RULE_HTTPS, RULE_FILE],
+      removeRuleIds: [RULE_HTTPS, RULE_FILE, RULE_INITIATOR],
       addRules: buildRules(options),
     });
   });
@@ -218,7 +231,13 @@ chrome.runtime.onStartup.addListener(() => { syncRules(); setupContextMenu(); })
 
 // Rebuild rules whenever the options change (popup/options page write storage).
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.options) syncRules();
+  if (area === "local" && changes.options) {
+    syncRules();
+    chrome.tabs.query({}).then((tabs) => {
+      const options = { ...DEFAULT_OPTIONS, ...(changes.options.newValue || {}) };
+      for (const tab of tabs) if (tab.id != null) badge.tabBase(tab.id, tab.url, options);
+    }).catch(() => {});
+  }
 });
 
 // Per-tab bypass rule id allocator. Tab ids grow unbounded over a session, so a
@@ -291,10 +310,7 @@ chrome.commands.onCommand.addListener(async (command) => {
     if (!host) return;
     const options = await getOptions();
     if (!options.enabledByDefault) return;
-    const set = new Set(options.disabledHosts || []);
-    if (set.has(host)) set.delete(host);
-    else set.add(host);
-    options.disabledHosts = [...set];
+    setSiteEnabled(options, host, !siteEnabled(options, host));
     await chrome.storage.local.set({ options });
     // The rules rebuild from the storage change; the badge has no listener of its own.
     badge.tabBase(tab.id, tab.url, options);

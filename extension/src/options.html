@@ -99,9 +99,23 @@
   </div>
 
   <div class="field">
+    <label for="site-mode" data-i18n="siteModeLabel">Site mode</label>
+    <select id="site-mode">
+      <option value="all" data-i18n="siteModeAll">All sites except disabled sites</option>
+      <option value="allowlist" data-i18n="siteModeAllowlist">Only listed sites</option>
+    </select>
+    <div class="hint" data-i18n="siteModeHint">Automatic reflow is off by default. Turn it on above, then choose which sites it applies to. Switching modes keeps both lists.</div>
+  </div>
+
+  <div class="field">
     <label data-i18n="optDisabledSites">Sites where reflow is off</label>
     <ul class="hosts" id="hosts"><li class="hint">None</li></ul>
     <div class="hint">Manage these from the toolbar popup's "On this site" switch.</div>
+  </div>
+  <div class="field">
+    <label data-i18n="optAllowedSites">Sites where reflow is on in only listed sites mode</label>
+    <ul class="hosts" id="allowed-hosts"><li class="hint">None</li></ul>
+    <div class="hint" data-i18n="optAllowedSitesHint">Manage these from the toolbar popup's "On this site" switch while only listed sites mode is selected.</div>
   </div>
 
   <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">

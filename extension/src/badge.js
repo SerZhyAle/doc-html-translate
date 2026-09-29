@@ -11,6 +11,7 @@
 // tabs.onUpdated in background.js).
 
 import { siteHost } from "./site-host.js";
+import { siteEnabled } from "./site-mode.js";
 
 // One badge cell, in the popup's own palette: the product blue while work runs, green for a
 // finished run, red for a failure, grey for a site whose documents are left alone.
@@ -111,7 +112,7 @@ export function tabReset(tabId) {
 export function tabBase(tabId, url, options) {
   const e = state(tabId);
   const host = siteHost(String(url || ""), chrome.runtime.getURL("src/viewer.html"));
-  e.off = !!(host && options.enabledByDefault && (options.disabledHosts || []).includes(host));
+  e.off = !!(host && options.enabledByDefault && !siteEnabled(options, host));
   refresh(tabId);
 }
 

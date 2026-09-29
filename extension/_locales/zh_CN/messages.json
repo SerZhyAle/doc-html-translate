@@ -687,5 +687,15 @@
   "optWidthFull": {
     "message": "全宽",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "网站模式"},
+  "siteModeAll": {"message": "除已禁用网站外的所有网站"},
+  "siteModeAllowlist": {"message": "仅列表中的网站"},
+  "siteModeHint": {"message": "自动重排默认关闭。请先在上方开启，再选择适用的网站。切换模式会保留两个列表。"},
+  "popupInAllowlist": {"message": "在允许列表中"},
+  "popupNotInAllowlist": {"message": "不在允许列表中"},
+  "popupInDisablelist": {"message": "在禁用列表中"},
+  "popupNotInDisablelist": {"message": "不在禁用列表中"},
+  "optAllowedSites": {"message": "仅列表网站模式下启用的网站"},
+  "optAllowedSitesHint": {"message": "在弹出窗口中使用“在此网站上”开关管理。"}
 }

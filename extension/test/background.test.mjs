@@ -100,7 +100,7 @@ test("install with default options clears interception and builds the context me
   await settle();
 
   // Interception is opt-in, so the defaults must remove both redirect rules and add none.
-  assert.deepEqual(calls.dynamicRules.at(-1), { removeRuleIds: [1, 2], addRules: [] });
+  assert.deepEqual(calls.dynamicRules.at(-1), { removeRuleIds: [1, 2, 3], addRules: [] });
 
   // One root and every action hangs off it - two top-level entries would make Chrome print its
   // own long group header.
@@ -144,6 +144,35 @@ test("a switched-off site's documents are left alone wherever they are served fr
   const [https] = calls.dynamicRules.at(-1).addRules;
   assert.deepEqual(https.condition.excludedRequestDomains, ["books.test"], "a document on the site itself");
   assert.deepEqual(https.condition.excludedInitiatorDomains, ["books.test"], "a document opened from the site's pages");
+});
+
+test("allowlist rules cover the document host and its initiator without changing either stored list", async () => {
+  const disabledHosts = ["old.test"];
+  const allowedHosts = Array.from({ length: 500 }, (_, i) => `site${i}.test`);
+  storedOptions = { enabledByDefault: true, siteMode: "allowlist", disabledHosts, allowedHosts };
+  fire("storageChanged", { options: { newValue: storedOptions } }, "local");
+  await settle();
+  const { removeRuleIds, addRules } = calls.dynamicRules.at(-1);
+  assert.deepEqual(removeRuleIds, [1, 2, 3]);
+  assert.equal(addRules.length, 3, "file URLs keep their existing rule in both modes");
+  assert.deepEqual(addRules[0].condition.requestDomains, allowedHosts);
+  assert.deepEqual(addRules[2].condition.initiatorDomains, allowedHosts);
+  assert.equal(addRules[0].condition.excludedRequestDomains, undefined);
+  assert.equal(addRules[2].condition.excludedInitiatorDomains, undefined);
+  assert.equal(addRules[1].id, 2);
+  assert.deepEqual(storedOptions.disabledHosts, disabledHosts);
+  assert.deepEqual(storedOptions.allowedHosts, allowedHosts);
+
+  storedOptions.siteMode = "all";
+  fire("storageChanged", { options: { newValue: storedOptions } }, "local");
+  await settle();
+  assert.equal(calls.dynamicRules.at(-1).addRules.length, 2);
+  assert.deepEqual(calls.dynamicRules.at(-1).addRules[0].condition.excludedRequestDomains, disabledHosts);
+  storedOptions.siteMode = "allowlist";
+  storedOptions.allowedHosts = [];
+  fire("storageChanged", { options: { newValue: storedOptions } }, "local");
+  await settle();
+  assert.deepEqual(calls.dynamicRules.at(-1).addRules.map((r) => r.id), [2]);
 });
 
 test("interception matches the document extension in the URL path only", async () => {
@@ -326,6 +355,20 @@ test("the toggle-interception command flips the current site in the options and 
   await settle();
   assert.deepEqual(storedOptions.disabledHosts, [], "a second press re-enables the site");
   assert.equal(badgeText(7), "");
+});
+
+test("the shortcut toggles allowlist membership and preserves the disable list", async () => {
+  storedOptions = { enabledByDefault: true, siteMode: "allowlist", allowedHosts: [], disabledHosts: ["books.test"] };
+  activeTabValue = { id: 71, url: "https://books.test/shelf/" };
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.allowedHosts, ["books.test"]);
+  assert.deepEqual(storedOptions.disabledHosts, ["books.test"]);
+  assert.equal(badgeText(71), "");
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.allowedHosts, []);
+  assert.equal(badgeText(71), "off");
 });
 
 test("the toggle-interception command is a no-op on browser pages and while interception is globally off", async () => {

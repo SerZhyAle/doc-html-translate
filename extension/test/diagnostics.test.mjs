@@ -42,11 +42,16 @@ test("reportText names the version and the last format", async () => {
 test("the report carries no URL and no host name", async () => {
   await recordRun({ format: "pdf", pages: 3 });
 
-  const text = await reportText("26.811.1600", { disabledHosts: ["secret-intranet.example.com"] });
+  const text = await reportText("26.811.1600", {
+    disabledHosts: ["secret-intranet.example.com"], allowedHosts: ["private-library.example.com"], siteMode: "allowlist",
+  });
   assert.ok(!text.includes("http"), `report contains a URL:\n${text}`);
   assert.ok(!text.includes("secret-intranet.example.com"), `report names a disabled host:\n${text}`);
+  assert.ok(!text.includes("private-library.example.com"), `report names an allowed host:\n${text}`);
   // The count is what a report needs; which sites someone reads is not diagnostic.
   assert.match(text, /disabled hosts: 1/);
+  assert.match(text, /allowed hosts: 1/);
+  assert.match(text, /site mode: allowlist/);
 });
 
 test("recordRun keeps no document identity and truncates the error", async () => {

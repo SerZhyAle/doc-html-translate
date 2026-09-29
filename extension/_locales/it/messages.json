@@ -619,7 +619,8 @@
   "ariaCollapse": {
     "message": "Comprimi",
     "description": "Accessible name of an open table-of-contents branch's chevron (nav.collapse)."
-  },
+  }
+,
   "vSearch": {"message":"Cerca"},
   "vSearchText": {"message":"Cerca testo"},
   "vSearchScope": {"message":"Ambito"},
@@ -687,5 +688,15 @@
   "optWidthFull": {
     "message": "A tutta larghezza",
     "description": "Column width option: no width cap. Same words as the desktop reader."
-  }
+  },
+  "siteModeLabel": {"message": "Modalità siti"},
+  "siteModeAll": {"message": "Tutti i siti tranne quelli disattivati"},
+  "siteModeAllowlist": {"message": "Solo i siti elencati"},
+  "siteModeHint": {"message": "La riformattazione automatica è disattivata per impostazione predefinita. Attivala sopra e scegli i siti. Il cambio di modalità conserva entrambi gli elenchi."},
+  "popupInAllowlist": {"message": "Nell'elenco consentiti"},
+  "popupNotInAllowlist": {"message": "Non nell'elenco consentiti"},
+  "popupInDisablelist": {"message": "Nell'elenco disattivati"},
+  "popupNotInDisablelist": {"message": "Non nell'elenco disattivati"},
+  "optAllowedSites": {"message": "Siti attivi nella modalità solo siti elencati"},
+  "optAllowedSitesHint": {"message": "Gestiscili con l'interruttore «Su questo sito» nel popup."}
 }

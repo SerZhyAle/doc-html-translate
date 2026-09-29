@@ -1236,6 +1236,11 @@ the popup toggle is on); the "Convert with doc-html-translate" right-click item
 ([`background.js`](../extension/src/background.js)) is the always-available on-demand path. See
 [Intentional divergences](#intentional-divergences-do-not-fix) for the MSIX exception.
 
+The extension alone has a site mode for automatic interception: all sites except the disable list
+(default), or only the allowlist. Its two lists survive mode changes. The desktop editions have no
+always-on website interception surface, so this control has no desktop counterpart. The global
+auto-interception switch remains off by default in either mode.
+
 ### Product URL and feedback address
 
 **Guard:** Prose only. Spot-checked consistent on 2026-08-15 across the 13 splash files, the GUI and the

@@ -1,8 +1,8 @@
 // site-host.js - the viewer's ?file= parameter, and the site the popup's per-site switch acts on.
 //
-// The switch means "leave the documents of this site alone". background.js excludes a switched-off
-// host both as the document's own host and as the host of the page the document was opened from,
-// so a PDF on a CDN linked from that site is left alone too. On the reflow viewer's own tab the
+// The switch controls the active site's list. background.js matches both the document's own host
+// and the host of the page it was opened from, so a PDF on a CDN linked from that site follows
+// the same setting. On the reflow viewer's own tab the
 // site is the one the shown document came from: the extension's id is not a site anyone can mean.
 
 // The interception rule substitutes the original URL after `file=` *without*

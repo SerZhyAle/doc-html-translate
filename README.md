@@ -29,6 +29,7 @@ The desktop app and the extension are independent and complementary: the app con
 
 ## Features
 
+- Browser extension site mode: automatic interception starts off; when enabled, it can cover all sites except disabled ones or only sites you list. The popup switch manages the active list, and both lists survive mode changes.
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
 - Read comics: CBZ / CBR / CB7 / CBT comic archives open page by page, with the text in speech bubbles recognized (OCR) and laid over each page as translatable plates - so Chrome's "Translate page" works on the bubbles. OCR is automatic (a comic has no text layer to translate otherwise)
 - Translate a standalone image: pass a PNG/JPG/JPEG/WebP/GIF/BMP/TIFF and the app OCRs it and lays translatable text plates over the picture (Chrome's built-in page translation then works in place - the same behaviour as the browser extension). OCR needs a `tesseract` engine (see `-ocr-lang`)
