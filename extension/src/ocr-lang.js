@@ -26,6 +26,7 @@ export const LANGS = [
   { code: "por", name: "Portuguese" },
   { code: "pol", name: "Polish" },
   { code: "chi_sim", name: "Chinese (simplified)" },
+  { code: "chi_tra", name: "Chinese (traditional)" },
   { code: "kor", name: "Korean" },
 ];
 

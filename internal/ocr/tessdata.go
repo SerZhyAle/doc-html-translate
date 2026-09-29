@@ -34,6 +34,7 @@ var Available = []LangInfo{
 	{"por", "Portuguese"},
 	{"pol", "Polish"},
 	{"chi_sim", "Chinese (simplified)"},
+	{"chi_tra", "Chinese (traditional)"},
 	{"kor", "Korean"},
 }
 
@@ -229,11 +230,21 @@ var iso2tess = map[string]string{
 	"zh": "chi_sim", "ko": "kor",
 }
 
+// region2tess overrides the plain language mapping for the subtags that name a different
+// catalogue pack: the traditional script and the regions that print it (zh-Hant, zh-TW,
+// zh-HK, zh-MO) select chi_tra, whose data reads those forms - plain zh stays chi_sim,
+// which is what the subtag-less code means in BCP-47. Consulted before the base-subtag
+// fallback, so zh-TW is not folded back to zh.
+var region2tess = map[string]string{
+	"zh-hant": "chi_tra", "zh-tw": "chi_tra", "zh-hk": "chi_tra", "zh-mo": "chi_tra",
+}
+
 // TessLang derives the OCR language from a -src code (OCR-INVOCATION: derive from -src, else eng).
-// A region subtag names the same pack as its language (pt-BR is por, zh-CN is chi_sim), a catalog
-// Tesseract name passes as is, and anything else - a language the catalog does not offer - gives
-// eng, so the script check still gets its chance to correct it. A "+"-joined value keeps the parts
-// that derive a pack.
+// A region subtag names the same pack as its language (pt-BR is por, zh-CN is chi_sim) except
+// where the subtag names a script the base pack cannot read (zh-TW, zh-Hant are chi_tra), a
+// catalog Tesseract name passes as is, and anything else - a language the catalog does not
+// offer - gives eng, so the script check still gets its chance to correct it. A "+"-joined
+// value keeps the parts that derive a pack.
 func TessLang(code string) string {
 	var out []string
 	for _, part := range strings.Split(strings.ToLower(code), "+") {
@@ -252,7 +263,11 @@ func catalogLang(code string) string {
 	if t, ok := iso2tess[code]; ok {
 		return t
 	}
-	if base, _, ok := strings.Cut(strings.ReplaceAll(code, "_", "-"), "-"); ok {
+	norm := strings.ReplaceAll(code, "_", "-")
+	if t, ok := region2tess[norm]; ok {
+		return t
+	}
+	if base, _, ok := strings.Cut(norm, "-"); ok {
 		if t, ok := iso2tess[base]; ok {
 			return t
 		}

@@ -51,8 +51,8 @@ var osdScriptLine = regexp.MustCompile(`(?m)^Script:\s*(\S+)\s*$[\s\S]*?^Script 
 var scriptOfLang = map[string]string{
 	"rus": "Cyrillic", "ukr": "Cyrillic",
 	"jpn": "Japanese", "jpn_vert": "Japanese",
-	"chi_sim": "Han",
-	"kor":     "Hangul",
+	"chi_sim": "Han", "chi_tra": "Han",
+	"kor": "Hangul",
 }
 
 // osdScriptAliases folds the several names Tesseract's OSD gives one writing system onto the names

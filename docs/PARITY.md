@@ -815,8 +815,11 @@ their own test where one exists.
   gzipped build from projectnaptha itself and caches it in IndexedDB, so the bytes it receives are
   neither the plain files nor seen by extension code. Its catalogue gate is the `LANGS` list the
   picker is built from.
-- **Language catalog = 13** on both sides (`eng rus ukr jpn jpn_vert deu fra spa ita por pol chi_sim
-  kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`.
+- **Language catalog = 14** on both sides (`eng rus ukr jpn jpn_vert deu fra spa ita por pol chi_sim
+  chi_tra kor`): `tessdata.go` `Available` == `ocr-lang.js` `LANGS`. (`chi_tra` is ticket 74,
+  2026-09-29: Traditional Chinese had no pack, so Taiwan/Hong Kong/Macau and pre-1950s printing
+  could not be OCR'd; `chi_tra_vert` was measured on the ticket's corpus cartoon and declined -
+  the hand-lettered vertical inscription reads no better with it than with `chi_tra`.)
 - **Overlay grouping constants** identical: `OCR_MIN_LINE_CONF = 50`, `OCR_CLUSTER_PITCH_FACTOR = 1.2`,
   `OCR_MAX_LEADING_RATIO = 3`, `OCR_TYPE_SIZE_RATIO = 1.6`, `OCR_MAX_PLATE_COVERAGE = 0.52` and
   `OCR_MIN_PLATE_LINE_FILL = 0.72` (`tesseract.go` `ocrMinLineConf` /

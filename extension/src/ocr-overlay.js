@@ -826,7 +826,7 @@ export async function overlayImage(source, { lang = "eng", onProgress, isCancell
 // translate offer).
 const HTML_LANG = {
   eng: "en", rus: "ru", ukr: "uk", jpn: "ja", jpn_vert: "ja",
-  deu: "de", fra: "fr", spa: "es", ita: "it", por: "pt", pol: "pl", chi_sim: "zh", kor: "ko",
+  deu: "de", fra: "fr", spa: "es", ita: "it", por: "pt", pol: "pl", chi_sim: "zh", chi_tra: "zh", kor: "ko",
 };
 export function ocrLangToHtmlLang(code) {
   return HTML_LANG[code] || "en";

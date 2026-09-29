@@ -8,7 +8,7 @@ const OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 const UI_LANGS = new Set(["", "en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh"]);
 const SOURCE_LANGS = new Set(["auto", "en", "ru", "uk", "fr", "de", "es", "it", "pt", "zh", "ja", "ko", "ar"]);
 const THEMES = new Set(["light", "sepia", "dark", "night"]);
-const OCR_LANGS = new Set(["eng", "rus", "ukr", "jpn", "jpn_vert", "deu", "fra", "spa", "ita", "por", "pol", "chi_sim", "kor"]);
+const OCR_LANGS = new Set(["eng", "rus", "ukr", "jpn", "jpn_vert", "deu", "fra", "spa", "ita", "por", "pol", "chi_sim", "chi_tra", "kor"]);
 const HOST = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 function object(value, name) {
