@@ -83,13 +83,14 @@ html.dht-ocr-off .ocr-box{display:none}`
 	compare(t, "overlay", rules(t, OverlayCSS(desktopOverlay)), rules(t, shipped))
 }
 
-// TestPaletteCSSMatchesShipped: the four reader themes as the desktop pages carried them on
-// 2026-08-15.
+// TestPaletteCSSMatchesShipped: the four reader themes as the desktop pages carry them since
+// the 2026-09-29 accessibility pass (ticket 57) re-derived the muted token - the shipped values
+// read 2.8-4.4:1 for secondary text, under WCAG AA's 4.5:1; see the ticket's checklist.
 func TestPaletteCSSMatchesShipped(t *testing.T) {
 	const shipped = `:root{--dht-bg:#faf9f7;--dht-fg:#1b1b1b;--dht-muted:#6b6b6b;--dht-bar-bg:#ffffff;--dht-bar-fg:#222222;--dht-border:#e2e0db;--dht-accent:#2563eb;--dht-link:#1a4fb4}
-html[data-dht-theme="sepia"]{--dht-bg:#f4ecd8;--dht-fg:#4a3f2f;--dht-muted:#7a6c54;--dht-bar-bg:#efe6cf;--dht-bar-fg:#4a3f2f;--dht-border:#ddd0b0;--dht-accent:#8a5a2b;--dht-link:#7a4a1b}
-html[data-dht-theme="dark"]{--dht-bg:#1a1a1c;--dht-fg:#e6e4df;--dht-muted:#9a9893;--dht-bar-bg:#232327;--dht-bar-fg:#e6e4df;--dht-border:#36363b;--dht-accent:#5b8dff;--dht-link:#8fb4ff}
-html[data-dht-theme="night"]{--dht-bg:#0a0a0b;--dht-fg:#9a9a9a;--dht-muted:#6a6a6a;--dht-bar-bg:#131315;--dht-bar-fg:#b8b8b8;--dht-border:#262629;--dht-accent:#5599d6;--dht-link:#6aa8e0}`
+html[data-dht-theme="sepia"]{--dht-bg:#f4ecd8;--dht-fg:#4a3f2f;--dht-muted:#6b5f48;--dht-bar-bg:#efe6cf;--dht-bar-fg:#4a3f2f;--dht-border:#ddd0b0;--dht-accent:#8a5a2b;--dht-link:#7a4a1b}
+html[data-dht-theme="dark"]{--dht-bg:#1a1a1c;--dht-fg:#e6e4df;--dht-muted:#aaa79f;--dht-bar-bg:#232327;--dht-bar-fg:#e6e4df;--dht-border:#36363b;--dht-accent:#5b8dff;--dht-link:#8fb4ff}
+html[data-dht-theme="night"]{--dht-bg:#0a0a0b;--dht-fg:#9a9a9a;--dht-muted:#8a8a86;--dht-bar-bg:#131315;--dht-bar-fg:#b8b8b8;--dht-border:#262629;--dht-accent:#5599d6;--dht-link:#6aa8e0}`
 	compare(t, "palette", rules(t, PaletteCSS(desktopPalette)), rules(t, shipped))
 }
 

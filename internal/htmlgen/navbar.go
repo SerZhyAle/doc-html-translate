@@ -45,6 +45,10 @@ const navBarCSS = `
     border-bottom: 1px solid var(--dht-border);
     display: flex;
     align-items: center;
+    /* wrap, like the extension viewer's toolbar: at 200% browser zoom or in a narrow
+       window the controls reflow onto a second line instead of running off the edge
+       (WCAG 1.4.4 / 1.4.10 - text zoom must not cost content or function). */
+    flex-wrap: wrap;
 		gap: 6px;
 		padding: 6px 10px;
     font-family: "Segoe UI", system-ui, Arial, sans-serif;
@@ -71,7 +75,7 @@ const navBarCSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 40%;
-    padding-right: 12px;
+    padding-inline-end: 12px;
   }
   .dht-navbar .nav-title {
     font-weight: 400;
@@ -80,24 +84,29 @@ const navBarCSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 30%;
-    padding-right: 12px;
+    padding-inline-end: 12px;
   }
 	.dht-navbar .nav-actions {
     display: flex;
     align-items: center;
 		gap: 4px;
-		margin-left: auto;
+		margin-inline-start: auto;
   }
   .dht-navbar .nav-info {
     font-size: 12px;
     color: var(--dht-muted);
-		margin-left: 4px;
+		margin-inline-start: 4px;
   }
   .dht-navbar a.nav-version {
     font-size: 11px;
     color: var(--dht-muted);
     padding: 2px 6px;
-    margin-left: 4px;
+    /* the version link is the bar's smallest target; the 24px floor is WCAG 2.2's
+       target-size minimum (2.5.8), which a bare 11px line misses */
+    display: inline-block;
+    box-sizing: border-box;
+    min-height: 24px;
+    margin-inline-start: 4px;
     text-decoration: none;
   }
   .dht-navbar a.nav-version:hover {
@@ -105,7 +114,7 @@ const navBarCSS = `
     background: rgba(127,127,127,0.14);
   }
   /* prev/next turn group, pinned to the far corner for easy "next" clicks */
-  .dht-navbar .nav-turn { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
+  .dht-navbar .nav-turn { display: flex; align-items: center; gap: 4px; margin-inline-start: 8px; }
   .dht-navbar .nav-turn a.dht-next { font-weight: 600; }
   img {
     max-height: 100vh;
@@ -383,18 +392,32 @@ var readerCSS = `
      and the image fills that, so the plates stay pinned to what they cover. */
   .pdf-page-scan { margin-left:50%; transform:translateX(-50%); }
   .pdf-page-scan img { display:block; width:100%; height:auto; max-height:none; margin:0; }
+  /* box-sizing + min-height hold every control to WCAG 2.2's 24px target-size floor
+     (2.5.8) whatever the book's own CSS does; the border-box keeps the padding inside it. */
   .dht-btn, .dht-navbar select, .dht-toolbar select {
     background:transparent; color:var(--dht-bar-fg); border:1px solid var(--dht-border);
     border-radius:6px; padding:3px 8px; font:inherit; font-size:13px; cursor:pointer;
+    box-sizing:border-box; min-height:24px;
   }
   .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
   .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
   .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
-  .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:#fff; text-decoration:none; padding:4px 10px; border-radius:6px; }
+  /* Button ink is the theme's own paper colour: white passes 4.5:1 on the light and sepia
+     accents but lands at 3.1:1 on the dark and night accents, while --dht-bg clears it on
+     all four (5.0 / 5.0 / 5.5 / 6.5) - measured for the accessibility pass, ticket 57. */
+  .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:var(--dht-bg); text-decoration:none; padding:4px 10px; border-radius:6px; }
   .dht-toolbar a.dht-continue:hover { filter:brightness(1.08); }
   .dht-glyph { width:1.15em; height:1.15em; vertical-align:-0.22em; flex:none; }
   .dht-btn[aria-pressed="true"] { background:var(--dht-border); border-color:var(--dht-accent); }
   .dht-sel { display:inline-flex; align-items:center; gap:3px; font-size:13px; }
+  /* The chrome's focus ring draws in the reading theme's accent: the browser default can
+     disappear on the dark and night bars, and a keyboard reader must see where they are.
+     Scoped to the chrome - the book's own links keep the author's styling. Lives in
+     readerCSS, not navBarCSS, because index.html carries the toolbar without the navbar. */
+  .dht-navbar :focus-visible, .dht-toolbar :focus-visible, .dht-search-panel :focus-visible {
+    outline: 2px solid var(--dht-accent);
+    outline-offset: 2px;
+  }
 </style>
 `
 

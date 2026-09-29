@@ -25,6 +25,26 @@ func uiStyle(t *testing.T) string {
 	return uiHTML[start:end]
 }
 
+// The 2026-09-29 accessibility pass (ticket 57): compact controls clear WCAG 2.2's 24px
+// target-size floor, the chrome mirrors for RTL through logical properties, the log does not
+// flood screen readers (the stage line announces instead), and stage text is a status region.
+// docs/PARITY.md "Reader chrome accessibility floor" holds the extension to the same list.
+func TestUIKeepsTheAccessibilityFloor(t *testing.T) {
+	for _, want := range []string{
+		".inline-btn { min-height: 24px; }",
+		"max-width: 150px; min-height: 24px", // the theme/language selects
+		"min-width: 0; min-height: 24px",     // the output-path button
+		".switches { margin-inline-start: auto",
+		`id="logArea" role="log" aria-live="off"`,
+		`id="progressStage" role="status"`,
+		`id="readiness" role="status" aria-live="polite"`,
+	} {
+		if !strings.Contains(uiHTML, want) {
+			t.Errorf("ui.html lost %q - the GUI accessibility floor regressed", want)
+		}
+	}
+}
+
 // APP-STYLE rules 3-4: one palette table, every role a light/dark pair, named by the vocabulary.
 // A role declared with one value would stop changing when the theme does.
 func TestPaletteDeclaresEveryRoleForBothThemes(t *testing.T) {

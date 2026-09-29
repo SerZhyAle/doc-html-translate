@@ -13,6 +13,10 @@
     .note { color: #666; font-size: 11px; margin: -2px 0 6px; line-height: 1.35; }
     .switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; }
     .switch input { opacity: 0; width: 0; height: 0; }
+    /* The checkbox itself is a zero-size hidden input, so the focus ring goes on the slider
+       it drives - without this a keyboard user cannot see the switch has focus. */
+    .switch input:focus-visible + .slider { outline: 2px solid #2563eb; outline-offset: 2px; }
+    :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
     .slider { position: absolute; inset: 0; background: #ccc; border-radius: 22px; transition: 0.2s; cursor: pointer; }
     .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
     input:checked + .slider { background: #2563eb; }
@@ -33,7 +37,7 @@
     .ocr-langs .hint { color: #666; font-size: 11px; margin: 2px 0 6px; }
     .ocr-lang { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
     .ocr-lang label, .ocr-lang > span { font-size: 13px; }
-    .ocr-lang button { font: inherit; font-size: 12px; padding: 2px 8px; border: 1px solid #2563eb; color: #2563eb;
+    .ocr-lang button { font: inherit; font-size: 12px; padding: 3px 8px; min-height: 24px; border: 1px solid #2563eb; color: #2563eb;
            background: #fff; border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>

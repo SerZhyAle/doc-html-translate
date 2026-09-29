@@ -298,12 +298,32 @@ authoritative. Change a colour there, not here, then update this table.
 | Theme | bg | fg | muted | bar-bg | bar-fg | border | accent | link |
 |---|---|---|---|---|---|---|---|---|
 | light (`:root`) | `#faf9f7` | `#1b1b1b` | `#6b6b6b` | `#ffffff` | `#222222` | `#e2e0db` | `#2563eb` | `#1a4fb4` |
-| sepia | `#f4ecd8` | `#4a3f2f` | `#7a6c54` | `#efe6cf` | `#4a3f2f` | `#ddd0b0` | `#8a5a2b` | `#7a4a1b` |
-| dark | `#1a1a1c` | `#e6e4df` | `#9a9893` | `#232327` | `#e6e4df` | `#36363b` | `#5b8dff` | `#8fb4ff` |
-| night | `#0a0a0b` | `#9a9a9a` | `#6a6a6a` | `#131315` | `#b8b8b8` | `#262629` | `#5599d6` | `#6aa8e0` |
+| sepia | `#f4ecd8` | `#4a3f2f` | `#6b5f48` | `#efe6cf` | `#4a3f2f` | `#ddd0b0` | `#8a5a2b` | `#7a4a1b` |
+| dark | `#1a1a1c` | `#e6e4df` | `#aaa79f` | `#232327` | `#e6e4df` | `#36363b` | `#5b8dff` | `#8fb4ff` |
+| night | `#0a0a0b` | `#9a9a9a` | `#8a8a86` | `#131315` | `#b8b8b8` | `#262629` | `#5599d6` | `#6aa8e0` |
+
+The sepia/dark/night `muted` values were re-derived 2026-09-29 (ticket 57): the previous ones read
+2.8-4.4:1 behind the secondary chrome text, under WCAG AA's 4.5:1. The re-derived ones clear 5:1 on
+both `bg` and `bar-bg` of their theme and stay visibly dimmer than `fg`.
 
 Emitted by [`navbar.go`](../internal/htmlgen/navbar.go) `readerCSS` (`--dht-*`, `data-dht-theme`) and the
 generated region of [`viewer.css`](../extension/src/viewer.css) (`--*`, `data-theme`).
+
+### Reader chrome accessibility floor (2026-09-29)
+
+Both editions hold their reader chrome (navbar / toolbar, search panel, notices, dialogs) to the
+same floor, verified in ticket 57's checklist; the book's own content is out of scope:
+
+- Every control is at least 24x24 CSS px (WCAG 2.2 target size, 2.5.8) - compact controls carry an
+  explicit `min-height`/padding rather than sizing to their line.
+- The chrome draws its own `:focus-visible` ring in the theme's accent colour, because the browser
+  default can vanish on the dark and night bars; the book's own links keep the author's styling.
+- Accent-filled buttons take the theme's `bg` as their ink, not white: white passes 4.5:1 only on
+  the light and sepia accents.
+- Status text (conversion stages, search result counts) sits in a `role="status"` live region, fed
+  per stage - never per log line or per OCR event.
+- Right-to-left interface languages mirror the chrome through logical properties
+  (`margin-inline-start`, `border-inline-end`), never `left`/`right`.
 
 ### Reading position (resume) (2026-09-29)
 

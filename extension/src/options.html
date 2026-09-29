@@ -13,14 +13,19 @@
     input[type="checkbox"] { transform: scale(1.2); margin-right: 0.5rem; }
     .saved { color: #16803c; font-size: 0.85rem; margin-left: 0.6rem; opacity: 0; transition: opacity 0.2s; }
     .saved.show { opacity: 1; }
+    :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
     ul.hosts { padding-left: 1.1rem; }
     code { background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 4px; }
     .ocr-langs.disabled { opacity: 0.5; }
     .ocr-lang { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0; }
     .ocr-lang label { font-weight: 400; margin: 0; display: inline; }
-    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.15rem 0.6rem; border: 1px solid #2563eb;
+    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid #2563eb;
       color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* The per-host remove button gets the same treatment as the OCR-language buttons: a real
+       target size (WCAG 2.2, 2.5.8) and the page's own link blue. */
+    ul.hosts button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; margin-inline-start: 0.6rem;
+      border: 1px solid #2563eb; color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
     #copy-diag { font: inherit; font-size: 0.85rem; padding: 0.25rem 0.7rem; border: 1px solid #2563eb;
       color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
   </style>
@@ -49,7 +54,10 @@
       <option value="dark">Dark</option>
       <option value="night">Night</option>
     </select>
-    <span class="saved" id="saved-theme" data-i18n="optSaved">Saved</span>
+    <!-- role="status": the flash is a save confirmation, so a screen reader hears it (4.1.3).
+         The text is filled by flash(), not data-i18n - an announced message must change text,
+         and a permanently present invisible string would read as a ghost in browse mode. -->
+    <span class="saved" id="saved-theme" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span>
   </div>
 
   <div class="field">
@@ -96,7 +104,7 @@
     <div class="field">
       <label data-i18n="optAbout">About</label>
       <button id="copy-diag" data-i18n="btnCopyDiag">Copy diagnostics</button>
-      <span class="saved" id="saved-diag" data-i18n="optCopied">Copied</span>
+      <span class="saved" id="saved-diag" role="status" data-saved-key="optCopied" data-saved-fallback="Copied"></span>
       <div class="hint" data-i18n="diagHint">Copies a short technical summary - no document text - so you can paste it into a mail to the author.</div>
     </div>
     <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="linkProductSite">Product site</a>

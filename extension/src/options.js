@@ -102,11 +102,18 @@ async function setOptions(opts) {
   await chrome.storage.local.set({ options: opts });
 }
 
+// flash shows a ".saved" confirmation. The span is a role="status" live region that is empty
+// until it flashes: a status message is announced when its text appears (WCAG 4.1.3), and an
+// always-present invisible string would be neither announced again nor readable as absent.
+// The wording comes from the span's data-saved-key with an English data-saved-fallback, the
+// same degrade-to-English rule every t() call site follows.
 function flash(id) {
   const e = document.getElementById(id);
   if (!e) return;
+  e.textContent = msg(e.dataset.savedKey, e.dataset.savedFallback || "");
   e.classList.add("show");
-  setTimeout(() => e.classList.remove("show"), 900);
+  clearTimeout(e._hideTimer);
+  e._hideTimer = setTimeout(() => { e.classList.remove("show"); e.textContent = ""; }, 900);
 }
 
 function renderHosts(hosts) {
@@ -121,8 +128,7 @@ function renderHosts(hosts) {
   for (const h of hosts) {
     const li = document.createElement("li");
     const btn = document.createElement("button");
-    btn.textContent = "remove";
-    btn.style.marginLeft = "0.6rem";
+    btn.textContent = msg("optHostRemove", "Remove");
     btn.addEventListener("click", async () => {
       const o = await getOptions();
       o.disabledHosts = o.disabledHosts.filter((x) => x !== h);
