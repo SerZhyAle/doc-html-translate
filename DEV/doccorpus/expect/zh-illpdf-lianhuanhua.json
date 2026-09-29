@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "zh-illpdf-lianhuanhua",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 6,
+  "textLayer": "full",
+  "sourceTextChars": 6456,
+  "lang": "zh",
+  "snippets": [
+    "1951年上海市民阅读连环画 上海市非物质文化遗产",
+    "申报 徐匯區、上海人民美術出版社 上海海派連環畫中心",
+    "中国动漫博物馆展出的中國近代連環漫畫",
+    "連環畫收藏的品相標準"
+  ],
+  "omissions": [],
+  "notes": ""
+}

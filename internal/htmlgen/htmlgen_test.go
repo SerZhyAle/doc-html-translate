@@ -243,16 +243,16 @@ func TestGenerateIndex_FallbackLabelNotDoubleNumbered(t *testing.T) {
 	}
 }
 
-// The TOC page is in the book's language: it takes lang/dir from the first content page the
-// way the merge does (dir from <html>, else <body>), falls back to the language the book
-// declares, and declares none rather than invent one (E30, E33).
+// The TOC page is in the book's language: it takes the language the book declares, else the first
+// content page's, the way the merge does (dir from <html>, else <body>), and declares none rather
+// than invent one (E30, E33, ticket 71).
 func TestGenerateIndexCarriesDocumentLang(t *testing.T) {
 	for _, c := range []struct{ page, bookLang, want string }{
 		{`<html lang="ar" dir="rtl"><body><p>x</p></body></html>`, "", `<html lang="ar" dir="rtl">`},
 		{`<html xml:lang="ru"><body><p>x</p></body></html>`, "", `<html lang="ru">`},
 		{`<html lang="he"><body dir="RTL"><p>x</p></body></html>`, "", `<html lang="he" dir="rtl">`},
 		{`<html><body><p>x</p></body></html>`, "uk", `<html lang="uk">`},
-		{`<html lang="de"><body><p>x</p></body></html>`, "uk", `<html lang="de">`},
+		{`<html lang="de"><body><p>x</p></body></html>`, "uk", `<html lang="uk">`},
 		{`<html><body><p>x</p></body></html>`, "", "<html>\n"},
 	} {
 		dir := t.TempDir()

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "caseId": "en-epub-alice-illustrated",
+  "origin": "draft",
+  "draftSource": "source XHTML of the EPUB spine",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 0,
+  "lang": "en",
+  "snippets": [
+    "The Project Gutenberg eBook of Alice's Adventures in Wonderland",
+    "\"One side of what? The other side of what?\" thought Alice to herself.",
+    "\"The game's going on rather better now,\" Alice said, by way of keeping up the conversation a little.",
+    "• You comply with all other terms of this agreement for free distribution of Project Gutenberg™ works."
+  ],
+  "omissions": [],
+  "notes": ""
+}

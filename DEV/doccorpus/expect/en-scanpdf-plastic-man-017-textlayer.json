@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "caseId": "en-scanpdf-plastic-man-017-textlayer",
+  "origin": "draft",
+  "draftSource": "none",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 37,
+  "textLayer": "weak",
+  "lang": "en",
+  "snippets": [],
+  "omissions": [],
+  "notes": "No independent transcription exists yet: a person transcribes representative lettering or text from the original page. OCR output must not seed it. The text layer is someone else's OCR, so it is not used as truth."
+}

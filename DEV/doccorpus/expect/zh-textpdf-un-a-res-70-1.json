@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "zh-textpdf-un-a-res-70-1",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 32,
+  "textLayer": "full",
+  "sourceTextChars": 30794,
+  "lang": "zh",
+  "snippets": [
+    "Distr.: General 21 October 2015",
+    "变革我们的世界：2030 年可持续发展议程",
+    "这些目标和具体目标将促使人们在今后 15 年内，在那些对人类和地球至关 重要的领域中采取行动。",
+    "我们决心推动创建没有恐惧与暴力的和平、公正和包容的社会。没有和平， 就没有可持续发展；没有可持续发展，就没有和平。"
+  ],
+  "omissions": [],
+  "notes": ""
+}

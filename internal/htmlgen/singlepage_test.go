@@ -221,13 +221,52 @@ func readFile(t *testing.T, path string) string {
 	return string(data)
 }
 
-// The merged page never invents a language (E30): it keeps the first page's, else the one the
-// book declares, else none. dir is read from <html>, then <body>, as the TOC index reads it.
+// A Project Gutenberg EPUB opens with a cover wrapper declaring lang="en" whatever the book's
+// language. The merged page must carry the book's language, and the wrapper keeps its own on its
+// chapter div (ticket 71, corpus cases fr-epub-phantom-opera / ru-epub-moskoviya).
+func TestGenerateSinglePageBookLanguageOutranksACoverWrapper(t *testing.T) {
+	dir := t.TempDir()
+	pages := map[string]string{
+		"wrap0000.html": `<!DOCTYPE html><html lang="en"><body><img src="cover.png" alt="Cover"/></body></html>`,
+		"ch1.html":      `<!DOCTYPE html><html xml:lang="fr"><body><p>Le fantôme de l'Opéra a existé.</p></body></html>`,
+	}
+	for name, body := range pages {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	book := &epub.Book{
+		Title:    "Le Fantôme de l'Opéra",
+		Language: "fr",
+		Manifest: []epub.ManifestItem{{ID: "w", Href: "wrap0000.html", MediaType: "text/html"}, {ID: "c", Href: "ch1.html", MediaType: "text/html"}},
+		Spine:    []epub.SpineItem{{IDRef: "w"}, {IDRef: "c"}},
+	}
+	out, err := GenerateSinglePage(book, dir, "book.epub")
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(out)
+	page := string(data)
+	if !strings.Contains(page, `<html lang="fr">`) {
+		t.Errorf("merged page is not labelled with the book's language:\n%.160s", page)
+	}
+	if !strings.Contains(page, `class="dht-chapter dht-ch-1" lang="en"`) {
+		t.Errorf("the English cover wrapper lost its own language on its chapter div")
+	}
+	if strings.Contains(page, `class="dht-chapter dht-ch-2" lang=`) {
+		t.Errorf("a chapter in the book's own language was given a redundant lang")
+	}
+}
+
+// The merged page never invents a language (E30): it takes the one the book declares, else the
+// first page's, else none (ticket 71: the book's own statement outranks a first page). dir is read
+// from <html>, then <body>, as the TOC index reads it.
 func TestGenerateSinglePageDeclaresOnlyAStatedLanguage(t *testing.T) {
 	for _, c := range []struct{ page, bookLang, want string }{
 		{`<!DOCTYPE html><html><body><p>x</p></body></html>`, "", "<html>\n"},
 		{`<!DOCTYPE html><html><body><p>x</p></body></html>`, "ru", `<html lang="ru">` + "\n"},
-		{`<!DOCTYPE html><html lang="fr"><body><p>x</p></body></html>`, "ru", `<html lang="fr">` + "\n"},
+		{`<!DOCTYPE html><html lang="fr"><body><p>x</p></body></html>`, "ru", `<html lang="ru">` + "\n"},
+		{`<!DOCTYPE html><html lang="fr"><body><p>x</p></body></html>`, "", `<html lang="fr">` + "\n"},
 		{`<!DOCTYPE html><html><body dir="rtl"><p>x</p></body></html>`, "", `<html dir="rtl">` + "\n"},
 	} {
 		dir := t.TempDir()

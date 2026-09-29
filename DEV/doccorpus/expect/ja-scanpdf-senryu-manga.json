@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ja-scanpdf-senryu-manga",
+  "origin": "draft",
+  "draftSource": "none",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 8,
+  "textLayer": "none",
+  "lang": "ja",
+  "snippets": [],
+  "omissions": [],
+  "notes": "No independent transcription exists yet: a person transcribes representative lettering or text from the original page. OCR output must not seed it."
+}

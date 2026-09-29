@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "en-textpdf-un-a-res-70-1",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 35,
+  "textLayer": "full",
+  "sourceTextChars": 94913,
+  "lang": "en",
+  "snippets": [
+    "Distr.: General 21 October 2015",
+    "Resolution adopted by the General Assembly on 25 September 2015",
+    "70/1. Transforming our world: the 2030 Agenda for Sustainable Development",
+    "Our shared principles and commitments"
+  ],
+  "omissions": [],
+  "notes": ""
+}

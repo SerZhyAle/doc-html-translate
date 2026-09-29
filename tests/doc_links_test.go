@@ -27,6 +27,20 @@ var (
 	lineAnchor = regexp.MustCompile(`^L\d+(-L\d+)?$`)
 )
 
+// unpublishedTrees are folders the owner keeps out of the repository on purpose (.gitignore): the
+// spec and ticket store. A committed document may still point into them for the owner's local
+// reading, so such a link is not judged - it is neither a broken link nor a published one.
+var unpublishedTrees = []string{"DEV/plan"}
+
+func inUnpublishedTree(p string) bool {
+	for _, t := range unpublishedTrees {
+		if p == t || strings.HasPrefix(p, t+"/") {
+			return true
+		}
+	}
+	return false
+}
+
 type docLink struct {
 	line int
 	dest string
@@ -78,6 +92,9 @@ func linkProblem(file string, l docLink, files, dirs map[string]bool, anchorsOf 
 		resolved = strings.TrimSuffix(resolved, "/")
 		if resolved == "" {
 			resolved = "."
+		}
+		if inUnpublishedTree(resolved) {
+			return ""
 		}
 		if !files[resolved] && !dirs[resolved] {
 			kind := "link"
@@ -154,6 +171,8 @@ func TestDocLinkRules(t *testing.T) {
 		{"#flags", "", false},
 		{"#nope", "", true},
 		{"../internal/x.go#L10", "", true},
+		{"../DEV/plan/68_x.md", "", false}, // the unpublished spec store is not judged
+		{"../DEV/planner.md", "", true},    // a sibling that only shares the prefix is
 	}
 	for _, c := range cases {
 		got := linkProblem("docs/A.md", docLink{1, c.dest, c.tag}, files, dirs, anchorsOf)

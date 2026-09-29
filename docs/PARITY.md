@@ -1329,9 +1329,15 @@ from what the source states. Both editions read the same declarations:
   `textutil.NormalizeLangTag` == `lang.js` `normalizeLangTag`, pinned by the same cases in
   `internal/textutil/lang_test.go` and `extension/test/reflow.test.mjs`.
 - **Go never guesses.** An extractor whose source states no language (TXT, RTF, Markdown, PDF, image,
-  comic) writes `<html>` with no `lang`, and the merged page and the TOC index take the first page's
-  language, else the book's, else none - never a default `en`. An EPUB page that declares no language of
-  its own is given the package's `dc:language`. `dir` is read from `<html>`, then `<body>`, by the merge
+  comic) writes `<html>` with no `lang`, and the merged page and the TOC index take the book's declared
+  language, else the first page's, else none - never a default `en`. The book's statement outranks the
+  first page because a first page is not a sample of the book: every Project Gutenberg EPUB opens with a
+  cover wrapper (`wrap0000.html`) declaring `lang="en"` whatever the book's language, and the merge used
+  to label French, Russian, Chinese and Japanese books English (ticket 71, corpus cases
+  `fr-epub-phantom-opera` / `ru-epub-moskoviya`). A merged chapter whose own `<html lang>` differs from
+  the page's keeps it on its chapter wrapper. This is the extension's order too (`book.lang` =
+  `dc:language` first). An EPUB page that declares no language of its own is given the package's
+  `dc:language`. `dir` is read from `<html>`, then `<body>`, by the merge
   and the index alike. Guarded by `TestConvertedSourceLanguage` (Russian FB2 -> `<html lang="ru">`,
   Markdown -> no `lang`) and `internal/htmlgen` `TestGenerateIndexCarriesDocumentLang`.
 - **Intentional difference:** where nothing is stated the extension still fills in a language - PDF

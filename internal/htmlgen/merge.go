@@ -30,6 +30,10 @@ type mergeChapter struct {
 
 	// scopedCSS holds the scoped CSS rules from this chapter's <style> blocks.
 	scopedCSS []string
+
+	// lang is the chapter's own declared language when it differs from the merged page's, so the
+	// chapter keeps it on its wrapper; "" when it matches or declares none.
+	lang string
 }
 
 // chromeIDs are the ids the merged page's own chrome carries. A book id equal

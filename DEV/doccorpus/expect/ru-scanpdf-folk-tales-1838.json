@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ru-scanpdf-folk-tales-1838",
+  "origin": "draft",
+  "draftSource": "none",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 114,
+  "textLayer": "weak",
+  "lang": "ru",
+  "snippets": [],
+  "omissions": [],
+  "notes": "No independent transcription exists yet: a person transcribes representative lettering or text from the original page. OCR output must not seed it. The text layer is someone else's OCR, so it is not used as truth."
+}

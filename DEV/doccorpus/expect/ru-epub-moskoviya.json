@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ru-epub-moskoviya",
+  "origin": "draft",
+  "draftSource": "source XHTML of the EPUB spine",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 0,
+  "lang": "ru",
+  "snippets": [
+    "The Project Gutenberg eBook of Московия в представлении иностранцев XVI-XVII в.",
+    "Гербъ Русскаго Царства и его областей (Корбъ)",
+    "Игры и забавы женщинъ (Олеарій)",
+    "• You comply with all other terms of this agreement for free distribution of Project Gutenberg™ works."
+  ],
+  "omissions": [],
+  "notes": ""
+}

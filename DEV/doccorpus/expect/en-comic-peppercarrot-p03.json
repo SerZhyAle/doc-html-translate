@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "caseId": "en-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/en/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "en",
+  "snippets": [],
+  "lettering": [
+    "WHAT?!!",
+    "As Mayor of Komona,",
+    "I declare the",
+    "potion contest...",
+    "Open!",
+    "Our town is delighted",
+    "to welcome no fewer than",
+    "four witches",
+    "for this first edition.",
+    "Please give a",
+    "huge",
+    "Komona Potion Contest",
+    "round of applause:"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}

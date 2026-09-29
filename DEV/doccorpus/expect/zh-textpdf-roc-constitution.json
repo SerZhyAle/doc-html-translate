@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "zh-textpdf-roc-constitution",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 21,
+  "textLayer": "full",
+  "sourceTextChars": 9128,
+  "lang": "zh",
+  "snippets": [
+    "第 一 章 總綱",
+    "第 10 條 人民有居住及遷徙之自由。",
+    "第 21 條 人民有受國民教育之權利與義務。",
+    "第 35 條 總統為國家元首，對外代表中華民國。"
+  ],
+  "omissions": [],
+  "notes": ""
+}

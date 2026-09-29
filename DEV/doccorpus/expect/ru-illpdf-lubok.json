@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ru-illpdf-lubok",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 17,
+  "textLayer": "full",
+  "sourceTextChars": 32937,
+  "lang": "ru",
+  "snippets": [
+    "Материал из Википедии — свободной энциклопедии",
+    "Адам и Ева. Гравёр (резных дел мастер) Василий Корень. XVII век.",
+    "В то же время лубок окончательно становится",
+    "деревянных досках был запрещён, и отныне лубки, как и плакаты изготавливались методом"
+  ],
+  "omissions": [],
+  "notes": ""
+}

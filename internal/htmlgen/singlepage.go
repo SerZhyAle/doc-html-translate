@@ -70,6 +70,11 @@ func GenerateSinglePageWithDepth(book *epub.Book, outputDir, sourceName string, 
 		}
 		chapters = append(chapters, &mergeChapter{href: path.Clean(href), doc: doc})
 	}
+	for _, ch := range chapters {
+		if own := htmlLang(ch.doc); own != "" && !strings.EqualFold(own, lang) {
+			ch.lang = own
+		}
+	}
 	prepareMerge(chapters)
 	contents := singlePageContents(book.TOC, chapters)
 	if len(contents) == 0 && !isPagedChapters(chapters) {
@@ -280,14 +285,17 @@ func isPagedBook(inners []string) bool {
 	return true
 }
 
-// rootLangDir returns the language and direction a content page declares, for the <html> of a
-// page generated from it (the merged page, the TOC index). A page that declares no language
-// takes the book's (bookLang, "" when the source states none); nothing is ever guessed, since a
-// wrong lang can stop Chrome offering "Translate page".
+// rootLangDir returns the language and direction for the <html> of a page generated from a
+// content page (the merged page, the TOC index). The language the book declares for itself
+// (bookLang, the EPUB's dc:language) wins; the first page's own declaration is used only when the
+// book states none. A first page is not a sample of the book: every Project Gutenberg EPUB opens
+// with a cover wrapper (wrap0000.html) declaring lang="en" whatever the book's language, and
+// taking it labelled French, Russian, Chinese and Japanese books English (ticket 71). Nothing is
+// ever guessed, since a wrong lang can stop Chrome offering "Translate page".
 func rootLangDir(doc *gohtml.Node, bookLang string) (lang, dir string) {
-	lang = htmlLang(doc)
+	lang = bookLang
 	if lang == "" {
-		lang = bookLang
+		lang = htmlLang(doc)
 	}
 	return lang, htmlDir(doc)
 }
@@ -367,6 +375,10 @@ func chapterInnerHTML(ch *mergeChapter, pos int) (string, error) {
 		default:
 			otherAttrs = append(otherAttrs, fmt.Sprintf(`%s="%s"`, a.Key, html.EscapeString(a.Val)))
 		}
+	}
+	// A <body lang> is the more specific statement and already rode along above.
+	if ch.lang != "" && nodeAttr(body, "lang") == "" {
+		otherAttrs = append(otherAttrs, fmt.Sprintf(`lang="%s"`, html.EscapeString(ch.lang)))
 	}
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf(`<div class="%s"`, html.EscapeString(strings.Join(classes, " "))))

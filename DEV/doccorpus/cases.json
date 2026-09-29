@@ -1,0 +1,1599 @@
+{
+  "schemaVersion": 1,
+  "ticket": "DEV/plan/68_2026-09-29_multilingual_comic_book_verification.md",
+  "root": "test_doc",
+  "splitRule": "primary cases: for class index i in [comic-image, epub, text-pdf, scanned-pdf, illustrated-pdf, comic-archive], the languages at positions 2i and 2i+1 (mod 6) of [en, fr, ru, ja, zh, ko] are holdout; supplementary and windows-only cases are dev",
+  "cases": [
+    {
+      "id": "en-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/en-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "balloons",
+        "sfx",
+        "painted-sign",
+        "colour",
+        "hires"
+      ],
+      "sha256": "11ce0f561afd7bd8f2ddf4562072873c116628dfa1aa3d5b4f6ebc7835b03277",
+      "bytes": 2322158,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (en)",
+        "page": "https://www.peppercarrot.com/en/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/en_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/en_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "en-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "fr-comic-fenouillard",
+      "file": "multilingual_2026-09-29/fr-fenouillard-comic.jpg",
+      "class": "comic-image",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "captions-under-panels",
+        "accents",
+        "1890s-print"
+      ],
+      "sha256": "8357532004c22f73288689b5edf48bcb9ca2ea94979adb2871f6b6af7b144bf8",
+      "bytes": 990194,
+      "source": {
+        "title": "File:Christophe - La Famille Fenouillard, 1895 (page 1 crop).jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Christophe_-_La_Famille_Fenouillard,_1895_(page_1_crop).jpg",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Christophe_-_La_Famille_Fenouillard%2C_1895_%28page_1_crop%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-fenouillard-comic.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-comic-fenouillard.json"
+    },
+    {
+      "id": "ru-comic-rosta-window",
+      "file": "multilingual_2026-09-29/ru-rosta-window-mayakovsky.jpg",
+      "class": "comic-image",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "hand-lettered",
+        "multi-panel",
+        "poster",
+        "low-contrast"
+      ],
+      "sha256": "11492ec3f0d69eb76c2cdf5398f03ef019e1a8175466cf3b5bfd9d8d91e2e967",
+      "bytes": 588546,
+      "source": {
+        "title": "File:Маяковский. ОКНА РОСТА.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%8F%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9._%D0%9E%D0%9A%D0%9D%D0%90_%D0%A0%D0%9E%D0%A1%D0%A2%D0%90.jpg",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/%D0%9C%D0%B0%D1%8F%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9._%D0%9E%D0%9A%D0%9D%D0%90_%D0%A0%D0%9E%D0%A1%D0%A2%D0%90.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/%D0%9C%D0%B0%D1%8F%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9._%D0%9E%D0%9A%D0%9D%D0%90_%D0%A0%D0%9E%D0%A1%D0%A2%D0%90.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-rosta-window-mayakovsky.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons imageinfo.extmetadata LicenseShortName",
+        "attribution": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Vladimir_Mayakovsky\" class=\"extiw\" title=\"w:en:Vladimir Mayakovsky\"><span title=\"Russian and Soviet poet (1893–1930)\">Vladimir Mayakovsky</span></a></bdi",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-comic-rosta-window.json"
+    },
+    {
+      "id": "ja-comic-rakuten-tokyo",
+      "file": "multilingual_2026-09-29/ja-rakuten-tokyo-1902.jpg",
+      "class": "comic-image",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn_vert",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "vertical",
+        "furigana",
+        "rtl-panels",
+        "lowres"
+      ],
+      "sha256": "c1dc622ed07b8c65ffa363291fec7b0db59164c9254381cc44be88cb03fc094e",
+      "bytes": 202096,
+      "source": {
+        "title": "File:Tagosaku to Mokube no Tokyo Kenbutsu.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Tagosaku_to_Mokube_no_Tokyo_Kenbutsu.jpg",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/Tagosaku_to_Mokube_no_Tokyo_Kenbutsu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-rakuten-tokyo-1902.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-comic-rakuten-tokyo.json"
+    },
+    {
+      "id": "zh-comic-sanmin-cartoon",
+      "file": "multilingual_2026-09-29/zh-sanmimzhuyi-cartoon.jpg",
+      "class": "comic-image",
+      "language": "zh",
+      "script": "Hant",
+      "ocrLang": "chi_tra",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "traditional",
+        "newspaper",
+        "lowres"
+      ],
+      "sha256": "84544fa6641f196d7a3e7260a76da6d4b924f2eb4293a8b67cb57ca57f521b80",
+      "bytes": 116930,
+      "source": {
+        "title": "File:三民主義 漫畫 華字日報.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:%E4%B8%89%E6%B0%91%E4%B8%BB%E7%BE%A9_%E6%BC%AB%E7%95%AB_%E8%8F%AF%E5%AD%97%E6%97%A5%E5%A0%B1.jpg",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/2/29/%E4%B8%89%E6%B0%91%E4%B8%BB%E7%BE%A9_%E6%BC%AB%E7%95%AB_%E8%8F%AF%E5%AD%97%E6%97%A5%E5%A0%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-sanmimzhuyi-cartoon.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-comic-sanmin-cartoon.json"
+    },
+    {
+      "id": "ko-comic-spring-1933",
+      "file": "multilingual_2026-09-29/ko-spring-cartoon-1933.png",
+      "class": "comic-image",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "hangul",
+        "1930s-print",
+        "halftone"
+      ],
+      "sha256": "d838700bd1b2091e43f73dfe916664a6c60b1d462d5dc57e11e99d98d059acc1",
+      "bytes": 383204,
+      "source": {
+        "title": "File:봄이 쓰는 만문 봄이 그리는 만화(최영수作, 1933년 4월 3일).png",
+        "page": "https://commons.wikimedia.org/wiki/File:%EB%B4%84%EC%9D%B4_%EC%93%B0%EB%8A%94_%EB%A7%8C%EB%AC%B8_%EB%B4%84%EC%9D%B4_%EA%B7%B8%EB%A6%AC%EB%8A%94_%EB%A7%8C%ED%99%94(%EC%B5%9C%EC%98%81%EC%88%98%E4%BD%9C,_1933%EB%85%84_4%EC%9B%94_3%EC%9D%BC).png",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b1/%EB%B4%84%EC%9D%B4_%EC%93%B0%EB%8A%94_%EB%A7%8C%EB%AC%B8_%EB%B4%84%EC%9D%B4_%EA%B7%B8%EB%A6%AC%EB%8A%94_%EB%A7%8C%ED%99%94%28%EC%B5%9C%EC%98%81%EC%88%98%E4%BD%9C%2C_1933%EB%85%84_4%EC%9B%94_3%EC%9D%BC%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-spring-cartoon-1933.png",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-comic-spring-1933.json"
+    },
+    {
+      "id": "en-epub-alice-illustrated",
+      "file": "epub-illustrated-mid_Alice-in-Wonderland.epub",
+      "class": "epub",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "chapters",
+        "illustrations"
+      ],
+      "sha256": "95b012a624f7744b723bcf5a8efd8b6a6e0c82ba91abd2c92763bd94143868bf",
+      "bytes": 1901867,
+      "source": {
+        "title": "Project Gutenberg, Alice's Adventures in Wonderland (illustrated edition)",
+        "page": "test_doc/_fetch/fetch-corpus4.ps1",
+        "downloadUrl": "",
+        "finalUrl": "",
+        "retrievedOn": "2026-07-17",
+        "originalFilename": "epub-illustrated-mid_Alice-in-Wonderland.epub",
+        "transformation": ""
+      },
+      "rights": {
+        "licence": "Project Gutenberg (public domain in the USA) - item page not recorded",
+        "evidence": "test_doc/_fetch/fetch-corpus4.ps1",
+        "attribution": "Lewis Carroll",
+        "agentReview": "legacy test_doc file; licence not re-read for ticket 68",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-epub-alice-illustrated.json"
+    },
+    {
+      "id": "fr-epub-phantom-opera",
+      "file": "multilingual_2026-09-29/fr-phantom-opera-gutenberg.epub",
+      "class": "epub",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "chapters",
+        "accents"
+      ],
+      "sha256": "dd398afca646333e11b47afc59f27649923b2e4c80bcd64c0debf80cf9ae31d1",
+      "bytes": 459660,
+      "source": {
+        "title": "Le Fantôme de l'Opéra by Gaston Leroux | Project Gutenberg",
+        "page": "https://www.gutenberg.org/ebooks/62215",
+        "downloadUrl": "https://www.gutenberg.org/ebooks/62215.epub.images",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-phantom-opera-gutenberg.epub",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain in the USA",
+        "evidence": "Copyright Public domain in the USA.",
+        "attribution": null,
+        "agentReview": "item page inspected; non-US review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-epub-phantom-opera.json"
+    },
+    {
+      "id": "ru-epub-moskoviya",
+      "file": "multilingual_2026-09-29/ru-moskoviya-gutenberg.epub",
+      "class": "epub",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "illustrations",
+        "cyrillic"
+      ],
+      "sha256": "645b7039f0e92db5587b311ab6e4e6bdd83714b55a0119231467a98301068c6b",
+      "bytes": 2002432,
+      "source": {
+        "title": "Московия в представлении иностранцев XVI-XVII в. by P. N. Apostol | Project Gutenberg",
+        "page": "https://www.gutenberg.org/ebooks/30774",
+        "downloadUrl": "https://www.gutenberg.org/ebooks/30774.epub.images",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-moskoviya-gutenberg.epub",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain in the USA",
+        "evidence": "Copyright Public domain in the USA.",
+        "attribution": null,
+        "agentReview": "item page inspected; non-US review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-epub-moskoviya.json"
+    },
+    {
+      "id": "ja-epub-kusamakura",
+      "file": "multilingual_2026-09-29/ja-kusamakura-vertical-ruby.epub",
+      "class": "epub",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn_vert",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "vertical",
+        "ruby",
+        "rtl",
+        "non-ascii-paths"
+      ],
+      "sha256": "6d4d4ed5eda3f612e3263c54fa0f74ccfa87260f43e81bb58ea658636e52eeb7",
+      "bytes": 17940673,
+      "source": {
+        "title": "IDPF epub3-samples release 20230704: kusamakura-japanese-vertical-writing.epub",
+        "page": "https://idpf.github.io/epub3-samples/30/samples.html",
+        "downloadUrl": "https://github.com/IDPF/epub3-samples/releases/download/20230704/kusamakura-japanese-vertical-writing.epub",
+        "finalUrl": "https://github.com/IDPF/epub3-samples/releases/download/20230704/kusamakura-japanese-vertical-writing.epub",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-kusamakura-vertical-ruby.epub",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY-SA 3.0 (IDPF epub3-samples table: 'Unless specified otherwise ... CC-BY-SA 3.0')",
+        "evidence": "https://idpf.github.io/epub3-samples/30/samples.html (licence column) and repository README",
+        "attribution": "IDPF / W3C EPUB 3 samples, CC BY-SA 3.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-epub-kusamakura.json"
+    },
+    {
+      "id": "zh-epub-journey-west",
+      "file": "multilingual_2026-09-29/zh-journey-west-gutenberg.epub",
+      "class": "epub",
+      "language": "zh",
+      "script": "Hani",
+      "ocrLang": "chi_sim",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "chapters",
+        "thin-illustration"
+      ],
+      "sha256": "e7d8004352868820b8d19720813613c23b85ee9fda083705bf81ee0ea8c65e04",
+      "bytes": 1140292,
+      "source": {
+        "title": "西遊記 by Cheng'en Wu | Project Gutenberg",
+        "page": "https://www.gutenberg.org/ebooks/23962",
+        "downloadUrl": "https://www.gutenberg.org/ebooks/23962.epub.images",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-journey-west-gutenberg.epub",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain in the USA",
+        "evidence": "Copyright Public domain in the USA.",
+        "attribution": null,
+        "agentReview": "item page inspected; non-US review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-epub-journey-west.json"
+    },
+    {
+      "id": "ko-epub-hong-gildong",
+      "file": "multilingual_2026-09-29/ko-hong-gildong-wikisource.epub",
+      "class": "epub",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "old-hangul",
+        "thin"
+      ],
+      "sha256": "69e2d4222c5777dc83993ab668f6a02a04916e225fbb17e825148a87286acf04",
+      "bytes": 4391648,
+      "source": {
+        "title": "홍길동전 (30장 경판본)",
+        "page": "https://ko.wikisource.org/wiki/%ED%99%8D%EA%B8%B8%EB%8F%99%EC%A0%84_%2830%EC%9E%A5_%EA%B2%BD%ED%8C%90%EB%B3%B8%29",
+        "downloadUrl": "https://ws-export.wmcloud.org/?lang=ko&page=%ED%99%8D%EA%B8%B8%EB%8F%99%EC%A0%84+%2830%EC%9E%A5+%EA%B2%BD%ED%8C%90%EB%B3%B8%29&format=epub",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-hong-gildong-wikisource.epub",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain (PD-old-100, Wikisource source page)",
+        "evidence": "source page licence section; PD-old-100",
+        "attribution": null,
+        "agentReview": "source page inspected; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-epub-hong-gildong.json"
+    },
+    {
+      "id": "en-textpdf-un-a-res-70-1",
+      "file": "multilingual_2026-09-29/en-un-a-res-70-1-text.pdf",
+      "class": "text-pdf",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "headings",
+        "parallel-text"
+      ],
+      "sha256": "b96f316e5c9dcdacc0980d46509e8c9032a02abe5069624d87003ace25c80dc8",
+      "bytes": 446402,
+      "source": {
+        "title": "A/RES/70/1 Transforming our world: the 2030 Agenda for Sustainable Development",
+        "page": "https://undocs.org/A/RES/70/1",
+        "downloadUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=en&t=pdf",
+        "finalUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=en&t=pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "en-un-a-res-70-1-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "UN official document (PD-UN-doc: ST/AI/189/Add.9/Rev.2 - documents bearing a UN symbol)",
+        "evidence": "https://www.un.org/en/about-us/copyright ; Commons Template:PD-UN-doc",
+        "attribution": "United Nations General Assembly, A/RES/70/1 (2015)",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-textpdf-un-a-res-70-1.json"
+    },
+    {
+      "id": "fr-textpdf-un-a-res-70-1",
+      "file": "multilingual_2026-09-29/fr-un-a-res-70-1-text.pdf",
+      "class": "text-pdf",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "headings",
+        "parallel-text",
+        "accents"
+      ],
+      "sha256": "bbde7c8616fd438762e310442826f70f6d48ab7b050c4b193d452ec819324dda",
+      "bytes": 497060,
+      "source": {
+        "title": "A/RES/70/1 Transforming our world: the 2030 Agenda for Sustainable Development",
+        "page": "https://undocs.org/A/RES/70/1",
+        "downloadUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=fr&t=pdf",
+        "finalUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=fr&t=pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-un-a-res-70-1-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "UN official document (PD-UN-doc: ST/AI/189/Add.9/Rev.2 - documents bearing a UN symbol)",
+        "evidence": "https://www.un.org/en/about-us/copyright ; Commons Template:PD-UN-doc",
+        "attribution": "United Nations General Assembly, A/RES/70/1 (2015)",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-textpdf-un-a-res-70-1.json"
+    },
+    {
+      "id": "ru-textpdf-un-a-res-70-1",
+      "file": "multilingual_2026-09-29/ru-un-a-res-70-1-text.pdf",
+      "class": "text-pdf",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "headings",
+        "parallel-text"
+      ],
+      "sha256": "a9fdb06d1ec08835d2382918d70f0c6d886d145e5550d7617ec39b243363582a",
+      "bytes": 569124,
+      "source": {
+        "title": "A/RES/70/1 Transforming our world: the 2030 Agenda for Sustainable Development",
+        "page": "https://undocs.org/A/RES/70/1",
+        "downloadUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=ru&t=pdf",
+        "finalUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=ru&t=pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-un-a-res-70-1-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "UN official document (PD-UN-doc: ST/AI/189/Add.9/Rev.2 - documents bearing a UN symbol)",
+        "evidence": "https://www.un.org/en/about-us/copyright ; Commons Template:PD-UN-doc",
+        "attribution": "United Nations General Assembly, A/RES/70/1 (2015)",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-textpdf-un-a-res-70-1.json"
+    },
+    {
+      "id": "ja-textpdf-pdl-commentary",
+      "file": "multilingual_2026-09-29/ja-digital-agency-pdl-commentary-text.pdf",
+      "class": "text-pdf",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "horizontal"
+      ],
+      "sha256": "7b6157cb8a0536b36bc44ede57741056cedbd2b1d70303aa5a1f06f6dbfb2a56",
+      "bytes": 215852,
+      "source": {
+        "title": "「公共データ利用規約（第1.0版）」の解説 (Digital Agency, 2024-07-05)",
+        "page": "https://www.digital.go.jp/resources/data_policy",
+        "downloadUrl": "https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/f7fde41d-ffca-4b2a-9b25-94b8a701a037/b44a7e0c/20240705_resources_data_outline_07.pdf",
+        "finalUrl": "https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/f7fde41d-ffca-4b2a-9b25-94b8a701a037/b44a7e0c/20240705_resources_data_outline_07.pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-digital-agency-pdl-commentary-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public Data License 1.0 (PDL1.0, compatible with CC BY 4.0) per Digital Agency site policy",
+        "evidence": "https://www.digital.go.jp/copyright-policy",
+        "attribution": "出典：デジタル庁「公共データ利用規約（第1.0版）の解説」",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-textpdf-pdl-commentary.json"
+    },
+    {
+      "id": "zh-textpdf-un-a-res-70-1",
+      "file": "multilingual_2026-09-29/zh-Hans-un-a-res-70-1-text.pdf",
+      "class": "text-pdf",
+      "language": "zh",
+      "script": "Hans",
+      "ocrLang": "chi_sim",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "simplified",
+        "parallel-text"
+      ],
+      "sha256": "302c1a66d260f6d0a9510d77a6f5aa4506b5d22f39484096496b203b920db29a",
+      "bytes": 831241,
+      "source": {
+        "title": "A/RES/70/1 Transforming our world: the 2030 Agenda for Sustainable Development",
+        "page": "https://undocs.org/A/RES/70/1",
+        "downloadUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=zh&t=pdf",
+        "finalUrl": "https://documents.un.org/api/symbol/access?s=A/RES/70/1&l=zh&t=pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-Hans-un-a-res-70-1-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "UN official document (PD-UN-doc: ST/AI/189/Add.9/Rev.2 - documents bearing a UN symbol)",
+        "evidence": "https://www.un.org/en/about-us/copyright ; Commons Template:PD-UN-doc",
+        "attribution": "United Nations General Assembly, A/RES/70/1 (2015)",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-textpdf-un-a-res-70-1.json"
+    },
+    {
+      "id": "ko-textpdf-constitution-1987",
+      "file": "multilingual_2026-09-29/ko-constitution-1987-text.pdf",
+      "class": "text-pdf",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "hangul",
+        "hanja"
+      ],
+      "sha256": "6e036779aebe3cde207c5d229e3f01c8b5da4ebbcce9f59082c6be0c106965a6",
+      "bytes": 160588,
+      "source": {
+        "title": "大韓民國憲法 (헌법 제10호, 1987.10.29 전부개정) - 국회법률정보시스템 print",
+        "page": "https://archives.nanet.go.kr/",
+        "downloadUrl": "https://archives.nanet.go.kr/upload/namo/files/000006/%eb%8c%80%ed%95%9c%eb%af%bc%ea%b5%ad%ed%97%8c%eb%b2%95(%ed%97%8c%eb%b2%95%ec%a0%9c10%ed%98%b8).pdf",
+        "finalUrl": "https://archives.nanet.go.kr/upload/namo/files/000006/%eb%8c%80%ed%95%9c%eb%af%bc%ea%b5%ad%ed%97%8c%eb%b2%95(%ed%97%8c%eb%b2%95%ec%a0%9c10%ed%98%b8).pdf",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-constitution-1987-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Not protected: Korean Copyright Act Art. 7 (constitution, statutes)",
+        "evidence": "https://www.law.go.kr/법령/저작권법 (제7조)",
+        "attribution": "National Assembly of the Republic of Korea",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-textpdf-constitution-1987.json"
+    },
+    {
+      "id": "en-scanpdf-plastic-man-017-textlayer",
+      "file": "comic-textlayer-mid_Plastic-Man-v1-017.pdf",
+      "class": "scanned-pdf",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "weak-text-layer",
+        "comic"
+      ],
+      "sha256": "fcd7da9f66ed260ec8bbdbf1b054020f7093c2f4bcd33d3a585f7968738ff3ab",
+      "bytes": 17157077,
+      "source": {
+        "title": "Internet Archive PlasticManV1017",
+        "page": "https://archive.org/details/PlasticManV1017",
+        "downloadUrl": "https://archive.org/download/PlasticManV1017/Plastic_Man_v1_017_c2c_text.pdf",
+        "finalUrl": "",
+        "retrievedOn": "2026-07-17",
+        "originalFilename": "comic-textlayer-mid_Plastic-Man-v1-017.pdf",
+        "transformation": ""
+      },
+      "rights": {
+        "licence": "Internet Archive item, asserted public domain (1949 comic) - renewal status unverified",
+        "evidence": "https://archive.org/details/PlasticManV1017",
+        "attribution": "Quality Comics (1949)",
+        "agentReview": "legacy test_doc file; licence not re-read for ticket 68",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-scanpdf-plastic-man-017-textlayer.json"
+    },
+    {
+      "id": "fr-scanpdf-la-fontaine",
+      "file": "multilingual_2026-09-29/fr-la-fontaine-fables.pdf",
+      "class": "scanned-pdf",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "weak-text-layer",
+        "large",
+        "illustrations"
+      ],
+      "sha256": "c4e5e0c5d0cd18a9499bff32fdb607781b1788f61e3bac507f9fe997b3d4a974",
+      "bytes": 16122179,
+      "source": {
+        "title": "File:Fables de La Fontaine (IA fablesdelafontai0000lafo).pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:Fables_de_La_Fontaine_(IA_fablesdelafontai0000lafo).pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Fables_de_La_Fontaine_%28IA_fablesdelafontai0000lafo%29.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-la-fontaine-fables.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-scanpdf-la-fontaine.json"
+    },
+    {
+      "id": "ru-scanpdf-folk-tales-1838",
+      "file": "multilingual_2026-09-29/ru-folk-tales-1838.pdf",
+      "class": "scanned-pdf",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "weak-text-layer",
+        "pre-1918-orthography"
+      ],
+      "sha256": "9ff84987f4a94b75cae0c845145e766b06abf2d53c7d612399af6c34993eb901",
+      "bytes": 8282909,
+      "source": {
+        "title": "File:Бронницын. Русские народные сказки (1838).pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:%D0%91%D1%80%D0%BE%D0%BD%D0%BD%D0%B8%D1%86%D1%8B%D0%BD._%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B5_%D0%BD%D0%B0%D1%80%D0%BE%D0%B4%D0%BD%D1%8B%D0%B5_%D1%81%D0%BA%D0%B0%D0%B7%D0%BA%D0%B8_(1838).pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1f/%D0%91%D1%80%D0%BE%D0%BD%D0%BD%D0%B8%D1%86%D1%8B%D0%BD._%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B5_%D0%BD%D0%B0%D1%80%D0%BE%D0%B4%D0%BD%D1%8B%D0%B5_%D1%81%D0%BA%D0%B0%D0%B7%D0%BA%D0%B8_%281838%29.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-folk-tales-1838.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-scanpdf-folk-tales-1838.json"
+    },
+    {
+      "id": "ja-scanpdf-senryu-manga",
+      "file": "multilingual_2026-09-29/ja-senryu-manga.pdf",
+      "class": "scanned-pdf",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "image-only",
+        "manga",
+        "encrypted"
+      ],
+      "sha256": "ca4ecfd26af3eaff9bf5dd5e1e558c190cab70e8402b5c9ff41279b788e49036",
+      "bytes": 4185392,
+      "source": {
+        "title": "File:NDL1015589 川柳漫画.pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:NDL1015589_%E5%B7%9D%E6%9F%B3%E6%BC%AB%E7%94%BB.pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dc/NDL1015589_%E5%B7%9D%E6%9F%B3%E6%BC%AB%E7%94%BB.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-senryu-manga.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-scanpdf-senryu-manga.json"
+    },
+    {
+      "id": "zh-scanpdf-fairy-tales",
+      "file": "multilingual_2026-09-29/zh-chinese-fairy-tales.pdf",
+      "class": "scanned-pdf",
+      "language": "zh",
+      "script": "Hani",
+      "ocrLang": "chi_sim",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "image-only",
+        "script-variant-unconfirmed"
+      ],
+      "sha256": "9053b18a215f743138908545c6508c4f25bc9532f63ce58b88e67c96cf31b98c",
+      "bytes": 1885978,
+      "source": {
+        "title": "File:NLC416-08jh005399-19254 中國童話選.pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:NLC416-08jh005399-19254_%E4%B8%AD%E5%9C%8B%E7%AB%A5%E8%A9%B1%E9%81%B8.pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/NLC416-08jh005399-19254_%E4%B8%AD%E5%9C%8B%E7%AB%A5%E8%A9%B1%E9%81%B8.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-chinese-fairy-tales.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-scanpdf-fairy-tales.json"
+    },
+    {
+      "id": "ko-scanpdf-hong-gildong-1917",
+      "file": "multilingual_2026-09-29/ko-hong-gildong-1917.pdf",
+      "class": "scanned-pdf",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "image-only",
+        "old-print"
+      ],
+      "sha256": "b78b6828ade6f7956eaeecaaff018f320df1b502f1bf6b6647e79be38c35984c",
+      "bytes": 9111741,
+      "source": {
+        "title": "File:홍길동전.pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:%ED%99%8D%EA%B8%B8%EB%8F%99%EC%A0%84.pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/%ED%99%8D%EA%B8%B8%EB%8F%99%EC%A0%84.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": null,
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-hong-gildong-1917.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons file page imageinfo.extmetadata",
+        "attribution": null,
+        "agentReview": "commons-api; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-scanpdf-hong-gildong-1917.json"
+    },
+    {
+      "id": "en-illpdf-little-nemo",
+      "file": "multilingual_2026-09-29/en-wikipedia-little-nemo-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "0981978c295c2f7e1ba5d0ea4fc8735f8dd7c7ca249f1eded79a417c0659e748",
+      "bytes": 1351344,
+      "source": {
+        "title": "en.wikipedia.org: Little Nemo (REST page/pdf render)",
+        "page": "https://en.wikipedia.org/wiki/Little_Nemo",
+        "downloadUrl": "https://en.wikipedia.org/api/rest_v1/page/pdf/Little_Nemo",
+        "finalUrl": "https://en.wikipedia.org/api/rest_v1/page/pdf/Little_Nemo",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "en-wikipedia-little-nemo-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, 'Little Nemo', en.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-illpdf-little-nemo.json"
+    },
+    {
+      "id": "fr-illpdf-bande-dessinee",
+      "file": "multilingual_2026-09-29/fr-wikipedia-bande-dessinee-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "db01731776bb5b2d99c483d98783f0fff0f877e91d25b94d4cd8bdf207b4db49",
+      "bytes": 2061643,
+      "source": {
+        "title": "fr.wikipedia.org: Bande dessinée (REST page/pdf render)",
+        "page": "https://fr.wikipedia.org/wiki/Bande_dessin%C3%A9e",
+        "downloadUrl": "https://fr.wikipedia.org/api/rest_v1/page/pdf/Bande_dessin%C3%A9e",
+        "finalUrl": "https://fr.wikipedia.org/api/rest_v1/page/pdf/Bande_dessin%C3%A9e",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-wikipedia-bande-dessinee-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, 'Bande dessinée', fr.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-illpdf-bande-dessinee.json"
+    },
+    {
+      "id": "ru-illpdf-lubok",
+      "file": "multilingual_2026-09-29/ru-wikipedia-lubok-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "17c34f6a1481bb294d590f73d3671883856665431ee3330b0fb5e352e216d42d",
+      "bytes": 1523468,
+      "source": {
+        "title": "ru.wikipedia.org: Лубок (REST page/pdf render)",
+        "page": "https://ru.wikipedia.org/wiki/%D0%9B%D1%83%D0%B1%D0%BE%D0%BA",
+        "downloadUrl": "https://ru.wikipedia.org/api/rest_v1/page/pdf/%D0%9B%D1%83%D0%B1%D0%BE%D0%BA",
+        "finalUrl": "https://ru.wikipedia.org/api/rest_v1/page/pdf/%D0%9B%D1%83%D0%B1%D0%BE%D0%BA",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-wikipedia-lubok-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, 'Лубок', ru.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-illpdf-lubok.json"
+    },
+    {
+      "id": "ja-illpdf-choju-giga",
+      "file": "multilingual_2026-09-29/ja-wikipedia-choju-giga-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "1357729fb8e15c783f22044d0b7f97c2b6af7c707ee62a10ebaabc80f407c996",
+      "bytes": 2231840,
+      "source": {
+        "title": "ja.wikipedia.org: 鳥獣戯画 (REST page/pdf render)",
+        "page": "https://ja.wikipedia.org/wiki/%E9%B3%A5%E7%8D%A3%E6%88%AF%E7%94%BB",
+        "downloadUrl": "https://ja.wikipedia.org/api/rest_v1/page/pdf/%E9%B3%A5%E7%8D%A3%E6%88%AF%E7%94%BB",
+        "finalUrl": "https://ja.wikipedia.org/api/rest_v1/page/pdf/%E9%B3%A5%E7%8D%A3%E6%88%AF%E7%94%BB",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-wikipedia-choju-giga-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, '鳥獣戯画', ja.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-illpdf-choju-giga.json"
+    },
+    {
+      "id": "zh-illpdf-lianhuanhua",
+      "file": "multilingual_2026-09-29/zh-wikipedia-lianhuanhua-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "zh",
+      "script": "Hani",
+      "ocrLang": "chi_sim",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "3369f049843e3e7a019e5723d50aef94468908aecba91e0e6f2d366a48fd4e46",
+      "bytes": 1945079,
+      "source": {
+        "title": "zh.wikipedia.org: 連環畫 (REST page/pdf render)",
+        "page": "https://zh.wikipedia.org/wiki/%E9%80%A3%E7%92%B0%E7%95%AB",
+        "downloadUrl": "https://zh.wikipedia.org/api/rest_v1/page/pdf/%E9%80%A3%E7%92%B0%E7%95%AB",
+        "finalUrl": "https://zh.wikipedia.org/api/rest_v1/page/pdf/%E9%80%A3%E7%92%B0%E7%95%AB",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-wikipedia-lianhuanhua-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, '連環畫', zh.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-illpdf-lianhuanhua.json"
+    },
+    {
+      "id": "ko-illpdf-kim-hong-do",
+      "file": "multilingual_2026-09-29/ko-wikipedia-kim-hong-do-illustrated.pdf",
+      "class": "illustrated-pdf",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "text-plus-images"
+      ],
+      "sha256": "41d592e57a94ba2f8a8556a8a49e13e15942253c1d965fe4a3c509dbeded80d1",
+      "bytes": 2178796,
+      "source": {
+        "title": "ko.wikipedia.org: 김홍도 (REST page/pdf render)",
+        "page": "https://ko.wikipedia.org/wiki/%EA%B9%80%ED%99%8D%EB%8F%84",
+        "downloadUrl": "https://ko.wikipedia.org/api/rest_v1/page/pdf/%EA%B9%80%ED%99%8D%EB%8F%84",
+        "finalUrl": "https://ko.wikipedia.org/api/rest_v1/page/pdf/%EA%B9%80%ED%99%8D%EB%8F%84",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-wikipedia-kim-hong-do-illustrated.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Text CC BY-SA 4.0 (Wikipedia); every article image checked by API to be hosted on Commons under a free licence; UI icons only are local",
+        "evidence": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use ; per-image extmetadata via API on 2026-09-29",
+        "attribution": "Wikipedia contributors, '김홍도', ko.wikipedia.org, CC BY-SA 4.0",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-illpdf-kim-hong-do.json"
+    },
+    {
+      "id": "en-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/en-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "11-pages",
+        "balloons"
+      ],
+      "sha256": "3caf9f01ed7f3894ca6a106de7bc9a9e9b659e1730aff74259b94241745965ec",
+      "bytes": 6157148,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (en)",
+        "page": "https://www.peppercarrot.com/en/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "en-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "fr-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/fr-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "11-pages",
+        "balloons",
+        "accents"
+      ],
+      "sha256": "cd91512934d695f3b1fccb2f0b5d446bcdea222b8c9e0aa4655b6d16aa229129",
+      "bytes": 6195323,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (fr)",
+        "page": "https://www.peppercarrot.com/fr/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "ru-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/ru-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "11-pages",
+        "balloons"
+      ],
+      "sha256": "d533321a11480073ee607e20853d694e81c90d98fe808f7dc503c46876cab8ca",
+      "bytes": 6129454,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (ru)",
+        "page": "https://www.peppercarrot.com/ru/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "ja-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/ja-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn",
+      "role": "primary",
+      "split": "dev",
+      "features": [
+        "11-pages",
+        "balloons",
+        "horizontal"
+      ],
+      "sha256": "479614a6d6ba0ea35ae0a7c701260426b0c5a4e3dadcddb3a22b6d46194d3abe",
+      "bytes": 6230861,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (ja)",
+        "page": "https://www.peppercarrot.com/ja/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "zh-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/zh-Hans-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "zh",
+      "script": "Hans",
+      "ocrLang": "chi_sim",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "11-pages",
+        "balloons",
+        "simplified"
+      ],
+      "sha256": "959b882d27d8df1b89703827d77b7b0f14baf7503097cab0965dfffefde3cf18",
+      "bytes": 6039104,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (cn)",
+        "page": "https://www.peppercarrot.com/cn/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-Hans-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "ko-cbz-peppercarrot-e06",
+      "file": "multilingual_2026-09-29/ko-peppercarrot-e06-low-res.cbz",
+      "class": "comic-archive",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "primary",
+      "split": "holdout",
+      "features": [
+        "11-pages",
+        "balloons"
+      ],
+      "sha256": "df8686edd265d7c40347480cbad2204b77a42f3ba9e2d5a73f17463ee77dc449",
+      "bytes": 6156526,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (kr)",
+        "page": "https://www.peppercarrot.com/kr/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/low-res/",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-peppercarrot-e06-low-res.cbz",
+        "transformation": "packaged official low-res JPEGs into CBZ (ZIP_STORED, fixed mtime); page bytes unchanged"
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-cbz-peppercarrot-e06.json"
+    },
+    {
+      "id": "fr-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/fr-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "fr",
+      "script": "Latn",
+      "ocrLang": "fra",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "same-art-six-languages"
+      ],
+      "sha256": "95b6274d19779fa457db2c4b7cec2dab74deebb3a566f54da65f9ade052e2fb5",
+      "bytes": 2330873,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (fr)",
+        "page": "https://www.peppercarrot.com/fr/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/fr_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/fr_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "fr-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/fr-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "ru-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/ru-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "ru",
+      "script": "Cyrl",
+      "ocrLang": "rus",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "same-art-six-languages"
+      ],
+      "sha256": "cc8a0621e98f1b82e4d28b242018c4d3dd5034d8512660c2438d6401e1a95bd2",
+      "bytes": 2308028,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (ru)",
+        "page": "https://www.peppercarrot.com/ru/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/ru_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/ru_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ru-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ru-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "ja-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/ja-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "same-art-six-languages",
+        "horizontal"
+      ],
+      "sha256": "352522ec89a99e2eca5c238b29343ea5b4e0e867eaa09fe4a6179f1a1ecad7c0",
+      "bytes": 2321034,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (ja)",
+        "page": "https://www.peppercarrot.com/ja/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/ja_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/ja_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "zh-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/zh-Hans-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "zh",
+      "script": "Hans",
+      "ocrLang": "chi_sim",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "same-art-six-languages"
+      ],
+      "sha256": "56f4d1468e86a8ad1bd736a4d06edd46987676902dc11abdc18eabf01df617da",
+      "bytes": 2305101,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (cn)",
+        "page": "https://www.peppercarrot.com/cn/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/cn_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/cn_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-Hans-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "ko-comic-peppercarrot-p03",
+      "file": "multilingual_2026-09-29/ko-peppercarrot-e06-p03-hires.jpg",
+      "class": "comic-image",
+      "language": "ko",
+      "script": "Kore",
+      "ocrLang": "kor",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "same-art-six-languages"
+      ],
+      "sha256": "ca8441dae426cb1b92f1e8dde482338507e6174e49924f15a0bfc1f19a40114f",
+      "bytes": 2321296,
+      "source": {
+        "title": "Pepper&Carrot ep06_The-Potion-Contest (kr)",
+        "page": "https://www.peppercarrot.com/kr/webcomic/ep06_The-Potion-Contest.html",
+        "downloadUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/kr_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "finalUrl": "https://www.peppercarrot.com/0_sources/ep06_The-Potion-Contest/hi-res/kr_Pepper-and-Carrot_by-David-Revoy_E06P03.jpg",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ko-peppercarrot-e06-p03-hires.jpg",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "CC BY 4.0",
+        "evidence": "https://www.peppercarrot.com/en/license/index.html",
+        "attribution": "Pepper&Carrot by David Revoy, www.peppercarrot.com, CC BY 4.0; translation credits per language in the episode lang-pack",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ko-comic-peppercarrot-p03.json"
+    },
+    {
+      "id": "zh-textpdf-roc-constitution",
+      "file": "multilingual_2026-09-29/zh-Hant-roc-constitution-text.pdf",
+      "class": "text-pdf",
+      "language": "zh",
+      "script": "Hant",
+      "ocrLang": "chi_tra",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "traditional"
+      ],
+      "sha256": "94e84da3d878bce6602a358dbe299a5bcbad8552b65cd48b8e56842006ced0f1",
+      "bytes": 170491,
+      "source": {
+        "title": "中華民國憲法 (Executive Yuan file download)",
+        "page": "https://www.ey.gov.tw/",
+        "downloadUrl": "https://www.ey.gov.tw/File/EBAE3946EC6D5E9A",
+        "finalUrl": "https://www.ey.gov.tw/File/EBAE3946EC6D5E9A",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "zh-Hant-roc-constitution-text.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Not protected: Taiwan Copyright Act Art. 9 (constitution, laws, official documents)",
+        "evidence": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=J0070017&flno=9",
+        "attribution": "Republic of China (Taiwan) Ministry of Justice",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/zh-textpdf-roc-constitution.json"
+    },
+    {
+      "id": "ja-scanpdf-ia-weak-layer-1920s",
+      "file": "multilingual_2026-09-29/ja-ia-scan-weak-text-layer-1920s.pdf",
+      "class": "scanned-pdf",
+      "language": "ja",
+      "script": "Jpan",
+      "ocrLang": "jpn_vert",
+      "role": "supplementary",
+      "split": "dev",
+      "features": [
+        "weak-text-layer",
+        "vertical",
+        "large"
+      ],
+      "sha256": "ddc6381b6b214a9bf9f3933e3f1721262c3b973909e370d93d4f3020e6b0c665",
+      "bytes": 17645181,
+      "source": {
+        "title": "File:Beikoku seihokubu zairyu Nihonjin hatten ryakushi (IA beikokuseihokub00shia).pdf",
+        "page": "https://commons.wikimedia.org/wiki/File:Beikoku_seihokubu_zairyu_Nihonjin_hatten_ryakushi_(IA_beikokuseihokub00shia).pdf",
+        "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Beikoku_seihokubu_zairyu_Nihonjin_hatten_ryakushi_%28IA_beikokuseihokub00shia%29.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Beikoku_seihokubu_zairyu_Nihonjin_hatten_ryakushi_%28IA_beikokuseihokub00shia%29.pdf?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+        "retrievedOn": "2026-09-29",
+        "originalFilename": "ja-ia-scan-weak-text-layer-1920s.pdf",
+        "transformation": null
+      },
+      "rights": {
+        "licence": "Public domain",
+        "evidence": "Commons imageinfo.extmetadata LicenseShortName",
+        "attribution": "",
+        "agentReview": "agent read the source/licence page; human review pending",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/ja-scanpdf-ia-weak-layer-1920s.json"
+    },
+    {
+      "id": "en-cb7-nyoka-071",
+      "file": "cb7-tiny_Nyoka-the-Jungle-Girl-071.cb7",
+      "class": "comic-archive",
+      "language": "en",
+      "script": "Latn",
+      "ocrLang": "eng",
+      "role": "windows-only",
+      "split": "dev",
+      "features": [
+        "cb7",
+        "extension-does-not-read-cb7"
+      ],
+      "sha256": "98118d207f6a4488e33bd521be5db62be5d424510235d4f200696d47179c9719",
+      "bytes": 8242347,
+      "source": {
+        "title": "Digital Comic Museum / Internet Archive, Nyoka the Jungle Girl #71 (repackaged locally as CB7)",
+        "page": "test_doc/_fetch/fetch-corpus.ps1, make-derived.ps1",
+        "downloadUrl": "",
+        "finalUrl": "",
+        "retrievedOn": "2026-07-17",
+        "originalFilename": "cb7-tiny_Nyoka-the-Jungle-Girl-071.cb7",
+        "transformation": ""
+      },
+      "rights": {
+        "licence": "asserted public domain (1952 comic) - renewal status unverified",
+        "evidence": "test_doc/_fetch/fetch-corpus.ps1, make-derived.ps1",
+        "attribution": "Fawcett Publications (1952)",
+        "agentReview": "legacy test_doc file; licence not re-read for ticket 68",
+        "reviewedBy": "",
+        "reviewedOn": "",
+        "permitsCommit": false,
+        "restrictions": ""
+      },
+      "expect": "expect/en-cb7-nyoka-071.json"
+    }
+  ]
+}

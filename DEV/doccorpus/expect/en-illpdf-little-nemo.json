@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "en-illpdf-little-nemo",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 14,
+  "textLayer": "full",
+  "sourceTextChars": 33029,
+  "lang": "en",
+  "snippets": [
+    "Nemo in bed where he awoke at the end of each strip (here February 11, 1906)",
+    "Publishers New York Herald New York American",
+    "Nemo and the Little Imp explore the city as giants, September 9, 1907.",
+    "Winsor McCay's son Robert served as the model for Nemo."
+  ],
+  "omissions": [],
+  "notes": ""
+}

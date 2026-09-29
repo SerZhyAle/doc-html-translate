@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ko-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/kr/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "ko",
+  "snippets": [],
+  "lettering": [
+    "이게 뭐야 ?!!",
+    "코모나 시장으로서,",
+    "포션 대회의 개최를...",
+    "선언합니다!",
+    "첫째 포션 대회의",
+    "참가자로 4명의 마녀를",
+    "초대한 것을",
+    "영광스럽게 생각합니다",
+    "코모나 포션 대회",
+    "부탁드립니다!",
+    "박수"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}

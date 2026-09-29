@@ -5,6 +5,7 @@ package pdf
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html"
 	"image"
@@ -42,11 +43,16 @@ const maxPDFToTextOutput = 256 << 20
 func Extract(ctx context.Context, pdfPath, outputDir string) (*epub.Book, error) {
 	// pdftotext handles complex font encodings, ligatures, and text ordering
 	// far better than the pure-Go reader.
+	// textless: pdftotext read the file and found no text on any page - a scan. Such a file is
+	// still read by the pure-Go reader below, as it always has been; only when that reader cannot
+	// open it at all is the book built from the page images alone (imageOnlyFallback).
+	textless := false
 	if pdftotext := findPDFToText(); pdftotext != "" {
 		book, err := extractWithPDFToText(ctx, pdftotext, pdfPath, outputDir)
 		if err == nil {
 			return book, nil
 		}
+		textless = errors.Is(err, errPDFToTextNoContent)
 		// A cancelled run stops here: the fallback reader would read the whole book again.
 		if ctx.Err() != nil {
 			return nil, err
@@ -69,7 +75,7 @@ func Extract(ctx context.Context, pdfPath, outputDir string) (*epub.Book, error)
 	logging.Printf("  WARNING: PDF extract failed, trying repair fallback: %v\n", err)
 	repairedPath, repErr := tryRepairPDF(pdfPath)
 	if repErr != nil {
-		return nil, err
+		return imageOnlyFallback(ctx, textless, pdfPath, outputDir, err)
 	}
 	defer func() { _ = os.Remove(repairedPath) }()
 
@@ -78,7 +84,7 @@ func Extract(ctx context.Context, pdfPath, outputDir string) (*epub.Book, error)
 		if strings.Contains(retryErr.Error(), "no text content found in PDF") {
 			return nil, fmt.Errorf("no text content found in PDF (likely scanned/image-only, OCR required): %s", pdfPath)
 		}
-		return nil, retryErr
+		return imageOnlyFallback(ctx, textless, pdfPath, outputDir, retryErr)
 	}
 
 	logging.Printf("  PDF repair fallback succeeded.\n")
@@ -130,9 +136,35 @@ func extractWithPDFToText(ctx context.Context, pdftotextBin, pdfPath, outputDir 
 		pageTexts = pageTexts[:len(pageTexts)-1]
 	}
 	if len(pageTexts) == 0 {
-		return nil, fmt.Errorf("pdftotext extracted no content")
+		return nil, errPDFToTextNoContent
 	}
+	return pagesFromText(ctx, pdfPath, outputDir, pageTexts)
+}
 
+// errPDFToTextNoContent is pdftotext reading a PDF and finding no text on any page.
+var errPDFToTextNoContent = errors.New("pdftotext extracted no content")
+
+// imageOnlyFallback is the last resort for a scan the pure-Go reader cannot open - an AES-256
+// encrypted PDF is the measured case (ledongthuc/pdf: "256-bit encryption key", corpus case
+// ja-scanpdf-senryu-manga, ticket 72), while pdftotext and pdfcpu read it fine. When pdftotext
+// found the file textless, the book is built from the page images pdfcpu extracts, exactly as the
+// pdftotext path builds a page with no text. Otherwise the reader's own error stands.
+func imageOnlyFallback(ctx context.Context, textless bool, pdfPath, outputDir string, cause error) (*epub.Book, error) {
+	if !textless {
+		return nil, cause
+	}
+	logging.Printf("  NOTE: the PDF reader could not open this file (%v); building the book from its page images\n", cause)
+	book, err := pagesFromText(ctx, pdfPath, outputDir, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%w; image-only fallback: %v", cause, err)
+	}
+	return book, nil
+}
+
+// pagesFromText writes one HTML page per PDF page from pdftotext's per-page text and the page
+// images, and returns the book. A page with neither is skipped; pageTexts may be empty when every
+// page is a picture.
+func pagesFromText(ctx context.Context, pdfPath, outputDir string, pageTexts []string) (*epub.Book, error) {
 	title := pdfTitle(pdfPath)
 	book := &epub.Book{Title: title}
 
@@ -259,6 +291,7 @@ func parsePDFLayoutPage(text string) []pageItem {
 	}
 
 	merge := isDoubleSpacedLayout(blocks)
+	pageMargin := pageLeftMargin(text)
 
 	var items []pageItem
 	for _, b := range blocks {
@@ -270,10 +303,38 @@ func parsePDFLayoutPage(text string) []pageItem {
 			items[len(items)-1].text += " " + b.text
 			continue
 		}
-		items = append(items, pageItem{b.text, classifyBlock(b.text, b.leadingSpaces)})
+		items = append(items, pageItem{b.text, classifyBlock(b.text, b.leadingSpaces, pageMargin)})
 	}
 
 	return items
+}
+
+// pageLeftMargin is the page's own left margin: the smallest leading-space count of the page's
+// text lines, counted the way parseLayoutBlocks counts a block's first line (spaces only; the
+// zero-width-space marker is a paragraph signal, not an indent, and does not count).
+//
+// Centring is measured against this baseline, not against column 0. A page whose whole text
+// column sits inset - a wide binder margin, a per-page indent - used to make every block
+// "centred", which on CJK text (whose paragraphs are one or two whitespace words) promoted the
+// entire page to headings; the corpus case is zh-textpdf-un-a-res-70-1, 400 headings on 32 pages
+// (ticket 73). A running header at column 0 holds the baseline there, so an ordinary body line
+// never reads as centred by accident.
+func pageLeftMargin(text string) int {
+	margin := -1
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimRight(line, " \t\r")
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		trimmed := strings.TrimLeft(line, " \t"+zeroWidthSpaceMarker)
+		if n := strings.Count(line[:len(line)-len(trimmed)], " "); margin < 0 || n < margin {
+			margin = n
+		}
+	}
+	if margin < 0 {
+		return 0
+	}
+	return margin
 }
 
 // parseLayoutBlocks splits a page into blank-line-delimited blocks and records,

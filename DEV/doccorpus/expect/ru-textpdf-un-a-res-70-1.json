@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ru-textpdf-un-a-res-70-1",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 44,
+  "textLayer": "full",
+  "sourceTextChars": 115958,
+  "lang": "ru",
+  "snippets": [
+    "Организация Объединенных Наций",
+    "Семидесятая сессия Пункты 15 и 116 повестки дня",
+    "[без передачи в главные комитеты (A/70/L.1)]",
+    "Просьба отправить на вторичную переработку"
+  ],
+  "omissions": [],
+  "notes": ""
+}

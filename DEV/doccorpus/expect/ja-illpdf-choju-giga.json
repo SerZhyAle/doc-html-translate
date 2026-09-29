@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ja-illpdf-choju-giga",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 9,
+  "textLayer": "full",
+  "sourceTextChars": 6405,
+  "lang": "ja",
+  "snippets": [
+    "出典: フリー百科事典『ウィキペディア（Wikipedia）』",
+    "似した手法が見られることもあって、「日本最古の漫画」とも称される[1]。",
+    "益田家旧蔵断簡（実業家・茶人である益田孝が収集 していた） 高松家旧蔵断簡（ブルックリン美術館寄託、A.B.マ",
+    "甲巻の画像（全巻）"
+  ],
+  "omissions": [],
+  "notes": ""
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ja-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/ja/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "ja",
+  "snippets": [],
+  "lettering": [
+    "ええっ ?!!",
+    "今ここに...",
+    "コモナ市長の私が",
+    "魔法薬コンテストの",
+    "開会を宣言します!",
+    "記念すべき第1回の開催に",
+    "4人もの魔女が",
+    "参加してくださったことを",
+    "街として歓迎しましょう",
+    "さあ皆さん",
+    "盛大なる拍手で",
+    "Komona Potion Contest",
+    "お迎えください :"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}

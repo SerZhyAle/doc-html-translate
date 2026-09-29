@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ko-illpdf-kim-hong-do",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 9,
+  "textLayer": "full",
+  "sourceTextChars": 7863,
+  "lang": "ko",
+  "snippets": [
+    "조선 경기도 안산군 군내면 성고",
+    "종교 유교(성리학)",
+    "행해각를된무도예책우의과려그정했마림이다다므.그정로림조,을의정조덧명가붙으여그로림이간",
+    "— 정조의 어제문집, 《홍재전서》, 〈삼가 주자 선생의 시에 화운함〉, 시의 말미협에주첨(夾부註된)"
+  ],
+  "omissions": [],
+  "notes": ""
+}

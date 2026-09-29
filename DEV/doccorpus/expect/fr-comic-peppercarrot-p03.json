@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "caseId": "fr-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/fr/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "fr",
+  "snippets": [],
+  "lettering": [
+    "QUOI ?!!",
+    "Je déclare, en tant que Maire de Komona, le concours de potions ouvert !",
+    "Notre ville est très honorée d'accueillir pas moins de quatre sorcières pour cette première.",
+    "Merci d'applaudir",
+    "bien fort",
+    "nos candidates...",
+    "Concours de Potions de Komona"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}

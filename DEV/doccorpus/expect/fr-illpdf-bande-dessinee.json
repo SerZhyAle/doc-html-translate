@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "fr-illpdf-bande-dessinee",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 30,
+  "textLayer": "full",
+  "sourceTextChars": 81008,
+  "lang": "fr",
+  "snippets": [
+    "Planche du Little Nemo de Winsor McCay (1905).",
+    "du site, penchent pour une interprétation chamanique, les dessins auraient une fonction « magique ».",
+    "retenue depuis la mise en avant de la bande dessinée, neuvième art.",
+    "Un strip du Thimble Theatre de 1920 montrant Olive Oyl et son frère Castor."
+  ],
+  "omissions": [],
+  "notes": ""
+}

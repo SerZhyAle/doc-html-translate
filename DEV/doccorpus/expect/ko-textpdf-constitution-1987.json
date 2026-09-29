@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ko-textpdf-constitution-1987",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 14,
+  "textLayer": "full",
+  "sourceTextChars": 14279,
+  "lang": "ko",
+  "snippets": [
+    "제1조 ① 대한민국은 민주공화국이다. ② 대한민국의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나온다.",
+    "③ 훈장등의 영전은 이를 받은 자에게만 효력이 있고, 어떠한 특권도 이에 따르지 아니한다.",
+    "제20조 ① 모든 국민은 종교의 자유를 가진다. ② 국교는 인정되지 아니하며, 종교와 정치는 분리된다.",
+    "제40조 입법권은 국회에 속한다."
+  ],
+  "omissions": [],
+  "notes": ""
+}

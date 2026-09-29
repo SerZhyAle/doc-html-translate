@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "fr-textpdf-un-a-res-70-1",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 38,
+  "textLayer": "full",
+  "sourceTextChars": 113842,
+  "lang": "fr",
+  "snippets": [
+    "Distr. générale 21 octobre 2015",
+    "Résolution adoptée par l’Assemblée générale le 25 septembre 2015",
+    "70/1. Transformer notre monde : le Programme de développement durable à l’horizon 2030",
+    "Nos principes communs et nos engagements"
+  ],
+  "omissions": [],
+  "notes": ""
+}

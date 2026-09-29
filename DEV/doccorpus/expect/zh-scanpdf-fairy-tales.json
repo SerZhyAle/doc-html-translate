@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "caseId": "zh-scanpdf-fairy-tales",
+  "origin": "draft",
+  "draftSource": "none",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 30,
+  "textLayer": "none",
+  "lang": "zh",
+  "snippets": [],
+  "omissions": [],
+  "notes": "No independent transcription exists yet: a person transcribes representative lettering or text from the original page. OCR output must not seed it."
+}

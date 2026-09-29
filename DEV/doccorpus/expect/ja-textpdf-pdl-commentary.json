@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ja-textpdf-pdl-commentary",
+  "origin": "draft",
+  "draftSource": "the PDF's own text layer (bundled pdftotext)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 12,
+  "textLayer": "full",
+  "sourceTextChars": 11673,
+  "lang": "ja",
+  "snippets": [
+    "「公共データ利用規約（第 1.0 版）」の解説",
+    "＜全体の構成、基本的考え方について＞",
+    "１．当ウェブサイトのコンテンツの利用について",
+    "［解説］ アは、本コンテンツを利用する際には出典の記載が条件とされていることを規定す"
+  ],
+  "omissions": [],
+  "notes": ""
+}

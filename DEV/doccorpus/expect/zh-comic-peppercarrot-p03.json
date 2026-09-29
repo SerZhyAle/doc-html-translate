@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "caseId": "zh-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/cn/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "zh",
+  "snippets": [],
+  "lettering": [
+    "什么？！！",
+    "身为科魔那市长，我宣布魔药大赛拉开序幕！",
+    "即使是第一届魔药大赛，",
+    "本市依然迎来了",
+    "至少四位魔女参赛",
+    "请大家鼓掌",
+    "热烈欢迎：",
+    "科魔那市魔药大赛"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}

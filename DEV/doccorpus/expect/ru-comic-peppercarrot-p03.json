@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "caseId": "ru-comic-peppercarrot-p03",
+  "origin": "draft",
+  "draftSource": "author lettering: multilingual_2026-09-29/xx-peppercarrot-e06-lang-pack.zip (lang/ru/E06P*.svg)",
+  "reviewedBy": "",
+  "reviewedOn": "",
+  "pages": 1,
+  "lang": "ru",
+  "snippets": [],
+  "lettering": [
+    "ЧТО?!!",
+    "На правах мэра Комоны,",
+    "я объявляю соревнование зельеваров... Открытым!",
+    "Наш город рад приветствовать на первом таком конкурсе аж четырёх ведьм!",
+    "Давайте же им",
+    "громко",
+    "Конкурс Зельеваров Комоны",
+    "поаплодируем !"
+  ],
+  "omissions": [],
+  "notes": "Lettering lines are the author's own SVG text in reading order of the file, not OCR. The painted sign on P03 is part of the artwork; check whether it must stay unplated."
+}
