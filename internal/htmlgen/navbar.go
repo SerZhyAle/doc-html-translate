@@ -419,7 +419,7 @@ var readerCSS = `
     outline-offset: 2px;
   }
 </style>
-`
+` + searchCSS
 
 // readerMarker opens the reader script; its presence marks a page as already injected.
 const readerMarker = `<script id="dht-reader">`
@@ -635,15 +635,19 @@ func buildNavBarHTML(nav NavInfo) string {
 	// prev/next live in a turn group pinned to the far corner (next flush to the edge)
 	// so "next" is the easiest button to hit while reading.
 	turn := fmt.Sprintf(`<span class="nav-turn">%s%s</span>`, prevLink, nextLink)
+	searchIndexHref := nav.IndexHref
+	if nav.Total == 1 {
+		searchIndexHref = ""
+	}
 
 	// The bar declares its own language and direction. <html lang> carries the *document's*
 	// language - that is what makes Chrome offer "Translate page", the product's free flow - so
 	// interface words in a different language must be attributed to themselves here, or the
 	// detector can be pulled towards the chrome and the offer never appears.
-	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s`,
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s%s</div><div id="dht-progress" class="dht-progress"></div></div>%s%s%s`,
 		i18n.Language(), chromeDirAttr(),
 		fileEl, titleEl, indexLink, readerControlsHTML(), versionLink, info, turn, navBarScript,
-		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total))
+		readerScript(nav.BookKey, nav.SelfHref, nav.Current, nav.Total), searchScript(nav.BookKey, nav.SelfHref, searchIndexHref))
 }
 
 // chromeDirAttr returns ` dir="rtl"` for a right-to-left interface language, or "" otherwise.
@@ -675,7 +679,7 @@ func readerControlsHTML() string {
 	// (ICON-RENDER rule 8). The text layer has one drawing for both states until the catalog
 	// draws its off form, so aria-pressed and the pressed look carry the state. The theme select
 	// shows app.theme once; its choices are words, never the sun or the moon of other meanings.
-	return fmt.Sprintf(
+	controls := fmt.Sprintf(
 		`<button id="dht-font-dec" class="dht-btn" type="button" title="%[1]s" aria-label="%[1]s">%[13]s</button>`+
 			`<button id="dht-font-inc" class="dht-btn" type="button" title="%[2]s" aria-label="%[2]s">%[14]s</button>`+
 			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%[3]s" aria-label="%[3]s">%[15]s</button>`+
@@ -683,6 +687,7 @@ func readerControlsHTML() string {
 			`<span class="dht-sel">%[16]s<select id="dht-theme-sel" title="%[8]s" aria-label="%[8]s"><option value="light">%[9]s</option><option value="sepia">%[10]s</option><option value="dark">%[11]s</option><option value="night">%[12]s</option></select></span>`,
 		titleSmaller, titleLarger, titleOCR, titleFont, fSerif, fSans, fMono, titleTheme, tLight, tSepia, tDark, tNight,
 		glyphSVG("action.text-smaller"), glyphSVG("action.text-larger"), glyphSVG("view.text-layer"), glyphSVG("app.theme"))
+	return controls + searchControlsHTML()
 }
 
 // versionLabel formats the running app version for display in the navbar.

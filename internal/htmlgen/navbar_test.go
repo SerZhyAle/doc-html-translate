@@ -207,7 +207,7 @@ func TestInjectNavBars(t *testing.T) {
 // floor" holds the extension edition to the same list. A control under 24px, a chrome without
 // a theme-accent focus ring, or white ink on an accent button regresses here first.
 func TestReaderChromeAccessibilityFloor(t *testing.T) {
-	css := navBarCSS + readerCSS
+	css := navBarCSS + readerCSS + searchCSS
 	for _, want := range []string{
 		"flex-wrap: wrap",            // the bar reflows at 200% zoom instead of clipping
 		".dht-navbar :focus-visible", // the chrome carries a theme-accent focus ring
@@ -215,7 +215,8 @@ func TestReaderChromeAccessibilityFloor(t *testing.T) {
 		"box-sizing:border-box; min-height:24px", // buttons and selects, floor included
 		"margin-inline-start: auto",              // RTL mirrors through logical properties
 		"padding-inline-end: 12px",
-		"color:var(--dht-bg)", // accent buttons take theme ink, never white
+		"color:var(--dht-bg)",       // accent buttons take theme ink, never white
+		"#dht-search-close{padding", // the close word clears the floor too
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("injected reader chrome lost %q - the accessibility floor regressed", want)

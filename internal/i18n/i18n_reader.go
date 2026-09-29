@@ -8,6 +8,21 @@ package i18n
 //
 // Order of the translations is always Codes[1:]: ru uk de it es fr pt ar hi bn ur zh.
 func init() {
+	Add("Search", "Поиск", "Пошук", "Suche", "Cerca", "Buscar", "Rechercher", "Pesquisar", "بحث", "खोजें", "অনুসন্ধান", "تلاش", "搜索")
+	Add("Search text", "Искать текст", "Шукати текст", "Text suchen", "Cerca testo", "Buscar texto", "Rechercher du texte", "Pesquisar texto", "البحث في النص", "पाठ खोजें", "পাঠ খুঁজুন", "متن تلاش کریں", "搜索文字")
+	Add("Scope", "Область", "Область", "Bereich", "Ambito", "Ámbito", "Portée", "Âmbito", "النطاق", "दायरा", "পরিসর", "دائرہ", "范围")
+	Add("This page", "Эта страница", "Ця сторінка", "Diese Seite", "Questa pagina", "Esta página", "Cette page", "Esta página", "هذه الصفحة", "यह पृष्ठ", "এই পৃষ্ঠা", "یہ صفحہ", "本页")
+	Add("Whole book", "Вся книга", "Уся книга", "Ganzes Buch", "Libro intero", "Libro completo", "Livre entier", "Livro inteiro", "الكتاب كله", "पूरी किताब", "সম্পূর্ণ বই", "پوری کتاب", "整本书")
+	Add("Close", "Закрыть", "Закрити", "Schließen", "Chiudi", "Cerrar", "Fermer", "Fechar", "إغلاق", "बंद करें", "বন্ধ করুন", "بند کریں", "关闭")
+	Add("Matches: {1} - {2}", "Найдено: {1} - {2}", "Знайдено: {1} - {2}", "Gefunden: {1} - {2}", "Trovati: {1} - {2}",
+		"Encontrados: {1} - {2}", "Trouvés : {1} - {2}", "Encontrados: {1} - {2}", "النتائج: {1} - {2}",
+		"परिणाम: {1} - {2}", "ফলাফল: {1} - {2}", "نتائج: {1} - {2}", "匹配：{1} - {2}")
+	Add("OCR text plates", "Текстовые блоки OCR", "Текстові блоки OCR", "OCR-Textfelder", "Testo OCR", "Texto OCR", "Texte OCR", "Texto OCR", "نص التعرف الضوئي", "OCR पाठ", "OCR পাঠ", "OCR متن", "OCR 文字")
+	Add("Scanned pages need OCR text plates", "Для поиска в сканах нужен распознанный текст", "Для пошуку в сканах потрібен розпізнаний текст", "Gescannte Seiten benötigen OCR-Textfelder", "Le pagine scansionate richiedono testo OCR", "Las páginas escaneadas requieren texto OCR", "Les pages numérisées nécessitent du texte OCR", "Páginas digitalizadas precisam de texto OCR", "تحتاج الصفحات الممسوحة إلى نص التعرف الضوئي", "स्कैन किए गए पृष्ठों के लिए OCR पाठ चाहिए", "স্ক্যান করা পৃষ্ঠায় OCR পাঠ প্রয়োজন", "اسکین شدہ صفحات کے لیے OCR متن درکار ہے", "扫描页面需要 OCR 文字")
+	Add("Enter text to search", "Введите текст для поиска", "Введіть текст для пошуку", "Suchtext eingeben", "Inserisci il testo da cercare", "Escribe el texto a buscar", "Saisissez le texte à rechercher", "Digite o texto a pesquisar", "أدخل النص للبحث", "खोजने के लिए पाठ दर्ज करें", "খোঁজার পাঠ লিখুন", "تلاش کے لیے متن لکھیں", "输入搜索文字")
+	Add("Searching whole book", "Поиск по всей книге", "Пошук в усій книзі", "Suche im ganzen Buch", "Ricerca nel libro intero", "Buscando en todo el libro", "Recherche dans le livre entier", "Pesquisando no livro inteiro", "البحث في الكتاب كله", "पूरी किताब में खोज", "সম্পূর্ণ বইয়ে খোঁজা হচ্ছে", "پوری کتاب میں تلاش", "正在搜索整本书")
+	Add("Search index unavailable", "Поисковый индекс недоступен", "Пошуковий індекс недоступний", "Suchindex nicht verfügbar", "Indice di ricerca non disponibile", "Índice de búsqueda no disponible", "Index de recherche indisponible", "Índice de pesquisa indisponível", "فهرس البحث غير متاح", "खोज अनुक्रमणिका उपलब्ध नहीं है", "অনুসন্ধান সূচি অনুপলব্ধ", "تلاش کا اشاریہ دستیاب نہیں", "搜索索引不可用")
+	Add("showing first 500", "показаны первые 500", "показано перші 500", "erste 500 angezeigt", "mostrati i primi 500", "se muestran los primeros 500", "500 premiers affichés", "mostrando os primeiros 500", "عرض أول 500", "पहले 500 दिखाए गए", "প্রথম ৫০০ দেখানো হয়েছে", "پہلے 500 دکھائے گئے", "仅显示前 500 个")
 	// Paging names are media.previous / media.next qualified with their object, as ICON-SET
 	// rule 3 allows ("Previous page"). They never borrow nav.back's word: the Russian "Назад"
 	// and the German "Zurück" these links used to read are Back, a different meaning.

@@ -88,5 +88,5 @@ misread is the common case by the only measurement this rule has.
 - Live repro: `doc-html-translate -ocr` on the source page, 0 pipes left in the plate.
 - Catalog: `OCR-PIPELINE` 1.5 (amendment, document log, registry row, pointer file) - before the code.
 - **Owner to verify in a real browser:** the same image through the extension edition, page
-  translation on - the Russian should read "Я Эндрю. Я учусь в пятом классе. Я встаю в семь..." with
+  translation on - the Russian should read "Я Эндрю. Я учусь в пятом классе. Я встаю в семь.." with
   no bars.

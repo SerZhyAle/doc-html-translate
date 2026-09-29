@@ -118,6 +118,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString(navBody)
 	sb.WriteString("  </nav>\n")
 	sb.WriteString(readerScript(readerKey(book), "", 0, len(spineHrefs)))
+	sb.WriteString(searchScript(readerKey(book), "", "index.html"))
 	sb.WriteString("</body>\n")
 	sb.WriteString("</html>\n")
 

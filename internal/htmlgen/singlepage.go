@@ -142,6 +142,7 @@ func GenerateSinglePage(book *epub.Book, outputDir, sourceName string) (string, 
 	sb.WriteString("\n</main>\n")
 	sb.WriteString(navBarScript)
 	sb.WriteString(readerScript(readerKey(book), "index.html", 1, 1))
+	sb.WriteString(searchScript(readerKey(book), "index.html", ""))
 	sb.WriteString("</body>\n</html>\n")
 
 	WriteFavicon(outputDir)

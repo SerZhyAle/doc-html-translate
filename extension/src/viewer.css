@@ -186,7 +186,7 @@ body {
 #search-panel li { margin:.4em 0; }
 #search-panel li button { background:none;border:0;color:var(--link);text-align:start;font:inherit;cursor:pointer; }
 #content mark.reader-search-hit { background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00; }
-#content mark.reader-search-current { background:#ff8b46!important;outline:3px solid #3156c9; }
+#content mark.reader-search-current { background:#ff8b46!important;color:#191919!important;outline:3px solid #3156c9; }
 #toc .collapsed > ul { display: none; }
 @media (max-width: 700px) {
   #toc:not(.hidden) { position: fixed; z-index: 20; inset-block-start: 3.1em; inset-inline-start: 0; width: min(19em, calc(100vw - 1em)); max-height: calc(100dvh - 3.4em); box-sizing: border-box; background: var(--bg); box-shadow: 0 6px 20px #0003; }

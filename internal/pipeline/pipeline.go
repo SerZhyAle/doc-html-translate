@@ -327,6 +327,9 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 			return ExitIOError, fmt.Errorf("generate index: %w", err)
 		}
 		logging.Printf("  TOC created: %s\n", generatedIndex)
+		if err := htmlgen.WriteSearchIndex(book, outputDir); err != nil {
+			return ExitIOError, fmt.Errorf("write search index: %w", err)
+		}
 	}
 
 	// The very last write: from here on the output counts as finished and may be reopened.

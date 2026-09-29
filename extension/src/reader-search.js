@@ -1,11 +1,21 @@
 // Search stays in the viewer tab. It walks rendered document text, including OCR plates.
+// Lowering can change length (Turkic dotted I lowers to two code units under most locales),
+// so every lowered code unit records the offset of the character it came from and matches
+// report offsets in the ORIGINAL string - a highlight must land on what was matched.
 export function occurrences(text, query, lang) {
-  let haystack, needle;
-  try { haystack = text.toLocaleLowerCase(lang); needle = query.toLocaleLowerCase(lang); }
-  catch { haystack = text.toLowerCase(); needle = query.toLowerCase(); }
+  const fold = (s) => { try { return s.toLocaleLowerCase(lang); } catch { return s.toLowerCase(); } };
+  const needle = fold(query);
   const found = [];
   if (!needle) return found;
-  for (let from = 0, at; (at = haystack.indexOf(needle, from)) !== -1; from = at + Math.max(needle.length, 1)) found.push(at);
+  const map = [];
+  let lowered = "", i = 0;
+  for (const ch of text) {
+    const f = fold(ch);
+    for (let k = 0; k < f.length; k++) map.push(i);
+    lowered += f;
+    i += ch.length;
+  }
+  for (let from = 0, at; (at = lowered.indexOf(needle, from)) !== -1; from = at + Math.max(needle.length, 1)) found.push(map[at]);
   return found;
 }
 

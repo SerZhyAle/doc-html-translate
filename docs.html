@@ -137,6 +137,7 @@
         <ul>
           <li><strong>Reading themes</strong> - a toggle in the navbar (and on <code>index.html</code>) cycles Light / Sepia / Dark / Night. Your choice is stored in <code>localStorage</code> and applied on every page.</li>
           <li><strong>Reading position</strong> - your scroll is saved per book, so the app remembers where you stopped even when you don't. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book.</li>
+          <li><strong>Search</strong> - the navbar's search panel finds a phrase on this page or across the whole book; multi-page output ships a local text index, so whole-book search works on <code>file://</code>. Results list context lines and the chosen match is highlighted; recognized OCR text over images is searchable where recognition produced it - image-only pages have no text to match.</li>
           <li><strong>Spending guard</strong> - for paid engines, <code>-max-cost N</code> turns the cost estimate (chars / 1e6 * $20) into a hard pre-flight limit: if the estimate exceeds N, translation is skipped and the book is still produced untranslated.</li>
         </ul>
         <p class="small">Single-page documents have no navbar and therefore no reader layer.</p>

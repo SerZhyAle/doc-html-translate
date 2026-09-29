@@ -324,6 +324,24 @@ same floor, verified in ticket 57's checklist; the book's own content is out of 
   per stage - never per log line or per OCR event.
 - Right-to-left interface languages mirror the chrome through logical properties
   (`margin-inline-start`, `border-inline-end`), never `left`/`right`.
+### Reader search (2026-09-29)
+
+Both editions match a literal phrase without changing the document language. Case folding uses
+the document's `<html lang>` through `toLocaleLowerCase`, and because lowering can change string
+length (Turkic dotted I) every lowered code unit carries the offset it came from, so match offsets
+always point into the original text - a highlight lands on what was matched (pinned by the
+extension suite). Results show a text-node context and highlight the chosen match. The UI language
+applies to search controls only. Search marks and queries are never persisted. OCR plates are
+ordinary searchable text where they exist.
+
+The generated desktop reader searches the current page in the live DOM and the whole book through
+`dht-search-index.js`, written after OCR and translation. The file is a local script so chapter pages
+can load it under `file://`; result links carry the query and per-page match ordinal. The merged
+single page searches its live DOM. The extension searches its rendered document model; a whole-book
+PDF search first renders the remaining pages, while a current-page search stays in the visible section.
+The two implementations live in [`internal/htmlgen/search.go`](../internal/htmlgen/search.go) and
+[`extension/src/reader-search.js`](../extension/src/reader-search.js).
+
 
 ### Reading position (resume) (2026-09-29)
 
