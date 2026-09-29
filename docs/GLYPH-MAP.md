@@ -49,6 +49,7 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Recognized text layer toggle | `▤`, English aria-label | `view.text-layer` | Text layer (`ttOcrLayer`) | conforms; state as in the book (exception) |
 | Theme select | - (text) | `app.theme` | Theme (`ariaTheme`) | conforms |
 | Page jump | - (text) | `nav.go-to-page` | Go to page (`ttGoToPage`) | conforms |
+| Resume-reading offer | - (new 2026-09-29, ticket 53) | `feature.continue-reading` | Continue reading (`vResumeContinue`, the desktop's words) | conforms |
 
 ## GUI launcher (`cmd/doc-html-ui/ui.html`)
 

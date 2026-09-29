@@ -623,5 +623,9 @@
   "vSavedCompletePages": {"message":"محفوظ ہو گیا - مکمل، تمام {1} صفحات"},
   "vSavedCompleteDoc": {"message":"محفوظ ہو گیا - پوری دستاویز"},
 
-  "vExportPartialLineComic": {"message":"جزوی برآمد: فائل میں {2} میں سے {1} صفحات شامل ہوں گے۔"}
+  "vExportPartialLineComic": {"message":"جزوی برآمد: فائل میں {2} میں سے {1} صفحات شامل ہوں گے۔"},
+
+  "vResumeAt": {"message":"پڑھنا صفحہ {1} سے جاری رکھیں؟"},
+  "vResumeContinue": {"message":"پڑھنا جاری رکھیں"},
+  "vResumeReset": {"message":"دوبارہ شروع کریں"}
 }

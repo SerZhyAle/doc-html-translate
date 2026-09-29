@@ -714,5 +714,9 @@
   "vSavedCompletePages": {"message":"Saved - complete, all {1} pages"},
   "vSavedCompleteDoc": {"message":"Saved - the complete document"},
 
-  "vExportPartialLineComic": {"message":"Partial export: the file would hold {1} of {2} pages."}
+  "vExportPartialLineComic": {"message":"Partial export: the file would hold {1} of {2} pages."},
+
+  "vResumeAt": {"message":"Continue reading from page {1}?"},
+  "vResumeContinue": {"message":"Continue reading"},
+  "vResumeReset": {"message":"Start over"}
 }

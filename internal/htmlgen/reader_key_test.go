@@ -67,6 +67,23 @@ func TestReaderKeyDistinguishesBooks(t *testing.T) {
 	}
 }
 
+// The derivation is frozen twice: the extension's resume feature (ticket 53) hashes the
+// same four inputs with the same FNV-1a, and extension/test/reading-position.test.mjs
+// asserts these exact hex literals. Changing either side invalidates every saved position
+// that edition's readers hold, and unaligns the editions.
+func TestReaderKeyGoldenValues(t *testing.T) {
+	cases := []struct{ name, title, want string }{
+		{"a.epub", "Title", "b47b207ce648c694"},
+		{"book.epub", "War and Peace", "8f6d8fb2fe4caf87"},
+		{"1984.txt", "1984", "adf39f75ec5d86d1"},
+	}
+	for _, c := range cases {
+		if got := ReaderKey(c.name, 100, c.title, 3); got != c.want {
+			t.Errorf("ReaderKey(%q, 100, %q, 3) = %s, want %s", c.name, c.title, got, c.want)
+		}
+	}
+}
+
 // E13: a URL fragment is an explicit destination, so the saved position is restored only
 // when the page was opened without one.
 func TestReaderScriptRestoresOnlyWithoutFragment(t *testing.T) {

@@ -13,6 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { register } from "node:module";
 import { parseHTML, DOMParser } from "linkedom";
+import { readerKey } from "../src/reading-position.js";
 
 const VENDOR_STUB = `
 export const GlobalWorkerOptions = {};
@@ -42,6 +43,11 @@ const VIEWER_HTML = fs.readFileSync(path.join(root, "src", "viewer.html"), "utf8
   .replace(/<script[^>]*src="viewer\.js"[^>]*><\/script>/, "");
 
 const recorded = [];
+// storedData stands in for chrome.storage.local: a test can seed it (a saved reading
+// position, ticket 53) before the viewer runs, and everything the viewer writes lands in
+// it, so a later module instance reads back what an earlier one saved - one shared
+// profile store, which is exactly the scope the resume feature lives in.
+const storedData = {};
 globalThis.chrome = {
   runtime: {
     getURL: (p) => `chrome-extension://test/${p}`,
@@ -49,8 +55,14 @@ globalThis.chrome = {
   },
   storage: {
     local: {
-      get: async () => ({}),
-      set: async (obj) => { recorded.push(obj); },
+      get: async (keys) => {
+        const out = {};
+        for (const k of (Array.isArray(keys) ? keys : [keys])) {
+          if (k in storedData) out[k] = storedData[k];
+        }
+        return out;
+      },
+      set: async (obj) => { Object.assign(storedData, obj); recorded.push(obj); },
     },
   },
   tabs: { getCurrent: async () => ({ id: 1 }) },
@@ -215,8 +227,9 @@ test("a local file picked during a slow URL load is the document that stays show
 });
 
 // bootViewer loads a fresh viewer for `search` without waiting for it to settle, for the cases
-// that interleave a second document with a first one still loading.
-async function bootViewer(search, fetchDoc) {
+// that interleave a second document with a first one still loading. `hash` puts a fragment on
+// the viewer URL - an explicit destination (ticket 53's direct-link exception).
+async function bootViewer(search, fetchDoc, { hash = "" } = {}) {
   const { document, window } = parseHTML(VIEWER_HTML);
   window.top = window;
   window.self = window;
@@ -224,7 +237,7 @@ async function bootViewer(search, fetchDoc) {
   globalThis.document = document;
   globalThis.window = window;
   globalThis.DOMParser = DOMParser;
-  globalThis.location = { search, href: `chrome-extension://test/src/viewer.html${search}` };
+  globalThis.location = { search, href: `chrome-extension://test/src/viewer.html${search}`, hash };
   globalThis.fetch = async (url) => {
     if (String(url).startsWith("chrome-extension://")) return new Response("", { status: 404 });
     return fetchDoc(String(url));
@@ -557,3 +570,131 @@ test("a stopped preparation writes nothing, labels no file, and leaves the reade
     ioAutoFire = true;
   }
 });
+
+// ---- Ticket 53: resume reading ------------------------------------------------
+// A one-paragraph text renders exactly one section (txt.js PARAS_PER_SECTION = 30), so the
+// resume key of a picked file is computable here: name, byte size, title (the file name
+// without its extension) and the section count - the four inputs the viewer binds in
+// setPageTotal, the same four the desktop's ReaderKey hashes.
+const BOOK_TEXT = "It was a bright cold day in April, and the clocks were striking thirteen.\n";
+
+function seedPosition(name, pos) {
+  const bytes = new TextEncoder().encode(BOOK_TEXT);
+  const key = readerKey(name, bytes.length, name.replace(/\.txt$/, ""), 1);
+  storedData.readingPositions = {
+    ...(storedData.readingPositions || {}),
+    [key]: { page: 1, frag: "", off: 800, secoff: 800, at: 1, ...pos },
+  };
+  return key;
+}
+
+const resumeButtons = (bar) => [...bar.querySelectorAll("button")].map((b) => b.textContent.trim());
+
+test("scrolling a document saves a bounded reading position locally", async () => {
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  window.innerHeight = 900;
+  await pickLocalFile(document, window, "book.txt", BOOK_TEXT);
+  assert.match(document.getElementById("content").textContent, /bright cold day/);
+  assert.equal(document.querySelector(".resume-notice"), null, "a fresh document offers nothing");
+  assert.equal(storedData.readingPositions, undefined, "nothing is written before the reader moves");
+
+  window.scrollTo = () => {};
+  document.dispatchEvent(new window.Event("scroll"));
+  const stored = await waitFor(() => {
+    const map = storedData.readingPositions;
+    return map ? map[Object.keys(map)[0]] : null;
+  });
+  assert.ok(stored, "the throttled save landed in storage");
+  assert.equal(stored.page, 1);
+  assert.equal(stored.frag, "", "a text page has no inner anchors, the section offset carries it");
+  // linkedom lays nothing out, so every offset reads 0 here; the anchor/offset math itself is
+  // asserted with real numbers in reading-position.test.mjs.
+  assert.equal(typeof stored.secoff, "number");
+});
+
+test("reopening the same document offers Continue reading, which jumps to the saved place", async () => {
+  seedPosition("book.txt");
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickLocalFile(document, window, "book.txt", BOOK_TEXT);
+  const bar = await waitFor(() => document.querySelector(".resume-notice"));
+  assert.ok(bar, "the saved place is offered on a plain reopen");
+  assert.match(bar.textContent, /Continue reading from page 1\?/);
+  const buttons = resumeButtons(bar);
+  assert.ok(buttons.includes("Continue reading"));
+  assert.ok(buttons.includes("Start over"));
+
+  const jumps = [];
+  window.scrollTo = (x, y) => jumps.push(y);
+  [...bar.querySelectorAll("button")].find((b) => b.textContent.trim() === "Continue reading")
+    .dispatchEvent(new window.Event("click"));
+  assert.ok(await waitFor(() => jumps.length > 0), "Continue scrolls to the saved place");
+  assert.equal(document.querySelector(".resume-notice"), null, "the offer is spent once acted on");
+});
+
+test("Start over clears the saved position for that document only", async () => {
+  const key = seedPosition("book.txt");
+  seedPosition("other.txt", { page: 1, frag: "", off: 5, secoff: 5 });
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickLocalFile(document, window, "book.txt", BOOK_TEXT);
+  const bar = await waitFor(() => document.querySelector(".resume-notice"));
+  window.scrollTo = () => {};
+  [...bar.querySelectorAll("button")].find((b) => b.textContent.trim() === "Start over")
+    .dispatchEvent(new window.Event("click"));
+  assert.ok(await waitFor(() => !document.querySelector(".resume-notice")));
+  const cleared = await waitFor(() => storedData.readingPositions[key] === undefined);
+  assert.ok(cleared, "the entry is gone from storage");
+  assert.ok(storedData.readingPositions[Object.keys(storedData.readingPositions).find((k) => k !== key)],
+    "another document's position is untouched");
+});
+
+test("a direct link to a section wins over the saved position", async () => {
+  seedPosition("book.txt");
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }), { hash: "#txt-0" });
+  await pickLocalFile(document, window, "book.txt", BOOK_TEXT);
+  for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+  assert.equal(document.querySelector(".resume-notice"), null, "an explicit destination gets no offer");
+});
+
+test("an unrelated file with the same title does not reuse the position", async () => {
+  seedPosition("book.txt");
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  // Same displayed title ("book"), different bytes: the size differs, so the identity differs.
+  await pickLocalFile(document, window, "book.txt", "A different little book entirely, of a different byte size.\n");
+  for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
+  assert.equal(document.querySelector(".resume-notice"), null, "no offer for a document this key never saw");
+});
+
+test("a saved place past the rendered edge is still offered for a chunked PDF", async () => {
+  ioAutoFire = false; // chunk two must wait for the reader's Continue, not for the stubbed scroll
+  try {
+    // The URL document is 9 bytes ("%PDF-1.7\n"), titled "long", 150 pages.
+    seedPositionKey(readerKey("long.pdf", 9, "long", 150), { page: 120, frag: "", off: 400, secoff: 400 });
+    globalThis.__getDocument = () => ({ promise: Promise.resolve(makePdfStub(150)), destroy() {} });
+    const { document, window } = await bootViewer(
+      "?file=https://books.test/long.pdf",
+      async () => new Response(new TextEncoder().encode("%PDF-1.7\n").buffer, { status: 200 }),
+    );
+    try {
+      assert.ok(await waitFor(() => /Pages 1-100 of 150/.test(document.getElementById("status-text").textContent)),
+        "the first chunk renders");
+      const bar = document.querySelector(".resume-notice");
+      assert.ok(bar, "page 120 is offered before it is rendered");
+      assert.match(bar.textContent, /page 120\?/);
+
+      const jumps = [];
+      window.scrollTo = (x, y) => jumps.push(y);
+      [...bar.querySelectorAll("button")].find((b) => b.textContent.trim() === "Continue reading")
+        .dispatchEvent(new window.Event("click"));
+      assert.ok(await waitFor(() => jumps.length > 0, 20000), "the jump renders forward first");
+      assert.equal(document.querySelectorAll("#content section").length, 150, "the jump rendered the rest");
+    } finally {
+      delete globalThis.__getDocument;
+    }
+  } finally {
+    ioAutoFire = true;
+  }
+});
+
+function seedPositionKey(key, pos) {
+  storedData.readingPositions = { [key]: { at: 1, ...pos } };
+}

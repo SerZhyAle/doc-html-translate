@@ -623,5 +623,9 @@
   "vSavedCompletePages": {"message":"सहेजा गया - पूर्ण, सभी {1} पृष्ठ"},
   "vSavedCompleteDoc": {"message":"सहेजा गया - पूरा दस्तावेज़"},
 
-  "vExportPartialLineComic": {"message":"आंशिक निर्यात: फ़ाइल में {2} में से {1} पृष्ठ आएँगे।"}
+  "vExportPartialLineComic": {"message":"आंशिक निर्यात: फ़ाइल में {2} में से {1} पृष्ठ आएँगे।"},
+
+  "vResumeAt": {"message":"पढ़ना पृष्ठ {1} से जारी रखें?"},
+  "vResumeContinue": {"message":"पढ़ना जारी रखें"},
+  "vResumeReset": {"message":"फिर से शुरू करें"}
 }

@@ -623,5 +623,9 @@
   "vSavedCompletePages": {"message":"সংরক্ষিত - সম্পূর্ণ, সব {1}টি পৃষ্ঠা"},
   "vSavedCompleteDoc": {"message":"সংরক্ষিত - সম্পূর্ণ নথি"},
 
-  "vExportPartialLineComic": {"message":"আংশিক এক্সপোর্ট: ফাইলে {2}-এর মধ্যে {1}টি পৃষ্ঠা থাকবে।"}
+  "vExportPartialLineComic": {"message":"আংশিক এক্সপোর্ট: ফাইলে {2}-এর মধ্যে {1}টি পৃষ্ঠা থাকবে।"},
+
+  "vResumeAt": {"message":"পৃষ্ঠা {1} থেকে পড়া চালিয়ে যাবেন?"},
+  "vResumeContinue": {"message":"পড়া চালিয়ে যান"},
+  "vResumeReset": {"message":"শুরু থেকে আবার পড়ুন"}
 }

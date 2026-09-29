@@ -639,5 +639,9 @@
   "vSavedCompletePages": {"message":"Сохранено - полностью, все {1} страниц"},
   "vSavedCompleteDoc": {"message":"Сохранено - весь документ"},
 
-  "vExportPartialLineComic": {"message":"Частичный экспорт: файл будет содержать {1} из {2} страниц."}
+  "vExportPartialLineComic": {"message":"Частичный экспорт: файл будет содержать {1} из {2} страниц."},
+
+  "vResumeAt": {"message":"Продолжить чтение со страницы {1}?"},
+  "vResumeContinue": {"message":"Продолжить чтение"},
+  "vResumeReset": {"message":"Начать сначала"}
 }

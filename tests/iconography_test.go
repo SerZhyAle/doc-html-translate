@@ -218,6 +218,7 @@ func TestEditionsNameSharedControlsAlike(t *testing.T) {
 		"Theme":             "ariaTheme",
 		"Text layer":        "ttOcrLayer",
 		"Go to page":        "ttGoToPage",
+		"Continue reading":  "vResumeContinue",
 	}
 	for _, lang := range i18n.Codes {
 		dir := lang

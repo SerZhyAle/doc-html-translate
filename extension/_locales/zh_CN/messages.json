@@ -623,5 +623,9 @@
   "vSavedCompletePages": {"message":"已保存 - 完整，共 {1} 页"},
   "vSavedCompleteDoc": {"message":"已保存 - 完整文档"},
 
-  "vExportPartialLineComic": {"message":"部分导出：文件将包含 {2} 页中的 {1} 页。"}
+  "vExportPartialLineComic": {"message":"部分导出：文件将包含 {2} 页中的 {1} 页。"},
+
+  "vResumeAt": {"message":"从第 {1} 页继续阅读？"},
+  "vResumeContinue": {"message":"继续阅读"},
+  "vResumeReset": {"message":"从头开始"}
 }

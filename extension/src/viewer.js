@@ -32,6 +32,15 @@ import { buildExportHtml, exportImageEncoding, exportPlan, EXPORT_PREPARE_MAX_FI
 import { restoreRemote, REMOTE_MARK } from "./url-policy.js";
 import { parseFileParam } from "./site-host.js";
 import { setupReaderSearch } from "./reader-search.js";
+import {
+  readerKey,
+  currentPosition,
+  resolvePositionTarget,
+  mergePosition,
+  removePosition,
+  POSITIONS_KEY,
+  SAVE_THROTTLE_MS,
+} from "./reading-position.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("vendor/pdf.worker.mjs");
 
@@ -71,6 +80,18 @@ function fileTitle(url) {
   } catch {
     return "Document";
   }
+}
+
+// sourceFileName reduces a picker name or a document URL to the bare file name - the
+// one component of the resume identity (reading-position.js). The full URL never
+// enters storage: the key is a hash of the name, byte size, title and page count, and
+// a URL can carry a path or a token its source would rather not see kept anywhere.
+function sourceFileName(src) {
+  const clean = String(src || "").split(/[?#]/)[0];
+  const at = clean.lastIndexOf("/");
+  let name = at >= 0 ? clean.slice(at + 1) : clean;
+  try { name = decodeURIComponent(name); } catch { /* a broken escape keeps its raw text */ }
+  return name;
 }
 
 // FORMAT_EXT maps a filename extension to the internal format id. Each format
@@ -129,6 +150,7 @@ function teardownCurrent() {
   hideExportDialog();
   stopExportPreparation();
   resetToolbar();
+  resetReadingPosition();
   releaseOverlays($("content"));
   if (revokeCurrent) { try { revokeCurrent(); } catch { /* ignore */ } revokeCurrent = null; }
   // destroy() ends the document's worker-side state too; dropping the reference alone kept every
@@ -200,9 +222,10 @@ const FAMILIES = {
 
 async function loadPrefs() {
   try {
-    const got = await chrome.storage.local.get(["viewerPrefs", "options"]);
+    const got = await chrome.storage.local.get(["viewerPrefs", "options", POSITIONS_KEY]);
     prefs = { ...DEFAULT_PREFS, ...(got.viewerPrefs || {}) };
     options = { ...DEFAULT_OPTIONS, ...(got.options || {}) };
+    positions = got[POSITIONS_KEY] && typeof got[POSITIONS_KEY] === "object" ? got[POSITIONS_KEY] : {};
   } catch { /* storage may be unavailable in odd contexts */ }
 }
 async function savePrefs() {
@@ -225,6 +248,102 @@ function applyPrefs() {
 // checking once at load would hide the control on every book.
 function revealOcrToggle() {
   if (document.querySelector(".ocr-overlay")) $("grp-ocr").hidden = false;
+}
+
+// ---- Reading position (resume) ---------------------------------------------
+// The viewer remembers where the reader stopped and offers a "Continue reading" action
+// when the same document reopens (ticket 53). reading-position.js holds the rules
+// (identity, anchor+offset shape, bounded storage); this block only wires them to the
+// viewer's lifecycle. The identity binds once per load - name, byte size, title and
+// page count as extracted, before any translation can rewrite the title - and the
+// position is saved from the scroll handler, throttled, into chrome.storage.local.
+// Nothing leaves the device, and the offer never moves the reader by itself.
+let docKey = "";
+let docSourceName = "";
+let docSourceSize = 0;
+let docPages = 0;
+let positions = {};
+let saveTimer = null;
+let saveDirty = false;
+let resumeBar = null;
+
+// resetReadingPosition drops the previous document's resume state: its identity, any
+// save still pending, and an unacted offer, so nothing carries into the next document.
+function resetReadingPosition() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  saveDirty = false;
+  clearResumeBar();
+  docKey = "";
+  docSourceName = "";
+  docSourceSize = 0;
+  docPages = 0;
+}
+
+// queuePositionSave coalesces scroll-driven saves: the position is read and written at
+// most once per SAVE_THROTTLE_MS while the reader moves, and any pending write lands
+// when the tab is hidden or closed (the two listeners at the bottom of wireToolbar).
+function queuePositionSave() {
+  if (!docKey) return;
+  saveDirty = true;
+  if (saveTimer) return;
+  saveTimer = setTimeout(flushPositionSave, SAVE_THROTTLE_MS);
+}
+
+async function flushPositionSave() {
+  saveTimer = null;
+  if (!saveDirty || !docKey) return;
+  saveDirty = false;
+  const pos = currentPosition(document, window);
+  if (!pos) return;
+  positions = mergePosition(positions, docKey, pos, Date.now());
+  try { await chrome.storage.local.set({ [POSITIONS_KEY]: positions }); } catch { /* ignore */ }
+}
+
+// maybeOfferResume shows the bar when this exact document was read before. A URL
+// fragment is an explicit destination (a TOC entry, a footnote, a shared link) and
+// wins - the rule the desktop reader also follows - and a saved place at the very top
+// is not worth a bar. The offer sits in the flow above the document, so a reader who
+// ignores it simply scrolls past.
+function maybeOfferResume() {
+  clearResumeBar();
+  if (!docKey || location.hash) return;
+  const pos = positions[docKey];
+  if (!pos || !(pos.page >= 1 && pos.page <= docPages)) return;
+  if (pos.page === 1 && !pos.frag && (pos.off || 0) + (pos.secoff || 0) < 40) return;
+  const bar = el("div", "resume-notice");
+  bar.setAttribute("role", "status");
+  const line = el("span");
+  line.textContent = t("vResumeAt", "Continue reading from page {1}?", pos.page);
+  const go = el("button", "primary");
+  go.type = "button";
+  go.append(glyph("feature.continue-reading"), document.createTextNode(` ${t("vResumeContinue", "Continue reading")}`));
+  go.addEventListener("click", () => { clearResumeBar(); resumeReading(pos); });
+  const reset = el("button", "secondary");
+  reset.type = "button";
+  reset.textContent = t("vResumeReset", "Start over");
+  reset.addEventListener("click", async () => {
+    clearResumeBar();
+    positions = removePosition(positions, docKey);
+    try { await chrome.storage.local.set({ [POSITIONS_KEY]: positions }); } catch { /* ignore */ }
+    window.scrollTo(0, 0);
+  });
+  bar.append(line, go, reset);
+  $("content").before(bar);
+  resumeBar = bar;
+}
+
+function clearResumeBar() {
+  if (resumeBar) { resumeBar.remove(); resumeBar = null; }
+}
+
+// resumeReading jumps to the saved place. A PDF past the rendered edge renders forward
+// first; the anchor is resolved afterwards, against the settled layout.
+async function resumeReading(pos) {
+  await ensurePageRendered(pos.page);
+  const target = resolvePositionTarget(pos, document);
+  if (!target) return;
+  const viewport = Number(window.innerHeight) > 0 ? window.innerHeight : 0;
+  window.scrollTo(0, Math.max(0, target.el.offsetTop + target.off - viewport / 3));
 }
 
 // ---- Status / progress -----------------------------------------------------
@@ -1276,6 +1395,11 @@ async function loadUrl(url) {
 function setPageTotal(total) {
   $("page-total").textContent = `/ ${total}`;
   recordRun({ pages: total });
+  // The resume identity binds here, the one moment every loader has set both the
+  // document's title and its page count - the desktop binds the same four inputs once,
+  // before translation, for the same reason (docs/PARITY.md "Reading position").
+  docPages = total > 0 ? total : 0;
+  docKey = readerKey(sourceFileName(docSourceName), docSourceSize, document.title || "", docPages);
 }
 
 // The formats read whole, held against the text-input budget before parsing (limits.js).
@@ -1283,6 +1407,8 @@ const TEXT_FORMATS = new Set(["txt", "rtf", "html", "md", "fb2"]);
 
 async function loadFromData(data, title, name, gen) {
   if (!isCurrent(gen)) return;
+  docSourceName = name;
+  docSourceSize = data.byteLength;
   const format = detectFormat(data, name);
   // The format id only - never the document's name, bytes or URL. See diagnostics.js.
   recordRun({ format });
@@ -1388,6 +1514,7 @@ async function loadImageData(data, title, mime) {
   }
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
+  maybeOfferResume();
   setTimeout(hideStatus, 1400);
 }
 
@@ -1479,6 +1606,7 @@ function renderComic(pages) {
   setStatus(comicTotal === 1
     ? t("vComicReadyOne", "Ready - 1 page, text is recognized as you scroll")
     : t("vComicReady", "Ready - {1} pages, text is recognized as you scroll", comicTotal));
+  maybeOfferResume();
   setTimeout(hideStatus, 1800);
 }
 
@@ -1702,6 +1830,7 @@ async function renderDocument(pdf, title, gen = docGen) {
   // document would mean never showing the banner on the files that most need it.
   warnIfNoText();
   $("btn-save-html").classList.remove("hidden");
+  maybeOfferResume();
 }
 
 // renderChunk renders the next PAGE_CHUNK pages. Callers that race (the scroll
@@ -1985,6 +2114,7 @@ function renderBook(book, fallbackTitle) {
   setStatus(total === 1
     ? t("vStatusDoneSectionsOne", "Done - 1 section")
     : t("vStatusDoneSections", "Done - {1} sections", total));
+  maybeOfferResume();
   setTimeout(hideStatus, 1200);
 }
 
@@ -2116,7 +2246,8 @@ function wireToolbar() {
     if (prepareCtx) prepareCtx.cancelled = true;
   });
 
-  // Keep the page-jump box in sync with scroll position.
+  // Keep the page-jump box in sync with scroll position, and the reading position with
+  // the reader.
   let ticking = false;
   document.addEventListener("scroll", () => {
     if (ticking) return;
@@ -2129,8 +2260,15 @@ function wireToolbar() {
         if (s.offsetTop <= mid) $("page-jump").value = s.dataset.page;
         else break;
       }
+      queuePositionSave();
     });
   }, { passive: true });
+  // A throttled save still pending when the reader closes or hides the tab lands now,
+  // not never - the last seconds of a session keep their place.
+  window.addEventListener("pagehide", flushPositionSave);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPositionSave();
+  });
 }
 
 main();

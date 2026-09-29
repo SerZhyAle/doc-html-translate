@@ -189,6 +189,19 @@ Links keep only `http`, `https`, `mailto`, `tel` and in-document targets; anythi
 `data:`, `file:` ..) becomes plain text. A file saved with "&#8595; HTML" carries its own content policy
 that forbids script, so it stays inert when opened from disk, outside the extension.
 
+## Resume reading
+
+Reopen a document you read here and the viewer offers **Continue reading** - the page and the exact
+spot where you stopped, not a rough fraction, so images that load late or a changed text size do not
+move you away from the saved content. **Start over** clears the saved place instead, and the reading
+begins from the top.
+
+The place is kept per document in the browser profile's local extension storage, keyed by the file's
+name, size, title and length - two different files that show the same title never trade places, and
+nothing about your documents or reading history is ever sent anywhere. A link that names a section
+directly (a `#fragment` in the URL) opens there, not at the saved place; the saved place is offered
+only on a plain reopen. The oldest of the last 100 documents falls off the list.
+
 ## Saving the document
 
 The toolbar's second download, "&#8595; HTML", saves the current on-screen view as one self-contained

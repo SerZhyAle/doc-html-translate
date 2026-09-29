@@ -623,5 +623,9 @@
   "vSavedCompletePages": {"message":"Salvo - completo, todas as {1} páginas"},
   "vSavedCompleteDoc": {"message":"Salvo - o documento completo"},
 
-  "vExportPartialLineComic": {"message":"Exportação parcial: o arquivo conteria {1} de {2} páginas."}
+  "vExportPartialLineComic": {"message":"Exportação parcial: o arquivo conteria {1} de {2} páginas."},
+
+  "vResumeAt": {"message":"Continuar a leitura na página {1}?"},
+  "vResumeContinue": {"message":"Continuar a leitura"},
+  "vResumeReset": {"message":"Começar do início"}
 }

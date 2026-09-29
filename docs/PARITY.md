@@ -305,6 +305,39 @@ authoritative. Change a colour there, not here, then update this table.
 Emitted by [`navbar.go`](../internal/htmlgen/navbar.go) `readerCSS` (`--dht-*`, `data-dht-theme`) and the
 generated region of [`viewer.css`](../extension/src/viewer.css) (`--*`, `data-theme`).
 
+### Reading position (resume) (2026-09-29)
+
+**Guard:** Guarded for the identity by the golden pairs - `TestReaderKeyGoldenValues`
+([`internal/htmlgen/reader_key_test.go`](../internal/htmlgen/reader_key_test.go)) and
+`readerKey matches the desktop ReaderKey`
+([`extension/test/reading-position.test.mjs`](../extension/test/reading-position.test.mjs)) pin the
+same hex values; the rest of this section is prose only.
+
+Both editions remember where the reader stopped, per document, and bring it back on a plain reopen.
+The identity is the same on both sides: an FNV-1a 64 hash over the source file's name and byte size
+plus the title and page/section count as extracted, bound once per load before any translation can
+rewrite the title. Two documents that share a displayed title never trade places (name or size
+differs), a genuine reopen finds its own position, and a document that cannot be identified reliably
+(no usable name or title) gets no resume at all rather than another book's place. A URL fragment is
+an explicit destination and wins on both sides: restore happens only when `location.hash` is empty.
+Positions stay on the device - the desktop's `localStorage` (`dht_pos:*`), the extension's
+`chrome.storage.local` map (`readingPositions`) - and nothing about a document or its reading
+history is ever sent anywhere; a stored record carries only numbers and an element id, never the
+document's text or a full URL.
+
+What intentionally differs is the restore surface and the saved shape. The desktop output is a
+multi-file book: a chapter page restores its own scroll fraction silently, `index.html` offers a
+"Continue reading" link to the last-read chapter, and every scroll frame writes `{href, frac}`. The
+extension renders one scrolling document: it offers a bar with **Continue reading** and **Start
+over** (the reset deletes the saved position), and saves a stable anchor - the current section's
+page index, the deepest element id at or above the reading line, and pixel offsets from that
+element and from the section's top - so images that load late or a changed text size do not move
+the resumed reader away from the saved content. Extension writes are throttled (2 s trailing edge,
+flushed when the tab hides) and the per-profile map is pruned to the newest 100 documents.
+Sources: [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerScript`, `POS_KEY`),
+[`extension/src/reading-position.js`](../extension/src/reading-position.js),
+[`viewer.js`](../extension/src/viewer.js) `maybeOfferResume`.
+
 ### Reader fonts
 
 **Guard:** Guarded by `TestParityReaderFonts` ([`tests/reader_parity_test.go`](../tests/reader_parity_test.go)),
@@ -335,8 +368,10 @@ form yet. The theme options are words on either side. Colour is `currentColor`, 
 (`ICON-RENDER` rule 2).
 
 Glyphs one edition has and the other does not, by surface rather than by drift: the paging pair
-(`media.previous` / `media.next`) and `feature.continue-reading` exist only in the desktop book, which pages
-and has an index page; the extension's viewer is one scrolling document. `action.save`, `action.export`
+(`media.previous` / `media.next`) exists only in the desktop book, which pages
+and has an index page; the extension's viewer is one scrolling document. `feature.continue-reading`
+is drawn by both since 2026-09-29 (ticket 53): the desktop index page's continue link and the
+extension's resume offer. `action.save`, `action.export`
 and `nav.open-external` exist only in the extension's viewer and popup. `nav.expand` / `nav.collapse` are
 in both, drawn differently by surface: a button in the extension's table of contents, a CSS mask over the
 `<details>` marker in the desktop index. The GUI launcher and the site carry their own inline copies, held to the same vendored files.
@@ -539,8 +574,8 @@ Checked against the extension on the same date:
 |---|---|---|
 | Merging chapters into one page | [`merge.go`](../internal/htmlgen/merge.go) `prepareMerge`: relative `src`/`href`/`srcset` and CSS `url()` (style attributes, `<style>` blocks) rebased from the chapter folder to the merged page's folder; only **colliding** ids renamed `cN-<id>`, so book CSS aimed at ids keeps working | `renderChapter` namespaces **every** id `d<index>-<id>` in one in-memory DOM and loads images as `blob:` URLs, so there is no folder to rebase (by construction) |
 | `chapter.html#note` and bare `chapter.html` links | in-page `#<id>` / `#dht-ch-N` chapter marker; a root (`<body>`) id lands on the marker | `rewriteAnchor`: `#d<idx>-<frag>` / `#epub-sec-<idx>`; root ids re-exposed as marker anchors - same model |
-| Reading-position key | `epub.Book.ReaderKey` from source name + size + original title + page count, set once before translation | **n/a** - the viewer persists no reading position (Go-only feature, see Intentional divergences), so it has neither the old key drift nor a key to align |
-| Restore vs URL fragment | restore only when `location.hash` is empty | **n/a** - no restore; a TOC click scrolls to the anchor directly (`scrollToAnchor`) |
+| Reading-position key | `epub.Book.ReaderKey` from source name + size + original title + page count, set once before translation | the same four inputs through `reading-position.js` `readerKey` (FNV-1a 64), bound once in `setPageTotal`, before any translation can rewrite the title - see [Reading position (resume)](#reading-position-resume-2026-09-29) |
+| Restore vs URL fragment | restore only when `location.hash` is empty | same rule: the resume offer is skipped when `location.hash` is set; a TOC click scrolls to the anchor directly (`scrollToAnchor`) |
 | Script literals / hrefs | `jsString` (JSON) for script values, `epub.URLPath` for every generated path | links stay DOM attributes set through `setAttribute` - nothing is spliced into script text |
 
 ### Comic archive page order and entry filter
@@ -1273,8 +1308,10 @@ These are by design. Do not "sync" them without a decision - document changes he
   traversal); the extension has **no analogue and needs none** - a URL-loaded page lets the browser resolve
   relative images against the origin, and a file picked through the picker grants no directory access to
   reach its siblings anyway. So HTML local-image copying is intentionally **Go-only**.
-- **Reader features that are Go-only:** reading-position persistence + "Continue reading", page zoom
-  (Ctrl+wheel, `?z=`), and the separate `index.html` TOC page / multi-file navigation. Interface
+- **Reader features that are Go-only:** page zoom (Ctrl+wheel, `?z=`) and the separate `index.html`
+  TOC page / multi-file navigation. Reading-position persistence left this list on 2026-09-29
+  (ticket 53): the extension resumes too, with its own offer-and-reset surface - see
+  [Reading position (resume)](#reading-position-resume-2026-09-29). Interface
   localization is **no longer** on this list - both editions ship the same 13 languages, see the invariant
   above.
 - **Reader features that are JS-only:** heuristic source-language detection ([`lang.js`](../extension/src/lang.js)),
@@ -1393,7 +1430,9 @@ These are by design. Do not "sync" them without a decision - document changes he
 - **Translation target:** the extension has **no target language** - it delegates to the browser's
   built-in "Translate page", so `-dst` is CLI/GUI-only.
 - **Storage:** Go uses `localStorage`/`sessionStorage` string keys (`dht_*`); the extension uses
-  `chrome.storage.local` objects. Reading preferences are not portable between the two.
+  `chrome.storage.local` objects. Reading preferences are not portable between the two, and neither
+  are reading positions (the desktop's `dht_pos:*` vs the extension's `readingPositions` map, see
+  [Reading position (resume)](#reading-position-resume-2026-09-29)).
 - **MSIX default-handler / right-click:** on the Store/MSIX build the file-type association comes from
   the package manifest ([`AppxManifest.xml`](../msix/AppxManifest.xml) `windows.fileTypeAssociation`),
   which Windows never force-defaults (it always prompts) and only surfaces in "Open with" - so it is
