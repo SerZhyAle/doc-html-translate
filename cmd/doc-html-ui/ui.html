@@ -281,6 +281,11 @@ details > .body { padding: 2px 12px 12px; }
 }
 .log .end { color: var(--console-command); }
 .log .end.failed { color: var(--console-danger); }
+/* Failure lines stand apart from progress (ticket 63): the converter's stderr arrives as
+   "[err] .." and takes the danger colour, the executed command as "> .." and takes the
+   command colour. The end line above keeps its own classes. */
+.log .log-err { color: var(--console-danger); }
+.log .log-cmd { color: var(--console-command); }
 
 /* live command-line preview: shows the exact command the current settings will run,
    with a Copy button to grab it for a terminal. */
@@ -330,11 +335,23 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 .queue-head .stitle { margin: 0; }
 .queue-head .count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .queue-head .inline-btn { margin-left: auto; padding: 2px 9px; font-size: 11px; }
+/* The log header carries two tools after its title; only a direct-child button is pushed
+   to the far edge, so the paired buttons inside .log-tools keep their gap. */
+.log-tools { margin-inline-start: auto; display: flex; gap: 6px; }
+.queue-head > .log-tools .inline-btn { margin-inline-start: 0; }
 #queueList {
     list-style: none; margin: 6px 0 2px; padding: 2px 0;
     border: 1px solid var(--border); border-radius: 7px; background: var(--surface-sunken);
     max-height: 216px; overflow-y: auto;
 }
+/* Recent documents (ticket 63): the same row vocabulary as the queue, in a list of its
+   own. An entry that is no longer on disk is shown unavailable and cannot be chosen. */
+#recentList {
+    list-style: none; margin: 6px 0 2px; padding: 2px 0;
+    border: 1px solid var(--border); border-radius: 7px; background: var(--surface-sunken);
+    max-height: 216px; overflow-y: auto;
+}
+.qsel.is-gone { color: var(--text-disabled); cursor: not-allowed; }
 .qitem { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 12px; min-width: 0; }
 .qitem + .qitem { border-top: 1px solid var(--border); }
 .qsel {
@@ -424,7 +441,7 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
 
 <!-- primary flow: pick a document (left) and run (right), on one line -->
 <div class="toprow">
-    <button type="button" class="drop" id="dropZone" onclick="browseFile()">
+    <button type="button" class="drop" id="dropZone" onclick="browseFile()" data-i18n-title="ttDropKbd" title="Choose a file (Ctrl+Shift+F)">
         <span id="dropEmpty">
             <span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M14,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8L14,2zM16,18H8v-2h8v2zM16,14H8v-2h8v2zM13,9V3.5L18.5,9H13z"/></svg></span>
             <span class="ph" data-i18n="dropPlaceholder">Drag a document here, or click to choose one</span>
@@ -434,8 +451,8 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
             <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
         </span>
     </button>
-    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n="btnConvert">Convert</button>
-    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n="btnCancel">Cancel</button>
+    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n="btnConvert" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)">Convert</button>
+    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n="btnCancel" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)">Cancel</button>
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="readiness" role="status" aria-live="polite" style="display:none"></div>
@@ -455,6 +472,18 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <button type="button" class="path-btn" id="btnOpenPrevFolder"
                 data-i18n-title="ttOpenFolder" data-i18n-aria="ttOpenFolder" title="Open the containing folder" aria-label="Open the containing folder"><code id="prevResultDir"></code></button>
     </div>
+</div>
+
+<!-- Recent documents (ticket 63): the last few files the reader chose or dropped, riding
+     the settings store with its atomic write and corruption set-aside. An entry is a
+     convenience, not a promise: one that is no longer on disk is greyed out as
+     unavailable and cannot be chosen, so a stale path is never converted silently. -->
+<div id="recentSection" style="display:none">
+    <div class="queue-head">
+        <span class="stitle" data-i18n="secRecent">Recent</span>
+        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n="recentClear" data-i18n-title="ttRecentClear" data-i18n-aria="ttRecentClear" title="Forget every recent document" aria-label="Forget every recent document">Clear all</button>
+    </div>
+    <ul id="recentList" data-i18n-aria="ariaRecentList" aria-label="Recently chosen documents"></ul>
 </div>
 
 <!-- The batch queue: several documents converted in one go. Shown once two or more files
@@ -598,7 +627,15 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <div class="cmdline console" id="cmdLine"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
         <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
     </div>
-    <div class="stitle" data-i18n="secLog">Log</div>
+    <!-- The log's tools (ticket 63): copy the selected lines - or the whole log when nothing
+         is selected - and jump back to the latest line after scrolling up. -->
+    <div class="queue-head log-head">
+        <span class="stitle" data-i18n="secLog">Log</span>
+        <span class="log-tools">
+            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n="logCopySel" data-i18n-title="ttLogCopy" data-i18n-aria="ttLogCopy" title="Copy the selected log lines" aria-label="Copy the selected log lines">Copy selection</button>
+            <button type="button" class="inline-btn" id="btnLogJump" data-i18n="logJumpLatest" data-i18n-title="ttLogJump" data-i18n-aria="ttLogJump" title="Scroll the log to the newest line" aria-label="Scroll the log to the newest line">Jump to latest</button>
+        </span>
+    </div>
     <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
          region would read out every appended chunk of a long conversion. The stage line
          (#progressStage) and the end outcome announce what matters, so the flood is off. -->
@@ -686,9 +723,14 @@ function applyLang(lang) {
     if (typeof lastReadiness !== 'undefined' && lastReadiness) renderReadiness(lastReadiness);
     renderProgressCount();
     renderAbout();
-    // The queue words its rows and its head line from data, so a switch re-renders them.
+    // The -src/-dst pickers word the translation languages in the interface language
+    // (ticket 63), like every other string; the current picks survive the re-fill.
+    fillLangs(el('srcLang'), el('srcLang').value);
+    fillLangs(el('dstLang'), el('dstLang').value);
+    // The queue and the recent list word their rows from data, so a switch re-renders them.
     updateQueueProgress();
     if (queue.length) renderQueue();
+    renderRecent();
     document.documentElement.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
     document.body.style.fontFamily = FONT_STACKS[lang] || '';
     const sw = document.getElementById('langSwitch');
@@ -804,10 +846,13 @@ const LANGS = [
 ];
 function fillLangs(sel, selected) {
     sel.innerHTML = '';
-    for (const [code, name] of LANGS) {
+    // Names follow the interface language (ticket 63); TRANSLANGS in i18n.js holds the
+    // table, and an untranslated code falls back to the English name.
+    const names = TRANSLANGS[currentLang] || TRANSLANGS.en;
+    for (const [code, nameEn] of LANGS) {
         const o = document.createElement('option');
         o.value = code;
-        o.textContent = name + ' (' + code + ')';
+        o.textContent = (names[code] || nameEn) + ' (' + code + ')';
         if (code === selected) o.selected = true;
         sel.appendChild(o);
     }
@@ -953,7 +998,7 @@ api('/api/version').then(r=>r.json()).then(d=>{
 }).catch(()=>{});
 
 api('/api/initial').then(r=>r.json()).then(d=>{
-    if (d.file) setInputPath(d.file);
+    if (d.file) { setInputPath(d.file); rememberRecent([d.file]); }
 }).catch(()=>{});
 
 api('/api/env').then(r=>r.json()).then(d=>{
@@ -1182,6 +1227,10 @@ function collectSettings() {
         ocrLangChoice:  el('ocrLang').value,
         queueParallel:  el('queueConcurrency').value,
         assocPrompted:  assocPrompted,
+        // Session context (ticket 63): the recent documents and the last window geometry
+        // ride the same blob, so they get the same atomic write and corruption set-aside.
+        recent:         recentDocs,
+        win:            winGeom,
         theme:          themePref,
     };
 }
@@ -1212,6 +1261,15 @@ function applySettings(s) {
         el('queueConcurrency').value = String(s.queueParallel);
     }
     if (s.assocPrompted != null) assocPrompted = !!s.assocPrompted;
+    // Recent documents (ticket 63): keep plain strings only, capped at the list's size -
+    // the saved blob is the page's business, but it is still outside data the page trusts.
+    if (Array.isArray(s.recent)) {
+        recentDocs = s.recent.filter(p => typeof p === 'string' && p).slice(0, RECENT_MAX);
+        renderRecent();
+        scheduleRecentStatus();
+    }
+    // The saved window geometry is restored once, right after this load (see restoreWindow).
+    if (s.win) { const g = saneGeometry(s.win); if (g) winGeom = g; }
     if (typeof s.theme === 'string') applyTheme(s.theme);
     syncEngineUI();
 }
@@ -1238,6 +1296,7 @@ api('/api/settings').then(r => {
     resolveLang();
     syncOcrLangToSource();
     fitWindow();
+    restoreWindow(); // the saved size and position, clamped to the screen it opens on
     updateCmdPreview();
     maybeShowAssocPrompt();
 });
@@ -1597,6 +1656,25 @@ el('btnCopyCmd').addEventListener('click', async () => {
     setTimeout(() => { btn.textContent = t('btnCopy'); btn.classList.remove('done'); }, 1400);
 });
 
+// The log console's tools (ticket 63). Copy takes the selected lines - the log is plain
+// text, so the browser's own selection is the selection - and falls back to the whole log
+// when nothing is selected. Jump-to-latest returns a reader who scrolled up, and is also
+// what undoes the appender's "follow only while at the bottom" rule by hand.
+el('btnLogCopy').addEventListener('click', async () => {
+    const log = el('logArea'), btn = el('btnLogCopy');
+    const sel = window.getSelection();
+    const text = (sel && sel.rangeCount && log.contains(sel.anchorNode)) ? sel.toString() : '';
+    if (!text && !log.textContent) return;
+    const ok = await copyToClipboard(text || log.textContent);
+    btn.textContent = ok ? t('logCopied') : t('logCopyFailed');
+    btn.classList.toggle('done', ok);
+    setTimeout(() => { btn.textContent = t('logCopySel'); btn.classList.remove('done'); }, 1400);
+});
+el('btnLogJump').addEventListener('click', () => {
+    const log = el('logArea');
+    log.scrollTop = log.scrollHeight;
+});
+
 // ── send logs to the author ─────────────────────────────
 // One press does four things: build the archive, put its path on the clipboard, open its folder
 // with the file selected, and open the user's own mail program with a prefilled message. The app
@@ -1686,9 +1764,16 @@ function runPressed() {
 // already at the bottom, so scrolling up to read an earlier line is not undone by the
 // next chunk. appendChild is O(chunk); "textContent +=" re-reads the whole log each time
 // (O(n^2)) and can freeze the page on a long conversion.
+// Unstyled lines are classified on arrival (ticket 63): the converter's stderr comes
+// prefixed "[err] " and takes the failure colour, the executed command comes as "> .."
+// and takes the command colour - one look at the log says where a run went wrong.
 function makeLogAppender(log) {
     return (text, cls) => {
         const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
+        if (!cls) {
+            if (/^\[err\]/.test(text)) cls = 'log-err';
+            else if (/^> /.test(text)) cls = 'log-cmd';
+        }
         if (cls) {
             const s = document.createElement('span');
             s.className = cls;
@@ -1952,8 +2037,11 @@ const QUEUE_RETRY_STATES = ['failed', 'blocked', 'cancelled'];
 
 // addPickedPaths routes a file choice into the input model. With no queue yet, a lone
 // file stays the one-document flow; anything else joins the queue - and a lone pick joins
-// an existing queue, so adding to a batch stays one gesture.
+// an existing queue, so adding to a batch stays one gesture. Every pick is remembered in
+// the recent list (ticket 63), the queue's items included: the queue is the batch, the
+// recent list is the memory.
 function addPickedPaths(paths) {
+    rememberRecent(paths);
     if (paths.length === 1 && !queue.length) {
         setInputPath(paths[0]);
         setStatus('dropStatus', '');
@@ -2315,6 +2403,182 @@ el('queueList').addEventListener('keydown', ev => {
     ev.preventDefault();
     const next = ev.key === 'ArrowDown' ? Math.min(i + 1, buttons.length - 1) : Math.max(i - 1, 0);
     buttons[next].focus();
+});
+
+// ── recent documents ────────────────────────────────────
+// The last few files the reader chose or dropped (ticket 63). The list rides the settings
+// blob - the same file, the same atomic write, the same corruption set-aside - so there is
+// no second store. An entry is a convenience, not a promise: one that is no longer on disk
+// is greyed out and cannot be chosen, so a stale path is never converted silently.
+const RECENT_MAX = 8;
+let recentDocs = [];      // paths, newest first
+let recentExists = {};    // path -> on disk? (answered by /api/recent-status)
+let recentTimer = null;
+
+function rememberRecent(paths) {
+    const fresh = paths.filter(p => typeof p === 'string' && p);
+    if (!fresh.length) return;
+    for (const p of fresh) {
+        const key = p.toLowerCase();
+        recentDocs = [p, ...recentDocs.filter(x => x.toLowerCase() !== key)];
+    }
+    if (recentDocs.length > RECENT_MAX) recentDocs = recentDocs.slice(0, RECENT_MAX);
+    renderRecent();
+    saveSettings();
+}
+
+function renderRecent() {
+    const list = el('recentList');
+    if (!list) return;
+    el('recentSection').style.display = recentDocs.length ? '' : 'none';
+    list.replaceChildren();
+    for (const p of recentDocs) list.appendChild(recentRow(p));
+}
+
+function recentRow(p) {
+    const li = document.createElement('li');
+    li.className = 'qitem';
+    const gone = recentExists[p] === false;
+    const name = document.createElement('button');
+    name.type = 'button';
+    name.className = 'qsel' + (gone ? ' is-gone' : '');
+    name.textContent = p.split(/[\\/]/).pop() || p;
+    name.title = p;
+    name.disabled = gone;
+    name.addEventListener('click', () => { setInputPath(p); });
+    li.appendChild(name);
+    const st = document.createElement('span');
+    st.className = 'qstate';
+    st.textContent = gone ? t('recentUnavailable') : '';
+    li.appendChild(st);
+    return li;
+}
+
+// The page cannot stat a path, so the server answers existence for the whole list at once.
+// Until the answer is in, entries render available - only a definite "no" disables one, and
+// a failed check leaves the list clickable rather than blocking the reader.
+function scheduleRecentStatus() {
+    clearTimeout(recentTimer);
+    recentTimer = setTimeout(async () => {
+        if (!recentDocs.length) return;
+        try {
+            const r = await api('/api/recent-status', {method: 'POST', body: JSON.stringify({paths: recentDocs})});
+            const d = await r.json();
+            recentExists = {};
+            for (const s of (d.statuses || [])) recentExists[s.path] = !!s.exists;
+            renderRecent();
+        } catch (e) { /* leave the list as it is */ }
+    }, 150);
+}
+
+el('btnRecentClear').addEventListener('click', () => {
+    recentDocs = [];
+    recentExists = {};
+    renderRecent();
+    saveSettings();
+});
+
+// Arrow keys walk the recent list's file buttons, the way the queue's list does.
+el('recentList').addEventListener('keydown', ev => {
+    if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+    const buttons = [...el('recentList').querySelectorAll('.qsel:not(.is-gone)')];
+    const i = buttons.indexOf(document.activeElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    const next = ev.key === 'ArrowDown' ? Math.min(i + 1, buttons.length - 1) : Math.max(i - 1, 0);
+    buttons[next].focus();
+});
+
+// ── window geometry ─────────────────────────────────────
+// The window reopens at the size and position of the last session (ticket 63). The page
+// owns this, not the Go side: only the page can see the screen it landed on to clamp with,
+// and the default-browser fallback launches through a URL alone, where no flags exist.
+// A minimized window reports the classic -32000 park position on Windows - that is not a
+// geometry to remember.
+let winGeom = null;      // the geometry baseline: what was saved, or what the window really is
+let geomTimer = null;
+
+// saneGeometry admits only numbers that could be a real window box: secondary monitors
+// legitimately have negative coordinates, so the coordinate bound is generous, while the
+// size bound merely keeps nonsense out.
+function saneGeometry(v) {
+    if (!v || typeof v !== 'object') return null;
+    const n = k => (typeof v[k] === 'number' && isFinite(v[k])) ? v[k] : NaN;
+    const x = n('x'), y = n('y'), w = n('w'), h = n('h');
+    if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(w) || Number.isNaN(h)) return null;
+    if (w < 200 || h < 200 || w > 30000 || h > 30000) return null;
+    if (Math.abs(x) > 60000 || Math.abs(y) > 60000) return null;
+    return {x, y, w, h};
+}
+
+function restoreWindow() {
+    if (!winGeom) return;
+    try {
+        window.resizeTo(winGeom.w, winGeom.h);
+        window.moveTo(winGeom.x, winGeom.y);
+    } catch (e) { /* the app window may forbid it; --window-size stays the fallback */ }
+    clampWindowToScreen();
+    // A window that could not take the saved box - a plain browser tab ignores
+    // move/resize - would otherwise look "changed" on every poll and keep rewriting the
+    // settings. Adopt what the window actually is as the baseline instead; a real move or
+    // resize by the reader still differs from it and gets saved.
+    const now = {x: window.screenX, y: window.screenY, w: window.outerWidth, h: window.outerHeight};
+    if (now.x !== winGeom.x || now.y !== winGeom.y || now.w !== winGeom.w || now.h !== winGeom.h) {
+        winGeom = now;
+    }
+}
+
+// clampWindowToScreen pulls the window into the work area of the screen it sits on now.
+// After the move above, the browser reports that screen; a saved second-monitor position
+// still restores there when the monitor exists, and lands on the remaining screen when it
+// does not - a detached monitor can no longer park the window out of reach.
+function clampWindowToScreen() {
+    try {
+        const L = screen.availLeft || 0, T = screen.availTop || 0;
+        const R = L + screen.availWidth, B = T + screen.availHeight;
+        const x = Math.min(Math.max(window.screenX, L), Math.max(L, R - window.outerWidth));
+        const y = Math.min(Math.max(window.screenY, T), Math.max(T, B - window.outerHeight));
+        if (x !== window.screenX || y !== window.screenY) window.moveTo(x, y);
+    } catch (e) { /* no screen facts - nothing to clamp against */ }
+}
+
+function trackWindowGeometry() {
+    const x = window.screenX, y = window.screenY, w = window.outerWidth, h = window.outerHeight;
+    if (x < -30000 || y < -30000) return; // minimized: the park position is not a geometry
+    if (w < 200 || h < 200 || w > 30000 || h > 30000) return;
+    if (winGeom && x === winGeom.x && y === winGeom.y && w === winGeom.w && h === winGeom.h) return;
+    winGeom = {x, y, w, h};
+    clearTimeout(geomTimer);
+    geomTimer = setTimeout(saveSettings, 800);
+}
+// Browsers fire no event for a window move, so the position is polled; the resize event
+// catches a drag of the edge at once. The debounce collapses both into one save per burst.
+setInterval(trackWindowGeometry, 2000);
+window.addEventListener('resize', trackWindowGeometry);
+
+// ── keyboard shortcuts ──────────────────────────────────
+// One document-level keydown handler owns every shortcut (ticket 63, aligned with ticket
+// 57's audit): the table below is the one place to read or extend them. Nothing fires
+// while a modal dialog is up - Escape there is the dialog's own dismiss - and the
+// combinations carry modifiers on purpose, so plain typing in the form never triggers one.
+const SHORTCUTS = [
+    // Convert: the button's own dispatch decides single flow vs queue (runPressed).
+    {key: 'Enter', ctrl: true, fire: () => runPressed()},
+    // Stop the running conversion; with nothing running, Escape stays untouched.
+    {key: 'Escape', fire: () => { if (runAbort || queueBusy) cancelPressed(); }},
+    // Put the keyboard on the file box: the everyday first step, without tabbing.
+    {key: 'F', ctrl: true, shift: true, fire: () => el('dropZone').focus()},
+];
+document.addEventListener('keydown', ev => {
+    if (dlgOpen) return;
+    for (const s of SHORTCUTS) {
+        if (ev.key !== s.key && ev.key !== (s.key || '').toLowerCase()) continue;
+        if (!!s.ctrl !== (ev.ctrlKey || ev.metaKey)) continue;
+        if (!!s.shift !== ev.shiftKey) continue;
+        ev.preventDefault();
+        s.fire();
+        return;
+    }
 });
 </script>
 </body>

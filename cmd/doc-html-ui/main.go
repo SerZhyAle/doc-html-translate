@@ -113,6 +113,7 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/cancel", jsonPost(handleCancel))
 	mux.HandleFunc("/api/answer", jsonPost(handleAnswer))
 	mux.HandleFunc("/api/shell-entries", jsonPost(handleShellEntries))
+	mux.HandleFunc("/api/recent-status", jsonPost(handleRecentStatus))
 	mux.HandleFunc("/api/ocr-download", jsonPost(handleOCRDownload))
 	mux.HandleFunc("/api/report-reveal", jsonPost(handleReportReveal))
 	mux.HandleFunc("/api/report-open", jsonPost(handleReportOpen))
@@ -325,6 +326,41 @@ func settingsPath() string {
 		return filepath.Join(appData, "doc-html-translate", "ui-settings.json")
 	}
 	return filepath.Join(os.TempDir(), "doc-html-translate-ui-settings.json")
+}
+
+// maxRecentStatusPaths caps one recent-status answer. The page keeps RECENT_MAX entries;
+// the cap is a multiple of that, so a future list size change cannot turn the endpoint
+// into an unbounded stat loop.
+const maxRecentStatusPaths = 32
+
+// handleRecentStatus reports which recent-document paths still exist on disk, so the page
+// can show an entry that is gone as unavailable instead of converting from a stale path
+// (ticket 63). It answers existence only - one os.Stat per path - and says nothing about
+// the files' contents. Paths it cannot read (a bad drive, a permission error) answer
+// "not there": the entry is a convenience, not a promise.
+//
+//	POST {"paths": ["..", ".."]} → {"statuses": [{"path": "..", "exists": bool}]}
+func handleRecentStatus(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Paths []string `json:"paths"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	type status struct {
+		Path   string `json:"path"`
+		Exists bool   `json:"exists"`
+	}
+	out := make([]status, 0, len(req.Paths))
+	for i, p := range req.Paths {
+		if i >= maxRecentStatusPaths {
+			break
+		}
+		fi, err := os.Stat(p)
+		out = append(out, status{Path: p, Exists: err == nil && fi.Mode().IsRegular()})
+	}
+	_ = json.NewEncoder(w).Encode(map[string]any{"statuses": out})
 }
 
 // handleGoogleKey lets the GUI inspect and save the Google Translate API key.
