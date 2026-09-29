@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "ہٹائیں"
+  },
+  "commandOpenViewer": {
+    "message": "موجودہ دستاویز ریڈر میں کھولیں"
+  },
+  "commandToggleInterception": {
+    "message": "اس سائٹ پر بہاؤ آن یا آف کریں"
+  },
+  "popupTabDocument": {
+    "message": "موجودہ ٹیب میں ایک معاون دستاویز کھلی ہے۔"
+  },
+  "popupOpenInReader": {
+    "message": "اسے ریڈر میں کھولیں"
+  },
+  "popupTabOff": {
+    "message": "{1} پر بہاؤ بند ہے - دستاویزات ہمیشہ کی طرح کھلتی ہیں۔"
+  },
+  "ocrDownloadFailed": {
+    "message": "{1} ڈاؤن لوڈ نہیں ہو سکا"
+  },
+  "ocrRetry": {
+    "message": "دوبارہ کوشش کریں"
+  },
   "appName": {
     "message": "دستاویزی صفحہ مترجم - PDF، EPUB اور مزید (مفت اور مقامی)",
     "description": "Extension name shown in Chrome and on the store listing."

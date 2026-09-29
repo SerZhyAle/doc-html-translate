@@ -9,6 +9,9 @@
 // (spec sec 4/7).
 
 import { DEFAULT_OPTIONS } from "./defaults.js";
+import { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX, isInterceptableUrl } from "./intercept.js";
+import { siteHost } from "./site-host.js";
+import * as badge from "./badge.js";
 // The whole-page OCR broker attaches its own message and tab listeners on import; this file only
 // owns the menu entry that starts it. See DEV/plan/done/2026-09-19_page-ocr-overlay.md.
 import { startRun as startPageOcr } from "./page-ocr.js";
@@ -16,15 +19,9 @@ import { startRun as startPageOcr } from "./page-ocr.js";
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
 
-// The document extension must end the URL's *path*: `[^?#]*` keeps the match out of the query
-// and fragment, so `https://site/viewer?file=a.pdf` - a web app's own page - is not taken over.
-// The query string itself is still captured and carried to the viewer.
-const INTERCEPT_EXT = "(?:pdf|epub|rtf|fb2|mobi|azw3|cbz|cbt)";
-export const HTTPS_INTERCEPT_REGEX = `^(https?://[^?#]*\\.${INTERCEPT_EXT}(?:[?#].*)?)$`;
-// Three slashes: only empty-host file URLs. UNC paths (file://server/share) can't be granted to
-// extensions by any match pattern, so the viewer could never fetch them - leave those to
-// Chrome's built-in viewer.
-export const FILE_INTERCEPT_REGEX = `^(file:///[^?#]*\\.${INTERCEPT_EXT}(?:[?#].*)?)$`;
+// The intercept patterns live in intercept.js, shared with the popup and the command handler;
+// re-exported here for the worker's own tests.
+export { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX };
 
 // Extensions offered by the "Convert with doc-html-translate" right-click entry. Broader
 // than the DNR interception list (pdf/epub/rtf/fb2/mobi/azw3/cbz/cbt) because the viewer
@@ -264,8 +261,77 @@ async function openOriginal(url, tabId) {
   }, 5000);
 }
 
+// The tab a keyboard command acts on: the command fires with no event argument, and the tab
+// that matters is the one in the window the user is looking at.
+async function activeTab() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return tab || null;
+  } catch { return null; }
+}
+
+// Keyboard commands (manifest "commands", rebindable in the browser's settings).
+//   - open-viewer: what the popup's primary button does - a document tab opens in the reflow
+//     viewer, anything else opens the viewer's empty state with its file picker. Never a
+//     silent conversion: the same viewer flow, only faster to reach.
+//   - toggle-interception: the popup's "On this site" switch without the popup. A no-op where
+//     there is no site (browser pages) and while interception is globally off (there is
+//     nothing to toggle per site; the popup disables the switch there too).
+chrome.commands.onCommand.addListener(async (command) => {
+  const tab = await activeTab();
+  if (!tab) return;
+  if (command === "open-viewer") {
+    const url = isInterceptableUrl(tab.url) ? tab.url : "";
+    if (url) openInViewer(url);
+    else chrome.tabs.create({ url: viewerBase() });
+    return;
+  }
+  if (command === "toggle-interception") {
+    const host = siteHost(tab.url || "", viewerBase());
+    if (!host) return;
+    const options = await getOptions();
+    if (!options.enabledByDefault) return;
+    const set = new Set(options.disabledHosts || []);
+    if (set.has(host)) set.delete(host);
+    else set.add(host);
+    options.disabledHosts = [...set];
+    await chrome.storage.local.set({ options });
+    // The rules rebuild from the storage change; the badge has no listener of its own.
+    badge.tabBase(tab.id, tab.url, options);
+  }
+});
+
+// The passive half of the badge: a tab whose site documents are left alone wears a grey
+// "off". Recomputed from the tab's own URL on navigation, so it never needs document content.
+async function refreshTabBase(tabId, url) {
+  try {
+    badge.tabBase(tabId, url, await getOptions());
+  } catch { /* options unavailable - the badge stays as it is */ }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  // A navigation drops the previous page's job, error and flash state with it.
+  if (info.status === "loading") {
+    badge.tabNavigated(tabId);
+    chrome.tabs.get(tabId).then((tab) => refreshTabBase(tabId, tab && tab.url)).catch(() => {});
+  } else if (typeof info.url === "string") {
+    refreshTabBase(tabId, info.url);
+  }
+});
+
+chrome.tabs.onRemoved.addListener((tabId) => badge.tabGone(tabId));
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== "object") return;
+  // The viewer's job reports. The tab is the sender: a page cannot move another tab's badge.
+  if (msg.dht === "badge" && sender.tab && sender.tab.id != null) {
+    const tabId = sender.tab.id;
+    if (msg.t === "job" && typeof msg.kind === "string") {
+      badge.tabJob(tabId, msg.kind, msg.phase, Number(msg.done) || 0, Number(msg.total) || 0);
+    } else if (msg.t === "error") badge.tabError(tabId);
+    else if (msg.t === "reset") badge.tabReset(tabId);
+    return;
+  }
   if (msg.type === "open-original") {
     const tabId = msg.tabId != null ? msg.tabId : sender.tab && sender.tab.id;
     openOriginal(msg.url, tabId).then(() => sendResponse({ ok: true }));

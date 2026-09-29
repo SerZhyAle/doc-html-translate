@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "Rimuovi"
+  },
+  "commandOpenViewer": {
+    "message": "Apri il documento corrente nel lettore"
+  },
+  "commandToggleInterception": {
+    "message": "Attiva o disattiva il riflusso su questo sito"
+  },
+  "popupTabDocument": {
+    "message": "La scheda corrente contiene un documento supportato."
+  },
+  "popupOpenInReader": {
+    "message": "Apri nel lettore"
+  },
+  "popupTabOff": {
+    "message": "Su {1} il riflusso è spento - i documenti si aprono come al solito."
+  },
+  "ocrDownloadFailed": {
+    "message": "Impossibile scaricare {1}"
+  },
+  "ocrRetry": {
+    "message": "Riprova"
+  },
   "appName": {
     "message": "Traduttore di pagine documento - PDF, EPUB e altro (gratis e locale)",
     "description": "Extension name shown in Chrome and on the store listing."

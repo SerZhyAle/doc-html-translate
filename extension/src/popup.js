@@ -1,11 +1,14 @@
 // popup.js - global on/off and per-site disable. Writes the shared `options`
 // object to storage; background.js rebuilds the DNR rules on the storage change.
+// The popup also reflects the active tab: a supported document gets a one-click
+// open in the reader, and a site whose documents are left alone says so.
 
-import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
+import { renderOcrLangs } from "./ocr-lang-ui.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { applyGlyphs } from "./glyphs.js";
 import { siteHost } from "./site-host.js";
+import { isInterceptableUrl } from "./intercept.js";
 
 const globalEl = document.getElementById("global");
 const siteEl = document.getElementById("site");
@@ -13,82 +16,19 @@ const hostEl = document.getElementById("host");
 const ocrImagesEl = document.getElementById("ocr-images");
 const ocrLangsDetailsEl = document.getElementById("ocr-langs-details");
 const ocrLangsEl = document.getElementById("ocr-langs");
+const tabStateEl = document.getElementById("tab-state");
+const ctaEl = document.getElementById("open-pdf");
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
 const verEl = document.getElementById("ver");
 if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
 
 // Routed through i18n.js so the options page's interface-language override reaches these too.
-const msg = (key, fallback) => t(key, fallback);
+const msg = (key, fallback, ...args) => t(key, fallback, ...args);
 
-// Render the nested OCR-language list: installed languages are selectable (radio),
-// others show a Download button that fetches + caches the language, then re-renders.
-// While "Use OCR for images" is off we show a call-to-action pointing at the switch
-// above instead of a greyed-out, dead-looking list (which reads as "unavailable").
-async function renderOcrLangs() {
-  const o = await getOptions();
-  ocrLangsEl.replaceChildren();
-  ocrLangsEl.classList.remove("disabled");
-
-  if (!o.ocrImages) {
-    const off = document.createElement("div");
-    off.className = "hint";
-    off.textContent = msg("ocrOffHint", "Turn on to recognize text in images - then pick or download a language (English is built-in).");
-    ocrLangsEl.append(off);
-    return;
-  }
-
-  const installed = await getInstalledLangs();
-  const hint = document.createElement("div");
-  hint.className = "hint";
-  hint.textContent = msg("ocrLangsHint", "Recognition language (English is built-in).");
-  ocrLangsEl.append(hint);
-
-  for (const lang of LANGS) {
-    const row = document.createElement("div");
-    row.className = "ocr-lang";
-    if (installed.includes(lang.code)) {
-      const id = `ocrlang-${lang.code}`;
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "ocrLang";
-      radio.id = id;
-      radio.checked = o.ocrLang === lang.code;
-      radio.addEventListener("change", async () => {
-        const oo = await getOptions();
-        oo.ocrLang = lang.code;
-        await setOptions(oo);
-      });
-      const label = document.createElement("label");
-      label.htmlFor = id;
-      label.textContent = `${lang.name} (${msg("ocrInstalled", "installed")})`;
-      row.append(radio, label);
-    } else {
-      const name = document.createElement("span");
-      name.textContent = lang.name;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = msg("ocrDownload", "Download");
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        try {
-          await downloadLang(lang.code, (m) => {
-            if (m && typeof m.progress === "number") {
-              btn.textContent = `${msg("ocrDownloading", "Downloading")} ${Math.round(m.progress * 100)}%`;
-            }
-          });
-          await renderOcrLangs();
-        } catch (e) {
-          console.error("language download failed", e);
-          btn.textContent = msg("ocrDownload", "Download");
-          btn.disabled = false;
-        }
-      });
-      row.append(name, btn);
-    }
-    ocrLangsEl.append(row);
-  }
-}
+// renderLangList is the shared OCR-language renderer (ocr-lang-ui.js); the popup keeps its
+// compact heading line above the rows.
+const renderLangList = () => renderOcrLangs(ocrLangsEl, { hint: msg("ocrLangsHint", "Recognition language (English is built-in).") });
 
 async function getOptions() {
   const got = await chrome.storage.local.get("options");
@@ -98,14 +38,14 @@ async function setOptions(opts) {
   await chrome.storage.local.set({ options: opts });
 }
 
-// activeHost is the site the per-site switch acts on (site-host.js): on the viewer's own tab, the
-// host of the document it shows.
-async function activeHost() {
+// activeTab fetches the tab the popup is acting on; everything the popup says about "this
+// site" and "this document" is derived from its URL alone.
+async function activeTab() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.url) return siteHost(tab.url, chrome.runtime.getURL("src/viewer.html"));
-  } catch { /* no host access */ }
-  return "";
+    return tab || null;
+  } catch { /* no tab access */ }
+  return null;
 }
 
 async function init() {
@@ -114,7 +54,11 @@ async function init() {
   applyI18n(document);
   applyGlyphs(document);
   const opts = await getOptions();
-  const host = await activeHost();
+  const tab = await activeTab();
+  const tabUrl = (tab && tab.url) || "";
+  // activeHost is the site the per-site switch acts on (site-host.js): on the viewer's own
+  // tab, the host of the document it shows.
+  const host = tabUrl ? siteHost(tabUrl, chrome.runtime.getURL("src/viewer.html")) : "";
 
   globalEl.checked = opts.enabledByDefault;
 
@@ -126,9 +70,33 @@ async function init() {
     // Keep the popup compact when it opens, but reveal the next OCR step when
     // the user has just opted in.
     if (ocrImagesEl.checked) ocrLangsDetailsEl.open = true;
-    renderOcrLangs();
+    renderLangList();
   });
-  renderOcrLangs();
+  renderLangList();
+
+  // The tab's own story first: a supported document gets the one-click open (instead of
+  // routing its reader through the empty viewer state), a site whose documents are left
+  // alone is told so where the switch that controls it sits right below.
+  const docUrl = isInterceptableUrl(tabUrl) ? tabUrl : "";
+  if (docUrl) {
+    tabStateEl.hidden = false;
+    tabStateEl.textContent = msg("popupTabDocument", "The current tab is a supported document.");
+    ctaEl.textContent = msg("popupOpenInReader", "Open it in the reader");
+  } else if (host && opts.enabledByDefault && (opts.disabledHosts || []).includes(host)) {
+    tabStateEl.hidden = false;
+    tabStateEl.textContent = msg("popupTabOff", "Reflow is off on {1} - documents open as usual.", host);
+  }
+
+  ctaEl.addEventListener("click", () => {
+    // A document tab opens in the reader directly; anything else opens the viewer's empty
+    // state, where "Open a PDF file" lives (the OS file dialog needs a user gesture on the
+    // viewer page itself).
+    const url = docUrl
+      ? `${chrome.runtime.getURL("src/viewer.html")}?file=${encodeURIComponent(docUrl)}`
+      : chrome.runtime.getURL("src/viewer.html");
+    chrome.tabs.create({ url });
+    window.close();
+  });
 
   if (host) {
     hostEl.textContent = host;
@@ -155,13 +123,6 @@ async function init() {
     else set.add(host);
     o.disabledHosts = [...set];
     await setOptions(o);
-  });
-
-  document.getElementById("open-pdf").addEventListener("click", () => {
-    // Open the viewer's empty state in a new tab; the user clicks "Open a PDF file"
-    // there (the OS file dialog needs a user gesture on the viewer page itself).
-    chrome.tabs.create({ url: chrome.runtime.getURL("src/viewer.html") });
-    window.close();
   });
 
   document.getElementById("opts").addEventListener("click", (e) => {

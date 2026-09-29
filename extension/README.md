@@ -49,9 +49,13 @@ has an explicit override. `ar` and `ur` mirror the **chrome only** - the rendere
 ## Layout
 
 ```text
-manifest.json          MV3 manifest
+manifest.json          MV3 manifest (+ "commands": the keyboard shortcuts)
 src/
-  background.js        service worker: declarativeNetRequest interception + on/off toggle + "open original"
+  background.js        service worker: declarativeNetRequest interception + on/off toggle + "open original",
+                       keyboard commands, and the toolbar badge
+  badge.js             the toolbar icon's per-tab state (job counts / off / error), owned by the worker
+  intercept.js         the URL shapes interception agrees on - the DNR patterns, shared with the popup
+                       and the command handler
   viewer.html/.js/.css viewer (the redirect target); detectFormat routes to the right reader -> renderBook
   reflow.js            PDF paragraph/heading heuristics ported from internal/pdf/extract.go
   toc.js               PDF outline -> nested TOC, ported from internal/pdf/toc.go
@@ -65,9 +69,12 @@ src/
   export-html.js       the "save as HTML" shell: script-free content policy, image encoding, and the completeness plan (partial vs prepare-all) behind the export
   lang.js              source-language detection -> <html lang>
   i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
-  popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads
+  popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads;
+                       reflects the active tab (a supported document gets a one-click open)
   options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
   ocr-lang.js          OCR languages: bundled English, on-demand download + IndexedDB cache
+  ocr-lang-ui.js       the OCR-language picker the popup and the options page both render, with the
+                       inline download-failure message and its retry
   ocr-overlay.js/.css  shared OCR unit: recognize -> opaque translatable plates over the image
   ocr-plates.js        the plate half of that unit: block geometry -> plate specs -> DOM + runtime fit
   ocr.html/.js         standalone page for the right-click "OCR & translate this image" action
@@ -188,6 +195,32 @@ itself (EPUB, MOBI, FB2, comics) are never affected.
 Links keep only `http`, `https`, `mailto`, `tel` and in-document targets; anything else (`javascript:`,
 `data:`, `file:` ..) becomes plain text. A file saved with "&#8595; HTML" carries its own content policy
 that forbids script, so it stays inert when opened from disk, outside the extension.
+
+## Toolbar badge and keyboard shortcuts
+
+The toolbar icon mirrors what the extension is doing, so a conversion or an OCR pass running in a
+background tab stays visible without opening the popup. The badge is per tab and derived only from
+what the extension already knows (job counts it is told, and the interception options) - never from
+the content of unrelated pages:
+
+| Badge | Meaning |
+| --- | --- |
+| `..` (blue) | A document is downloading or being parsed; the job has nothing to count yet. |
+| `3/7` (blue) | Progress of a job that counts: pages rendered, or images OCR'd. |
+| `✓` (green) | The job finished; clears itself after a few seconds, or on the next navigation. |
+| `!` (red) | The last job failed (a document that would not load or run). Clears on the next navigation or the next document. |
+| `off` (grey) | Reflow is switched off for this tab's site; its documents open as usual. |
+| *(none)* | Nothing happening on this tab. |
+
+Two keyboard shortcuts are built in (change them in the browser's own
+`chrome://extensions/shortcuts`):
+
+- **Alt+Shift+O** - open the current document in the reader. On a document tab this is the popup's
+  one-click open; on any other page it opens the viewer's empty state with its file picker. It never
+  converts silently.
+- **Alt+Shift+R** - turn reflow on or off for the current site, the popup's "On this site" switch
+  without the popup. A no-op on browser pages (there is no site) and while interception is globally
+  off (there is nothing to toggle per site).
 
 ## Resume reading
 

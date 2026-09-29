@@ -10,10 +10,13 @@ const VIEWER = "chrome-extension://test/src/viewer.html";
 const on = {};                   // event name -> listeners
 const calls = {
   dynamicRules: [], sessionRules: [], menus: [], tabsCreated: [], tabsUpdated: [], insertCSS: [],
+  badgeTexts: [], badgeColors: [],
 };
 let storedOptions;               // what chrome.storage.local holds under "options"
 let failSessionRules = false;
 let failDynamicRules = false;
+let activeTabValue = null;       // what chrome.tabs.query hands the command handler
+const tabUrlById = new Map();    // what chrome.tabs.get hands the navigation listener
 
 const event = (name) => ({ addListener: (fn) => { (on[name] ||= []).push(fn); } });
 const fire = (name, ...args) => (on[name] || []).map((fn) => fn(...args));
@@ -27,9 +30,17 @@ globalThis.chrome = {
     onMessage: event("message"),
   },
   storage: {
-    local: { get: async () => (storedOptions ? { options: storedOptions } : {}) },
+    local: {
+      get: async () => (storedOptions ? { options: storedOptions } : {}),
+      set: async (obj) => { if ("options" in obj) storedOptions = obj.options; },
+    },
     onChanged: event("storageChanged"),
   },
+  action: {
+    setBadgeText: (a) => { calls.badgeTexts.push(a); },
+    setBadgeBackgroundColor: (a) => { calls.badgeColors.push(a); },
+  },
+  commands: { onCommand: event("command") },
   declarativeNetRequest: {
     updateDynamicRules: async (arg) => {
       if (failDynamicRules) throw new Error("Rule with id 1 specifies an incorrect value for the \"excludedRequestDomains\" key.");
@@ -48,6 +59,8 @@ globalThis.chrome = {
   tabs: {
     create: (arg) => { calls.tabsCreated.push(arg); },
     update: async (tabId, arg) => { calls.tabsUpdated.push({ tabId, ...arg }); },
+    get: async (tabId) => ({ id: tabId, url: tabUrlById.get(tabId) }),
+    query: async () => (activeTabValue ? [activeTabValue] : []),
     sendMessage: async () => null,
     onRemoved: event("tabRemoved"),
     onUpdated: event("tabUpdated"),
@@ -63,6 +76,14 @@ await import("../src/background.js");
 
 // The rule sync is fire-and-forget from the listeners, so let its awaits drain before asserting.
 const settle = () => new Promise((r) => setImmediate(r));
+
+// badgeText reads what a tab's cell wears now (paints accumulate; the last one wins).
+function badgeText(tabId) {
+  for (let i = calls.badgeTexts.length - 1; i >= 0; i--) {
+    if (calls.badgeTexts[i].tabId === tabId) return calls.badgeTexts[i].text;
+  }
+  return undefined;
+}
 
 // sendMessage runs the worker's message listener the way the runtime does and resolves with the
 // async response, if the listener promised one.
@@ -261,4 +282,106 @@ test("rule syncs apply in order, each with the options current at its turn", asy
   assert.equal(applied.length, 2);
   // The later sync ran last, so the rules left in place are the latest options' (off: none).
   assert.equal(applied.at(-1).addRules.length, 0);
+});
+
+// ---- Keyboard commands ------------------------------------------------------
+
+test("the open-viewer command mirrors the popup: a document tab opens in the viewer, anything else in the empty viewer", async () => {
+  activeTabValue = { id: 5, url: "https://x.test/nested/book.epub?x=1" };
+  fire("command", "open-viewer");
+  await settle();
+  assert.equal(calls.tabsCreated.at(-1).url,
+    `${VIEWER}?file=${encodeURIComponent("https://x.test/nested/book.epub?x=1")}`);
+
+  // A local document too - file URLs are the shape the file-access toggle exists for.
+  activeTabValue = { id: 5, url: "file:///C:/b/a.pdf" };
+  fire("command", "open-viewer");
+  await settle();
+  assert.equal(calls.tabsCreated.at(-1).url, `${VIEWER}?file=${encodeURIComponent("file:///C:/b/a.pdf")}`);
+
+  // An ordinary page opens the viewer's empty state with its file picker - never a silent conversion.
+  activeTabValue = { id: 5, url: "https://x.test/page.html" };
+  fire("command", "open-viewer");
+  await settle();
+  assert.equal(calls.tabsCreated.at(-1).url, VIEWER);
+
+  // No tab to act on (no focused window): nothing opens.
+  activeTabValue = null;
+  const before = calls.tabsCreated.length;
+  fire("command", "open-viewer");
+  await settle();
+  assert.equal(calls.tabsCreated.length, before);
+});
+
+test("the toggle-interception command flips the current site in the options and repaints the badge", async () => {
+  storedOptions = { enabledByDefault: true, disabledHosts: [] };
+  activeTabValue = { id: 7, url: "https://www.books.test/shelf/a.pdf" };
+
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.disabledHosts, ["www.books.test"]);
+  assert.equal(badgeText(7), "off", "the tab's cell says its site is now left alone");
+
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.disabledHosts, [], "a second press re-enables the site");
+  assert.equal(badgeText(7), "");
+});
+
+test("the toggle-interception command is a no-op on browser pages and while interception is globally off", async () => {
+  storedOptions = { enabledByDefault: false, disabledHosts: [] };
+  activeTabValue = { id: 8, url: "https://www.books.test/shelf/" };
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.disabledHosts, [], "globally off: nothing per-site to toggle");
+
+  storedOptions = { enabledByDefault: true, disabledHosts: [] };
+  activeTabValue = { id: 8, url: "chrome://newtab/" };
+  fire("command", "toggle-interception");
+  await settle();
+  assert.deepEqual(storedOptions.disabledHosts, [], "no site, no toggle");
+  assert.equal(badgeText(8), undefined, "and nothing is painted for a browser page");
+});
+
+// ---- The toolbar badge ------------------------------------------------------
+
+test("badge messages from a viewer tab paint that tab's cell and no other's", async () => {
+  await sendMessage({ dht: "badge", t: "job", kind: "convert", phase: "begin" }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "..");
+  await sendMessage({ dht: "badge", t: "job", kind: "convert", phase: "progress", done: 3, total: 7 }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "3/7");
+  await sendMessage({ dht: "badge", t: "job", kind: "convert", phase: "end" }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "✓", "the conversion's own end is worth a check mark");
+  await sendMessage({ dht: "badge", t: "job", kind: "ocr", phase: "begin", done: 0, total: 2 }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "..", "the OCR pass takes the cell over from the finished conversion");
+  await sendMessage({ dht: "badge", t: "job", kind: "ocr", phase: "end" }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "✓");
+  await sendMessage({ dht: "badge", t: "error" }, { tab: { id: 9 } });
+  assert.equal(badgeText(9), "!");
+
+  // A page cannot move another tab's badge, and a message without a sending tab is ignored.
+  await sendMessage({ dht: "badge", t: "error" }, { tab: { id: 10 } });
+  assert.equal(badgeText(10), "!");
+  assert.equal(badgeText(9), "!");
+  await sendMessage({ dht: "badge", t: "reset" }, {});
+  assert.equal(badgeText(9), "!");
+});
+
+test("a navigation drops the tab's badge state and recomputes the passive off-state from the new URL", async () => {
+  storedOptions = { enabledByDefault: true, disabledHosts: ["quiet.test"] };
+
+  tabUrlById.set(9, "https://quiet.test/shelf/");
+  fire("tabUpdated", 9, { status: "loading" });
+  await settle();
+  assert.equal(badgeText(9), "off");
+
+  // The same tab lands on an ordinary site: nothing to announce.
+  tabUrlById.set(9, "https://x.test/page.html");
+  fire("tabUpdated", 9, { url: "https://x.test/page.html" });
+  await settle();
+  assert.equal(badgeText(9), "");
+
+  // And a tab that goes away drops its state entirely.
+  fire("tabRemoved", 9);
+  assert.equal(badgeText(9), "");
 });

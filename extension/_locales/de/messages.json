@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "Entfernen"
+  },
+  "commandOpenViewer": {
+    "message": "Das aktuelle Dokument im Reader öffnen"
+  },
+  "commandToggleInterception": {
+    "message": "Umbrechen auf dieser Website ein- oder ausschalten"
+  },
+  "popupTabDocument": {
+    "message": "Im aktuellen Tab ist ein unterstütztes Dokument geöffnet."
+  },
+  "popupOpenInReader": {
+    "message": "Im Reader öffnen"
+  },
+  "popupTabOff": {
+    "message": "Auf {1} ist Umbrechen aus - Dokumente öffnen sich wie üblich."
+  },
+  "ocrDownloadFailed": {
+    "message": "{1} konnte nicht geladen werden"
+  },
+  "ocrRetry": {
+    "message": "Erneut versuchen"
+  },
   "appName": {
     "message": "Dokument-Seitenübersetzer - PDF, EPUB & mehr (kostenlos & lokal)",
     "description": "Extension name shown in Chrome and on the store listing."

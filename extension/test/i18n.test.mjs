@@ -65,28 +65,20 @@ test("every data-i18n key used in markup is defined", () => {
   assert.ok(seen > 20, `only ${seen} tagged nodes found - the scan is wrong`);
 });
 
-test("every t() key used in the sources is defined", () => {
+// Every source file resolves its strings through i18n.js's t() - directly, or through a local
+// msg() wrapper that forwards to it (popup.js, options.js, the OCR-language picker, the standalone
+// image-OCR page). The wrapper call sites look identical, so both spellings are scanned: a key
+// used only through a wrapper would otherwise ship missing from all thirteen files.
+test("every t()/msg() key used in the sources is defined", () => {
   const en = readLocale("en");
-  const call = /\bt\(\s*"([A-Za-z0-9_]+)"/g;
-  for (const file of ["viewer.js", "options.js", "popup.js", "i18n.js"]) {
+  const call = /\b(?:t|msg)\(\s*"([A-Za-z0-9_]+)"/g;
+  let seen = 0;
+  for (const file of ["viewer.js", "options.js", "popup.js", "i18n.js", "ocr-lang-ui.js", "ocr.js"]) {
     const js = fs.readFileSync(path.join(srcDir, file), "utf8");
     for (const m of js.matchAll(call)) {
+      seen++;
       assert.ok(m[1] in en, `${file}: t("${m[1]}") has no English message`);
     }
   }
-});
-
-// The standalone image-OCR page resolves its own messages through a local msg() helper rather
-// than i18n.js, so the scan above never saw it and a key added only there would ship missing
-// from all thirteen files.
-test("every msg() key used in the standalone OCR page is defined", () => {
-  const en = readLocale("en");
-  const call = /\bmsg\(\s*"([A-Za-z0-9_]+)"/g;
-  const js = fs.readFileSync(path.join(srcDir, "ocr.js"), "utf8");
-  let seen = 0;
-  for (const m of js.matchAll(call)) {
-    seen++;
-    assert.ok(m[1] in en, `ocr.js: msg("${m[1]}") has no English message`);
-  }
-  assert.ok(seen > 3, `only ${seen} msg() calls found - the scan is wrong`);
+  assert.ok(seen > 30, `only ${seen} message calls found - the scan is wrong`);
 });

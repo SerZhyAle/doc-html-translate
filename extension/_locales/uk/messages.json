@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "Видалити"
+  },
+  "commandOpenViewer": {
+    "message": "Відкрити поточний документ у читанці"
+  },
+  "commandToggleInterception": {
+    "message": "Увімкнути або вимкнути переформатування на цьому сайті"
+  },
+  "popupTabDocument": {
+    "message": "У вкладці відкрито документ підтримуваного формату."
+  },
+  "popupOpenInReader": {
+    "message": "Відкрити в читанці"
+  },
+  "popupTabOff": {
+    "message": "На сайті {1} переформатування вимкнено - документи відкриваються як зазвичай."
+  },
+  "ocrDownloadFailed": {
+    "message": "Не вдалося завантажити {1}"
+  },
+  "ocrRetry": {
+    "message": "Повторити"
+  },
   "appName": {
     "message": "Перекладач сторінок: PDF, EPUB та інші (безкоштовно, локально)",
     "description": "Extension name shown in Chrome and on the store listing."

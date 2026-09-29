@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "移除"
+  },
+  "commandOpenViewer": {
+    "message": "在阅读器中打开当前文档"
+  },
+  "commandToggleInterception": {
+    "message": "开启或关闭此网站的重排"
+  },
+  "popupTabDocument": {
+    "message": "当前标签页是受支持的文档。"
+  },
+  "popupOpenInReader": {
+    "message": "在阅读器中打开"
+  },
+  "popupTabOff": {
+    "message": "{1} 上的重排已关闭 - 文档照常打开。"
+  },
+  "ocrDownloadFailed": {
+    "message": "无法下载 {1}"
+  },
+  "ocrRetry": {
+    "message": "重试"
+  },
   "appName": {
     "message": "文档页面翻译器 - PDF、EPUB 及更多（免费、本地）",
     "description": "Extension name shown in Chrome and on the store listing."

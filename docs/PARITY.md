@@ -1558,6 +1558,14 @@ These are by design. Do not "sync" them without a decision - document changes he
   paths - file-scheme match patterns only cover empty-host URLs, so no toggle can ever grant it. The
   browser context menu is likewise extension-only, including the rule that a title's `&` is a keyboard
   mnemonic and has to be doubled to print ([`background.js`](../extension/src/background.js), `menuTitle`).
+- **Toolbar visibility (badge + keyboard commands) is extension-only** (2026-09-29). The desktop app has
+  its own window with progress bars and dialogs, so there is no toolbar surface to mirror: the
+  extension's per-tab badge ([`badge.js`](../extension/src/badge.js) - job counts, the grey `off` for a
+  switched-off site, the red `!` for a failure) and the manifest `commands` (`open-viewer`,
+  `toggle-interception`) have no Go counterpart and must not grow one. What may be shared is the
+  *wording* (any user-visible badge/shortcut text goes through `_locales`, same as every other chrome
+  string) - not the state itself, which is derived from what the worker already knows: job counts the
+  viewer and the page-OCR broker report, and the interception options.
 
 ## Process: keeping editions in sync
 

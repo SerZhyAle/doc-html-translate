@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "إزالة"
+  },
+  "commandOpenViewer": {
+    "message": "افتح المستند الحالي في القارئ"
+  },
+  "commandToggleInterception": {
+    "message": "تشغيل إعادة التدفق أو إيقافها على هذا الموقع"
+  },
+  "popupTabDocument": {
+    "message": "التبويب الحالي يحتوي على مستند مدعوم."
+  },
+  "popupOpenInReader": {
+    "message": "افتحه في القارئ"
+  },
+  "popupTabOff": {
+    "message": "إعادة التدفق متوقفة على {1} - تُفتح المستندات كالمعتاد."
+  },
+  "ocrDownloadFailed": {
+    "message": "تعذر تنزيل {1}"
+  },
+  "ocrRetry": {
+    "message": "أعد المحاولة"
+  },
   "appName": {
     "message": "مترجم صفحات المستندات - PDF و EPUB وغيرها (مجاني ومحلي)",
     "description": "Extension name shown in Chrome and on the store listing."

@@ -1,4 +1,36 @@
 {
+  "optHostRemove": {
+    "message": "Remove",
+    "description": "Button to take a site off the where-reflow-is-off list."
+  },
+  "commandOpenViewer": {
+    "message": "Open the current document in the reader",
+    "description": "Keyboard shortcut: open the current document in the reflow viewer, or the viewer's file picker on any other page."
+  },
+  "commandToggleInterception": {
+    "message": "Turn reflow on or off for this site",
+    "description": "Keyboard shortcut: turn document reflow on or off for the current site."
+  },
+  "popupTabDocument": {
+    "message": "The current tab is a supported document.",
+    "description": "Popup note above the primary button when the tab holds a supported document."
+  },
+  "popupOpenInReader": {
+    "message": "Open it in the reader",
+    "description": "Popup primary button when the tab holds a supported document."
+  },
+  "popupTabOff": {
+    "message": "Reflow is off on {1} - documents open as usual.",
+    "description": "Popup note when the current site's documents are left alone. {1} is the site's host name."
+  },
+  "ocrDownloadFailed": {
+    "message": "Couldn't download {1}",
+    "description": "Inline message next to a failed OCR language download. {1} is the language's name."
+  },
+  "ocrRetry": {
+    "message": "Retry",
+    "description": "Button to retry a failed OCR language download."
+  },
   "appName": {
     "message": "Document Page Translator - PDF, EPUB & more (Free & Local)",
     "description": "Extension name shown in Chrome and on the store listing."

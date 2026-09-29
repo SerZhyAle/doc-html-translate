@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "हटाएँ"
+  },
+  "commandOpenViewer": {
+    "message": "वर्तमान दस्तावेज़ रीडर में खोलें"
+  },
+  "commandToggleInterception": {
+    "message": "इस साइट पर पुनर्प्रवाह चालू या बंद करें"
+  },
+  "popupTabDocument": {
+    "message": "वर्तमान टैब में एक समर्थित दस्तावेज़ है।"
+  },
+  "popupOpenInReader": {
+    "message": "इसे रीडर में खोलें"
+  },
+  "popupTabOff": {
+    "message": "{1} पर पुनर्प्रवाह बंद है - दस्तावेज़ सामान्य रूप से खुलते हैं।"
+  },
+  "ocrDownloadFailed": {
+    "message": "{1} डाउनलोड नहीं हो सका"
+  },
+  "ocrRetry": {
+    "message": "पुनः प्रयास करें"
+  },
   "appName": {
     "message": "दस्तावेज़ पृष्ठ अनुवादक - PDF, EPUB और अन्य (निःशुल्क और स्थानीय)",
     "description": "Extension name shown in Chrome and on the store listing."

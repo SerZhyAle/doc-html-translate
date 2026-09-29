@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "Retirer"
+  },
+  "commandOpenViewer": {
+    "message": "Ouvrir le document actuel dans le lecteur"
+  },
+  "commandToggleInterception": {
+    "message": "Activer ou désactiver la redistribution sur ce site"
+  },
+  "popupTabDocument": {
+    "message": "L'onglet actuel contient un document pris en charge."
+  },
+  "popupOpenInReader": {
+    "message": "Ouvrir dans le lecteur"
+  },
+  "popupTabOff": {
+    "message": "Sur {1}, la redistribution est désactivée - les documents s'ouvrent normalement."
+  },
+  "ocrDownloadFailed": {
+    "message": "Impossible de télécharger {1}"
+  },
+  "ocrRetry": {
+    "message": "Réessayer"
+  },
   "appName": {
     "message": "Traducteur de pages de documents - PDF, EPUB et plus (gratuit et local)",
     "description": "Extension name shown in Chrome and on the store listing."

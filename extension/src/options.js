@@ -1,7 +1,7 @@
 // options.js - default on/off, reading theme, source-language hint, image OCR + language
 // downloads, and a view of the per-site disable list. Persists the shared `options` object.
 
-import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
+import { renderOcrLangs } from "./ocr-lang-ui.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
 import { reportText } from "./diagnostics.js";
 import { t, initI18n, applyI18n, loadMessages, setUiLang, uiLang } from "./i18n.js";
@@ -30,69 +30,9 @@ if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
 // not only to the ones Chrome serves by browser language.
 const msg = (key, fallback) => t(key, fallback);
 
-// Render the OCR-language manager: installed languages are selectable as the default
-// recognition language; others show a Download button (fetch + cache, then re-render).
-// While OCR is off we show a call-to-action pointing at the checkbox above instead of a
-// greyed-out list (kept in sync with popup.js's renderOcrLangs).
-async function renderOcrLangs() {
-  const o = await getOptions();
-  ocrLangsEl.replaceChildren();
-  ocrLangsEl.classList.remove("disabled");
-
-  if (!o.ocrImages) {
-    const off = document.createElement("div");
-    off.className = "hint";
-    off.textContent = msg("ocrOffHint", "Turn on to recognize text in images - then pick or download a language (English is built-in).");
-    ocrLangsEl.append(off);
-    return;
-  }
-
-  const installed = await getInstalledLangs();
-  for (const lang of LANGS) {
-    const row = document.createElement("div");
-    row.className = "ocr-lang";
-    if (installed.includes(lang.code)) {
-      const id = `ocrlang-${lang.code}`;
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "ocrLang";
-      radio.id = id;
-      radio.checked = o.ocrLang === lang.code;
-      radio.addEventListener("change", async () => {
-        const oo = await getOptions();
-        oo.ocrLang = lang.code;
-        await setOptions(oo);
-      });
-      const label = document.createElement("label");
-      label.htmlFor = id;
-      label.textContent = `${lang.name} (${msg("ocrInstalled", "installed")})`;
-      row.append(radio, label);
-    } else {
-      const name = document.createElement("span");
-      name.textContent = lang.name;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = msg("ocrDownload", "Download");
-      btn.addEventListener("click", async () => {
-        btn.disabled = true;
-        try {
-          await downloadLang(lang.code, (m) => {
-            if (m && typeof m.progress === "number") {
-              btn.textContent = `${msg("ocrDownloading", "Downloading")} ${Math.round(m.progress * 100)}%`;
-            }
-          });
-          await renderOcrLangs();
-        } catch (e) {
-          console.error("language download failed", e);
-          btn.textContent = msg("ocrDownload", "Download");
-          btn.disabled = false;
-        }
-      });
-      row.append(name, btn);
-    }
-    ocrLangsEl.append(row);
-  }
-}
+// renderLangList is the shared OCR-language renderer (ocr-lang-ui.js); the options page
+// labels the block in its own markup, so no extra hint line is needed here.
+const renderLangList = () => renderOcrLangs(ocrLangsEl);
 
 async function getOptions() {
   const got = await chrome.storage.local.get("options");
@@ -153,9 +93,9 @@ async function init() {
     const opts = await getOptions();
     opts.ocrImages = ocrImagesEl.checked;
     await setOptions(opts);
-    renderOcrLangs();
+    renderLangList();
   });
-  renderOcrLangs();
+  renderLangList();
 
   allowRemoteEl.checked = o.allowRemoteContent === true;
   allowRemoteEl.addEventListener("change", async () => {

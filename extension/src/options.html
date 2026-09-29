@@ -22,6 +22,11 @@
     .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid #2563eb;
       color: #2563eb; background: #fff; border-radius: 6px; cursor: pointer; }
     .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* A failed download says so where it happened, with its own retry action. */
+    .ocr-error { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0;
+      color: #c5221f; font-size: 0.85rem; }
+    .ocr-error button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid #c5221f;
+      color: #c5221f; background: #fff; border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
     /* The per-host remove button gets the same treatment as the OCR-language buttons: a real
        target size (WCAG 2.2, 2.5.8) and the page's own link blue. */
     ul.hosts button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; margin-inline-start: 0.6rem;

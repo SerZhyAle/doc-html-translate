@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "Удалить"
+  },
+  "commandOpenViewer": {
+    "message": "Открыть текущий документ в читалке"
+  },
+  "commandToggleInterception": {
+    "message": "Включить или выключить переформатирование на этом сайте"
+  },
+  "popupTabDocument": {
+    "message": "Во вкладке открыт документ поддерживаемого формата."
+  },
+  "popupOpenInReader": {
+    "message": "Открыть в читалке"
+  },
+  "popupTabOff": {
+    "message": "На сайте {1} переформатирование выключено - документы открываются как обычно."
+  },
+  "ocrDownloadFailed": {
+    "message": "Не удалось скачать {1}"
+  },
+  "ocrRetry": {
+    "message": "Повторить"
+  },
   "appName": {
     "message": "Переводчик страниц: PDF, EPUB и другие (бесплатно, локально)",
     "description": "Extension name shown in Chrome and on the store listing."

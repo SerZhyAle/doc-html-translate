@@ -176,6 +176,8 @@ function teardownCurrent() {
   ocrWithText = 0;
   ocrPending.length = 0;
   ocrStarted = new WeakSet();
+  ocrBadgeActive = false;
+  loadInFlight = false;
   prepareBlocked = null;
   for (const url of pdfImageUrls) { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }
   pdfImageUrls = [];
@@ -366,6 +368,36 @@ function setStatus(text) { $("status-text").textContent = text; }
 function setProgress(frac) { $("progress-bar").style.width = `${Math.round(frac * 100)}%`; }
 function hideStatus() { $("status").classList.add("done"); }
 
+// ---- Toolbar badge reports --------------------------------------------------
+// The service worker's toolbar badge mirrors this status bar for a reader who has switched to
+// another tab while a document loads or OCR runs. Only job facts cross - the same counts this
+// bar has already rendered, never document content; the worker owns the cell (badge.js).
+let loadInFlight = false;   // a document is loading: a failure notice now ends it as an error
+let convertBadgeAt = 0;     // progress reports are throttled; a page tick is too chatty
+let ocrBadgeActive = false; // whether the badge currently holds this document's OCR job
+
+function reportJob(detail) {
+  try {
+    const p = chrome.runtime.sendMessage({ dht: "badge", ...detail });
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  } catch { /* the worker is idle; its badge state is rebuilt by the next event */ }
+}
+
+// beginConvertBadge starts the convert job on the badge, dropping whatever the previous
+// document left there (its error, a drained OCR count).
+function beginConvertBadge() {
+  loadInFlight = true;
+  ocrBadgeActive = false;
+  reportJob({ t: "reset" });
+  reportJob({ t: "job", kind: "convert", phase: "begin" });
+}
+
+// endConvertBadge closes the convert job once the document is on screen.
+function endConvertBadge() {
+  loadInFlight = false;
+  reportJob({ t: "job", kind: "convert", phase: "end" });
+}
+
 // ---- Lazy image OCR --------------------------------------------------------
 // When options.ocrImages is on, document images are OCR'd only as they scroll into
 // view (a single shared worker processes them one at a time, so an image-heavy book
@@ -422,7 +454,21 @@ function ocrUpdateStatus() {
     ? t("vOcrStatusWhere", "OCR: {1}/{2} images - {3}", ocrDone, ocrTotal, where)
     : t("vOcrStatus", "OCR: {1}/{2} images", ocrDone, ocrTotal));
   setProgress(ocrDone / ocrTotal);
-  if (ocrDone < ocrTotal) return;
+  if (ocrDone < ocrTotal) {
+    // The badge carries the same counter for a reader in another tab. Images join the queue as
+    // the reader scrolls, so the job ends and starts again as the book goes on.
+    if (!ocrBadgeActive) {
+      ocrBadgeActive = true;
+      reportJob({ t: "job", kind: "ocr", phase: "begin", done: ocrDone, total: ocrTotal });
+    } else {
+      reportJob({ t: "job", kind: "ocr", phase: "progress", done: ocrDone, total: ocrTotal });
+    }
+    return;
+  }
+  if (ocrBadgeActive) {
+    ocrBadgeActive = false;
+    reportJob({ t: "job", kind: "ocr", phase: "end" });
+  }
   if (ocrWithText === 0 && ocrDone >= OCR_EMPTY_RUN_HINT) {
     const lang = options.ocrLang || "eng";
     setStatus(t("ocrNoTextLang", "No text found using {1} - if this page is in another language, pick it in the extension popup.", langLabel(lang)));
@@ -640,6 +686,10 @@ async function appendPdfImages(page, section, pageChars, gen = docGen) {
 // Every failure the viewer shows the user comes through here, so this is the one place the
 // last error has to be recorded for a diagnostics report.
 function showNotice(titleText, bodyNodes) {
+  // A notice while a load was running is how a failed load ends: the badge says so until the
+  // tab navigates or the reader picks another file. Notices without a load (the empty state)
+  // are not failures.
+  if (loadInFlight) { loadInFlight = false; reportJob({ t: "error" }); }
   recordRun({ error: titleText });
   $("btn-save-html").classList.add("hidden"); // nothing valid to save as HTML
   const content = $("content");
@@ -1365,6 +1415,7 @@ async function loadUrl(url) {
     return;
   }
   setStatus(t("vStatusDownloading", "Downloading document.."));
+  beginConvertBadge(); // the download is the conversion's first stretch on the badge
   let data;
   try {
     // With the reader's cookies: a document behind a login opens here exactly when it opens in
@@ -1424,6 +1475,7 @@ const TEXT_FORMATS = new Set(["txt", "rtf", "html", "md", "fb2"]);
 
 async function loadFromData(data, title, name, gen) {
   if (!isCurrent(gen)) return;
+  beginConvertBadge();
   docSourceName = name;
   docSourceSize = data.byteLength;
   const format = detectFormat(data, name);
@@ -1529,6 +1581,7 @@ async function loadImageData(data, title, mime) {
     ]);
     return;
   }
+  endConvertBadge();
   $("btn-save-html").classList.remove("hidden");
   setProgress(1);
   maybeOfferResume();
@@ -1623,6 +1676,7 @@ function renderComic(pages) {
   setStatus(comicTotal === 1
     ? t("vComicReadyOne", "Ready - 1 page, text is recognized as you scroll")
     : t("vComicReady", "Ready - {1} pages, text is recognized as you scroll", comicTotal));
+  endConvertBadge();
   maybeOfferResume();
   setTimeout(hideStatus, 1800);
 }
@@ -1847,6 +1901,7 @@ async function renderDocument(pdf, title, gen = docGen) {
   // document would mean never showing the banner on the files that most need it.
   warnIfNoText();
   $("btn-save-html").classList.remove("hidden");
+  endConvertBadge();
   maybeOfferResume();
 }
 
@@ -1947,6 +2002,13 @@ async function renderPages(from, to) {
 
     setProgress(0.15 + 0.85 * (n / pdfTotal));
     setStatus(t("vStatusRendering", "Rendering page {1} / {2}", n, pdfTotal));
+    // The badge takes the same counter, twice a second at most - a thousand-page render must
+    // not turn into a thousand messages to the worker. Only while the document is still
+    // loading: later scroll-triggered chunks are reading, not converting.
+    if (loadInFlight && Date.now() - convertBadgeAt > 500) {
+      convertBadgeAt = Date.now();
+      reportJob({ t: "job", kind: "convert", phase: "progress", done: n, total: pdfTotal });
+    }
     if (n % 4 === 0) {
       if (stream) content.append(frag);
       await yieldToUI();
@@ -2131,6 +2193,7 @@ function renderBook(book, fallbackTitle) {
   setStatus(total === 1
     ? t("vStatusDoneSectionsOne", "Done - 1 section")
     : t("vStatusDoneSections", "Done - {1} sections", total));
+  endConvertBadge();
   maybeOfferResume();
   setTimeout(hideStatus, 1200);
 }

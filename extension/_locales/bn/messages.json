@@ -1,4 +1,28 @@
 {
+  "optHostRemove": {
+    "message": "সরান"
+  },
+  "commandOpenViewer": {
+    "message": "বর্তমান নথিটি রিডারে খুলুন"
+  },
+  "commandToggleInterception": {
+    "message": "এই সাইটে পুনঃপ্রবাহ চালু বা বন্ধ করুন"
+  },
+  "popupTabDocument": {
+    "message": "বর্তমান ট্যাবে একটি সমর্থিত নথি আছে।"
+  },
+  "popupOpenInReader": {
+    "message": "এটি রিডারে খুলুন"
+  },
+  "popupTabOff": {
+    "message": "{1}-এ পুনঃপ্রবাহ বন্ধ - নথি যেমন আছে তেমনই খোলে।"
+  },
+  "ocrDownloadFailed": {
+    "message": "{1} ডাউনলোড করা যায়নি"
+  },
+  "ocrRetry": {
+    "message": "আবার চেষ্টা করুন"
+  },
   "appName": {
     "message": "নথি পৃষ্ঠা অনুবাদক - PDF, EPUB ও আরও (বিনামূল্যে ও স্থানীয়)",
     "description": "Extension name shown in Chrome and on the store listing."

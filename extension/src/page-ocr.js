@@ -17,6 +17,10 @@
 // still compiles under the extension's policy; what the page's policy can do is refuse to load the
 // frame at all, and that refusal is reported to the reader rather than swallowed.
 
+// The toolbar badge lives here in the worker too: a whole-page run is invisible once its tab
+// is in the background, and the badge is the one surface still showing its progress.
+import * as badge from "./badge.js";
+
 const NS = "page-ocr";
 
 // A picture gets this long before the run gives up on it and moves to the next one. Recognition is
@@ -282,9 +286,11 @@ async function drain(run) {
       run.failed++;
       console.warn("page OCR: picture failed", picture.src, res.error);
     }
+    badge.tabJob(run.tabId, "ocr", "progress", run.done, run.total);
     await status(run);
   }
   run.running = false;
+  badge.tabJob(run.tabId, "ocr", "end");
   await status(run);
   await releaseHost(run);
 }
@@ -298,6 +304,7 @@ async function startRun(tabId, { rescan = false } = {}) {
   }
   run.stopped = false;
   run.running = true;
+  badge.tabReset(tabId);
   run.lang = await getOcrLang();
   try {
     if (!rescan) await injectAgent(tabId);
@@ -310,11 +317,13 @@ async function startRun(tabId, { rescan = false } = {}) {
       await status(run);
       return;
     }
+    badge.tabJob(tabId, "ocr", "begin", run.done, run.total);
     await status(run);
     await ensureHost(run);
   } catch (e) {
     run.running = false;
     run.queue = [];
+    badge.tabError(tabId);
     console.warn("page OCR: could not start", e);
     await releaseHost(run);
     await status(run, { error: hostFailureMessage(e) });
@@ -341,6 +350,7 @@ async function removeLayer(tabId) {
   await stopRun(tabId);
   const run = runs.get(tabId);
   if (run) { await releaseHost(run); runs.delete(tabId); }
+  badge.tabReset(tabId);
   await toTab(tabId, { t: "teardown" });
   try {
     await chrome.scripting.removeCSS({ target: { tabId }, files: ["src/ocr-overlay.css", "src/page-overlay.css"] });
