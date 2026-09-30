@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"doc-html-translate/internal/limits"
+
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/tannevaled/gobig2"
 	"golang.org/x/image/draw"
@@ -32,7 +34,8 @@ func mrcPair(imgs map[int]model.Image) (background, foreground model.Image, ok b
 	if a.HasImgMask && !b.HasImgMask {
 		a, b = b, a
 	}
-	if a.HasImgMask || !b.HasImgMask || a.HasSMask || b.HasSMask || !sameShapeRaster(a, b) {
+	if a.HasImgMask || !b.HasImgMask || a.HasSMask || b.HasSMask || !sameShapeRaster(a, b) ||
+		imagePixels(b) < 4*imagePixels(a) {
 		return background, foreground, false
 	}
 	return a, b, true
@@ -41,6 +44,9 @@ func mrcPair(imgs map[int]model.Image) (background, foreground model.Image, ok b
 // maskForImage reads the separate /Mask XObject. pdfcpu exposes the flag on its
 // image stub but does not apply the mask when extracting the foreground raster.
 func maskForImage(ctx *model.Context, foreground model.Image) (*image.Gray, error) {
+	if err := limits.CheckPixels(int64(foreground.Width), int64(foreground.Height)); err != nil {
+		return nil, err
+	}
 	entry := ctx.Table[foreground.ObjNr]
 	if entry == nil {
 		return nil, fmt.Errorf("foreground object %d missing", foreground.ObjNr)
@@ -57,16 +63,22 @@ func maskForImage(ctx *model.Context, foreground model.Image) (*image.Gray, erro
 	if len(mask.FilterPipeline) != 1 || mask.FilterPipeline[0].Name != "JBIG2Decode" {
 		return nil, fmt.Errorf("unsupported MRC mask filter")
 	}
+	if isMask := mask.BooleanEntry("ImageMask"); isMask == nil || !*isMask {
+		return nil, fmt.Errorf("MRC stencil is not an image mask")
+	}
 	if mask.IntEntry("Width") == nil || mask.IntEntry("Height") == nil ||
 		*mask.IntEntry("Width") != foreground.Width || *mask.IntEntry("Height") != foreground.Height {
 		return nil, fmt.Errorf("MRC mask dimensions differ from foreground")
 	}
-	// The corpus streams have no JBIG2Globals. Fail closed for other streams so
-	// their existing unmasked background remains available as a fallback.
-	if _, hasGlobals := mask.FilterPipeline[0].DecodeParms["JBIG2Globals"]; hasGlobals {
-		return nil, fmt.Errorf("JBIG2Globals is not supported")
+	var globals []byte
+	if globalsObj, hasGlobals := mask.FilterPipeline[0].DecodeParms["JBIG2Globals"]; hasGlobals {
+		globalStream, _, err := ctx.DereferenceStreamDict(globalsObj)
+		if err != nil || globalStream == nil {
+			return nil, fmt.Errorf("JBIG2Globals stream: %v", err)
+		}
+		globals = globalStream.Raw
 	}
-	decoder, err := gobig2.NewDecoderEmbedded(bytes.NewReader(mask.Raw), nil)
+	decoder, err := gobig2.NewDecoderEmbedded(bytes.NewReader(mask.Raw), globals)
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +94,11 @@ func maskForImage(ctx *model.Context, foreground model.Image) (*image.Gray, erro
 }
 
 func readMRCRaster(runCtx context.Context, img model.Image, dir string) (image.Image, error) {
+	var err error
+	img, err = tiffAsPNG(img)
+	if err != nil {
+		return nil, err
+	}
 	file, err := os.CreateTemp(dir, "mrc-*."+img.FileType)
 	if err != nil {
 		return nil, err
@@ -110,17 +127,19 @@ func readMRCRaster(runCtx context.Context, img model.Image, dir string) (image.I
 
 func composeMRCPixels(background, foreground image.Image, mask *image.Gray) (*image.RGBA, error) {
 	w, h := foreground.Bounds().Dx(), foreground.Bounds().Dy()
-	if w <= 0 || h <= 0 || int64(w)*int64(h) > 100_000_000 ||
-		mask.Bounds().Dx() != w || mask.Bounds().Dy() != h {
+	if w <= 0 || h <= 0 || mask.Bounds().Dx() != w || mask.Bounds().Dy() != h {
 		return nil, fmt.Errorf("invalid MRC image dimensions")
+	}
+	if err := limits.CheckPixels(int64(w), int64(h)); err != nil {
+		return nil, err
 	}
 	out := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.ApproxBiLinear.Scale(out, out.Bounds(), background, background.Bounds(), draw.Src, nil)
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			// The PDF's default ImageMask decode selects foreground where the
-			// decoded mask bit is one (white in gobig2's Gray image).
-			if mask.GrayAt(x, y).Y >= 128 {
+			// gobig2 represents selected stencil pixels as black. The vast
+			// white area is the transparent part of the foreground image.
+			if mask.GrayAt(x, y).Y < 128 {
 				out.Set(x, y, color.NRGBAModel.Convert(foreground.At(foreground.Bounds().Min.X+x, foreground.Bounds().Min.Y+y)))
 			}
 		}

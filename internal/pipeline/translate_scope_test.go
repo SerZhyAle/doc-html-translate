@@ -78,11 +78,7 @@ func TestChromeIsNotBilled(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "p.html"), `<html><body><div class="dht-navbar" lang="en"><span class="nav-file">book.epub</span>`+
 		`<a class="dht-nav-link">Next page</a><span class="nav-info">1 / 9</span></div><p>Hello</p></body></html>`)
 	book := &epub.Book{Manifest: []epub.ManifestItem{{ID: "p", Href: "p.html", MediaType: "text/html"}}}
-	pages := loadContentPages(book, dir)
-	if len(pages) != 1 || pages[0].err != nil {
-		t.Fatalf("pages = %+v", pages)
-	}
-	if got := billableChars(book, pages); got != len("Hello") {
+	if got := billableChars(book, dir); got != len("Hello") {
 		t.Fatalf("billable characters = %d, want %d (the chrome is not sent)", got, len("Hello"))
 	}
 }

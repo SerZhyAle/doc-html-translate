@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/dialog"
@@ -23,12 +22,11 @@ import (
 )
 
 type contentPage struct {
-	item      epub.ManifestItem
-	filePath  string
-	segments  []*htmlproc.TextSegment
-	doc       *gohtml.Node
-	err       error
-	charCount int
+	item     epub.ManifestItem
+	filePath string
+	segments []*htmlproc.TextSegment
+	doc      *gohtml.Node
+	err      error
 }
 
 // engines builds the translation clients. It is a field so the tests can put a stub engine
@@ -115,12 +113,11 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 			none.err = fmt.Errorf("google translate unavailable: %w", keyErr)
 			return none
 		}
-		pages := loadContentPages(book, outputDir)
-		if !r.approveGoogleCost(book, pages) {
+		if !r.approveGoogleCost(book, outputDir) {
 			return none
 		}
 		client := translator.NewCachingClient(r.engines.google(apiKey))
-		return r.translateContent(ctx, book, client, pages)
+		return r.translateContent(ctx, book, client, outputDir)
 	case r.cfg.UseOllama:
 		worker := r.engines.ollama(r.cfg)
 		// Ctrl+C cancels ctx; the model is released from VRAM on the way out rather than from a
@@ -134,7 +131,7 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 			}()
 		}
 		client := translator.NewCachingClient(worker)
-		return r.translateContent(ctx, book, client, loadContentPages(book, outputDir))
+		return r.translateContent(ctx, book, client, outputDir)
 	default:
 		logging.Println("[3/4] Translation skipped (use -google or -ollama to enable)")
 		return none
@@ -144,9 +141,10 @@ func (r Runner) translate(ctx context.Context, book *epub.Book, outputDir string
 // translateContent translates all HTML content files in the book. The first engine failure
 // stops it: the page in hand keeps whatever part of it did come back, every later page stays in
 // the source language, and the outcome says how many pages are fully translated.
-func (r Runner) translateContent(ctx context.Context, book *epub.Book, client translator.Client, pages []contentPage) translationOutcome {
+func (r Runner) translateContent(ctx context.Context, book *epub.Book, client translator.Client, outputDir string) translationOutcome {
 	out := translationOutcome{state: outputpath.TranslationFull}
-	total := len(pages)
+	contentFiles := book.ContentFiles()
+	total := len(contentFiles)
 	if total == 0 {
 		logging.Println("[3/4] No content files to translate")
 		return out
@@ -156,11 +154,12 @@ func (r Runner) translateContent(ctx context.Context, book *epub.Book, client tr
 	dialog.Progress("translating", 0, total)
 	out.snippets = make(map[string]string, total)
 
-	for i, page := range pages {
+	for i, item := range contentFiles {
 		dialog.Progress("translating", i, total)
 		if ctx.Err() != nil {
 			return out
 		}
+		page := loadContentPage(book, outputDir, item)
 		if page.err != nil {
 			logging.Errorf("  WARNING: skip %s: %v\n", page.item.Href, page.err)
 			out.pages++
@@ -336,27 +335,10 @@ func contentFilePath(book *epub.Book, outputDir string, item epub.ManifestItem) 
 	return filepath.Join(outputDir, filepath.FromSlash(href))
 }
 
-func loadContentPages(book *epub.Book, outputDir string) []contentPage {
-	contentFiles := book.ContentFiles()
-	pages := make([]contentPage, 0, len(contentFiles))
-	for _, item := range contentFiles {
-		filePath := contentFilePath(book, outputDir, item)
-		segments, doc, err := htmlproc.ExtractTexts(filePath, htmlgen.IsReaderChrome)
-		page := contentPage{
-			item:     item,
-			filePath: filePath,
-			segments: segments,
-			doc:      doc,
-			err:      err,
-		}
-		if err == nil {
-			for _, seg := range segments {
-				page.charCount += utf8.RuneCountInString(seg.Text)
-			}
-		}
-		pages = append(pages, page)
-	}
-	return pages
+func loadContentPage(book *epub.Book, outputDir string, item epub.ManifestItem) contentPage {
+	filePath := contentFilePath(book, outputDir, item)
+	segments, doc, err := htmlproc.ExtractTexts(filePath, htmlgen.IsReaderChrome)
+	return contentPage{item: item, filePath: filePath, segments: segments, doc: doc, err: err}
 }
 
 // formatDuration formats seconds as "4m5s" or "38s".

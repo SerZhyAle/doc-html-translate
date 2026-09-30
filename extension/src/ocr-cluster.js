@@ -111,7 +111,7 @@ export const OCR_RESCUE_ANCHOR_CONF = 47;
 // OCR-OVERLAY rule 13: inherited - the 2026-08-15 band's four-letter run (ocr_rescue_floor_2026-08-15),
 // reused by the anchored rescue admission (OCR-PIPELINE amendment 1.6 A).
 export const OCR_RESCUE_ANCHOR_RUN = 4;
-// OCR-OVERLAY rule 13: derived - ocr_rescue_anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
+// OCR-OVERLAY rule 13: derived - RESEARCH_ocr-rescue-anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
 export const OCR_RESCUE_ANCHOR_VOTES = 2;
 
 // longestLetterRun counts the longest run of consecutive letters in s - the "run of four letters"

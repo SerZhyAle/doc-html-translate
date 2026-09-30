@@ -137,6 +137,9 @@ const DEST_FONT_TABLE = 2;
 // A parameter is a signed 16-bit value in the spec; longer digit runs are garbage.
 const MAX_PARAM_DIGITS = 10;
 
+// Bound the scoped-state stack on hostile input. Mirrors maxGroupDepth in parse.go.
+const MAX_GROUP_DEPTH = 1024;
+
 const isLetter = (c) => (c >= 0x61 && c <= 0x7a) || (c >= 0x41 && c <= 0x5a);
 const isDigit = (c) => c >= 0x30 && c <= 0x39;
 
@@ -315,6 +318,9 @@ export function stripRtf(bytes) {
   while (pos < input.length) {
     const c = input[pos++];
     if (c === 0x7b) {
+      if (stack.length >= MAX_GROUP_DEPTH) {
+        throw new RangeError(`rtf group nesting exceeds ${MAX_GROUP_DEPTH}`);
+      }
       flush();
       skip = 0;
       stack.push({ ...st });
@@ -344,8 +350,8 @@ export function stripRtf(bytes) {
 
 // splitRtfParagraphs groups consecutive non-blank lines into paragraphs, matching
 // the Go rtf splitParagraphs (blank-line separated, joined with a space).
-function splitRtfParagraphs(text) {
-  const norm = String(text).replace(/\r\n?/g, "\n");
+export function splitRtfParagraphs(text) {
+  const norm = String(text).replace(/\r\n?|[\u0085\u2028\u2029\v\f]/g, "\n");
   const paras = [];
   let cur = "";
   for (const line of norm.split("\n")) {

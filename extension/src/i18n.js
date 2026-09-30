@@ -53,8 +53,8 @@ async function initI18n() {
 }
 
 // applyI18n fills every tagged node under root and mirrors the chrome for right-to-left
-// languages. It sets dir on the element it is given - never on the document body of a converted
-// document, whose direction belongs to the document itself.
+// languages. It sets lang and dir on the element it is given - never on the document body of a
+// converted document, whose language and direction belong to the document itself.
 function applyI18n(root) {
   const scope = root || document;
   scope.querySelectorAll("[data-i18n]").forEach((el) => {
@@ -76,6 +76,7 @@ function applyI18n(root) {
     document.documentElement.lang = uiLang();
     document.documentElement.dir = rtl ? "rtl" : "ltr";
   } else if (scope.setAttribute) {
+    scope.setAttribute("lang", uiLang());
     scope.setAttribute("dir", rtl ? "rtl" : "ltr");
   }
 }

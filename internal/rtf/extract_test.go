@@ -108,3 +108,23 @@ func TestExtract_RTFFileNotFound(t *testing.T) {
 		t.Error("expected error for missing file")
 	}
 }
+
+func TestExtract_RTFNestingLimit(t *testing.T) {
+	dir := t.TempDir()
+	rtfPath := filepath.Join(dir, "deep.rtf")
+	content := `{\rtf1 ` + strings.Repeat("{", 1024) + "text"
+	if err := os.WriteFile(rtfPath, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	outDir := filepath.Join(dir, "out")
+	if err := os.Mkdir(outDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, err := rtf.Extract(rtfPath, outDir)
+	if err == nil || !strings.Contains(err.Error(), "rtf group nesting exceeds 1024") {
+		t.Fatalf("Extract error = %v; want nesting limit", err)
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "page_001.html")); !os.IsNotExist(err) {
+		t.Fatalf("page created after nesting error: %v", err)
+	}
+}

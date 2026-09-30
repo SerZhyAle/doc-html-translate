@@ -133,8 +133,8 @@ func Locate() (string, error) {
 			return p, nil
 		}
 	}
-	if exe, err := os.Executable(); err == nil {
-		cand := filepath.Join(filepath.Dir(exe), "tesseract", tesseractExeName())
+	if dir := runningExecutableDir(); dir != "" {
+		cand := filepath.Join(dir, "tesseract", tesseractExeName())
 		if _, err := os.Stat(cand); err == nil {
 			return cand, nil
 		}
@@ -648,7 +648,7 @@ const ocrRescueLineConf = 80
 // splitting the cluster it fits inside. The corroboration is what the 2026-09-25 attempt lacked: on
 // both scenes that regressed, the pass held exactly one confident line, and on one of them that line
 // (`МОТ ЕУЕМ` at 81.4) was itself debris from an English scene read with `rus`. Measured in
-// DEV/research/ocr_rescue_anchor_2026-09-28.md.
+// DEV/research/RESEARCH_ocr-rescue-anchor_2026-09-28.md.
 
 // ocrRescueAnchorConf is the confidence a sub-floor line must clear before the rescue admission
 // looks at anything else. It is the middle of the empty band the 2026-08-15 populations bracket
@@ -670,7 +670,7 @@ const ocrRescueAnchorRun = 4
 // `rus` data and trusted debris (`МОТ ЕУЕМ`, 81.4), and a second scene's single-anchor admission
 // plated wrong-alphabet debris over a real caption position (`арропитеве`, 57.8). Two or more are
 // the pass's evidence that it read the page's own script.
-// OCR-OVERLAY rule 13: derived - ocr_rescue_anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
+// OCR-OVERLAY rule 13: derived - RESEARCH_ocr-rescue-anchor_2026-09-28 (OCR-PIPELINE amendment 1.6 A).
 const ocrRescueAnchorVotes = 2
 
 // greyRendition returns an 8-bit luminance copy of the image, or nil when it cannot be decoded.

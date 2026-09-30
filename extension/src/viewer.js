@@ -328,6 +328,7 @@ function maybeOfferResume() {
   if (!pos || !(pos.page >= 1 && pos.page <= docPages)) return;
   if (pos.page === 1 && !pos.frag && (pos.off || 0) + (pos.secoff || 0) < 40) return;
   const bar = el("div", "resume-notice");
+  applyI18n(bar);
   bar.setAttribute("role", "status");
   const line = el("span");
   line.textContent = t("vResumeAt", "Continue reading from page {1}?", pos.page);
@@ -702,6 +703,7 @@ function showNotice(titleText, bodyNodes) {
   const content = $("content");
   content.replaceChildren();
   const box = el("div", "notice");
+  applyI18n(box);
   const h = el("h1");
   h.textContent = titleText;
   box.append(h);
@@ -1332,14 +1334,14 @@ function renderBlocks(section, blocks) {
 const yieldToUI = () => new Promise((r) => setTimeout(r, 0));
 
 // ---- Main ------------------------------------------------------------------
-// applyViewerChromeI18n translates the toolbar and the table-of-contents panel only. It must not
+// applyViewerChromeI18n translates and attributes the viewer controls. It must not
 // touch <html lang> or the reflowed content: that attribute carries the *document's* language and
 // is what makes Chrome offer "Translate page" - the whole point of this extension.
 function applyViewerChromeI18n() {
   applyI18n(document.getElementById("toolbar"));
+  applyI18n(document.getElementById("status"));
   applyI18n(document.getElementById("toc"));
   applyI18n(document.getElementById("search-panel"));
-  document.getElementById("search-panel").lang = uiLang();
   applyGlyphs(document.getElementById("toolbar"));
   document.title = t("viewerTitle", document.title);
 }
@@ -2093,6 +2095,7 @@ async function allowRemoteAlways() {
 function offerRemoteContent(count) {
   clearRemoteNotice();
   const bar = el("div", "remote-notice");
+  applyI18n(bar);
   bar.setAttribute("role", "status");
   const text = el("span");
   text.textContent = t("vRemoteBlocked", "This document wants to load {1} item(s) from the internet. They are blocked, so its author cannot see that you opened it.", count);
@@ -2185,6 +2188,7 @@ function renderBook(book, fallbackTitle) {
   const ocrCovering = options.ocrImages && ocrTotal > 0;
   if (totalChars === 0 && !ocrCovering) {
     const banner = el("div", "notice");
+    applyI18n(banner);
     const h = el("h1");
     h.textContent = t("vLittleTextTitle", "Little or no text found");
     banner.append(
@@ -2222,6 +2226,7 @@ function warnIfNoText() {
   if ((totalChars === 0 || mostlyEmpty) && !ocrCovering) {
     const content = $("content");
     const banner = el("div", "notice");
+    applyI18n(banner);
     const h = el("h1");
     h.textContent = t("vLittleTextTitle", "Little or no text found");
     banner.append(

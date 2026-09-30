@@ -38,8 +38,8 @@ var stagingRoot = sync.OnceValues(func() (string, error) {
 func stagingCandidates() []string {
 	out := []string{os.TempDir()}
 	out = append(out, platformStagingRoots()...)
-	if exe, err := os.Executable(); err == nil {
-		out = append(out, filepath.Join(filepath.Dir(exe), stagingDirName))
+	if dir := runningExecutableDir(); dir != "" {
+		out = append(out, filepath.Join(dir, stagingDirName))
 	}
 	return out
 }

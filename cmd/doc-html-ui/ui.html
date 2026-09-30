@@ -792,31 +792,35 @@ document.getElementById('themeSwitch').addEventListener('change', e => {
 //
 //   buttons: [{id, key, kind: 'primary'|'danger'|'', focus: true}]; cancel: the no-action id
 let dlgQueue = Promise.resolve();
-let dlgOpen = null; // {close()} of the dialog on screen, so a run that ends can withdraw its question
+let dlgOpen = null; // {tag, close()} of the dialog on screen, so its owning run can withdraw it
 function openDialog(opts) {
-    const next = dlgQueue.then(() => new Promise(resolve => {
-        const dlg = el('dlg'), actions = el('dlgActions');
-        el('dlgTitle').textContent = opts.title || '';
-        el('dlgMsg').textContent = opts.message || '';
-        actions.innerHTML = '';
-        let focus = null;
-        for (const b of opts.buttons) {
-            const btn = document.createElement('button');
-            btn.value = b.id;
-            btn.textContent = t(b.key);
-            if (b.kind) btn.className = b.kind;
-            actions.appendChild(btn);
-            if (b.focus) focus = btn;
-        }
-        dlg.returnValue = '';
-        dlg.addEventListener('close', () => {
-            dlgOpen = null;
-            resolve(dlg.returnValue || opts.cancel);
-        }, {once: true});
-        dlgOpen = {tag: opts.tag, close: () => dlg.close()};
-        dlg.showModal();
-        (focus || actions.lastChild).focus();
-    }));
+    const next = dlgQueue.then(() => {
+        // A run can end while its question waits behind another dialog.
+        if (opts.run && !opts.run.active) return null;
+        return new Promise(resolve => {
+            const dlg = el('dlg'), actions = el('dlgActions');
+            el('dlgTitle').textContent = opts.title || '';
+            el('dlgMsg').textContent = opts.message || '';
+            actions.innerHTML = '';
+            let focus = null;
+            for (const b of opts.buttons) {
+                const btn = document.createElement('button');
+                btn.value = b.id;
+                btn.textContent = t(b.key);
+                if (b.kind) btn.className = b.kind;
+                actions.appendChild(btn);
+                if (b.focus) focus = btn;
+            }
+            dlg.returnValue = '';
+            dlg.addEventListener('close', () => {
+                dlgOpen = null;
+                resolve(dlg.returnValue || opts.cancel);
+            }, {once: true});
+            dlgOpen = {tag: opts.tag, close: () => dlg.close()};
+            dlg.showModal();
+            (focus || actions.lastChild).focus();
+        });
+    });
     dlgQueue = next.catch(() => {});
     return next;
 }
@@ -1839,6 +1843,7 @@ function makeLogAppender(log) {
 // stream died without saying.
 async function streamRun(cfg, hooks) {
     let runWarning = false, runReused = false, end = null;
+    const run = {active: true};
     let progressStage = 'checking';
     const showProgress = (data) => {
         const keys = {checking:'progressChecking', extracting:'progressExtracting', building:'progressBuilding', recognizing:'progressRecognizing', translating:'progressTranslating', saving:'progressSaving', reused:'progressReused'};
@@ -1864,7 +1869,7 @@ async function streamRun(cfg, hooks) {
         if (kind === 'end') { end = data; return; }
         if (kind === 'progress') { if (data.stage === 'warning') runWarning = true; else showProgress(data); return; }
         if (kind === 'note') { informDialog(data.title, data.message); return; }
-        if (kind === 'ask') askForTheRun(cfg, data);
+        if (kind === 'ask') askForTheRun(cfg, data, run);
     };
     const feed = (text) => {
         pendingLine += text;
@@ -1907,9 +1912,10 @@ async function streamRun(cfg, hooks) {
     } catch(e) {
         if (e.name !== 'AbortError') console.error(e);
     } finally {
+        run.active = false;
         hooks.onAbort(null);
         // A question the run asked and nobody answered goes with the run.
-        if (dlgOpen && dlgOpen.tag === 'run') dlgOpen.close();
+        if (dlgOpen && dlgOpen.tag === run) dlgOpen.close();
     }
     return {end, warning: runWarning, reused: runReused, refused: false};
 }
@@ -1987,12 +1993,13 @@ const MARK = '\x1edht:';
 // askForTheRun puts the converter's question - the paid-translation cost - in this window, owned
 // by it, and sends the answer back. Not spending is the recommended answer: it has the focus, so
 // Enter declines, and Escape and closing the dialog decline too (APP-BEHAVIOUR rule 1).
-async function askForTheRun(cfg, q) {
+async function askForTheRun(cfg, q, run) {
     const choice = await openDialog({
-        title: q.title, message: q.message, tag: 'run',
+        title: q.title, message: q.message, tag: run, run,
         buttons: [{id: 'yes', key: 'costYes', kind: 'danger'}, {id: 'no', key: 'costNo', focus: true}],
         cancel: 'no',
     });
+    if (!run.active) return;
     try {
         await api('/api/answer', {method: 'POST', body: JSON.stringify({input: cfg.input, output: cfg.output, yes: choice === 'yes'})});
     } catch (e) { /* the run is gone; so is the question */ }

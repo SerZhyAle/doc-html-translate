@@ -71,8 +71,8 @@ var userDataDir = func() string {
 // bundledDataDir is <exe dir>/tessdata: where the build provisions eng and where earlier versions
 // installed downloads. Read-only under MSIX, so the app only ever reads from it.
 var bundledDataDir = func() string {
-	if exe, err := os.Executable(); err == nil {
-		return filepath.Join(filepath.Dir(exe), "tessdata")
+	if dir := runningExecutableDir(); dir != "" {
+		return filepath.Join(dir, "tessdata")
 	}
 	return "tessdata"
 }

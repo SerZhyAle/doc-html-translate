@@ -34,7 +34,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 |---|---|---|
 | PDF paragraph/heading reflow | [`internal/pdf/extract.go`](../internal/pdf/extract.go) (`rowsToText`, `classifyBlock`, `isLigaturesArtifact`) | [`extension/src/reflow.js`](../extension/src/reflow.js) |
 | PDF outline -> TOC | [`internal/pdf/toc.go`](../internal/pdf/toc.go) | [`extension/src/toc.js`](../extension/src/toc.js) |
-| PDF page images: select + same-shape dedupe | [`internal/pdf/images.go`](../internal/pdf/images.go) (`selectPageImages`, `sameShapeRaster`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`dedupeSameShape`, `sameShapeRaster`) |
+| PDF page images: selection, MRC composition, same-shape dedupe | [`internal/pdf/images.go`](../internal/pdf/images.go) (`selectPageImages`, `sameShapeRaster`), [`internal/pdf/mrc.go`](../internal/pdf/mrc.go) (`mrcPair`, `writeMRCComposite`) | [`extension/src/pdf-images.js`](../extension/src/pdf-images.js) (`needsPageComposite`, `dedupeSameShape`, `sameShapeRaster`) |
 | EPUB unzip + OPF/spine + sanitize + TOC | [`internal/epub/`](../internal/epub/) (`epub.go`, `toc.go`) | [`extension/src/epub.js`](../extension/src/epub.js) |
 | EPUB chapter normalization (XHTML syntax, cover SVG, charset) | [`internal/epub/normalize.go`](../internal/epub/normalize.go) (`xhtmlToHTMLSyntax`, `rewriteCoverSVGs`), [`charset.go`](../internal/epub/charset.go) (`decodeToUTF8`) | [`extension/src/epub-normalize.js`](../extension/src/epub-normalize.js) (`xhtmlToHtmlSyntax`, `coverSvgImage`), [`charset.js`](../extension/src/charset.js) (`decodeChapter`) |
 | Plain text -> paragraphs/pages | [`internal/txt/`](../internal/txt/) | [`extension/src/txt.js`](../extension/src/txt.js) |
@@ -231,6 +231,11 @@ charset, destination, symbol and break tables and the FB2 declaration window val
 RTF unit cases run on both sides (`internal/rtf/parse_test.go`, `extension/test/rtf.test.mjs`).
 
 **RTF** is read in one forward pass with RTF's group state:
+
+The group-state stack has a shared limit of 1,024 groups. A deeper document fails with
+`rtf group nesting exceeds 1024` before another state is pushed. RTF paragraphs normalize CR/LF,
+NEL, LS, PS, vertical tab and form feed before splitting on blank lines. Both rules are guarded by
+[`tests/testdata/rtf_cases.json`](../tests/testdata/rtf_cases.json) in the Go and extension RTF tests.
 
 - **Destinations.** Each `{` copies the group state and `}` restores it. The font table is read for
   charsets and never shown. The known non-text destinations (`colortbl`, `stylesheet`, `info`, `pict`,
@@ -507,11 +512,13 @@ both editions' unit tests, and `TestParityReflowConstants` fails if either stops
 
 ### PDF page-image selection
 
-**Guard:** Prose only. A future ticket would pin `aspectRatioTolerance` == `ASPECT_RATIO_TOLERANCE` and
-the keep-the-largest rule.
+**Guard:** The synthetic two-layer case in `tests/testdata/pdf_mrc_pair.json` is read by both editions'
+tests. A future ticket would also pin `aspectRatioTolerance` == `ASPECT_RATIO_TOLERANCE` and the
+keep-the-largest rule.
 
-When a PDF page yields more than one raster, both editions collapse **proportional-scale duplicates** -
-the same picture embedded at two resolutions - down to the largest, so a scanned page is not shown twice.
+When a PDF page yields more than one raster, both editions collapse ordinary **proportional-scale
+duplicates** - the same picture embedded at two resolutions - down to the largest, so a scanned page
+is not shown twice. Layered MRC pages use the composition rule below first.
 The signal is the aspect ratio: a uniform scale preserves it, so two rasters whose ratios match within
 **`aspectRatioTolerance = 0.01` (1%)** are the same image and only the larger is kept. Differently-shaped
 images (a composed page: an illustration beside a figure) are all kept - guessing "the page" among genuinely
@@ -521,8 +528,9 @@ Go: `internal/pdf/images.go` `selectPageImages` / `sameShapeRaster` / `betterPag
 JS: `extension/src/pdf-images.js` `dedupeSameShape` / `sameShapeRaster` / `ASPECT_RATIO_TOLERANCE`.
 
 **Which rasters reach the reader - the same rule on every path.** Both editions show every raster a page
-paints, whatever its size, and whether OCR is on or off; the dedupe above is the only filter. The desktop
-extracts them during conversion; the extension extracts a page's rasters lazily, as the reader scrolls near
+paints, whatever its size, and whether OCR is on or off; the dedupe and MRC composition above decide
+which page image reaches the reader. The desktop extracts them during conversion; the extension
+extracts a page's rasters lazily, as the reader scrolls near
 the page (`viewer.js` `deferPageImages`), on the default path as well as with OCR on. What the OCR option
 decides is only whether the shown pictures are recognized. One named difference sits on that side: the
 extension does not queue a raster under **`OCR_MIN_SIDE = 64`** px on a side for recognition (`pdf-images.js`
@@ -533,20 +541,17 @@ through the browser's `ImageDecoder` as a `VideoFrame`, which the extractor did 
 illustrations were dropped silently (`en-illpdf-little-nemo`: 1 of the desktop's 15 images; 10 of the
 other 14 were `VideoFrame` JPEGs, 4 were icons under the old 64 px display floor).
 
-**Known divergence - the stencil `/Mask` preference is desktop-only.** Inside a same-shape group the Go side
-keeps a raster *without* a stencil `/Mask` over a larger one painted through it (`betterPageRaster`): a mixed
-raster content (MRC) scan's high-resolution foreground layer is undefined outside its mask, and pdfcpu
-extracts it whole, as a smear. The extension keeps the largest. It is not ported because pdf.js gives the
-extension no per-image signal to port it with: its operator list wraps an image with `/SMask` and one with
-`/Mask` the same way (`addImageOps`, `hasMask = SMask || Mask`), the image object carries only pixels, and the
-Go rule must not fire on `/SMask` (a PNG-with-alpha illustration). The consequence differs from the desktop's
-original bug: pdf.js applies the stencil as alpha (`PDFImage.fillOpacity`), so the extension's kept raster is
-not a smear but the foreground layer alone - lettering where the mask selects, transparent elsewhere. The
-page's background layer (paper tone, anything painted only there) is missing from the viewer, the lettering
-sits on the theme's page colour (dark lettering on the dark theme can be hard to read), and OCR runs on that
-partly transparent raster. This is reasoned from the vendored pdf.js source, not measured on an MRC file in
-the extension. Closing it needs the raw image dictionaries (a PDF object reader beside pdf.js), not a change
-to `dedupeSameShape`.
+**MRC page composition.** Before same-shape deduplication, the desktop recognizes a pair with one
+unmasked background and one same-shape `/Mask` foreground with at least four times the background's
+pixel count. It decodes the JBIG2 stencil, scales the background to foreground size, and writes one
+composed JPEG for display and OCR (`internal/pdf/mrc.go`).
+If a mask or raster cannot be decoded, it falls back to the existing unmasked-raster preference. A
+soft `/SMask` does not trigger this rule. The extension has no separate `/Mask` signal in pdf.js's
+image objects, so a pair of same-shape images with a smaller side of at least 256 pixels and at least
+a 4:1 pixel-count ratio uses pdf.js's full-page render. That preserves the PDF paint order, mask,
+and paper colour. If rendering fails, it uses the extracted images. This geometric trigger can also
+rasterize an ordinary pair embedded at
+very different resolutions; the resulting page still shows its painted content.
 
 The **thumbnail** half of the problem is handled asymmetrically by construction, not by drift (see
 [Intentional divergences](#intentional-divergences-do-not-fix)): the Go extractor drops pdfcpu's `/Thumb`
@@ -1077,7 +1082,9 @@ their own test where one exists.
   - **Trigger:** the ordinary pass's own layout analysis marks the regions it isolated and
     recognition returned no words for - the desktop keeps them as `Result.unread` from the raw TSV's
     wordless line rows; the extension's `collectLines` gathers wordless line units onto the array it
-    returns. The sweep fires only when a marked region stands where the accepted plates leave at
+    returns, and the split-line regroup carries them onto the array it builds (`orderColumns` returns
+    a new one) - the desktop computes `Result.unread` from the reordered lines themselves, so there
+    the reordering cannot lose the mark. The sweep fires only when a marked region stands where the accepted plates leave at
     most `OCR_SCREEN_MERGE_MAX_OVERLAP` of it covered - the same bar a candidate must clear. A page
     whose marked regions are all served pays nothing. **Intentional edition difference:** an engine
     that never surfaces a wordless line unit leaves the extension's array empty and the sweep
@@ -1422,11 +1429,12 @@ Adding a language means adding it on **both** sides plus the site, the installer
 
 **The invariant both sides must keep:** the interface language dresses the *chrome* only. The converted
 document keeps its own `<html lang>` and its own direction - the Go side sets `lang`/`dir` on the navbar
-div ([`chromeDirAttr`](../internal/htmlgen/navbar.go)), the extension sets them on the toolbar and TOC
-scope only ([`applyI18n`](../extension/src/i18n.js)). Carrying the UI language on `<html lang>` would stop
-Chrome offering "Translate page", which is the product's entire free workflow. Guarded by
-[`TestConvertedChromeLanguage`](../tests/smoke_test.go) and the RTL assertions in
-[`make-screenshot.ps1`](../tools/store/make-screenshot.ps1).
+div ([`chromeDirAttr`](../internal/htmlgen/navbar.go)), and the extension sets them on the toolbar,
+status line, TOC, search panel and notices ([`applyI18n`](../extension/src/i18n.js)). Carrying the UI
+language on `<html lang>` would stop Chrome offering "Translate page", which is the product's entire
+free workflow. Guarded by [`TestConvertedChromeLanguage`](../tests/smoke_test.go), the RTL assertions
+in [`make-screenshot.ps1`](../tools/store/make-screenshot.ps1), and the extension's
+[`viewer.test.mjs`](../extension/test/viewer.test.mjs) language-attribution test.
 
 ## Intentional divergences (do NOT "fix")
 

@@ -1,6 +1,7 @@
 package report
 
 import (
+	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -73,5 +74,34 @@ func TestRedactPrefersTheMoreSpecificLocation(t *testing.T) {
 	got := Redact(in)
 	if !strings.HasPrefix(got, "%LOCALAPPDATA%") {
 		t.Errorf("Redact(%q) = %q, want it to start with %%LOCALAPPDATA%%", in, got)
+	}
+}
+
+func TestRedactProfilePathEncodings(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "Audit User")
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("HOME", home)
+	t.Setenv("LOCALAPPDATA", filepath.Join(home, "AppData", "Local"))
+	slash := filepath.ToSlash(home)
+	filePath := slash
+	if !strings.HasPrefix(filePath, "/") {
+		filePath = "/" + filePath
+	}
+	paths := map[string]string{
+		"native":        filepath.Join(home, "Books", "novel.epub"),
+		"json escaped":  strings.ReplaceAll(home, `\`, `\\`) + `\\Books\\novel.epub`,
+		"forward slash": slash + "/Books/novel.epub",
+		"file URL":      (&url.URL{Scheme: "file", Path: filePath + "/Books/novel.epub"}).String(),
+	}
+	for name, path := range paths {
+		t.Run(name, func(t *testing.T) {
+			got := Redact(path)
+			if !strings.Contains(got, "%USERPROFILE%") || !strings.Contains(got, "novel.epub") {
+				t.Errorf("Redact(%q) = %q", path, got)
+			}
+			if strings.Contains(got, "Audit User") || strings.Contains(got, "Audit%20User") {
+				t.Errorf("profile name survived redaction: %q", got)
+			}
+		})
 	}
 }

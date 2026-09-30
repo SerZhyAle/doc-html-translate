@@ -695,13 +695,16 @@ function Invoke-Summary {
     $untriaged = [System.Collections.Generic.List[string]]::new()
     $tickets = [System.Collections.Generic.SortedSet[int]]::new()
     $regressed = [System.Collections.Generic.List[string]]::new()
+    # 'still open' is a register-only finding (no ticket) that was never fixed: checked, not a regression.
+    $stillOpen = [System.Collections.Generic.List[string]]::new()
     if (Test-Path $fPath) {
         $section = ''
         foreach ($line in (Get-Content $fPath -Encoding utf8)) {
             if ($line -match '^## (.*)') { $section = $Matches[1]; continue }
-            if ($section -like 'Re-check*' -and $line -match '^- ([A-Z]\d+) - (still fixed|regressed|one edition only|superseded) - ') {
+            if ($section -like 'Re-check*' -and $line -match '^- ([A-Z]\d+) - (still fixed|still open|regressed|one edition only|superseded) - ') {
                 [void]$rechecked.Add($Matches[1])
-                if ($Matches[2] -ne 'still fixed' -and $Matches[2] -ne 'superseded') { $regressed.Add("$($Matches[1]) $($Matches[2])") }
+                if ($Matches[2] -eq 'still open') { if (-not $stillOpen.Contains($Matches[1])) { $stillOpen.Add($Matches[1]) } }
+                elseif ($Matches[2] -ne 'still fixed' -and $Matches[2] -ne 'superseded') { $regressed.Add("$($Matches[1]) $($Matches[2])") }
                 continue
             }
             if ($section -like 'New findings*' -and $line -match '^- ([A-Z]\d+) - (crit|high|med|low) - (conf|plaus)\b') {
@@ -720,6 +723,7 @@ function Invoke-Summary {
     Write-Host "re-check: $($want.Count) ids of the previous register in class A, $($want.Count - $missing.Count) re-checked, $($missing.Count) missing"
     if ($missing.Count) { Write-Host "  missing: $($missing -join ' ')" -ForegroundColor Yellow }
     if ($regressed.Count) { Write-Host "  not holding: $($regressed -join ', ')" -ForegroundColor Yellow }
+    if ($stillOpen.Count) { Write-Host "  still open (register-only, never fixed): $($stillOpen -join ' ')" }
     if (@($m.registerNoCode).Count) { Write-Host "  cite no file still in the tree (re-check by hand): $(@($m.registerNoCode) -join ' ')" -ForegroundColor Yellow }
     if ($missing.Count) { $open.Add("$($missing.Count) re-checks missing") }
     Write-Host "findings: crit $($sev.crit), high $($sev.high), med $($sev.med), low $($sev.low)"

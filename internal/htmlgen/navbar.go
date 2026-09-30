@@ -971,8 +971,12 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 
 	// Inject the tab icon + CSS before </head>. The icon lives at the output root, so the
 	// link is relative to this page's own depth.
-	if idx := strings.Index(strings.ToLower(content), "</head>"); idx >= 0 {
-		content = content[:idx] + faviconLink(path.Dir(nav.SelfHref)) + navBarCSS + readerCSS + content[idx:]
+	if idx := indexASCIIFold(content, "</head>"); idx >= 0 {
+		icon := ""
+		if !containsGeneratedFavicon(content, path.Dir(nav.SelfHref)) {
+			icon = faviconLink(path.Dir(nav.SelfHref))
+		}
+		content = content[:idx] + icon + navBarCSS + readerCSS + content[idx:]
 	}
 
 	// Inject navbar after <body> (or <body ...>)
@@ -986,8 +990,7 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 
 // findBodyTagEnd finds the position right after the <body...> tag.
 func findBodyTagEnd(content string) int {
-	lower := strings.ToLower(content)
-	bodyStart := strings.Index(lower, "<body")
+	bodyStart := indexASCIIFold(content, "<body")
 	if bodyStart < 0 {
 		return -1
 	}

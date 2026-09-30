@@ -1,6 +1,7 @@
 package report
 
 import (
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -44,10 +45,31 @@ func pathRedactions() []redaction {
 		if dir == "" {
 			continue
 		}
-		rules = append(rules, redaction{
-			re:   regexp.MustCompile(`(?i)` + regexp.QuoteMeta(dir)),
-			with: r.with,
-		})
+		// Settings JSON doubles Windows separators; logs and settings can also carry
+		// slash paths and percent-escaped file URLs. Keep the location order above
+		// so a profile rule cannot consume the start of LOCALAPPDATA first.
+		slash := strings.ReplaceAll(dir, `\`, `/`)
+		urlPath := slash
+		if !strings.HasPrefix(urlPath, "/") {
+			urlPath = "/" + urlPath // file:///C:/Users/... on Windows
+		}
+		variants := []string{
+			(&url.URL{Scheme: "file", Path: urlPath}).String(),
+			strings.ReplaceAll(dir, `\`, `\\`),
+			slash,
+			dir,
+		}
+		seen := make(map[string]bool, len(variants))
+		for _, variant := range variants {
+			if seen[variant] {
+				continue
+			}
+			seen[variant] = true
+			rules = append(rules, redaction{
+				re:   regexp.MustCompile(`(?i)` + regexp.QuoteMeta(variant)),
+				with: r.with,
+			})
+		}
 	}
 	return rules
 }

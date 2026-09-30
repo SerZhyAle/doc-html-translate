@@ -2,7 +2,9 @@ package report
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -131,6 +133,48 @@ func TestBuildRedactsSettings(t *testing.T) {
 	}
 	if !strings.Contains(got, "<redacted>") {
 		t.Errorf("settings.json was not redacted: %q", got)
+	}
+}
+
+func TestBuildRedactsRecentPathsInSettings(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "Audit User")
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("HOME", home)
+	t.Setenv("LOCALAPPDATA", filepath.Join(home, "AppData", "Local"))
+	slash := filepath.ToSlash(home)
+	filePath := slash
+	if !strings.HasPrefix(filePath, "/") {
+		filePath = "/" + filePath
+	}
+	recent := []string{
+		filepath.Join(home, "Books", "native.epub"),
+		slash + "/Books/slash.epub",
+		(&url.URL{Scheme: "file", Path: filePath + "/Books/url.epub"}).String(),
+	}
+	settings, err := json.Marshal(map[string]any{"recentDocuments": recent})
+	if err != nil {
+		t.Fatal(err)
+	}
+	opts := buildOpts()
+	opts.SettingsJSON = settings
+	path, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	got := entries(t, path)["settings.json"]
+	if !json.Valid([]byte(got)) {
+		t.Fatalf("redacted settings.json is invalid JSON: %q", got)
+	}
+	if strings.Contains(got, "Audit User") || strings.Contains(got, "Audit%20User") {
+		t.Fatalf("profile name reached settings.json: %q", got)
+	}
+	if strings.Count(got, "%USERPROFILE%") != len(recent) {
+		t.Errorf("settings.json did not redact all recent paths: %q", got)
+	}
+	for _, name := range []string{"native.epub", "slash.epub", "url.epub"} {
+		if !strings.Contains(got, name) {
+			t.Errorf("document name %q was lost: %q", name, got)
+		}
 	}
 }
 

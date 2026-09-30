@@ -93,8 +93,11 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
    **existing** tag, must be started from `main`, checks that tag out and stops unless HEAD is its commit -
    it never creates a tag. Third-party actions are pinned by commit; bump a pin by resolving the new
    release's commit (`git ls-remote --tags https://github.com/<owner>/<action>`), not by a moving `@vN`.
-3. **winget** `[PUBLIC]` - after the release exists. **Always local-install-test the manifest
-   first** - `winget install --manifest winget` (one-time: `winget settings --enable
+3. **winget** `[PUBLIC]` - after the release exists, download its zip and calculate its SHA256.
+   Re-stamp all 15 flat `winget/*.yaml` files before validation: `PackageVersion` in each file,
+   `InstallerUrl` and `InstallerSha256` in the installer file, and `ReleaseNotesUrl` in the default
+   locale. Run `winget validate --manifest winget`, then **always local-install-test the new manifest**
+   with `winget install --manifest winget` (one-time: `winget settings --enable
    LocalManifestFiles`) - it downloads the release zip and verifies the SHA256 end-to-end, the
    single best gate (`winget validate` only checks schema, not the hash/URL). `winget/` must stay flat -
    `--manifest` rejects a folder with subdirectories - so the per-version copies of past submissions

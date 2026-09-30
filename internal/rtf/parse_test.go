@@ -1,6 +1,10 @@
 package rtf
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -38,8 +42,8 @@ func TestStripRTF(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := stripRTF([]byte(c.in)); got != c.want {
-				t.Errorf("stripRTF(%q)\n got %q\nwant %q", c.in, got, c.want)
+			if got, err := stripRTF([]byte(c.in)); err != nil || got != c.want {
+				t.Errorf("stripRTF(%q)\n got %q, %v\nwant %q", c.in, got, err, c.want)
 			}
 		})
 	}
@@ -64,8 +68,8 @@ func TestReadParamSaturates(t *testing.T) {
 		}
 	}
 	for _, in := range []string{`{\rtf1 abc\bin2147483647 x}`, `{\rtf1 abc\bin4294967295 x}`} {
-		if got := stripRTF([]byte(in)); got != "abc" {
-			t.Errorf("stripRTF(%q) = %q, want %q", in, got, "abc")
+		if got, err := stripRTF([]byte(in)); err != nil || got != "abc" {
+			t.Errorf("stripRTF(%q) = %q, %v; want %q", in, got, err, "abc")
 		}
 	}
 }
@@ -87,7 +91,10 @@ func largeRTF(n int) []byte {
 func TestStripRTFLargeInput(t *testing.T) {
 	data := largeRTF(50000) // about 5 MB
 	start := time.Now()
-	out := stripRTF(data)
+	out, err := stripRTF(data)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if elapsed := time.Since(start); elapsed > 5*time.Second {
 		t.Errorf("stripRTF took %v on %d bytes", elapsed, len(data))
 	}
@@ -101,6 +108,52 @@ func BenchmarkStripRTF(b *testing.B) {
 	b.SetBytes(int64(len(data)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		stripRTF(data)
+		_, _ = stripRTF(data)
+	}
+}
+
+func TestRTFSharedCases(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "tests", "testdata", "rtf_cases.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fx struct {
+		DepthCases []struct {
+			Name  string `json:"name"`
+			Depth int    `json:"depth"`
+			Error bool   `json:"error"`
+		} `json:"depth_cases"`
+		ParagraphCases []struct {
+			Name string   `json:"name"`
+			In   string   `json:"in"`
+			Want []string `json:"want"`
+		} `json:"paragraph_cases"`
+	}
+	if err := json.Unmarshal(data, &fx); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range fx.DepthCases {
+		t.Run(c.Name, func(t *testing.T) {
+			input := `{\rtf1 ` + strings.Repeat("{", c.Depth-1) + "A" + strings.Repeat("}", c.Depth-1) + "B}"
+			got, err := stripRTF([]byte(input))
+			if c.Error {
+				if err == nil || !strings.Contains(err.Error(), "rtf group nesting exceeds 1024") {
+					t.Fatalf("got %q, %v; want nesting error", got, err)
+				}
+			} else if err != nil || got != "AB" {
+				t.Fatalf("got %q, %v; want AB", got, err)
+			}
+		})
+	}
+	for _, c := range fx.ParagraphCases {
+		t.Run(c.Name, func(t *testing.T) {
+			plain, err := stripRTF([]byte(c.In))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := splitParagraphs(plain); !reflect.DeepEqual(got, c.Want) {
+				t.Fatalf("splitParagraphs(%q) = %q, want %q", plain, got, c.Want)
+			}
+		})
 	}
 }

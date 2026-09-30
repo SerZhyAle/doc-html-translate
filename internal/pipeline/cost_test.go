@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -82,10 +81,15 @@ func TestBillableCharsIncludeTitleAndTOC(t *testing.T) {
 			{Title: "Глава", Children: []epub.TOCEntry{{Title: "Часть"}}},
 		},
 	}
-	pages := []contentPage{{charCount: 10}, {charCount: 7}, {charCount: 99, err: errSkip}}
-	if got := billableChars(book, pages); got != 10+7+5+5+5 {
+	dir := t.TempDir()
+	book.Manifest = []epub.ManifestItem{
+		{ID: "a", Href: "a.html", MediaType: "text/html"},
+		{ID: "b", Href: "b.html", MediaType: "text/html"},
+		{ID: "missing", Href: "missing.html", MediaType: "text/html"},
+	}
+	writeFile(t, filepath.Join(dir, "a.html"), "<html><body>1234567890</body></html>")
+	writeFile(t, filepath.Join(dir, "b.html"), "<html><body>1234567</body></html>")
+	if got := billableChars(book, dir); got != 10+7+5+5+5 {
 		t.Fatalf("billableChars = %d", got)
 	}
 }
-
-var errSkip = errors.New("unreadable page")

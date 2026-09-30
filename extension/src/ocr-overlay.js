@@ -362,7 +362,7 @@ async function sampleColors(blob, blocks) {
 // unordered-rows mark (the sparse rung), which the clustering reads to tolerate a late row. Both
 // flags are false for every pass that was ever measured without them. Mirrors tesseract.go
 // tsvLines (docs/PARITY.md).
-function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, rescue = false, unordered = false) {
+export function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, rescue = false, unordered = false) {
   const out = [];
   const at = (v) => Math.round(v / scale);
   let split = false; // did any line on this page have to be cut?
@@ -454,7 +454,15 @@ function collectLines(data, scale = 1, ink = null, minConf = OCR_MIN_LINE_CONF, 
   // other. Only a page the split actually cut is regrouped - see orderColumns.
   if (rescue) markRescueAdmission(out, minConf);
   if (unordered) for (const l of out) l.unordered = true;
-  return split ? orderColumns(out, minConf) : out;
+  const lines = split ? orderColumns(out, minConf) : out;
+  // The regroup builds a new array, and the grey sweep's evidence is a property of the array emit
+  // collected it on: handed back bare, a page with both a split line and an unread region never
+  // fired the sweep (ocr-cluster.js orderColumns parks those lines rather than deleting them, but
+  // the property itself was left behind). The desktop computes Result.unread from the reordered
+  // lines themselves (tesseract.go parseTSV), so there the reordering cannot lose it. The evidence
+  // travels to whatever array this returns.
+  if (out.unread && lines !== out) lines.unread = out.unread;
+  return lines;
 }
 
 // Decide how to feed the image to Tesseract: estimate its DPI, upscale genuinely low-res images

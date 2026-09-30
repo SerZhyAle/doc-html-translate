@@ -1,0 +1,6 @@
+{
+  "background": {"width": 256, "height": 256, "rgb": [210, 190, 160]},
+  "foreground": {"width": 768, "height": 768, "rgb": [35, 30, 25]},
+  "selected": [200, 200],
+  "ordinary": [0, 0]
+}

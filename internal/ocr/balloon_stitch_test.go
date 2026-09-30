@@ -8,6 +8,7 @@ package ocr
 // does.
 
 import (
+	"context"
 	"encoding/json"
 	"image"
 	"os"
@@ -123,7 +124,7 @@ func TestGreySweepTrigger(t *testing.T) {
 	if !unreadOutside([]image.Rectangle{image.Rect(600, 0, 700, 100)}, rects) {
 		t.Error("an unplated region must fire the sweep")
 	}
-	got, dropped := greySweep(nil, "", nil, "", "", 0, kept, nil)
+	got, dropped := greySweep(context.Background(), "", nil, "", "", 0, kept, nil)
 	if len(got) != 1 || len(dropped) != 0 || got[0].Text != kept[0].Text {
 		t.Errorf("greySweep with no unread regions moved the plates: %v", got)
 	}

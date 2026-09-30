@@ -153,6 +153,32 @@ test("a text document from a URL is fetched and rendered as translatable section
   assert.match(document.getElementById("page-total").textContent, /^\/ \d+$/);
 });
 
+test("viewer controls and notices use the interface language while book text keeps its language", async () => {
+  const previous = storedData.uiLang;
+  storedData.uiLang = "ru";
+  try {
+    const { document, content } = await openViewer(
+      "?file=https://books.test/english.txt",
+      async () => new Response("The morning was bright and the streets were quiet.\n\nThe book begins here."),
+    );
+    assert.equal(document.documentElement.lang, "en");
+    for (const id of ["toolbar", "status", "toc", "search-panel"]) {
+      assert.equal(document.getElementById(id).lang, "ru", `${id} language`);
+    }
+    assert.equal(content.getAttribute("lang"), null, "the book inherits the document language");
+    assert.equal(content.querySelector("section").closest("[lang]"), document.documentElement);
+
+    const failure = await openViewer(
+      "?file=https://books.test/missing.pdf",
+      async () => new Response("missing", { status: 404 }),
+    );
+    assert.equal(failure.content.querySelector(".notice").lang, "ru");
+  } finally {
+    if (previous === undefined) delete storedData.uiLang;
+    else storedData.uiLang = previous;
+  }
+});
+
 test("a download that fails shows the reason and offers the file picker", async () => {
   const { content } = await openViewer(
     "?file=https://books.test/missing.pdf",

@@ -155,10 +155,8 @@ export function sameShapeRaster(a, b) {
 // Differently-shaped images (a composed page: an illustration beside a figure) are all
 // kept. Mirrors selectPageImages in the desktop app (internal/pdf/images.go); the app
 // also drops /Thumb previews, which never reach here because a thumbnail is a page-dict
-// entry that the content stream never paints. The app's other rule - a raster painted
-// through a stencil /Mask loses to its unmasked twin - is not ported: pdf.js marks /Mask
-// and /SMask images alike, so there is no signal to port it with (docs/PARITY.md,
-// "PDF page-image selection").
+// entry that the content stream never paints. Layered MRC candidates are rendered
+// as whole pages before this dedupe runs (docs/PARITY.md, "PDF page-image selection").
 export function dedupeSameShape(imgs) {
   const kept = [];
   for (const im of imgs) {
@@ -181,6 +179,7 @@ export function dedupeSameShape(imgs) {
 // Rendering the PDF page preserves the paint order and the mask on either path.
 export function needsPageComposite(imgs) {
   if (imgs.length !== 2 || !sameShapeRaster(imgs[0], imgs[1])) return false;
+  if (imgs.some(({ width, height }) => Math.min(width, height) < 256)) return false;
   const a = imgs[0].width * imgs[0].height;
   const b = imgs[1].width * imgs[1].height;
   return Math.min(a, b) > 0 && Math.max(a, b) / Math.min(a, b) >= 4;
@@ -200,9 +199,10 @@ export function ocrWorthy({ width, height }) {
   return width >= OCR_MIN_SIDE && height >= OCR_MIN_SIDE;
 }
 
-// Extract embedded raster images from a page as { blob, width, height }. Every painted
-// raster is kept, whatever its size, as the desktop does; images smaller than minSize on a
-// side are skipped (0 keeps all).
+// Extract embedded raster images from a page as { blob, width, height }. A page-sized
+// same-shape pair is rendered whole so its mask and background stay together. Otherwise
+// every painted raster is considered, whatever its size; minSize skips smaller ones
+// when requested (0 keeps all).
 export async function extractPageImages(page, { minSize = 0 } = {}) {
   const out = [];
   let opList;
@@ -242,8 +242,13 @@ export async function extractPageImages(page, { minSize = 0 } = {}) {
     }
   }
   if (needsPageComposite(out)) {
-    const composite = await rasterizePage(page);
-    if (composite) return [composite];
+    try {
+      const largest = out[0].width * out[0].height >= out[1].width * out[1].height ? out[0] : out[1];
+      const unit = page.getViewport({ scale: 1 });
+      const scale = Math.max(largest.width / unit.width, largest.height / unit.height);
+      const composite = await rasterizePage(page, { scale });
+      if (composite) return [composite];
+    } catch { /* retain the extracted images when page rendering fails */ }
   }
   return dedupeSameShape(out);
 }

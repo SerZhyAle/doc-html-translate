@@ -83,7 +83,7 @@ func protectKey(key string) ([]byte, error) {
 	if err := windows.CryptProtectData(&in, nil, nil, 0, nil, windows.CRYPTPROTECT_UI_FORBIDDEN, &out); err != nil {
 		return nil, err
 	}
-	defer windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data)))
+	defer func() { _, _ = windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data))) }()
 	return append([]byte(nil), unsafe.Slice(out.Data, out.Size)...), nil
 }
 
@@ -96,6 +96,6 @@ func unprotectKey(data []byte) (string, error) {
 	if err := windows.CryptUnprotectData(&in, nil, nil, 0, nil, windows.CRYPTPROTECT_UI_FORBIDDEN, &out); err != nil {
 		return "", err
 	}
-	defer windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data)))
+	defer func() { _, _ = windows.LocalFree(windows.Handle(unsafe.Pointer(out.Data))) }()
 	return string(unsafe.Slice(out.Data, out.Size)), nil
 }

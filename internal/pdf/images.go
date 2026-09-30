@@ -81,6 +81,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 	byPage = make(map[int][]string)
 
 	written := 0
+	composited := 0
 	skippedThumbs := 0
 	skippedDups := 0
 	tick := logging.NewTicker("Extracting images", "pages")
@@ -95,6 +96,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 			if err := writeMRCComposite(runCtx, ctx, bg, fg, imagesDir, name); err == nil {
 				byPage[pageNum] = append(byPage[pageNum], name)
 				written++
+				composited++
 				continue
 			} else {
 				logging.Printf("  WARNING: could not compose MRC layers on page %d: %v\n", pageNum, err)
@@ -125,6 +127,9 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 	}
 	if written > 0 && !tick.Quiet() {
 		tick.Report(pageCount, pageCount)
+	}
+	if composited > 0 {
+		logging.Printf("  Images: composed %d MRC page(s) from background, foreground and stencil\n", composited)
 	}
 	// Say what was dropped so an image count of 0 (or of "fewer than the PDF holds")
 	// is explained rather than looking like a silent loss.

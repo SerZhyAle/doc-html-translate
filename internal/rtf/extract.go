@@ -31,7 +31,10 @@ func Extract(rtfPath, outputDir string) (*epub.Book, error) {
 		return nil, fmt.Errorf("no content found: %s", rtfPath)
 	}
 
-	text := stripRTF(data)
+	text, err := stripRTF(data)
+	if err != nil {
+		return nil, err
+	}
 	paragraphs := splitParagraphs(text)
 
 	if len(paragraphs) == 0 {

@@ -1,6 +1,7 @@
 package rtf
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"unicode/utf8"
@@ -33,6 +34,10 @@ const maxParamDigits = 10
 // 386 build the wrapped value used to reach the \bin skip arithmetic and panic.
 const maxParamValue = math.MaxInt32
 
+// maxGroupDepth bounds the scoped-state stack even for a text input made entirely of '{'.
+// Keep this limit in step with MAX_GROUP_DEPTH in extension/src/rtf.js.
+const maxGroupDepth = 1024
+
 // reader turns RTF into plain text. It is a single forward pass: a group stack for the scoped
 // state, a destination per group so tables, metadata and pictures never reach the text, and
 // code-page decoding of \'XX bytes batched so a whole run goes through one decoder call.
@@ -57,7 +62,7 @@ type reader struct {
 }
 
 // stripRTF returns the text of an RTF document. Paragraph breaks come out as blank lines.
-func stripRTF(data []byte) string {
+func stripRTF(data []byte) (string, error) {
 	r := &reader{
 		in:     data,
 		st:     groupState{uc: 1},
@@ -71,6 +76,9 @@ func stripRTF(data []byte) string {
 		r.pos++
 		switch c {
 		case '{':
+			if len(r.stack) >= maxGroupDepth {
+				return "", fmt.Errorf("rtf group nesting exceeds %d", maxGroupDepth)
+			}
 			r.flush()
 			r.skip = 0
 			r.stack = append(r.stack, r.st)
@@ -91,7 +99,7 @@ func stripRTF(data []byte) string {
 	}
 	r.flush()
 	r.resolveHigh()
-	return r.out.String()
+	return r.out.String(), nil
 }
 
 // textByte handles one literal byte of document text.

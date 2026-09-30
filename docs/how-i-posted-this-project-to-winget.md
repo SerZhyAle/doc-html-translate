@@ -334,7 +334,10 @@ Get the new SHA from the release (it's printed in the workflow log and in the `.
 gh release view v<new-version> --json assets | ConvertFrom-Json
 ```
 
-Update the four values across the three manifest files (`PackageVersion` ×3, `InstallerUrl`, `InstallerSha256`, `ReleaseNotesUrl`), validate, then:
+Update the values across all 15 flat `winget/*.yaml` files: `PackageVersion` in every file,
+`InstallerUrl` and `InstallerSha256` in the installer file, and `ReleaseNotesUrl` in the default
+locale. Calculate the zip digest with `Get-FileHash -Algorithm SHA256`; then run
+`winget validate --manifest winget` and `winget install --manifest winget` before submitting:
 
 ```powershell
 wingetcreate update SerZhyAle.DocHtmlTranslate `
@@ -349,7 +352,7 @@ wingetcreate update SerZhyAle.DocHtmlTranslate `
 
 ## 12. Lessons worth remembering
 
-1. **`go:embed` makes packaging cleaner.** `pdftotext.exe` is embedded inside the binary - no extra files to include in the zip, no extraction step the user sees. The zip is just the two `.exe` files + LICENSE + README.
+1. **`go:embed` makes packaging cleaner.** `pdftotext.exe` is embedded inside the binary, so it needs no separate zip entry or visible extraction step. The zip contains both `.exe` files, LICENSE, README and `tessdata/eng.traineddata` for offline English OCR.
 2. **Don't call local-deploy scripts from CI.** The `.ps1` build scripts both have a `Copy-Item … "C:\GD\tc\SZA\_APP"` step that fails on a CI runner. Reproduce the build logic inline in the workflow instead.
 3. **The `goversioninfo` tool must be installed in CI.** It's a dev dependency that `go build` itself doesn't pull. Add `go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest` before the build steps.
 4. **Don't paste PATs into chat.** Use device-code auth (`wingetcreate submit` without `--token`) so the token never leaves the browser flow. If you do use `--token`, revoke it at https://github.com/settings/tokens the instant the PR is open.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -282,6 +283,18 @@ func TestUIMarkupExposesQueueControls(t *testing.T) {
 	// path must be gone, dictionary included.
 	if strings.Contains(uiHTML, "dropFirstOnly") {
 		t.Error("ui.html still references dropFirstOnly - the queue replaced the first-file-only drop")
+	}
+}
+
+// Run the page's dialog and stream code against simulated parallel runs. This catches a
+// finished queue item withdrawing or answering another item's cost question.
+func TestUIRunQuestionOwnership(t *testing.T) {
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Fatal("node is needed for the GUI page interaction test")
+	}
+	cmd := exec.Command("node", "--test", "ui_dialog_test.mjs")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("GUI page interaction test: %v\n%s", err, output)
 	}
 }
 

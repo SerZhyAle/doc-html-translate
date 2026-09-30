@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { stripRtf } from "../src/rtf.js";
+import { readFileSync } from "node:fs";
+import { stripRtf, splitRtfParagraphs } from "../src/rtf.js";
 
 // Bytes read as latin1 (one byte per char), so a test can write raw high bytes as \xNN.
 const bytes = (s) => Uint8Array.from(Buffer.from(s, "latin1"));
@@ -47,6 +48,23 @@ const cases = [
 for (const [name, input, want] of cases) {
   test(`stripRtf: ${name}`, () => {
     assert.equal(stripRtf(bytes(input)), want);
+  });
+}
+
+const shared = JSON.parse(readFileSync(new URL("../../tests/testdata/rtf_cases.json", import.meta.url), "utf8"));
+for (const c of shared.depth_cases) {
+  test(`stripRtf: shared depth case: ${c.name}`, () => {
+    const input = `{\\rtf1 ${"{".repeat(c.depth - 1)}A${"}".repeat(c.depth - 1)}B}`;
+    if (c.error) {
+      assert.throws(() => stripRtf(bytes(input)), /rtf group nesting exceeds 1024/);
+    } else {
+      assert.equal(stripRtf(bytes(input)), "AB");
+    }
+  });
+}
+for (const c of shared.paragraph_cases) {
+  test(`RTF paragraphs: shared case: ${c.name}`, () => {
+    assert.deepEqual(splitRtfParagraphs(stripRtf(bytes(c.in))), c.want);
   });
 }
 

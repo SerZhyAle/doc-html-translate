@@ -21,8 +21,8 @@ const confirmThreshold = 1000
 // A -max-cost limit is a pre-approval: an estimate within it translates without asking, so a
 // scripted or unattended run never stops at a dialog, and one over it is refused at any size.
 // Without a limit the dialog asks, as it always did, for anything above confirmThreshold.
-func (r Runner) approveGoogleCost(book *epub.Book, pages []contentPage) bool {
-	chars := billableChars(book, pages)
+func (r Runner) approveGoogleCost(book *epub.Book, outputDir string) bool {
+	chars := billableChars(book, outputDir)
 	estCost := float64(chars) / 1_000_000 * googleUSDPerMillionChars
 	if r.cfg.MaxCost > 0 {
 		if estCost > r.cfg.MaxCost {
@@ -49,11 +49,14 @@ func (r Runner) approveGoogleCost(book *epub.Book, pages []contentPage) bool {
 // billableChars counts every character the engine will be sent - the pages, the book title and
 // the authored TOC labels - in characters, which is what Google bills, not in UTF-8 bytes, which
 // doubled the count for Cyrillic and tripled it for CJK.
-func billableChars(book *epub.Book, pages []contentPage) int {
+func billableChars(book *epub.Book, outputDir string) int {
 	total := 0
-	for _, page := range pages {
+	for _, item := range book.ContentFiles() {
+		page := loadContentPage(book, outputDir, item)
 		if page.err == nil {
-			total += page.charCount
+			for _, seg := range page.segments {
+				total += utf8.RuneCountInString(seg.Text)
+			}
 		}
 	}
 	total += utf8.RuneCountInString(book.Title)

@@ -3,6 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 // pdf-images.js imports pdf.mjs (for the OPS enum), and from pdfjs 6 that module
 // constructs a DOMMatrix at top level - a browser global Node does not have, so the
@@ -16,7 +17,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {
   }
 };
 
-const { composeTransform, paintFlips, sameShapeRaster, dedupeSameShape, rasterScale, RASTER_MAX_PIXELS, RASTER_MAX_SIDE } = await import("../src/pdf-images.js");
+const { composeTransform, paintFlips, sameShapeRaster, dedupeSameShape, needsPageComposite, rasterScale, RASTER_MAX_PIXELS, RASTER_MAX_SIDE } = await import("../src/pdf-images.js");
+const mrcFixture = JSON.parse(readFileSync(new URL("../../tests/testdata/pdf_mrc_pair.json", import.meta.url)));
 
 const IDENTITY = [1, 0, 0, 1, 0, 0];
 
@@ -79,6 +81,21 @@ test("dedupeSameShape: a composed page of differently-shaped images keeps all", 
   const landscape = { blob: "l", width: 900, height: 600 };
   const square = { blob: "s", width: 500, height: 500 };
   assert.equal(dedupeSameShape([portrait, landscape, square]).length, 3);
+});
+
+test("the shared MRC pair is rendered as a page composite", async () => {
+  assert.equal(needsPageComposite([mrcFixture.background, mrcFixture.foreground]), true);
+  assert.equal(needsPageComposite([{ width: 24, height: 24 }, { width: 96, height: 96 }]), false);
+  const page = stubPage({
+    background: { ...mrcFixture.background, data: new Uint8Array(mrcFixture.background.width * mrcFixture.background.height * 3) },
+    foreground: { ...mrcFixture.foreground, data: new Uint8Array(mrcFixture.foreground.width * mrcFixture.foreground.height * 4) },
+  });
+  let rendered = false;
+  page.getViewport = ({ scale }) => ({ width: mrcFixture.background.width * scale, height: mrcFixture.background.height * scale });
+  page.render = () => { rendered = true; return { promise: Promise.resolve() }; };
+  const images = await extractPageImages(page);
+  assert.equal(rendered, true);
+  assert.deepEqual(images.map(({ width, height }) => [width, height]), [[mrcFixture.foreground.width, mrcFixture.foreground.height]]);
 });
 
 test("the page raster keeps ordinary pages at full scale and caps outsized ones", () => {

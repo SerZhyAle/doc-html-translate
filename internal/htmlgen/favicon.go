@@ -41,8 +41,30 @@ func faviconLink(fromDir string) string {
 	return `<link rel="icon" href="` + relativePath(fromDir, FaviconName) + "\">\n"
 }
 
-// injectFavicon adds the tab-icon link to a page that was already written. Needed for the
-// paths that skip the navbar injection, which carries the link for everything else.
+// indexASCIIFold finds an ASCII HTML tag without changing offsets in the original bytes.
+// Unicode case folding can change byte lengths (for example, U+0130 in Turkish titles).
+func indexASCIIFold(content, tag string) int {
+	for i := 0; i+len(tag) <= len(content); i++ {
+		matched := true
+		for j := 0; j < len(tag); j++ {
+			b := content[i+j]
+			if b >= 'A' && b <= 'Z' {
+				b += 'a' - 'A'
+			}
+			if b != tag[j] {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			return i
+		}
+	}
+	return -1
+}
+
+// injectFavicon adds the tab-icon link to a page that was already written. The
+// single-spine index path uses it before adding reader controls to the content page.
 // Best-effort, like the rest of the icon handling.
 func injectFavicon(filePath, fromDir string) {
 	data, err := os.ReadFile(filePath)
@@ -50,9 +72,16 @@ func injectFavicon(filePath, fromDir string) {
 		return
 	}
 	content := string(data)
-	idx := strings.Index(strings.ToLower(content), "</head>")
+	idx := indexASCIIFold(content, "</head>")
 	if idx < 0 {
 		return
 	}
+	if containsGeneratedFavicon(content, fromDir) {
+		return
+	}
 	_ = fsutil.WriteFile(filePath, []byte(content[:idx]+faviconLink(fromDir)+content[idx:]), 0o644)
+}
+
+func containsGeneratedFavicon(content, fromDir string) bool {
+	return strings.Contains(content, faviconLink(fromDir))
 }

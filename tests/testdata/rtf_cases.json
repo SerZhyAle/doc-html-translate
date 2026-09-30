@@ -1,0 +1,14 @@
+{
+  "_comment": "Shared RTF nesting and paragraph cases for internal/rtf and extension/test/rtf.test.mjs. depth counts the outer RTF group.",
+  "depth_cases": [
+    { "name": "at limit", "depth": 1024, "error": false },
+    { "name": "past limit", "depth": 1025, "error": true },
+    { "name": "many opening groups", "depth": 200000, "error": true }
+  ],
+  "paragraph_cases": [
+    { "name": "RTF paragraph control", "in": "{\\rtf1 a\\par b}", "want": ["a", "b"] },
+    { "name": "NEL with blank line", "in": "{\\rtf1 a\\u133?b\\u133?\\u133?c}", "want": ["a b", "c"] },
+    { "name": "LS and PS", "in": "{\\rtf1 a\\u8232?b\\u8233?\\u8233?c}", "want": ["a b", "c"] },
+    { "name": "VT and FF", "in": "{\\rtf1 a\\u11?b\\u12?\\u12?c}", "want": ["a b", "c"] }
+  ]
+}
