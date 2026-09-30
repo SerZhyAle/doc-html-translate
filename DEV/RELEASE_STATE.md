@@ -12,6 +12,6 @@ publishing itself is the manual flow in [RELEASE.md](RELEASE.md) / `scripts/rele
 | winget | submitted | PR#444113 | 15 manifests; SHA256 from the release .sha256 asset (matches Get-FileHash); winget validate + local install-test verified the hash end-to-end; PR body filled from the live upstream template; previous PR#433869 merged | 2026-09-30 12:01 |
 | Store | pending | SZA.Doc-HTML-Translate_26.930.1107.0_x64.msix | unsigned package built from the tag in msix/out; awaiting manual upload in Partner Center (product 9PMHSWQPR6V1); listing CSV ReleaseNotes not refreshed yet | 2026-09-30 12:01 |
 | Chrome | submitted | ext-cws-v26.0930 | publish-cws run 36699584346 success; upload SUCCEEDED, item state PENDING_REVIEW - the previous revision stays published until it clears | 2026-09-30 12:01 |
-| Edge | blocked | ext-edge-v26.0930 | publish-edge run 36699584033 failed: upload rejected HTTP 401 - EDGE_CLIENT_ID/EDGE_API_KEY refused (likely expired API key); rotate the secret, then re-run the run or re-push the tag | 2026-09-30 12:01 |
+| Edge | submitted | ext-edge-v26.0930 | publish-edge run 36699584033 first failed HTTP 401 (expired EDGE_API_KEY); new key stored as the repo secret, rerun success: upload Succeeded, draft submission published; Microsoft certification runs out-of-band | 2026-09-30 12:04 |
 
 Status vocabulary: `pending` -> `submitted` -> `live` (or `blocked` / `n/a`).
