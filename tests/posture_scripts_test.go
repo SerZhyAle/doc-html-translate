@@ -271,6 +271,17 @@ func TestContractGateOutcomes(t *testing.T) {
 	run("the catalog is where AGENTS.md says, and every row holds", 0, "contract-gate: PASS (1 contract(s)", "verdict = PASS")
 	run("an unreachable catalog is never a pass", 2, "contract-gate: COULD NOT VERIFY", "verdict = UNVERIFIED", "-Catalog", filepath.Join(catalog, "missing"))
 
+	// A single pointer can hold contracts whose minor versions move independently (ticket 90).
+	w("docs/contracts/FOO-FORMAT.md", strings.Replace(strings.Replace(pointer("1.2 / 1.3"), "`FOO-FORMAT`", "`FOO-FORMAT`, `BAR-FORMAT`", 1), "# Pointer: FOO-FORMAT", "# Pointer: two formats", 1))
+	grouped := registry("1.2", row("1.2", today), "")
+	grouped = strings.Replace(grouped, "## 2. Adoption", "| `BAR-FORMAT` | bar | 1.3 | active | other | none | none |\n\n## 2. Adoption", 1)
+	grouped = strings.Replace(grouped, "## 3. Exceptions", "| `BAR-FORMAT` | testprod | C | 1.3 | 1.3 | "+today+" | checked |\n\n## 3. Exceptions", 1)
+	setCatalog(grouped)
+	run("grouped pointer uses each contract's declared version", 0, "contract-gate: PASS (2 contract(s)", "verdict = PASS")
+	w("docs/contracts/FOO-FORMAT.md", strings.Replace(strings.Replace(pointer("1.2 / 1.4"), "`FOO-FORMAT`", "`FOO-FORMAT`, `BAR-FORMAT`", 1), "# Pointer: FOO-FORMAT", "# Pointer: two formats", 1))
+	run("second grouped version ahead is refused", 1, "contract-gate: FAIL", "claims 1.4, the catalog is at 1.3")
+	setCatalog(registry("1.2", row("1.2", today), ""))
+
 	w("docs/contracts/FOO-FORMAT.md", pointer("1.3"))
 	run("the repository ahead of the catalog", 1, "contract-gate: FAIL", "the contract change goes into the catalog first")
 	w("docs/contracts/FOO-FORMAT.md", pointer("1.1"))

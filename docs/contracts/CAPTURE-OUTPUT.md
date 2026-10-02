@@ -1,7 +1,7 @@
 # Pointer: CAPTURE-OUTPUT
 
 - **Id:** `CAPTURE-OUTPUT`
-- **Version:** 0.2 draft
+- **Version:** 0.3 draft
 - **Home:** the shared contracts catalog, `capture-output/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - a reader of the `documents` kinds (`text`, `ocr_text`, `translation`) through the TXT input path; produces no file of any kind in rule 1's table
 

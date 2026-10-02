@@ -1,7 +1,7 @@
 # Pointer: BUILD-EVIDENCE
 
 - **Id:** `BUILD-EVIDENCE`
-- **Version:** 0.9 (draft)
+- **Version:** 0.10 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 5 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer
 - **Owner:** FastMediaSorter Android

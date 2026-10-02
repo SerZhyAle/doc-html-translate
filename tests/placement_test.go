@@ -134,3 +134,27 @@ func TestCheckPlacement(t *testing.T) {
 		}
 	}
 }
+
+// CHECK-PLACEMENT rule 8: finer local classes map to the shared runner vocabulary.
+func TestPlacementDeclaresRunnerClasses(t *testing.T) {
+	var runners struct {
+		PerChangeRunner string            `json:"perChangeRunner"`
+		Reason          string            `json:"reason"`
+		ClassMap        map[string]string `json:"classMap"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "configs", "check-runners.json")), &runners); err != nil {
+		t.Fatal(err)
+	}
+	if runners.PerChangeRunner != "none" || strings.TrimSpace(runners.Reason) == "" {
+		t.Fatal("missing explicit per-change runner declaration and reason")
+	}
+	allowed := map[string]bool{"per-change": true, "agent-closure": true, "build": true, "release": true, "hand-run": true, "none": true}
+	for _, p := range loadPlacement(t) {
+		if !allowed[runners.ClassMap[p.Class]] {
+			t.Errorf("%s: unmapped class %q", p.Check, p.Class)
+		}
+		if p.Class == "gate" && runners.ClassMap[p.Class] != "hand-run" {
+			t.Errorf("%s: operator batch must stay hand-run", p.Check)
+		}
+	}
+}

@@ -40,5 +40,6 @@ Tags:
 - translation
 - txt
 - windows
+InstallationNotes: "غیر دستخط شدہ پورٹیبل ورژن: Windows SmartScreen کی رہنمائی دیکھیں https://serzhyale.github.io/doc-html-translate/install-trust.html"
 ManifestType: locale
 ManifestVersion: 1.12.0

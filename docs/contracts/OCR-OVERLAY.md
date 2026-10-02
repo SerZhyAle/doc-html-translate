@@ -1,9 +1,7 @@
 # Pointer: OCR-OVERLAY
 
 - **Id:** `OCR-OVERLAY`
-- **Version:** 1.2 (2026-09-26: 1.1 - rule 7 admits a gradient rebuilt from the ring and a backing
-  restricted to the padded line boxes, besides the opaque rectangle; 1.2 - rule 13 admits a third status,
-  `policy`, and section 7's `translation` is optional, emitted from an instrument the product owns)
+- **Version:** 1.3
 - **Home:** the shared contracts catalog, `ocr-overlay/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** reference implementation - this product both produces the overlay and consumes its own output
 - **Other products bound:** FastMediaSorter Android, FastMediaSorter_Lite
@@ -22,18 +20,9 @@ two editions (Go and the browser extension) held to one constant table by the gu
   rule 13`. The numbers themselves are this implementation's own; they are not facts another product may
   copy.
 - Cite rules in source as `OCR-OVERLAY rule N`, never as a path.
-- One deviation is recorded as a dated exception in the catalog registry, not fixed here in silence: the
-  extension edition recognizes with an assumed `eng` because it has no script-detection pass (rule 10's
-  failure mode) - see [`../PARITY.md`](../PARITY.md) ("Intentional divergences"). The second one found on
-  2026-09-22 - the discard record of rule 12 was not written for an image that produced no plates - was
-  closed on 2026-09-25 by
-  [`../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md`](../../DEV/plan/done/15_2026-09-22_ocr-discard-record-missing-for-blank-images.md);
-  the registry row is closed. Three more closed on 2026-09-26 by
-  [`../../DEV/plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md`](../../DEV/plan/done/21_2026-09-23_contract-ocr-pipeline-sync.md):
-  rule 5 for the plate font (the font now reads the word-height type size), rule 9 (the overflow rule is
-  written in `OCR-PIPELINE` amendment 1.4 A and implemented) and rule 13 (every listed constant is marked
-  with its status in both editions, guarded by `tests/ocr_constant_status_test.go`). The JPEG-only EXIF
-  read of rule 1 stays a dated exception.
+- Two open dated exceptions remain: JPEG-only EXIF (rule 1), and the extension's assumed language
+  without qualifying script evidence (rule 10). Amendment 1.3 permits recorded evidence; it does not
+  excuse the extension's current absence of it. See [`../PARITY.md`](../PARITY.md).
 
 **Conformance.** The catalog has no shared vector set for this contract yet; section 6 of its README names
 the ladder. This product holds the first three rungs - the discard record, the per-image diagnostic line

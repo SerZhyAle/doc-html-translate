@@ -1,7 +1,7 @@
 # Pointer: DIAGNOSTIC-REPORT
 
 - **Id:** `DIAGNOSTIC-REPORT`
-- **Version:** 0.10 draft
+- **Version:** 0.12 draft
 - **Home:** the shared contracts catalog, `diagnostic-report/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - `internal/report` generates diagnostic zip archives and environment summaries
 - **Wire carrier:** `schemaVersion` in metadata or `environment.txt` (`key: value` lines) + sanitized session log bundle
@@ -13,8 +13,13 @@ How diagnostic bundles and support packages are assembled and sanitized:
 - **Redaction invariants:** `Redact` / `RedactBytes` strips API keys (Google API keys `AIza...`), tokens/passwords, and personal paths (`%LOCALAPPDATA%`, `%USERPROFILE%`).
 - **User consent:** diagnostic bundle generation is strictly user-initiated (UI button / report command); zero silent telemetry.
 
-0.10 (2026-09-29) restated rule 4's retention reading - the last 10 session logs in total, current plus 9
-closed. This producer keeps 20 run logs under byte bounds and names its archive with the version inside
-the file name; both are deliberate and stand as dated exceptions in the catalog's registry (ticket 69).
+**Re-read 2026-10-02 at 0.12.** A version in the archive name is now allowed, but this product's
+`report_` prefix still differs from the `-logs-` pattern. Its run-log retention/capping exception stays.
+The environment has a per-product field set (absent schema key means 1).
+**Conformed 2026-10-02 (ticket 91):** Redactor in `internal/report/redact.go` conforms to sections 7 and 8 C
+(structured JSON values, signed-CDN query parameters with `&amp;`, credential-in-path, URL userinfo, short
+secrets with `[REDACTED]` marker); all catalog vectors pass in `TestRedactStructuredValueVectors` and
+`TestRedactCatalogVectorFileIfAvailable`. The redaction exception is closed. The archive name and run-log
+retention deviations remain explicitly dated in the registry.
 
 **Conformance.** Package `internal/report` unit tests (`archive_test.go`, `redact_test.go`, `store_test.go`).

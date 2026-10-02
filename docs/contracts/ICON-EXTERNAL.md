@@ -1,7 +1,7 @@
 # Pointer: ICON-EXTERNAL
 
 - **Id:** `ICON-EXTERNAL`
-- **Version:** 0.10 (draft)
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` section 4 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25
 - **Wire carrier:** none

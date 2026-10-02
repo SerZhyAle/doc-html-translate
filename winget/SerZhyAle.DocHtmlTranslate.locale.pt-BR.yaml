@@ -41,5 +41,6 @@ Tags:
 - translation
 - txt
 - windows
+InstallationNotes: "Versão portátil sem assinatura: ajuda sobre o Windows SmartScreen em https://serzhyale.github.io/doc-html-translate/install-trust.html"
 ManifestType: locale
 ManifestVersion: 1.12.0

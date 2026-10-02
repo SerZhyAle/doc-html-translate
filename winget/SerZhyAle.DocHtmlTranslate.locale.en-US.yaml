@@ -48,5 +48,6 @@ ReleaseNotesUrl: https://github.com/SerZhyAle/doc-html-translate/releases/tag/v2
 Documentations:
 - DocumentLabel: Wiki
   DocumentUrl: https://github.com/SerZhyAle/doc-html-translate/wiki
+InstallationNotes: "Unsigned portable build: if Windows shows SmartScreen, see https://serzhyale.github.io/doc-html-translate/install-trust.html"
 ManifestType: defaultLocale
 ManifestVersion: 1.12.0

@@ -1,7 +1,7 @@
 # Pointer: PAGE-STYLE
 
 - **Id:** `PAGE-STYLE`
-- **Version:** 1.1
+- **Version:** 1.2
 - **Home:** the shared contracts catalog, `product-web-pages/PAGE-STYLE.md`, reference kit `product-web-pages/reference/sza-kit.css` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - role "App - medium" (the distribution block is required)
 - **Wire carrier:** `assets/sza-kit.css` - the one machine-checkable artifact of the domain
@@ -18,9 +18,9 @@ What this repo owes it:
 Deviations (each to be recorded as a dated registry exception in the catalog):
 - `--wide` is `min(1760px,94vw)` in `assets/site.css`, not 1100px - `PAGE-CONTENT` asks for the full width
   (ticket 26, B3).
-- The docs are three per-language pages (`docs.html`, `docs.ru.html`, `docs.uk.html`), a form section 6 allows only
-  for the "Big SEO app" role (ticket 26, B7).
-- The ten locale landings carry a link list to the other languages instead of the RU / EN / UA switch (ticket 26, B5).
+- The ten locale landings have the text-only secondary language list now admitted by 1.2. The remaining
+  deviation is its EN-first order and lack of `sza-lang` writes on core-locale navigation; the documentation
+  trio is admitted by section 6 and no longer excepted.
 - The copy button's done state is the word "Copied" alone (`ICON-SET` 0.15), not section 4.7's "✓ Copied" (B13).
 
 **Conformance.** `tests/site_test.go` pins the kit's SHA-256 and checks that every page links the kit then

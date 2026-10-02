@@ -1,7 +1,7 @@
 # Pointer: DOC-INTERNAL-QUALITY, DOC-EXTERNAL-QUALITY
 
 - **Id:** `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY`
-- **Version:** 0.9 (both, draft)
+- **Version:** 0.9 / 0.10 (draft)
 - **Home:** the shared contracts catalog, `documentation-quality/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer of both - internal engineering docs, and a published site, README trio and store listings
 - **Wire carrier:** none - a documentation tree and the checks that hold it

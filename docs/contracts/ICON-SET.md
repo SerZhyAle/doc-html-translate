@@ -1,7 +1,7 @@
 # Pointer: ICON-SET
 
 - **Id:** `ICON-SET`
-- **Version:** 0.16 (draft)
+- **Version:** 0.17 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` section 2, data in `iconography/vocabulary.jsonl` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25 - every edition (converted book, GUI, extension, site)
 - **Wire carrier:** none - a vocabulary read by people; the drawings this product ships are vendored under `assets/glyphs/`

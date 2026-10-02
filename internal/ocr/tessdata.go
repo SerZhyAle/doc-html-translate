@@ -23,19 +23,19 @@ type LangInfo struct {
 // catalog with the extension's ocr-lang.js LANGS - keep the two in sync (see docs/PARITY.md).
 var Available = []LangInfo{
 	{"eng", "English"},
-	{"rus", "Russian"},
-	{"ukr", "Ukrainian"},
-	{"jpn", "Japanese"},
-	{"jpn_vert", "Japanese (vertical)"},
-	{"deu", "German"},
-	{"fra", "French"},
-	{"spa", "Spanish"},
-	{"ita", "Italian"},
-	{"por", "Portuguese"},
-	{"pol", "Polish"},
-	{"chi_sim", "Chinese (simplified)"},
-	{"chi_tra", "Chinese (traditional)"},
-	{"kor", "Korean"},
+	{"rus", "Русский"},
+	{"ukr", "Українська"},
+	{"jpn", "日本語"},
+	{"jpn_vert", "日本語 (縦書き)"},
+	{"deu", "Deutsch"},
+	{"fra", "Français"},
+	{"spa", "Español"},
+	{"ita", "Italiano"},
+	{"por", "Português"},
+	{"pol", "Polski"},
+	{"chi_sim", "中文 (简体)"},
+	{"chi_tra", "中文 (繁體)"},
+	{"kor", "한국어"},
 }
 
 // Bundled languages ship with the app so English OCR works offline out of the box.

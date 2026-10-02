@@ -1,7 +1,7 @@
 # Pointer: SITE-FAMILY-MAP
 
 - **Id:** `SITE-FAMILY-MAP`
-- **Version:** 1.1
+- **Version:** 1.2
 - **Home:** the shared contracts catalog, `product-web-pages/SITE-FAMILY-MAP.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - this product's row is `https://serzhyale.github.io/doc-html-translate/`
 - **Wire carrier:** none - the footer tools grid of every site page

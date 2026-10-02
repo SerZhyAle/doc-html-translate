@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"doc-html-translate/internal/i18n"
 )
 
 // Ticket 63 - the GUI remembers its session context. The recent list, the window geometry
@@ -165,78 +163,37 @@ func TestUIShortcutsHaveOneOwner(t *testing.T) {
 	}
 }
 
-// Translation-language names follow the interface language: the TRANSLANGS table in the
-// dictionary covers every interface language with exactly the codes ui.html's LANGS lists,
-// and both the fill and the re-fill on a language switch go through it.
-func TestUITranslationLangNamesFollowTheInterface(t *testing.T) {
-	start := strings.Index(uiI18nJS, "const TRANSLANGS = {")
+// ICON-EXTERNAL rule 6: translation pickers preserve each language's endonym across UI switches.
+func TestUITranslationLangNamesUseEndonyms(t *testing.T) {
+	start := strings.Index(uiI18nJS, "const TRANSLANG_ENDONYMS = {")
 	if start < 0 {
-		t.Fatal("i18n.js does not declare const TRANSLANGS")
+		t.Fatal("missing translation endonyms")
 	}
 	end := strings.Index(uiI18nJS[start:], "\n};")
 	if end < 0 {
-		t.Fatal("TRANSLANGS block never closes")
+		t.Fatal("endonym table never closes")
 	}
 	block := uiI18nJS[start : start+end]
-
-	// Slice the block into per-interface-language rows at their 4-space headers, then read
-	// each row's code keys in order: every row must list the same codes, because fillLangs
-	// looks a code up in the row of the current interface language.
-	locs := guiLangRow.FindAllStringSubmatchIndex(block, -1)
-	if len(locs) == 0 {
-		t.Fatal("TRANSLANGS has no readable rows")
+	names := map[string]string{}
+	for _, m := range regexp.MustCompile(`([a-z]{2}): "([^"]+)"`).FindAllStringSubmatch(block, -1) {
+		names[m[1]] = m[2]
 	}
-	enCodes := ""
-	for i, loc := range locs {
-		stop := len(block)
-		if i+1 < len(locs) {
-			stop = locs[i+1][0]
-		}
-		var codes []string
-		for _, m := range translangCodePair.FindAllStringSubmatch(block[loc[0]:stop], -1) {
-			codes = append(codes, m[1])
-		}
-		joined := strings.Join(codes, ",")
-		if i == 0 {
-			enCodes = joined
-			continue
-		}
-		if joined != enCodes {
-			t.Errorf("TRANSLANGS %q row codes (%s) differ from en (%s)", block[loc[2]:loc[3]], joined, enCodes)
+	for _, m := range regexp.MustCompile(`\['([a-z]{2})', '([^']+)'\]`).FindAllStringSubmatch(uiHTML, -1) {
+		if got := names[m[1]]; got == "" || got != m[2] {
+			t.Errorf("%s: picker %q, dictionary %q", m[1], m[2], got)
 		}
 	}
-	if enCodes == "" {
-		t.Fatal("the TRANSLANGS en row lists no codes")
+	for code, want := range map[string]string{"ru": "Русский", "uk": "Українська", "de": "Deutsch", "ja": "日本語", "ar": "العربية"} {
+		if names[code] != want {
+			t.Errorf("%s: %q, want endonym %q", code, names[code], want)
+		}
 	}
-	if got := len(locs); got != len(i18n.Codes) {
-		t.Errorf("TRANSLANGS has %d rows, internal/i18n ships %d interface languages", got, len(i18n.Codes))
+	if strings.Contains(uiHTML, "TRANSLANGS[currentLang]") {
+		t.Fatal("translation names still depend on interface language")
 	}
-
-	// The codes LANGS offers in the pickers, from ui.html, must be exactly what the table lists.
-	var want []string
-	for _, m := range guiLANGSCode.FindAllStringSubmatch(uiHTML, -1) {
-		want = append(want, m[1])
-	}
-	if len(want) == 0 {
-		t.Fatal("ui.html exposes no LANGS codes - the scan is wrong")
-	}
-	if strings.Join(want, ",") != enCodes {
-		t.Fatalf("TRANSLANGS codes (%s) do not match LANGS codes (%s)", enCodes, strings.Join(want, ","))
-	}
-
-	for _, snippet := range []string{
-		"const names = TRANSLANGS[currentLang] || TRANSLANGS.en;",
-		"fillLangs(el('srcLang'), el('srcLang').value);",
-		"fillLangs(el('dstLang'), el('dstLang').value);",
-	} {
+	for _, snippet := range []string{"const names = TRANSLANG_ENDONYMS;", "fillLangs(el('srcLang'), el('srcLang').value);", "fillLangs(el('dstLang'), el('dstLang').value);"} {
 		if !strings.Contains(uiHTML, snippet) {
-			t.Errorf("ui.html is missing %q - the language names would not follow a switch", snippet)
+			t.Errorf("missing %q", snippet)
 		}
 	}
 }
-
-var (
-	translangCodePair = regexp.MustCompile(`([a-z]{2}): "`)
-	guiLANGSCode      = regexp.MustCompile(`\['([a-z]{2})', `)
-	guiLangRow        = regexp.MustCompile(`(?m)^    ([a-z]{2}): \{`)
-)

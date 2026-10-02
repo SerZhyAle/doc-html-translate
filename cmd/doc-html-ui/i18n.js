@@ -27,55 +27,9 @@ const FONT_STACKS = {
     zh: '"Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif',
 };
 
-// Translation-language names, worded in each interface language (ticket 63): the
-// -src/-dst pickers follow the window's language like every other string. Outer keys
-// are the interface languages; inner keys are the translation codes of ui.html's LANGS
-// table, in its order. A missing name falls back to the English one at fillLangs().
-const TRANSLANGS = {
-    en: { en: "English", ru: "Russian", uk: "Ukrainian", de: "German", fr: "French", es: "Spanish",
-        it: "Italian", pt: "Portuguese", pl: "Polish", nl: "Dutch", cs: "Czech", sv: "Swedish",
-        tr: "Turkish", zh: "Chinese", ja: "Japanese", ko: "Korean", ar: "Arabic", hi: "Hindi" },
-    ru: { en: "Английский", ru: "Русский", uk: "Украинский", de: "Немецкий", fr: "Французский",
-        es: "Испанский", it: "Итальянский", pt: "Португальский", pl: "Польский",
-        nl: "Нидерландский", cs: "Чешский", sv: "Шведский", tr: "Турецкий", zh: "Китайский",
-        ja: "Японский", ko: "Корейский", ar: "Арабский", hi: "Хинди" },
-    uk: { en: "Англійська", ru: "Російська", uk: "Українська", de: "Німецька", fr: "Французька",
-        es: "Іспанська", it: "Італійська", pt: "Португальська", pl: "Польська",
-        nl: "Нідерландська", cs: "Чеська", sv: "Шведська", tr: "Турецька", zh: "Китайська",
-        ja: "Японська", ko: "Корейська", ar: "Арабська", hi: "Гінді" },
-    de: { en: "Englisch", ru: "Russisch", uk: "Ukrainisch", de: "Deutsch", fr: "Französisch",
-        es: "Spanisch", it: "Italienisch", pt: "Portugiesisch", pl: "Polnisch",
-        nl: "Niederländisch", cs: "Tschechisch", sv: "Schwedisch", tr: "Türkisch",
-        zh: "Chinesisch", ja: "Japanisch", ko: "Koreanisch", ar: "Arabisch", hi: "Hindi" },
-    it: { en: "Inglese", ru: "Russo", uk: "Ucraino", de: "Tedesco", fr: "Francese", es: "Spagnolo",
-        it: "Italiano", pt: "Portoghese", pl: "Polacco", nl: "Olandese", cs: "Ceco", sv: "Svedese",
-        tr: "Turco", zh: "Cinese", ja: "Giapponese", ko: "Coreano", ar: "Arabo", hi: "Hindi" },
-    es: { en: "Inglés", ru: "Ruso", uk: "Ucraniano", de: "Alemán", fr: "Francés", es: "Español",
-        it: "Italiano", pt: "Portugués", pl: "Polaco", nl: "Neerlandés", cs: "Checo", sv: "Sueco",
-        tr: "Turco", zh: "Chino", ja: "Japonés", ko: "Coreano", ar: "Árabe", hi: "Hindi" },
-    fr: { en: "Anglais", ru: "Russe", uk: "Ukrainien", de: "Allemand", fr: "Français",
-        es: "Espagnol", it: "Italien", pt: "Portugais", pl: "Polonais", nl: "Néerlandais",
-        cs: "Tchèque", sv: "Suédois", tr: "Turc", zh: "Chinois", ja: "Japonais", ko: "Coréen",
-        ar: "Arabe", hi: "Hindi" },
-    pt: { en: "Inglês", ru: "Russo", uk: "Ucraniano", de: "Alemão", fr: "Francês", es: "Espanhol",
-        it: "Italiano", pt: "Português", pl: "Polaco", nl: "Holandês", cs: "Tcheco", sv: "Sueco",
-        tr: "Turco", zh: "Chinês", ja: "Japonês", ko: "Coreano", ar: "Árabe", hi: "Hindi" },
-    ar: { en: "الإنجليزية", ru: "الروسية", uk: "الأوكرانية", de: "الألمانية", fr: "الفرنسية",
-        es: "الإسبانية", it: "الإيطالية", pt: "البرتغالية", pl: "البولندية", nl: "الهولندية",
-        cs: "التشيكية", sv: "السويدية", tr: "التركية", zh: "الصينية", ja: "اليابانية",
-        ko: "الكورية", ar: "العربية", hi: "الهندية" },
-    hi: { en: "अंग्रेज़ी", ru: "रूसी", uk: "यूक्रेनियन", de: "जर्मन", fr: "फ़्रेंच", es: "स्पेनिश",
-        it: "इटैलियन", pt: "पुर्तगाली", pl: "पोलिश", nl: "डच", cs: "चेक", sv: "स्वीडिश",
-        tr: "तुर्की", zh: "चीनी", ja: "जापानी", ko: "कोरियाई", ar: "अरबी", hi: "हिन्दी" },
-    bn: { en: "ইংরেজি", ru: "রুশ", uk: "ইউক্রেনীয়", de: "জার্মান", fr: "ফরাসি", es: "স্প্যানিশ",
-        it: "ইতালীয়", pt: "পর্তুগিজ", pl: "পোলিশ", nl: "ডাচ", cs: "চেক", sv: "সুইডিশ",
-        tr: "তুর্কি", zh: "চীনা", ja: "জাপানি", ko: "কোরিয়ান", ar: "আরবি", hi: "হিন্দি" },
-    ur: { en: "انگریزی", ru: "روسی", uk: "یوکرینی", de: "جرمن", fr: "فرانسیسی", es: "ہسپانوی",
-        it: "اطالوی", pt: "پرتگالی", pl: "پولش", nl: "ڈچ", cs: "چیک", sv: "سویڈش", tr: "ترک",
-        zh: "چینی", ja: "جاپانی", ko: "کوریائی", ar: "عربی", hi: "ہندی" },
-    zh: { en: "英语", ru: "俄语", uk: "乌克兰语", de: "德语", fr: "法语", es: "西班牙语", it: "意大利语", pt: "葡萄牙语",
-        pl: "波兰语", nl: "荷兰语", cs: "捷克语", sv: "瑞典语", tr: "土耳其语", zh: "中文", ja: "日语", ko: "韩语",
-        ar: "阿拉伯语", hi: "印地语" },
+// ICON-EXTERNAL rule 6: translation pickers use endonyms, independent of the UI locale.
+const TRANSLANG_ENDONYMS = {
+    en: "English", ru: "Русский", uk: "Українська", de: "Deutsch", fr: "Français", es: "Español", it: "Italiano", pt: "Português", pl: "Polski", nl: "Nederlands", cs: "Čeština", sv: "Svenska", tr: "Türkçe", zh: "中文", ja: "日本語", ko: "한국어", ar: "العربية", hi: "हिन्दी"
 };
 
 const I18N = {

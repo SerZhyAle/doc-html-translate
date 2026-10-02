@@ -14,19 +14,62 @@ type redaction struct {
 	with string
 }
 
-// redactions are the rules that do not depend on the machine. `${1}` keeps the label that
-// introduced the value, so a reader still sees *what* was hidden.
+// redactions are the rules that do not depend on the machine.
+// Follows DIAGNOSTIC-REPORT 0.12 (rules 3, 7, 8 C) using the contract marker [REDACTED].
 var redactions = []redaction{
-	// A value long enough to be a credential, introduced by a word that names one. The
-	// separator class covers `key=..`, `token: ..`, and the `"key":"..."` of a settings blob.
+	// 1. Google API key shapes (recognisable with or without label).
 	{
-		re:   regexp.MustCompile(`(?i)((?:key|token|secret|password)["']?\s*[=:]?\s*["']?)([A-Za-z0-9_\-]{20,})`),
-		with: "${1}<redacted>",
+		re:   regexp.MustCompile(`AIza[A-Za-z0-9_\-]{35,}`),
+		with: "[REDACTED]",
 	},
-	// A Google API key is recognisable on its own, with or without a label in front of it.
+	// 2. Xtream-style credential-in-path: /live|movie|series/<user>/<pass>/<id>.
 	{
-		re:   regexp.MustCompile(`AIza[A-Za-z0-9_\-]{35}`),
-		with: "<redacted>",
+		re:   regexp.MustCompile(`(?i)(/(?:live|movie|series)/)[^/\s\[\]]+/[^/\s\[\]]+(/[^/\s]+)`),
+		with: "${1}[REDACTED]/[REDACTED]${2}",
+	},
+	// 3. URL userinfo (including passwords with /, ?, # before @host).
+	{
+		re:   regexp.MustCompile(`(?i)(https?://)[^/\s@:]+:[^@\s]+@`),
+		with: "${1}[REDACTED]:[REDACTED]@",
+	},
+	{
+		re:   regexp.MustCompile(`(?i)(https?://)[^/\s@]+@`),
+		with: "${1}[REDACTED]@",
+	},
+	// 4. Secret query parameters (signed CDN signatures, tokens, keys, passwords), supporting &amp;.
+	{
+		re:   regexp.MustCompile(`(?i)((?:[?&]|&amp;)(?:X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|wmsAuthSign|hdnts|hdnea|Policy|Key-Pair-Id|api_key|apiKey|client_secret|clientSecret|refresh_token|refreshToken|access_token|accessToken|auth_token|authToken|googleKey|google_key|token|password|pass|accessPin|pin|secret|auth|sig|signature|key)=)([^&\s"'#\[\]]+)`),
+		with: "${1}[REDACTED]",
+	},
+	// 5. JSON structured fields: string values under secret keys.
+	{
+		re:   regexp.MustCompile(`(?i)("(?:accessPin|pin|password|pass|token|accessToken|refreshToken|authToken|access_token|refresh_token|auth_token|secret|clientSecret|client_secret|apiKey|api_key|googleKey|google_key|auth|authorization|signature|sig|X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|wmsAuthSign|hdnts|hdnea|Policy|Key-Pair-Id)"\s*:\s*)"(?:[^"\\[\]]|\\.)*"`),
+		with: `${1}"[REDACTED]"`,
+	},
+	// 6. JSON structured fields: numeric/primitive values under secret keys.
+	{
+		re:   regexp.MustCompile(`(?i)("(?:accessPin|pin|password|pass|token|secret|key)"\s*:\s*)\d+`),
+		with: `${1}"[REDACTED]"`,
+	},
+	// 7. Connection string / semicolon-separated key-value pairs.
+	{
+		re:   regexp.MustCompile(`(?i)((?:^|[;\s])(?:password|pass|userpass|secret|token|auth|accesspin|api_key|apikey)\s*=\s*)([^;\s"'\[\]]+)(;|\s|$)`),
+		with: "${1}[REDACTED]${3}",
+	},
+	// 8. Bearer tokens.
+	{
+		re:   regexp.MustCompile(`(?i)(Bearer\s+)[A-Za-z0-9_\-\.]{8,}`),
+		with: "${1}[REDACTED]",
+	},
+	// 9. Generic key=value or key: value pairs (short and long secrets).
+	{
+		re:   regexp.MustCompile(`(?i)((?:key|token|secret|password|accesspin|pin|apikey|api_key|client_secret)["']?\s*[=:]\s*["']?)([^"'\s,;{}\[\]]+)`),
+		with: "${1}[REDACTED]",
+	},
+	// 10. Free-text password labels (e.g. "Password hunter2").
+	{
+		re:   regexp.MustCompile(`(?i)((?:password|pass|secret)\s+)(["']?[^"'\s,;{}\[\]]+["']?)`),
+		with: "${1}[REDACTED]",
 	},
 }
 

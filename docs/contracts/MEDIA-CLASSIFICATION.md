@@ -1,7 +1,7 @@
 # Pointer: MEDIA-CLASSIFICATION
 
 - **Id:** `MEDIA-CLASSIFICATION`
-- **Version:** 0.9 draft
+- **Version:** 0.10 draft
 - **Home:** the shared contracts catalog, `media-classification/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - input format dispatch across books, documents, comics, and images
 

@@ -36,5 +36,6 @@ Tags:
 - translation
 - txt
 - windows
+InstallationNotes: "未签名的便携版：Windows SmartScreen 帮助请参阅 https://serzhyale.github.io/doc-html-translate/install-trust.html"
 ManifestType: locale
 ManifestVersion: 1.12.0

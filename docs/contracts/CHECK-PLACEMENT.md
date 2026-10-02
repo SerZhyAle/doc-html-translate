@@ -1,7 +1,7 @@
 # Pointer: CHECK-PLACEMENT
 
 - **Id:** `CHECK-PLACEMENT`
-- **Version:** 0.10 (draft)
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 4 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - this repo keeps its own placement registry in the contract's shape
 - **Owner:** FastMediaSorter Android
@@ -13,13 +13,16 @@ compared with the wiring in both directions.
 Classes used here: `gate` (run by [`scripts/check.ps1`](../../scripts/check.ps1)), `build` (run by the build
 scripts on the artifact they just produced), `release` (run by [`scripts/release.ps1`](../../scripts/release.ps1)
 before the tag step, because its input - the contracts catalog - exists only where a release is cut),
-`hand-run` (a named human or agent step), `none`.
+`hand-run` (a named human or agent step).
+The class map and the explicit `perChangeRunner: none` declaration live in
+[`../../configs/check-runners.json`](../../configs/check-runners.json). `gate` maps to `hand-run`;
+`build`, `release` and `hand-run` retain the contract names.
 
 **Declared: there is no per-change runner.** Nothing runs on every change - no pre-commit hook, no CI test
 job. The `gate` class is an operator-typed batch: `scripts/check.ps1`, reached through
 `scripts/build-local.ps1` and the `/build` agent command. The reasons are a solo developer and paid CI;
-the contract's rule 3 says such a batch does not satisfy a per-change class, and that gap is a dated
-exception in the catalog's registry rather than a silent one.
+rule 8 admits this explicit state; the old rule 3 exception is closed.
+The paid CI workflows are release runners, not per-change coverage.
 
 **What this repo owes it**
 

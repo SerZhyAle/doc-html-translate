@@ -13,8 +13,8 @@ import (
 func TestLangLabel(t *testing.T) {
 	cases := map[string]string{
 		"eng":     "eng (English)",
-		"rus":     "rus (Russian)",
-		"eng+rus": "eng (English) + rus (Russian)",
+		"rus":     "rus (Русский)",
+		"eng+rus": "eng (English) + rus (Русский)",
 		"xyz":     "xyz",
 		"":        "",
 	}

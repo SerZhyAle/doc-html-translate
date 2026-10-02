@@ -25,15 +25,15 @@ func uiStyle(t *testing.T) string {
 	return uiHTML[start:end]
 }
 
-// The 2026-09-29 accessibility pass (ticket 57): compact controls clear WCAG 2.2's 24px
+// ICON-RENDER rule 5 (ticket 90): compact Windows desktop controls clear the 28px
 // target-size floor, the chrome mirrors for RTL through logical properties, the log does not
 // flood screen readers (the stage line announces instead), and stage text is a status region.
 // docs/PARITY.md "Reader chrome accessibility floor" holds the extension to the same list.
 func TestUIKeepsTheAccessibilityFloor(t *testing.T) {
 	for _, want := range []string{
-		".inline-btn { min-height: 24px; }",
-		"max-width: 150px; min-height: 24px", // the theme/language selects
-		"min-width: 0; min-height: 24px",     // the output-path button
+		".inline-btn { min-height: 28px; }",
+		"max-width: 150px; min-height: 28px", // the theme/language selects
+		"min-width: 0; min-height: 28px",     // the output-path button
 		".switches { margin-inline-start: auto",
 		`id="logArea" role="log" aria-live="off"`,
 		`id="progressStage" role="status"`,
@@ -243,5 +243,27 @@ func TestNoNativeAlertOrConfirm(t *testing.T) {
 	script := uiHTML[strings.Index(uiHTML, "<script>"):]
 	if m := regexp.MustCompile(`(^|[^.\w])(alert|confirm|prompt)\(`).FindString(script); m != "" {
 		t.Errorf("ui.html calls a native dialog: %q", m)
+	}
+}
+
+// Rebuilding replaces an existing result and must never run through the default focus.
+func TestRebuildConfirmationsChooseCancel(t *testing.T) {
+	calls := regexp.MustCompile(`confirmDialog\([^\n]*'btnRebuild'[^\n]*\)`).FindAllString(uiHTML, -1)
+	if len(calls) != 2 {
+		t.Fatalf("got %d rebuild prompts, want single and queue", len(calls))
+	}
+	for _, call := range calls {
+		if !strings.Contains(call, "'danger', true)") {
+			t.Errorf("unsafe default: %s", call)
+		}
+	}
+}
+
+func TestDesktopTargetsAndMotionFollowSystem(t *testing.T) {
+	style := uiStyle(t)
+	for _, want := range []string{"@media (any-pointer: coarse)", "min-width: 44px !important; min-height: 44px !important", "@media (prefers-reduced-motion: reduce)", "animation: none !important; transition: none !important; scroll-behavior: auto !important;"} {
+		if !strings.Contains(style, want) {
+			t.Errorf("missing %q", want)
+		}
 	}
 }

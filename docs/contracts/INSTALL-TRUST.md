@@ -1,7 +1,7 @@
 # Pointer: INSTALL-TRUST
 
 - **Id:** `INSTALL-TRUST`
-- **Version:** 1.0
+- **Version:** 1.1
 - **Home:** the shared contracts catalog, `install-trust/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - bound by the contract and adopted (2026-09-28): the page is live on the site and
   the catalog registry row is closed

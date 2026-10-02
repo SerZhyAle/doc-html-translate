@@ -131,7 +131,7 @@ func TestBuildRedactsSettings(t *testing.T) {
 	if strings.Contains(got, secret) {
 		t.Fatalf("the API key reached the archive: %q", got)
 	}
-	if !strings.Contains(got, "<redacted>") {
+	if !strings.Contains(got, "[REDACTED]") {
 		t.Errorf("settings.json was not redacted: %q", got)
 	}
 }

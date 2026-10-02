@@ -1,7 +1,7 @@
 # Pointer: ICON-RENDER
 
 - **Id:** `ICON-RENDER`
-- **Version:** 0.13 (draft)
+- **Version:** 0.15 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` sections 3 and 10, `iconography/palette.json` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25
 - **Wire carrier:** none - a picture, not a payload

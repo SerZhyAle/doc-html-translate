@@ -15,19 +15,19 @@ const { createWorker } = Tesseract;
 // internal/ocr/tessdata.go `Available` - keep the two in sync (see ../../docs/PARITY.md).
 export const LANGS = [
   { code: "eng", name: "English" },
-  { code: "rus", name: "Russian" },
-  { code: "ukr", name: "Ukrainian" },
-  { code: "jpn", name: "Japanese" },
-  { code: "jpn_vert", name: "Japanese (vertical)" },
-  { code: "deu", name: "German" },
-  { code: "fra", name: "French" },
-  { code: "spa", name: "Spanish" },
-  { code: "ita", name: "Italian" },
-  { code: "por", name: "Portuguese" },
-  { code: "pol", name: "Polish" },
-  { code: "chi_sim", name: "Chinese (simplified)" },
-  { code: "chi_tra", name: "Chinese (traditional)" },
-  { code: "kor", name: "Korean" },
+  { code: "rus", name: "Русский" },
+  { code: "ukr", name: "Українська" },
+  { code: "jpn", name: "日本語" },
+  { code: "jpn_vert", name: "日本語 (縦書き)" },
+  { code: "deu", name: "Deutsch" },
+  { code: "fra", name: "Français" },
+  { code: "spa", name: "Español" },
+  { code: "ita", name: "Italiano" },
+  { code: "por", name: "Português" },
+  { code: "pol", name: "Polski" },
+  { code: "chi_sim", name: "中文 (简体)" },
+  { code: "chi_tra", name: "中文 (繁體)" },
+  { code: "kor", name: "한국어" },
 ];
 
 // langLabel renders a "+"-joined language string for a reader: each code keeps its traineddata

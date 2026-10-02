@@ -1686,3 +1686,18 @@ These are by design. Do not "sync" them without a decision - document changes he
    here under [Intentional divergences](#intentional-divergences-do-not-fix).
    `tests/parity_map_test.go` fails when `configs/parity-map.json` and the port map table at the top of this
    file disagree, so a row added here must be watched there (or excused under `notWatched` with a reason).
+
+### Canon and contracts sync (ticket 90, 2026-10-02)
+
+**Guard:** Guarded by `TestParityOCRCatalog`, `TestUITranslationLangNamesUseEndonyms`,
+`TestDesktopTargetsAndMotionFollowSystem` and the reduced-motion viewer tests.
+
+OCR catalog display names are endonyms in both editions, including Japanese vertical and Chinese script
+variants; traineddata codes, host, digests and recognition choices are unchanged. Translation and source
+language selectors also use endonyms. Ticket 63's interface-dependent translation names are superseded
+by `ICON-EXTERNAL` rule 6.
+
+The GUI window has 28 px Windows mouse/pen targets and 44 px targets whenever a coarse pointer exists.
+The converted book, extension viewer and product site are web surfaces; their existing dated target-size
+exception remains, and the Windows floor does not close it. Both reader editions and the GUI honour the
+system reduced-motion preference; the extension switches scripted scrolling to instant when requested.

@@ -1,7 +1,7 @@
 # Pointer: UPDATE-MANIFEST
 
 - **Id:** `UPDATE-MANIFEST`
-- **Version:** 0.9 draft
+- **Version:** 0.10 draft
 - **Home:** the shared contracts catalog, `app-update-feed/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - release discovery and winget package synchronization
 - **Wire carrier:** `schemaVersion` (JSON int)

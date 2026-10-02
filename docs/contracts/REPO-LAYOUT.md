@@ -1,7 +1,7 @@
 # Pointer: REPO-LAYOUT
 
 - **Id:** `REPO-LAYOUT`
-- **Version:** 0.9 draft
+- **Version:** 0.10 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - repository structure and named entry points
 - **Wire carrier:** none - file and directory names

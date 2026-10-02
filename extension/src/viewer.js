@@ -1310,12 +1310,12 @@ async function scrollToPage(n) {
   // rendered edge is rendered on the way there.
   await ensurePageRendered(n);
   const sec = document.querySelector(`#content section[data-page="${n}"]`);
-  if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (sec) sec.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
 }
 
 function scrollToAnchor(id) {
   const target = document.getElementById(id);
-  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (target) target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
 }
 
 // ---- Page rendering --------------------------------------------------------

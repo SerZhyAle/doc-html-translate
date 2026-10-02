@@ -1,0 +1,11 @@
+{
+  "perChangeRunner": "none",
+  "reason": "Solo developer; CI publishes only on explicit paid release triggers. The local gate is an operator-typed batch.",
+  "classMap": {
+    "gate": "hand-run",
+    "build": "build",
+    "release": "release",
+    "hand-run": "hand-run",
+    "none": "none"
+  }
+}

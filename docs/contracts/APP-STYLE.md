@@ -1,7 +1,7 @@
 # Pointer: APP-STYLE
 
 - **Id:** `APP-STYLE`
-- **Version:** 0.10 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - desktop GUI styling (`cmd/doc-html-ui`) and the reader theme palette
 - **Wire carrier:** none - theme palette tokens and CSS variables
@@ -23,3 +23,8 @@ What the GUI holds:
 
 **Conformance.** `cmd/doc-html-ui/contract_test.go` (roles in both themes, three themes, console
 declared), `tests/appearance_parity_test.go`, `tests/parity_test.go`.
+
+**Warning text exception (2026-10-02, until 2026-12-31).** The GUI retains day `--warning: #8a4b00`
+for small text: the kit's `#EF6C00` fails the 4.5:1 text floor on its light surfaces. This is an
+accessibility reason, measured by `TestPaletteTextMeetsWCAGAA`, not a new glyph palette. The vendored
+kit stays byte-identical. The catalog registry records this distinction.

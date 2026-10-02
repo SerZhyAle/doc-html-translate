@@ -1,7 +1,7 @@
 # Pointer: REPO-STAMP
 
 - **Id:** `REPO-STAMP`
-- **Version:** 0.9 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - [`.sza-canon.json`](../../.sza-canon.json) at the repository root
 - **Wire carrier:** none - `.sza-canon.json` JSON fields

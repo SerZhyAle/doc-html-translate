@@ -1,7 +1,7 @@
 # Pointer: APP-BEHAVIOUR
 
 - **Id:** `APP-BEHAVIOUR`
-- **Version:** 0.10 draft
+- **Version:** 0.12 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - GUI launcher behaviour (`cmd/doc-html-ui`), plus the CLI's native dialogs a GUI user meets
 - **Wire carrier:** none - desktop application user interaction
@@ -23,7 +23,7 @@ wording of the rules is read through that - see ticket 23, Direction B):
   own: the right-click entry and "Open with" are added on the first-run question's yes or the toggle
   under "Windows integration"; the CLI's no-arg flow asks before it writes. Nothing is installed.
 - **Rule 5 - confirm the irreversible, not the empty.** Deleting a previous result and clearing the
-  stored logs are confirmed; an empty log store is reported as such.
+  stored logs and rebuilding existing output are confirmed, with Cancel focused; an empty log store is reported as such.
 - **Rule 6 - a failure is a set of actions.** The page words each failure as a named cause and what to
   do; the raw error goes to the GUI's own log in the run-log store, which "Send logs to the author" packs.
   A failed conversion offers send logs / try again / close.
@@ -32,13 +32,13 @@ wording of the rules is read through that - see ticket 23, Direction B):
   `internal/i18n.IsRTL` by a test.
 - **Rule 9 - accessible names, gated.** Glyph-only controls and every select carry a localized
   `aria-label`; the drop zone is a real button. A test fails on a missing name.
-- **Rules 10 and 12** do not apply as written: the window keeps no geometry, and every control saves
-  itself (no Save/Cancel settings window).
+- **Rule 10** has no saved geometry here. **Rule 12** applies to the autosaving settings surface: value
+  edits are reversible; deleting output and logs keeps a separate confirmed button.
 
 **Open, recorded in the catalog (2026-09-28):** the right-click verb's own caption ("Convert to HTML")
-is English in Explorer - a dated exception in the shared registry (until 2026-12-31). B1-B8 and the
-`APP-STYLE` section 4 `danger` report are filed in the catalog's `desktop-app-ux/` as
-`PROPOSAL-2026-09-28-*`; the domain README's proposal table lists them.
+is English in Explorer - a dated exception in the shared registry (until 2026-12-31). The console-dialog and own-state-repair proposals are settled by 0.12: console dialogs stay bound;
+repair needs no new consent only within already enabled HKCU registration kinds. This product has no
+automatic repair path: the no-argument CLI asks again, and explicit registration flags authorize writes.
 
 **Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/hardening_test.go`
 (`TestQuestionIsAskedInTheWindow`, the cancel tests), `internal/dialog` tests, and a headless-Edge run of

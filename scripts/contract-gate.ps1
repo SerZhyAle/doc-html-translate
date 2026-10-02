@@ -148,7 +148,19 @@ foreach ($f in (Get-ChildItem -LiteralPath 'docs/contracts' -Filter '*.md' -File
     $ver = [regex]::Match($text, '(?m)^- \*\*Version:\*\*\s*(.+)$')
     $role = [regex]::Match($text, '(?m)^- \*\*Role:\*\*\s*(.+)$')
     if ($ids.Count -eq 0 -or -not $ver.Success) { $fails.Add("docs/contracts/$($f.Name): no '- **Id:**' or '- **Version:**' line - a pointer names its contract and version"); continue }
-    foreach ($id in $ids) { $pointers[$id] = [pscustomobject]@{ File = "docs/contracts/$($f.Name)"; Version = (Get-Version $ver.Groups[1].Value); Role = $role.Groups[1].Value } }
+    # A grouped pointer may declare one shared version or one per id (DOC-QUALITY now differs).
+    $versions = @($ver.Groups[1].Value -split '\s*/\s*' | ForEach-Object { Get-Version $_ })
+    if ($versions.Count -ne 1 -and $versions.Count -ne $ids.Count) {
+        $fails.Add("docs/contracts/$($f.Name): version count must be one or match the id count")
+        continue
+    }
+    for ($i = 0; $i -lt $ids.Count; $i++) {
+        $pointers[$ids[$i]] = [pscustomobject]@{
+            File = "docs/contracts/$($f.Name)"
+            Version = if ($versions.Count -eq $ids.Count) { $versions[$i] } else { $versions[0] }
+            Role = $role.Groups[1].Value
+        }
+    }
 }
 
 $checked = 0

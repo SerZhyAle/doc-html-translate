@@ -473,6 +473,10 @@ var readerCSS = `
     box-sizing:border-box; min-height:24px;
   }
   .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .dht-navbar *, .dht-toolbar * { animation:none !important; transition:none !important; }
+    html { scroll-behavior:auto !important; }
+  }
   .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
   /* The bar's readable companion (ticket 59): the same number as a tooltip on hover or on
      keyboard focus - the bar is a focusable progressbar - so it stays a 3px line. The tip

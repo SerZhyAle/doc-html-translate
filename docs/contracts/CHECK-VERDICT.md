@@ -1,7 +1,7 @@
 # Pointer: CHECK-VERDICT
 
 - **Id:** `CHECK-VERDICT`
-- **Version:** 0.10 (draft)
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 2 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - this repo's checks produce verdicts in the contract's vocabulary, and its own
   aggregator and release checklist read them

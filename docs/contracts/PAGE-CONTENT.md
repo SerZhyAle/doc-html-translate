@@ -1,7 +1,7 @@
 # Pointer: PAGE-CONTENT
 
 - **Id:** `PAGE-CONTENT`
-- **Version:** 1.1
+- **Version:** 1.2
 - **Home:** the shared contracts catalog, `product-web-pages/PAGE-CONTENT.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - variant "Medium app"
 - **Wire carrier:** none - rendered page markup
@@ -18,8 +18,9 @@ What this repo owes it (the landing `index.html` and the ten locale landings):
 - Never an invented channel, command or claim; the release link resolves the latest release at run time and
   falls back to `/releases/latest`.
 
-Child pages (extension, docs, privacy) follow the style and footer rules but carry no get-started block - a
-sub-page role the contract does not describe yet (ticket 26, B6).
+Child pages follow style and footer rules without the landing order or distribution block (1.2).
+`extension.html` distributes its edition and keeps its own get-started block; docs, privacy and trust
+pages need none. The old child-page exception is closed.
 
 **Conformance.** Read off the rendered page; the acceptance test is the contract's own ("This is ___; it is
 for me when ___; I start by ___" before a deep scroll). The static parts are guarded by `tests/site_test.go`.

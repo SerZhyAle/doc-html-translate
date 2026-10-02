@@ -20,10 +20,10 @@ import (
 )
 
 // kitSHA256 is the SHA-256 of the PAGE-STYLE reference kit (contracts catalog,
-// product-web-pages/reference/sza-kit.css, 13037 bytes, LF) measured 2026-09-25. assets/sza-kit.css
+// product-web-pages/reference/sza-kit.css, 13880 bytes, LF) measured 2026-10-02. assets/sza-kit.css
 // must stay a byte copy; page-local rules go into assets/site.css. Re-vendor and update this
 // constant only together with a catalog change of the reference.
-const kitSHA256 = "72bd903e7edd4d883106eb296c50b64a6e11731125fab89017320b250332593f"
+const kitSHA256 = "e544a6ce47160f827dc97379c3e4814d4aece763593c5a9420e681f1f4e4eb48"
 
 var localeLandings = []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ur", "zh"}
 

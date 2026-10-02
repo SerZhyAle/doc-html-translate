@@ -90,3 +90,25 @@ test("unawaited writes land in call order without overwriting each other", async
   const run = await readRun();
   assert.deepEqual([run.format, run.pages, run.error], ["txt", 3, "late"]);
 });
+
+test("reportText emits strictly count-only host metrics and expected fields only", async () => {
+  await recordRun({ format: "epub", pages: 50, error: "" });
+  const text = await reportText("26.811.1600", {
+    theme: "light",
+    disabledHosts: ["a.com", "b.com"],
+    allowedHosts: ["c.com"],
+  });
+  const lines = text.trim().split("\n");
+  const fieldKeys = lines.map((l) => l.split(":")[0].trim());
+  const expectedKeys = [
+    "edition", "version", "platform", "user agent", "interface language",
+    "auto reflow", "site mode", "theme", "source language", "ocr", "ocr language",
+    "disabled hosts", "allowed hosts", "last format", "last pages", "last error", "last run at",
+  ];
+  assert.deepEqual(fieldKeys, expectedKeys);
+  // Disabled and allowed hosts must be numeric counts only
+  const disabledLine = lines.find((l) => l.startsWith("disabled hosts:"));
+  const allowedLine = lines.find((l) => l.startsWith("allowed hosts:"));
+  assert.equal(disabledLine, "disabled hosts: 2");
+  assert.equal(allowedLine, "allowed hosts: 1");
+});
