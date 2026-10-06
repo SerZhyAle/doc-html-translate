@@ -73,7 +73,7 @@ func Extract(ctx context.Context, pdfPath, outputDir string) (*epub.Book, error)
 	}
 
 	logging.Printf("  WARNING: PDF extract failed, trying repair fallback: %v\n", err)
-	repairedPath, repErr := tryRepairPDF(pdfPath)
+	repairedPath, repErr := tryRepairPDF(ctx, pdfPath)
 	if repErr != nil {
 		return imageOnlyFallback(ctx, textless, pdfPath, outputDir, err)
 	}
@@ -220,7 +220,7 @@ func pagesFromText(ctx context.Context, pdfPath, outputDir string, pageTexts []s
 	}
 	dialog.Progress("extracting", totalPages, totalPages)
 
-	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
+	book.TOC = buildPDFTOC(ctx, pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
 	logPageCounts(totalPages, withText, generated)
@@ -728,7 +728,7 @@ func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *ep
 	}
 	dialog.Progress("extracting", totalPages, totalPages)
 
-	book.TOC = buildPDFTOC(pdfPath, pdfPageToHref)
+	book.TOC = buildPDFTOC(ctx, pdfPath, pdfPageToHref)
 
 	logging.Printf("  Title: %s\n", title)
 	logPageCounts(totalPages, withText, generated)
@@ -738,7 +738,7 @@ func extractWithPDFLib(ctx context.Context, pdfPath, outputDir string) (book *ep
 
 // tryRepairPDF attempts to normalize/rewrite malformed PDF structure so the
 // text extractor can parse the document without panicking.
-func tryRepairPDF(inputPath string) (string, error) {
+func tryRepairPDF(ctx context.Context, inputPath string) (string, error) {
 	tmp, err := os.CreateTemp("", "doc-html-translate-repair-*.pdf")
 	if err != nil {
 		return "", fmt.Errorf("create repair temp file: %w", err)
@@ -746,7 +746,7 @@ func tryRepairPDF(inputPath string) (string, error) {
 	repairedPath := tmp.Name()
 	_ = tmp.Close()
 
-	if err := optimizeSafe(inputPath, repairedPath); err != nil {
+	if err := optimizeSafe(ctx, inputPath, repairedPath); err != nil {
 		_ = os.Remove(repairedPath)
 		return "", fmt.Errorf("repair pdf with pdfcpu: %w", err)
 	}
@@ -756,7 +756,7 @@ func tryRepairPDF(inputPath string) (string, error) {
 // optimizeSafe is the repair attempt behind a panic guard. The file reaching it has already
 // defeated one PDF library, which is exactly the input most likely to panic the next one; a
 // failed repair must end as the original extraction error, not as a crash.
-func optimizeSafe(inputPath, outputPath string) (err error) {
+func optimizeSafe(ctx context.Context, inputPath, outputPath string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logging.Printf("  WARNING: PDF repair panicked: %v\n", r)
@@ -764,7 +764,7 @@ func optimizeSafe(inputPath, outputPath string) (err error) {
 			err = fmt.Errorf("pdfcpu panic: %v", r)
 		}
 	}()
-	return api.OptimizeFile(inputPath, outputPath, nil)
+	return api.OptimizeFile(ctx, inputPath, outputPath, nil, nil)
 }
 
 // extractPage safely extracts text from a single PDF page.

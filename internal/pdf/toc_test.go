@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -51,7 +52,7 @@ func TestBuildPDFTOC_FromBookmarks(t *testing.T) {
 	}
 
 	pageToHref := map[int]string{1: "page_001.html", 2: "page_002.html", 3: "page_003.html"}
-	toc := buildPDFTOC(pdfPath, pageToHref)
+	toc := buildPDFTOC(context.Background(), pdfPath, pageToHref)
 	if len(toc) != 2 {
 		t.Fatalf("expected 2 top-level bookmarks, got %d: %s", len(toc), tocDump(toc))
 	}
@@ -74,7 +75,7 @@ func TestBuildPDFTOC_NoBookmarks(t *testing.T) {
 	pdfPath := filepath.Join(dir, "plain.pdf")
 	createTestPDF(t, pdfPath, []string{"page one", "page two"})
 
-	if toc := buildPDFTOC(pdfPath, map[int]string{1: "page_001.html", 2: "page_002.html"}); toc != nil {
+	if toc := buildPDFTOC(context.Background(), pdfPath, map[int]string{1: "page_001.html", 2: "page_002.html"}); toc != nil {
 		t.Errorf("expected nil TOC for a PDF without bookmarks, got %s", tocDump(toc))
 	}
 }

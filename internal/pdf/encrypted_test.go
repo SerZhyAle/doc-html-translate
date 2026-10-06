@@ -18,7 +18,7 @@ import (
 func encryptAES256(t *testing.T, src, dst string) {
 	t.Helper()
 	conf := model.NewAESConfiguration("", "owner-secret", 256)
-	if err := api.EncryptFile(src, dst, conf); err != nil {
+	if err := api.EncryptFile(context.Background(), src, dst, conf); err != nil {
 		t.Fatalf("encrypt fixture: %v", err)
 	}
 }

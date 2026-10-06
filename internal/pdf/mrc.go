@@ -106,7 +106,7 @@ func readMRCRaster(runCtx context.Context, img model.Image, dir string) (image.I
 	path := file.Name()
 	_ = file.Close()
 	defer func() { _ = os.Remove(path) }()
-	if err := writeImageFile(path, img); err != nil {
+	if err := writeImageFile(runCtx, path, img); err != nil {
 		return nil, err
 	}
 	if strings.EqualFold(img.FileType, "jpx") {

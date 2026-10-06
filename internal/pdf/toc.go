@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"context"
 	"os"
 	"sort"
 	"strings"
@@ -15,7 +16,7 @@ import (
 // nested epub TOC. pageToHref maps 1-based PDF page numbers to the generated
 // page hrefs. Returns nil when the PDF has no usable bookmarks; best-effort:
 // any error or panic from the (re-parsing) pdfcpu reader yields no TOC.
-func buildPDFTOC(pdfPath string, pageToHref map[int]string) (entries []epub.TOCEntry) {
+func buildPDFTOC(ctx context.Context, pdfPath string, pageToHref map[int]string) (entries []epub.TOCEntry) {
 	defer func() {
 		if r := recover(); r != nil {
 			entries = nil
@@ -33,7 +34,7 @@ func buildPDFTOC(pdfPath string, pageToHref map[int]string) (entries []epub.TOCE
 	defer f.Close()
 
 	// pdfcpu returns (nil, nil) when a document simply has no bookmarks.
-	bms, err := api.Bookmarks(f, nil)
+	bms, err := api.Bookmarks(ctx, f, nil)
 	if err != nil || len(bms) == 0 {
 		return nil
 	}

@@ -1062,3 +1062,30 @@ Changed files:
 - tools/store/listing/zh.txt
 - tools/store/listingData.csv
 
+| 2026-10-07 01:36:49 | main | e7578a1 | chore(deps): refresh Go and extension dependencies before release 26.1007.0054
+
+Go: pdfcpu 0.16.1 (every call now takes a context.Context; the six call sites in
+internal/pdf pass the run's own context), ledongthuc/pdf, goldmark 1.8.6, tiff 1.0.7,
+x/image, x/net, x/sys, x/text. The new x/* modules need Go 1.26, so the go directive
+moves to 1.26.0 (AGENTS.md and CLAUDE.md updated). Extension: pdfjs-dist 6.4.299,
+marked 18.1.0, @napi-rs/canvas 1.0.10.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> |
+
+Changed files:
+- AGENTS.md
+- CLAUDE.md
+- DEV/CHANGELOG.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- extension/package-lock.json
+- extension/package.json
+- go.mod
+- go.sum
+- internal/pdf/encrypted_test.go
+- internal/pdf/extract.go
+- internal/pdf/images.go
+- internal/pdf/mrc.go
+- internal/pdf/toc.go
+- internal/pdf/toc_test.go
+

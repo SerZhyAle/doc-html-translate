@@ -35,7 +35,7 @@ This repo's overlay shape (four overlay facts):
 
 ## Project Snapshot
 
-- Language: Go (module: doc-html-translate, go 1.25)
+- Language: Go (module: doc-html-translate, go 1.26)
 - Primary target: Windows desktop usage (CLI + GUI launcher)
 - Main binaries:
   - cmd/doc-html-translate (CLI)

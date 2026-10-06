@@ -13,7 +13,7 @@ hooks with the plugin; this repo registers none of its own and must not re-imple
 
 ## What this is
 
-`doc-html-translate` - a Go 1.25 Windows app that converts EPUB / PDF / MOBI / AZW3 / FB2 / RTF / TXT /
+`doc-html-translate` - a Go 1.26 Windows app that converts EPUB / PDF / MOBI / AZW3 / FB2 / RTF / TXT /
 Markdown / HTML into clean local HTML with generated navigation and a real multi-level TOC, plus optional
 translation (Google Cloud or local Ollama). Binaries: `cmd/doc-html-translate` (CLI) and `cmd/doc-html-ui`
 (GUI). Conversion runs through [internal/pipeline/pipeline.go](internal/pipeline/pipeline.go) into per-format

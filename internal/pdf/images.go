@@ -67,7 +67,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 
 	conf := model.NewDefaultConfiguration()
 	conf.Cmd = model.EXTRACTIMAGES
-	ctx, err := api.ReadValidateAndOptimize(f, conf)
+	ctx, err := api.ReadValidateAndOptimize(runCtx, f, conf, nil)
 	if err != nil {
 		logging.Printf("  WARNING: could not read PDF for image extraction: %v\n", err)
 		return nil, 0
@@ -87,7 +87,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 	tick := logging.NewTicker("Extracting images", "pages")
 	for pageNum := 1; pageNum <= pageCount; pageNum++ {
 		tick.Report(pageNum-1, pageCount)
-		imgs, err := pageImagesSafe(ctx, pageNum)
+		imgs, err := pageImagesSafe(runCtx, ctx, pageNum)
 		if err != nil {
 			continue // expected for pages with no (or unreadable) images
 		}
@@ -101,7 +101,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 			} else {
 				logging.Printf("  WARNING: could not compose MRC layers on page %d: %v\n", pageNum, err)
 				// Extraction readers were consumed during the failed attempt.
-				imgs, err = pageImagesSafe(ctx, pageNum)
+				imgs, err = pageImagesSafe(runCtx, ctx, pageNum)
 				if err != nil {
 					continue
 				}
@@ -116,7 +116,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 				logging.Printf("  WARNING: image obj#%d on page %d stays a .tif the browser cannot show: %v\n", img.ObjNr, pageNum, convErr)
 			}
 			name := imageFileName(prefix, pageNum, img, used)
-			if err := writeImageFile(filepath.Join(imagesDir, name), img); err != nil {
+			if err := writeImageFile(runCtx, filepath.Join(imagesDir, name), img); err != nil {
 				logging.Printf("  WARNING: could not write image from page %d: %v\n", pageNum, err)
 				continue
 			}
@@ -146,7 +146,7 @@ func writePDFImages(runCtx context.Context, pdfPath, imagesDir string) (byPage m
 
 // pageImagesSafe extracts and filters one page's images. A panic inside pdfcpu on one
 // malformed image stream costs that page its pictures, not the conversion.
-func pageImagesSafe(ctx *model.Context, pageNum int) (imgs map[int]model.Image, err error) {
+func pageImagesSafe(runCtx context.Context, ctx *model.Context, pageNum int) (imgs map[int]model.Image, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logging.Printf("  WARNING: PDF image extraction panicked on page %d: %v\n", pageNum, r)
@@ -154,7 +154,7 @@ func pageImagesSafe(ctx *model.Context, pageNum int) (imgs map[int]model.Image, 
 			imgs, err = nil, fmt.Errorf("panic on page %d: %v", pageNum, r)
 		}
 	}()
-	imgs, err = pdfcpulib.ExtractPageImages(ctx, pageNum, false)
+	imgs, err = pdfcpulib.ExtractPageImages(runCtx, ctx, pageNum, false)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func pageImagesSafe(ctx *model.Context, pageNum int) (imgs map[int]model.Image, 
 	// decoding any pixels. selectPageImages needs the dimensions to spot a page
 	// embedded twice at two resolutions, and the /Mask flag to tell an MRC scan's
 	// foreground layer from the page it is painted over.
-	if stubs, serr := pdfcpulib.ExtractPageImages(ctx, pageNum, true); serr == nil {
+	if stubs, serr := pdfcpulib.ExtractPageImages(runCtx, ctx, pageNum, true); serr == nil {
 		for objNr, img := range imgs {
 			if s, ok := stubs[objNr]; ok {
 				img.Width = s.Width
@@ -191,8 +191,8 @@ func imageFileName(prefix string, pageNum int, img model.Image, used map[string]
 	return name
 }
 
-func writeImageFile(path string, img model.Image) error {
-	if err := pdfcpulib.WriteReader(path, img.Reader); err != nil {
+func writeImageFile(runCtx context.Context, path string, img model.Image) error {
+	if err := pdfcpulib.WriteReader(runCtx, path, img.Reader); err != nil {
 		if errors.Is(err, pdfcpulib.ErrMissingReader) {
 			return fmt.Errorf("image obj#%d has no data", img.ObjNr)
 		}
