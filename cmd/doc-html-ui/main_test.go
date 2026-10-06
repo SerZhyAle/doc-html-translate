@@ -215,7 +215,7 @@ func TestUIDefaultsTheOCRLanguageToAutomatic(t *testing.T) {
 	// GUI run - the Store entry point - sent an explicit -ocr-lang and never ran the script check.
 	for _, snippet := range []string{
 		"auto.value = ''",
-		"ocrLangChoice:  el('ocrLang').value",
+		"return {ocrLangChoice: sel.value};", // the setting is the select's value once the catalog filled it
 		"function applyOcrWant()",
 	} {
 		if !strings.Contains(uiHTML, snippet) {

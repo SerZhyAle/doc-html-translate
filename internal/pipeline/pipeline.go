@@ -14,6 +14,7 @@ import (
 	"doc-html-translate/internal/dialog"
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fb2"
+	"doc-html-translate/internal/fdsec"
 	"doc-html-translate/internal/htmlconv"
 	"doc-html-translate/internal/htmlgen"
 	"doc-html-translate/internal/htmlsplit"
@@ -135,6 +136,23 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	outputDir := target.Dir
 	ext := strings.ToLower(filepath.Ext(inputPath))
 
+	// A FileDO secret file is decrypted first, before any output folder is claimed, so every
+	// refusal that can come before the password does, and one that cannot leaves nothing behind.
+	// The container stays the identity of the run (inputPath); srcPath is only the bytes the
+	// extractor reads, and the plain copy is gone as soon as extraction has read it.
+	srcPath := inputPath
+	var plain *fdsec.Plain
+	if fdsec.IsContainer(ext) {
+		var code int
+		var uerr error
+		plain, code, uerr = r.unwrapContainer(ctx, inputPath)
+		if uerr != nil {
+			return code, uerr
+		}
+		defer plain.Remove()
+		srcPath, ext = plain.Path, plain.Ext
+	}
+
 	// Step 1: Extract (format-specific)
 	claim, err := claimOutputDir(target, inputPath)
 	if err != nil {
@@ -150,7 +168,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	forceOCR := false
 	if img.IsImage(ext) {
 		logging.Println("[1/4] Preparing image..")
-		book, err = img.Extract(inputPath, outputDir)
+		book, err = img.Extract(srcPath, outputDir)
 		if err != nil {
 			cleanup()
 			return ExitParse, fmt.Errorf("prepare image: %w", err)
@@ -163,7 +181,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 		// comic *is* the request to read its text, so OCR is forced here rather than
 		// left to -ocr (same rationale as a standalone image).
 		logging.Println("[1/4] Extracting comic archive..")
-		book, err = comic.Extract(ctx, inputPath, outputDir)
+		book, err = comic.Extract(ctx, srcPath, outputDir)
 		if err != nil {
 			cleanup()
 			return extractFailed(ctx, fmt.Errorf("extract comic: %w", err))
@@ -173,7 +191,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 		switch ext {
 		case ".epub":
 			logging.Println("[1/4] Extracting EPUB..")
-			book, err = epub.Extract(inputPath, outputDir)
+			book, err = epub.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitEPUB, fmt.Errorf("extract epub: %w", err)
@@ -182,49 +200,49 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 			logging.Printf("  Chapters: %d\n", len(book.Spine))
 		case ".pdf":
 			logging.Println("[1/4] Extracting PDF..")
-			book, err = pdf.Extract(ctx, inputPath, outputDir)
+			book, err = pdf.Extract(ctx, srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return extractFailed(ctx, fmt.Errorf("extract pdf: %w", err))
 			}
 		case ".txt":
 			logging.Println("[1/4] Extracting TXT..")
-			book, err = txt.Extract(inputPath, outputDir)
+			book, err = txt.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract txt: %w", err)
 			}
 		case ".md":
 			logging.Println("[1/4] Extracting Markdown..")
-			book, err = md.Extract(inputPath, outputDir)
+			book, err = md.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract markdown: %w", err)
 			}
 		case ".fb2":
 			logging.Println("[1/4] Extracting FB2..")
-			book, err = fb2.Extract(inputPath, outputDir)
+			book, err = fb2.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract fb2: %w", err)
 			}
 		case ".rtf":
 			logging.Println("[1/4] Extracting RTF..")
-			book, err = rtf.Extract(inputPath, outputDir)
+			book, err = rtf.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract rtf: %w", err)
 			}
 		case ".html", ".htm":
 			logging.Println("[1/4] Extracting HTML..")
-			book, err = htmlconv.Extract(inputPath, outputDir)
+			book, err = htmlconv.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract html: %w", err)
 			}
 		case ".mobi", ".azw3":
 			logging.Println("[1/4] Extracting MOBI..")
-			book, err = mobi.Extract(ctx, inputPath, outputDir)
+			book, err = mobi.Extract(ctx, srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return extractFailed(ctx, fmt.Errorf("extract mobi: %w", err))
@@ -234,7 +252,7 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 			// (a .docx, a .djvu, a comic archive) handed to the text extractor became a
 			// multi-megabyte document of raw bytes rendered as prose, reported as success. The
 			// browser extension routes on the byte signature and refuses these; this matches it.
-			if head, herr := readHead(inputPath, 4096); herr == nil {
+			if head, herr := readHead(srcPath, 4096); herr == nil {
 				if desc := txt.LooksBinary(head); desc != "" {
 					cleanup()
 					return ExitParse, fmt.Errorf("%s looks like %s, not a text document - refusing to convert it into garbage",
@@ -242,13 +260,14 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 				}
 			}
 			logging.Printf("[1/4] Unknown extension %q - reading as plain text..\n", ext)
-			book, err = txt.Extract(inputPath, outputDir)
+			book, err = txt.Extract(srcPath, outputDir)
 			if err != nil {
 				cleanup()
 				return ExitParse, fmt.Errorf("extract as txt: %w", err)
 			}
 		}
 	}
+	plain.Remove() // nil-safe: only a FileDO secret file has a plain copy
 	if ctx.Err() != nil {
 		return interrupted()
 	}
@@ -351,6 +370,9 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 	}); err != nil {
 		logging.Errorf("  WARNING: could not record the finished output: %v\n", err)
 		dialog.Progress("warning", 0, 0)
+	} else if plain != nil {
+		// The result sits beside the user's documents in the clear: say so, once.
+		logging.Println(i18n.S("Note: the converted pages in %s are not encrypted.", outputDir))
 	}
 
 	// Step 4: Open in browser - a partial translation is still opened, it is the book the

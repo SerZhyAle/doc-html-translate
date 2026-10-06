@@ -18,14 +18,15 @@ func TestParityGUIExposesEveryCLIFlag(t *testing.T) {
 	// Flags the GUI handles through its own endpoints/buttons rather than by forwarding
 	// the CLI flag to the converter.
 	guiNative := map[string]string{
-		"register":          `"Make default handler" toggle (on) + /api/register`,
-		"unregister":        `"Make default handler" toggle (off) + /api/unregister`,
-		"register-openwith": `"Right-click entry" toggle + first-run question + /api/shell-entries (adds "Open with" + "Convert to HTML" without setting a default; never on its own)`,
-		"version":           `/api/version`,
-		"ocr-langs":         `/api/ocr-langs`,
-		"ocr-download":      `/api/ocr-download`,
-		"free":              `alias of -ollama`,
-		"report":            `About section "Send logs to the author" button + /api/report`,
+		"register":           `"Make default handler" toggle (on) + /api/register`,
+		"unregister":         `"Make default handler" toggle (off) + /api/unregister`,
+		"register-openwith":  `"Right-click entry" toggle + first-run question + /api/shell-entries (adds "Open with" + "Convert to HTML" without setting a default; never on its own)`,
+		"version":            `/api/version`,
+		"ocr-langs":          `/api/ocr-langs`,
+		"ocr-download":       `/api/ocr-download`,
+		"free":               `alias of -ollama`,
+		"report":             `About section "Send logs to the author" button + /api/report`,
+		"fdsec-password-env": `the window asks for the password in its own masked dialog over the host channel (/api/secret); a variable name is a scripting source`,
 	}
 
 	re := regexp.MustCompile(`fs\.(?:Bool|String|Int|Float64)\("([a-z0-9-]+)"`)

@@ -90,6 +90,10 @@ body {
   border-bottom: 1px solid var(--border);
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
+  /* Pinned: body carries the reader's line-spacing choice, and the controls would otherwise
+     grow and shrink with it (29-40px). 1.6 is the shipped spacing, so the default bar and the
+     sticky offsets below it keep their geometry; buttons stay ~31px, over the 24px floor. */
+  line-height: 1.6;
 }
 
 #toolbar .spacer { flex: 1 1 auto; }
@@ -162,17 +166,20 @@ body {
 }
 #toc.hidden { display: none; }
 #toc h2 { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.6em; }
-#toc ul { list-style: none; margin: 0; padding-left: 0.9em; }
-#toc > ul { padding-left: 0; }
+#toc ul { list-style: none; margin: 0; padding-inline-start: 0.9em; }
+#toc > ul { padding-inline-start: 0; }
 #toc li { margin: 0.1em 0; }
 /* Rows sit 0.1em apart, so the entry link itself carries the target height (2.5.8): at the
    toc's 14px type, the old 0.15em padding landed a ~21px row - under the 24px floor. */
 #toc a { color: var(--link); text-decoration: none; display: block; padding: 0.3em 0.3em; border-radius: 4px; }
 #toc a:hover { background: rgba(127, 127, 127, 0.12); }
 #toc a[aria-current="location"] { background: rgba(127, 127, 127, 0.16); font-weight: 600; }
+/* The chevron's hit target meets the 24px floor (2.5.8): the minimums win over the 16.8px that
+   1.2em gives at the toc's 14px type, while the glyph keeps its own 1.15em size, centred. */
 #toc .toc-toggle {
   cursor: pointer; user-select: none; color: var(--muted);
   display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em;
+  min-width: 24px; min-height: 24px;
   padding: 0; margin: 0; border: 0; background: none; font: inherit; vertical-align: middle;
 }
 /* Vocabulary glyphs (glyphs.js): colour from the text around them, 1.15em in the chrome's font. */
@@ -188,6 +195,9 @@ body {
 #search-panel ol { padding-inline-start:1.5em; }
 #search-panel li { margin:.4em 0; }
 #search-panel li button { background:none;border:0;color:var(--link);text-align:start;font:inherit;cursor:pointer; }
+/* Deliberately out of theme (APP-STYLE section 5): a search hit is a highlighter mark, the same
+   fill in every reading theme so a hit always looks like a hit, and it carries its own dark text
+   colour because the theme's ink would be unreadable on it in dark and night. */
 #content mark.reader-search-hit { background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00; }
 #content mark.reader-search-current { background:#ff8b46!important;color:#191919!important;outline:3px solid #3156c9; }
 #toc .collapsed > ul { display: none; }
@@ -297,7 +307,7 @@ body {
    the light and sepia accents but lands at 3.1:1 on the dark and night accents, while --bg
    clears it on all four (5.0 / 5.0 / 5.5 / 6.5). */
 .notice a.btn, .notice button {
-  display: inline-block; margin-top: 0.8em; margin-right: 0.6em;
+  display: inline-block; margin-top: 0.8em; margin-inline-end: 0.6em;
   padding: 0.5em 1em; border-radius: 8px; border: 1px solid var(--accent);
   background: var(--accent); color: var(--bg); text-decoration: none; cursor: pointer; font: inherit;
 }
@@ -355,8 +365,9 @@ img[data-dht-remote] {
    in a long document, so the question about what the file would hold must be reachable there
    too, not at the top of a scrolled-away page. */
 .export-dialog {
-  position: fixed; z-index: 30; inset-block-start: 3.5em; inset-inline-start: 50%;
-  transform: translateX(-50%);
+  /* Centred by equal insets and auto margins, not a 50% offset plus a -50% shift: the card
+     carries the interface direction, and a translateX does not mirror with it. */
+  position: fixed; z-index: 30; inset-block-start: 3.5em; inset-inline: 0; margin-inline: auto;
   width: min(36em, calc(100vw - 2em));
   max-height: 75vh; overflow: auto;
   padding: 1em 1.2em;
@@ -374,7 +385,7 @@ img[data-dht-remote] {
 }
 .export-dialog button.secondary { background: var(--bar-bg); color: inherit; border-color: var(--border); }
 
-/* The Stop button rides in the status bar while a preparation runs (a page render or a
+/* The Cancel button rides in the status bar while a preparation runs (a page render or a
    recognition pass between yields is never interrupted - only the gaps are). */
 #status-stop {
   margin-inline-start: 0.8em; padding: 0.3em 0.8em;

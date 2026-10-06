@@ -84,8 +84,8 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	// theme only - the old literal link blue measured 1.4:1 on the dark theme and 1.59:1 on night,
 	// under the 3:1 floor of ICON-RENDER rule 3. --dht-link reads at least 6.3:1 on all four.
 	sb.WriteString("    h1 { border-bottom: 1px solid var(--dht-border); padding-bottom: 0.3em; }\n")
-	sb.WriteString("    nav ul { list-style: none; padding-left: 1.3em; }\n")
-	sb.WriteString("    nav > ul { padding-left: 0; }\n")
+	sb.WriteString("    nav ul { list-style: none; padding-inline-start: 1.3em; }\n")
+	sb.WriteString("    nav > ul { padding-inline-start: 0; }\n")
 	sb.WriteString("    nav li { margin: 0.4em 0; }\n")
 	sb.WriteString("    nav a { text-decoration: none; color: var(--dht-link); }\n")
 	sb.WriteString("    nav a:hover { text-decoration: underline; }\n")
@@ -99,7 +99,7 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("    nav summary::before { content: \"\"; display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.22em; margin-inline-end: 0.2em; background-color: currentColor; -webkit-mask: " +
 		glyphMaskURL("nav.expand") + " center / contain no-repeat; mask: " + glyphMaskURL("nav.expand") + " center / contain no-repeat; }\n")
 	sb.WriteString("    nav details[open] > summary::before { -webkit-mask-image: " + glyphMaskURL("nav.collapse") + "; mask-image: " + glyphMaskURL("nav.collapse") + "; }\n")
-	sb.WriteString("    .toc-label { font-weight: bold; margin-right: 0.4em; }\n")
+	sb.WriteString("    .toc-label { font-weight: bold; margin-inline-end: 0.4em; }\n")
 	sb.WriteString("    .toc-snippet { font-size: 0.9em; color: var(--dht-fg); font-style: italic; }\n")
 	sb.WriteString("    .toc-section { color: var(--dht-fg); }\n")
 	sb.WriteString("    .meta { color: var(--dht-muted); font-size: 0.9em; margin-bottom: 2em; }\n")

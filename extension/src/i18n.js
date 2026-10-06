@@ -57,18 +57,18 @@ async function initI18n() {
 // converted document, whose language and direction belong to the document itself.
 function applyI18n(root) {
   const scope = root || document;
-  scope.querySelectorAll("[data-i18n]").forEach((el) => {
+  tagged(scope, "[data-i18n]").forEach((el) => {
     el.textContent = t(el.dataset.i18n, el.textContent);
   });
-  scope.querySelectorAll("[data-i18n-title]").forEach((el) => {
+  tagged(scope, "[data-i18n-title]").forEach((el) => {
     el.title = t(el.dataset.i18nTitle, el.title);
   });
-  scope.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+  tagged(scope, "[data-i18n-ph]").forEach((el) => {
     el.placeholder = t(el.dataset.i18nPh, el.placeholder);
   });
   // A glyph-only control's accessible name is its meaning's name in the interface language,
   // never the glyph character and never English left behind (ICON-RENDER rule 8).
-  scope.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+  tagged(scope, "[data-i18n-aria]").forEach((el) => {
     el.setAttribute("aria-label", t(el.dataset.i18nAria, el.getAttribute("aria-label") || ""));
   });
   const rtl = RTL_UI_LANGS.includes(uiLang());
@@ -79,6 +79,15 @@ function applyI18n(root) {
     scope.setAttribute("lang", uiLang());
     scope.setAttribute("dir", rtl ? "rtl" : "ltr");
   }
+}
+
+// tagged lists the elements matching selector under scope, scope itself included: a landmark
+// translated as one region (the TOC <nav>, the search panel) names itself, and querySelectorAll
+// never returns the element it is called on.
+function tagged(scope, selector) {
+  const found = [...scope.querySelectorAll(selector)];
+  if (scope.matches && scope.matches(selector)) found.unshift(scope);
+  return found;
 }
 
 // MESSAGES holds the override translations. chrome.i18n can only serve the browser's own

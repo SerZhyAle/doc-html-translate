@@ -86,6 +86,7 @@ const ocrScript = `(function(){
 function fit(b){
   if(b.dataset.ocrTop===undefined)b.dataset.ocrTop=b.style.top||"";
   b.style.top=b.dataset.ocrTop;
+  maskBackground(b,0);
   if(!b.dataset.ocrCqw){var m=/([0-9.]+)cqw/.exec(b.style.fontSize||"");b.dataset.ocrCqw=m?m[1]:"0";}
   var base=parseFloat(b.dataset.ocrCqw);
   b.style.height="";
@@ -98,8 +99,14 @@ function fit(b){
         if(b.scrollHeight>b.clientHeight+1){b.style.fontSize=p+"cqw";break;}p=n;}}}
   if(b.scrollHeight>b.clientHeight+1){b.style.height="auto";lift(b);}
 }
+function maskBackground(b,delta){if(b.dataset.ocrMode!=="mask")return;
+  if(b.dataset.ocrBgPosition===undefined)b.dataset.ocrBgPosition=b.style.backgroundPosition||"";
+  var source=b.dataset.ocrBgPosition;b.style.backgroundPosition=source;
+  if(delta&&source)b.style.backgroundPosition=source.split(",").map(function(p){var a=p.trim().split(/\s+/);
+    return a.length===2?a[0]+" calc("+a[1]+" + "+delta+"px)":p;}).join(",");}
 function lift(b){var p=b.parentNode,h=p?p.clientHeight:0;
-  if(h>0&&b.offsetTop+b.offsetHeight>h)b.style.top=Math.max(0,h-b.offsetHeight)+"px";}
+  if(h>0&&b.offsetTop+b.offsetHeight>h){var old=b.offsetTop,top=Math.max(0,h-b.offsetHeight);
+    b.style.top=top+"px";maskBackground(b,old-top);}}
 function fitAll(){var l=document.querySelectorAll(".ocr-box");for(var i=0;i<l.length;i++)fit(l[i]);}
 var t;function go(){clearTimeout(t);t=setTimeout(fitAll,0);}
 if(document.readyState!=="loading")fitAll();else document.addEventListener("DOMContentLoaded",fitAll);
@@ -535,6 +542,11 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 			// records; a page without a decoded image has no evidence and keeps the plain plate.
 			ring := measureRing(srcImg, b)
 			mode, conf := decideMode(ring)
+			paint := maskPlateBounds(b, mode, res.Width, res.Height)
+			style = percentStyle(paint, res.Width, res.Height)
+			if mode == ModeMask {
+				style += ";border-radius:0"
+			}
 			attrs = append(attrs,
 				gohtml.Attribute{Key: "data-ocr-mode", Val: string(mode)},
 				gohtml.Attribute{Key: "data-ocr-mode-conf", Val: fmt.Sprintf("%.2f", conf)})
@@ -542,12 +554,15 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 				// Paper and ink both land on the plate box: the box is what covers the source
 				// region, so it is what has to be opaque (see the plate's background note in
 				// internal/appearance for the measurement that decided this against the string).
-				bg := plateBackground(mode, ring, b, paper, res.Width)
+				bg := plateBackground(mode, ring, paint, paper, res.Width)
 				if bg == "" {
 					bg = paper
 				}
 				style += ";background:" + bg + ";color:" + ink
 			}
+		}
+		if leftAligned(b) {
+			style += ";text-align:left;justify-content:flex-start"
 		}
 		box := &gohtml.Node{
 			Type: gohtml.ElementNode, Data: "span", DataAtom: atom.Span,
@@ -556,6 +571,32 @@ func wrapImage(img *gohtml.Node, res Result, srcImg image.Image) {
 		box.AppendChild(&gohtml.Node{Type: gohtml.TextNode, Data: b.Text})
 		wrap.AppendChild(box)
 	}
+}
+
+// A mask's line padding must fit inside its CSS background box. Tight ink geometry used to
+// clip that padding on all four edges, leaving original letter fragments visible.
+func maskPlateBounds(b Block, mode Mode, w, h int) Block {
+	if mode != ModeMask || len(b.Lines) == 0 {
+		return b
+	}
+	pad := max(b.LineH/modeMaskPadDivisor, ringMinPad)
+	b.X0, b.Y0 = max(0, b.X0-pad), max(0, b.Y0-pad)
+	b.X1, b.Y1 = min(w, b.X1+pad), min(h, b.Y1+pad)
+	return b
+}
+
+// Only a demonstrably aligned margin overrides centering. The right edge must vary;
+// equally aligned sides could describe centered or justified copy.
+func leftAligned(b Block) bool {
+	if len(b.Lines) < 2 {
+		return false
+	}
+	lo, hi, rlo, rhi := b.Lines[0].X0, b.Lines[0].X0, b.Lines[0].X1, b.Lines[0].X1
+	for _, l := range b.Lines[1:] {
+		lo, hi = min(lo, l.X0), max(hi, l.X0)
+		rlo, rhi = min(rlo, l.X1), max(rhi, l.X1)
+	}
+	return (hi-lo)*2 <= fontBasis(b) && (rhi-rlo)*2 > fontBasis(b)
 }
 
 // fontFitFactor shrinks the plate font below the block's raw line height so the recognized

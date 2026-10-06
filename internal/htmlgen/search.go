@@ -94,6 +94,9 @@ const searchCSS = `<style id="dht-search-css">
 /* The close button is a bare word at the panel's corner; padding puts it over the 24px
    target-size floor (WCAG 2.2, 2.5.8). */
 #dht-search-close{padding:.25em .7em}
+/* APP-STYLE section 5: search hits are a deliberate out-of-theme surface carrying their own
+   dark text - a highlighter yellow, the current hit orange with a blue ring - so a hit looks
+   the same in every reading theme. The panel's black shadow is a neutral overlay with no text. */
 mark.dht-search-hit{background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00}mark.dht-search-current{background:#ff8b46!important;color:#191919!important;outline:3px solid #3156c9}
 </style>`
 
@@ -191,5 +194,17 @@ document.getElementById('dht-search-close').addEventListener('click',function(){
 input.addEventListener('input',function(){clearTimeout(input._timer);input._timer=setTimeout(run,180)});scope.addEventListener('change',run);
 input.addEventListener('keydown',function(e){if(e.key!=='Enter')return;e.preventDefault();if(!hits.length){run();if(hits.length)open(0);return}open(cur+(e.shiftKey?-1:1))});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!panel.hidden){panel.hidden=true;button.setAttribute('aria-expanded','false');clearMarks();button.focus()}});
+// INPUT-PARITY section 4: search is Ctrl+F (Cmd+F on macOS) and puts the focus in the search field.
+// Pressed again inside the field it passes through, so the browser's own find bar stays one press
+// away. A non-Latin layout types another letter on that key, so there its position stands in.
+var mac=/Mac|iP(hone|ad|od)/.test(navigator.platform||'');
+document.addEventListener('keydown',function(e){
+ if(e.altKey||e.shiftKey||(mac?!e.metaKey||e.ctrlKey:!e.ctrlKey||e.metaKey))return;
+ if(!(e.key==='f'||e.key==='F'||(e.code==='KeyF'&&!/^[a-z]$/i.test(e.key))))return;
+ if(e.target===input)return;
+ e.preventDefault();var opening=panel.hidden;
+ if(opening){panel.hidden=false;button.setAttribute('aria-expanded','true')}
+ input.focus();input.select();if(opening&&input.value.trim())run();
+});
 var params=new URLSearchParams(location.search),from=params.get('dhtq');if(from){input.value=from;panel.hidden=false;button.setAttribute('aria-expanded','true');scope.value='page';var restore=function(){run();var n=parseInt(params.get('dhtn'),10);if(Number.isFinite(n))setTimeout(function(){choose(n)},0)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restore,{once:true});else restore()}
 })();</script>`

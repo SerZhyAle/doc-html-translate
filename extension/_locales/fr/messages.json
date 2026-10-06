@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "Options",
+    "message": "Réglages",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "Les extensions ne peuvent pas lire les chemins réseau (\\\\serveur\\partage). Connectez le partage à une lettre de lecteur et ouvrez le fichier en local, ou choisissez-le ci-dessous."
+  },
+  "vFdsecTitle": {
+    "message": "Les fichiers secrets FileDO s'ouvrent dans l'application de bureau",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "L'extension du navigateur ne peut pas ouvrir les fichiers secrets FileDO (.fd-sec). Utilisez l'application de bureau doc-html-translate : elle demande le mot de passe, déchiffre le fichier avec le FileDO installé sur votre PC et le convertit.",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "Ouvrir dans le lecteur intégré"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"le fichier complet ferait environ {1} - plus que ce qu'un onglet du navigateur gère de façon fiable"},
   "vExportReasonStalled": {"message":"les pages restantes n'ont pas pu être affichées"},
   "vExportPreparing": {"message":"Préparation de la page {1} sur {2}.."},
-  "vExportStop": {"message":"Arrêter"},
+  "vExportStop": {"message":"Annuler"},
   "vExportStopped": {"message":"Préparation arrêtée - rien n'a été enregistré"},
   "vStatusSaving": {"message":"Enregistrement du HTML.."},
   "vSavedCompletePages": {"message":"Enregistré - complet, les {1} pages"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "Importé. Modifié : {1}"},
   "optSettingsNone": {"message": "aucun"},
   "optSettingsResetConfirm": {"message": "Réinitialiser tous les paramètres de l'extension ?"},
-  "optSettingsResetDone": {"message": "Paramètres réinitialisés."}
+  "optSettingsResetDone": {"message": "Paramètres réinitialisés."},
+  "popupConvertNote": {"message": "Désactivé par défaut. Ou faites un clic droit sur un lien vers un document et choisissez « {1} »."},
+  "popupGuide": {"message": "Guide et aide"},
+  "optIntro": {"message": "Affiche les documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) sous forme de HTML propre et redistribué, pour que la fonction « Traduire la page » intégrée au navigateur fonctionne. Tout s'exécute en local ; seul le traducteur du navigateur lui-même se connecte au réseau - et seulement quand vous le lui demandez."},
+  "optReflowAuto": {"message": "Redistribuer automatiquement les documents"},
+  "optReflowAutoHint": {"message": "Intercepte automatiquement les liens vers des PDF, EPUB, MOBI, AZW3, FB2 et RTF. Désactivé, ils s'ouvrent ou se téléchargent comme le navigateur le fait d'habitude - autrement dit, retour à la case départ. (Les autres formats s'ouvrent toujours via le sélecteur de fichiers.)"},
+  "optSourceLangHint": {"message": "Définit {1} pour que le navigateur propose la bonne traduction. La détection automatique fonctionne pour la plupart des documents (les EPUB utilisent aussi leur langue déclarée) - et tombe juste plus souvent qu'à son tour."},
+  "optOcrHint": {"message": "Reconnaît le texte contenu dans les images - dans vos documents et via l'entrée du menu contextuel « Reconnaître et traduire cette image » - puis le traduit avec la fonction « Traduire la page » du navigateur. L'anglais fonctionne hors ligne ; les autres langues se téléchargent à la demande et sont conservées en local."},
+  "optNoSites": {"message": "Aucun"},
+  "optDisabledSitesHint": {"message": "Gérez ces sites avec l'interrupteur « Sur ce site » de la fenêtre contextuelle."}
 }

@@ -146,6 +146,8 @@ func TestUILogToolsAndFailureClasses(t *testing.T) {
 
 // Keyboard handling has one owner: exactly one document-level keydown listener, driven by
 // the SHORTCUTS table, silent while a modal dialog is up (ticket 63, with ticket 57's audit).
+// Escape is claimed - default prevented - only while a run can be cancelled (INPUT-PARITY):
+// the `when` check sits before preventDefault, so an idle Escape keeps its browser default.
 func TestUIShortcutsHaveOneOwner(t *testing.T) {
 	if n := strings.Count(uiHTML, "document.addEventListener('keydown'"); n != 1 {
 		t.Fatalf("ui.html has %d document keydown listeners, want exactly 1", n)
@@ -153,9 +155,10 @@ func TestUIShortcutsHaveOneOwner(t *testing.T) {
 	for _, snippet := range []string{
 		"const SHORTCUTS = [",
 		"{key: 'Enter', ctrl: true, fire: () => runPressed()}",
-		"if (runAbort || queueBusy) cancelPressed()",
+		"{key: 'Escape', when: () => !!(runAbort || queueBusy), fire: () => cancelPressed()}",
 		"el('dropZone').focus()",
-		"if (dlgOpen) return;",
+		"if (dlgOpen || document.querySelector('dialog[open]')) return;",
+		"if (s.when && !s.when()) return;\n        ev.preventDefault();",
 	} {
 		if !strings.Contains(uiHTML, snippet) {
 			t.Errorf("ui.html is missing %q - the shortcut table is incomplete", snippet)

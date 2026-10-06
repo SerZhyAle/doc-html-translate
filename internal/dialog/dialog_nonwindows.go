@@ -12,7 +12,7 @@ import (
 // Confirm prints a Y/N prompt to stdout. Returns true only on an explicit yes, so Enter declines.
 // Under the GUI the question is asked in the GUI's window.
 func Confirm(title, message string) bool {
-	if hostedByGUI() {
+	if HostedByGUI() {
 		return askHost(title, message)
 	}
 	fmt.Printf("\n=== %s ===\n%s\n\nProceed? [y/N]: ", title, message)
@@ -25,7 +25,7 @@ func Confirm(title, message string) bool {
 // ShowWarning prints a warning message to stderr, or hands it to the GUI that runs the converter.
 // An unattended run also keeps it in the run log.
 func ShowWarning(title, message string) {
-	if hostedByGUI() {
+	if HostedByGUI() {
 		noteHost(title, message)
 		return
 	}

@@ -260,7 +260,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "Options",
+    "message": "Settings",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -365,6 +365,14 @@
   },
   "vUncBody": {
     "message": "Extensions cannot read network file paths (\\\\server\\share). Map the share to a drive letter and open it as a local file, or pick the file below.",
+    "description": "Viewer runtime string."
+  },
+  "vFdsecTitle": {
+    "message": "FileDO secret files open in the desktop app",
+    "description": "Viewer runtime string."
+  },
+  "vFdsecBody": {
+    "message": "The browser extension cannot open FileDO secret files (.fd-sec). Use the doc-html-translate desktop app: it asks for the password, decrypts the file with the FileDO installed on your PC and converts it.",
     "description": "Viewer runtime string."
   },
   "vBtnBuiltinViewer": {
@@ -741,7 +749,7 @@
   "vExportReasonBytes": {"message":"the complete file would be about {1}, more than a browser tab holds reliably"},
   "vExportReasonStalled": {"message":"the remaining pages would not render"},
   "vExportPreparing": {"message":"Preparing page {1} of {2}.."},
-  "vExportStop": {"message":"Stop"},
+  "vExportStop": {"message":"Cancel"},
   "vExportStopped": {"message":"Preparation stopped - nothing was saved"},
   "vStatusSaving": {"message":"Saving HTML.."},
   "vSavedCompletePages": {"message":"Saved - complete, all {1} pages"},
@@ -807,5 +815,14 @@
   "optSettingsImported": {"message": "Imported. Changed: {1}"},
   "optSettingsNone": {"message": "none"},
   "optSettingsResetConfirm": {"message": "Reset all extension settings to their defaults?"},
-  "optSettingsResetDone": {"message": "Settings reset to defaults."}
+  "optSettingsResetDone": {"message": "Settings reset to defaults."},
+  "popupConvertNote": {"message": "Off by default. Or right-click a document link and choose “{1}”.", "description": "Popup note under the reflow switch. {1} is the right-click menu item's name (convertDocMenu)."},
+  "popupGuide": {"message": "Guide & help", "description": "Popup link to the extension's guide page on the product site."},
+  "optIntro": {"message": "Re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean, reflowed HTML so the browser's built-in \"Translate page\" works. Everything runs locally; the only thing that phones home is the browser's own translator - and only when you ask it to.", "description": "Options page: the introduction under the heading."},
+  "optReflowAuto": {"message": "Reflow documents automatically", "description": "Options checkbox label: intercept supported document links automatically."},
+  "optReflowAutoHint": {"message": "Auto-intercepts PDF, EPUB, MOBI, AZW3, FB2 and RTF links. When off, they open or download the way the browser normally handles them - i.e. back to square one. (Other formats always open via the file picker.)", "description": "Hint under the automatic-reflow checkbox."},
+  "optSourceLangHint": {"message": "Sets {1} so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.", "description": "Hint under the source-language select. {1} is the HTML attribute <html lang>, shown as code."},
+  "optOcrHint": {"message": "Recognize text baked into images - in your documents, and via the right-click \"OCR & translate this image\" - then translate it with the browser's \"Translate page\". English works offline; other languages download on demand and are cached locally.", "description": "Hint under the image-OCR checkbox on the options page. Names the image context-menu item (ocrImageMenu) and the browser's own Translate page."},
+  "optNoSites": {"message": "None", "description": "Options page: shown in a site list that holds no site yet."},
+  "optDisabledSitesHint": {"message": "Manage these from the toolbar popup's \"On this site\" switch.", "description": "Hint under the list of sites where reflow is off. Quotes the popup's per-site switch (popupOnThisSite)."}
 }

@@ -132,19 +132,24 @@ func isPagedChapters(chapters []*mergeChapter) bool {
 
 func renderSingleContents(entries []epub.TOCEntry, depth int) string {
 	label := html.EscapeString(i18n.S("Table of contents"))
-	closeLabel := html.EscapeString(i18n.S("Close contents"))
+	// nav.close as its word, the search panel's close: a typed cross is not the vocabulary's
+	// drawing (ICON-SET rule 1, ICON-RENDER rule 7), and the visible word is the accessible name.
+	closeLabel := html.EscapeString(i18n.S("Close"))
 	var sb strings.Builder
-	fmt.Fprintf(&sb, `<nav id="dht-contents" class="dht-contents" lang="%s"%s aria-label="%s" hidden><div class="dht-contents-head"><strong>%s</strong><button id="dht-contents-close" type="button" aria-label="%s" title="%s">&#215;</button></div>`, i18n.Language(), chromeDirAttr(), label, label, closeLabel, closeLabel)
+	fmt.Fprintf(&sb, `<nav id="dht-contents" class="dht-contents" lang="%s"%s aria-label="%s" hidden><div class="dht-contents-head"><strong>%s</strong><button id="dht-contents-close" type="button">%s</button></div>`, i18n.Language(), chromeDirAttr(), label, label, closeLabel)
 	renderTOCList(&sb, entries, "", depth, 1, 1)
 	sb.WriteString("</nav>\n")
 	return sb.String()
 }
 
 const singleContentsCSS = `<style id="dht-contents-css">
+  /* APP-STYLE section 5: the panel's black shadow and the links' grey hover tint stay outside
+     the palette on purpose - neutral overlays that carry no text, so one value reads on all four
+     reading themes while the words keep their themed colours. */
   .dht-contents[hidden] { display: none; }
   .dht-contents { position: fixed; z-index: 9998; inset-block-start: 3.5rem; inset-inline-start: 0; width: min(20rem, calc(100vw - 1rem)); max-height: calc(100dvh - 4rem); overflow: auto; box-sizing: border-box; padding: .75rem 1rem; background: var(--dht-bar-bg); color: var(--dht-bar-fg); border: 1px solid var(--dht-border); box-shadow: 0 6px 20px #0003; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
   .dht-contents-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .dht-contents-head button { color: inherit; background: transparent; border: 1px solid var(--dht-border); border-radius: 4px; font-size: 1.25rem; cursor: pointer; }
+  .dht-contents-head button { color: inherit; background: transparent; border: 1px solid var(--dht-border); border-radius: 4px; font: inherit; padding: .25em .7em; cursor: pointer; }
   .dht-contents ul { list-style: none; padding-inline-start: 1rem; margin: .3rem 0; }
   .dht-contents > ul { padding-inline-start: 0; }
   .dht-contents li { margin: .2rem 0; }

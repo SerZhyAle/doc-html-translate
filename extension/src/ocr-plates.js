@@ -50,7 +50,7 @@ export function plateSpecs({ blocks, width, height }) {
   if (!width || !height) return specs;
   for (const b of blocks || []) {
     if (!b || !b.text) continue;
-    const { x0, y0, x1, y1 } = b.bbox;
+    const { x0, y0, x1, y1 } = b.conceal?.bounds || b.bbox;
     specs.push({
       text: b.text,
       left: `${(x0 / width) * 100}%`,
@@ -64,6 +64,7 @@ export function plateSpecs({ blocks, width, height }) {
       mode: b.conceal ? b.conceal.mode : "",
       modeConf: b.conceal ? b.conceal.conf.toFixed(2) : "",
       background: b.conceal ? b.conceal.background : "",
+      leftAligned: leftAligned(b),
     });
   }
   return specs;
@@ -81,6 +82,8 @@ export function renderPlates(container, specs) {
     plate.style.width = s.width;
     plate.style.minHeight = s.minHeight;
     plate.style.fontSize = s.fontSize;
+    if (s.mode === "mask") plate.style.borderRadius = "0";
+    if (s.leftAligned) { plate.style.textAlign = "left"; plate.style.justifyContent = "flex-start"; }
     // Paper and ink both land on the plate box: the box is what covers the source region, so it is
     // what has to be opaque. The paper sat on an inline span hugging the string for one day, which
     // gave it the shape of the rendered words but left a mean 93% of the source lettering showing
@@ -93,6 +96,13 @@ export function renderPlates(container, specs) {
     container.append(plate);
   }
   return container;
+}
+
+function leftAligned(b) {
+  if (!(b.lines?.length >= 2)) return false;
+  const left = b.lines.map((l) => l.x0), right = b.lines.map((l) => l.x1);
+  return (Math.max(...left) - Math.min(...left)) * 2 <= fontBasis(b) &&
+    (Math.max(...right) - Math.min(...right)) * 2 > fontBasis(b);
 }
 
 // A container the size of the image (via aspect-ratio) with the image as a base layer
@@ -149,6 +159,7 @@ export function fitPlate(b) {
   // (OCR-PIPELINE amendment 1.4 A).
   if (b.dataset.ocrTop === undefined) b.dataset.ocrTop = b.style.top || "";
   b.style.top = b.dataset.ocrTop;
+  maskBackground(b, 0);
   if (!b.dataset.ocrCqw) {
     const m = /([0-9.]+)cqw/.exec(b.style.fontSize || "");
     b.dataset.ocrCqw = m ? m[1] : "0";
@@ -192,7 +203,23 @@ export function liftPlate(b) {
   const box = b.parentNode;
   const h = box ? box.clientHeight : 0;
   if (!(h > 0)) return;
-  if (b.offsetTop + b.offsetHeight > h) b.style.top = `${Math.max(0, h - b.offsetHeight)}px`;
+  if (b.offsetTop + b.offsetHeight > h) {
+    const old = b.offsetTop, top = Math.max(0, h - b.offsetHeight);
+    b.style.top = `${top}px`;
+    maskBackground(b, old - top);
+  }
+}
+
+// Keep mask stripes over their source lines when long text lifts at the bottom edge.
+function maskBackground(b, delta) {
+  if (b.dataset?.ocrMode !== "mask") return;
+  if (b.dataset.ocrBgPosition === undefined) b.dataset.ocrBgPosition = b.style.backgroundPosition || "";
+  const source = b.dataset.ocrBgPosition;
+  b.style.backgroundPosition = source;
+  if (delta && source) b.style.backgroundPosition = source.split(",").map((p) => {
+    const a = p.trim().split(/\s+/);
+    return a.length === 2 ? `${a[0]} calc(${a[1]} + ${delta}px)` : p;
+  }).join(",");
 }
 
 // scheduleFit fits every plate in a container once it is laid out in the DOM (the caller appends it

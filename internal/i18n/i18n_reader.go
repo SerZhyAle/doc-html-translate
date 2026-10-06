@@ -37,16 +37,12 @@ func init() {
 		"الصفحة التالية", "अगला पृष्ठ", "পরবর্তী পৃষ্ঠা", "اگلا صفحہ", "下一页")
 
 	// nav.contents. The same words as the extension's ttToc message in every language
-	// (tests/iconography_test.go). The Russian keeps the book word "Оглавление" where the
-	// vocabulary says "Содержание" - proposed to the vocabulary, a dated exception meanwhile.
+	// (tests/iconography_test.go). The Russian "Оглавление" is the record's declared form for a
+	// book's table of contents (ICON-SET 0.15); "Содержание" is the vocabulary's word elsewhere.
 	Add("Table of contents",
 		"Оглавление", "Зміст", "Inhaltsverzeichnis", "Indice", "Índice", "Table des matières",
 		"Sumário",
 		"المحتويات", "विषय-सूची", "সূচিপত্র", "فہرست", "目录")
-	Add("Close contents",
-		"Закрыть оглавление", "Закрити зміст", "Inhaltsverzeichnis schließen", "Chiudi indice",
-		"Cerrar índice", "Fermer la table des matières", "Fechar sumário",
-		"إغلاق المحتويات", "विषय-सूची बंद करें", "সূচিপত্র বন্ধ করুন", "فہرست بند کریں", "关闭目录")
 
 	Add("Smaller text",
 		"Мельче", "Дрібніше", "Kleinerer Text", "Testo più piccolo", "Texto más pequeño",
@@ -77,6 +73,8 @@ func init() {
 		"Тема", "Тема", "Design", "Tema", "Tema", "Thème", "Tema",
 		"المظهر", "थीम", "থিম", "تھیم", "主题")
 
+	// The theme choices are words (app.theme's note, ICON-SET): ru and uk name each theme by the
+	// record's adjective - Светлая / Сепия / Тёмная / Ночная, Світла / Сепія / Темна / Нічна.
 	Add("Light",
 		"Светлая", "Світла", "Hell", "Chiaro", "Claro", "Clair", "Claro",
 		"فاتح", "हल्का", "উজ্জ্বল", "روشن", "浅色")
@@ -90,7 +88,7 @@ func init() {
 		"داكن", "गहरा", "গাঢ়", "گہرا", "深色")
 
 	Add("Night",
-		"Ночь", "Ніч", "Nacht", "Notte", "Noche", "Nuit", "Noite",
+		"Ночная", "Нічна", "Nacht", "Notte", "Noche", "Nuit", "Noite",
 		"ليلي", "रात", "রাত", "رات", "夜间")
 
 	Add("Serif",

@@ -10,6 +10,7 @@ import (
 
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/dialog"
+	"doc-html-translate/internal/fdsec"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/ocr"
@@ -55,7 +56,7 @@ func (a App) Run() (int, error) {
 	// (APP-BEHAVIOUR rules 4 and 11).
 	if a.cfg.FirstRun {
 		printSplash()
-		fmt.Println(i18n.S("  Supported file types: %s", strings.Join(windowsreg.SupportedExtensions, " ")))
+		fmt.Println(i18n.S("  Supported file types: %s", strings.Join(append(append([]string(nil), windowsreg.SupportedExtensions...), windowsreg.ShellOnlyExtensions...), " ")))
 		fmt.Println()
 		if promptAddShellEntries() {
 			_, openWithErr := windowsreg.RegisterOpenWith()
@@ -141,6 +142,9 @@ func (a App) Run() (int, error) {
 		fmt.Printf("Installed into %s\n", ocr.UserDataDir())
 		return 0, nil
 	}
+
+	// A plain copy a killed or crashed run left behind must not outlive it: sweep before any run.
+	fdsec.SweepStale()
 
 	dialog.SetUnattended(unattendedRun(a.cfg.NoOpen, logging.StdoutIsTerminal()))
 

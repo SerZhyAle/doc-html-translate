@@ -82,7 +82,10 @@ body {
     flex: 1 1 auto;
     min-height: 0;
 }
-.col-main { min-width: 0; overflow-y: auto; overflow-x: hidden; }
+/* The pane clips what overflows its padding box, and the focus ring (2px plus its 2px offset)
+   overflows every full-width field and edge button. The padding gives the ring room and the
+   equal negative margin keeps the content where it was (APP-SETTINGS rule 10). */
+.col-main { min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 4px; margin: -4px; }
 .col-log { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 /* one-time first-run opt-in banner for the default-handler association */
 .assoc-prompt {
@@ -114,18 +117,26 @@ h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
 .byline a { color: var(--link); text-decoration: none; }
 .byline a:hover { text-decoration: underline; }
 .byline .dot { color: var(--text-muted); margin: 0 3px; }
+/* WINDOWS-UI section 2.3: the purpose line under the title takes a row of its own below the
+   header items instead of squeezing between them. */
+.head .purpose { flex-basis: 100%; margin-top: 0; }
 /* theme and language switches, pushed to the far right of the header row */
 /* 13 endonyms do not fit a button row, so the switcher is a select */
 .switches { margin-inline-start: auto; align-self: center; display: flex; gap: 6px; }
 .langsw { padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; min-height: 28px; }
 .hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+/* APP-STYLE section 4: a failure or a refusal is danger; "this may not do what you expect" - a
+   caveat beside something that did happen - is warning. */
 .hint.ok { color: var(--success); }
-.hint.warn { color: var(--danger); }
+.hint.warn { color: var(--warning); }
+.hint.fail { color: var(--danger); }
 code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; background: var(--surface-raised); padding: 1px 4px; border-radius: 3px; }
 
+/* WINDOWS-UI section 6.1: accent marks interaction, so a static section heading takes muted ink;
+   only the clickable group headers (summary) keep the accent. */
 .stitle {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--accent); margin: 14px 0 6px;
+    letter-spacing: 0.06em; color: var(--text-muted); margin: 14px 0 6px;
 }
 
 /* inputs / selects / buttons */
@@ -137,12 +148,15 @@ input[type="text"], input[type="number"], input[type="password"], select {
     border-radius: 5px;
     font-size: 13px;
     font-family: inherit;
-    outline: none;
     transition: border-color .15s;
 }
 select { cursor: pointer; }
 input:focus, select:focus { border-color: var(--accent); }
 input::placeholder { color: var(--text-muted); }
+/* WINDOWS-UI section 2.5: a technical value (path, model name, key) keeps its own left-to-right
+   direction in an RTL window; while the field is empty it shows a translated placeholder, which
+   follows the window instead. */
+:root[dir="rtl"] input[dir="ltr"]:placeholder-shown { direction: rtl; }
 button {
     background: var(--control);
     color: var(--text-primary);
@@ -180,7 +194,7 @@ button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allo
 .drop:hover { border-color: var(--accent); background: none; }
 .drop > span { display: block; }
 .drop.dragover { border-color: var(--accent); background: var(--accent-soft); }
-.drop.has-file { border-style: solid; border-color: var(--accent); text-align: left; }
+.drop.has-file { border-style: solid; border-color: var(--accent); text-align: start; }
 .drop .ico { font-size: 20px; color: var(--accent); display: block; margin-bottom: 2px; }
 .drop .ico .glyph { margin: 0 auto; }
 .drop .ph, .drop .fname, .drop .sub { display: block; }
@@ -192,8 +206,14 @@ button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allo
 .field { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
 .field > label { font-size: 12px; color: var(--text-muted); min-width: 84px; }
 .field > input, .field > select { flex: 1; min-width: 0; }
-.field.num > input { max-width: 130px; flex: 0 0 auto; }
-.field.num > .gap { flex: 1; }
+/* WINDOWS-UI section 4 (Numeric): readable digits and readable native spin controls - the whole
+   editor scales, not just the box. The 16px digit font / 110px editor width is the reference
+   baseline the profile names as a reusable starting point; the spin glyphs grow with the font. */
+input[type="number"] { font-size: 16px; min-height: 32px; }
+.field.num > input { width: 110px; flex: 0 0 auto; }
+/* WINDOWS-UI section 4 (Units): the unit sits immediately next to the value, the range and
+   sentinel meaning stay in the hint below the row. */
+.field .unit { font-size: 12px; color: var(--text-muted); flex: none; }
 
 /* engine radios */
 .engine { display: flex; flex-wrap: wrap; gap: 7px 18px; margin: 4px 0 2px; }
@@ -208,9 +228,14 @@ button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allo
 .glyph { display: block; flex: none; }
 
 /* checkbox toggles */
-.toggles { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 4px 0; }
+/* WINDOWS-UI section 4 (Boolean) / APP-SETTINGS section 8: the checkbox sits at the reading
+   start with the caption immediately beside it, and a setting's description goes below the
+   caption at the same text inset (.chk-hint: 15px input + 7px gap). */
+.toggles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; margin: 4px 0; }
+@media (max-width: 700px) { .toggles { grid-template-columns: 1fr; } }
 .chk { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; }
-.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex: none; }
+.chk-hint { margin-inline-start: 22px; margin-top: 1px; }
 
 /* collapsibles */
 details {
@@ -245,6 +270,13 @@ details[open] > summary::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
 }
+/* WINDOWS-UI section 6.5: forced colors repaint a background with Canvas, which would leave a
+   mask-drawn glyph Canvas-on-Canvas - invisible. The mask glyphs opt out and take the system
+   text colour instead. The inline SVG glyphs (content.document, action.swap) fill with
+   currentColor, which forced colors already resolve to the system text colour. */
+@media (forced-colors: active) {
+    details > summary::before { forced-color-adjust: none; background-color: CanvasText; }
+}
 details > .body { padding: 2px 12px 12px; }
 
 /* primary row: document picker + run button on one line */
@@ -278,6 +310,9 @@ details > .body { padding: 2px 12px 12px; }
     overflow: auto;
     white-space: pre;
     word-break: normal;
+    /* The console is dir="ltr" (WINDOWS-UI section 2.5); each line still takes its own base
+       direction, so a line quoting an Arabic file name reads in order. */
+    unicode-bidi: plaintext;
 }
 .log .end { color: var(--console-command); }
 .log .end.failed { color: var(--console-danger); }
@@ -334,7 +369,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 .queue-head { display: flex; align-items: baseline; gap: 10px; margin-top: 12px; }
 .queue-head .stitle { margin: 0; }
 .queue-head .count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.queue-head .inline-btn { margin-left: auto; padding: 2px 9px; font-size: 11px; }
+.queue-head > .inline-btn { margin-inline-start: auto; padding: 2px 9px; font-size: 11px; }
 /* The log header carries two tools after its title; only a direct-child button is pushed
    to the far edge, so the paired buttons inside .log-tools keep their gap. */
 .log-tools { margin-inline-start: auto; display: flex; gap: 6px; }
@@ -356,11 +391,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 .qitem + .qitem { border-top: 1px solid var(--border); }
 .qsel {
     flex: 1 1 auto; min-width: 0; background: none; border: none; padding: 2px 4px;
-    font: inherit; color: var(--text-primary); text-align: left; cursor: pointer;
+    font: inherit; color: var(--text-primary); text-align: start; cursor: pointer;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 4px;
 }
 .qsel:hover { background: var(--control-hover); }
 .qsel.selected { color: var(--accent); font-weight: 600; }
+/* WINDOWS-UI section 6.4: accent ink on the hover face falls under 4.5:1 in dark, so a hovered
+   selected row takes the accent fill with its own ink (TestListRowStatesMeetWCAGAA). */
+.qsel.selected:hover { background: var(--accent); color: var(--accent-ink); }
 .qstate { flex: none; font-size: 11px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .qitem.is-running .qstate { color: var(--accent); }
 .qitem.is-done .qstate { color: var(--success); }
@@ -395,6 +433,10 @@ dialog.dlg {
 dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
 .dlg h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
 .dlg p { font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dlg-secret { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.dlg-secret label { font-size: 12px; font-weight: 600; }
+.dlg-secret input { width: 100%; }
+.dlg-secret .hint { margin: 0; }
 .dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .dlg-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .dlg-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
@@ -435,8 +477,10 @@ a { display: inline-flex; align-items: center; }
         </select>
         <select class="langsw" id="langSwitch" data-i18n-title="titleUiLang" data-i18n-aria="titleUiLang" title="Interface language" aria-label="Interface language"></select>
     </span>
+    <!-- WINDOWS-UI section 2.3: the title, then one short line saying what the window is for. -->
+    <p class="hint purpose" data-i18n="appPurpose">Converts e-books and documents into a local HTML book you can read and translate in the browser.</p>
 </div>
-<div class="hint warn" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
+<div class="hint fail" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
 <div class="app">
 <div class="col-main">
@@ -483,7 +527,7 @@ a { display: inline-flex; align-items: center; }
     <div class="prev-dir" id="prevDirRow">
         <span data-i18n="prevResultIn">Saved in:</span>
         <button type="button" class="path-btn" id="btnOpenPrevFolder"
-                data-i18n-title="ttOpenFolder" data-i18n-aria="ttOpenFolder" title="Open the containing folder" aria-label="Open the containing folder"><code id="prevResultDir"></code></button>
+                data-i18n-title="ttOpenFolder" data-i18n-aria="ttOpenFolder" title="Open the containing folder" aria-label="Open the containing folder"><code id="prevResultDir" dir="ltr"></code></button>
     </div>
 </div>
 
@@ -494,7 +538,7 @@ a { display: inline-flex; align-items: center; }
 <div id="recentSection" style="display:none">
     <div class="queue-head">
         <span class="stitle" data-i18n="secRecent">Recent</span>
-        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n="recentClear" data-i18n-title="ttRecentClear" data-i18n-aria="ttRecentClear" title="Forget every recent document" aria-label="Forget every recent document">Clear all</button>
+        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n="recentClear" data-i18n-title="ttRecentClear" title="Forget every recent document">Clear all</button>
     </div>
     <ul id="recentList" data-i18n-aria="ariaRecentList" aria-label="Recently chosen documents"></ul>
 </div>
@@ -509,11 +553,11 @@ a { display: inline-flex; align-items: center; }
     <div class="queue-head">
         <span class="stitle" data-i18n="secQueue">Queue</span>
         <span class="count" id="queueProgress" role="status" aria-live="polite"></span>
-        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n="queueClear" data-i18n-title="ttQueueClear" data-i18n-aria="ttQueueClear" title="Remove every file from the queue" aria-label="Remove every file from the queue">Clear</button>
+        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n="queueClear" data-i18n-title="ttQueueClear" title="Clear the whole queue; the files themselves stay on disk">Clear</button>
     </div>
     <ol id="queueList" data-i18n-aria="ariaQueueList" aria-label="Files queued for conversion"></ol>
     <div class="queue-foot">
-        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n="btnRetryFailed" data-i18n-title="ttRetryFailed" data-i18n-aria="ttRetryFailed" title="Convert again only the files that did not" aria-label="Convert again only the files that did not" disabled>Retry failed</button>
+        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n="btnRetryFailed" data-i18n-title="ttRetryFailed" title="Convert again only the files that did not" disabled>Retry failed</button>
         <button type="button" class="inline-btn" id="btnCancelQueue" style="display:none" data-i18n="btnCancelQueue">Cancel queue</button>
         <label class="chk" for="queueConcurrency"><span data-i18n="queueParallel">Parallel:</span></label>
         <select id="queueConcurrency" data-i18n-aria="queueParallel" aria-label="Parallel conversions">
@@ -527,11 +571,14 @@ a { display: inline-flex; align-items: center; }
 </div>
 
 <!-- output folder -->
-<div class="field" style="margin-top:10px">
-    <label data-i18n="lblOutput">Output:</label>
-    <input type="text" id="outputFolder" data-i18n-ph="phOutput" placeholder="Leave empty - lands next to the input">
+<div class="field" id="outputRow" style="margin-top:10px">
+    <label for="outputFolder" data-i18n="lblOutput">Output:</label>
+    <input type="text" id="outputFolder" dir="ltr" data-i18n-ph="phOutput" placeholder="Leave empty - lands next to the input">
     <button onclick="browseFolder()" data-i18n="btnBrowse">Browse..</button>
 </div>
+<!-- APP-SETTINGS rule 3: the placeholder says what empty means, but it is gone once a path is
+     set; the hint keeps saying it. -->
+<div class="hint" data-i18n="hintOutput">The folder that receives the results; each document gets its own subfolder named after it. Empty = next to the document itself (a dropped file is copied into the app's own folder first, so its result lands there).</div>
 
 <div class="stitle" data-i18n="secTranslation">Translation</div>
 <div class="engine" id="engine">
@@ -542,19 +589,22 @@ a { display: inline-flex; align-items: center; }
 </div>
 <div class="hint" data-i18n="hintEngine">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</div>
 
-<div class="field langs" style="margin-top:8px">
-    <label data-i18n="lblLanguages">Languages:</label>
+<div class="field langs" id="langsRow" style="margin-top:8px">
+    <label for="srcLang" data-i18n="lblLanguages">Languages:</label>
     <select id="srcLang" data-i18n-aria="ariaSrcLang" aria-label="Source language"></select>
     <button class="swap" id="btnSwap" data-i18n-title="titleSwap" data-i18n-aria="titleSwap" title="Swap source and target" aria-label="Swap source and target"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z"/></svg></button>
     <select id="dstLang" data-i18n-aria="ariaDstLang" aria-label="Target language"></select>
 </div>
+<div class="hint" data-i18n="hintLangs">Source - the language the document is written in; target - the language Google or Ollama translate into. "Chrome (free)" and "Don't translate" use only the source: it picks the OCR language while that is "Automatic".</div>
 
-<!-- Google API key (only when Google is selected) -->
+<!-- Google API key (only when Google is selected). WINDOWS-UI section 4 (Text/password): masked
+     by default, revealed only by the ordinary checkbox beside it. -->
 <div id="googleKeySection" style="display:none">
     <div class="field" style="margin-top:8px">
-        <label data-i18n="lblGoogleKey">Google key:</label>
-        <input type="password" id="googleKey" data-i18n-ph="phGoogleKey" placeholder="Paste your Google Cloud Translation API key..">
+        <label for="googleKey" data-i18n="lblGoogleKey">Google key:</label>
+        <input type="password" id="googleKey" dir="ltr" data-i18n-ph="phGoogleKey" placeholder="Paste your Google Cloud Translation API key..">
         <button onclick="saveGoogleKey()" data-i18n="btnSave">Save</button>
+        <label class="chk"><input type="checkbox" id="chkRevealKey" onchange="revealKey(this.checked)"> <span data-i18n="btnShow">Show</span></label>
     </div>
     <div class="hint" id="googleKeyStatus" data-i18n="googleKeySearching">Rummaging for a saved key..</div>
 </div>
@@ -562,10 +612,10 @@ a { display: inline-flex; align-items: center; }
 <details id="advancedDetails">
     <summary data-i18n="secAdvanced">Advanced</summary>
     <div class="body">
-        <div class="field num"><label data-i18n="lblSplitSize">Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="gap"></span></div>
+        <div class="field num"><label for="splitSize" data-i18n="lblSplitSize">Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="unit" data-i18n="unitChars">chars</span></div>
         <div class="hint" data-i18n-html="hintSplit">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
-        <div class="field num"><label data-i18n="lblTocDepth">TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"><span class="gap"></span></div>
-        <div class="field num"><label data-i18n="lblMaxCost">Max cost $:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="gap"></span></div>
+        <div class="field num"><label for="tocDepth" data-i18n="lblTocDepth">TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"></div>
+        <div class="field num"><label for="maxCost" data-i18n="lblMaxCost">Max cost:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="unit" data-i18n="unitUsd">$</span></div>
         <div class="hint" data-i18n-html="hintTocCost">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
     </div>
 </details>
@@ -573,9 +623,12 @@ a { display: inline-flex; align-items: center; }
 <details id="ollamaDetails">
     <summary data-i18n="secOllama">Ollama settings</summary>
     <div class="body">
-        <div class="field"><label data-i18n="lblModel">Model:</label><input type="text" id="ollamaModel" value="gemma3:12b"></div>
-        <div class="field num"><label data-i18n="lblParallel">Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"><span class="gap"></span></div>
-        <div class="field num"><label data-i18n="lblContext">Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="gap"></span></div>
+        <div class="field"><label for="ollamaModel" data-i18n="lblModel">Model:</label><input type="text" id="ollamaModel" dir="ltr" value="gemma3:12b"></div>
+        <div class="hint" data-i18n-html="hintOllamaModel">A model already pulled into your local Ollama; <code>gemma3:12b</code> is the default. A larger model translates better but needs more memory and runs slower.</div>
+        <div class="field num"><label for="ollamaParallel" data-i18n="lblParallel">Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"></div>
+        <div class="hint" data-i18n-html="hintOllamaParallel">How many batches go to Ollama at once; <code>1</code> (the minimum) sends them one by one. More helps only when Ollama itself runs with <code>OLLAMA_NUM_PARALLEL</code> set to the same number, and costs memory.</div>
+        <div class="field num"><label for="ollamaCtx" data-i18n="lblContext">Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="unit" data-i18n="unitTokens">tokens</span></div>
+        <div class="hint" data-i18n-html="hintOllamaCtx">The model's working window per request, in tokens: minimum <code>512</code>, default <code>8192</code>. Smaller is faster and uses less memory, but below about <code>4000</code> a batch of text may not fit; larger only costs memory.</div>
     </div>
 </details>
 
@@ -583,28 +636,42 @@ a { display: inline-flex; align-items: center; }
     <summary data-i18n="secOCR">Image OCR (translate text in pictures)</summary>
     <div class="body">
         <label class="chk"><input type="checkbox" id="chkOCR"> <span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
-        <div class="hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
-        <div class="field" style="margin-top:8px"><label data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
-        <div class="field"><label data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
+        <div class="hint chk-hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
+        <div class="field" style="margin-top:8px"><label for="ocrLang" data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
+        <div class="field"><label for="ocrDownloadSel" data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
         <div class="hint" id="ocrStatus" role="status" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
     </div>
 </details>
 
-<div class="toggles">
-    <label class="chk"><input type="checkbox" id="chkSingle" checked> <span data-i18n="chkSingle">Single page (contents available)</span></label>
-    <label class="chk"><input type="checkbox" id="chkNoOpen"> <span data-i18n="chkNoOpen">Don't open browser</span></label>
-    <label class="chk"><input type="checkbox" id="chkForce"> <span data-i18n="chkForce">Force re-process</span></label>
-    <label class="chk"><input type="checkbox" id="chkVerbose"> <span data-i18n="chkVerbose">Verbose log</span></label>
+<!-- APP-SETTINGS rule 3: every setting carries its caption, its control and a muted hint that
+     says what it does and what it costs; the hint sits below the caption at the caption's inset. -->
+<div class="toggles" id="togglesRow">
+    <div class="chk-block">
+        <label class="chk"><input type="checkbox" id="chkSingle" checked> <span data-i18n="chkSingle">Single page (contents available)</span></label>
+        <div class="hint chk-hint" data-i18n="hintSingle">One long page with a linked table of contents at the top, instead of a page per chapter.</div>
+    </div>
+    <div class="chk-block">
+        <label class="chk"><input type="checkbox" id="chkNoOpen"> <span data-i18n="chkNoOpen">Don't open browser</span></label>
+        <div class="hint chk-hint" data-i18n="hintNoOpen">Convert without opening the result; find it afterwards through the output path shown under the picker.</div>
+    </div>
+    <div class="chk-block">
+        <label class="chk"><input type="checkbox" id="chkForce"> <span data-i18n="chkForce">Force re-process</span></label>
+        <div class="hint chk-hint" data-i18n="hintForce">Rebuild even when a finished result for this file already exists; otherwise the existing result is reused.</div>
+    </div>
+    <div class="chk-block">
+        <label class="chk"><input type="checkbox" id="chkVerbose"> <span data-i18n="chkVerbose">Verbose log</span></label>
+        <div class="hint chk-hint" data-i18n="hintVerbose">Copy the converter's full log into the log panel; it is what "Send logs to the author" packs.</div>
+    </div>
 </div>
 
 <details id="integrationSection">
     <summary data-i18n="secIntegration">Windows integration</summary>
     <div class="body">
         <label class="chk"><input type="checkbox" id="chkShellEntries" onchange="toggleShellEntries()"> <span data-i18n="chkShellEntries">Right-click "Convert to HTML" and "Open with"</span></label>
-        <div class="hint" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</div>
+        <div class="hint chk-hint" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</div>
         <label class="chk" style="margin-top:8px"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
         <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()" data-i18n="btnOpenDefaultApps">Open Default apps</button>
-        <div class="hint" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</div>
+        <div class="hint chk-hint" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</div>
     </div>
 </details>
 
@@ -616,15 +683,25 @@ a { display: inline-flex; align-items: center; }
     <div class="body">
         <div class="about-row"><span data-i18n="aboutVersion">Version:</span> <code id="aboutVer"></code></div>
         <div class="about-row"><span data-i18n="aboutEdition">Edition:</span> <span id="aboutEd"></span></div>
-        <div class="about-row" id="updateControls">
-            <button type="button" class="inline-btn" id="btnUpdateCheck" data-i18n="btnUpdateCheck">Check for updates</button>
-            <label class="chk"><input type="checkbox" id="chkAutoUpdates"> <span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label>
+        <!-- APP-SETTINGS rule 12: the About page carries the version, the licence, the support
+             bundle (below) and the privacy policy link - what a reader needs to ask for help. -->
+        <div class="about-row"><span data-i18n="aboutLicence">Licence:</span> <span>MIT</span></div>
+        <!-- APP-BEHAVIOUR rule 11: the packaged build hides this whole block, the hint included -
+             a hint about a control that is not there is a half-hidden control. -->
+        <div id="updateControls">
+            <div class="about-row">
+                <button type="button" class="inline-btn" id="btnUpdateCheck" data-i18n="btnUpdateCheck">Check for updates</button>
+                <label class="chk"><input type="checkbox" id="chkAutoUpdates"> <span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label>
+            </div>
+            <div class="hint chk-hint" data-i18n="hintAutoUpdate">Checks the release feed once a day and only reports - nothing is downloaded or installed without you.</div>
         </div>
         <div class="about-row" id="updateStatus" role="status"></div>
         <div class="about-row"><span data-i18n="aboutEngine">Converter engine:</span> <span id="aboutEng"></span></div>
         <div class="about-row"><span id="aboutLogs"></span></div>
         <div class="about-row">
             <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="aboutSite">Product site</a>
+            <span class="dot">&#183;</span>
+            <a href="https://serzhyale.github.io/doc-html-translate/privacy.html" target="_blank" rel="noopener" data-i18n="aboutPrivacy">Privacy</a>
             <span class="dot">&#183;</span>
             <a id="aboutMail" href="#" data-i18n="aboutFeedback">Feedback</a>
         </div>
@@ -642,7 +719,7 @@ a { display: inline-flex; align-items: center; }
 <div class="col-log">
     <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
     <div class="cmdbar">
-        <div class="cmdline console" id="cmdLine"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
+        <div class="cmdline console" id="cmdLine" dir="ltr"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
         <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
     </div>
     <!-- The log's tools (ticket 63): copy the selected lines - or the whole log when nothing
@@ -650,14 +727,14 @@ a { display: inline-flex; align-items: center; }
     <div class="queue-head log-head">
         <span class="stitle" data-i18n="secLog">Log</span>
         <span class="log-tools">
-            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n="logCopySel" data-i18n-title="ttLogCopy" data-i18n-aria="ttLogCopy" title="Copy the selected log lines" aria-label="Copy the selected log lines">Copy selection</button>
-            <button type="button" class="inline-btn" id="btnLogJump" data-i18n="logJumpLatest" data-i18n-title="ttLogJump" data-i18n-aria="ttLogJump" title="Scroll the log to the newest line" aria-label="Scroll the log to the newest line">Jump to latest</button>
+            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n="logCopySel" data-i18n-title="ttLogCopy" title="Copy the selected log lines">Copy selection</button>
+            <button type="button" class="inline-btn" id="btnLogJump" data-i18n="logJumpLatest" data-i18n-title="ttLogJump" title="Scroll the log to the newest line">Jump to latest</button>
         </span>
     </div>
     <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
          region would read out every appended chunk of a long conversion. The stage line
          (#progressStage) and the end outcome announce what matters, so the flood is off. -->
-    <div class="log console" id="logArea" role="log" aria-live="off"></div>
+    <div class="log console" id="logArea" role="log" aria-live="off" dir="ltr"></div>
 </div><!-- /col-log -->
 
 </div><!-- /app -->
@@ -693,13 +770,14 @@ let currentLang = 'en';   // language currently shown
 let userLang = null;      // explicit user choice (from saved settings / buttons)
 let systemLang = null;    // Windows UI language (from /api/env)
 
+// APP-BEHAVIOUR rule 7: formatting never throws, and a placeholder whose argument is missing,
+// null or undefined renders a blank - never "{name}" or "undefined" in front of the reader.
 function t(key, params) {
     if (!key) return '';
     const dict = I18N[currentLang] || I18N.en;
-    let s = (dict[key] != null) ? dict[key] : I18N.en[key];
+    const s = (dict[key] != null) ? dict[key] : I18N.en[key];
     if (s == null) return key;
-    if (params) for (const k in params) s = s.split('{' + k + '}').join(params[k]);
-    return s;
+    return String(s).replace(/\{(\w+)\}/g, (m, k) => params && params[k] != null ? String(params[k]) : '');
 }
 
 // Dynamic status lines: remember the (key, params, cls) so a language switch
@@ -724,7 +802,10 @@ function renderStatus(elId) {
     const node = document.getElementById(elId);
     if (!node) return;
     node.textContent = t(s.key, s.params);
-    node.className = 'hint' + (s.cls ? ' ' + s.cls : '');
+    // A status hint that also carries a layout class (.chk-hint's caption inset) keeps it
+    // through re-renders; only the state class (ok / warn / fail) turns over.
+    const keep = node.classList.contains('chk-hint') ? ' chk-hint' : '';
+    node.className = 'hint' + keep + (s.cls ? ' ' + s.cls : '');
 }
 
 function applyLang(lang) {
@@ -804,6 +885,10 @@ document.getElementById('themeSwitch').addEventListener('change', e => {
 // the first to be answered.
 //
 //   buttons: [{id, key, kind: 'primary'|'danger'|'', focus: true}]; cancel: the no-action id
+//   secret: true adds a masked password field (a FileDO secret file); the dialog then resolves to
+//   {choice, value}. The field is created for this one question, wiped and removed when the
+//   dialog closes, and its value goes nowhere but the caller (never the log, the console or
+//   any storage). Enter confirms with the primary button, Escape cancels.
 let dlgQueue = Promise.resolve();
 let dlgOpen = null; // {tag, close()} of the dialog on screen, so its owning run can withdraw it
 function openDialog(opts) {
@@ -815,7 +900,7 @@ function openDialog(opts) {
             el('dlgTitle').textContent = opts.title || '';
             el('dlgMsg').textContent = opts.message || '';
             actions.innerHTML = '';
-            let focus = null;
+            let focus = null, primary = null, secretBox = null, secretInput = null;
             for (const b of opts.buttons) {
                 const btn = document.createElement('button');
                 btn.value = b.id;
@@ -823,15 +908,44 @@ function openDialog(opts) {
                 if (b.kind) btn.className = b.kind;
                 actions.appendChild(btn);
                 if (b.focus) focus = btn;
+                if (b.kind === 'primary' && !primary) primary = btn;
+            }
+            if (opts.secret) {
+                secretBox = document.createElement('div');
+                secretBox.className = 'dlg-secret';
+                const label = document.createElement('label');
+                label.htmlFor = 'dlgSecretInput';
+                label.textContent = t('secretLabel');
+                secretInput = document.createElement('input');
+                secretInput.type = 'password';
+                secretInput.id = 'dlgSecretInput';
+                secretInput.autocomplete = 'off';
+                secretInput.spellcheck = false;
+                secretInput.setAttribute('dir', 'ltr');
+                secretInput.setAttribute('aria-describedby', 'dlgSecretNote');
+                const note = document.createElement('p');
+                note.className = 'hint';
+                note.id = 'dlgSecretNote';
+                note.textContent = t('secretEmptyNote');
+                secretInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' && primary) { e.preventDefault(); primary.click(); }
+                });
+                secretBox.append(label, secretInput, note);
+                actions.before(secretBox);
             }
             dlg.returnValue = '';
             dlg.addEventListener('close', () => {
                 dlgOpen = null;
-                resolve(dlg.returnValue || opts.cancel);
+                const choice = dlg.returnValue || opts.cancel;
+                if (!opts.secret) { resolve(choice); return; }
+                const value = secretInput.value;
+                secretInput.value = '';
+                secretBox.remove();
+                resolve({choice, value});
             }, {once: true});
             dlgOpen = {tag: opts.tag, close: () => dlg.close()};
             dlg.showModal();
-            (focus || actions.lastChild).focus();
+            (secretInput || focus || actions.lastChild).focus();
         });
     });
     dlgQueue = next.catch(() => {});
@@ -955,7 +1069,7 @@ async function uploadDropped(file) {
     setStatus('dropStatus', 'statusLoading', {name: file.name});
     try {
         const r = await api('/api/drop?name=' + encodeURIComponent(file.name), {method:'POST', body: file});
-        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', null, 'warn'); return ''; }
+        if (!r.ok) { setStatus('dropStatus', 'statusLoadFail', null, 'fail'); return ''; }
         const d = await r.json();
         if (d.path) { setStatus('dropStatus', 'statusLoadedCopy'); return d.path; }
     } catch(e) {
@@ -991,7 +1105,9 @@ window.addEventListener('drop', ev => { dropZone.classList.remove('dragover'); h
 // on a language switch, rather than writing a sentence once in whatever language was current.
 let authorAddress = '';
 let appVersion = '';
-const aboutFacts = { packaged: false, cli: false, logs: null };
+// logs: undefined until /api/env answers, null when the store could not be measured - an
+// unknown count, which is never shown as zero (WINDOWS-UI section 7) - else {count, bytes}.
+const aboutFacts = { packaged: false, cli: false, logs: undefined };
 
 function formatBytes(n) {
     if (!n) return '0 KB';
@@ -1007,6 +1123,8 @@ function renderAbout() {
     const logs = document.getElementById('aboutLogs');
     if (logs && aboutFacts.logs) {
         logs.textContent = t('aboutLogsHeld', {1: aboutFacts.logs.count, 2: formatBytes(aboutFacts.logs.bytes)});
+    } else if (logs && aboutFacts.logs === null) {
+        logs.textContent = t('aboutLogsUnknown');
     }
     document.getElementById('updateControls').style.display = aboutFacts.packaged ? 'none' : '';
     renderUpdateStatus();
@@ -1061,7 +1179,7 @@ api('/api/env').then(r=>r.json()).then(d=>{
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
     aboutFacts.packaged = !!d.packaged;
     aboutFacts.cli = !!d.cli;
-    aboutFacts.logs = d.logs || {count: 0, bytes: 0};
+    aboutFacts.logs = d.logs || null;
     // The address is served, never written into the page a second time.
     authorAddress = d.author || '';
     const mail = document.getElementById('aboutMail');
@@ -1071,13 +1189,13 @@ api('/api/env').then(r=>r.json()).then(d=>{
     envReady = true;
     if (!integrationHidden) loadAssocStatus();
     maybeShowAssocPrompt();
-}).catch(()=>{ envReady = true; maybeShowAssocPrompt(); });
+}).catch(()=>{ aboutFacts.logs = null; renderAbout(); envReady = true; maybeShowAssocPrompt(); });
 
 // ── browse buttons ──────────────────────────────────────
 async function browseFile() {
     try {
         const r = await api('/api/browse-file?title=' + encodeURIComponent(t('dlgPickFile')), {method:'POST'});
-        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'warn'); return; }
+        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'fail'); return; }
         const d = await r.json();
         const paths = (d.paths && d.paths.length) ? d.paths : (d.path ? [d.path] : []);
         if (!paths.length) return;
@@ -1087,7 +1205,7 @@ async function browseFile() {
 async function browseFolder() {
     try {
         const r = await api('/api/browse-folder?title=' + encodeURIComponent(t('dlgPickFolder')), {method:'POST'});
-        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'warn'); return; }
+        if (!r.ok) { setStatus('dropStatus', 'browseFail', null, 'fail'); return; }
         const d = await r.json();
         if (d.path) { document.getElementById('outputFolder').value = d.path; saveSettings(); updateCmdPreview(); }
     } catch(e) { serviceGone(e); }
@@ -1095,7 +1213,12 @@ async function browseFolder() {
 
 // ── translation engine ──────────────────────────────────
 const googleKeySection = document.getElementById('googleKeySection');
-document.querySelectorAll('input[name="engine"]').forEach(r => r.addEventListener('change', syncEngineUI));
+// Only a real pick (a change event) opens the Ollama group: syncEngineUI also runs on every
+// restore, where reopening it would override the collapse the reader left (WINDOWS-UI section 3.4).
+document.querySelectorAll('input[name="engine"]').forEach(r => r.addEventListener('change', () => {
+    syncEngineUI();
+    if (currentEngine() === 'ollama') el('ollamaDetails').open = true;
+}));
 
 function currentEngine() {
     const r = document.querySelector('input[name="engine"]:checked');
@@ -1105,16 +1228,20 @@ function syncEngineUI() {
     const e = currentEngine();
     googleKeySection.style.display = (e === 'google') ? '' : 'none';
     if (e === 'google') refreshGoogleKeyStatus();
-    if (e === 'ollama') document.getElementById('ollamaDetails').open = true;
 }
 
 // ── Google API key ──────────────────────────────────────
+// WINDOWS-UI section 4 (Text/password): the secret stays masked until the reader reveals it
+// with the checkbox beside it - never by focusing or hovering the field.
+function revealKey(on) {
+    el('googleKey').type = on ? 'text' : 'password';
+}
 async function refreshGoogleKeyStatus() {
     try {
         const r = await api('/api/google-key');
         const d = await r.json();
         if (d.unusable) {
-            setStatus('googleKeyStatus', 'googleKeyUnusable', null, 'warn');
+            setStatus('googleKeyStatus', 'googleKeyUnusable', null, 'fail');
         } else if (d.exists) {
             setStatus('googleKeyStatus', 'googleKeyFound', null, 'ok');
         } else {
@@ -1122,19 +1249,19 @@ async function refreshGoogleKeyStatus() {
         }
     } catch(e) {
         console.error(e);
-        setStatus('googleKeyStatus', 'googleKeyCheckFail', null, 'warn');
+        setStatus('googleKeyStatus', 'googleKeyCheckFail', null, 'fail');
     }
 }
 async function saveGoogleKey() {
     const key = document.getElementById('googleKey').value.trim();
-    if (!key) { setStatus('googleKeyStatus', 'googleKeyEnterFirst', null, 'warn'); return; }
+    if (!key) { setStatus('googleKeyStatus', 'googleKeyEnterFirst', null, 'fail'); return; }
     try {
         const r = await api('/api/google-key', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({key}),
         });
-        if (!r.ok) { setStatus('googleKeyStatus', 'googleKeySaveFail', null, 'warn'); return; }
+        if (!r.ok) { setStatus('googleKeyStatus', 'googleKeySaveFail', null, 'fail'); return; }
         document.getElementById('googleKey').value = '';
         const d = await r.json();
         if (d.exists) setStatus('googleKeyStatus', 'googleKeySaved', null, 'ok');
@@ -1186,7 +1313,7 @@ function applyAssocState(d, action) {
         break;
     default: // none
         if (action === 'unregister') msg = ['unregisterDone', null, 'ok'];
-        if (action === 'register') msg = ['registerFail', null, 'warn'];
+        if (action === 'register') msg = ['registerFail', null, 'fail'];
     }
     el('btnDefaultApps').style.display = needSettings ? '' : 'none';
     if (msg) setStatus('registerStatus', msg[0], msg[1], msg[2]);
@@ -1201,7 +1328,7 @@ async function toggleDefaultHandler() {
         if (d.ok) {
             applyAssocState(d, on ? 'register' : 'unregister');
         } else {
-            setStatus('registerStatus', 'registerFail', null, 'warn');
+            setStatus('registerStatus', 'registerFail', null, 'fail');
             el('chkDefaultHandler').checked = !on; // revert the toggle on failure
         }
     } catch(e) {
@@ -1216,7 +1343,7 @@ async function toggleShellEntries() {
         const d = await (await api('/api/shell-entries', {method: 'POST', body: JSON.stringify({on})})).json();
         el('chkShellEntries').checked = !!d.shell;
         if (d.ok) setStatus('shellStatus', on ? 'shellAdded' : 'shellRemoved', null, 'ok');
-        else setStatus('shellStatus', 'shellFail', null, 'warn');
+        else setStatus('shellStatus', 'shellFail', null, 'fail');
     } catch(e) {
         el('chkShellEntries').checked = !on;
         serviceGone(e);
@@ -1226,7 +1353,7 @@ async function toggleShellEntries() {
 async function openDefaultApps() {
     try {
         const d = await (await api('/api/open-default-apps', {method:'POST'})).json();
-        if (!d.ok) setStatus('registerStatus', 'openDefaultAppsFail', null, 'warn');
+        if (!d.ok) setStatus('registerStatus', 'openDefaultAppsFail', null, 'fail');
     } catch(e) {
         serviceGone(e);
     }
@@ -1280,7 +1407,7 @@ function collectSettings() {
         force:          el('chkForce').checked,
         verbose:        el('chkVerbose').checked,
         ocr:            el('chkOCR').checked,
-        ocrLangChoice:  el('ocrLang').value,
+        ...ocrLangSetting(),
         queueParallel:  el('queueConcurrency').value,
         assocPrompted:  assocPrompted,
         autoUpdates:    el('chkAutoUpdates').checked,
@@ -1289,7 +1416,21 @@ function collectSettings() {
         recent:         recentDocs,
         win:            winGeom,
         theme:          themePref,
+        // WINDOWS-UI section 3.3: remembered UI context - each group's expansion by its
+        // stable id, and the pane viewport as a stable section anchor plus relative offset.
+        // Translated captions and raw pixel offsets are never the key.
+        openGroups:     [...document.querySelectorAll('details[id]')].filter(d => d.open).map(d => d.id),
+        scroll:         paneScroll,
     };
+}
+// Until /api/ocr-langs has filled the select, its value ('') is not the reader's pick: the
+// remembered one still waits in dataset.want, or in the legacy key applyOcrWant sorts out once
+// the catalog is in. A save in that window must carry the remembered pick, not erase it.
+function ocrLangSetting() {
+    const sel = el('ocrLang');
+    if (ocrCatalog.length) return {ocrLangChoice: sel.value};
+    if (sel.dataset.legacy != null) return {ocrLang: sel.dataset.legacy};
+    return {ocrLangChoice: sel.dataset.want || ''};
 }
 function applySettings(s) {
     if (!s || typeof s !== 'object') return;
@@ -1329,10 +1470,26 @@ function applySettings(s) {
     // The saved window geometry is restored once, right after this load (see restoreWindow).
     if (s.win) { const g = saneGeometry(s.win); if (g) winGeom = g; }
     if (typeof s.theme === 'string') applyTheme(s.theme);
+    // WINDOWS-UI section 3.3: restoring context sets values; it never fires a user-edit save.
+    // Opening a group still dispatches a toggle event as a later task, after settingsLoaded is
+    // set, so the toggle and scroll listeners ignore everything while `restoring` holds.
+    // A retired or unknown group id is skipped, not fatal.
+    if (Array.isArray(s.openGroups)) {
+        for (const id of s.openGroups) {
+            const d = document.getElementById(id);
+            if (d && d.tagName === 'DETAILS') d.open = true;
+        }
+    }
+    if (s.scroll && typeof s.scroll.id === 'string' && Number.isFinite(s.scroll.off)) {
+        paneScroll = {id: s.scroll.id, off: s.scroll.off};
+    }
     syncEngineUI();
 }
 
 let settingsLoaded = false, saveTimer = null;
+// WINDOWS-UI section 3.4: true from page load until the restore's own toggle and scroll events
+// have been dispatched; while it holds, those events are context being restored, not edits.
+let restoring = true;
 function saveSettings() {
     if (!settingsLoaded) return; // don't overwrite saved state before it loads
     clearTimeout(saveTimer);
@@ -1355,6 +1512,11 @@ api('/api/settings').then(r => {
     syncOcrLangToSource();
     fitWindow();
     restoreWindow(); // the saved size and position, clamped to the screen it opens on
+    restorePaneScroll(); // WINDOWS-UI section 3.3: the remembered pane anchor and offset
+    // Toggle events run as tasks queued above and the scroll event in the next rendering
+    // step, ahead of that frame's callbacks; two frames on, every restore-induced event has
+    // been heard and ignored, and the next one is the reader's.
+    requestAnimationFrame(() => requestAnimationFrame(() => { restoring = false; }));
     updateCmdPreview();
     maybeShowAssocPrompt();
     if (el('chkAutoUpdates').checked) checkUpdates(true);
@@ -1476,9 +1638,9 @@ el('btnOcrDownload').addEventListener('click', async () => {
     }
     const cause = result ? result.cause : '';
     if (cause === 'cancelled') setStatus('ocrStatus', 'ocrDownloadCancelled');
-    else if (cause === 'mismatch') setStatus('ocrStatus', 'ocrDownloadMismatch', {lang: name}, 'warn');
-    else if (cause === 'network') setStatus('ocrStatus', 'ocrDownloadFail', {lang: name}, 'warn');
-    else setStatus('ocrStatus', 'ocrDownloadFailGeneric', null, 'warn');
+    else if (cause === 'mismatch') setStatus('ocrStatus', 'ocrDownloadMismatch', {lang: name}, 'fail');
+    else if (cause === 'network') setStatus('ocrStatus', 'ocrDownloadFail', {lang: name}, 'fail');
+    else setStatus('ocrStatus', 'ocrDownloadFailGeneric', null, 'fail');
 });
 loadOcrLangs();
 
@@ -1496,11 +1658,35 @@ function fitWindow(growOnly) {
 }
 window.addEventListener('load', () => setTimeout(fitWindow, 120));
 
-// Expanding a collapsible group grows the window to reveal it; collapsing leaves
-// the window as-is (no shrink-back, per request).
-document.querySelectorAll('details').forEach(d => {
-    d.addEventListener('toggle', () => { if (d.open) fitWindow(true); });
+// WINDOWS-UI sections 3.2-3.3: collapsing a group changes visibility only - it never resizes
+// the window (long content scrolls in the pane), and a group closed while one of its children
+// holds the focus hands that focus to its header before the children leave the traversal. The
+// expansion itself is remembered by stable id (see collectSettings), programmatic opens
+// included, so the context a run leaves behind is the context the next launch restores.
+document.querySelectorAll('details[id]').forEach(d => {
+    d.addEventListener('toggle', () => {
+        if (!d.open) {
+            const f = document.activeElement;
+            if (f && d.contains(f)) {
+                const head = d.querySelector('summary');
+                if (head) head.focus();
+            }
+        }
+        if (!restoring) saveSettings();
+    });
 });
+
+// WINDOWS-UI section 4: the wheel never edits a value the reader did not focus. Chromium spins
+// only a focused number input, but the default-browser fallback can land the page in an engine
+// that spins a hovered one (Firefox-class behavior); the guard eats that edit and forwards the
+// scroll to the pane the pointer is really over, so scrolling never stalls on a field either.
+document.addEventListener('wheel', ev => {
+    const n = ev.target && ev.target.closest ? ev.target.closest('input[type="number"]') : null;
+    if (!n || n === document.activeElement) return;
+    ev.preventDefault();
+    const pane = n.closest('.col-main, .log, #queueList, #recentList');
+    if (pane) pane.scrollTop += ev.deltaY;
+}, { passive: false });
 
 // ── command config (shared by run + live preview) ───────
 // Mirrors the runRequest the server expects; the preview and the actual run go
@@ -1574,7 +1760,8 @@ async function fetchReadiness(cfg) {
 // the queue's blocked rows: the same problem says the same words in both places.
 const READINESS_ISSUE_KEYS = {input:'readinessInput', calibre:'readinessCalibre', sevenzip:'readinessSevenzip',
     tesseract:'readinessTesseract', ocrData:'readinessOcrData', googleKey:'readinessGoogleKey',
-    ollamaService:'readinessOllamaService', ollamaModel:'readinessOllamaModel'};
+    ollamaService:'readinessOllamaService', ollamaModel:'readinessOllamaModel',
+    filedo:'readinessFiledo', fdsecScreen:'readinessFdsecScreen'};
 function readinessIssueText(issue) {
     return t(READINESS_ISSUE_KEYS[issue.code] || 'readinessInput', {detail: issue.detail});
 }
@@ -1756,7 +1943,7 @@ async function sendLogs() {
     setStatus('sendLogsMsg', 'sendLogsBuilding');
     try {
         const r = await (await api('/api/report', {method:'POST'})).json();
-        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', null, 'warn'); return; }
+        if (!r.ok) { setStatus('sendLogsMsg', 'sendLogsFailed', null, 'fail'); return; }
         reportPath = r.path;
         await copyToClipboard(reportPath);
         await api('/api/report-reveal', {method:'POST', body: JSON.stringify({path: reportPath})});
@@ -1782,7 +1969,7 @@ el('btnOpenArchive').addEventListener('click', async () => {
     if (!reportPath) return;
     try {
         const r = await (await api('/api/report-open', {method:'POST', body: JSON.stringify({path: reportPath})})).json();
-        if (!r.ok) setStatus('sendLogsMsg', 'openArchiveFail', null, 'warn');
+        if (!r.ok) setStatus('sendLogsMsg', 'openArchiveFail', null, 'fail');
     } catch (e) {
         serviceGone(e);
     }
@@ -1790,17 +1977,19 @@ el('btnOpenArchive').addEventListener('click', async () => {
 
 // Deleting the logs cannot be undone, so it is confirmed; an empty store is reported, not
 // confirmed (APP-BEHAVIOUR rule 5). The count is re-read first: runs since the window opened
-// have added logs the About line has not seen.
+// have added logs the About line has not seen. A store that could not be read is neither
+// empty nor confirmable - it is reported as the failure it is (WINDOWS-UI section 7).
 el('btnClearLogs').addEventListener('click', async () => {
     try {
         const env = await (await api('/api/env')).json();
-        aboutFacts.logs = env.logs || {count: 0, bytes: 0};
+        aboutFacts.logs = env.logs || null;
         renderAbout();
+        if (!aboutFacts.logs) { setStatus('sendLogsMsg', 'logsUnknownClear', null, 'fail'); return; }
         const n = aboutFacts.logs.count;
         if (!n) { setStatus('sendLogsMsg', 'logsNothing'); return; }
         if (!await confirmDialog(t('confirmClearLogs', {1: n}), 'btnClearConfirm', 'danger', true)) return;
         const r = await (await api('/api/logs-clear', {method:'POST'})).json();
-        if (!r.ok) { setStatus('sendLogsMsg', 'clearLogsFail', null, 'warn'); return; }
+        if (!r.ok) { setStatus('sendLogsMsg', 'clearLogsFail', null, 'fail'); return; }
         lastReport = null;
         aboutFacts.logs = {count: 0, bytes: 0};
         renderAbout();
@@ -1814,10 +2003,17 @@ el('btnClearLogs').addEventListener('click', async () => {
 // runPressed is the one Convert button's dispatch: several queued files run the queue,
 // everything else keeps the single-document flow.
 function runPressed() {
-    if (queueBusy || runAbort) return;
+    if (queueBusy || runAbort || runInFlight) return;
     if (queue.length >= 2) runQueue();
     else runConvert();
 }
+
+// APP-BEHAVIOUR rule 3, no second start: runConvert awaits readiness, the key check and the
+// rebuild question before the stream - and runAbort - exist, so a second click or Ctrl+Enter in
+// that window would start a second run that wipes the log and, refused with 409, hides Cancel
+// while the first one continues. The flag is set before the first await and cleared in the
+// run's own finally, once its outcome has been reported.
+let runInFlight = false;
 
 // makeLogAppender returns a log's writer. It follows new output only while the reader is
 // already at the bottom, so scrolling up to read an earlier line is not undone by the
@@ -1882,6 +2078,7 @@ async function streamRun(cfg, hooks) {
         if (kind === 'progress') { if (data.stage === 'warning') runWarning = true; else showProgress(data); return; }
         if (kind === 'note') { informDialog(data.title, data.message); return; }
         if (kind === 'ask') askForTheRun(cfg, data, run);
+        if (kind === 'secret') askSecretForTheRun(cfg, data, run);
     };
     const feed = (text) => {
         pendingLine += text;
@@ -1933,8 +2130,23 @@ async function streamRun(cfg, hooks) {
 }
 
 async function runConvert() {
+    if (runInFlight || queueBusy) return;
+    runInFlight = true;
+    const btn = el('btnRun');
+    btn.disabled = true;
+    try {
+        await convertSingle();
+    } finally {
+        runInFlight = false;
+        btn.disabled = queueBusy;
+    }
+}
+
+// convertSingle is one single-document run, from the click-time checks to the reported
+// outcome; runConvert owns the in-flight guard around it.
+async function convertSingle() {
     const input = document.getElementById('inputFile').value.trim();
-    if (!input) { setStatus('dropStatus', 'alertChooseFirst', null, 'warn'); el('dropZone').focus(); return; }
+    if (!input) { setStatus('dropStatus', 'alertChooseFirst', null, 'fail'); el('dropZone').focus(); return; }
 
     // Recheck services, files and packs at the click; the displayed summary may be stale.
     const readiness = await fetchReadiness();
@@ -1961,7 +2173,6 @@ async function runConvert() {
 
     const btn = document.getElementById('btnRun');
     const cancelBtn = document.getElementById('btnCancel');
-    btn.disabled = true;
     btn.style.display = 'none';
     cancelBtn.style.display = '';
     cancelBtn.disabled = false;
@@ -1980,13 +2191,12 @@ async function runConvert() {
             onLog: append,
             onStage: key => setStatus('progressStage', key),
             onCount: p => { progressCountData = p; renderProgressCount(); },
-            onRefused: key => { setStatus('progressStage', key, null, 'warn'); informDialog(t('dlgFailTitle'), t(key)); },
+            onRefused: key => { setStatus('progressStage', key, null, 'fail'); informDialog(t('dlgFailTitle'), t(key)); },
             onAbort: c => { runAbort = c; },
         });
     } finally {
         runAbort = null;
         runTarget = null;
-        btn.disabled = false;
         btn.style.display = '';
         cancelBtn.style.display = 'none';
         // The run just created (or replaced) the result, so re-read its status: this is
@@ -2017,12 +2227,44 @@ async function askForTheRun(cfg, q, run) {
     } catch (e) { /* the run is gone; so is the question */ }
 }
 
+// The password of a FileDO secret file, typed once for a queue and held here only until the queue
+// ends or is cancelled; a single conversion never keeps it. It is never written to the log, the
+// console, storage or the command preview.
+let queueSecret = null;
+
+// askSecretForTheRun puts the converter's password question - a FileDO secret file - in this
+// window's one modal dialog with a masked field, and sends the answer to the run on its own
+// channel (/api/secret), out of sight of the log and the command preview. During a queue the
+// password typed for the first container is offered to the next ones without asking again; a
+// container it did not open comes back with retry set and asks for another.
+async function askSecretForTheRun(cfg, q, run) {
+    const post = (body) => api('/api/secret', {method: 'POST', body: JSON.stringify({input: cfg.input, output: cfg.output, ...body})}).catch(() => {});
+    if (queueBusy && queueSecret !== null && !q.retry) { await post({value: queueSecret}); return; }
+    const res = await openDialog({
+        title: q.title, message: q.message, tag: run, run, secret: true,
+        buttons: [{id: 'open', key: 'btnOpenSecret', kind: 'primary'}, {id: 'cancel', key: 'btnCancel'}],
+        cancel: 'cancel',
+    });
+    if (!run.active) return;
+    if (!res || res.choice !== 'open') { await post({cancel: true}); return; }
+    if (queueBusy) queueSecret = res.value;
+    await post({value: res.value});
+}
+
+// APP-BEHAVIOUR rule 6: the converter's exit code becomes a named cause. The codes are the CLI's
+// published ones (internal/pipeline ExitCode, OCR-INVOCATION section 1): 1 the input or a flag
+// was refused, 2 reading the document or writing the result failed, 3 the document could not be
+// parsed, 4 translation failed and left no usable result (with a usable one it is "done with
+// warnings" above), 130 the converter was interrupted. Any other code is unknown and keeps its
+// number for the logs.
+const RUN_FAILURE_CAUSES = {1: 'runCauseArgs', 2: 'runCauseIO', 3: 'runCauseParse', 4: 'runCauseTranslate', 130: 'runCauseInterrupted'};
+
 // reportRunEnd words the outcome in the window's language. Done and cancelled are outcomes with
 // their own line (APP-BEHAVIOUR rule 3); a failure is a set of actions - send the log, try again,
 // leave - not an exit status (rule 6). No end line means the service behind the window went away.
 function reportRunEnd(end, append, result) {
     if (!end) {
-        setStatus('progressStage', 'runLost', null, 'warn');
+        setStatus('progressStage', 'runLost', null, 'fail');
         progressCountData = null;
         renderProgressCount();
         append('\n' + t('runLost') + '\n', 'end failed');
@@ -2041,8 +2283,8 @@ function reportRunEnd(end, append, result) {
         setStatus('progressStage', 'progressDoneWarnings');
         append(t('progressDoneWarnings') + '\n', 'end'); return;
     }
-    const msg = end.code ? t('runFailedCode', {code: end.code}) : t('runFailed');
-    setStatus('progressStage', 'runFailedTitle', null, 'warn');
+    const msg = end.code ? t(RUN_FAILURE_CAUSES[end.code] || 'runCauseUnknown', {code: end.code}) : t('runFailed');
+    setStatus('progressStage', 'runFailedTitle', null, 'fail');
     append(msg + '\n', 'end failed');
     openDialog({
         title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'),
@@ -2193,7 +2435,8 @@ function queueRow(it, sel) {
         del.textContent = t('queueRemoveItem');
         del.dataset.i18n = 'queueRemoveItem';
         del.title = t('ttQueueRemove');
-        del.setAttribute('aria-label', t('ttQueueRemove') + ': ' + it.name);
+        // WCAG 2.5.3: the accessible name starts with the visible word, then says which file.
+        del.setAttribute('aria-label', t('queueRemoveItem') + ': ' + it.name);
         del.disabled = queueBusy;
         del.addEventListener('click', () => {
             if (queueBusy) return;
@@ -2262,7 +2505,7 @@ function setQueueControls() {
     el('btnRetryFailed').disabled = queueBusy || !queue.some(it => QUEUE_RETRY_STATES.includes(it.state));
     el('btnQueueClear').disabled = queueBusy;
     el('queueConcurrency').disabled = queueBusy;
-    el('btnRun').disabled = queueBusy;
+    el('btnRun').disabled = queueBusy || runInFlight;
     for (const b of document.querySelectorAll('.qdel')) b.disabled = queueBusy;
     const cancelBtn = el('btnCancel');
     const key = queueBusy ? 'btnCancelCurrent' : 'btnCancel';
@@ -2303,7 +2546,7 @@ async function prepareItem(it) {
 }
 
 async function runQueue() {
-    if (queueBusy || runAbort || queue.length < 2) return;
+    if (queueBusy || runAbort || runInFlight || queue.length < 2) return;
     queueBusy = true;
     queueCancelAll = false;
     setQueueControls();
@@ -2319,6 +2562,7 @@ async function runQueue() {
             const d = await (await api('/api/google-key')).json();
             if (!d.exists && !await confirmDialog(t('confirmNoKey'), 'btnConvertAnyway', 'primary', true)) {
                 queueBusy = false;
+                queueSecret = null;
                 setQueueControls();
                 return;
             }
@@ -2345,6 +2589,7 @@ async function runQueue() {
     if (queueCancelAll) {
         for (const it of queue) if (it.state === 'pending') it.state = 'cancelled';
         queueBusy = false;
+        queueSecret = null;
         setQueueControls();
         renderQueue();
         return;
@@ -2355,6 +2600,7 @@ async function runQueue() {
     for (let i = 0; i < limit; i++) workers.push(queueWorker(log));
     await Promise.all(workers);
     queueBusy = false;
+    queueSecret = null;
     queueCancelAll = false;
     setQueueControls();
     renderQueue();
@@ -2389,7 +2635,9 @@ async function queueWorker(log) {
         if (res.end && res.end.state === 'done') it.state = 'done';
         else if (res.end && res.end.state === 'cancelled') it.state = 'cancelled';
         else it.state = 'failed';
-        log(t(itemStateText(it)) + '\n', it.state === 'done' ? 'end' : 'end failed');
+        // APP-BEHAVIOUR rule 3: cancelled is an outcome of its own, so only a failure takes the
+        // failure style.
+        log(itemStateText(it) + '\n', it.state === 'failed' ? 'end failed' : 'end');
         renderQueue();
     }
 }
@@ -2414,6 +2662,7 @@ function cancelRunningItems() {
 async function cancelQueueRun() {
     if (!queueBusy) return;
     queueCancelAll = true;
+    queueSecret = null;
     for (const it of queue) if (it.state === 'pending') it.state = 'cancelled';
     renderQueue();
     cancelRunningItems();
@@ -2533,7 +2782,11 @@ function scheduleRecentStatus() {
     }, 150);
 }
 
-el('btnRecentClear').addEventListener('click', () => {
+// APP-BEHAVIOUR rule 5: the forgotten list cannot be brought back, so clearing it is confirmed,
+// with the safe answer focused. There is no empty case to report: the section, and this button
+// with it, is hidden while the list is empty (renderRecent).
+el('btnRecentClear').addEventListener('click', async () => {
+    if (!await confirmDialog(t('confirmRecentClear', {n: recentDocs.length}), 'recentClear', 'danger', true)) return;
     recentDocs = [];
     recentExists = {};
     renderRecent();
@@ -2618,25 +2871,66 @@ function trackWindowGeometry() {
 setInterval(trackWindowGeometry, 2000);
 window.addEventListener('resize', trackWindowGeometry);
 
+// ── remembered pane viewport (WINDOWS-UI section 3.3) ───
+// The settings pane's scroll is remembered as a stable anchor - the last pane section whose
+// top stands above the viewport - plus the pixels below it, so language, DPI and layout changes
+// that move the pixel geometry still land the reader where they left off. Ids are internal and
+// stable; a missing anchor (renamed or retired section) restores nothing, and the pane simply
+// opens at the top, which is a valid position.
+let paneScroll = null;
+let scrollSaveTimer = null;
+function paneScrollAnchor() {
+    const pane = document.querySelector('.col-main');
+    if (!pane || pane.scrollTop < 4) return null;
+    const top = pane.getBoundingClientRect().top;
+    let anchor = null;
+    for (const kid of pane.children) {
+        if (!kid.id || kid.offsetParent === null) continue;
+        const r = kid.getBoundingClientRect();
+        if (r.top <= top + 8) anchor = {id: kid.id, off: Math.round(pane.scrollTop - (kid.offsetTop - pane.offsetTop))};
+        else break;
+    }
+    return anchor;
+}
+function restorePaneScroll() {
+    if (!paneScroll) return;
+    const pane = document.querySelector('.col-main');
+    const kid = paneScroll.id ? document.getElementById(paneScroll.id) : null;
+    if (!pane || !kid || kid.offsetParent === null) return;
+    pane.scrollTop = Math.max(0, (kid.offsetTop - pane.offsetTop) + paneScroll.off);
+}
+document.querySelector('.col-main').addEventListener('scroll', () => {
+    if (restoring) return;
+    clearTimeout(scrollSaveTimer);
+    scrollSaveTimer = setTimeout(() => {
+        paneScroll = paneScrollAnchor();
+        saveSettings();
+    }, 400);
+});
+
 // ── keyboard shortcuts ──────────────────────────────────
 // One document-level keydown handler owns every shortcut (ticket 63, aligned with ticket
 // 57's audit): the table below is the one place to read or extend them. Nothing fires
 // while a modal dialog is up - Escape there is the dialog's own dismiss - and the
 // combinations carry modifiers on purpose, so plain typing in the form never triggers one.
+// A shortcut with a `when` claims its key only while that holds; otherwise the key and its
+// default action stay the browser's.
 const SHORTCUTS = [
     // Convert: the button's own dispatch decides single flow vs queue (runPressed).
     {key: 'Enter', ctrl: true, fire: () => runPressed()},
-    // Stop the running conversion; with nothing running, Escape stays untouched.
-    {key: 'Escape', fire: () => { if (runAbort || queueBusy) cancelPressed(); }},
+    // Escape is the cancel action (INPUT-PARITY section 3.1): it stops the running conversion,
+    // which keeps what was already written (rule 4). With nothing running it is not claimed.
+    {key: 'Escape', when: () => !!(runAbort || queueBusy), fire: () => cancelPressed()},
     // Put the keyboard on the file box: the everyday first step, without tabbing.
     {key: 'F', ctrl: true, shift: true, fire: () => el('dropZone').focus()},
 ];
 document.addEventListener('keydown', ev => {
-    if (dlgOpen) return;
+    if (dlgOpen || document.querySelector('dialog[open]')) return;
     for (const s of SHORTCUTS) {
         if (ev.key !== s.key && ev.key !== (s.key || '').toLowerCase()) continue;
         if (!!s.ctrl !== (ev.ctrlKey || ev.metaKey)) continue;
         if (!!s.shift !== ev.shiftKey) continue;
+        if (s.when && !s.when()) return;
         ev.preventDefault();
         s.fire();
         return;

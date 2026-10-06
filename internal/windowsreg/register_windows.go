@@ -16,6 +16,17 @@ import (
 // SupportedExtensions lists all file extensions registered by this program.
 var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf", ".html", ".htm", ".mobi", ".azw3", ".cbz", ".cbr", ".cb7", ".cbt"}
 
+// ShellOnlyExtensions are types the shell entries cover - "Open with" and the right-click
+// "Convert to HTML" verb - but that are never offered as a default handler. A FileDO secret file
+// stays FileDO's to open on a double-click (ticket 94, owner decision Q6).
+var ShellOnlyExtensions = []string{".fd-sec"}
+
+// shellExtensions is every type the shell entries are written for: the supported ones and the
+// shell-only ones. The default-handler offer and its release use SupportedExtensions alone.
+func shellExtensions() []string {
+	return append(append([]string(nil), SupportedExtensions...), ShellOnlyExtensions...)
+}
+
 // legacyProgIDs are old ProgID names left from previous versions; cleaned up on every registration.
 var legacyProgIDs = []string{"epub2html"}
 
@@ -254,7 +265,7 @@ func RegisterOpenWithFor(exePath string) ([]string, error) {
 	defer typesKey.Close()
 
 	var advertised []string
-	for _, ext := range SupportedExtensions {
+	for _, ext := range shellExtensions() {
 		if err := w.set(typesKey, ext, ""); err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to advertise %s: %v\n", ext, err)
 			continue
@@ -298,7 +309,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 	defer w.notifyIfChanged()
 
 	var added []string
-	for _, ext := range SupportedExtensions {
+	for _, ext := range shellExtensions() {
 		verbPath := contextMenuVerbPath(ext)
 		verbKey, err := createKey(verbPath)
 		if err != nil {
@@ -333,7 +344,7 @@ func RegisterContextMenuFor(exePath string) ([]string, error) {
 // at least one SupportedExtensions type. It is the on/off state of the GUI's shell-entry
 // toggle and what decides whether the first-run question is still worth asking.
 func HasShellEntries() bool {
-	for _, ext := range SupportedExtensions {
+	for _, ext := range shellExtensions() {
 		k, err := openKey(contextMenuVerbPath(ext)+`\command`, registry.QUERY_VALUE)
 		if err == nil {
 			k.Close()
@@ -354,7 +365,7 @@ func RemoveShellEntries() ([]string, error) {
 	defer w.notifyIfChanged()
 
 	var removed, failed []string
-	for _, ext := range SupportedExtensions {
+	for _, ext := range shellExtensions() {
 		verbPath := contextMenuVerbPath(ext)
 		cmdErr := deleteKey(verbPath + `\command`)
 		verbErr := deleteKey(verbPath)
@@ -377,7 +388,7 @@ func RemoveShellEntries() ([]string, error) {
 			failed = append(failed, `Applications\`+exe)
 			continue
 		}
-		for _, ext := range SupportedExtensions {
+		for _, ext := range shellExtensions() {
 			if _, _, err := k.GetStringValue(ext); err != nil {
 				continue
 			}

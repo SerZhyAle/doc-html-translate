@@ -61,6 +61,9 @@ const navBarCSS = `
     border-radius: 6px;
     transition: background 0.2s;
   }
+  /* APP-STYLE section 5: the hover tint here and on the version link stays outside the palette
+     on purpose - a neutral grey that darkens a light bar and lightens a dark one, so one value
+     reads on all four reading themes while the text keeps its themed colour. */
   .dht-navbar a:hover {
     background: rgba(127,127,127,0.14);
   }
@@ -477,7 +480,7 @@ var readerCSS = `
     .dht-navbar *, .dht-toolbar * { animation:none !important; transition:none !important; }
     html { scroll-behavior:auto !important; }
   }
-  .dht-progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
+  .dht-progress { position:absolute; inset-inline-start:0; bottom:0; height:3px; width:0; background:var(--dht-accent); transition:width .12s linear; }
   /* The bar's readable companion (ticket 59): the same number as a tooltip on hover or on
      keyboard focus - the bar is a focusable progressbar - so it stays a 3px line. The tip
      anchors to the bar's inline start, so its place does not move with the width, and

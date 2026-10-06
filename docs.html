@@ -138,7 +138,7 @@
           <li><strong>Reading themes</strong> - a toggle in the navbar (and on <code>index.html</code>) cycles Light / Sepia / Dark / Night. Your choice is stored in <code>localStorage</code> and applied on every page.</li>
           <li><strong>Reading position</strong> - your scroll is saved per book, so the app remembers where you stopped even when you don't. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book - one that reads as a percentage on hover or keyboard focus.</li>
           <li><strong>Reading comfort</strong> - line spacing and column width are selects in the same navbar, remembered with your theme and applied only once you pick one. A night-mode button swaps the light and dark themes in one click, a reset button returns the text size to its default, and the arrow keys and space bar turn pages at the scroll edges, just like PageUp/PageDown. Comics and scanned pages gain a per-session <strong>Fit width</strong> mode beside the Ctrl+wheel zoom, so a page fills the window without hand-tuning a percentage.</li>
-          <li><strong>Search</strong> - the navbar's search panel finds a phrase on this page or across the whole book; multi-page output ships a local text index, so whole-book search works on <code>file://</code>. Results list context lines and the chosen match is highlighted; recognized OCR text over images is searchable where recognition produced it - image-only pages have no text to match.</li>
+          <li><strong>Search</strong> - the navbar's search panel finds a phrase on this page or across the whole book, and <kbd>Ctrl</kbd>+<kbd>F</kbd> opens it with the field focused (pressed again inside the field, it gives way to the browser's own find bar); multi-page output ships a local text index, so whole-book search works on <code>file://</code>. Results list context lines and the chosen match is highlighted; recognized OCR text over images is searchable where recognition produced it - image-only pages have no text to match.</li>
           <li><strong>Spending guard</strong> - for paid engines, <code>-max-cost N</code> turns the cost estimate (chars / 1e6 * $20) into a hard pre-flight limit: if the estimate exceeds N, translation is skipped and the book is still produced untranslated.</li>
         </ul>
         <p class="small">Single-page documents keep a continuous reading view and show a compact contents panel when authored navigation, PDF bookmarks, or headings are available.</p>
@@ -212,6 +212,7 @@
               <tr><td><code>-unregister</code></td><td>false</td><td>Release the default-handler association (keeps the "Convert to HTML" right-click entry and "Open with").</td></tr>
               <tr><td><code>-register-openwith</code></td><td>false</td><td>Add the app to the Windows "Open with" list and the "Convert to HTML" right-click menu, without making it the default handler. The doc-html-ui app offers the same as a toggle under "Windows integration" and on its first-run question; it never adds it on its own.</td></tr>
               <tr><td><code>-report</code></td><td>false</td><td>Pack the recent run logs plus an environment summary into an archive for the author, print where it landed, and exit</td></tr>
+              <tr><td><code>-fdsec-password-env</code></td><td>(empty)</td><td>For a FileDO secret file (<code>.fd-sec</code>): the <strong>name</strong> of an environment variable that holds its password, for unattended runs - never the password itself. The console and the app window ask for the password instead.</td></tr>
             </tbody>
           </table>
         </div>
@@ -254,6 +255,18 @@
           last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document
           text and no list of your sites.</p>
       </details>
+
+      <details class="sec" id="secret-files">
+        <summary><span class="secnum">06</span>FileDO secret files (.fd-sec)</summary>
+        <p>A <code>.fd-sec</code> file is a <strong>FileDO secret file</strong>. Open it like any other document - from the command line, by picking or dropping it in the window, from the queue or the recent list, or with the right-click <em>Convert to HTML</em> entry. Nothing in the bytes says what is inside, so the app only suspects a secret file, and then:</p>
+        <ol>
+          <li>decides first, before asking anything, whether the result is already finished (an unchanged file is reopened with no password at all), whether FileDO is installed and whether the file's size fits the format;</li>
+          <li>asks for the password - without echo in a console, or in a masked field of the window (once for a whole queue). An empty password opens only a file made without one: that is obfuscation, not secrecy;</li>
+          <li>decrypts the file with the <strong>FileDO installed on your PC</strong> (<code>winget install SerZhyAle.FileDO</code>, the Microsoft Store, or the FileDO setup or portable build) into one private folder under your temp folder, converts the document or picture inside exactly as it would convert the original, and removes the decrypted copy as soon as it has been read. A copy left by a crash is swept at the next start.</li>
+        </ol>
+        <p>The result is named after the secret file and is <strong>not encrypted</strong> - it sits beside your documents like any other conversion. The password goes only to the local FileDO and is never stored, logged, sent anywhere or shown on a command line (see the <a href="privacy.html">privacy page</a>). For unattended runs name an environment variable that holds the password: <code>-fdsec-password-env NAME</code> - a variable name, never the password itself.</p>
+        <p class="small">Refused, each with its own message: a secret file that holds a folder, one that holds another secret file, one that holds a type this app does not convert, a wrong password (the message offers all three readings: wrong password, not a secret file, or altered), a damaged file, and a FileDO too old for the kind of secret file (update it). The browser extension does not open secret files.</p>
+      </details>
     </section>
 
     <section id="subject-index">
@@ -270,6 +283,7 @@
         <li><a href="#editions">Editions</a></li>
         <li><a href="#external-tools">External tools</a></li>
         <li><a href="#external-tools">ffmpeg</a></li>
+        <li><a href="#secret-files">FileDO secret files (.fd-sec)</a></li>
         <li><a href="#flags">Flags</a></li>
         <li><a href="#glossary">Glossary</a></li>
         <li><a href="#flags">Google Cloud translation (-google)</a></li>

@@ -127,7 +127,8 @@ func handleReportOpen(w http.ResponseWriter, r *http.Request) {
 
 // handleLogsClear empties the run-log store for a user who would rather not keep a history.
 // The page confirms first (APP-BEHAVIOUR rule 5); "cleared" says how many logs there were, so an
-// empty store is reported as nothing to clear rather than as a success.
+// empty store is reported as nothing to clear rather than as a success. A store that cannot be
+// read is a failure, never "nothing to clear" (WINDOWS-UI section 7).
 //
 //	POST → {"ok":true,"cleared":N} | {"ok":false,"error":".."}
 func handleLogsClear(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +136,12 @@ func handleLogsClear(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	count, _ := logStoreSize()
+	count, _, err := logStoreSize()
+	if err != nil {
+		logFailure("measure log store", err)
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": "the log store could not be read"})
+		return
+	}
 	if count == 0 {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "cleared": 0})
 		return

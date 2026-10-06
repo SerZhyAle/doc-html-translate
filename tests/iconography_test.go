@@ -171,12 +171,15 @@ func TestRetiredGlyphsStayRetired(t *testing.T) {
 	cases := map[string][]string{
 		"internal/htmlgen/navbar.go":  {"&#9664;", "&#9654;", "&#9776;", "&#9728;", "&#9681;", "&#9790;", "&#9679;", "A&minus;", "&#9636;"},
 		"internal/htmlgen/htmlgen.go": {"&#9656;", "#1a0dab"},
-		"extension/src/viewer.html":   {"&#9776;", "&#8595;", "Toggle contents", "A&minus;", "&#9636;"},
-		"extension/src/viewer.js":     {`"▾"`, `"▸"`},
-		"extension/src/popup.html":    {"&#8599;", "↗"},
-		"cmd/doc-html-ui/ui.html":     {`\25B8`, `\25BE`, "&#x2913;", "&#x21C4;"},
-		"extension.html":              {"▸", "▾", "← ", "⤓"},
-		"index.html":                  {"'✓ '"},
+		// The contents panel's close was a typed cross standing for nav.close; it is the word now.
+		"internal/htmlgen/singlecontents.go": {"&#215;", "×"},
+		"extension/src/viewer.html":          {"&#9776;", "&#8595;", "Toggle contents", "A&minus;", "&#9636;"},
+		"extension/src/viewer.js":            {`"▾"`, `"▸"`},
+		// A typed arrow is never a glyph (ICON-RENDER rule 7), in a control or in the note's prose.
+		"extension/src/popup.html": {"&#8599;", "↗", "&rarr;", "→"},
+		"cmd/doc-html-ui/ui.html":  {`\25B8`, `\25BE`, "&#x2913;", "&#x21C4;"},
+		"extension.html":           {"▸", "▾", "← ", "⤓"},
+		"index.html":               {"'✓ '"},
 	}
 	codes := append([]string{}, i18n.Codes...)
 	for _, c := range codes {
@@ -229,6 +232,11 @@ func TestEditionsNameSharedControlsAlike(t *testing.T) {
 		"Normal":          "optWidthNormal",
 		"Wide":            "optWidthWide",
 		"Full width":      "optWidthFull",
+		// app.theme's choices, named by the record's note (Ночная / Нічна, not Ночь / Ніч).
+		"Light": "themeLight",
+		"Sepia": "themeSepia",
+		"Dark":  "themeDark",
+		"Night": "themeNight",
 	}
 	for _, lang := range i18n.Codes {
 		dir := lang

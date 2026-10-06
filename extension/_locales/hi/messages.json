@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "विकल्प",
+    "message": "सेटिंग",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "एक्सटेंशन नेटवर्क पथ (\\\\server\\share) नहीं पढ़ सकते। साझा फ़ोल्डर को ड्राइव अक्षर से जोड़ें और फ़ाइल को स्थानीय रूप से खोलें, या नीचे से फ़ाइल चुनें।"
+  },
+  "vFdsecTitle": {
+    "message": "FileDO गोपनीय फ़ाइलें डेस्कटॉप ऐप में खुलती हैं",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "ब्राउज़र एक्सटेंशन FileDO गोपनीय फ़ाइलें (.fd-sec) नहीं खोल सकता। डेस्कटॉप ऐप doc-html-translate का उपयोग करें: वह पासवर्ड पूछता है, आपके पीसी पर इंस्टॉल किए गए FileDO से फ़ाइल को डिक्रिप्ट करता है और उसे कन्वर्ट करता है।",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "अंतर्निहित रीडर में खोलें"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"पूरी फ़ाइल लगभग {1} की होगी - जो ब्राउज़र टैब भरोसेमंद ढंग से सँभालता है उससे अधिक"},
   "vExportReasonStalled": {"message":"शेष पृष्ठ बनाए नहीं जा सके"},
   "vExportPreparing": {"message":"पृष्ठ {1} / {2} तैयार हो रहा है.."},
-  "vExportStop": {"message":"रोकें"},
+  "vExportStop": {"message":"रद्द करें"},
   "vExportStopped": {"message":"तैयारी रुक गई - कुछ नहीं सहेजा गया"},
   "vStatusSaving": {"message":"HTML सहेजा जा रहा है.."},
   "vSavedCompletePages": {"message":"सहेजा गया - पूर्ण, सभी {1} पृष्ठ"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "आयात हुआ। बदला: {1}"},
   "optSettingsNone": {"message": "कुछ नहीं"},
   "optSettingsResetConfirm": {"message": "सभी एक्सटेंशन सेटिंग रीसेट करें?"},
-  "optSettingsResetDone": {"message": "सेटिंग रीसेट हुई।"}
+  "optSettingsResetDone": {"message": "सेटिंग रीसेट हुई।"},
+  "popupConvertNote": {"message": "डिफ़ॉल्ट रूप से बंद। या किसी दस्तावेज़ के लिंक पर राइट-क्लिक करें और “{1}” चुनें।"},
+  "popupGuide": {"message": "गाइड और सहायता"},
+  "optIntro": {"message": "दस्तावेज़ों (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) को साफ़, पुनर्प्रवाहित HTML के रूप में दिखाता है, ताकि ब्राउज़र की अंतर्निहित “पेज का अनुवाद करें” सुविधा काम करे। सब कुछ स्थानीय रूप से चलता है; इंटरनेट से केवल ब्राउज़र का अपना अनुवादक जुड़ता है - और वह भी तभी जब आप कहें।"},
+  "optReflowAuto": {"message": "दस्तावेज़ों को स्वचालित रूप से रीफ़्लो करें"},
+  "optReflowAutoHint": {"message": "PDF, EPUB, MOBI, AZW3, FB2 और RTF लिंक को अपने-आप पकड़ता है। बंद होने पर वे वैसे ही खुलते या डाउनलोड होते हैं जैसे ब्राउज़र सामान्य रूप से करता है - यानी सब पहले जैसा। (अन्य फ़ॉर्मैट हमेशा फ़ाइल चयनकर्ता से खुलते हैं।)"},
+  "optSourceLangHint": {"message": "{1} सेट करता है ताकि ब्राउज़र सही अनुवाद सुझाए। स्वतः पहचान ज़्यादातर दस्तावेज़ों के लिए काम करती है (EPUB अपनी घोषित भाषा भी इस्तेमाल करते हैं) - और अक्सर सही अनुमान लगाती है।"},
+  "optOcrHint": {"message": "चित्रों के भीतर का पाठ पहचानता है - आपके दस्तावेज़ों में, और राइट-क्लिक मेनू के “इस चित्र का पाठ पहचानें और अनुवाद करें” से - फिर ब्राउज़र के “पेज का अनुवाद करें” से उसका अनुवाद होता है। अंग्रेज़ी ऑफ़लाइन काम करती है; अन्य भाषाएँ ज़रूरत पड़ने पर डाउनलोड होकर स्थानीय रूप से सहेजी जाती हैं।"},
+  "optNoSites": {"message": "कोई नहीं"},
+  "optDisabledSitesHint": {"message": "पॉपअप में “इस साइट पर” स्विच से इन्हें प्रबंधित करें।"}
 }

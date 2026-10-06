@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "选项",
+    "message": "设置",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "扩展无法读取网络路径（\\\\服务器\\共享）。请将共享映射为驱动器盘符并作为本地文件打开，或在下方选择文件。"
+  },
+  "vFdsecTitle": {
+    "message": "FileDO 秘密文件需在桌面应用中打开",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "浏览器扩展无法打开 FileDO 秘密文件（.fd-sec）。请使用桌面应用 doc-html-translate：它会询问密码，用您电脑上已安装的 FileDO 解密该文件并进行转换。",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "在内置阅读器中打开"
@@ -641,7 +649,7 @@
   "vExportReasonBytes": {"message":"完整文件约有 {1} - 超出了浏览器标签页能可靠承载的大小"},
   "vExportReasonStalled": {"message":"其余页面无法渲染"},
   "vExportPreparing": {"message":"正在准备第 {1}/{2} 页.."},
-  "vExportStop": {"message":"停止"},
+  "vExportStop": {"message":"取消"},
   "vExportStopped": {"message":"准备已停止 - 未保存任何文件"},
   "vStatusSaving": {"message":"正在保存 HTML.."},
   "vSavedCompletePages": {"message":"已保存 - 完整，共 {1} 页"},
@@ -707,5 +715,14 @@
   "optSettingsImported": {"message": "已导入。更改：{1}"},
   "optSettingsNone": {"message": "无"},
   "optSettingsResetConfirm": {"message": "重置所有扩展设置？"},
-  "optSettingsResetDone": {"message": "设置已重置。"}
+  "optSettingsResetDone": {"message": "设置已重置。"},
+  "popupConvertNote": {"message": "默认关闭。也可以右键单击文档链接，然后选择“{1}”。"},
+  "popupGuide": {"message": "指南与帮助"},
+  "optIntro": {"message": "将文档（PDF、EPUB、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML）重新排版为干净的 HTML，让浏览器内置的“翻译此页”功能可以使用。一切都在本地运行；唯一联网的是浏览器自带的翻译器 - 而且只在你要求时才联网。"},
+  "optReflowAuto": {"message": "自动重排文档"},
+  "optReflowAutoHint": {"message": "自动拦截 PDF、EPUB、MOBI、AZW3、FB2 和 RTF 链接。关闭后，它们会按浏览器的常规方式打开或下载 - 也就是一切照旧。（其他格式始终通过文件选择器打开。）"},
+  "optSourceLangHint": {"message": "设置 {1}，让浏览器提供正确的翻译。自动检测适用于大多数文档（EPUB 还会使用其声明的语言）- 而且多数时候都能猜对。"},
+  "optOcrHint": {"message": "识别图片中的文字 - 包括文档里的图片，以及通过右键菜单“识别并翻译这张图片” - 然后用浏览器的“翻译此页”进行翻译。英语可离线使用；其他语言按需下载并缓存在本地。"},
+  "optNoSites": {"message": "无"},
+  "optDisabledSitesHint": {"message": "在弹出窗口中使用“在本站”开关管理。"}
 }

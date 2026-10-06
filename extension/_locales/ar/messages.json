@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "الخيارات",
+    "message": "الإعدادات",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "لا تستطيع الإضافات قراءة مسارات الشبكة (\\\\server\\share). اربط المجلد المشترك بحرف محرك أقراص وافتح الملف محليًا، أو اختر الملف أدناه."
+  },
+  "vFdsecTitle": {
+    "message": "تُفتح ملفات FileDO السرية في تطبيق سطح المكتب",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "لا يمكن لامتداد المتصفح فتح ملفات FileDO السرية (.fd-sec). استخدم تطبيق سطح المكتب doc-html-translate: فهو يطلب كلمة المرور، ويفك تشفير الملف باستخدام FileDO المثبّت على جهازك، ثم يحوّله.",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "الفتح في القارئ المدمج"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"سيبلغ الملف الكامل نحو {1} - وهو أكثر مما تحتمله علامة التبويب موثوقاً"},
   "vExportReasonStalled": {"message":"تعذّر عرض الصفحات المتبقية"},
   "vExportPreparing": {"message":"تجهيز الصفحة {1} من {2}.."},
-  "vExportStop": {"message":"إيقاف"},
+  "vExportStop": {"message":"إلغاء"},
   "vExportStopped": {"message":"توقف التجهيز - لم يُحفظ شيء"},
   "vStatusSaving": {"message":"جارٍ حفظ HTML.."},
   "vSavedCompletePages": {"message":"تم الحفظ - كامل، كل الصفحات ({1})"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "تم الاستيراد. التغييرات: {1}"},
   "optSettingsNone": {"message": "لا شيء"},
   "optSettingsResetConfirm": {"message": "إعادة جميع إعدادات الإضافة إلى الافتراضي؟"},
-  "optSettingsResetDone": {"message": "تمت إعادة ضبط الإعدادات."}
+  "optSettingsResetDone": {"message": "تمت إعادة ضبط الإعدادات."},
+  "popupConvertNote": {"message": "متوقف افتراضيًا. أو انقر بزر الماوس الأيمن على رابط مستند واختر «{1}»."},
+  "popupGuide": {"message": "الدليل والمساعدة"},
+  "optIntro": {"message": "يعرض المستندات (PDF وEPUB وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML) بصيغة HTML نظيفة ومعاد تدفقها، لكي تعمل ميزة «ترجمة الصفحة» المضمنة في المتصفح. يجري كل شيء محليًا؛ الشيء الوحيد الذي يتصل بالإنترنت هو مترجم المتصفح نفسه - وفقط عندما تطلب منه ذلك."},
+  "optReflowAuto": {"message": "إعادة تدفق المستندات تلقائيًا"},
+  "optReflowAutoHint": {"message": "يعترض تلقائيًا روابط PDF وEPUB وMOBI وAZW3 وFB2 وRTF. عند إيقافه، تُفتح أو تُنزَّل بالطريقة المعتادة للمتصفح - أي نعود إلى نقطة البداية. (تُفتح الصيغ الأخرى دائمًا عبر منتقي الملفات.)"},
+  "optSourceLangHint": {"message": "يضبط {1} لكي يعرض المتصفح الترجمة الصحيحة. يعمل الكشف التلقائي مع معظم المستندات (تستخدم ملفات EPUB أيضًا لغتها المعلنة) - ويصيب في أغلب الأحيان."},
+  "optOcrHint": {"message": "يتعرف على النص داخل الصور - في مستنداتك ومن خلال عنصر القائمة السياقية «تعرف على هذه الصورة وترجمها» - ثم يترجمه بميزة «ترجمة الصفحة» في المتصفح. تعمل الإنجليزية دون اتصال؛ وتُنزَّل اللغات الأخرى عند الحاجة وتُحفظ محليًا."},
+  "optNoSites": {"message": "لا يوجد"},
+  "optDisabledSitesHint": {"message": "أدر هذه المواقع من مفتاح «في هذا الموقع» في النافذة المنبثقة."}
 }

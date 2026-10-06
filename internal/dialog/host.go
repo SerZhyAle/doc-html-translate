@@ -22,11 +22,12 @@ const (
 	AskPrefix      = "\x1edht:ask "
 	NotePrefix     = "\x1edht:note "
 	ProgressPrefix = "\x1edht:progress "
+	SecretPrefix   = "\x1edht:secret "
 	AnswerYes      = "yes"
 )
 
-// hostedByGUI reports whether a GUI is answering the dialogs.
-func hostedByGUI() bool { return os.Getenv(HostEnv) == HostStdio }
+// HostedByGUI reports whether a GUI is answering the dialogs.
+func HostedByGUI() bool { return os.Getenv(HostEnv) == HostStdio }
 
 // hostLine is the marker payload: what the dialog says, in the process language.
 type hostLine struct {
@@ -48,6 +49,38 @@ func askHost(title, message string) bool {
 	return strings.TrimSpace(line) == AnswerYes
 }
 
+// secretLine is the marker payload of a masked-input question; retry says the previous answer
+// did not open the file.
+type secretLine struct {
+	Title   string `json:"title"`
+	Message string `json:"message"`
+	Retry   bool   `json:"retry"`
+}
+
+// secretAnswer is the GUI's one-line reply: a cancel, or the typed value.
+type secretAnswer struct {
+	Cancel bool   `json:"cancel"`
+	Value  string `json:"value"`
+}
+
+// AskSecret asks the GUI for a secret in its masked dialog and waits for the answer. The value
+// travels only on the child's own stdin: it is never written to any writer, and a closed pipe,
+// a malformed line or a cancel are all "not ok" - an unanswered question never reads as an
+// empty password.
+func AskSecret(title, message string, retry bool) (secret []byte, ok bool) {
+	b, _ := json.Marshal(secretLine{Title: title, Message: message, Retry: retry})
+	fmt.Fprintf(os.Stdout, "%s%s\n", SecretPrefix, b)
+	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil && line == "" {
+		return nil, false
+	}
+	var a secretAnswer
+	if json.Unmarshal([]byte(strings.TrimRight(line, "\r\n")), &a) != nil || a.Cancel {
+		return nil, false
+	}
+	return []byte(a.Value), true
+}
+
 // noteHost hands a notice to the GUI. Nothing waits for it to be read.
 func noteHost(title, message string) {
 	writeHostLine(os.Stdout, NotePrefix, title, message)
@@ -63,7 +96,7 @@ var progressState struct {
 // Progress reports a stable stage and, when known, completed units to the GUI.
 // It is silent for console runs; their existing log remains the progress display.
 func Progress(stage string, done, total int) {
-	if !hostedByGUI() {
+	if !HostedByGUI() {
 		return
 	}
 	progressState.Lock()

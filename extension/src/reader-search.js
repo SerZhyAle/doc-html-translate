@@ -19,6 +19,20 @@ export function occurrences(text, query, lang) {
   return found;
 }
 
+// isSearchChord tells whether a keydown is INPUT-PARITY's `search` binding: Ctrl+F, or Cmd+F on
+// macOS, with no Alt and no Shift. The key decides on Latin layouts; on a layout whose F key types
+// another letter (Cyrillic, Greek) the physical key does, as the browser's own find does. The
+// test is the desktop reader's (internal/htmlgen/search.go) word for word, so both editions take
+// the same chords.
+export function isSearchChord(event, mac) {
+  if (event.altKey || event.shiftKey || (mac ? !event.metaKey || event.ctrlKey : !event.ctrlKey || event.metaKey)) return false;
+  return event.key === "f" || event.key === "F" || (event.code === "KeyF" && !/^[a-z]$/i.test(event.key));
+}
+
+function isMacPlatform() {
+  return /Mac|iP(hone|ad|od)/.test(globalThis.navigator?.platform || "");
+}
+
 export function setupReaderSearch({ root, beforeWholeBook, scopeLabel, translate }) {
   const $ = (id) => document.getElementById(id);
   const panel = $("search-panel"), button = $("btn-search"), input = $("search-input");
@@ -58,7 +72,7 @@ export function setupReaderSearch({ root, beforeWholeBook, scopeLabel, translate
     const id = ++generation, query = input.value.trim();
     clear(); results.replaceChildren();
     if (!query) { status.textContent = tr("vSearchPrompt", "Enter text to search"); return; }
-    status.textContent = tr("vSearchWorking", "Searching…");
+    status.textContent = tr("vSearchWorking", "Searching..");
     if (scope.value === "book") await beforeWholeBook();
     if (id !== generation) return;
     const matches = [], lang = document.documentElement.lang || undefined;
@@ -80,7 +94,7 @@ export function setupReaderSearch({ root, beforeWholeBook, scopeLabel, translate
     matches.forEach((match, i) => { match.mark = marks[i]; });
     const label = scopeLabel(scope.value);
     const onlyPlates = matches.length > 0 && matches.every((m) => m.plate);
-    status.textContent = tr("vSearchCount", "{1} matches — {2}", matches.length, label)
+    status.textContent = tr("vSearchCount", "Matches: {1} - {2}", matches.length, label)
       + (onlyPlates ? ` (${tr("vSearchPlates", "OCR text plates")})` : "")
       + (!matches.length ? ` (${tr("vSearchNoText", "Scanned pages need OCR text plates")})` : "");
     for (const match of matches.slice(0, 500)) {
@@ -93,12 +107,26 @@ export function setupReaderSearch({ root, beforeWholeBook, scopeLabel, translate
   let timer;
   input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(search, 180); });
   scope.addEventListener("change", search);
+  function open() {
+    const wasHidden = panel.hidden;
+    panel.hidden = false; button.setAttribute("aria-expanded", "true");
+    input.focus(); input.select();
+    if (wasHidden && input.value.trim()) search();
+  }
   button.addEventListener("click", () => {
-    panel.hidden = !panel.hidden; button.setAttribute("aria-expanded", String(!panel.hidden));
-    if (!panel.hidden) { input.focus(); if (input.value.trim()) search(); } else clear();
+    if (panel.hidden) open();
+    else { panel.hidden = true; button.setAttribute("aria-expanded", "false"); clear(); }
   });
   function close() { panel.hidden = true; button.setAttribute("aria-expanded", "false"); clear(); button.focus(); }
   $("search-close").addEventListener("click", close);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !panel.hidden) close(); });
+  const mac = isMacPlatform();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !panel.hidden) { close(); return; }
+    // A second Ctrl+F from inside the field is left to the browser, so its own find bar (which
+    // also searches the chrome) stays one chord away.
+    if (!isSearchChord(event, mac) || event.target === input) return;
+    event.preventDefault();
+    open();
+  });
   return { reset() { ++generation; clearTimeout(timer); clear(); input.value = ""; results.replaceChildren(); status.textContent = ""; panel.hidden = true; button.setAttribute("aria-expanded", "false"); } };
 }

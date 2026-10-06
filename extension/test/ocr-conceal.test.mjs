@@ -92,3 +92,15 @@ test("conceal returns the mode, its confidence and the background together", () 
   assert.ok(c.conf > 0 && c.conf <= 1);
   assert.match(c.background, /cqw no-repeat$/);
 });
+
+test("mask padding survives the plate boundary and stays inside the image", () => {
+  const img = raster(300, 150, [245, 240, 225]);
+  const b = block(0, 0, 300, 150, 24, [{ x0: 0, y0: 0, x1: 300, y1: 150 }]);
+  const edge = conceal(img.sample, b, img.w, img.h, RING, "rgb(245,240,225)");
+  assert.equal(edge.mode, MODE_MASK);
+  assert.deepEqual(edge.bounds, b.bbox, "image edges clamp the mask padding");
+  for (let y = 0; y < 150; y++) for (let x = 0; x < 300; x++) if (x % 6 < 3 && y % 6 < 3) img.set(x, y, [120, 110, 100]);
+  const c = conceal(img.sample, block(40, 50, 260, 80, 24, [{ x0: 40, y0: 50, x1: 260, y1: 80 }]), img.w, img.h, RING, "rgb(245,240,225)");
+  assert.deepEqual(c.bounds, { x0: 36, y0: 46, x1: 264, y1: 84 });
+  assert.match(c.background, /0\.000cqw 0\.000cqw/, "source padding now starts inside the background box");
+});

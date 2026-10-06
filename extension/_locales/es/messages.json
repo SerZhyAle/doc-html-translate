@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "Opciones",
+    "message": "Ajustes",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "Las extensiones no pueden leer rutas de red (\\\\servidor\\recurso). Conecta el recurso a una letra de unidad y abre el archivo en local, o elígelo abajo."
+  },
+  "vFdsecTitle": {
+    "message": "Los archivos secretos de FileDO se abren en la aplicación de escritorio",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "La extensión del navegador no puede abrir archivos secretos de FileDO (.fd-sec). Usa la aplicación de escritorio doc-html-translate: pide la contraseña, descifra el archivo con el FileDO instalado en tu PC y lo convierte.",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "Abrir en el lector integrado"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"el archivo completo pesaría unos {1} - más de lo que una pestaña del navegador maneja con fiabilidad"},
   "vExportReasonStalled": {"message":"las páginas restantes no se pudieron renderizar"},
   "vExportPreparing": {"message":"Preparando página {1} de {2}.."},
-  "vExportStop": {"message":"Detener"},
+  "vExportStop": {"message":"Cancelar"},
   "vExportStopped": {"message":"Preparación detenida - no se guardó nada"},
   "vStatusSaving": {"message":"Guardando HTML.."},
   "vSavedCompletePages": {"message":"Guardado - completo, las {1} páginas"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "Importado. Cambios: {1}"},
   "optSettingsNone": {"message": "ninguno"},
   "optSettingsResetConfirm": {"message": "¿Restablecer todos los ajustes de la extensión?"},
-  "optSettingsResetDone": {"message": "Ajustes restablecidos."}
+  "optSettingsResetDone": {"message": "Ajustes restablecidos."},
+  "popupConvertNote": {"message": "Desactivado de forma predeterminada. O haz clic con el botón derecho en un enlace a un documento y elige «{1}»."},
+  "popupGuide": {"message": "Guía y ayuda"},
+  "optIntro": {"message": "Muestra los documentos (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) como HTML limpio y reajustado, para que funcione la opción «Traducir página» integrada en el navegador. Todo se ejecuta en local; lo único que se conecta a internet es el propio traductor del navegador - y solo cuando tú se lo pides."},
+  "optReflowAuto": {"message": "Reajustar documentos automáticamente"},
+  "optReflowAutoHint": {"message": "Intercepta automáticamente los enlaces a PDF, EPUB, MOBI, AZW3, FB2 y RTF. Si está desactivado, se abren o se descargan como lo hace normalmente el navegador - es decir, vuelta al punto de partida. (Los demás formatos siempre se abren con el selector de archivos.)"},
+  "optSourceLangHint": {"message": "Establece {1} para que el navegador ofrezca la traducción correcta. La detección automática funciona con la mayoría de los documentos (los EPUB también usan su idioma declarado) - y acierta más veces de las que falla."},
+  "optOcrHint": {"message": "Reconoce el texto que contienen las imágenes - en tus documentos y con la opción del menú contextual «Reconocer y traducir esta imagen» - y luego lo traduces con «Traducir página» del navegador. El inglés funciona sin conexión; los demás idiomas se descargan cuando hacen falta y se guardan en local."},
+  "optNoSites": {"message": "Ninguno"},
+  "optDisabledSitesHint": {"message": "Gestiona estos sitios con el interruptor «En este sitio» de la ventana emergente."}
 }

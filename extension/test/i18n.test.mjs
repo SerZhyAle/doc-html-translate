@@ -53,7 +53,7 @@ test("every locale carries the full runtime key set with non-empty messages", ()
 
 test("every data-i18n key used in markup is defined", () => {
   const en = readLocale("en");
-  const attr = /data-i18n(?:-title|-ph)?="([A-Za-z0-9_]+)"/g;
+  const attr = /data-i18n(?:-title|-ph|-aria)?="([A-Za-z0-9_]+)"/g;
   let seen = 0;
   for (const file of ["viewer.html", "options.html", "popup.html"]) {
     const html = fs.readFileSync(path.join(srcDir, file), "utf8");
@@ -81,4 +81,46 @@ test("every t()/msg() key used in the sources is defined", () => {
     }
   }
   assert.ok(seen > 30, `only ${seen} message calls found - the scan is wrong`);
+});
+
+// ICON-RENDER rule 8: a landmark's accessible name is the meaning's name in the interface
+// language. The TOC <nav> and the search panel are translated as one region each, so applyI18n
+// must reach the element it is handed, not only what sits inside it.
+test("applyI18n names the region it is given, not only its descendants", async () => {
+  const { parseHTML } = await import("linkedom");
+  const viewer = fs.readFileSync(path.join(srcDir, "viewer.html"), "utf8");
+  const { document } = parseHTML(viewer);
+  globalThis.document = document;
+  globalThis.chrome = { i18n: { getMessage: (key) => `[${key}]`, getUILanguage: () => "ur" } };
+  const { applyI18n } = await import("../src/i18n.js");
+
+  const toc = document.getElementById("toc");
+  assert.equal(toc.getAttribute("data-i18n-aria"), "ttToc", "the TOC landmark is tagged");
+  applyI18n(toc);
+  assert.equal(toc.getAttribute("aria-label"), "[ttToc]");
+  assert.equal(toc.getAttribute("dir"), "rtl");
+
+  const panel = document.getElementById("search-panel");
+  applyI18n(panel);
+  assert.equal(panel.getAttribute("aria-label"), "[vSearch]");
+});
+
+// docs/PARITY.md, reader chrome floor: a right-to-left interface mirrors the chrome through
+// logical properties. The popup and the options page are chrome from edge to edge, so their
+// styles name no physical side at all, and the popup's switch knob travels toward the reading end.
+test("the popup and options styles mirror for right-to-left languages", () => {
+  const physical = /\b(?:margin|padding|border)-(?:left|right)\b|(?:^|[\s;{"])(?:left|right)\s*:|float\s*:\s*(?:left|right)|text-align\s*:\s*(?:left|right)/;
+  for (const file of ["popup.html", "options.html"]) {
+    const html = fs.readFileSync(path.join(srcDir, file), "utf8");
+    const styles = [
+      ...[...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]),
+      ...[...html.matchAll(/\sstyle="([^"]*)"/g)].map((m) => m[1]),
+    ];
+    assert.ok(styles.length > 0, `${file}: no styles found - the scan is wrong`);
+    for (const css of styles) {
+      for (const line of css.split("\n")) assert.doesNotMatch(line, physical, `${file}: ${line.trim()}`);
+    }
+  }
+  const popup = fs.readFileSync(path.join(srcDir, "popup.html"), "utf8");
+  assert.match(popup, /\[dir="rtl"\] input:checked \+ \.slider::before \{ transform: translateX\(-16px\); \}/);
 });

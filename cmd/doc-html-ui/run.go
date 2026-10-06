@@ -123,6 +123,29 @@ func answerRun(key string, yes bool) bool {
 	return err == nil
 }
 
+// answerRunSecret hands the converter writing to key the password the user typed in the masked
+// dialog, or their cancel, as one JSON line on its stdin. The value is written once and never
+// kept, logged or echoed.
+func answerRunSecret(key, value string, cancel bool) bool {
+	runs.Lock()
+	defer runs.Unlock()
+	r, ok := runs.m[key]
+	if !ok || r.stdin == nil {
+		return false
+	}
+	b, err := json.Marshal(struct {
+		Cancel bool   `json:"cancel"`
+		Value  string `json:"value"`
+	}{cancel, value})
+	if err != nil {
+		return false
+	}
+	b = append(b, '\n')
+	_, err = r.stdin.Write(b)
+	clear(b)
+	return err == nil
+}
+
 // cancelAllRuns stops every run; the GUI is going away.
 func cancelAllRuns() {
 	runs.Lock()

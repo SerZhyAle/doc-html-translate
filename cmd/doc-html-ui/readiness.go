@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"doc-html-translate/internal/comic"
+	"doc-html-translate/internal/fdsec"
 	"doc-html-translate/internal/img"
 	"doc-html-translate/internal/mobi"
 	"doc-html-translate/internal/ocr"
@@ -35,11 +36,12 @@ type readinessResult struct {
 var readinessProbes = struct {
 	calibre    func() bool
 	sevenZip   func() bool
+	filedo     func() bool
 	ocrLocate  func() (string, error)
 	ocrMissing func(context.Context, string, string) []string
 	googleKey  func() (string, error)
 	ollama     func(context.Context, string) (bool, error)
-}{mobi.Available, comic.SevenZipAvailable, ocr.Locate, ocr.MissingLangs, translator.LoadGoogleAPIKey, translator.OllamaModelAvailable}
+}{mobi.Available, comic.SevenZipAvailable, fdsec.Available, ocr.Locate, ocr.MissingLangs, translator.LoadGoogleAPIKey, translator.OllamaModelAvailable}
 
 func checkReadiness(ctx context.Context, req runRequest) readinessResult {
 	out := readinessResult{State: "ready", Issues: []readinessIssue{}}
@@ -60,6 +62,20 @@ func checkReadiness(ctx context.Context, req runRequest) readinessResult {
 		return out
 	}
 	ext := strings.ToLower(filepath.Ext(req.Input))
+	// A FileDO secret file needs FileDO, and its size must pass the format's credential-free
+	// screen. Both are decided here, before Convert and before any password question; the
+	// converter checks again, so a queue screens every container before it asks anything.
+	if fdsec.IsContainer(ext) {
+		switch {
+		case !readinessProbes.filedo():
+			add("filedo", "action", "")
+		case !fdsec.ScreenLength(info.Size()):
+			add("fdsecScreen", "action", "")
+		}
+		if out.State == "action" {
+			return out
+		}
+	}
 	if (ext == ".mobi" || ext == ".azw3") && !readinessProbes.calibre() {
 		add("calibre", "action", "")
 	}

@@ -1,5 +1,22 @@
 # Cross-edition parity
 
+Ticket 92 (2026-10-04), `OCR-PIPELINE` 1.9: both editions retain repaired transcripts,
+type heights, confidence and token counts alongside each cluster's source line boxes.
+Screen and grey sweep merging partitions partly duplicated candidates into covered and
+uncovered line runs at the existing 0.20 union-overlap threshold; missing line association
+keeps the conservative block fallback. Additions enter the existing engine column order.
+Identical, stronger transcripts may corroborate a contained narrower line box when the
+removed width exceeds one type/line height; accepted text is never rewritten. Drawn line
+bounds use retained word unions rather than an inflated engine line header.
+
+Mask bounds expand by their existing pad and clamp to the image; stripes keep source
+coordinates relative to the expanded bounds, use square corners, and compensate for a
+runtime lift. Each fit restores the original stripe positions. Multi-line ragged-right
+copy aligns left only when left-edge spread is at most half the font basis and right-edge
+spread exceeds it. Neither script direction nor a source font is inferred. Font and
+recognition confidence constants stay unchanged. Both editions' regression tests cover
+missing tails, duplicate refusal, source order, corroborated boxes and drawable masks.
+
 The single source of truth for what must stay identical across the project's editions, what is
 intentionally different, and how to keep them from drifting. **If you add or change a user-facing
 feature, read this file first and update it.**
@@ -48,12 +65,13 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | Comic archive -> page book | [`internal/comic/`](../internal/comic/) (CBZ/CBT stdlib; CBR/CB7 shell out to 7-Zip) | [`extension/src/comic.js`](../extension/src/comic.js) (CBZ/CBT only; CBR/CB7 declined) |
 | Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
 | Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
+| FileDO secret file (.fd-sec) unwrap | [`internal/fdsec/`](../internal/fdsec/) (decrypted by the installed FileDO; the run unwraps first and converts the inner type) | (none - desktop-only by design, see Intentional divergences) |
 | Input limits (archive listing budget, per-entry caps, capped inflation) | [`internal/limits/`](../internal/limits/) (+ `internal/epub` `maxEntryBytes`, `internal/comic` `maxPageBytes`) | [`extension/src/limits.js`](../extension/src/limits.js) |
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` (overlay rules generated from `internal/appearance`) |
 | OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
-| OCR halftone-screen detection (rescue rung, additive sweep) | [`internal/ocr/screen.go`](../internal/ocr/screen.go) (`screenPitch`, `mergeScreenBlocks`) | [`extension/src/ocr-screen.js`](../extension/src/ocr-screen.js) (`screenPitch`, `mergeScreenBlocks`) |
+| OCR halftone-screen detection (rescue rung, additive line sweep) | [`internal/ocr/screen.go`](../internal/ocr/screen.go) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) | [`extension/src/ocr-screen.js`](../extension/src/ocr-screen.js) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) |
 | OCR plate concealment mode (fill / reconstruct / mask) | [`internal/ocr/conceal.go`](../internal/ocr/conceal.go) (`measureRing`, `decideMode`, `plateBackground`) | [`extension/src/ocr-conceal.js`](../extension/src/ocr-conceal.js) (`measureRing`, `decideMode`, `plateBackground`) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
@@ -1594,6 +1612,16 @@ These are by design. Do not "sync" them without a decision - document changes he
   intentional divergence, not a gap: the desktop side can do what the browser cannot. The desktop app is
   therefore the second runtime-dependency format (after MOBI/Calibre): CBR/CB7 without 7-Zip fail with an
   actionable "install 7-Zip" notice, never a crash or garbage.
+- **FileDO secret file (.fd-sec): desktop-only, by capability.** The desktop app opens a `.fd-sec` by calling
+  the FileDO installed on the machine (`internal/fdsec`): it asks for the password, hands it to FileDO in the
+  child's environment, converts the document or picture that comes out and removes the decrypted copy. The
+  extension cannot start a local program (it has no `nativeMessaging`) and deliberately carries no reader of
+  the format (one credential mechanism per product, `FDSEC-BEHAVIOUR`), so it **declines**: a `.fd-sec` is not a
+  type it converts. `loadFromData` in [`extension/src/viewer.js`](../extension/src/viewer.js) recognises the
+  name alone (before any byte signature) and shows a notice that points at the desktop app (`vFdsecTitle` /
+  `vFdsecBody`, 13 locales) instead of failing with the PDF reader's generic error. This is an intentional
+  divergence, not a gap: the desktop side can do what the browser cannot. Recorded in ticket 94, which covers
+  both editions.
 - **TIFF: Go transcodes it, the extension refuses it.** Chrome cannot decode TIFF, so both editions must do
   *something* other than show it raw. The extension refuses (its `imageMime` has no TIFF entry, so a `.tif`
   falls through to the PDF reader's clear "cannot read this"), because a browser tab has no decoder. The Go

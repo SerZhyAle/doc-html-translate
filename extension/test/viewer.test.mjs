@@ -499,6 +499,43 @@ test("a comic with a page that will not inflate is labeled partial before and af
     /Partial export: 2 of 3 pages - prepare the remaining pages to add them/);
 });
 
+// INPUT-PARITY `cancel`: Esc on the card is its Cancel - nothing is decided - and focus goes back
+// to Export rather than to <body>. The card carries the interface language and direction.
+test("Esc on the partial-export card cancels it and hands focus back to Export", async () => {
+  const previous = storedData.uiLang;
+  storedData.uiLang = "ar";
+  try {
+    const { document, window, content } = await bootViewer("", async () => new Response("", { status: 404 }));
+    await pickComic(document, window, "book.cbz", cbzBytes([
+      { name: "page1.jpg", data: "ONE" },
+      { name: "page2.jpg", data: "TWO", broken: true },
+    ]));
+    assert.ok(await waitFor(() => comicImages(content) === 1));
+    await letOcrSettle(content);
+
+    const exportBtn = document.getElementById("btn-save-html");
+    let refocused = 0;
+    exportBtn.focus = () => { refocused++; };
+    exportBtn.dispatchEvent(new window.Event("click"));
+    const dialog = await waitFor(() => document.querySelector(".export-dialog"));
+    assert.ok(dialog, "a partial view asks first");
+    assert.equal(dialog.getAttribute("lang"), "ar");
+    assert.equal(dialog.getAttribute("dir"), "rtl", "an Arabic interface lays the card out right to left");
+
+    const before = savedExports.length;
+    const esc = new window.Event("keydown", { bubbles: true, cancelable: true });
+    esc.key = "Escape";
+    dialog.querySelector("button").dispatchEvent(esc);
+    assert.equal(document.querySelector(".export-dialog"), null, "Esc closes the card");
+    assert.equal(esc.defaultPrevented, true);
+    assert.equal(savedExports.length, before, "and writes nothing");
+    assert.equal(refocused, 1, "focus returns to Export");
+  } finally {
+    if (previous === undefined) delete storedData.uiLang;
+    else storedData.uiLang = previous;
+  }
+});
+
 // makePdfStub answers a PDF of `total` text pages; page `stallAt` blocks on `gate` so a
 // test can hold a preparation mid-chunk and stop it there. `language` puts a /Lang value
 // in the metadata and `text` replaces the page's text layer, so a test can stage the
@@ -617,7 +654,9 @@ test("a stopped preparation writes nothing, labels no file, and leaves the reade
       // Hold the chunk mid-render and stop the preparation there, then let the pages through.
       // The chunk in flight always finishes - only the gaps between pages are interruptible -
       // so this lands after it completes; the outcome is still "stopped, nothing written".
-      assert.ok(await waitFor(() => !document.getElementById("status-stop").hidden), "the status bar carries a Stop control");
+      assert.ok(await waitFor(() => !document.getElementById("status-stop").hidden), "the status bar carries a Cancel control");
+      // Ending a running task is action.cancel (ICON-SET decision (c)), never media.stop's word.
+      assert.equal(document.getElementById("status-stop").textContent, "Cancel");
       const before = savedExports.length;
       document.getElementById("status-stop").dispatchEvent(new window.Event("click"));
       release();

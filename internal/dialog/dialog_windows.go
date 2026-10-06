@@ -59,7 +59,7 @@ func ownerStyle(owner uintptr) uintptr {
 // answer is the default: Cancel has the focus, so Enter declines, and Escape and the close box
 // are the same Cancel. Only OK proceeds. Under the GUI the question is asked in the GUI's window.
 func Confirm(title, message string) bool {
-	if hostedByGUI() {
+	if HostedByGUI() {
 		return askHost(title, message)
 	}
 	owner := consoleOwner()
@@ -69,7 +69,7 @@ func Confirm(title, message string) bool {
 // ShowWarning displays a warning with an OK button. Under the GUI it becomes a notice in the
 // GUI's window; in an unattended run it is logged, so it cannot halt a batch.
 func ShowWarning(title, message string) {
-	if hostedByGUI() {
+	if HostedByGUI() {
 		noteHost(title, message)
 		return
 	}

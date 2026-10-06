@@ -52,6 +52,9 @@ type Block struct {
 	LineH          int
 	TypeH          int
 	Lines          []LineBox
+	// LineContent parallels Lines after pipe repair. Rescue merging can retain an uncovered
+	// line without guessing where the assembled paragraph's words belong.
+	LineContent []LineContent
 	// Conf is the mean confidence of the block's lines. Only the discard record reads it: a plate
 	// the screen merge rejects has no line left to take a confidence from.
 	Conf float64
@@ -65,6 +68,13 @@ type Block struct {
 // LineBox is one recognized line's rectangle in image pixels.
 type LineBox struct {
 	X0, Y0, X1, Y1 int
+}
+
+type LineContent struct {
+	Text   string
+	TypeH  int
+	Conf   float64
+	Tokens int
 }
 
 // DroppedLine is a line the recognizer read and a gate threw away. It never reaches the page - it
@@ -818,6 +828,9 @@ func scaleDown(res *Result, s int) {
 		for j := range bl.Lines {
 			ln := &bl.Lines[j]
 			ln.X0, ln.Y0, ln.X1, ln.Y1 = div(ln.X0), div(ln.Y0), div(ln.X1), div(ln.Y1)
+			if j < len(bl.LineContent) {
+				bl.LineContent[j].TypeH = div(bl.LineContent[j].TypeH)
+			}
 		}
 	}
 	// The discard record is in the same prepared-image space, and a box left there would put a
@@ -1056,7 +1069,7 @@ type ocrWord struct {
 // could not be decoded, or a test fixture with no pixels) leaves only the ratio rule.
 // Mirrors ocr-cluster.js splitWideGaps (docs/PARITY.md).
 func (l *ocrLine) splitWideGaps(ink *image.Gray) []*ocrLine {
-	if len(l.words) < 2 {
+	if len(l.words) == 0 {
 		return []*ocrLine{l}
 	}
 	med := median(l.wordH, 0)
@@ -1250,7 +1263,7 @@ func (l *ocrLine) trimOutlierWords() {
 		}
 		kept = append(kept, w)
 	}
-	if len(kept) == 0 || len(kept) == len(l.words) {
+	if len(kept) == 0 {
 		return
 	}
 	x0, y0, x1, y1 := kept[0].x0, kept[0].y0, kept[0].x1, kept[0].y1
@@ -1769,6 +1782,10 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 			for i := range ctexts {
 				ctexts[i] = repairLinePipes(ctexts[i], cmembers[i].words, grid[i], med)
 			}
+			content := make([]LineContent, len(clines))
+			for i, m := range cmembers {
+				content[i] = LineContent{Text: ctexts[i], TypeH: cink[i], Conf: m.meanConf(), Tokens: len(m.words)}
+			}
 			if over := releaseOversized(cx0, cy0, cx1, cy1, ctexts, clines, cink, imgW, imgH); over != nil {
 				// A released plate is one member line; its box finds which (releaseOversized skips
 				// textless lines, so the positions do not line up).
@@ -1776,6 +1793,7 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 					if j := slices.Index(clines, over[i].Lines[0]); j >= 0 {
 						over[i].Conf = cmembers[j].meanConf()
 						over[i].tokens = len(cmembers[j].words)
+						over[i].LineContent = []LineContent{content[j]}
 					}
 				}
 				blocks = append(blocks, over...)
@@ -1788,10 +1806,11 @@ func clusterLinesRecording(lines []*ocrLine, minConf float64, imgW, imgH int, dr
 				}
 				b := Block{
 					Text: joinPlateLines(ctexts), X0: cx0, Y0: cy0, X1: cx1, Y1: cy1,
-					LineH: median(cheights, cy1-cy0),
-					TypeH: median(cink, 0),
-					Lines: append([]LineBox(nil), clines...),
-					Conf:  conf / float64(len(cmembers)),
+					LineH:       median(cheights, cy1-cy0),
+					TypeH:       median(cink, 0),
+					Lines:       append([]LineBox(nil), clines...),
+					LineContent: content,
+					Conf:        conf / float64(len(cmembers)),
 				}
 				b.tokens = tokens
 				blocks = append(blocks, b)

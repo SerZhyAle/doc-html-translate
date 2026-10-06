@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "বিকল্প",
+    "message": "সেটিংস",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "এক্সটেনশন নেটওয়ার্ক পাথ (\\\\server\\share) পড়তে পারে না। শেয়ারটিকে ড্রাইভ অক্ষরে যুক্ত করে ফাইলটি স্থানীয়ভাবে খুলুন, বা নিচে থেকে ফাইল বাছুন।"
+  },
+  "vFdsecTitle": {
+    "message": "FileDO গোপন ফাইল ডেস্কটপ অ্যাপে খোলে",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "ব্রাউজার এক্সটেনশন FileDO গোপন ফাইল (.fd-sec) খুলতে পারে না। ডেস্কটপ অ্যাপ doc-html-translate ব্যবহার করুন: এটি পাসওয়ার্ড চায়, আপনার পিসিতে ইনস্টল করা FileDO দিয়ে ফাইলটি ডিক্রিপ্ট করে এবং রূপান্তর করে।",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "অন্তর্নির্মিত রিডারে খুলুন"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"সম্পূর্ণ ফাইল প্রায় {1} হবে - যা একটি ব্রাউজার ট্যাব নির্ভরযোগ্যভাবে ধরে রাখতে পারে তার চেয়ে বেশি"},
   "vExportReasonStalled": {"message":"বাকি পৃষ্ঠাগুলি তৈরি করা যায়নি"},
   "vExportPreparing": {"message":"পৃষ্ঠা {1} / {2} প্রস্তুত হচ্ছে.."},
-  "vExportStop": {"message":"থামান"},
+  "vExportStop": {"message":"বাতিল"},
   "vExportStopped": {"message":"প্রস্তুতি থেমেছে - কিছু সংরক্ষিত হয়নি"},
   "vStatusSaving": {"message":"HTML সংরক্ষণ হচ্ছে.."},
   "vSavedCompletePages": {"message":"সংরক্ষিত - সম্পূর্ণ, সব {1}টি পৃষ্ঠা"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "আমদানি হয়েছে। পরিবর্তন: {1}"},
   "optSettingsNone": {"message": "কিছুই নয়"},
   "optSettingsResetConfirm": {"message": "সব এক্সটেনশন সেটিংস রিসেট করবেন?"},
-  "optSettingsResetDone": {"message": "সেটিংস রিসেট হয়েছে।"}
+  "optSettingsResetDone": {"message": "সেটিংস রিসেট হয়েছে।"},
+  "popupConvertNote": {"message": "ডিফল্টভাবে বন্ধ। অথবা কোনো নথির লিঙ্কে ডান-ক্লিক করে “{1}” বেছে নিন।"},
+  "popupGuide": {"message": "নির্দেশিকা ও সহায়তা"},
+  "optIntro": {"message": "নথিগুলোকে (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) পরিচ্ছন্ন, পুনঃপ্রবাহিত HTML হিসেবে দেখায়, যাতে ব্রাউজারের নিজস্ব “পৃষ্ঠা অনুবাদ করুন” সুবিধা কাজ করে। সবকিছু স্থানীয়ভাবে চলে; ইন্টারনেটে সংযোগ করে শুধু ব্রাউজারের নিজস্ব অনুবাদক - তাও কেবল আপনি চাইলে।"},
+  "optReflowAuto": {"message": "নথি স্বয়ংক্রিয়ভাবে রিফ্লো করুন"},
+  "optReflowAutoHint": {"message": "PDF, EPUB, MOBI, AZW3, FB2 ও RTF লিঙ্ক স্বয়ংক্রিয়ভাবে ধরে নেয়। বন্ধ থাকলে সেগুলো ব্রাউজার সাধারণত যেভাবে খোলে বা ডাউনলোড করে সেভাবেই হয় - অর্থাৎ আগের মতোই। (অন্য ফরম্যাট সবসময় ফাইল বাছাইকারী দিয়ে খোলে।)"},
+  "optSourceLangHint": {"message": "{1} সেট করে, যাতে ব্রাউজার সঠিক অনুবাদ প্রস্তাব করে। স্বয়ংক্রিয় শনাক্তকরণ বেশিরভাগ নথিতে কাজ করে (EPUB তাদের ঘোষিত ভাষাও ব্যবহার করে) - এবং প্রায়ই সঠিক অনুমান করে।"},
+  "optOcrHint": {"message": "ছবির ভেতরের লেখা শনাক্ত করে - আপনার নথিতে, এবং ডান-ক্লিক মেনুর “এই ছবির লেখা শনাক্ত করে অনুবাদ করুন” দিয়ে - তারপর ব্রাউজারের “পৃষ্ঠা অনুবাদ করুন” দিয়ে তা অনুবাদ করা যায়। ইংরেজি অফলাইনে কাজ করে; অন্য ভাষাগুলো প্রয়োজনে ডাউনলোড হয়ে স্থানীয়ভাবে সংরক্ষিত থাকে।"},
+  "optNoSites": {"message": "কিছু নেই"},
+  "optDisabledSitesHint": {"message": "পপআপের “এই সাইটে” সুইচ দিয়ে এগুলো পরিচালনা করুন।"}
 }

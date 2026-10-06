@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseTSV(t *testing.T) {
-	// One line, two words -> one plate boxed to the line.
+	// One line, two words -> one plate boxed to recognized words, not an inflated line header.
 	tsv := "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n" +
 		"1\t1\t0\t0\t0\t0\t0\t0\t200\t100\t-1\t\n" +
 		"4\t1\t1\t1\t1\t0\t10\t20\t120\t18\t-1\t\n" +
@@ -26,8 +26,8 @@ func TestParseTSV(t *testing.T) {
 	if b.Text != "Hello world" {
 		t.Errorf("text = %q, want %q", b.Text, "Hello world")
 	}
-	if b.X0 != 10 || b.Y0 != 20 || b.X1 != 130 || b.Y1 != 38 {
-		t.Errorf("bbox = (%d,%d,%d,%d), want (10,20,130,38)", b.X0, b.Y0, b.X1, b.Y1)
+	if b.X0 != 10 || b.Y0 != 20 || b.X1 != 125 || b.Y1 != 38 {
+		t.Errorf("bbox = (%d,%d,%d,%d), want (10,20,125,38)", b.X0, b.Y0, b.X1, b.Y1)
 	}
 	if b.LineH != 18 {
 		t.Errorf("lineH = %d, want 18", b.LineH)
@@ -280,8 +280,8 @@ func TestParseTSVReadsColumnsByName(t *testing.T) {
 	if b.Text != "Hello world" {
 		t.Errorf("text = %q, want %q", b.Text, "Hello world")
 	}
-	if b.X0 != 10 || b.Y0 != 20 || b.X1 != 130 || b.Y1 != 38 {
-		t.Errorf("bbox = (%d,%d,%d,%d), want (10,20,130,38)", b.X0, b.Y0, b.X1, b.Y1)
+	if b.X0 != 10 || b.Y0 != 20 || b.X1 != 125 || b.Y1 != 38 {
+		t.Errorf("bbox = (%d,%d,%d,%d), want (10,20,125,38)", b.X0, b.Y0, b.X1, b.Y1)
 	}
 }
 

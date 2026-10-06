@@ -33,7 +33,9 @@ var (
 	TesseractProbe = Budget{Base: 30 * time.Second, PerMB: 10 * time.Second, Max: 5 * time.Minute}
 	Calibre        = Budget{Base: 10 * time.Minute, PerMB: 30 * time.Second, Max: 60 * time.Minute}
 	SevenZip       = Budget{Base: 2 * time.Minute, PerMB: 6 * time.Second, Max: 30 * time.Minute}
-	ImageConvert   = Budget{Base: 2 * time.Minute, Max: 2 * time.Minute}
+	// FileDO decrypts a secret file (.fd-sec): a key derivation per attempt, then the container.
+	FileDO       = Budget{Base: 2 * time.Minute, PerMB: 6 * time.Second, Max: 30 * time.Minute}
+	ImageConvert = Budget{Base: 2 * time.Minute, Max: 2 * time.Minute}
 )
 
 // For returns the deadline for an input of inputBytes.

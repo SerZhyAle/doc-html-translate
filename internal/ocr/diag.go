@@ -23,12 +23,14 @@ func DiagnosticsPath() string { return os.Getenv(diagEnvVar) }
 
 // diagBlock is one recognized block as it was rendered.
 type diagBlock struct {
-	Text  string `json:"text"`
-	X0    int    `json:"x0"`
-	Y0    int    `json:"y0"`
-	X1    int    `json:"x1"`
-	Y1    int    `json:"y1"`
-	LineH int    `json:"lineH"`
+	Text        string        `json:"text"`
+	X0          int           `json:"x0"`
+	Y0          int           `json:"y0"`
+	X1          int           `json:"x1"`
+	Y1          int           `json:"y1"`
+	LineH       int           `json:"lineH"`
+	Lines       []LineBox     `json:"lines,omitempty"`
+	LineContent []LineContent `json:"lineContent,omitempty"`
 	// Conf is the block's mean line confidence, 0..100 - the `confidence` of the OCR-OVERLAY
 	// section 7 record the lab writes from this line (OCR-PIPELINE amendment 1.4 D).
 	Conf       float64 `json:"conf"`
@@ -88,11 +90,20 @@ func recordDiagnostics(file string, res Result, srcImg image.Image) {
 		db := diagBlock{
 			Text: b.Text, X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1, LineH: b.LineH, Conf: b.Conf,
 			Style: percentStyle(b, res.Width, res.Height),
+			Lines: b.Lines, LineContent: b.LineContent,
 		}
 		if srcImg != nil {
+			mode, _ := decideMode(measureRing(srcImg, b))
+			db.Style = percentStyle(maskPlateBounds(b, mode, res.Width, res.Height), res.Width, res.Height)
+			if mode == ModeMask {
+				db.Style += ";border-radius:0"
+			}
 			if bg, ink, ok := blockColors(srcImg, b); ok {
 				db.Background, db.Ink = bg, ink
 			}
+		}
+		if leftAligned(b) {
+			db.Style += ";text-align:left;justify-content:flex-start"
 		}
 		rec.Blocks = append(rec.Blocks, db)
 	}

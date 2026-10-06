@@ -232,7 +232,7 @@
     "description": "Popup per-site switch: the active tab is on no website, so there is no site to switch."
   },
   "popupOptions": {
-    "message": "اختیارات",
+    "message": "ترتیبات",
     "description": "Popup link to the options page."
   },
   "optTheme": {
@@ -321,6 +321,14 @@
   },
   "vUncBody": {
     "message": "ایکسٹینشنز نیٹ ورک راستے (\\\\server\\share) نہیں پڑھ سکتیں۔ شیئر کو ڈرائیو لیٹر سے منسلک کر کے فائل مقامی طور پر کھولیں، یا نیچے سے فائل منتخب کریں۔"
+  },
+  "vFdsecTitle": {
+    "message": "FileDO خفیہ فائلیں ڈیسک ٹاپ ایپ میں کھلتی ہیں",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "براؤزر ایکسٹینشن FileDO خفیہ فائلیں (.fd-sec) نہیں کھول سکتی۔ ڈیسک ٹاپ ایپ doc-html-translate استعمال کریں: وہ پاس ورڈ پوچھتی ہے، آپ کے پی سی پر نصب FileDO سے فائل کو ڈی کرپٹ کرتی ہے اور تبدیل کرتی ہے۔",
+    "description": ""
   },
   "vBtnBuiltinViewer": {
     "message": "بلٹ اِن ریڈر میں کھولیں"
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"مکمل فائل تقریباً {1} کی ہوگی - جو براؤزر ٹیب بھروسے سے سنبھالتا ہے اس سے زیادہ"},
   "vExportReasonStalled": {"message":"باقی صفحات تیار نہ ہو سکے"},
   "vExportPreparing": {"message":"صفحہ {1} / {2} تیار ہو رہا ہے.."},
-  "vExportStop": {"message":"روکیں"},
+  "vExportStop": {"message":"منسوخ کریں"},
   "vExportStopped": {"message":"تیاری رک گئی - کچھ محفوظ نہیں ہوا"},
   "vStatusSaving": {"message":"HTML محفوظ ہو رہا ہے.."},
   "vSavedCompletePages": {"message":"محفوظ ہو گیا - مکمل، تمام {1} صفحات"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "درآمد ہوگیا۔ تبدیلیاں: {1}"},
   "optSettingsNone": {"message": "کچھ نہیں"},
   "optSettingsResetConfirm": {"message": "تمام ایکسٹینشن ترتیبات بحال کریں؟"},
-  "optSettingsResetDone": {"message": "ترتیبات بحال ہوگئیں۔"}
+  "optSettingsResetDone": {"message": "ترتیبات بحال ہوگئیں۔"},
+  "popupConvertNote": {"message": "بطور طے شدہ بند۔ یا کسی دستاویز کے لنک پر دائیں کلک کریں اور «{1}» منتخب کریں۔"},
+  "popupGuide": {"message": "رہنما اور مدد"},
+  "optIntro": {"message": "دستاویزات (PDF، EPUB، MOBI، AZW3، FB2، RTF، TXT، Markdown، HTML) کو صاف، از سر نو ترتیب دیے گئے HTML کی صورت میں دکھاتا ہے تاکہ براؤزر کی اپنی «صفحے کا ترجمہ کریں» سہولت کام کرے۔ سب کچھ مقامی طور پر چلتا ہے؛ انٹرنیٹ سے صرف براؤزر کا اپنا مترجم رابطہ کرتا ہے - اور وہ بھی صرف تب جب آپ کہیں۔"},
+  "optReflowAuto": {"message": "دستاویزات کو خودکار طور پر ری فلو کریں"},
+  "optReflowAutoHint": {"message": "PDF، EPUB، MOBI، AZW3، FB2 اور RTF لنکس کو خودکار طور پر روکتا ہے۔ بند ہونے پر وہ ویسے ہی کھلتے یا ڈاؤن لوڈ ہوتے ہیں جیسے براؤزر عام طور پر کرتا ہے - یعنی سب پہلے جیسا۔ (دیگر فارمیٹ ہمیشہ فائل چنندہ سے کھلتے ہیں۔)"},
+  "optSourceLangHint": {"message": "{1} مقرر کرتا ہے تاکہ براؤزر درست ترجمہ پیش کرے۔ خودکار پہچان زیادہ تر دستاویزات کے لیے کام کرتی ہے (EPUB اپنی اعلان کردہ زبان بھی استعمال کرتے ہیں) - اور اکثر درست اندازہ لگاتی ہے۔"},
+  "optOcrHint": {"message": "تصاویر کے اندر کا متن پہچانتا ہے - آپ کی دستاویزات میں، اور رائٹ کلک مینو کے «اس تصویر کا متن پہچانیں اور ترجمہ کریں» سے - پھر براؤزر کے «صفحے کا ترجمہ کریں» سے اس کا ترجمہ ہوتا ہے۔ انگریزی آف لائن کام کرتی ہے؛ دیگر زبانیں ضرورت پر ڈاؤن لوڈ ہو کر مقامی طور پر محفوظ رہتی ہیں۔"},
+  "optNoSites": {"message": "کوئی نہیں"},
+  "optDisabledSitesHint": {"message": "پاپ اپ میں «اس سائٹ پر» سوئچ سے ان کا نظم کریں۔"}
 }

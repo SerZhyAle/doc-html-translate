@@ -35,11 +35,20 @@ wording of the rules is read through that - see ticket 23, Direction B):
 - **Rule 10** has no saved geometry here. **Rule 12** applies to the autosaving settings surface: value
   edits are reversible; deleting output and logs keeps a separate confirmed button.
 
+**Re-checked 2026-10-06 (ticket 95):** a second pass found a run could start twice from a double click
+(rule 3 - now blocked synchronously; a cancelled queue item is logged as its own outcome), the persisted
+recent-documents history cleared without a confirmation (rule 5 - now confirmed, `danger`, safe answer
+focused), a failure worded as an exit code (rule 6 - every converter exit code maps to a named cause,
+an unknown one to "send the logs"), a missing format argument rendered as `{k}` (rule 7 - a blank),
+captions that named no control and text buttons announcing a different sentence (rule 9), and the
+auto-update hint left visible in the MSIX build (rule 11). All fixed and gated in
+`cmd/doc-html-ui/conformance_test.go` and `contract_test.go`.
+
 **Open, recorded in the catalog (2026-09-28):** the right-click verb's own caption ("Convert to HTML")
 is English in Explorer - a dated exception in the shared registry (until 2026-12-31). The console-dialog and own-state-repair proposals are settled by 0.12: console dialogs stay bound;
 repair needs no new consent only within already enabled HKCU registration kinds. This product has no
 automatic repair path: the no-argument CLI asks again, and explicit registration flags authorize writes.
 
-**Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/hardening_test.go`
+**Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/conformance_test.go`, `cmd/doc-html-ui/hardening_test.go`
 (`TestQuestionIsAskedInTheWindow`, the cancel tests), `internal/dialog` tests, and a headless-Edge run of
 the real page (ticket 23, "Verification").

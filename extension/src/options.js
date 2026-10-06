@@ -64,7 +64,7 @@ function renderHosts(hosts, element, key) {
   if (!hosts.length) {
     const li = document.createElement("li");
     li.className = "hint";
-    li.textContent = "None";
+    li.textContent = msg("optNoSites", "None");
     element.append(li);
     return;
   }
@@ -84,7 +84,21 @@ function renderHosts(hosts, element, key) {
   }
 }
 
+// renderSourceLangHint fills the source-language hint, whose message marks with {1} where the
+// attribute name goes: it stays a <code> literal inside the translated sentence.
+function renderSourceLangHint() {
+  const code = document.createElement("code");
+  code.textContent = "<html lang>";
+  const [before, after = ""] = msg("optSourceLangHint",
+    "Sets {1} so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.").split("{1}");
+  document.getElementById("source-lang-hint").replaceChildren(before, code, after);
+}
+
 async function init() {
+  // The interface language first: the site lists, the OCR rows and the source-language hint are
+  // built in script, and under a stored override they would otherwise speak the browser's language.
+  await initUiLanguage();
+  renderSourceLangHint();
   const o = await getOptions();
   enabledEl.checked = o.enabledByDefault;
   siteModeEl.value = o.siteMode === "allowlist" ? "allowlist" : "all";
@@ -141,7 +155,6 @@ async function init() {
   });
 
   initDiagnostics();
-  await initUiLanguage();
   initSettingsTransfer();
 }
 
@@ -218,6 +231,7 @@ async function renderSettings() {
   renderHosts(o.disabledHosts, hostsEl, "disabledHosts");
   renderHosts(o.allowedHosts, allowedHostsEl, "allowedHosts");
   renderLangList();
+  renderSourceLangHint();
 }
 
 // initDiagnostics wires the About block's one action: put a short English summary on the
@@ -276,7 +290,10 @@ async function initUiLanguage() {
   sel.addEventListener("change", async () => {
     await setUiLang(sel.value);
     applyI18n(document);
-    flash("saved-theme");
+    // applyI18n reaches only the static markup; the lists built in script are rebuilt so their
+    // buttons and labels switch language too.
+    await renderSettings();
+    flash("saved-ui-lang");
   });
 
   applyI18n(document);

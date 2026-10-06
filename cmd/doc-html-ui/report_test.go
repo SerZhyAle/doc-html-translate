@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -136,6 +137,52 @@ func TestHandleLogsClearOnAnEmptyStoreSaysSo(t *testing.T) {
 	handleLogsClear(rec, httptest.NewRequest(http.MethodPost, "/api/logs-clear", nil))
 	if got := decodeResp(t, rec); got["ok"] != true || got["cleared"] != float64(0) {
 		t.Errorf("response = %v, want ok with cleared 0", got)
+	}
+}
+
+// WINDOWS-UI section 7: a store that cannot be read is unknown, not empty - About must not say
+// "0 logs" and Clear must not say "nothing to clear". The read failure is made real per
+// platform: Windows reports a file in the folder's place as "path not found" (which IS
+// not-exist), so there an invalid path character stands in; elsewhere the file gives ENOTDIR.
+func TestUnreadableLogStoreIsUnknownNotZero(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Setenv("LOCALAPPDATA", filepath.Join(t.TempDir(), "bad|name"))
+	} else {
+		t.Setenv("LOCALAPPDATA", t.TempDir())
+		if err := os.MkdirAll(filepath.Dir(report.LogsDir()), 0o755); err != nil {
+			t.Fatalf("MkdirAll: %v", err)
+		}
+		if err := os.WriteFile(report.LogsDir(), []byte("not a folder"), 0o600); err != nil {
+			t.Fatalf("write blocker: %v", err)
+		}
+	}
+	if _, _, err := logStoreSize(); err == nil || os.IsNotExist(err) {
+		t.Fatalf("logStoreSize error = %v, want a read failure that is not \"not exist\"", err)
+	}
+
+	rec := httptest.NewRecorder()
+	handleEnv(rec, httptest.NewRequest(http.MethodGet, "/api/env", nil))
+	env := decodeResp(t, rec)
+	if logs, present := env["logs"]; !present || logs != nil {
+		t.Errorf("env logs = %v (present %v), want null", logs, present)
+	}
+	if env["logsReason"] != "unreadable" {
+		t.Errorf("env logsReason = %v, want \"unreadable\"", env["logsReason"])
+	}
+
+	rec = httptest.NewRecorder()
+	handleLogsClear(rec, httptest.NewRequest(http.MethodPost, "/api/logs-clear", nil))
+	if got := decodeResp(t, rec); got["ok"] != false {
+		t.Errorf("logs-clear on an unreadable store = %v, want ok false", got)
+	}
+}
+
+// A store not created yet is empty, which is a fact, not an unknown.
+func TestMissingLogStoreIsEmpty(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	count, bytes, err := logStoreSize()
+	if err != nil || count != 0 || bytes != 0 {
+		t.Fatalf("logStoreSize = %d, %d, %v; want 0, 0, nil", count, bytes, err)
 	}
 }
 

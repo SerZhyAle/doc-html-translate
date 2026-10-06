@@ -26,9 +26,14 @@ const POPUP_HTML = fs.readFileSync(path.join(root, "src", "popup.html"), "utf8")
 
 let caseSeq = 0;
 
+// readLocale returns one _locales message file, for the cases that render the popup in a language
+// other than the English fallbacks.
+const readLocale = (dir) => JSON.parse(fs.readFileSync(path.join(root, "_locales", dir, "messages.json"), "utf8"));
+
 // openPopup renders the popup for an active tab at tabUrl, with `options` in storage, and returns
-// the page plus the options the popup wrote back and the tabs it opened.
-async function openPopup(tabUrl, options) {
+// the page plus the options the popup wrote back and the tabs it opened. `messages` stands in for
+// the browser-language table chrome.i18n serves; without it every string is its English fallback.
+async function openPopup(tabUrl, options, { messages } = {}) {
   const { document, window } = parseHTML(POPUP_HTML);
   globalThis.document = document;
   globalThis.window = window;
@@ -52,7 +57,7 @@ async function openPopup(tabUrl, options) {
       },
     },
     tabs: { query: async () => [{ url: tabUrl }], create: (arg) => { created.push(arg); } },
-    i18n: { getMessage: () => "", getUILanguage: () => "en" },
+    i18n: { getMessage: (key) => (messages && messages[key] ? messages[key].message : ""), getUILanguage: () => "en" },
   };
   globalThis.fetch = async () => new Response("", { status: 404 });
   await import(`../src/popup.js?case=${++caseSeq}`);
@@ -165,4 +170,26 @@ test("a site whose documents are left alone is named, and an ordinary page gets 
   // story to tell either.
   const globalOff = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false, disabledHosts: ["www.books.test"] });
   assert.equal(globalOff.document.getElementById("tab-state").hidden, true);
+});
+
+// ICON-SET rules 3 and 5: the note names the right-click item by its own message, in words - no
+// typed arrow - and the footer links speak the interface language while keeping their glyphs.
+test("the popup's note and links speak the interface language", async () => {
+  const en = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false });
+  const note = en.document.getElementById("convert-note").textContent;
+  assert.equal(note, "Off by default. Or right-click a document link and choose “Convert with doc-html-translate”.");
+  assert.doesNotMatch(note, /[←-⇿]/, "no typed arrow");
+  assert.equal(en.document.getElementById("opts").textContent, "Settings", "app.settings is named Settings");
+
+  const ru = readLocale("ru");
+  const { document } = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false }, { messages: ru });
+  assert.equal(document.getElementById("convert-note").textContent,
+    ru.popupConvertNote.message.replace("{1}", ru.convertDocMenu.message));
+  // linkedom's dataset cannot read data-i18n (the "i18n" name defeats its camel-case mapping), so
+  // the static labels are checked by their tags here; i18n.test.mjs checks every tag has a message.
+  for (const [id, key] of [["help", "popupGuide"], ["site-link", "linkProductSite"]]) {
+    const link = document.getElementById(id);
+    assert.equal(link.querySelector("[data-i18n]")?.getAttribute("data-i18n"), key, `${id} is tagged for translation`);
+    assert.ok(link.querySelector('[data-glyph="nav.open-external"] svg'), `${id} keeps its glyph`);
+  }
 });

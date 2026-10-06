@@ -129,5 +129,11 @@ export function plateBackground(mode, r, block, paper, W) {
 export function conceal(sample, block, W, H, ring, paper) {
   const r = measureRing(sample, block.bbox, block.lineHeight, W, H, ring);
   const { mode, conf } = decideMode(r);
-  return { mode, conf, background: plateBackground(mode, r, block, paper, W) };
+  let bounds = block.bbox;
+  if (mode === MODE_MASK && block.lines?.length) {
+    const pad = Math.max(ring.minPad, Math.floor(block.lineHeight / MODE_MASK_PAD_DIVISOR));
+    bounds = { x0: Math.max(0, bounds.x0 - pad), y0: Math.max(0, bounds.y0 - pad),
+      x1: Math.min(W, bounds.x1 + pad), y1: Math.min(H, bounds.y1 + pad) };
+  }
+  return { mode, conf, bounds, background: plateBackground(mode, r, { ...block, bbox: bounds }, paper, W) };
 }

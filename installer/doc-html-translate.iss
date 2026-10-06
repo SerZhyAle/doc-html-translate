@@ -159,6 +159,7 @@ Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.cbz\shell\dochtmlt
 Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.cbr\shell\dochtmltranslate.convert"; Flags: dontcreatekey uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.cb7\shell\dochtmltranslate.convert"; Flags: dontcreatekey uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.cbt\shell\dochtmltranslate.convert"; Flags: dontcreatekey uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.fd-sec\shell\dochtmltranslate.convert"; Flags: dontcreatekey uninsdeletekey
 
 [Code]
 { Browser detection - the extension tasks are offered only when the matching browser is present.

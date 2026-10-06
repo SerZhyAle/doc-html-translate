@@ -27,13 +27,14 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Previous page link | `◀` + "Back" | `media.previous` | Previous page / Предыдущая страница / Попередня сторінка | conforms |
 | Next page link | `▶` + "Forward" | `media.next` | Next page / Следующая страница / Наступна сторінка | conforms |
 | Table of contents link | `☰` | `nav.contents` | Table of contents / Оглавление / Зміст | conforms - "Оглавление" is the record's declared book-reader form (0.15) |
+| Contents panel close (single page) | `×` + "Close contents" | - (`nav.close` as its word) | Close / Закрыть / Закрити | conforms - a text button, the search panel's close word; the typed cross was no vocabulary drawing (`ICON-RENDER` rule 7, 2026-10-06) |
 | Continue reading (index) | `▸` | `feature.continue-reading` | Continue reading / Продолжить чтение / Продовжити читання | conforms |
 | Text smaller | `A−` | `action.text-smaller` | Smaller text / Мельче / Дрібніше | conforms |
 | Text larger | `A+` | `action.text-larger` | Larger text / Крупнее / Більше | conforms |
 | Recognized text layer toggle | `▤` | `view.text-layer` | Text layer / Текстовый слой / Текстовий шар | conforms in glyph and name; its state is an exception (`ICON-RENDER` rule 4: the record's off form is owed, so `aria-pressed` and a pressed look carry it) |
 | Night mode quick toggle | - (new 2026-09-29, ticket 59) | `app.night-mode` | Night mode / Ночной режим / Нічний режим | conforms; its state rides `aria-pressed` like the text layer's (pressed = a night-family theme is on) |
 | Reset text size | - (new 2026-09-29, ticket 59) | `action.reset` | Reset text size / Сбросить размер текста / Скинути розмір тексту | conforms - the record's name qualified by its object, as the catalog qualifies `action.convert` by its target |
-| Theme select | `☀ ◑ ☾ ●` on the options | `app.theme` | Theme / Тема / Тема; options Light / Sepia / Dark / Night as words | conforms (the record's choices are words) |
+| Theme select | `☀ ◑ ☾ ●` on the options | `app.theme` | Theme / Тема / Тема; options Light / Sepia / Dark / Night as words (Светлая / Сепия / Тёмная / Ночная, Світла / Сепія / Темна / Нічна) | conforms (the record's choices are words, named as its note names them) |
 | Page jump select | - (text) | `nav.go-to-page` | Go to page / Перейти к странице / Перейти до сторінки | conforms |
 | Index TOC disclosure | browser's `<details>` marker | `nav.expand` / `nav.collapse` | branch title | conforms (CSS mask, `rtl: fixed`, symmetric) |
 | Index TOC link colour | `#1a0dab` (1.4:1 on dark, 1.59:1 on night) | - | - | conforms: `--dht-link`, at least 6.3:1 on all four themes (`ICON-RENDER` rule 3) |

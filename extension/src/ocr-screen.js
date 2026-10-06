@@ -10,6 +10,8 @@
 //
 // Keep this file and screen.go in sync (docs/PARITY.md).
 
+import { joinPlateLines } from "./ocr-text.js";
+
 // OCR_SCREEN_SIGMA_DIVISOR turns the measured screen pitch into a Gaussian sigma. Chosen because it
 // is at or next to the optimum on every screened image measured, at two different pitches and on
 // real material as well as synthetic (DEV/research/ocr_halftone_2026-08-12.md). Shared invariant -
@@ -118,25 +120,90 @@ export function screenPitch(grey, width, height, covered = []) {
 // this cut-off was not.
 export const OCR_SCREEN_MERGE_MAX_OVERLAP = 0.2;
 
-// mergeScreenBlocks returns kept, unchanged and in order, followed by those of found that the plates
-// already accepted leave mostly uncovered - including the screen plates taken earlier in the same
-// call, so two of them cannot stack on each other either. Every plate the ordinary pass produced
-// survives: the sweep is additive, and a pass that could move or drop an existing plate would put a
-// page that reads fine today at risk to help one that does not. rejected, when given, receives the
-// plates it refused, for the discard record - the same test decides both. Mirrors screen.go
-// mergeScreenBlocks, which returns them as its second result.
+// Preserve accepted text and engine column order, inserting uncovered rescue line runs.
+// An identical, stronger transcript can corroborate tighter geometry without rewriting text.
+// rejected receives only the refused portions. Mirrors screen.go mergeScreenBlocks.
 export function mergeScreenBlocks(kept, found, rejected = null) {
   const out = kept.slice();
-  const taken = kept.map((b) => b.bbox);
+  refineAcceptedBoxes(out, found);
+  const taken = out.map((b) => b.bbox);
   for (const b of found) {
-    if (coveredFraction(b.bbox, taken) > OCR_SCREEN_MERGE_MAX_OVERLAP) {
-      if (rejected) rejected.push(b);
+    const content = hasLineContent(b);
+    const covered = (l) => coveredFraction(l, taken) > OCR_SCREEN_MERGE_MAX_OVERLAP;
+    if (covered(b.bbox) || (content && b.lines.some(covered))) {
+      // OCR-PIPELINE amendment 1.9 A: retain the unread lines of a duplicate paragraph.
+      if (!content) { if (rejected) rejected.push(b); continue; }
+      let start = 0;
+      while (start < b.lines.length) {
+        const duplicate = covered(b.lines[start]);
+        let end = start + 1;
+        while (end < b.lines.length && covered(b.lines[end]) === duplicate) end++;
+        const part = linePart(b, start, end);
+        if (duplicate) { if (rejected) rejected.push(part); }
+        else { insertRescueBlock(out, part); taken.push(part.bbox); }
+        start = end;
+      }
       continue;
     }
-    out.push(b);
+    insertRescueBlock(out, b);
     taken.push(b.bbox);
   }
   return out;
+}
+
+// OCR-OVERLAY rule 13: policy - exact transcript, higher confidence, containment and more
+// than one type height of excess width. Mirrors screen.go refineAcceptedBoxes.
+function refineAcceptedBoxes(kept, found) {
+  for (let i = 0; i < kept.length; i++) {
+    const old = kept[i];
+    if (!hasLineContent(old)) continue;
+    const lines = old.lines.slice(); let changed = false;
+    for (let j = 0; j < lines.length; j++) {
+      let l = lines[j];
+      for (const candidate of found) {
+        if (!hasLineContent(candidate)) continue;
+        for (let k = 0; k < candidate.lines.length; k++) {
+          const n = candidate.lines[k], c = candidate.lineContent[k], o = old.lineContent[j];
+          if (c.text === o.text && c.conf > o.conf && n.x0 >= l.x0 && n.y0 >= l.y0 && n.x1 <= l.x1 && n.y1 <= l.y1 &&
+            (l.x1 - l.x0) - (n.x1 - n.x0) > Math.max(o.typeHeight, old.lineHeight)) {
+            lines[j] = n; l = n; changed = true;
+          }
+        }
+      }
+    }
+    if (changed) {
+      const b = { ...old, lines };
+      kept[i] = { ...b, bbox: linePart(b, 0, lines.length).bbox };
+    }
+  }
+}
+
+function hasLineContent(b) {
+  return b.lines?.length > 0 && b.lineContent?.length === b.lines.length &&
+    b.lines.every((l, i) => l.x1 > l.x0 && l.y1 > l.y0 && b.lineContent[i].text?.trim());
+}
+
+function linePart(b, start, end) {
+  const lines = b.lines.slice(start, end), lineContent = b.lineContent.slice(start, end);
+  const median = (xs, fallback) => { const a = xs.slice().sort((x, y) => x - y); return a.length ? a[Math.floor(a.length / 2)] : fallback; };
+  return { text: joinPlateLines(lineContent.map((c) => c.text)), lines, lineContent,
+    bbox: { x0: Math.min(...lines.map((l) => l.x0)), y0: Math.min(...lines.map((l) => l.y0)),
+      x1: Math.max(...lines.map((l) => l.x1)), y1: Math.max(...lines.map((l) => l.y1)) },
+    lineHeight: median(lines.map((l) => l.y1 - l.y0), b.lineHeight),
+    typeHeight: median(lineContent.map((c) => c.typeHeight), b.typeHeight),
+    conf: lineContent.reduce((n, c) => n + c.conf, 0) / lines.length,
+    tokens: lineContent.reduce((n, c) => n + c.tokens, 0) };
+}
+
+function insertRescueBlock(out, b) {
+  let at = out.length;
+  for (let i = 0; i < out.length; i++) {
+    const old = out[i].bbox;
+    if (Math.min(old.x1, b.bbox.x1) <= Math.max(old.x0, b.bbox.x0)) continue;
+    at = i + 1;
+    if (old.y0 > b.bbox.y0) { at = i; break; }
+  }
+  out.splice(at, 0, b);
 }
 
 // coveredFraction returns how much of r lies inside the union of rects, as a fraction of r's area.

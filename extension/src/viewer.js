@@ -849,6 +849,7 @@ function hideExportDialog() {
 function showExportDialog(extent, plan) {
   hideExportDialog();
   const card = el("div", "export-dialog");
+  applyI18n(card);
   card.setAttribute("role", "dialog");
   card.setAttribute("aria-label", t("btnSaveHtml", "Export HTML"));
 
@@ -861,7 +862,13 @@ function showExportDialog(extent, plan) {
   card.append(line);
 
   const row = el("div", "export-actions");
-  const close = () => hideExportDialog();
+  // Every way out of the card hands focus back to Export, the control that opens it, instead of
+  // dropping it on <body> where a keyboard reader has to start over.
+  const close = () => {
+    hideExportDialog();
+    const opener = $("btn-save-html");
+    if (!opener.classList.contains("hidden")) opener.focus();
+  };
   const partial = el("button", "primary");
   partial.type = "button";
   partial.textContent = t("vExportPartialBtn", "Export partial ({1} pages)", extent.rendered);
@@ -897,6 +904,14 @@ function showExportDialog(extent, plan) {
   cancel.textContent = t("vExportCancel", "Cancel");
   cancel.addEventListener("click", close);
   row.append(cancel);
+  // INPUT-PARITY cancel: Esc on the card is its Cancel button. It stops here so the reader-search
+  // panel's own Esc handler does not close that panel too.
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    close();
+  });
 
   card.append(row);
   $("content").before(card);
@@ -912,7 +927,7 @@ function showExportDialog(extent, plan) {
 // the reader stops it, a new document replaces this one (the docGen checks), or the
 // accumulated image bytes pass the export budget (a resource-limit stop, whose reason is
 // remembered so the dialog offers only the partial export afterwards).
-let prepareCtx = null;      // in-flight preparation - the Stop button talks to it
+let prepareCtx = null;      // in-flight preparation - the status bar's Cancel button talks to it
 let prepareBlocked = null;  // reason a complete export was refused for this document
 
 function stopExportPreparation() {
@@ -927,7 +942,7 @@ async function runExportPreparation(extent) {
   prepareBlocked = null;
   $("status").classList.remove("done");
   $("status-stop").hidden = false;
-  $("status-stop").textContent = t("vExportStop", "Stop");
+  $("status-stop").textContent = t("vExportStop", "Cancel");
   try {
     const outcome = extent.kind === "comic"
       ? await prepareComicPages(ctx)
@@ -1487,6 +1502,17 @@ async function loadFromData(data, title, name, gen) {
   beginConvertBadge();
   docSourceName = name;
   docSourceSize = data.byteLength;
+  // A FileDO secret file is decrypted by the desktop app with the FileDO installed on the PC;
+  // the extension never reads the container (docs/PARITY.md). The name is the only signal the
+  // format allows, so it is judged before any byte signature.
+  if (fileExt(name) === "fd-sec") {
+    recordRun({ format: "fdsec" });
+    showNotice(t("vFdsecTitle", "FileDO secret files open in the desktop app"), [
+      para(t("vFdsecBody", "The browser extension cannot open FileDO secret files (.fd-sec). Use the doc-html-translate desktop app: it asks for the password, decrypts the file with the FileDO installed on your PC and converts it.")),
+      filePickerButton(),
+    ]);
+    return;
+  }
   const format = detectFormat(data, name);
   // The format id only - never the document's name, bytes or URL. See diagnostics.js.
   recordRun({ format });
@@ -1625,7 +1651,6 @@ async function loadComicData(data, title, name) {
       showLimitNotice(err);
     } else if (err instanceof DesktopOnlyError) {
       showNotice(t("vComicAppTitle", "This comic needs the desktop app"), [
-        para(err.message),
         para(t("vComicAppBody", "Get the free doc-html-translate app at https://serzhyale.github.io/doc-html-translate/ - it opens CBR and CB7 (with 7-Zip installed).")),
         filePickerButton(),
       ]);

@@ -212,7 +212,7 @@ Open source - no accounts, no telemetry, no ads, no data collection
 doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:
 - Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.
 - Launching the bundled command-line converter and the user's web browser to display the result.
-- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), and a local Ollama server when those optional features are used.
+- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), FileDO (for .fd-sec secret files), and a local Ollama server when those optional features are used.
 These capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated ones (Google Cloud Translation API, a local Ollama model, or downloading an extra OCR language from GitHub), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate
 ```
 <!-- security-posture:end msix-justification -->

@@ -14,3 +14,16 @@ func TestSupportsImageOCR(t *testing.T) {
 		}
 	}
 }
+
+func TestConvertible(t *testing.T) {
+	for _, ext := range []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf", ".html", ".htm", ".mobi", ".azw3", ".png", ".jpg", ".cbz", ".cbr"} {
+		if !Convertible(ext) {
+			t.Errorf("%s is converted by build", ext)
+		}
+	}
+	for _, ext := range []string{".docx", ".fd-sec", "", ".zip", ".exe"} {
+		if Convertible(ext) {
+			t.Errorf("%q is not converted by build", ext)
+		}
+	}
+}

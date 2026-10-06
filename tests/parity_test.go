@@ -877,7 +877,7 @@ func TestParityOCRFontFit(t *testing.T) {
 		{"overlay.go fontBasis prefers TypeH", goSrc, `if b\.TypeH > 0 \{\s+return b\.TypeH\s+\}\s+return b\.LineH`},
 		{"ocr-plates.js sizes the font from fontBasis", plateSrc, `\(fontBasis\(b\) / width\) \* 100 \* FONT_FIT`},
 		{"ocr-plates.js fontBasis prefers typeHeight", plateSrc, `b\.typeHeight > 0 \? b\.typeHeight : b\.lineHeight`},
-		{"tesseract.go TypeH is the median of the lines' type sizes", clusterGo, `TypeH: median\(cink, 0\)`},
+		{"tesseract.go TypeH is the median of the lines' type sizes", clusterGo, `TypeH:\s+median\(cink, 0\)`},
 		{"ocr-cluster.js typeHeight is the median of the lines' type sizes", clusterJS, `typeHeight: medianOf\(cur\.ink\) \|\| 0`},
 		{"tesseract.go a released plate keeps its own line's type size", clusterGo, `TypeH: typeAt\(types, i\)`},
 		{"ocr-cluster.js a released plate keeps its own line's type size", clusterJS, `typeHeight: \(cur\.ink && cur\.ink\[i\]\) \|\| 0`},
@@ -895,10 +895,10 @@ func TestParityOCRFontFit(t *testing.T) {
 	for _, c := range []struct{ what, src, re string }{
 		{"overlay.go restores the source top", goSrc, `b\.style\.top=b\.dataset\.ocrTop;`},
 		{"overlay.go lifts a released plate", goSrc, `b\.style\.height="auto";lift\(b\);`},
-		{"overlay.go lift pins the bottom, never above the top", goSrc, `b\.offsetTop\+b\.offsetHeight>h\)b\.style\.top=Math\.max\(0,h-b\.offsetHeight\)\+"px"`},
+		{"overlay.go lift pins the bottom, never above the top", goSrc, `b\.offsetTop\+b\.offsetHeight>h\)\{var old=b\.offsetTop,top=Math\.max\(0,h-b\.offsetHeight\);\s+b\.style\.top=top\+"px";maskBackground\(b,old-top\)`},
 		{"ocr-plates.js restores the source top", plateSrc, `b\.style\.top = b\.dataset\.ocrTop;`},
 		{"ocr-plates.js lifts a released plate", plateSrc, `b\.style\.height = "auto";\s+liftPlate\(b\);`},
-		{"ocr-plates.js lift pins the bottom, never above the top", plateSrc, "b\\.offsetTop \\+ b\\.offsetHeight > h\\) b\\.style\\.top = `\\$\\{Math\\.max\\(0, h - b\\.offsetHeight\\)\\}px`"},
+		{"ocr-plates.js lift pins the bottom, never above the top", plateSrc, "b\\.offsetTop \\+ b\\.offsetHeight > h\\) \\{\\s+const old = b\\.offsetTop, top = Math\\.max\\(0, h - b\\.offsetHeight\\);\\s+b\\.style\\.top = `\\$\\{top\\}px`;\\s+maskBackground\\(b, old - top\\)"},
 	} {
 		if !regexp.MustCompile(c.re).MatchString(c.src) {
 			t.Errorf("%s: no longer true (%q) - see docs/PARITY.md OCR (overflow rule)", c.what, c.re)

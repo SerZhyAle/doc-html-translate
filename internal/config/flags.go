@@ -54,6 +54,7 @@ type Config struct {
 	OCRDownload      string // -ocr-download <lang>: download an OCR language pack and exit
 	UILang           string // -ui-lang: interface language of the console output and the page chrome ("" = from the OS)
 	Report           bool   // -report: pack the recent run logs into an archive and exit
+	FdsecPasswordEnv string // -fdsec-password-env: name of the variable holding a FileDO secret file's password
 	InputFile        string
 	// Notices are the adjustments ParseArgs made to what was typed, already in the interface
 	// language. The caller prints them: a value that was quietly replaced reads as a bug later.
@@ -89,6 +90,7 @@ func ParseArgs(args []string) (Config, error) {
 	ocrDownload := fs.String("ocr-download", "", "download an OCR language pack (e.g. rus) into the per-user tessdata folder, then exit")
 	uiLang := fs.String("ui-lang", "", "interface language for the console output and the converted page's navigation "+
 		"(default: the Windows UI language); one of: "+strings.Join(i18n.Codes, " "))
+	fdsecPasswordEnv := fs.String("fdsec-password-env", "", "for a FileDO secret file (.fd-sec): the name of an environment variable that holds its password (unattended runs; the console and the app window ask instead)")
 	report := fs.Bool("report", false, "pack the recent run logs plus an environment summary into an archive for the author, then exit")
 	version := fs.Bool("version", false, "print version and exit")
 
@@ -185,6 +187,7 @@ func ParseArgs(args []string) (Config, error) {
 		OCRDownload:      *ocrDownload,
 		UILang:           *uiLang,
 		Report:           *report,
+		FdsecPasswordEnv: *fdsecPasswordEnv,
 		Notices:          notices,
 	}
 

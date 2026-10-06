@@ -56,6 +56,9 @@ async function init() {
   await loadMessages(uiLang());
   applyI18n(document);
   applyGlyphs(document);
+  document.getElementById("convert-note").textContent = msg("popupConvertNote",
+    "Off by default. Or right-click a document link and choose “{1}”.",
+    msg("convertDocMenu", "Convert with doc-html-translate"));
   const opts = await getOptions();
   const tab = await activeTab();
   const tabUrl = (tab && tab.url) || "";

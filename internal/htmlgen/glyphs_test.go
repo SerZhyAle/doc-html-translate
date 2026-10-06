@@ -87,11 +87,15 @@ func TestReaderControlsNameEveryGlyphOnlyControl(t *testing.T) {
 	controls := []struct{ id, glyph, name string }{
 		{"dht-font-dec", "action.text-smaller", "Smaller text"},
 		{"dht-font-inc", "action.text-larger", "Larger text"},
+		{"dht-size-reset", "action.reset", "Reset text size"},
+		{"dht-night-toggle", "app.night-mode", "Night mode"},
 		{"dht-ocr-toggle", "view.text-layer", "Text layer"},
+		// The single page's contents button, in its header rather than the shared controls.
+		{"dht-contents-button", "nav.contents", "Table of contents"},
 	}
 	for _, lang := range i18n.Codes {
 		i18n.SetLanguage(lang)
-		html := readerControlsHTML()
+		html := readerControlsHTML() + buildSinglePageHeader("", "", 0, true)
 		for _, c := range controls {
 			m := regexp.MustCompile(`(?s)<button id="` + c.id + `"[^>]*>.*?</button>`).FindString(html)
 			if !strings.Contains(m, `aria-label="`+i18n.T(lang, c.name)+`"`) || !strings.Contains(m, `d="`+Glyphs[c.glyph]+`"`) {
@@ -112,6 +116,25 @@ func TestReaderControlsNameEveryGlyphOnlyControl(t *testing.T) {
 	for _, legacy := range []string{"&#9728;", "&#9681;", "&#9790;", "&#9679;", "☀", "◑", "☾", "●"} {
 		if strings.Contains(html, legacy) {
 			t.Errorf("a theme option still draws %q", legacy)
+		}
+	}
+}
+
+// The contents panel closes with nav.close's word, as the search panel does - never a typed
+// cross, which is no vocabulary drawing (ICON-SET rule 1, ICON-RENDER rule 7).
+func TestContentsPanelClosesWithTheWord(t *testing.T) {
+	defer i18n.SetLanguage(i18n.Language())
+	for _, lang := range i18n.Codes {
+		i18n.SetLanguage(lang)
+		panel := renderSingleContents(nil, 0)
+		want := `<button id="dht-contents-close" type="button">` + i18n.T(lang, "Close") + `</button>`
+		if !strings.Contains(panel, want) {
+			t.Errorf("%s: the contents close is not the word %q: %s", lang, i18n.T(lang, "Close"), panel)
+		}
+		for _, legacy := range []string{"&#215;", "×"} {
+			if strings.Contains(panel, legacy) {
+				t.Errorf("%s: the contents panel still draws %q", lang, legacy)
+			}
 		}
 	}
 }

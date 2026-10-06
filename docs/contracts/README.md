@@ -23,9 +23,11 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [PAGE-STYLE.md](PAGE-STYLE.md) | `PAGE-STYLE` | 1.2 | consumer - the kit `assets/sza-kit.css` byte-identical, page rules in `assets/site.css` |
 | [PAGE-CONTENT.md](PAGE-CONTENT.md) | `PAGE-CONTENT` | 1.2 | consumer - landing page order, "Medium app" variant |
 | [APP-BEHAVIOUR.md](APP-BEHAVIOUR.md) | `APP-BEHAVIOUR` | 0.12 draft | consumer - GUI launcher behaviour (`cmd/doc-html-ui`) |
-| [APP-STYLE.md](APP-STYLE.md) | `APP-STYLE` | 0.11 draft | consumer - desktop GUI and reader styling |
+| [APP-SETTINGS.md](APP-SETTINGS.md) | `APP-SETTINGS` | 0.2 draft | consumer - the GUI launcher's settings surface, adopted 2026-10-05 (ticket 93) |
+| [APP-STYLE.md](APP-STYLE.md) | `APP-STYLE` | 0.12 draft | consumer - desktop GUI and reader styling |
 | [ICON-SET.md](ICON-SET.md) | `ICON-SET` | 0.17 draft | consumer - one glyph and one name per meaning, inventory in [`../GLYPH-MAP.md`](../GLYPH-MAP.md) |
-| [ICON-RENDER.md](ICON-RENDER.md) | `ICON-RENDER` | 0.15 draft | consumer - grid, theme colour, RTL, accessible names |
+| [ICON-RENDER.md](ICON-RENDER.md) | `ICON-RENDER` | 0.16 draft | consumer - grid, theme colour, RTL, accessible names |
+| [WINDOWS-UI.md](WINDOWS-UI.md) | `WINDOWS-UI` | 0.1 draft | consumer - the shared Windows UI profile for the GUI launcher, adopted 2026-10-05 (ticket 93) |
 | [ICON-EXTERNAL.md](ICON-EXTERNAL.md) | `ICON-EXTERNAL` | 0.11 draft | consumer - no third-party marks; glyph sources on record |
 | [CHECK-VERDICT.md](CHECK-VERDICT.md) | `CHECK-VERDICT` | 0.11 draft | consumer - the gate scripts' exit codes and verdict line |
 | [CHECK-BASELINE.md](CHECK-BASELINE.md) | `CHECK-BASELINE` | 0.10 draft | consumer, dormant - no baseline file in use |
@@ -38,7 +40,8 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [DOC-QUALITY.md](DOC-QUALITY.md) | `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY` | 0.9 / 0.10 draft | consumer - the documentation registry and its gates; gaps in tickets 48, 49 |
 | [CAPTURE-OUTPUT.md](CAPTURE-OUTPUT.md) | `CAPTURE-OUTPUT` | 0.3 draft | consumer - a reader of the `documents` kinds (`text`, `ocr_text`, `translation`) through the TXT input; writes no file of rule 1 |
 | [PACKAGE-VERSIONING.md](PACKAGE-VERSIONING.md) | `PACKAGE-VERSIONING` | 0.2 draft | consumer - Windows desktop dotted profile; independent edition clocks remain excepted; frozen `YY.MMDD.HHmm` |
-| [INPUT-PARITY.md](INPUT-PARITY.md) | `INPUT-PARITY` | 0.3 draft | consumer, keyboard and mouse - `confirm` / `cancel` / `move` in the GUI and the extension viewer |
+| [INPUT-PARITY.md](INPUT-PARITY.md) | `INPUT-PARITY` | 0.3 draft | consumer, keyboard and mouse - `confirm` / `cancel` / `move` / `search` in the GUI, the extension viewer and the converted book's reader |
+| [FDSEC.md](FDSEC.md) | `FDSEC-BEHAVIOUR`, `FDSEC-FORMAT` | 1.5 / 1.3 | consumer, through the installed FileDO CLI - opens `.fd-sec` secret files; the length screen only of the format, adopted 2026-10-06 (ticket 94) |
 
 Read and **not applicable**: `WAVE-PARTICLES` 0.12 (`animated-backdrop/`, checked 2026-09-25, re-checked at
 0.12 on 2026-09-29). No site page and no

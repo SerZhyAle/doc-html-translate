@@ -20,6 +20,17 @@ What this repo owes it:
   "Оглавление" as `nav.contents`' Russian book-reader form; the page forms of `nav.scroll-top`. Still open there:
   items 3 (RTL paging), 5, 11 and 12, and the co-signed items 2, 6-9.
 
+**Re-checked 2026-10-06 (ticket 95).** Two typed glyphs removed and put on the retired-glyph gate: the
+single-page contents panel's `×` close (now the localized word "Close", like the search panel) and the
+extension popup's `→` in an untranslated sentence. Names corrected to their records: the extension's site-list
+"Remove" read ru "Удалить" / uk "Видалити" (`action.delete`'s words; now "Убрать" / "Прибрати"), the button
+that abandons a running export preparation read "Stop" (`media.stop`; now `action.cancel`'s "Cancel"), the
+popup's link to the settings page read "Options" (now `app.settings`' "Settings"), and the night theme read
+"Ночь" / "Ніч" against the `app.theme` note ("Ночная" / "Нічна"), in both editions - the four theme words are
+now compared across editions by `TestEditionsNameSharedControlsAlike`. The seven 0.15 records this product
+shipped in `v26.0930.1107` are still `proposed` in the vocabulary; turning them `active` (rule 6) is asked of
+the owner in `iconography/PROPOSAL-2026-10-06-doc-html-translate-shipped-records.md`.
+
 **Conformance.** Rung 2 (inventoried) and rung 3 (labels agree with glyphs) for the meanings the product
 ships: `tests/iconography_test.go` (vendored copies = catalog, both editions' tables, inline copies, retired
 glyphs, shared names) and `internal/htmlgen/glyphs_test.go` (the paging pair and every glyph-only reader control, glyph and name,

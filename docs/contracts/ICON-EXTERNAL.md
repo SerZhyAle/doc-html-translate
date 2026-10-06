@@ -14,3 +14,11 @@ What this repo owes it:
   in `assets/glyphs/PROVENANCE.txt` (SHA-256 per file) and the
   Material Icons (Apache-2.0) licence in `THIRD-PARTY-NOTICES.txt`, shipped beside the desktop app and inside
   the extension package (`extension/src/THIRD-PARTY-NOTICES.txt`).
+- Rule 6 (0.11, decided 2026-10-02; checked against the tree 2026-10-06): every language this product lets
+  the user choose or see is its endonym and no flag stands for one. The GUI's interface-language select
+  (`ENDONYMS`) and translation source/target selects (`TRANSLANG_ENDONYMS`, both in `cmd/doc-html-ui/i18n.js`,
+  pinned by `TestUITranslationLangNamesUseEndonyms`), the OCR language and download lists of both editions
+  (`internal/ocr/tessdata.go`, `extension/src/ocr-lang.js` - script qualifiers such as `縦書き` / `简体`
+  in the language's own script), and the extension's interface and source-language selects
+  (`extension/src/options.js`, `options.html`). No flag image or regional-indicator character exists in
+  either edition; the site's switcher is held by `PAGE-STYLE` section 4.2.

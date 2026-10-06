@@ -83,9 +83,28 @@ func TestMain(m *testing.M) {
 			os.Exit(0)
 		}
 		os.Exit(4)
+	case "secret":
+		// The password question of a FileDO secret file, through the real dialog package: the
+		// exit code tells the test what arrived (0 the right password, 4 another, 5 a cancel).
+		if os.Getenv(dialog.HostEnv) != dialog.HostStdio {
+			fmt.Println("not hosted")
+			os.Exit(3)
+		}
+		secret, ok := dialog.AskSecret("FileDO secret file", "Enter it", false)
+		switch {
+		case !ok:
+			os.Exit(5)
+		case string(secret) == fakeSecret:
+			os.Exit(0)
+		}
+		os.Exit(4)
 	}
 	os.Exit(2)
 }
+
+// fakeSecret is the password the "secret" stand-in accepts; it has quote and non-ASCII
+// characters so the JSON hand-over is exercised, and the tests assert it is never echoed.
+const fakeSecret = "typed \"Pw\" ü密"
 
 // guardedServer runs the real mux behind the real guard, the way main wires it.
 func guardedServer(t *testing.T) (*httptest.Server, string) {

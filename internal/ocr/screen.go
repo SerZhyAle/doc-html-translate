@@ -4,6 +4,7 @@ import (
 	"image"
 	"math"
 	"sort"
+	"strings"
 )
 
 // A halftone screen - the dot lattice a press lays down to print a tone - is the one thing the
@@ -288,27 +289,149 @@ func clampByte(v float64) uint8 {
 // this cut-off was not.
 const ocrScreenMergeMaxOverlap = 0.2
 
-// mergeScreenBlocks returns kept, unchanged and in order, followed by those of found that the plates
-// already accepted leave mostly uncovered. "Already accepted" includes the screen plates taken
-// earlier in the same call, so two of them cannot stack on each other either. The second result is
-// the plates it refused, for the discard record: the same test decides both.
-//
-// Every plate the ordinary pass produced survives: the sweep is additive, and a pass that could move
-// or drop an existing plate would put a page that reads fine today at risk to help one that does not.
+// mergeScreenBlocks preserves accepted text and its engine column order, and inserts uncovered
+// rescue line runs into that order. Higher-confidence, identical transcripts can corroborate
+// tighter geometry; they never rewrite accepted text. Rejected portions feed the discard record.
 func mergeScreenBlocks(kept, found []Block) (merged, rejected []Block) {
 	out := make([]Block, len(kept), len(kept)+len(found))
 	copy(out, kept)
-	taken := blockRects(kept)
+	refineAcceptedBoxes(out, found)
+	taken := blockRects(out)
 	for _, b := range found {
 		r := image.Rect(b.X0, b.Y0, b.X1, b.Y1)
-		if coveredFraction(r, taken) > ocrScreenMergeMaxOverlap {
-			rejected = append(rejected, b)
+		if coveredFraction(r, taken) > ocrScreenMergeMaxOverlap || hasCoveredLine(b, taken) {
+			// OCR-PIPELINE amendment 1.9 A: a duplicate paragraph may have an unread tail.
+			// Without line-associated text we cannot safely partition it.
+			if !hasLineContent(b) {
+				rejected = append(rejected, b)
+				continue
+			}
+			start := 0
+			for start < len(b.Lines) {
+				duplicate := coveredFraction(lineRect(b.Lines[start]), taken) > ocrScreenMergeMaxOverlap
+				end := start + 1
+				for end < len(b.Lines) && (coveredFraction(lineRect(b.Lines[end]), taken) > ocrScreenMergeMaxOverlap) == duplicate {
+					end++
+				}
+				part := linePart(b, start, end)
+				if duplicate {
+					rejected = append(rejected, part)
+				} else {
+					out = insertRescueBlock(out, part)
+					// Occupancy is the accepted plate rectangle, not only its lettering.
+					taken = append(taken, image.Rect(part.X0, part.Y0, part.X1, part.Y1))
+				}
+				start = end
+			}
 			continue
 		}
-		out = append(out, b)
+		out = insertRescueBlock(out, b)
 		taken = append(taken, r)
 	}
 	return out, rejected
+}
+
+// Two passes reading exactly the same line can corroborate a tighter box. This repairs
+// an artifact folded into a word box without deleting punctuation or rewriting accepted text.
+// OCR-OVERLAY rule 13: policy - require higher confidence, containment and at least one type
+// height of excess width; small coordinate jitter alone is not grounds for moving a plate.
+func refineAcceptedBoxes(kept, found []Block) {
+	for i, old := range kept {
+		if !hasLineContent(old) {
+			continue
+		}
+		changed := false
+		lines := append([]LineBox(nil), old.Lines...)
+		for j, l := range lines {
+			for _, candidate := range found {
+				if !hasLineContent(candidate) {
+					continue
+				}
+				for k, n := range candidate.Lines {
+					c, o := candidate.LineContent[k], old.LineContent[j]
+					if c.Text == o.Text && c.Conf > o.Conf && lineRect(n).In(lineRect(l)) &&
+						(l.X1-l.X0)-(n.X1-n.X0) > max(o.TypeH, old.LineH) {
+						lines[j] = n
+						l = n
+						changed = true
+					}
+				}
+			}
+		}
+		if changed {
+			old.Lines = lines
+			bounds := linePart(old, 0, len(lines))
+			old.X0, old.Y0, old.X1, old.Y1 = bounds.X0, bounds.Y0, bounds.X1, bounds.Y1
+			kept[i] = old
+		}
+	}
+}
+
+func hasCoveredLine(b Block, taken []image.Rectangle) bool {
+	if !hasLineContent(b) {
+		return false
+	}
+	for _, l := range b.Lines {
+		if coveredFraction(lineRect(l), taken) > ocrScreenMergeMaxOverlap {
+			return true
+		}
+	}
+	return false
+}
+
+func lineRect(l LineBox) image.Rectangle { return image.Rect(l.X0, l.Y0, l.X1, l.Y1) }
+
+func hasLineContent(b Block) bool {
+	if len(b.Lines) == 0 || len(b.LineContent) != len(b.Lines) {
+		return false
+	}
+	for i, l := range b.Lines {
+		if l.X1 <= l.X0 || l.Y1 <= l.Y0 || strings.TrimSpace(b.LineContent[i].Text) == "" {
+			return false
+		}
+	}
+	return true
+}
+
+func linePart(b Block, start, end int) Block {
+	p := Block{Lines: append([]LineBox(nil), b.Lines[start:end]...), LineContent: append([]LineContent(nil), b.LineContent[start:end]...)}
+	p.X0, p.Y0, p.X1, p.Y1 = p.Lines[0].X0, p.Lines[0].Y0, p.Lines[0].X1, p.Lines[0].Y1
+	var texts []string
+	var heights, types []int
+	for i, l := range p.Lines {
+		p.X0, p.Y0 = min(p.X0, l.X0), min(p.Y0, l.Y0)
+		p.X1, p.Y1 = max(p.X1, l.X1), max(p.Y1, l.Y1)
+		c := p.LineContent[i]
+		texts = append(texts, c.Text)
+		heights = append(heights, l.Y1-l.Y0)
+		types = append(types, c.TypeH)
+		p.Conf += c.Conf
+		p.tokens += c.Tokens
+	}
+	p.Text, p.LineH, p.TypeH = joinPlateLines(texts), median(heights, b.LineH), median(types, b.TypeH)
+	p.Conf /= float64(len(p.Lines))
+	return p
+}
+
+// Preserve the engine's established column order. Insert within the first overlapping column;
+// no global y-sort may interleave independent columns or reverse an RTL engine's ordering.
+func insertRescueBlock(out []Block, b Block) []Block {
+	at := len(out)
+	for i, old := range out {
+		overlap := min(old.X1, b.X1) - max(old.X0, b.X0)
+		if overlap <= 0 {
+			continue
+		}
+		at = i + 1
+		if old.Y0 > b.Y0 {
+			at = i
+			break
+		}
+	}
+	out = append(out, Block{})
+	copy(out[at+1:], out[at:])
+	out[at] = b
+	return out
 }
 
 // blockRects is the blocks' boxes as rectangles, which is the form both the merge and the trigger

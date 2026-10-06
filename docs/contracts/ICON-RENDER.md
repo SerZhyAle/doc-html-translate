@@ -1,7 +1,7 @@
 # Pointer: ICON-RENDER
 
 - **Id:** `ICON-RENDER`
-- **Version:** 0.15 draft
+- **Version:** 0.16 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` sections 3 and 10, `iconography/palette.json` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25
 - **Wire carrier:** none - a picture, not a payload
@@ -22,6 +22,12 @@ What this repo owes it:
   `#808080` and embedded as exe icon resources 1 and 2, and the extension's action icon as the mark on its own
   plate. `tests/icons_test.go` holds the committed files to the generator, the resource order and the 3:1 ratios.
 
+- **Section 11 (0.16, 2026-10-05):** the navigation identity-ink permission is noted and not taken - the GUI
+  has no destination navigation list, so there is nothing to ink; ordinary role colouring stands.
+
 **Open, under dated registry exceptions:** rule 4 for the text-layer toggle (`view.text-layer` has no drawn off
 form yet, so `aria-pressed` and a pressed look carry the state), rule 5's 44 px target on the dense reader bar
-and the site (proposal item 8, co-signed).
+and the site (proposal item 8, co-signed). Widened 2026-10-06 (ticket 95) to every web glyph-only control
+measured below 44 px: the desktop reader bar's and index toolbar's glyph buttons (about 33 x 26 px), the
+extension viewer's toolbar buttons (about 35 x 31 px, height now pinned) and its contents disclosure toggles
+(raised from 16.8 px to the product's 24 x 24 px floor). All hold that floor (`docs/PARITY.md`, ticket 57).

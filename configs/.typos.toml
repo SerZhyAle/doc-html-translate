@@ -68,6 +68,7 @@ extend-exclude = [
   # (i18n.go) and its test stay in scope; a new catalog file needs its line here.
   "internal/i18n/i18n_cli.go",
   "internal/i18n/i18n_epub.go",
+  "internal/i18n/i18n_fdsec.go",
   "internal/i18n/i18n_limits.go",
   "internal/i18n/i18n_ocr.go",
   "internal/i18n/i18n_pipeline.go",

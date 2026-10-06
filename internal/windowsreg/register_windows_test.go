@@ -246,8 +246,8 @@ func TestRegisterOpenWithForAdvertisesWithoutTakingDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Equal(got, SupportedExtensions) {
-		t.Errorf("advertised %v, want %v", got, SupportedExtensions)
+	if !slices.Equal(got, shellExtensions()) {
+		t.Errorf("advertised %v, want %v", got, shellExtensions())
 	}
 	app := `Software\Classes\Applications\doc-html-translate.exe`
 	if v, _ := h.value(app, "FriendlyAppName"); v != "DOC-HTML-TRANSLATE" {
@@ -256,7 +256,7 @@ func TestRegisterOpenWithForAdvertisesWithoutTakingDefaults(t *testing.T) {
 	if v, _ := h.value(app+`\shell\open\command`, ""); v != `"`+exe+`" "%1"` {
 		t.Errorf("open command = %q", v)
 	}
-	for _, ext := range SupportedExtensions {
+	for _, ext := range shellExtensions() {
 		if _, ok := h.value(app+`\SupportedTypes`, ext); !ok {
 			t.Errorf("%s missing from SupportedTypes", ext)
 		}
@@ -292,7 +292,7 @@ func TestRegisterContextMenuFor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if slices.Contains(got, ".rtf") || len(got) != len(SupportedExtensions)-1 {
+	if slices.Contains(got, ".rtf") || len(got) != len(shellExtensions())-1 {
 		t.Errorf("added %v, want every extension but .rtf", got)
 	}
 	verb := `Software\Classes\SystemFileAssociations\.epub\shell\` + contextMenuVerb
@@ -344,7 +344,7 @@ func TestRemoveShellEntriesUndoesRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(removed) != len(SupportedExtensions) {
+	if len(removed) != len(shellExtensions()) {
 		t.Errorf("removed %v, want every extension", removed)
 	}
 	if HasShellEntries() {
@@ -510,5 +510,54 @@ func TestOpenDefaultAppsSettings(t *testing.T) {
 	h := useFakeHKCU(t)
 	if err := OpenDefaultAppsSettings(); err != nil || h.settings != 1 {
 		t.Errorf("err = %v, opened %d times; want one open", err, h.settings)
+	}
+}
+
+// A FileDO secret file is covered by the shell entries (Open with, the right-click verb) but is
+// never offered as a default handler: a double-click stays FileDO's (ticket 94, decision Q6).
+func TestSecretFilesGetShellEntriesButNoDefaultHandler(t *testing.T) {
+	h := useFakeHKCU(t)
+	exe := `D:\portable\doc-html-translate.exe`
+	if slices.Contains(SupportedExtensions, ".fd-sec") {
+		t.Fatal(".fd-sec must not be a default-handler type")
+	}
+
+	if _, err := RegisterHandler(); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := h.value(`Software\Classes\.fd-sec`, ""); ok {
+		t.Errorf("RegisterHandler wrote a default ProgID %q for .fd-sec", v)
+	}
+
+	added, err := RegisterContextMenuFor(exe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(added, ".fd-sec") {
+		t.Errorf("the right-click verb was not added for .fd-sec: %v", added)
+	}
+	verb := contextMenuVerbPath(".fd-sec")
+	if v, _ := h.value(verb+`\command`, ""); v != `"`+exe+`" "%1"` {
+		t.Errorf(".fd-sec verb command = %q", v)
+	}
+	if _, err := RegisterOpenWithFor(exe); err != nil {
+		t.Fatal(err)
+	}
+	app := `Software\Classes\Applications\doc-html-translate.exe`
+	if _, ok := h.value(app+`\SupportedTypes`, ".fd-sec"); !ok {
+		t.Error(".fd-sec is not offered under Open with")
+	}
+	if _, ok := h.value(`Software\Classes\.fd-sec`, ""); ok {
+		t.Error("the shell entries set a default handler for .fd-sec")
+	}
+
+	if _, err := RemoveShellEntries(); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := h.value(verb+`\command`, ""); ok {
+		t.Error("RemoveShellEntries left the .fd-sec verb behind")
+	}
+	if _, ok := h.value(app+`\SupportedTypes`, ".fd-sec"); ok {
+		t.Error("RemoveShellEntries left .fd-sec under Open with")
 	}
 }

@@ -9,6 +9,38 @@ import {
   FONT_FIT, FONT_GROW_CAP, fitPlate, fontBasis, liftPlate, pictureBox, plateSpecs, renderPlates, transformRotates,
 } from "../src/ocr-plates.js";
 
+test("supported left margin and expanded concealment bounds reach the rendered plate", () => {
+  const container = document.createElement("div");
+  const b = { text: "First line second line", bbox: { x0: 100, y0: 100, x1: 300, y1: 160 },
+    lineHeight: 20, lines: [{ x0: 100, y0: 100, x1: 300, y1: 120 }, { x0: 101, y0: 140, x1: 200, y1: 160 }],
+    conceal: { mode: "mask", conf: 1, bounds: { x0: 97, y0: 97, x1: 303, y1: 163 }, background: "red" } };
+  const specs = plateSpecs({ blocks: [b], width: 1000, height: 1000 });
+  renderPlates(container, specs);
+  const p = container.querySelector(".ocr-plate");
+  assert.ok(Math.abs(parseFloat(p.style.left) - 9.7) < 1e-9);
+  assert.equal(p.style.borderRadius, "0");
+  assert.equal(p.style.textAlign, "left");
+  b.lines[1].x0 = 150;
+  assert.equal(plateSpecs({ blocks: [b], width: 1000, height: 1000 })[0].leftAligned, false);
+});
+
+test("lifting long text leaves mask stripes anchored to source lines and refit resets them", () => {
+  const box = document.createElement("div"), p = document.createElement("div"); box.append(p);
+  Object.defineProperty(box, "clientHeight", { value: 100 });
+  Object.defineProperty(p, "offsetTop", { get: () => parseFloat(p.style.top) || 0 });
+  Object.defineProperty(p, "offsetHeight", { value: 60 });
+  Object.defineProperty(p, "clientHeight", { value: 60 });
+  Object.defineProperty(p, "scrollHeight", { value: 60 });
+  p.style.top = "80px"; p.dataset.ocrMode = "mask"; p.dataset.ocrTop = "80px";
+  p.style.backgroundPosition = "0cqw 0cqw, 1cqw 2cqw";
+  liftPlate(p);
+  assert.equal(p.style.top, "40px");
+  assert.equal(p.style.backgroundPosition, "0cqw calc(0cqw + 40px),1cqw calc(2cqw + 40px)");
+  withComputedStyle(() => fitPlate(p));
+  assert.equal(p.style.top, "80px");
+  assert.equal(p.style.backgroundPosition, "0cqw 0cqw, 1cqw 2cqw");
+});
+
 test("plateSpecs places a block in percent of the image and sizes its font in cqw", () => {
   const specs = plateSpecs({
     width: 1000, height: 500,

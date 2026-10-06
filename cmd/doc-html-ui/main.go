@@ -27,6 +27,7 @@ import (
 
 	"doc-html-translate/internal/browser"
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/fdsec"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
@@ -61,6 +62,9 @@ func main() {
 	if len(os.Args) > 1 {
 		initialFile = os.Args[1]
 	}
+
+	// A plain copy a killed or crashed conversion left behind must not outlive it.
+	fdsec.SweepStale()
 
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -113,6 +117,7 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/run", jsonPost(handleRun))
 	mux.HandleFunc("/api/cancel", jsonPost(handleCancel))
 	mux.HandleFunc("/api/answer", jsonPost(handleAnswer))
+	mux.HandleFunc("/api/secret", jsonPost(handleSecret))
 	mux.HandleFunc("/api/shell-entries", jsonPost(handleShellEntries))
 	mux.HandleFunc("/api/recent-status", jsonPost(handleRecentStatus))
 	mux.HandleFunc("/api/ocr-download", jsonPost(handleOCRDownload))
@@ -752,44 +757,56 @@ func nonNil(s []string) []string {
 //	           in it by default, unless the user has picked a language before.
 //	font     → the UI font that language's script needs (Nirmala UI, Microsoft YaHei UI),
 //	           empty when the default stack covers it.
-//	logs     → how many run logs are held and how many bytes they take, for the About section.
+//	logs     → how many run logs are held and how many bytes they take, for the About section;
+//	           null with logsReason "unreadable" when the store could not be read, because an
+//	           unknown count is not zero (WINDOWS-UI section 7).
 //	author   → the address a report is mailed to. It is served rather than written into the
 //	           page a second time, so the product has one place that defines it.
 func handleEnv(w http.ResponseWriter, _ *http.Request) {
 	lang := i18n.Resolve("", "", syslocale.Lang())
-	logCount, logBytes := logStoreSize()
-	_ = json.NewEncoder(w).Encode(map[string]any{
+	env := map[string]any{
 		"packaged": isPackaged(),
 		"cli":      cliAvailable(),
 		"lang":     lang,
 		"font":     i18n.FontFamily(lang),
-		"logs":     map[string]any{"count": logCount, "bytes": logBytes},
 		"author":   authorEmail,
-	})
+	}
+	if logCount, logBytes, err := logStoreSize(); err != nil {
+		logFailure("measure log store", err)
+		env["logs"] = nil
+		env["logsReason"] = "unreadable"
+	} else {
+		env["logs"] = map[string]any{"count": logCount, "bytes": logBytes}
+	}
+	_ = json.NewEncoder(w).Encode(env)
 }
 
 // authorEmail is where a report goes. Same address as the page's feedback link.
 const authorEmail = "sza@ukr.net"
 
 // logStoreSize measures the run-log store. A store that is not there yet is empty, not an
-// error - the About section says "0 logs" and the next conversion creates it.
-func logStoreSize() (count int, bytes int64) {
+// error - the About section says "0 logs" and the next conversion creates it. Any other
+// failure to read it is returned: the caller reports the count as unknown, never as zero.
+func logStoreSize() (count int, bytes int64, err error) {
 	entries, err := os.ReadDir(report.LogsDir())
 	if err != nil {
-		return 0, 0
+		if os.IsNotExist(err) {
+			return 0, 0, nil
+		}
+		return 0, 0, err
 	}
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
-		info, err := e.Info()
-		if err != nil {
+		info, infoErr := e.Info()
+		if infoErr != nil {
 			continue
 		}
 		count++
 		bytes += info.Size()
 	}
-	return count, bytes
+	return count, bytes, nil
 }
 
 // handleOCRLangs reports the OCR language catalog with an installed flag, so the GUI can
@@ -1128,7 +1145,7 @@ func browseFile(ctx context.Context, title string) ([]string, error) {
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
 $f.Multiselect = $true
-$f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.cbz;*.cbr;*.cb7;*.cbt|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Comics|*.cbz;*.cbr;*.cb7;*.cbt|All files|*.*"
+$f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.cbz;*.cbr;*.cb7;*.cbt;*.fd-sec|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Comics|*.cbz;*.cbr;*.cb7;*.cbt|FileDO secret files|*.fd-sec|All files|*.*"
 $f.Title = ` + psString(title) + `
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { $f.FileNames | ForEach-Object { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($_)) } }`

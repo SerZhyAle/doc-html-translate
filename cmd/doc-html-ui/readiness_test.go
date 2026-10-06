@@ -14,6 +14,7 @@ func TestReadinessUsesSelectedCapabilities(t *testing.T) {
 	t.Cleanup(func() { readinessProbes = saved })
 	readinessProbes.calibre = func() bool { return false }
 	readinessProbes.sevenZip = func() bool { return false }
+	readinessProbes.filedo = func() bool { return true }
 	readinessProbes.ocrLocate = func() (string, error) { return "tesseract", nil }
 	readinessProbes.ocrMissing = func(_ context.Context, _, _ string) []string { return []string{"rus"} }
 	readinessProbes.googleKey = func() (string, error) { return "", errors.New("missing") }
@@ -71,5 +72,47 @@ func TestReadinessUsesSelectedCapabilities(t *testing.T) {
 	got = checkReadiness(context.Background(), runRequest{Input: file(".pdf"), Google: true, Ollama: true, MaxCost: "invalid"})
 	if got.GoogleLimit != "0" || len(got.Issues) != 1 || got.Issues[0].Code != "googleKey" {
 		t.Fatalf("Google precedence and effective limit = %+v", got)
+	}
+}
+
+// A FileDO secret file is screened before Convert: FileDO must be installed and the size must
+// pass the format's length rules. Both are action items, neither asks for a password.
+func TestReadinessForAFileDOSecretFile(t *testing.T) {
+	saved := readinessProbes
+	t.Cleanup(func() { readinessProbes = saved })
+	readinessProbes.filedo = func() bool { return true }
+
+	container := func(size int) string {
+		t.Helper()
+		p := filepath.Join(t.TempDir(), "notes.fd-sec")
+		if err := os.WriteFile(p, make([]byte, size), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	codes := func(r readinessResult) []string {
+		var out []string
+		for _, i := range r.Issues {
+			out = append(out, i.Code)
+		}
+		return out
+	}
+
+	if got := checkReadiness(context.Background(), runRequest{Input: container(12288)}); got.State != "ready" {
+		t.Errorf("a container that passes both screens is ready, got %+v", got)
+	}
+	got := checkReadiness(context.Background(), runRequest{Input: container(100)})
+	if got.State != "action" || !slices.Equal(codes(got), []string{"fdsecScreen"}) {
+		t.Errorf("a size that rules the file out = %+v", got)
+	}
+	readinessProbes.filedo = func() bool { return false }
+	got = checkReadiness(context.Background(), runRequest{Input: container(12288)})
+	if got.State != "action" || !slices.Equal(codes(got), []string{"filedo"}) {
+		t.Errorf("a missing FileDO = %+v", got)
+	}
+	// Missing FileDO is reported ahead of the size: install first, then the size can matter.
+	got = checkReadiness(context.Background(), runRequest{Input: container(100)})
+	if !slices.Equal(codes(got), []string{"filedo"}) {
+		t.Errorf("missing FileDO must come first, got %+v", got)
 	}
 }

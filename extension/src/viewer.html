@@ -76,7 +76,7 @@
   <!-- role="status": reading/parsing stages and the OCR counter are status messages, so they
        are announced politely instead of only changing pixels. Updates are per stage, never per
        line, so the region stays quiet while pages render. -->
-  <div id="status" role="status" aria-live="polite"><div id="progress-bar"></div><span id="status-text" data-i18n="loading">Loading..</span><button id="status-stop" type="button" hidden>Stop</button></div>
+  <div id="status" role="status" aria-live="polite"><div id="progress-bar"></div><span id="status-text" data-i18n="loading">Loading..</span><button id="status-stop" type="button" hidden>Cancel</button></div>
 
   <section id="search-panel" hidden data-i18n-aria="vSearch" aria-label="Search">
     <label for="search-input" data-i18n="vSearchText">Search text</label>
@@ -88,7 +88,7 @@
   </section>
 
   <div id="layout">
-    <nav id="toc" class="hidden" aria-label="Table of contents">
+    <nav id="toc" class="hidden" data-i18n-aria="ttToc" aria-label="Table of contents">
       <h2 data-i18n="tocHeading">Contents</h2>
       <div id="toc-tree"></div>
     </nav>

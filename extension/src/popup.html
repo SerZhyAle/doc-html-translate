@@ -20,9 +20,12 @@
     .switch input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: 0.2s; cursor: pointer; }
-    .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: var(--bar-fg); border-radius: 50%; transition: 0.2s; }
+    .slider::before { content: ""; position: absolute; width: 16px; height: 16px; inset-inline-start: 3px; top: 3px; background: var(--bar-fg); border-radius: 50%; transition: 0.2s; }
     input:checked + .slider { background: var(--accent); }
     input:checked + .slider::before { transform: translateX(16px); }
+    /* A transform has no logical form, so the knob's travel is mirrored by hand: "on" sits at the
+       reading end of the track in a right-to-left interface too. */
+    [dir="rtl"] input:checked + .slider::before { transform: translateX(-16px); }
     input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     hr { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
     a { color: var(--link); font-size: 12px; text-decoration: none; }
@@ -35,7 +38,7 @@
     .cta:hover { filter: brightness(1.1); }
     .ocr-langs { margin: 2px 0 10px; }
     .ocr-langs summary { color: var(--link); cursor: pointer; font-size: 12px; }
-    .ocr-langs-content { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--border); }
+    .ocr-langs-content { margin-top: 6px; padding-inline-start: 8px; border-inline-start: 2px solid var(--border); }
     .ocr-langs .hint { color: var(--muted); font-size: 11px; margin: 2px 0 6px; }
     .ocr-lang { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
     .ocr-lang label, .ocr-lang > span { font-size: 13px; }
@@ -67,7 +70,9 @@
     <label for="global" data-i18n="popupReflow">Reflow PDFs &amp; EPUBs</label>
     <label class="switch"><input type="checkbox" id="global"><span class="slider"></span></label>
   </div>
-  <div class="note">Off by default. Or right-click a document link &rarr; &#8220;Convert with doc-html-translate&#8221;.</div>
+  <!-- Filled by popup.js: the message quotes the context-menu item by its own key, so the two
+       never drift apart in any language. -->
+  <div class="note" id="convert-note">Off by default. Or right-click a document link and choose &#8220;Convert with doc-html-translate&#8221;.</div>
   <div class="note"><span data-i18n="siteModeLabel">Site mode</span>: <strong id="site-mode"></strong></div>
   <div class="row">
     <label for="site"><span data-i18n="popupOnThisSite">On this site</span><br><span class="host" id="host"></span><br><span class="host" id="site-membership"></span></label>
@@ -75,11 +80,11 @@
   </div>
   <hr>
   <div class="links">
-    <a id="opts" href="#" data-i18n="popupOptions">Options</a>
-    <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener">Guide &amp; help <span data-glyph="nav.open-external"></span></a>
+    <a id="opts" href="#" data-i18n="popupOptions">Settings</a>
+    <a id="help" href="https://serzhyale.github.io/doc-html-translate/extension.html" target="_blank" rel="noopener"><span data-i18n="popupGuide">Guide &amp; help</span> <span data-glyph="nav.open-external"></span></a>
   </div>
   <div class="links">
-    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener">Product site <span data-glyph="nav.open-external"></span></a>
+    <a id="site-link" href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener"><span data-i18n="linkProductSite">Product site</span> <span data-glyph="nav.open-external"></span></a>
     <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>
   </div>
   <script type="module" src="popup.js"></script>

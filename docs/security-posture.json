@@ -182,7 +182,7 @@
       "public": null,
       "publicNote": "A packaging capability, not something the app does to the user's data: the user-facing facts it enables are the capability rows below, which the privacy page renders.",
       "storeLabel": "runFullTrust",
-      "storeJustification": "doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:\n- Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.\n- Launching the bundled command-line converter and the user's web browser to display the result.\n- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), and a local Ollama server when those optional features are used.\nThese capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated ones (Google Cloud Translation API, a local Ollama model, or downloading an extra OCR language from GitHub), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate"
+      "storeJustification": "doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:\n- Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.\n- Launching the bundled command-line converter and the user's web browser to display the result.\n- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), FileDO (for .fd-sec secret files), and a local Ollama server when those optional features are used.\nThese capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated ones (Google Cloud Translation API, a local Ollama model, or downloading an extra OCR language from GitHub), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate"
     },
     {
       "id": "app-read-documents",
@@ -231,7 +231,7 @@
       "declaredIn": "no permission manifest: child processes through internal/procrun",
       "consumers": [
         "the bundled pdftotext for PDF text",
-        "Tesseract for OCR, Calibre for MOBI and AZW3, 7-Zip for CBR and CB7, ffmpeg or ImageMagick for some PDF images - each only where the user installed it"
+        "Tesseract for OCR, Calibre for MOBI and AZW3, 7-Zip for CBR and CB7, ffmpeg or ImageMagick for some PDF images, FileDO for .fd-sec secret files - each only where the user installed it"
       ],
       "evidence": [
         { "file": "internal/procrun/procrun.go", "contains": "package procrun" },
@@ -240,9 +240,34 @@
       "shownAtRequest": false,
       "shownWhere": "no prompt: a missing helper is named in the run's own message",
       "public": {
-        "en": "**Helper programs on your computer** - the bundled pdftotext for PDF, and Tesseract, Calibre, 7-Zip, ffmpeg or ImageMagick where you have installed them, run locally to read a format. The app never installs anything.",
-        "ru": "**Вспомогательные программы на вашем компьютере** - встроенный pdftotext для PDF, а также Tesseract, Calibre, 7-Zip, ffmpeg или ImageMagick, если вы их установили, запускаются локально, чтобы прочитать формат. Приложение ничего не устанавливает.",
-        "uk": "**Допоміжні програми на вашому комп'ютері** - вбудований pdftotext для PDF, а також Tesseract, Calibre, 7-Zip, ffmpeg чи ImageMagick, якщо ви їх встановили, запускаються локально, щоб прочитати формат. Застосунок нічого не встановлює."
+        "en": "**Helper programs on your computer** - the bundled pdftotext for PDF, and Tesseract, Calibre, 7-Zip, ffmpeg, ImageMagick or FileDO where you have installed them, run locally to read a format. The app never installs anything.",
+        "ru": "**Вспомогательные программы на вашем компьютере** - встроенный pdftotext для PDF, а также Tesseract, Calibre, 7-Zip, ffmpeg, ImageMagick или FileDO, если вы их установили, запускаются локально, чтобы прочитать формат. Приложение ничего не устанавливает.",
+        "uk": "**Допоміжні програми на вашому комп'ютері** - вбудований pdftotext для PDF, а також Tesseract, Calibre, 7-Zip, ffmpeg, ImageMagick чи FileDO, якщо ви їх встановили, запускаються локально, щоб прочитати формат. Застосунок нічого не встановлює."
+      }
+    },
+    {
+      "id": "app-filedo-secret-files",
+      "edition": "app",
+      "declares": "capability:open-filedo-secret-files",
+      "declaredIn": "no permission manifest: FileDO is started through internal/procrun",
+      "consumers": [
+        "the password of a .fd-sec the user opens, handed only to the local FileDO in its child environment",
+        "one decrypted copy in a per-run folder under the user's temp folder, removed after extraction"
+      ],
+      "evidence": [
+        { "file": "internal/fdsec/restore.go", "contains": "cred = \"pe:\" + SecretEnv" },
+        { "file": "internal/fdsec/workdir.go", "contains": "doc-html-translate-fdsec" }
+      ],
+      "shownAtRequest": true,
+      "shownWhere": "the password prompt in the console and the password dialog in the app window",
+      "shownText": [
+        { "file": "internal/i18n/i18n_fdsec.go", "contains": "Password for %s (no echo; an empty password opens only a file made without one - obfuscation, no secrecy): " },
+        { "file": "cmd/doc-html-ui/i18n.js", "contains": "An empty password opens only a file made without one - obfuscation, no secrecy." }
+      ],
+      "public": {
+        "en": "**The password of a FileDO secret file (.fd-sec)** - asked only when you open one, handed only to the FileDO installed on your computer, kept in memory for that run and never stored, logged or sent anywhere. The decrypted copy lives in a private folder inside your temp folder only while it is being converted. The converted pages are not encrypted.",
+        "ru": "**Пароль секретного файла FileDO (.fd-sec)** - запрашивается только когда вы открываете такой файл, передаётся только программе FileDO, установленной на вашем компьютере, хранится в памяти на время этого запуска и нигде не сохраняется, не записывается в журнал и не отправляется. Расшифрованная копия лежит в личной папке внутри временной папки только пока идёт преобразование. Преобразованные страницы не зашифрованы.",
+        "uk": "**Пароль секретного файлу FileDO (.fd-sec)** - запитується лише коли ви відкриваєте такий файл, передається лише програмі FileDO, встановленій на вашому комп'ютері, зберігається в пам'яті на час цього запуску й ніде не зберігається, не записується в журнал і не надсилається. Розшифрована копія лежить у приватній теці всередині тимчасової теки лише доки триває перетворення. Перетворені сторінки не зашифровані."
       }
     },
     {
@@ -575,7 +600,7 @@
       "target": "privacy.html",
       "block": "app-access",
       "format": "html-lists",
-      "rows": ["app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "net-app-report-mail"],
+      "rows": ["app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "app-filedo-secret-files", "net-app-report-mail"],
       "after": {
         "en": "With the default free browser translation, the app sends nothing at all.",
         "ru": "При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.",

@@ -322,6 +322,14 @@
   "vUncBody": {
     "message": "Erweiterungen können Netzwerkpfade (\\\\Server\\Freigabe) nicht lesen. Verbinden Sie die Freigabe als Laufwerk und öffnen Sie die Datei lokal, oder wählen Sie sie unten aus."
   },
+  "vFdsecTitle": {
+    "message": "FileDO-Geheimdateien öffnen sich in der Desktop-App",
+    "description": ""
+  },
+  "vFdsecBody": {
+    "message": "Die Browser-Erweiterung kann FileDO-Geheimdateien (.fd-sec) nicht öffnen. Verwenden Sie die Desktop-App doc-html-translate: Sie fragt nach dem Passwort, entschlüsselt die Datei mit dem auf Ihrem PC installierten FileDO und konvertiert sie.",
+    "description": ""
+  },
   "vBtnBuiltinViewer": {
     "message": "Im integrierten Reader öffnen"
   },
@@ -642,7 +650,7 @@
   "vExportReasonBytes": {"message":"die vollständige Datei würde etwa {1} groß - mehr als ein Browser-Tab zuverlässig hält"},
   "vExportReasonStalled": {"message":"die übrigen Seiten ließen sich nicht rendern"},
   "vExportPreparing": {"message":"Seite {1} von {2} wird vorbereitet.."},
-  "vExportStop": {"message":"Stoppen"},
+  "vExportStop": {"message":"Abbrechen"},
   "vExportStopped": {"message":"Vorbereitung gestoppt - nichts gespeichert"},
   "vStatusSaving": {"message":"HTML wird gespeichert.."},
   "vSavedCompletePages": {"message":"Gespeichert - vollständig, alle {1} Seiten"},
@@ -708,5 +716,14 @@
   "optSettingsImported": {"message": "Importiert. Geändert: {1}"},
   "optSettingsNone": {"message": "keine"},
   "optSettingsResetConfirm": {"message": "Alle Erweiterungseinstellungen zurücksetzen?"},
-  "optSettingsResetDone": {"message": "Einstellungen zurückgesetzt."}
+  "optSettingsResetDone": {"message": "Einstellungen zurückgesetzt."},
+  "popupConvertNote": {"message": "Standardmäßig aus. Oder klicken Sie mit der rechten Maustaste auf einen Dokumentlink und wählen Sie „{1}“."},
+  "popupGuide": {"message": "Anleitung & Hilfe"},
+  "optIntro": {"message": "Stellt Dokumente (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) als sauberes, umgebrochenes HTML dar, damit die eingebaute Browserfunktion „Seite übersetzen“ funktioniert. Alles läuft lokal; ins Netz geht nur der Übersetzer des Browsers selbst - und nur, wenn Sie ihn darum bitten."},
+  "optReflowAuto": {"message": "Dokumente automatisch umbrechen"},
+  "optReflowAutoHint": {"message": "Fängt Links auf PDF, EPUB, MOBI, AZW3, FB2 und RTF automatisch ab. Wenn aus, öffnen oder laden sie sich so, wie der Browser es normalerweise tut - also alles wie vorher. (Andere Formate öffnen sich immer über die Dateiauswahl.)"},
+  "optSourceLangHint": {"message": "Setzt {1}, damit der Browser die richtige Übersetzung anbietet. Die automatische Erkennung funktioniert bei den meisten Dokumenten (EPUBs nutzen zusätzlich ihre angegebene Sprache) - und liegt öfter richtig als falsch."},
+  "optOcrHint": {"message": "Erkennt Text in Bildern - in Ihren Dokumenten und über den Kontextmenüeintrag „Dieses Bild per OCR lesen und übersetzen“ - und übersetzt ihn dann mit der Browserfunktion „Seite übersetzen“. Englisch funktioniert offline; andere Sprachen werden bei Bedarf geladen und lokal gespeichert."},
+  "optNoSites": {"message": "Keine"},
+  "optDisabledSitesHint": {"message": "Verwalten Sie diese über den Schalter „Auf dieser Website“ im Popup."}
 }

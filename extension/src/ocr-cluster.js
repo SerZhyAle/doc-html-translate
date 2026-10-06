@@ -466,7 +466,7 @@ export function lineInkHeight(l) {
 // line that is nothing but such tokens keeps its box - there is then no lettering to shrink towards.
 // Mirrors tesseract.go trimOutlierWords (docs/PARITY.md).
 export function trimOutlierWords(bbox, words, scale = 1) {
-  if (!words || words.length < 2) return bbox;
+  if (!words || words.length === 0) return bbox;
   const at = (v) => Math.round(v / scale);
   const heights = words.filter((w) => w.bbox).map((w) => at(w.bbox.y1) - at(w.bbox.y0));
   const med = medianOf(heights.filter((h) => h > 0));
@@ -476,7 +476,7 @@ export function trimOutlierWords(bbox, words, scale = 1) {
     if (/[\p{L}\p{N}]/u.test(w.text || "")) return true;
     return at(w.bbox.y1) - at(w.bbox.y0) <= med * OCR_TYPE_SIZE_RATIO;
   });
-  if (!kept.length || kept.length === words.length) return bbox;
+  if (!kept.length) return bbox;
   return {
     x0: Math.min(...kept.map((w) => at(w.bbox.x0))),
     y0: Math.min(...kept.map((w) => at(w.bbox.y0))),
@@ -718,6 +718,8 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
       for (let i = 0; i < cur.texts.length; i++) {
         cur.texts[i] = repairLinePipes(cur.texts[i], cur.members[i] && cur.members[i].pipes, grid[i], med);
       }
+      const content = cur.texts.map((text, i) => ({ text, typeHeight: cur.ink[i],
+        conf: cur.members[i].conf, tokens: cur.members[i].tokens || 0 }));
       const released = releaseOversized(cur, imgW, imgH);
       if (released) {
         // A released plate is one member line; its box finds which (releaseOversized skips
@@ -727,6 +729,7 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
           if (i >= 0) {
             b.conf = cur.members[i].conf;
             b.tokens = cur.members[i].tokens || 0;
+            b.lineContent = [content[i]];
           }
         }
         blocks.push(...released);
@@ -742,6 +745,7 @@ export function clusterLines(lines, minConf = OCR_MIN_LINE_CONF, imgW = 0, imgH 
           // The block's own line boxes, in reading order. Mirrors Block.Lines in the desktop app
           // (docs/PARITY.md); the coverage rule reads them, and so does the lab's geometry.
           lines: cur.lines.slice(),
+          lineContent: content,
           // Mean line confidence, for the discard record only: a plate the screen merge refuses
           // has no line left to take one from. Mirrors Block.Conf.
           conf: cur.members.reduce((sum, m) => sum + m.conf, 0) / cur.members.length,
