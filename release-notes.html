@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0f0a">
+  <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/release-notes.html">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="doc-html-translate">
+  <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/release-notes.html">
+  <meta property="og:title" content="Release notes - Doc-HTML-Translate">
+  <meta property="og:description" content="What changed in each Doc-HTML-Translate release, from the first tagged version to the latest, in English, Russian and Ukrainian.">
+  <meta property="og:image" content="https://serzhyale.github.io/doc-html-translate/tools/store/gui-en-us.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Release notes - Doc-HTML-Translate">
+  <meta name="twitter:description" content="What changed in each Doc-HTML-Translate release, from the first tagged version to the latest, in English, Russian and Ukrainian.">
+  <meta name="twitter:image" content="https://serzhyale.github.io/doc-html-translate/tools/store/gui-en-us.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Release notes - Doc-HTML-Translate",
+    "url": "https://serzhyale.github.io/doc-html-translate/release-notes.html",
+    "inLanguage": "en",
+    "description": "What changed in each Doc-HTML-Translate release, from the first tagged version to the latest, in English, Russian and Ukrainian.",
+    "isPartOf": { "@type": "WebSite", "name": "doc-html-translate", "url": "https://serzhyale.github.io/doc-html-translate/" }
+  }
+  </script>
+  <link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/release-notes.html">
+  <link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=ru">
+  <link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=uk">
+  <link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/release-notes.html">
+  <link rel="icon" href="assets/doc-html-translate.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
+  <script>(function(){try{var q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1];if(q)document.documentElement.setAttribute('data-lang',q==='uk'?'ua':q)}catch(e){}})();</script>
+  <link rel="stylesheet" href="assets/sza-kit.css">
+  <link rel="stylesheet" href="assets/site.css">
+  <style>
+    main.prose{padding-top:1.5rem;padding-bottom:3rem}
+    .prose .release h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .8rem}
+    .prose .release h2 time{font-size:.9rem;font-weight:500;color:var(--text-2)}
+    .prose .release{border-top:1px solid var(--border);margin-top:1.4rem}
+    .prose h1{font-size:clamp(1.7rem,4vw,2.3rem);margin:.5rem 0 .4rem}
+    .prose strong{color:var(--text)}
+    .prose .lead{font-size:1.05rem;color:var(--text)}
+    .prose ol.steps li{margin:.35rem 0}
+  </style>
+  <title>Release notes - Doc-HTML-Translate</title>
+  <meta name="description" content="What changed in each Doc-HTML-Translate release, from the first tagged version to the latest, in English, Russian and Ukrainian.">
+</head>
+<body>
+  <a class="skip-link" href="#top"><span data-l="ru">К содержимому</span><span data-l="en">Skip to content</span><span data-l="ua">До змісту</span></a>
+  <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
+    <div class="seg" role="group" aria-label="Language">
+      <button type="button" data-set-lang="ru">RU</button><button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="ua">UA</button>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">◐</button>
+    <nav class="site-nav" data-nav aria-label="Main navigation"><a class="btn btn-ghost btn-sm" href="index.html"><span data-l="ru">Главная</span><span data-l="en">Home</span><span data-l="ua">Головна</span></a></nav>
+  </header>
+
+  <main class="container prose" id="top" tabindex="-1">
+    <h1><span data-l="ru">Заметки к выпускам</span><span data-l="en">Release notes</span><span data-l="ua">Нотатки до випусків</span></h1>
+    <p class="meta"><span data-l="ru">Doc-HTML-Translate &middot; от нового к старому</span><span data-l="en">Doc-HTML-Translate &middot; newest first</span><span data-l="ua">Doc-HTML-Translate &middot; від нового до старого</span></p>
+
+    <p class="lead" data-l="ru">Что изменилось в каждом выпуске приложения. Заметки написаны для пользователя; технический журнал изменений ведётся отдельно в репозитории. Расширение для браузера выходит по своим меткам и версиям и здесь не перечислено.</p>
+    <p class="lead" data-l="en">What changed in each release of the app. The notes are written for the user; the technical change ledger is kept separately in the repository. The browser extension ships under its own tags and versions and is not listed here.</p>
+    <p class="lead" data-l="ua">Що змінилося в кожному випуску застосунку. Нотатки написані для користувача; технічний журнал змін ведеться окремо в репозиторії. Розширення для браузера виходить за власними мітками та версіями і тут не перелічене.</p>
+
+    <!-- release-notes:begin releases (rendered from docs/release-notes.json by scripts/release-notes.ps1 -Render; edit the records there) -->
+    <section class="release" id="v26-0930-1107">
+      <h2>26.0930.1107 <time datetime="2026-09-30">2026-09-30</time></h2>
+      <ul data-l="ru">
+        <li>Несколько документов за один запуск: у окна приложения есть очередь пакетной конвертации, перед стартом оно показывает сводку готовности, а между запусками помнит контекст сессии.</li>
+        <li>На готовой странице работает поиск по странице и по всей книге, а чтение можно продолжить с сохранённого места. Расширение для браузера показывает состояние на панели и доступно с клавиатуры.</li>
+        <li>Распознавание текста получило традиционный китайский, вернуло заглавную I, которую распознаватель читал как палку, и сохраняет настоящие надписи, которые отсекал порог уверенности. Расширение распознаёт все картинки на открытой веб-странице прямо на месте и умеет работать по списку разрешённых сайтов.</li>
+        <li>Конвертер никогда не удаляет и не переиспользует папку, которой не владеет. Содержимое EPUB, HTML и Markdown переживает нормализацию и разбиение, а разбор RTF, PDF и потоковый перевод стали устойчивее.</li>
+        <li>Новый знак продукта на всех поверхностях, измеряемый минимум доступности интерфейса и страница доверия к установке, объясняющая предупреждение Windows SmartScreen.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Convert several documents in one run: the desktop window has a batch queue, shows a readiness summary before it starts, and remembers its session context between launches.</li>
+        <li>Search the page or the whole book in a converted page, and pick up reading where you left off. The browser extension shows its state on the toolbar and is reachable from the keyboard.</li>
+        <li>Text recognition gains Traditional Chinese, restores the capital I the recognizer used to read as a pipe, and keeps real lettering that the confidence floor used to drop. The extension can recognize every image on a live web page in place and has a site allowlist mode.</li>
+        <li>The converter never deletes or reuses a folder it does not own. EPUB, HTML and Markdown content survives normalization and splitting, and RTF, PDF and streamed-translation handling is hardened.</li>
+        <li>A new product mark on every surface, an accessibility floor for the interface chrome, and an install-trust page that explains the Windows SmartScreen warning.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Кілька документів за один запуск: у вікні застосунку є черга пакетної конвертації, перед стартом воно показує зведення готовності, а між запусками пам'ятає контекст сесії.</li>
+        <li>На готовій сторінці працює пошук по сторінці та по всій книжці, а читання можна продовжити зі збереженого місця. Розширення для браузера показує стан на панелі й доступне з клавіатури.</li>
+        <li>Розпізнавання тексту отримало традиційну китайську, повернуло велику I, яку розпізнавач читав як паличку, і зберігає справжні написи, які відсікав поріг упевненості. Розширення розпізнає всі зображення на відкритій вебсторінці просто на місці та вміє працювати за списком дозволених сайтів.</li>
+        <li>Конвертер ніколи не видаляє і не використовує повторно теку, якою не володіє. Вміст EPUB, HTML і Markdown переживає нормалізацію та розбиття, а розбір RTF, PDF і потоковий переклад стали стійкішими.</li>
+        <li>Новий знак продукту на всіх поверхнях, вимірюваний мінімум доступності інтерфейсу та сторінка довіри до встановлення, що пояснює попередження Windows SmartScreen.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0930.1107"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0912-2026">
+      <h2>26.0912.2026 <time datetime="2026-09-12">2026-09-12</time></h2>
+      <ul data-l="ru">
+        <li>Текст, распознанный на картинке, больше не сшивается через всю ширину. Комикс с пузырями по обе стороны от фигуры или страница в две колонки раньше давали широкую полосу поверх изображения, в которой реплики двух говорящих шли одной фразой. Теперь каждый блок получает свою плашку - по своему тексту и в порядке чтения.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Text recognized on a picture is no longer run together across the image. A comic with balloons on both sides of a figure, or a page in two columns, used to come back as a wide band over the artwork carrying two speakers' words as one sentence. Each block now gets its own patch, on its own text and in reading order.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Текст, розпізнаний на зображенні, більше не зшивається через усю ширину. Комікс із бульбашками обабіч постаті або сторінка у дві колонки раніше давали широку смугу поверх малюнка, де репліки двох мовців ішли одним реченням. Тепер кожен блок отримує власну плашку - за своїм текстом і в порядку читання.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0912.2026"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0815-2020">
+      <h2>26.0815.2020 <time datetime="2026-08-15">2026-08-15</time></h2>
+      <ul data-l="ru">
+        <li>Плашки распознанного текста совпадают с рисунком: без тонкой рамки, без пузыря, разрезанного надвое, и в цвете.</li>
+        <li>Отсканированная страница PDF получается читаемой, а не цветным пятном.</li>
+        <li>В карточках магазина теперь есть блок «что нового» на всех 13 языках.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Recognized-text plates match the artwork: no hairline box, no balloon split in two, and they print in colour.</li>
+        <li>A scanned PDF page comes out readable instead of a colour smear.</li>
+        <li>Store listings carry their &quot;what's new&quot; in all 13 languages.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Плашки розпізнаного тексту збігаються з малюнком: без тонкої рамки, без бульбашки, розрізаної надвоє, і в кольорі.</li>
+        <li>Відсканована сторінка PDF виходить читабельною, а не кольоровою плямою.</li>
+        <li>У картках магазину тепер є блок «що нового» всіма 13 мовами.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0815.2020"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0813-1917">
+      <h2>26.0813.1917 <time datetime="2026-08-13">2026-08-13</time></h2>
+      <ul data-l="ru">
+        <li>Текст, распознанный на картинке, теперь закрывает буквы, которые заменяет. До сих пор замена рисовалась на подложке по форме самих слов, поэтому исходник оставался виден вокруг неё и читались оба слоя сразу.</li>
+        <li>Скриншот, форма или список больше не оказываются под одной огромной подложкой. Плашка, занявшая почти всю картинку, распускается обратно на строки, из которых была собрана: страница сохраняет свою вёрстку, и ничего распознанного не теряется.</li>
+        <li>Если язык OCR не выбран, приложение само смотрит, какой письменностью написана страница. Есть данные - читает на этом языке; нет - не добавляет текста вовсе и называет языковой пакет, который надо поставить, вместо того чтобы залить русский скриншот транслитерированной чепухой.</li>
+        <li>Надписи на насыщенной графике, на печатном растре и крупная дисплейная капитель распознаются там, где прежние версии не находили ничего.</li>
+        <li>Комиксы и сканы: у каждой страницы теперь свой якорь и поле перехода по страницам, так что на страницу 30 можно дать ссылку, а не тянуть полосу прокрутки.</li>
+        <li>Новая кнопка прячет слой распознанного текста, чтобы посмотреть рисунок под ним и вернуть текст обратно.</li>
+        <li>PDF, у которого нет ни текстового слоя, ни извлекаемой картинки страницы, теперь так и пишет, а не заявляет, что OCR отключён.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Text recognized on a picture now covers the lettering it replaces. Until now the replacement was painted on a patch shaped like the words themselves, so the original stayed visible around it and both layers were readable at once.</li>
+        <li>A screenshot, a form or a list is no longer buried under one giant patch. A plate that spans most of the picture is split back into the lines it was built from, so the page keeps its own layout and nothing that was read is lost.</li>
+        <li>If you do not choose an OCR language, the app now reads the writing system on the page. Where it has the data it recognizes the page in that language; where it does not it adds no text at all and names the language pack to install - instead of covering a Russian screenshot in transliterated nonsense.</li>
+        <li>Lettering on saturated artwork, on a halftone screen, or set as large display type is recognized where earlier versions found nothing at all.</li>
+        <li>Comics and scans: every page has its own anchor and a page jump box, so you can link to page 30 instead of dragging the scrollbar.</li>
+        <li>A new button hides the recognized-text layer, so you can look at the artwork underneath and bring the text back.</li>
+        <li>A PDF with neither a text layer nor an extractable page image now says exactly that, instead of claiming OCR was switched off.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Текст, розпізнаний на зображенні, тепер закриває літери, які замінює. Досі заміна малювалася на підкладці за формою самих слів, тож оригінал лишався видимим навколо неї і читалися обидва шари водночас.</li>
+        <li>Знімок екрана, форма чи список більше не опиняються під однією величезною підкладкою. Плашка, що зайняла майже все зображення, розпускається назад на рядки, з яких її склали: сторінка зберігає власну верстку, і нічого розпізнаного не втрачається.</li>
+        <li>Якщо мову OCR не вибрано, застосунок сам дивиться, якою писемністю написана сторінка. Є дані - читає цією мовою; немає - не додає тексту взагалі й називає мовний пакет, який треба встановити, замість того щоб залити російський знімок екрана транслітерованою нісенітницею.</li>
+        <li>Написи на насиченій графіці, на друкарському растрі та великий дисплейний шрифт розпізнаються там, де попередні версії не знаходили нічого.</li>
+        <li>Комікси та скани: кожна сторінка тепер має власний якір і поле переходу за сторінками, тож на сторінку 30 можна дати посилання, а не тягнути смугу прокручування.</li>
+        <li>Нова кнопка ховає шар розпізнаного тексту, щоб подивитися малюнок під ним і повернути текст назад.</li>
+        <li>PDF, у якого немає ні текстового шару, ні видобувного зображення сторінки, тепер так і пише, а не заявляє, що OCR вимкнено.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0813.1917"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0729-0134">
+      <h2>26.0729.0134 <time datetime="2026-07-29">2026-07-29</time></h2>
+      <ul data-l="ru">
+        <li>Интерфейс теперь говорит на 13 языках: английский, русский, украинский, немецкий, итальянский, испанский, французский, португальский, арабский, хинди, бенгальский, урду и китайский.</li>
+        <li>Язык берётся из настроек Windows сам. Переопределить можно флагом -ui-lang в командной строке или переключателем в окне приложения и в расширении для браузера.</li>
+        <li>Для арабского и урду интерфейс разворачивается справа налево.</li>
+        <li>Язык интерфейса не меняет язык документа, который вы конвертируете: у готовой страницы остаётся язык книги, поэтому браузер по-прежнему предлагает её перевести.</li>
+        <li>Установщик говорит на 8 языках; на сайте появилась полноценная страница на каждом из 13 языков, а readme теперь есть и на русском, и на украинском.</li>
+        <li>Десять переводов из тринадцати сделаны машинно и не вычитаны - исправления присылайте на sza@ukr.net.</li>
+      </ul>
+      <ul data-l="en">
+        <li>The interface now speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French, Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.</li>
+        <li>It follows your Windows language on its own. Override it with -ui-lang on the command line, or with the language selector in the app window and in the browser extension.</li>
+        <li>Arabic and Urdu lay the interface out right to left.</li>
+        <li>The interface language never changes the language of the document you convert: a converted page keeps the book's own language, so the browser still offers to translate it.</li>
+        <li>The installer speaks 8 languages; the site now has a full page in each of the 13, and the readme is available in Russian and Ukrainian too.</li>
+        <li>Ten of the thirteen translations are machine-made and not proofread - corrections are welcome at sza@ukr.net.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Інтерфейс тепер говорить 13 мовами: англійська, російська, українська, німецька, італійська, іспанська, французька, португальська, арабська, гінді, бенгальська, урду та китайська.</li>
+        <li>Мова береться з налаштувань Windows сама. Перевизначити можна прапорцем -ui-lang у командному рядку або перемикачем у вікні застосунку та в розширенні для браузера.</li>
+        <li>Для арабської та урду інтерфейс розгортається справа наліво.</li>
+        <li>Мова інтерфейсу не змінює мову документа, який ви конвертуєте: у готової сторінки лишається мова книжки, тому браузер і далі пропонує її перекласти.</li>
+        <li>Інсталятор говорить 8 мовами; на сайті з'явилася повноцінна сторінка кожною з 13 мов, а readme тепер є і російською, і українською.</li>
+        <li>Десять перекладів із тринадцяти зроблені машинно й не вичитані - виправлення надсилайте на sza@ukr.net.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0729.0134"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0718-0252">
+      <h2>26.0718.0252 <time datetime="2026-07-18">2026-07-18</time></h2>
+      <ul data-l="ru">
+        <li>Архивы комиксов принимаются как вход: CBZ и CBT напрямую, CBR и CB7 через установленный 7-Zip. Каждая картинка страницы становится одной страницей в естественном порядке имён файлов, с включённым распознаванием текста.</li>
+        <li>Большие PDF больше не зависают: картинки извлекаются за один проход (случай на 2 ч 20 мин теперь занимает 6 с), а расширение для браузера отрисовывает порциями.</li>
+        <li>Распознавание текста идёт пулом процессов, прогресс показывается спокойнее; отсканированные страницы занимают окно целиком, а текст в читалке крупнее.</li>
+        <li>Текстовые файлы в большем числе кодировок читаются правильно.</li>
+        <li>Обновлены библиотеки для PDF, OCR и Markdown.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Comic archives open as input: CBZ and CBT directly, CBR and CB7 through an installed 7-Zip. Every page image becomes one page in natural file-name order, with text recognition on.</li>
+        <li>Large PDFs no longer freeze: image extraction takes one pass (a 2 h 20 min case now takes 6 s) and the browser extension renders in chunks.</li>
+        <li>Text recognition runs across a process pool with calmer progress reporting; scanned pages fill the window and reader text is larger.</li>
+        <li>Plain-text files in more encodings are read correctly.</li>
+        <li>Updated PDF, OCR and Markdown libraries.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Архіви коміксів приймаються як вхід: CBZ і CBT безпосередньо, CBR і CB7 через встановлений 7-Zip. Кожне зображення сторінки стає однією сторінкою в природному порядку імен файлів, з увімкненим розпізнаванням тексту.</li>
+        <li>Великі PDF більше не зависають: зображення видобуваються за один прохід (випадок на 2 год 20 хв тепер займає 6 с), а розширення для браузера відмальовує порціями.</li>
+        <li>Розпізнавання тексту йде пулом процесів, прогрес показується спокійніше; відскановані сторінки займають вікно повністю, а текст у читалці більший.</li>
+        <li>Текстові файли в більшій кількості кодувань читаються правильно.</li>
+        <li>Оновлено бібліотеки для PDF, OCR і Markdown.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0718.0252"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0715-2158">
+      <h2>26.0715.2158 <time datetime="2026-07-15">2026-07-15</time></h2>
+      <ul data-l="ru">
+        <li>Необязательная интеграция с Windows: пункт «Convert to HTML» в контекстном меню и необязательное назначение программой по умолчанию - оба выключены, пока вы их не включите.</li>
+        <li>Универсальный установщик setup.exe для x86 и x64, на пользователя, без прав администратора.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Opt-in Windows integration: a right-click &quot;Convert to HTML&quot; entry and an optional default-handler setting, both off until you turn them on.</li>
+        <li>A universal setup.exe installer for x86 and x64, per user, with no administrator rights.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Необов'язкова інтеграція з Windows: пункт «Convert to HTML» у контекстному меню та необов'язкове призначення програмою за замовчуванням - обидва вимкнені, доки ви їх не ввімкнете.</li>
+        <li>Універсальний інсталятор setup.exe для x86 і x64, на користувача, без прав адміністратора.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0715.2158"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0714-1658">
+      <h2>26.0714.1658 <time datetime="2026-07-14">2026-07-14</time></h2>
+      <ul data-l="ru">
+        <li>Отдельная картинка принимается как вход: PNG, JPG, WebP и другие становятся одностраничным документом с переводимым текстовым слоем от распознавания текста.</li>
+        <li>Расширение для браузера: исправлены зеркально отражённые страницы PDF.</li>
+      </ul>
+      <ul data-l="en">
+        <li>A standalone picture is accepted as input: PNG, JPG, WebP and more become a one-page document with a translatable text layer from text recognition.</li>
+        <li>Browser extension: a fix for mirrored PDF pages.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Окреме зображення приймається як вхід: PNG, JPG, WebP та інші стають односторінковим документом із текстовим шаром для перекладу від розпізнавання тексту.</li>
+        <li>Розширення для браузера: виправлено дзеркально відображені сторінки PDF.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0714.1658"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0709-2245">
+      <h2>26.0709.2245 <time datetime="2026-07-09">2026-07-09</time></h2>
+      <ul data-l="ru">
+        <li>Приложение появляется в списке Windows «Открыть с помощью», не становясь программой по умолчанию.</li>
+        <li>PDF: распознаются заголовки кириллицей ЗАГЛАВНЫМИ БУКВАМИ, а неверный -src или -dst теперь вызывает предупреждение.</li>
+        <li>Расширение для браузера: правки по замечаниям магазинов.</li>
+      </ul>
+      <ul data-l="en">
+        <li>The app shows in the Windows &quot;Open with&quot; list without becoming the default program.</li>
+        <li>PDF: Cyrillic ALL-CAPS headings are detected, and a malformed -src or -dst now draws a warning.</li>
+        <li>Browser extension: fixes from the store reviews.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Застосунок з'являється у списку Windows «Відкрити за допомогою», не стаючи програмою за замовчуванням.</li>
+        <li>PDF: розпізнаються заголовки кирилицею ВЕЛИКИМИ ЛІТЕРАМИ, а неправильний -src або -dst тепер викликає попередження.</li>
+        <li>Розширення для браузера: правки за зауваженнями магазинів.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0709.2245"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0702-1530">
+      <h2>26.0702.1530 <time datetime="2026-07-02">2026-07-02</time></h2>
+      <ul data-l="ru">
+        <li>Настоящее оглавление: собственное оглавление книги (NCX, nav или структура PDF) становится многоуровневым сворачиваемым оглавлением с якорями.</li>
+        <li>Распознавание текста на картинках - в приложении и в расширении для браузера: распознанный текст ложится поверх изображения, и страницу можно перевести.</li>
+        <li>Расширение для браузера, перекладывающее страницы PDF и EPUB, и версия приложения для Microsoft Store.</li>
+        <li>Темы чтения и запоминание места чтения; ограничитель -max-cost останавливает перевод, который обошёлся бы дороже заданного предела.</li>
+        <li>В окне приложения появились перетаскивание файлов, компактная раскладка, выбор языков и сохраняемые настройки.</li>
+      </ul>
+      <ul data-l="en">
+        <li>A real table of contents: the book's own contents (NCX, nav or the PDF outline) become a multi-level, collapsible TOC with anchors.</li>
+        <li>Text recognition on pictures, in the desktop app and in the browser extension: recognized text is laid over the image so the page can be translated.</li>
+        <li>A browser extension that reflows PDF and EPUB pages, and a Microsoft Store edition of the app.</li>
+        <li>Reading themes and a remembered reading position; a -max-cost guard stops a translation that would cost more than you allow.</li>
+        <li>The desktop window gains drag and drop, a compact layout, language pickers and saved settings.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Справжній зміст: власний зміст книжки (NCX, nav або структура PDF) стає багаторівневим згортальним змістом із якорями.</li>
+        <li>Розпізнавання тексту на зображеннях - у застосунку та в розширенні для браузера: розпізнаний текст лягає поверх зображення, і сторінку можна перекласти.</li>
+        <li>Розширення для браузера, що переверстує сторінки PDF і EPUB, та версія застосунку для Microsoft Store.</li>
+        <li>Теми читання та запам'ятовування місця читання; обмежувач -max-cost зупиняє переклад, який коштував би більше за заданий ліміт.</li>
+        <li>У вікні застосунку з'явилися перетягування файлів, компактне компонування, вибір мов і збережені налаштування.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0702.1530"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0612-0124">
+      <h2>26.0612.0124 <time datetime="2026-06-12">2026-06-12</time></h2>
+      <ul data-l="ru">
+        <li>PDF: перенесённые строки в документах с двойным интервалом снова собираются в абзацы.</li>
+        <li>Исправления во фрагментах оглавления, в настройке размера разбиения в окне приложения и в повторном использовании разобранного HTML.</li>
+      </ul>
+      <ul data-l="en">
+        <li>PDF: lines wrapped in double-spaced documents are joined back into paragraphs.</li>
+        <li>Fixes to table-of-contents snippets, the GUI split-size setting and the reuse of parsed HTML.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>PDF: перенесені рядки в документах із подвійним інтервалом знову збираються в абзаци.</li>
+        <li>Виправлення у фрагментах змісту, в налаштуванні розміру розбиття у вікні застосунку та в повторному використанні розібраного HTML.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0612.0124"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0515-2046">
+      <h2>26.0515.2046 <time datetime="2026-05-15">2026-05-15</time></h2>
+      <ul data-l="ru">
+        <li>Служебный выпуск: исправлена контрольная сумма пакета winget и подготовлена карточка. Сами программы не менялись.</li>
+      </ul>
+      <ul data-l="en">
+        <li>Maintenance release: the winget package checksum was corrected and the listing was prepared. The programs themselves are unchanged.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Службовий випуск: виправлено контрольну суму пакета winget і підготовлено картку. Самі програми не змінювалися.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0515.2046"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0511-0342">
+      <h2>26.0511.0342 <time datetime="2026-05-11">2026-05-11</time></h2>
+      <ul data-l="ru">
+        <li>PDF: раскладка страниц «рядом».</li>
+        <li>Интерфейс следует языку системы.</li>
+      </ul>
+      <ul data-l="en">
+        <li>PDF: a side-by-side page layout.</li>
+        <li>The interface follows the system locale.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>PDF: розкладка сторінок «поруч».</li>
+        <li>Інтерфейс слідує мові системи.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0511.0342"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0428-0237">
+      <h2>26.0428.0237 <time datetime="2026-04-28">2026-04-28</time></h2>
+      <ul data-l="ru">
+        <li>Окно приложения больше не меняет размер принудительно при запуске и открывается ниже.</li>
+      </ul>
+      <ul data-l="en">
+        <li>The desktop window no longer forces a resize on start and opens lower.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Вікно застосунку більше не змінює розмір примусово під час запуску і відкривається нижче.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0428.0237"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <section class="release" id="v26-0427-1713">
+      <h2>26.0427.1713 <time datetime="2026-04-27">2026-04-27</time></h2>
+      <ul data-l="ru">
+        <li>Первый размеченный выпуск: EPUB, PDF и MOBI/AZW3 (через Calibre) в чистый локальный HTML с созданной навигацией.</li>
+        <li>pdftotext входит в поставку, изображения JPEG2000 в PDF конвертируются, а отсутствие вспомогательной программы даёт предупреждение вместо тихого пропуска.</li>
+        <li>Слишком большие страницы EPUB разбиваются правильно, с учётом базового пути EPUB. Пакет отправлен в winget.</li>
+      </ul>
+      <ul data-l="en">
+        <li>The first tagged release: EPUB, PDF and MOBI/AZW3 (through Calibre) into clean local HTML with generated navigation.</li>
+        <li>pdftotext is bundled, JPEG2000 images in PDF are converted, and a missing helper tool produces a warning instead of a silent gap.</li>
+        <li>Oversized EPUB pages are split correctly, honouring the EPUB base path. The package is submitted to winget.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Перший позначений випуск: EPUB, PDF і MOBI/AZW3 (через Calibre) у чистий локальний HTML зі створеною навігацією.</li>
+        <li>pdftotext входить у постачання, зображення JPEG2000 у PDF конвертуються, а відсутність допоміжної програми дає попередження замість тихого пропуску.</li>
+        <li>Завеликі сторінки EPUB розбиваються правильно, з урахуванням базового шляху EPUB. Пакет надіслано до winget.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.0427.1713"><span data-l="ru">Файлы и контрольные суммы на GitHub</span><span data-l="en">Downloads and checksums on GitHub</span><span data-l="ua">Файли та контрольні суми на GitHub</span></a></p>
+    </section>
+    <!-- release-notes:end releases -->
+
+    <p class="meta"><span data-l="ru">Все выпуски, файлы и контрольные суммы:</span><span data-l="en">Every release, with files and checksums:</span><span data-l="ua">Усі випуски, файли та контрольні суми:</span> <a href="https://github.com/SerZhyAle/doc-html-translate/releases">github.com/SerZhyAle/doc-html-translate/releases</a> &middot;
+    <span data-l="ru">Контакт:</span><span data-l="en">Contact:</span><span data-l="ua">Контакт:</span> <a href="mailto:sza@ukr.net">sza@ukr.net</a></p>  </main>
+
+  <footer class="site-footer"><div class="container"><h2><span data-l="ru">Другие инструменты SZA</span><span data-l="en">More tools by SZA</span><span data-l="ua">Інші інструменти SZA</span></h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 Serhii Zhyhunenko</span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
+  <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
+  <script>window.SITE={strings:{
+    ru:{title:'Заметки к выпускам - Doc-HTML-Translate',desc:'Что менялось в каждом выпуске Doc-HTML-Translate: от первой размеченной версии до последней, на английском, русском и украинском.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы',nav:'Основная навигация'},
+    en:{title:'Release notes - Doc-HTML-Translate',desc:'What changed in each Doc-HTML-Translate release, from the first tagged version to the latest, in English, Russian and Ukrainian.',copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',nav:'Main navigation'},
+    ua:{title:'Нотатки до випусків - Doc-HTML-Translate',desc:'Що змінювалося в кожному випуску Doc-HTML-Translate: від першої позначеної версії до останньої, англійською, російською та українською.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',nav:'Основна навігація'}}};</script>
+  <script src="assets/site.js"></script>
+</body>
+</html>

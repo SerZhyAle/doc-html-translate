@@ -45,6 +45,10 @@ One row per surface that opens a listening port, initiates an outbound connectio
 | `net-ext-images` | extension | outbound | fetches of the pictures the reader asks the extension to recognize | no | OCR & translate this image, or OCR every image on this page, from the right-click menu | that recognition run | requests for those images to the sites that serve them - for OCR every image on this page, only a picture on a public http(s) host that the page showed but could not read itself; the others are read from the pixels the page already shows; the recognition itself runs on the device |
 | `net-ext-remote-content` | extension | outbound | images and media a rendered document itself points at on the internet | no | Load them in the viewer, for one document, or the Load remote images in documents option | that document view, or until the option is turned off | requests to the hosts the document names, which tells them the document was opened |
 | `net-ext-ocr-languages` | extension | outbound | HTTPS to tessdata.projectnaptha.com (tessdata_fast 4.0.0), through the bundled Tesseract engine | no | Download beside an OCR language in the options | one download, then cached in the browser's storage for reuse | a request naming one language data file; no user content |
+| `net-site-fonts` | site | outbound | Stylesheet and font files that the head of every site page requests from fonts.googleapis.com and fonts.gstatic.com | yes | opening any page of the product website; the desktop app and the browser extension never load them | one request per page view, cached by the browser | what any web request carries - the visitor's IP address, the browser's user agent and the address of the page; the site itself sets no cookie and adds nothing |
+| `net-site-release-tag` | site | outbound | HTTPS GET to api.github.com for the latest published release, made by assets/site.js on the home page and its translations | yes | opening the home page or one of its translations; no other page makes the request | one request per page view | what any web request carries - the visitor's IP address and the browser's user agent; nothing else |
+
+The product website contacts these third-party origins, no others (SITE-EXPERIENCE rule 14; the check reads every site page and script): `fonts.googleapis.com`, `fonts.gstatic.com`, `api.github.com`.
 
 Every source file under these roots that contains a network primitive is the evidence of a row above, or is listed here as not reaching the network:
 
@@ -71,6 +75,9 @@ It is proven against the dependency set, not against the wording of a page: `go.
 
 - `privacy.html`, block `app-access` (html-lists): `app-read-documents`, `app-open-browser`, `net-app-gui-server`, `net-app-google`, `net-app-ollama`, `net-app-ocr-languages`, `net-app-update-check`, `app-explorer-registration`, `app-run-helpers`, `app-filedo-secret-files`, `net-app-report-mail`
 - `privacy.html`, block `app-writes` (html-lists): `app-write-output`, `app-user-folder`
+- `privacy.html`, block `site-origins` (html-lists): `net-site-fonts`, `net-site-release-tag`
+- `extension-privacy.html`, block `site-origins` (html-lists): `net-site-fonts`, `net-site-release-tag`
+- `install-trust.html`, block `site-origins` (html-lists): `net-site-fonts`, `net-site-release-tag`
 - `extension-privacy.html`, block `ext-network` (html-lists): `net-ext-document`, `net-ext-images`, `net-ext-remote-content`, `net-ext-ocr-languages`
 - `extension-privacy.html`, block `ext-permissions` (html-lists): `ext-declarativenetrequest`, `ext-host-all-urls`, `ext-scripting`, `ext-offscreen`, `ext-contextmenus`, `ext-storage`
 - `extension/store/PRIVACY.md`, block `ext-network` (md-list): `net-ext-document`, `net-ext-images`, `net-ext-remote-content`, `net-ext-ocr-languages`

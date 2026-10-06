@@ -38,7 +38,18 @@
   <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
+  <script>document.documentElement.setAttribute('data-lang','en');</script>
   <link rel="stylesheet" href="assets/sza-kit.css">
   <link rel="stylesheet" href="assets/site.css">
   <style>
@@ -54,6 +65,7 @@
   <meta name="description" content="Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.">
 </head>
 <body>
+  <a class="skip-link" href="#top">Skip to content</a>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
     <a class="brand" href="./" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
@@ -61,10 +73,10 @@
       <button type="button" data-set-lang="ru" data-href="docs.ru.html">RU</button><button type="button" data-set-lang="en" data-href="docs.html">EN</button><button type="button" data-set-lang="ua" data-href="docs.uk.html">UA</button>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to light theme">◐</button>
-    <a class="btn btn-primary btn-sm" href="index.html#get">Install</a>
+    <nav class="site-nav" aria-label="Main navigation"><a class="btn btn-primary btn-sm" href="index.html#get">Install</a></nav>
   </header>
 
-  <main class="container prose" id="top">
+  <main class="container prose" id="top" tabindex="-1">
     <section class="hero">
       <span class="eyebrow">Documentation</span>
       <h1>Fast local book reading with free Chrome translation</h1>
@@ -76,45 +88,61 @@
       <h2>Editions - all the ways to use it</h2>
       <p>Doc-HTML-Translate comes in several forms; they share the same converter and the same "hand the browser clean HTML, let it translate" idea. Pick whichever fits.</p>
       <ul>
-        <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, the command-line converter and Windows file-association handler. This page documents its flags.</li>
-        <li><strong>GUI desktop app</strong> - <code>doc-html-ui.exe</code>, a windowed front-end that exposes every flag below, with a file picker, drag &amp; drop and a default-handler toggle (opt-in, off by default).</li>
+        <li><strong>Desktop app</strong> - two programs on one converter: <code>doc-html-translate.exe</code>, the command-line converter and Windows file-association handler (this page documents its flags), and <code>doc-html-ui.exe</code>, a windowed front-end that exposes every flag below, with a file picker, drag &amp; drop and a default-handler toggle (opt-in, off by default).</li>
         <li><strong>Microsoft Store app</strong> - the same desktop app (GUI + CLI) shipped as an auto-updating, Store-signed MSIX: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>.</li>
-        <li><strong>Browser extension</strong> - re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT comics) as clean HTML right in the browser so the built-in <em>Translate page</em> works on them, no app install needed: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> · <a href="extension.html">extension page</a>.</li>
+        <li><strong>Browser extension</strong> - re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT comics) as clean HTML right in the browser so the built-in <em>Translate page</em> works on them, no app install needed: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> · <a href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons</a> · <a href="extension.html">extension page</a>.</li>
       </ul>
     </section>
 
     <div class="docs-pair">
       <article class="card" id="workflow">
-        <h2>Recommended Workflow (Free)</h2>
-        <p>The most convenient everyday scenario, and yes, "free" really does mean free:</p>
-        <ul>
-          <li>Open the file with the app or run the plain command</li>
-          <li>Open generated index in Chrome</li>
-          <li>Use Chrome page translation to your target language</li>
-        </ul>
-        <figure class="shot"><img src="tools/store/gui-en-us.png" width="1366" height="768" loading="lazy" alt="The doc-html-ui window: the drop zone, the Convert button and the translation choice with Chrome (free) selected"><figcaption>Step 1 - drop the file on the app window and press Convert.</figcaption></figure>
-        <figure class="shot"><img src="tools/store/table-of-contents-en-us.png" width="1366" height="768" loading="lazy" alt="A converted book open in the browser: the first page of Alice's Adventures in Wonderland under the reader toolbar"><figcaption>Step 2 - the converted book opens in the browser. Step 3 happens in the browser's own menu: Translate page.</figcaption></figure>
-        <div class="commands">
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Copy</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># or </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Copy</button></div>
-        </div>
-        <p class="small">Why: no API key setup, no paid translation calls, very fast startup.</p>
+        <h2>Convert a book and read it translated, free</h2>
+        <p>Turn a document into a local HTML book, open it in Chrome and let Chrome's own page translation do the rest. You end up reading the book in your language, with its table of contents and navigation intact, and with no API key and no paid call on the way.</p>
+        <dl class="req">
+          <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span><span class="pill">Microsoft Store app</span></span></dd>
+          <dt>You need</dt><dd>Windows, and Chrome with its built-in <em>Translate page</em>. The <a href="extension.html">Browser extension</a> reaches the same result inside the browser, with no app.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Open <strong>doc-html-ui</strong>, drop the file on its window and press <strong>Convert</strong>. Prefer the command line? Run one of these instead:
+            <figure class="shot"><img src="tools/store/gui-en-us.png" width="1366" height="768" loading="lazy" alt="The doc-html-ui window: the drop zone, the Convert button and the translation choice with Chrome (free) selected"><figcaption>Step 1 - drop the file on the app window and press Convert.</figcaption></figure>
+            <div class="commands">
+              <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Copy</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># or </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Copy</button></div>
+            </div>
+          </li>
+          <li>The converted book opens in the browser by itself (unless <code>-noopen</code> is set).
+            <figure class="shot"><img src="tools/store/table-of-contents-en-us.png" width="1366" height="768" loading="lazy" alt="A converted book open in the browser: the first page of Alice's Adventures in Wonderland under the reader toolbar"><figcaption>Step 2 - the converted book opens in the browser.</figcaption></figure>
+          </li>
+          <li>In the browser's own menu choose <em>Translate page</em> and pick your language.</li>
+        </ol>
+        <div class="note"><span class="tag">Result</span><p>The book reads in your language in the browser. The converted pages are a folder next to the source file (or in the folder you chose), so you can open them again without converting.</p></div>
+        <p class="related"><span class="lbl">Related:</span> <a href="#flags">Main flags</a> · <a href="#formats">Supported formats</a> · <a href="#quick-start">Build the command-line converter and run it with a translation engine</a></p>
       </article>
 
       <article class="card" id="quick-start">
-        <h2>Quick Start</h2>
-        <h3>Build</h3>
-        <div class="commands">
-          <div class="copybox" data-copy="go build -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Copy</button></div>
-        </div>
-        <h3>Run</h3>
-        <div class="commands">
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Copy</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -notranslate &quot;book.epub&quot;">doc-html-translate.exe -notranslate "book.epub"<span class="cmt">   # explicit convert-only</span><button class="copy" type="button">Copy</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -src en -dst ru &quot;book.epub&quot;">doc-html-translate.exe -src en -dst ru "book.epub"<button class="copy" type="button">Copy</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -google &quot;book.epub&quot;">doc-html-translate.exe -google "book.epub"<button class="copy" type="button">Copy</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -ollama &quot;book.epub&quot;">doc-html-translate.exe -ollama "book.epub"<button class="copy" type="button">Copy</button></div>
-        </div>
+        <h2>Build the command-line converter and run it with a translation engine</h2>
+        <p>Build <code>doc-html-translate.exe</code> from source, then run it from a terminal in the mode you want. You end up with a converted book, translated during conversion if you chose an engine.</p>
+        <dl class="req">
+          <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span></span></dd>
+          <dt>You need</dt><dd>Go, to build from source (a downloaded release needs nothing). <code>-google</code> needs a saved Google Cloud Translation API key; <code>-ollama</code> needs a running local Ollama service with the model you chose.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Build it. Skip this step if you downloaded a release.
+            <div class="commands">
+              <div class="copybox" data-copy="go build -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Copy</button></div>
+            </div>
+          </li>
+          <li>Run it with the mode you want. A plain conversion is the command of <a href="#workflow">the recommended workflow</a>; these add a flag:
+            <div class="commands">
+              <div class="copybox" data-copy="doc-html-translate.exe -notranslate &quot;book.epub&quot;">doc-html-translate.exe -notranslate "book.epub"<span class="cmt cmt-end">   # explicit convert-only</span><button class="copy" type="button">Copy</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -src en -dst ru &quot;book.epub&quot;">doc-html-translate.exe -src en -dst ru "book.epub"<button class="copy" type="button">Copy</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -google &quot;book.epub&quot;">doc-html-translate.exe -google "book.epub"<button class="copy" type="button">Copy</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -ollama &quot;book.epub&quot;">doc-html-translate.exe -ollama "book.epub"<button class="copy" type="button">Copy</button></div>
+            </div>
+          </li>
+        </ol>
+        <div class="note"><span class="tag">Result</span><p>The book is converted next to the source file and opens in the browser. With <code>-google</code> or <code>-ollama</code> it is translated during conversion.</p></div>
+        <p class="related"><span class="lbl">Related:</span> <a href="#flags">Main flags</a> · <a href="#external-tools">Optional external tools</a> · <a href="#workflow">Convert a book and read it translated, free</a></p>
       </article>
     </div>
 
@@ -194,8 +222,8 @@
             <tbody>
               <tr><td><code>-notranslate</code></td><td>false</td><td>Convert only, skip translation</td></tr>
               <tr><td><code>-noopen</code></td><td>false</td><td>Do not auto-open browser</td></tr>
-              <tr><td><code>-google</code></td><td>false</td><td>Google Cloud Translation API</td></tr>
-              <tr><td><code>-ollama</code></td><td>false</td><td>Local Ollama translation</td></tr>
+              <tr><td><code>-google</code></td><td>false</td><td>Google Cloud Translation API (needs a saved API key; paid, so see <code>-max-cost</code>)</td></tr>
+              <tr><td><code>-ollama</code></td><td>false</td><td>Local Ollama translation (needs a running local Ollama service with the chosen model)</td></tr>
               <tr><td><code>-ocr</code></td><td>false</td><td>OCR text inside document images and overlay it as translatable HTML (needs Tesseract)</td></tr>
               <tr><td><code>-ocr-lang</code></td><td>(-src)</td><td>OCR language(s), e.g. eng or eng+rus. Left empty it defaults from -src (else eng), and the app then checks the writing system on the page: where the data for it is installed the language is added rather than replaced (rus+eng), and where it is not the page gets no text plates and a line naming the pack to install. Pass this flag and that check never runs</td></tr>
               <tr><td><code>-ocr-langs</code></td><td>false</td><td>List installed/available OCR languages and exit</td></tr>
@@ -209,8 +237,8 @@
               <tr><td><code>-ui-lang</code></td><td>(system)</td><td>Interface language: en ru uk de it es fr pt ar hi bn ur zh. Empty follows the Windows language</td></tr>
               <tr><td><code>-force</code></td><td>false</td><td>Rebuild even if output exists</td></tr>
               <tr><td><code>-register</code></td><td>false</td><td>Opt in to becoming the default handler for EPUB, PDF and other supported files (off by default; also the default-handler toggle in the doc-html-ui app). The first run asks, and writes nothing without a yes.</td></tr>
-              <tr><td><code>-unregister</code></td><td>false</td><td>Release the default-handler association (keeps the "Convert to HTML" right-click entry and "Open with").</td></tr>
-              <tr><td><code>-register-openwith</code></td><td>false</td><td>Add the app to the Windows "Open with" list and the "Convert to HTML" right-click menu, without making it the default handler. The doc-html-ui app offers the same as a toggle under "Windows integration" and on its first-run question; it never adds it on its own.</td></tr>
+              <tr><td><code>-unregister</code></td><td>false</td><td>Release the default-handler association (keeps the <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>"Convert to HTML" right-click entry and "Open with").</td></tr>
+              <tr><td><code>-register-openwith</code></td><td>false</td><td>Add the app to the Windows "Open with" list and the <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>"Convert to HTML" right-click menu, without making it the default handler. The doc-html-ui app offers the same as a toggle under "Windows integration" and on its first-run question; it never adds it on its own.</td></tr>
               <tr><td><code>-report</code></td><td>false</td><td>Pack the recent run logs plus an environment summary into an archive for the author, print where it landed, and exit</td></tr>
               <tr><td><code>-fdsec-password-env</code></td><td>(empty)</td><td>For a FileDO secret file (<code>.fd-sec</code>): the <strong>name</strong> of an environment variable that holds its password, for unattended runs - never the password itself. The console and the app window ask for the password instead.</td></tr>
             </tbody>
@@ -221,51 +249,50 @@
       </details>
 
       <details class="sec" id="logs">
-        <summary><span class="secnum">05</span>Sending logs to the author</summary>
-        <p>When a conversion goes wrong, a description from memory is rarely enough to reproduce it. The app keeps its
-          recent run logs on disk - up to 20 runs or 20 MB, oldest trimmed first - so a failure can still be reported an
-          hour later, or after a crash.</p>
-        <p>Open <strong>About the program</strong> at the bottom of the settings in the <strong>doc-html-ui</strong> app.
-          It states the version, the edition (portable or Microsoft Store) and whether the converter engine was found, and
-          it carries one button: <strong>Send logs to the author</strong>. One press builds a single archive, opens its
-          folder with the file selected, copies its path to the clipboard, and opens a pre-addressed message in your own
-          mail program. On the command line, <code>-report</code> builds the same archive and prints where it landed.</p>
-        <p>The archive is written to <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> and contains exactly three
-          things:</p>
+        <summary><span class="secnum">05</span>Send the logs of a failed conversion to the author</summary>
+        <p>When a conversion goes wrong, a description from memory is rarely enough to reproduce it. The app keeps its recent run logs on disk - up to 20 runs or 20 MB, oldest trimmed first - so you can pack them into one archive for the author, even an hour later or after a crash.</p>
+        <dl class="req">
+          <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span><span class="pill">Microsoft Store app</span><span class="pill">Browser extension</span></span></dd>
+          <dt>You need</dt><dd>A mail program, for the pre-addressed message. The Browser extension has no log store and copies a short summary instead (see below).</dd>
+        </dl>
+        <ol class="steps">
+          <li>Open <strong>About the program</strong> at the bottom of the settings of the <strong>doc-html-ui</strong> app and press <strong>Send logs to the author</strong>. One press builds a single archive, opens its folder with the file selected, copies its path to the clipboard and opens a pre-addressed message in your own mail program.
+            <figure class="shot"><img src="tools/store/docs-about-en-us.png" width="600" height="269" loading="lazy" alt="The About the program block of doc-html-ui, open: version, edition, update check, converter engine, the number of stored run logs and the buttons Send logs to the author and Clear stored logs"><figcaption>The About block at the bottom of the settings. Open the archive appears beside Send logs to the author once an archive exists.</figcaption></figure>
+          </li>
+          <li>Attach the archive to that message and press Send. The app never sends anything itself.</li>
+        </ol>
+        <p>The archive is written to <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> and contains exactly three things:</p>
         <ul>
-          <li><strong>environment.txt</strong> - version, edition, platform, interface language, whether Tesseract was
-            found and which OCR languages are installed, and the default Ollama model. Always English, so the author reads
-            one format.</li>
+          <li><strong>environment.txt</strong> - version, edition, platform, interface language, whether Tesseract was found and which OCR languages are installed, and the default Ollama model. Always English, so the author reads one format.</li>
           <li><strong>settings.json</strong> - the settings that shaped the last run.</li>
           <li><strong>logs/</strong> - the recent run logs, newest first.</li>
         </ul>
-        <p>Everything in it is redacted first: anything shaped like a key, token, password or Google API key becomes
-          <code>&lt;redacted&gt;</code>, and your own folders collapse to <code>%USERPROFILE%</code> and
-          <code>%LOCALAPPDATA%</code>. <strong>Document file names are kept on purpose</strong> - a log that cannot be
-          matched to a document usually cannot be acted on. Your Google API key is never in the archive; an automated test
-          fails the build if it could be. The archive is capped at 15 MB, dropping the oldest logs first and telling you
-          how many were left out.</p>
-        <p><strong>Nothing is ever sent automatically.</strong> The app opens no network connection for this; it hands you
-          a file and an unsent message, you attach the archive and press Send. Use <strong>Open the archive</strong> in the
-          same section to look inside first, and <strong>Clear stored logs</strong> if you would rather keep no run history
-          on disk at all.</p>
-        <p>The <strong>browser extension</strong> has no log store to archive, so it offers the equivalent it can honestly
-          give: a <strong>Copy diagnostics</strong> button in the About block of its options page. It copies a short
-          English summary - extension version, browser, interface language, your option set, and the format, page count and
-          last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document
-          text and no list of your sites.</p>
+        <p>Everything in it is redacted first: anything shaped like a key, token, password or Google API key becomes <code>&lt;redacted&gt;</code>, and your own folders collapse to <code>%USERPROFILE%</code> and <code>%LOCALAPPDATA%</code>. <strong class="claim">Document file names are kept on purpose</strong> - a log that cannot be matched to a document usually cannot be acted on. Your Google API key is never in the archive; an automated test fails the build if it could be. The archive is capped at 15 MB, dropping the oldest logs first and telling you how many were left out.</p>
+        <p><strong class="claim">Nothing is ever sent automatically.</strong> The app opens no network connection for this; it hands you a file and an unsent message, you attach the archive and press Send. Use <strong>Open the archive</strong> in the same section to look inside first, and <strong>Clear stored logs</strong> if you would rather keep no run history on disk at all.</p>
+        <p>On the command line, <code>-report</code> builds the same archive and prints where it landed.</p>
+        <p>The <strong class="claim">Browser extension</strong> has no log store to archive, so it offers the equivalent it can honestly give: a <strong>Copy diagnostics</strong> button in the About block of its options page. It copies a short English summary - extension version, browser, interface language, your option set, and the format, page count and last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document text and no list of your sites.</p>
+        <div class="note"><span class="tag">Result</span><p>You hold one redacted archive, 15 MB at most, and an unsent message to the author. Nothing has left your PC until you press Send.</p></div>
+        <p class="related"><span class="lbl">Related:</span> <a href="#flags">Main flags</a> (<code>-report</code>) · <a href="privacy.html">Privacy</a></p>
       </details>
 
       <details class="sec" id="secret-files">
-        <summary><span class="secnum">06</span>FileDO secret files (.fd-sec)</summary>
-        <p>A <code>.fd-sec</code> file is a <strong>FileDO secret file</strong>. Open it like any other document - from the command line, by picking or dropping it in the window, from the queue or the recent list, or with the right-click <em>Convert to HTML</em> entry. Nothing in the bytes says what is inside, so the app only suspects a secret file, and then:</p>
-        <ol>
-          <li>decides first, before asking anything, whether the result is already finished (an unchanged file is reopened with no password at all), whether FileDO is installed and whether the file's size fits the format;</li>
-          <li>asks for the password - without echo in a console, or in a masked field of the window (once for a whole queue). An empty password opens only a file made without one: that is obfuscation, not secrecy;</li>
-          <li>decrypts the file with the <strong>FileDO installed on your PC</strong> (<code>winget install SerZhyAle.FileDO</code>, the Microsoft Store, or the FileDO setup or portable build) into one private folder under your temp folder, converts the document or picture inside exactly as it would convert the original, and removes the decrypted copy as soon as it has been read. A copy left by a crash is swept at the next start.</li>
+        <summary><span class="secnum">06</span>Open a FileDO secret file (.fd-sec) and convert what is inside</summary>
+        <p>A <code>.fd-sec</code> file is a <strong class="claim">FileDO secret file</strong>. The app asks for its password, decrypts it with the FileDO installed on your PC, and converts the document or picture inside as it would convert the original. You end up with an ordinary HTML book beside your documents.</p>
+        <dl class="req">
+          <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span><span class="pill">Microsoft Store app</span></span></dd>
+          <dt>You need</dt><dd>FileDO installed on your PC (<code>winget install SerZhyAle.FileDO</code>, the Microsoft Store, or the FileDO setup or portable build), and the file's password. The Browser extension does not open secret files.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Open it like any other document: from the command line, by picking or dropping it in the window, from the queue or the recent list, or with the right-click <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><em>Convert to HTML</em> entry. Nothing in the bytes says what is inside, so the app only suspects a secret file. First, before asking anything, it decides whether the result is already finished (an unchanged file is reopened with no password at all), whether FileDO is installed and whether the file's size fits the format.</li>
+          <li>Type the password in the masked field and press <strong>Open</strong> - once for a whole queue; a console asks without echo. An empty password opens only a file made without one: that is obfuscation, not secrecy.
+            <figure class="shot"><img src="tools/store/docs-password-en-us.png" width="560" height="246" loading="lazy" alt="The password dialog of doc-html-ui for a FileDO secret file: a masked Password field, with the Open and Cancel buttons"><figcaption>The masked password question of a secret file.</figcaption></figure>
+          </li>
         </ol>
-        <p>The result is named after the secret file and is <strong>not encrypted</strong> - it sits beside your documents like any other conversion. The password goes only to the local FileDO and is never stored, logged, sent anywhere or shown on a command line (see the <a href="privacy.html">privacy page</a>). For unattended runs name an environment variable that holds the password: <code>-fdsec-password-env NAME</code> - a variable name, never the password itself.</p>
-        <p class="small">Refused, each with its own message: a secret file that holds a folder, one that holds another secret file, one that holds a type this app does not convert, a wrong password (the message offers all three readings: wrong password, not a secret file, or altered), a damaged file, and a FileDO too old for the kind of secret file (update it). The browser extension does not open secret files.</p>
+        <p>The app then decrypts the file with the <strong class="claim">FileDO installed on your PC</strong> into one private folder under your temp folder, converts the document or picture inside exactly as it would convert the original, and removes the decrypted copy as soon as it has been read. A copy left by a crash is swept at the next start.</p>
+        <p>For unattended runs name an environment variable that holds the password: <code>-fdsec-password-env NAME</code> - a variable name, never the password itself.</p>
+        <p class="small">Refused, each with its own message: a secret file that holds a folder, one that holds another secret file, one that holds a type this app does not convert, a wrong password (the message offers all three readings: wrong password, not a secret file, or altered), a damaged file, and a FileDO too old for the kind of secret file (update it).</p>
+        <div class="note"><span class="tag">Result</span><p>The result is named after the secret file and is <strong class="claim">not encrypted</strong> - it sits beside your documents like any other conversion. The password goes only to the local FileDO and is never stored, logged, sent anywhere or shown on a command line.</p></div>
+        <p class="related"><span class="lbl">Related:</span> <a href="privacy.html">Privacy</a> · <a href="#flags">Main flags</a> (<code>-fdsec-password-env</code>) · <a href="#formats">Supported formats</a></p>
       </details>
     </section>
 

@@ -38,7 +38,18 @@
   <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var d=document.documentElement,t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'),q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1],l=q||localStorage.getItem('sza-lang');if(l==='uk')l='ua';if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')===0?'ru':n.indexOf('uk')===0?'ua':'en'}d.setAttribute('data-theme',t);d.setAttribute('data-lang',l)}catch(e){}})();</script>
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
+  <script>(function(){try{var q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1];if(q)document.documentElement.setAttribute('data-lang',q==='uk'?'ua':q)}catch(e){}})();</script>
   <link rel="stylesheet" href="assets/sza-kit.css">
   <link rel="stylesheet" href="assets/site.css">
   <style>
@@ -83,6 +94,7 @@
   <meta name="description" content="Re-renders PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown and HTML as clean HTML so the built-in Translate page in Chrome and Edge works on them. Fully local.">
 </head>
 <body>
+  <a class="skip-link" href="#top"><span data-l="ru">К содержимому</span><span data-l="en">Skip to content</span><span data-l="ua">До змісту</span></a>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
@@ -90,10 +102,10 @@
       <button type="button" data-set-lang="ru">RU</button><button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="ua">UA</button>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">◐</button>
-    <a class="btn btn-primary btn-sm" href="#get"><span data-l="ru">Установка</span><span data-l="en">Install</span><span data-l="ua">Встановлення</span></a>
+    <nav class="site-nav" data-nav aria-label="Main navigation"><a class="btn btn-primary btn-sm" href="#get"><span data-l="ru">Установка</span><span data-l="en">Install</span><span data-l="ua">Встановлення</span></a></nav>
   </header>
 
-<main class="container" id="top">
+<main class="container" id="top" tabindex="-1">
   <section class="hero">
     <span class="eyebrow"><span data-l="ru">Расширение для браузера · Chrome · Edge</span><span data-l="en">Browser extension · Chrome · Edge</span><span data-l="ua">Розширення для браузера · Chrome · Edge</span></span>
     <h1>
@@ -434,9 +446,9 @@
   <footer class="site-footer"><div class="container"><h2><span data-l="ru">Другие инструменты SZA</span><span data-l="en">More tools by SZA</span><span data-l="ua">Інші інструменти SZA</span></h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 Serhii Zhyhunenko</span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{
-    ru:{title:'Doc-HTML-Translate - перевод PDF и EPUB в браузере',desc:'Перерисовывает PDF и EPUB в чистый HTML, чтобы встроенный «Перевести страницу» в Chrome и Edge работал на них бесплатно. Локально, без ключей и загрузок.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы',expand:'Развернуть все',collapse:'Свернуть все'},
-    en:{title:'Doc-HTML-Translate - translate PDF and EPUB in the browser',desc:"Re-renders PDFs and EPUBs as clean HTML so the built-in Translate page in Chrome and Edge works on them for free. Fully local - no keys, no uploads.",copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',expand:'Expand all',collapse:'Collapse all'},
-    ua:{title:'Doc-HTML-Translate - переклад PDF та EPUB у браузері',desc:'Перемальовує PDF та EPUB у чистий HTML, щоб вбудований «Перекласти сторінку» в Chrome і Edge працював на них безкоштовно. Локально, без ключів і завантажень.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',expand:'Розгорнути все',collapse:'Згорнути все'}}};</script>
+    ru:{title:'Doc-HTML-Translate - перевод PDF и EPUB в браузере',desc:'Перерисовывает PDF и EPUB в чистый HTML, чтобы встроенный «Перевести страницу» в Chrome и Edge работал на них бесплатно. Локально, без ключей и загрузок.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы',expand:'Развернуть все',collapse:'Свернуть все',nav:'Основная навигация'},
+    en:{title:'Doc-HTML-Translate - translate PDF and EPUB in the browser',desc:"Re-renders PDFs and EPUBs as clean HTML so the built-in Translate page in Chrome and Edge works on them for free. Fully local - no keys, no uploads.",copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',expand:'Expand all',collapse:'Collapse all',nav:'Main navigation'},
+    ua:{title:'Doc-HTML-Translate - переклад PDF та EPUB у браузері',desc:'Перемальовує PDF та EPUB у чистий HTML, щоб вбудований «Перекласти сторінку» в Chrome і Edge працював на них безкоштовно. Локально, без ключів і завантажень.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',expand:'Розгорнути все',collapse:'Згорнути все',nav:'Основна навігація'}}};</script>
   <script src="assets/site.js"></script>
 </body>
 </html>

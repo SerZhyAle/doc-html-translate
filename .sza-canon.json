@@ -29,7 +29,7 @@
   "site": {
     "kind": "product",
     "root": ".",
-    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "install-trust.html", "extension.html", "extension-privacy.html",
+    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "install-trust.html", "release-notes.html", "extension.html", "extension-privacy.html",
               "ar/index.html", "bn/index.html", "de/index.html", "es/index.html", "fr/index.html",
               "hi/index.html", "it/index.html", "pt/index.html", "ur/index.html", "zh/index.html"]
   },

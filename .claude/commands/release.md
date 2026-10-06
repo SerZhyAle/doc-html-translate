@@ -54,6 +54,10 @@ later session reads the file instead of guessing.
    (`.github/workflows/release.yml`). Verify those subjects read as user-facing "What's new"; if any
    are unclear, note it - the cleanup belongs in `/build` (commit subjects), not here.
 4. Draft the human "What's new in <version>" summary for the user to approve before any tag push.
+5. Once approved, add it as the newest record of [docs/release-notes.json](../../docs/release-notes.json) (en, ru and
+   uk, the same bullets, plain text, house typography) and run `./scripts/release-notes.ps1 -Render`: the site's
+   release-notes page is assembled from that file at the release, never edited per ticket, and the check fails on
+   an app tag with no record.
 
 **Step D - Preflight (free).** Confirm clean tree + green gate, and that the **gate evidence** line in the
 Step A output is green (the last `check.ps1` passed on HEAD's exact tree). Quote the **contract gate** line
@@ -67,7 +71,8 @@ blocks the tag. Commit anything outstanding:
 
 **Step E - Docs & site (free, local commit).** Update every surface via `/docs-sync` (manifest
 [DEV/DOCS_SURFACES.md](../../DEV/DOCS_SURFACES.md) - README.md, the `docs.*` en/ru/uk trio, `index.html`,
-`extension.html`, `extension/store/LISTING.md`, `extension/README.md`, `_locales/*/messages.json`) plus the
+`extension.html`, `extension/store/LISTING.md`, `extension/README.md`, `_locales/*/messages.json`, and the
+`release-notes.html` render from Step C) plus the
 `DEV/CHANGELOG.md` "What's new" entries from Step C, then commit via `build-local.ps1`.
 
 **Step F - GitHub Release `[PAID]`.** Re-run `./scripts/release.ps1` and **refuse to push the tag** unless it

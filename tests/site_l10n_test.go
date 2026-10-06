@@ -38,6 +38,11 @@ import (
 
 var updateL10n = flag.Bool("update-l10n", false, "re-stamp every localized site page with the hash of its current English source")
 
+// generatedPage is rendered from one source (docs/release-notes.json) into all three languages at
+// once, so its translations cannot be older than its English and a stamp would only go stale at every
+// release; scripts/release-notes.ps1 holds it against the source instead.
+const generatedPage = "release-notes.html"
+
 var l10nStampRe = regexp.MustCompile(`<!-- l10n-source: (\S+) sha256:([0-9a-f]{16}) -->`)
 
 // l10nSources maps each localized page to the English page it is made from. docs.html is English
@@ -45,6 +50,9 @@ var l10nStampRe = regexp.MustCompile(`<!-- l10n-source: (\S+) sha256:([0-9a-f]{1
 func l10nSources() map[string]string {
 	m := map[string]string{"docs.ru.html": "docs.html", "docs.uk.html": "docs.html"}
 	for _, p := range inPageTrioPages {
+		if p == generatedPage {
+			continue
+		}
 		m[p] = p
 	}
 	for _, c := range localeLandings {
@@ -71,7 +79,7 @@ func englishFingerprint(source string) (string, error) {
 func TestSiteTranslationFreshness(t *testing.T) {
 	sources := l10nSources()
 	for _, p := range sitePages() {
-		if _, ok := sources[p]; !ok && p != "docs.html" {
+		if _, ok := sources[p]; !ok && p != "docs.html" && p != generatedPage {
 			t.Errorf("%s is served but has no translation source on record; add it to l10nSources", p)
 		}
 	}

@@ -18,6 +18,12 @@ What this repo owes it (the landing `index.html` and the ten locale landings):
 - Never an invented channel, command or claim; the release link resolves the latest release at run time and
   falls back to `/releases/latest`.
 
+Deviation (owner decision 2026-10-06, to be recorded as a dated registry exception and raised as a catalog
+amendment): the hero of the landing and of the ten locale landings carries the full name "Doc-HTML-Translate"
+in a prominent size beside the real application icon (`assets/doc-html-translate.ico`), repeating the header
+mark, and a row of help and documentation links under the proof strip. The contract's "the hero does not repeat
+the mark or the name" is overridden for this site until the catalog is amended.
+
 Child pages follow style and footer rules without the landing order or distribution block (1.2).
 `extension.html` distributes its edition and keeps its own get-started block; docs, privacy and trust
 pages need none. The old child-page exception is closed.

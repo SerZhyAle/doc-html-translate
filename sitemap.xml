@@ -136,6 +136,27 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/install-trust.html"/>
   </url>
   <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/release-notes.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/release-notes.html?l=ru</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+  </url>
+  <url>
+    <loc>https://serzhyale.github.io/doc-html-translate/release-notes.html?l=uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=ru"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/release-notes.html?l=uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://serzhyale.github.io/doc-html-translate/release-notes.html"/>
+  </url>
+  <url>
     <loc>https://serzhyale.github.io/doc-html-translate/extension-privacy.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html"/>
     <xhtml:link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/extension-privacy.html?l=ru"/>

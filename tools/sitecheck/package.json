@@ -1,0 +1,9 @@
+{
+  "name": "doc-html-translate-sitecheck",
+  "private": true,
+  "type": "module",
+  "description": "Real-browser run of the product-site SITE-CHECKLIST (ticket 102); dev tooling, not shipped",
+  "scripts": { "run": "node run.mjs" },
+  "dependencies": { "playwright-core": "1.58.2" }
+}
+

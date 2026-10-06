@@ -1,0 +1,50 @@
+{
+  "$comment": "Facts of doc-html-translate typed once (SITE-REPRESENTATION rules 3 and 4). The pillars and their order are in POSITIONING.md. tests/site_positioning_test.go compares the pages with this file; a fact changed here fails the test until every page that states it is changed in the same edit.",
+  "editions": [
+    {
+      "id": "desktop-app",
+      "names": { "en": "Desktop app", "ru": "Настольное приложение", "uk": "Настільний застосунок" },
+      "derivesFrom": ["cmd/doc-html-translate", "cmd/doc-html-ui"],
+      "channels": ["github-releases", "setup-installer", "winget"]
+    },
+    {
+      "id": "store-app",
+      "names": { "en": "Microsoft Store app", "ru": "Приложение из Microsoft Store", "uk": "Застосунок із Microsoft Store" },
+      "derivesFrom": ["msix/AppxManifest.xml"],
+      "channels": ["microsoft-store"]
+    },
+    {
+      "id": "extension",
+      "names": { "en": "Browser extension", "ru": "Расширение для браузера", "uk": "Розширення для браузера" },
+      "derivesFrom": ["extension/manifest.json"],
+      "channels": ["chrome-web-store", "edge-addons"]
+    }
+  ],
+  "channels": [
+    { "id": "github-releases", "name": "GitHub Releases" },
+    { "id": "setup-installer", "name": "Setup installer" },
+    { "id": "winget", "name": "winget" },
+    { "id": "microsoft-store", "name": "Microsoft Store" },
+    { "id": "chrome-web-store", "name": "Chrome Web Store" },
+    { "id": "edge-addons", "name": "Edge Add-ons" }
+  ],
+  "interfaceLanguages": {
+    "count": 13,
+    "codes": ["en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh"],
+    "derivesFrom": ["internal/i18n/i18n.go", "extension/_locales", "tools/store/listing"]
+  },
+  "deviceClasses": ["Windows desktop", "Desktop Chromium browser"],
+  "retiredNames": [
+    "GUI desktop app",
+    "GUI-приложение",
+    "GUI-застосунок",
+    "Приложение в Microsoft Store",
+    "Застосунок у Microsoft Store",
+    "Настольное приложение (GUI)",
+    "Настільний застосунок (GUI)",
+    "Microsoft Edge Add-ons",
+    "Edge Add-ons listing is still planned",
+    "Edge Add-ons listing planned",
+    "Edge Add-ons submission is still pending"
+  ]
+}

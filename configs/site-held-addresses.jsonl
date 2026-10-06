@@ -1,0 +1,63 @@
+{"kind":"ignore","path":"configs/site-held-addresses.jsonl","reason":"This list: it holds every address by definition and is read by the check as the list, not scanned as a holder."}
+{"kind":"ignore","path":"*.html","reason":"Site pages the host serves from the repository root; their own links are resolved by tests/site_links_test.go and the page set by scripts/doc-registry.ps1, so they are the site, not an outside surface."}
+{"kind":"ignore","path":"[a-z][a-z]/index.html","reason":"The ten per-language landings the host serves; the same gates as the root pages hold them, so they are the site, not an outside surface."}
+{"kind":"ignore","path":"sitemap.xml","reason":"Generated from docs/DOCUMENT_REGISTRY.jsonl by scripts/doc-registry.ps1 -Generate and compared with it on every run; a render target, never hand-edited."}
+{"kind":"ignore","path":"robots.txt","reason":"A file the host serves that names the sitemap by its absolute address; scripts/doc-registry.ps1 reads that address as the site base, so it is the source of the base rather than a holder."}
+{"kind":"ignore","path":"DEV/**","reason":"Engineering ledgers, commit log, dated research and archived notes: records of what was true when written, read by no user and no program. DEV/RELEASE.md mentions the sitemap address as a release step that scripts/release.ps1, which is listed, performs."}
+{"kind":"held","holder":"cmd/doc-html-ui/ui.html","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/privacy.html"]}
+{"kind":"held","holder":"docs/contracts/SITE-FAMILY-MAP.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"docs/PARITY.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/ar/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/bn/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/de/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/en/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/es/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/fr/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/hi/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/it/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/pt/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/ru/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/uk/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/ur/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/_locales/zh_CN/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/PUBLISHING.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/extension-privacy.html"]}
+{"kind":"held","holder":"extension/src/options.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/src/popup.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/src/viewer.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/src/viewer.js","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/store/LISTING.md","surface":"store-listing","addresses":["https://serzhyale.github.io/doc-html-translate/extension-privacy.html"]}
+{"kind":"held","holder":"extension/store/PRIVACY.md","surface":"store-listing","addresses":["https://serzhyale.github.io/doc-html-translate/extension-privacy.html"]}
+{"kind":"held","holder":"internal/app/splash/ar.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/bn.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/de.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/en.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/es.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/fr.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/hi.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/it.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/pt.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/ru.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/uk.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/ur.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/app/splash/zh.txt","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/htmlgen/navbar.go","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"msix/README.md","surface":"store-listing","addresses":["https://serzhyale.github.io/doc-html-translate/privacy.html"]}
+{"kind":"held","holder":"README_RU.md","surface":"readme","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/install-trust.html?l=ru"]}
+{"kind":"held","holder":"README_UK.md","surface":"readme","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk"]}
+{"kind":"held","holder":"README.md","surface":"readme","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"scripts/release.ps1","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/sitemap.xml"]}
+{"kind":"held","holder":"tests/site_html_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"tests/site_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.ar-SA.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.bn-BD.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.de-DE.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.en-US.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.es-ES.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.fr-FR.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.hi-IN.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.it-IT.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.pt-BR.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.ru-RU.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.uk-UA.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.ur-PK.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}

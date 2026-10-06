@@ -4,7 +4,8 @@ Copy and metadata for the Chrome Web Store + Edge Add-ons listings. Everything h
 action is automated.
 
 **Live listing (Chrome Web Store):** https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic
-The Edge Add-ons submission is still pending - reuse the same copy below (see the Edge notes at the end).
+**Live listing (Edge Add-ons):** https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh
+The same copy below is used there (see the Edge notes at the end).
 Keep this file in sync with the published listing when the description changes.
 
 > **Owner sign-off required (ticket 2026-07-01_extension-format-parity):** the extension now opens eleven

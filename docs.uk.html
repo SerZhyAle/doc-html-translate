@@ -2,7 +2,7 @@
 <html lang="uk" data-lang="ua" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <!-- l10n-source: docs.html sha256:21667eccb6254fcb -->
+  <!-- l10n-source: docs.html sha256:52dc3b9918d6dce7 -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0f0a">
   <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/docs.uk.html">
@@ -39,7 +39,18 @@
   <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
+  <script>document.documentElement.setAttribute('data-lang','ua');</script>
   <link rel="stylesheet" href="assets/sza-kit.css">
   <link rel="stylesheet" href="assets/site.css">
   <style>
@@ -55,6 +66,7 @@
   <meta name="description" content="Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
 </head>
 <body>
+  <a class="skip-link" href="#top">До змісту</a>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
     <a class="brand" href="./" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
@@ -62,10 +74,10 @@
       <button type="button" data-set-lang="ru" data-href="docs.ru.html">RU</button><button type="button" data-set-lang="en" data-href="docs.html">EN</button><button type="button" data-set-lang="ua" data-href="docs.uk.html">UA</button>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Світла тема">◐</button>
-    <a class="btn btn-primary btn-sm" href="index.html#get">Встановлення</a>
+    <nav class="site-nav" aria-label="Основна навігація"><a class="btn btn-primary btn-sm" href="index.html#get">Встановлення</a></nav>
   </header>
 
-  <main class="container prose" id="top">
+  <main class="container prose" id="top" tabindex="-1">
     <section class="hero">
       <span class="eyebrow">Документація</span>
       <h1>Швидке локальне читання книг і безкоштовний переклад у Chrome</h1>
@@ -77,45 +89,61 @@
       <h2>Іпостасі - усі способи користуватися</h2>
       <p>Doc-HTML-Translate існує в кількох іпостасях; у них спільний конвертер і спільна ідея - віддати браузеру чистий HTML і дати йому перекласти. Обирай, що зручніше.</p>
       <ul>
-        <li><strong>CLI</strong> - <code>doc-html-translate.exe</code>, конвертер командного рядка та обробник файлових асоціацій Windows. Його прапорці описані на цій сторінці.</li>
-        <li><strong>GUI-застосунок</strong> - <code>doc-html-ui.exe</code>, віконний інтерфейс з усіма прапорцями нижче: вибір файлу, drag &amp; drop і тумблер «обробник за замовчуванням» (за бажанням, типово вимкнено).</li>
-        <li><strong>Застосунок у Microsoft Store</strong> - той самий настільний застосунок (GUI + CLI) як авто-оновлюваний MSIX з підписом Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>.</li>
-        <li><strong>Розширення для браузера</strong> - перемальовує документи (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT-комікси) у чистий HTML прямо в браузері, щоб вбудований <em>«Перекласти сторінку»</em> працював на них без встановлення застосунку: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> · <a href="extension.html">сторінка розширення</a>.</li>
+        <li><strong>Настільний застосунок</strong> - дві програми на одному конвертері: <code>doc-html-translate.exe</code>, конвертер командного рядка та обробник файлових асоціацій Windows (його прапорці описані на цій сторінці), і <code>doc-html-ui.exe</code>, віконний інтерфейс з усіма прапорцями нижче: вибір файлу, drag &amp; drop і тумблер «обробник за замовчуванням» (за бажанням, типово вимкнено).</li>
+        <li><strong>Застосунок із Microsoft Store</strong> - той самий настільний застосунок (GUI + CLI) як авто-оновлюваний MSIX з підписом Store: <a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>.</li>
+        <li><strong>Розширення для браузера</strong> - перемальовує документи (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBT-комікси) у чистий HTML прямо в браузері, щоб вбудований <em>«Перекласти сторінку»</em> працював на них без встановлення застосунку: <a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a> · <a href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons</a> · <a href="extension.html">сторінка розширення</a>.</li>
       </ul>
     </section>
 
     <div class="docs-pair">
       <article class="card" id="workflow">
-        <h2>Рекомендований сценарій (безкоштовно)</h2>
-        <p>Найзручніший щоденний варіант, і так, «безкоштовно» тут справді означає безкоштовно:</p>
-        <ul>
-          <li>Відкрити файл застосунком або запустити звичайну команду</li>
-          <li>Відкриття згенерованого index у Chrome</li>
-          <li>Переклад сторінки на потрібну мову через вбудований переклад Chrome</li>
-        </ul>
-        <figure class="shot"><img src="tools/store/gui-uk.png" width="1366" height="768" loading="lazy" alt="Вікно doc-html-ui: поле для документа, кнопка «Конвертувати» і вибір перекладу, обрано Chrome (безкоштовно)"><figcaption>Крок 1 - перетягніть файл у вікно застосунку й натисніть «Конвертувати».</figcaption></figure>
-        <figure class="shot"><img src="tools/store/table-of-contents-uk.png" width="1366" height="768" loading="lazy" alt="Сконвертована книжка в браузері: перша сторінка «Аліси в Країні чудес» під панеллю читалки"><figcaption>Крок 2 - сконвертована книжка відкривається в браузері. Крок 3 - у меню самого браузера: «Перекласти сторінку».</figcaption></figure>
-        <div class="commands">
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Копіювати</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># або </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Копіювати</button></div>
-        </div>
-        <p class="small">Переваги: без API-ключа, без платних викликів, дуже швидкий старт.</p>
+        <h2>Сконвертуйте книжку і читайте її в перекладі безкоштовно</h2>
+        <p>Перетворіть документ на локальну HTML-книжку, відкрийте її в Chrome і довірте переклад вбудованому перекладу сторінок Chrome. Зрештою ви читаєте книжку своєю мовою, з навігацією та змістом, а ключа API і платних викликів дорогою немає.</p>
+        <dl class="req">
+          <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span><span class="pill">Застосунок із Microsoft Store</span></span></dd>
+          <dt>Знадобиться</dt><dd>Windows і Chrome з вбудованим перекладом сторінки (<em>Перекласти сторінку</em>). <a href="extension.html">Розширення для браузера</a> дає той самий результат просто в браузері, без застосунку.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Відкрийте <strong>doc-html-ui</strong>, перетягніть файл у вікно й натисніть <strong>Конвертувати</strong>. Зручніше командний рядок? Запустіть одну з команд:
+            <figure class="shot"><img src="tools/store/gui-uk.png" width="1366" height="768" loading="lazy" alt="Вікно doc-html-ui: поле для документа, кнопка «Конвертувати» і вибір перекладу, обрано Chrome (безкоштовно)"><figcaption>Крок 1 - перетягніть файл у вікно застосунку й натисніть «Конвертувати».</figcaption></figure>
+            <div class="commands">
+              <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Копіювати</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe &quot;book.pdf&quot;"><span class="cmt"># або </span>doc-html-translate.exe "book.pdf"<button class="copy" type="button">Копіювати</button></div>
+            </div>
+          </li>
+          <li>Сконвертована книжка відкриється в браузері сама (якщо не задано <code>-noopen</code>).
+            <figure class="shot"><img src="tools/store/table-of-contents-uk.png" width="1366" height="768" loading="lazy" alt="Сконвертована книжка в браузері: перша сторінка «Аліси в Країні чудес» під панеллю читалки"><figcaption>Крок 2 - сконвертована книжка відкривається в браузері.</figcaption></figure>
+          </li>
+          <li>У меню самого браузера виберіть <em>Перекласти сторінку</em> і вкажіть свою мову.</li>
+        </ol>
+        <div class="note"><span class="tag">Результат</span><p>Книжка читається в браузері вашою мовою. Сконвертовані сторінки лежать у теці поруч із вихідним файлом (або у вибраній вами теці), тож відкрити їх знову можна без нової конвертації.</p></div>
+        <p class="related"><span class="lbl">Пов'язане:</span> <a href="#flags">Основні прапорці</a> · <a href="#formats">Підтримувані формати</a> · <a href="#quick-start">Зберіть конвертер командного рядка й запустіть його з рушієм перекладу</a></p>
       </article>
 
       <article class="card" id="quick-start">
-        <h2>Швидкий старт</h2>
-        <h3>Збірка</h3>
-        <div class="commands">
-          <div class="copybox" data-copy="go build -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Копіювати</button></div>
-        </div>
-        <h3>Запуск</h3>
-        <div class="commands">
-          <div class="copybox" data-copy="doc-html-translate.exe &quot;book.epub&quot;">doc-html-translate.exe "book.epub"<button class="copy" type="button">Копіювати</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -notranslate &quot;book.epub&quot;">doc-html-translate.exe -notranslate "book.epub"<span class="cmt">   # явний режим без перекладу</span><button class="copy" type="button">Копіювати</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -src en -dst uk &quot;book.epub&quot;">doc-html-translate.exe -src en -dst uk "book.epub"<button class="copy" type="button">Копіювати</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -google &quot;book.epub&quot;">doc-html-translate.exe -google "book.epub"<button class="copy" type="button">Копіювати</button></div>
-          <div class="copybox" data-copy="doc-html-translate.exe -ollama &quot;book.epub&quot;">doc-html-translate.exe -ollama "book.epub"<button class="copy" type="button">Копіювати</button></div>
-        </div>
+        <h2>Зберіть конвертер командного рядка й запустіть його з рушієм перекладу</h2>
+        <p>Зберіть <code>doc-html-translate.exe</code> із вихідного коду й запустіть його з терміналу в потрібному режимі. Зрештою вийде сконвертована книжка, а якщо ви обрали рушій - ще й перекладена під час конвертації.</p>
+        <dl class="req">
+          <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span></span></dd>
+          <dt>Знадобиться</dt><dd>Go, щоб зібрати з вихідного коду (готовому релізу нічого не потрібно). Для <code>-google</code> потрібен збережений ключ Google Cloud Translation API; для <code>-ollama</code> - запущена локальна служба Ollama з вибраною моделлю.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Зберіть програму. Пропустіть цей крок, якщо завантажили готовий реліз.
+            <div class="commands">
+              <div class="copybox" data-copy="go build -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Копіювати</button></div>
+            </div>
+          </li>
+          <li>Запустіть її в потрібному режимі. Звичайна конвертація - це команда з <a href="#workflow">рекомендованого сценарію</a>; ці додають прапорець:
+            <div class="commands">
+              <div class="copybox" data-copy="doc-html-translate.exe -notranslate &quot;book.epub&quot;">doc-html-translate.exe -notranslate "book.epub"<span class="cmt cmt-end">   # явний режим без перекладу</span><button class="copy" type="button">Копіювати</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -src en -dst uk &quot;book.epub&quot;">doc-html-translate.exe -src en -dst uk "book.epub"<button class="copy" type="button">Копіювати</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -google &quot;book.epub&quot;">doc-html-translate.exe -google "book.epub"<button class="copy" type="button">Копіювати</button></div>
+              <div class="copybox" data-copy="doc-html-translate.exe -ollama &quot;book.epub&quot;">doc-html-translate.exe -ollama "book.epub"<button class="copy" type="button">Копіювати</button></div>
+            </div>
+          </li>
+        </ol>
+        <div class="note"><span class="tag">Результат</span><p>Книжка сконвертована поруч із вихідним файлом і відкривається в браузері. З <code>-google</code> або <code>-ollama</code> вона перекладається під час конвертації.</p></div>
+        <p class="related"><span class="lbl">Пов'язане:</span> <a href="#flags">Основні прапорці</a> · <a href="#external-tools">Додаткові зовнішні інструменти</a> · <a href="#workflow">Сконвертуйте книжку і читайте її в перекладі безкоштовно</a></p>
       </article>
     </div>
 
@@ -191,8 +219,8 @@
             <tbody>
               <tr><td><code>-notranslate</code></td><td>false</td><td>Лише конвертація, без перекладу</td></tr>
               <tr><td><code>-noopen</code></td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
-              <tr><td><code>-google</code></td><td>false</td><td>Переклад через Google Cloud Translation API</td></tr>
-              <tr><td><code>-ollama</code></td><td>false</td><td>Локальний переклад Ollama</td></tr>
+              <tr><td><code>-google</code></td><td>false</td><td>Переклад через Google Cloud Translation API (потрібен збережений ключ API; платний, див. <code>-max-cost</code>)</td></tr>
+              <tr><td><code>-ollama</code></td><td>false</td><td>Локальний переклад Ollama (потрібна запущена локальна служба Ollama з вибраною моделлю)</td></tr>
               <tr><td><code>-ocr</code></td><td>false</td><td>Розпізнати текст на зображеннях документа (OCR) і накласти його зверху справжнім перекладним HTML (потрібен Tesseract)</td></tr>
               <tr><td><code>-ocr-lang</code></td><td>(-src)</td><td>Мова(и) OCR, напр. eng або eng+rus. Якщо не задано - береться з -src (інакше eng), і застосунок перевіряє писемність сторінки: є дані для неї - мова додається, а не замінюється (rus+eng); немає - сторінка лишається без плашок, а в лог іде рядок із потрібним пакетом. Заданий прапорець цю перевірку вимикає</td></tr>
               <tr><td><code>-ocr-langs</code></td><td>false</td><td>Показати встановлені/доступні мови OCR і вийти</td></tr>
@@ -206,8 +234,8 @@
               <tr><td><code>-ui-lang</code></td><td>(системна)</td><td>Мова інтерфейсу: en ru uk de it es fr pt ar hi bn ur zh. Порожньо - мова Windows</td></tr>
               <tr><td><code>-force</code></td><td>false</td><td>Перезібрати навіть якщо output вже існує</td></tr>
               <tr><td><code>-register</code></td><td>false</td><td>За бажанням зробити застосунок обробником за замовчуванням для EPUB, PDF та інших підтримуваних файлів (типово вимкнено; та сама кнопка-тумблер у застосунку doc-html-ui). Перший запуск питає і без згоди нічого не записує.</td></tr>
-              <tr><td><code>-unregister</code></td><td>false</td><td>Зняти асоціацію обробника за замовчуванням (пункт правого кліку «Convert to HTML» і «Відкрити за допомогою» залишаються).</td></tr>
-              <tr><td><code>-register-openwith</code></td><td>false</td><td>Додати застосунок до списку Windows «Відкрити за допомогою» і пункт правого кліку «Convert to HTML» без призначення обробником за замовчуванням. Застосунок doc-html-ui пропонує те саме перемикачем у розділі «Інтеграція з Windows» і питанням під час першого запуску; сам по собі він нічого не додає.</td></tr>
+              <tr><td><code>-unregister</code></td><td>false</td><td>Зняти асоціацію обробника за замовчуванням (пункт правого кліку <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>«Convert to HTML» і «Відкрити за допомогою» залишаються).</td></tr>
+              <tr><td><code>-register-openwith</code></td><td>false</td><td>Додати застосунок до списку Windows «Відкрити за допомогою» і пункт правого кліку <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>«Convert to HTML» без призначення обробником за замовчуванням. Застосунок doc-html-ui пропонує те саме перемикачем у розділі «Інтеграція з Windows» і питанням під час першого запуску; сам по собі він нічого не додає.</td></tr>
               <tr><td><code>-report</code></td><td>false</td><td>Запакувати нещодавні журнали запусків і зведення про оточення в архів для автора, надрукувати шлях до нього та вийти</td></tr>
               <tr><td><code>-fdsec-password-env</code></td><td>(порожньо)</td><td>Для секретного файлу FileDO (<code>.fd-sec</code>): <strong>ім'я</strong> змінної середовища з його паролем, для запусків без участі людини - не сам пароль. Консоль і вікно застосунку запитують пароль самі.</td></tr>
             </tbody>
@@ -218,49 +246,50 @@
       </details>
 
       <details class="sec" id="logs">
-        <summary><span class="secnum">05</span>Надсилання журналів авторові</summary>
-        <p>Коли конвертація йде не так, опису з пам'яті зазвичай не досить, щоб відтворити проблему. Програма зберігає
-          нещодавні журнали запусків на диску - до 20 запусків або 20 МБ, найстаріші видаляються першими, - тож збій можна
-          показати і за годину, і після падіння програми.</p>
-        <p>Відкрийте розділ <strong>Про програму</strong> внизу налаштувань застосунку <strong>doc-html-ui</strong>. У
-          ньому видно версію, видання (портативне чи з Microsoft Store) і чи знайдено рушій конвертера, і є одна кнопка -
-          <strong>Надіслати журнали авторові</strong>. Одне натискання збирає єдиний архів, відкриває його теку з виділеним
-          файлом, копіює шлях у буфер обміну і відкриває готового листа у вашій поштовій програмі. У командному рядку той
-          самий архів збирає прапорець <code>-report</code>, друкуючи, куди він ліг.</p>
+        <summary><span class="secnum">05</span>Надішліть авторові журнали невдалої конвертації</summary>
+        <p>Коли конвертація йде не так, опису з пам'яті зазвичай не досить, щоб відтворити проблему. Програма зберігає нещодавні журнали запусків на диску - до 20 запусків або 20 МБ, найстаріші видаляються першими, - тож їх можна запакувати в один архів для автора і за годину, і після падіння програми.</p>
+        <dl class="req">
+          <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span><span class="pill">Застосунок із Microsoft Store</span><span class="pill">Розширення для браузера</span></span></dd>
+          <dt>Знадобиться</dt><dd>Поштова програма - для готового листа. У розширення для браузера немає сховища журналів, і воно копіює коротке зведення (див. нижче).</dd>
+        </dl>
+        <ol class="steps">
+          <li>Відкрийте розділ <strong>Про програму</strong> внизу налаштувань застосунку <strong>doc-html-ui</strong> і натисніть <strong>Надіслати журнали авторові</strong>. Одне натискання збирає єдиний архів, відкриває його теку з виділеним файлом, копіює шлях у буфер обміну і відкриває готового листа у вашій поштовій програмі.
+            <figure class="shot"><img src="tools/store/docs-about-uk.png" width="600" height="285" loading="lazy" alt="Блок «Про програму» в doc-html-ui, розгорнутий: версія, видання, перевірка оновлень, рушій конвертера, кількість збережених журналів і кнопки «Надіслати журнали авторові» та «Очистити журнали»"><figcaption>Блок «Про програму» внизу налаштувань. Кнопка «Відкрити архів» з'являється поруч із «Надіслати журнали авторові», коли архів уже є.</figcaption></figure>
+          </li>
+          <li>Прикріпіть архів до цього листа й натисніть «Надіслати». Сама програма нічого не надсилає.</li>
+        </ol>
         <p>Архів пишеться в <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> і містить рівно три речі:</p>
         <ul>
-          <li><strong>environment.txt</strong> - версія, видання, платформа, мова інтерфейсу, чи знайдено Tesseract і які
-            мови OCR встановлено, типова модель Ollama. Завжди англійською, щоб автор читав один формат.</li>
+          <li><strong>environment.txt</strong> - версія, видання, платформа, мова інтерфейсу, чи знайдено Tesseract і які мови OCR встановлено, типова модель Ollama. Завжди англійською, щоб автор читав один формат.</li>
           <li><strong>settings.json</strong> - налаштування, з якими йшов останній запуск.</li>
           <li><strong>logs/</strong> - нещодавні журнали запусків, свіжі першими.</li>
         </ul>
-        <p>Увесь вміст проходить через редагування: будь-яке значення, схоже на ключ, токен, пароль чи ключ Google API,
-          перетворюється на <code>&lt;redacted&gt;</code>, а ваші теки згортаються до <code>%USERPROFILE%</code> і
-          <code>%LOCALAPPDATA%</code>. <strong>Імена файлів документів зберігаються навмисно</strong> - із журналом, який
-          нема з чим зіставити, зазвичай нічого не вдієш. Ключа Google API в архіві немає ніколи; автоматичний тест не дасть
-          йому туди потрапити. Розмір архіву обмежено 15 МБ: найстаріші журнали відкидаються першими, і вам повідомляють,
-          скільки їх не вмістилося.</p>
-        <p><strong>Нічого не надсилається автоматично.</strong> Програма не відкриває для цього жодного мережевого
-          з'єднання; вона дає вам файл і ненадісланого листа, а прикріплюєте архів і натискаєте «Надіслати» ви самі. Кнопка
-          <strong>Відкрити архів</strong> у тому ж розділі дозволяє спершу зазирнути всередину, а <strong>Очистити
-          журнали</strong> - взагалі не зберігати історію запусків на диску.</p>
-        <p>У <strong>розширення для браузера</strong> немає сховища журналів, тому воно пропонує те, що може дати чесно:
-          кнопку <strong>Скопіювати діагностику</strong> в блоці «Про розширення» на сторінці налаштувань. Вона копіює в
-          буфер обміну коротке зведення англійською - версія розширення, браузер, мова інтерфейсу, ваш набір налаштувань, а
-          також формат, кількість сторінок і останню помилку останнього документа. Ні тексту документів, ні списку ваших
-          сайтів там немає.</p>
+        <p>Увесь вміст проходить через редагування: будь-яке значення, схоже на ключ, токен, пароль чи ключ Google API, перетворюється на <code>&lt;redacted&gt;</code>, а ваші теки згортаються до <code>%USERPROFILE%</code> і <code>%LOCALAPPDATA%</code>. <strong class="claim">Імена файлів документів зберігаються навмисно</strong> - із журналом, який нема з чим зіставити, зазвичай нічого не вдієш. Ключа Google API в архіві немає ніколи; автоматичний тест не дасть йому туди потрапити. Розмір архіву обмежено 15 МБ: найстаріші журнали відкидаються першими, і вам повідомляють, скільки їх не вмістилося.</p>
+        <p><strong class="claim">Нічого не надсилається автоматично.</strong> Програма не відкриває для цього жодного мережевого з'єднання; вона дає вам файл і ненадісланого листа, а прикріплюєте архів і натискаєте «Надіслати» ви самі. Кнопка <strong>Відкрити архів</strong> у тому ж розділі дозволяє спершу зазирнути всередину, а <strong>Очистити журнали</strong> - взагалі не зберігати історію запусків на диску.</p>
+        <p>У командному рядку той самий архів збирає прапорець <code>-report</code>, друкуючи, куди він ліг.</p>
+        <p>У <strong class="claim">розширення для браузера</strong> немає сховища журналів, тому воно пропонує те, що може дати чесно: кнопку <strong>Скопіювати діагностику</strong> в блоці «Про розширення» на сторінці налаштувань. Вона копіює в буфер обміну коротке зведення англійською - версія розширення, браузер, мова інтерфейсу, ваш набір налаштувань, а також формат, кількість сторінок і останню помилку останнього документа. Ні тексту документів, ні списку ваших сайтів там немає.</p>
+        <div class="note"><span class="tag">Результат</span><p>У вас на руках один відредагований архів, не більше 15 МБ, і ненадісланий лист авторові. Поки ви не натиснете «Надіслати», з вашого комп'ютера нічого не пішло.</p></div>
+        <p class="related"><span class="lbl">Пов'язане:</span> <a href="#flags">Основні прапорці</a> (<code>-report</code>) · <a href="privacy.html">Конфіденційність</a></p>
       </details>
 
       <details class="sec" id="secret-files">
-        <summary><span class="secnum">06</span>Секретні файли FileDO (.fd-sec)</summary>
-        <p>Файл <code>.fd-sec</code> - це <strong>секретний файл FileDO</strong>. Відкрийте його, як будь-який інший документ: з командного рядка, вибором або перетягуванням у вікно, з черги чи списку нещодавніх або пунктом <em>Convert to HTML</em> контекстного меню. За байтами не видно, що всередині, тому застосунок лише припускає секретний файл, а потім:</p>
-        <ol>
-          <li>спершу, нічого не питаючи, з''ясовує, чи результат уже готовий (незмінений файл відкривається повторно взагалі без пароля), чи встановлено FileDO і чи підходить розмір файлу під формат;</li>
-          <li>запитує пароль - без відображення в консолі або в маскованому полі вікна (один раз на всю чергу). Порожній пароль відкриває лише файл, зроблений без пароля: це маскування, а не таємність;</li>
-          <li>розшифровує файл <strong>встановленим на комп''ютері FileDO</strong> (<code>winget install SerZhyAle.FileDO</code>, Microsoft Store або інсталятор чи portable-збірка FileDO) в одну приватну теку всередині тимчасової теки, конвертує документ чи зображення всередині точно так само, як оригінал, і видаляє розшифровану копію, щойно її прочитано. Копія, що лишилася після збою, видаляється під час наступного запуску.</li>
+        <summary><span class="secnum">06</span>Відкрийте секретний файл FileDO (.fd-sec) і сконвертуйте те, що всередині</summary>
+        <p>Файл <code>.fd-sec</code> - це <strong class="claim">секретний файл FileDO</strong>. Застосунок запитає пароль, розшифрує файл встановленим на комп'ютері FileDO і сконвертує документ чи зображення всередині так само, як оригінал. Зрештою поруч із вашими документами лежить звичайна HTML-книжка.</p>
+        <dl class="req">
+          <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span><span class="pill">Застосунок із Microsoft Store</span></span></dd>
+          <dt>Знадобиться</dt><dd>FileDO, встановлений на комп'ютері (<code>winget install SerZhyAle.FileDO</code>, Microsoft Store або інсталятор чи portable-збірка FileDO), і пароль файлу. Розширення для браузера секретні файли не відкриває.</dd>
+        </dl>
+        <ol class="steps">
+          <li>Відкрийте його, як будь-який інший документ: з командного рядка, вибором або перетягуванням у вікно, з черги чи списку нещодавніх або пунктом <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><em>Convert to HTML</em> контекстного меню. За байтами не видно, що всередині, тому застосунок лише припускає секретний файл. Спершу, нічого не питаючи, він з'ясовує, чи результат уже готовий (незмінений файл відкривається повторно взагалі без пароля), чи встановлено FileDO і чи підходить розмір файлу під формат.</li>
+          <li>Введіть пароль у маскованому полі й натисніть <strong>Відкрити</strong> - один раз на всю чергу; консоль питає без відображення. Порожній пароль відкриває лише файл, зроблений без пароля: це маскування, а не таємність.
+            <figure class="shot"><img src="tools/store/docs-password-uk.png" width="560" height="246" loading="lazy" alt="Вікно пароля doc-html-ui для секретного файлу FileDO: маскований рядок «Пароль» і кнопки «Відкрити» та «Скасувати»"><figcaption>Питання про пароль секретного файлу, введення маскується.</figcaption></figure>
+          </li>
         </ol>
-        <p>Результат називається за іменем секретного файлу й <strong>не зашифрований</strong> - він лежить поруч із вашими документами, як будь-яка інша конвертація. Пароль передається лише локальному FileDO і ніде не зберігається, не записується в журнал, не надсилається та не показується в командному рядку (див. <a href="privacy.html">сторінку про конфіденційність</a>). Для запусків без участі людини вкажіть змінну середовища з паролем: <code>-fdsec-password-env ІМ''Я</code> - ім''я змінної, не сам пароль.</p>
-        <p class="small">Відмова з окремим повідомленням у кожному випадку: секретний файл із текою всередині, з іншим секретним файлом, з типом, який застосунок не конвертує, неправильний пароль (повідомлення називає всі три причини: неправильний пароль, це не секретний файл або його змінено), пошкоджений файл і надто старий FileDO для такого виду секретного файлу (оновіть його). Розширення для браузера секретні файли не відкриває.</p>
+        <p>Потім застосунок розшифровує файл <strong class="claim">встановленим на комп'ютері FileDO</strong> в одну приватну теку всередині тимчасової теки, конвертує документ чи зображення всередині точно так само, як оригінал, і видаляє розшифровану копію, щойно її прочитано. Копія, що лишилася після збою, видаляється під час наступного запуску.</p>
+        <p>Для запусків без участі людини вкажіть змінну середовища з паролем: <code>-fdsec-password-env ІМ'Я</code> - ім'я змінної, не сам пароль.</p>
+        <p class="small">Відмова з окремим повідомленням у кожному випадку: секретний файл із текою всередині, з іншим секретним файлом, з типом, який застосунок не конвертує, неправильний пароль (повідомлення називає всі три причини: неправильний пароль, це не секретний файл або його змінено), пошкоджений файл і надто старий FileDO для такого виду секретного файлу (оновіть його).</p>
+        <div class="note"><span class="tag">Результат</span><p>Результат називається за іменем секретного файлу й <strong class="claim">не зашифрований</strong> - він лежить поруч із вашими документами, як будь-яка інша конвертація. Пароль передається лише локальному FileDO і ніде не зберігається, не записується в журнал, не надсилається та не показується в командному рядку.</p></div>
+        <p class="related"><span class="lbl">Пов'язане:</span> <a href="privacy.html">Конфіденційність</a> · <a href="#flags">Основні прапорці</a> (<code>-fdsec-password-env</code>) · <a href="#formats">Підтримувані формати</a></p>
       </details>
     </section>
 
@@ -298,7 +327,7 @@
         <li><a href="#reference">Розділ довідки</a></li>
         <li><a href="#editions">Розширення для браузера</a></li>
         <li><a href="#reading">Теми читання</a></li>
-        <li><a href="#editions">Застосунок у Microsoft Store</a></li>
+        <li><a href="#editions">Застосунок із Microsoft Store</a></li>
         <li><a href="#quick-start">Швидкий старт</a></li>
       </ul>
     </section>
@@ -320,7 +349,7 @@
         <dd>Конвертер командного рядка <code>doc-html-translate.exe</code>. Кожне налаштування - прапорець із розділу «Основні прапорці».</dd>
         <dt>Розширення для браузера</dt>
         <dd>Версія для Chromium із Chrome Web Store та Edge Add-ons: конвертує документ просто у вкладці браузера, без настільного застосунку.</dd>
-        <dt>Застосунок у Microsoft Store</dt>
+        <dt>Застосунок із Microsoft Store</dt>
         <dd>Настільний застосунок як пакет MSIX з підписом Store, що оновлюється сам.</dd>
         <dt>Обробник за замовчуванням</dt>
         <dd>Програма, яку Windows запускає подвійним клацанням на файлі. Застосунок стає нею для EPUB, PDF та інших підтримуваних файлів лише з вашої згоди.</dd>
@@ -337,7 +366,7 @@
       <h2>Завантаження застосунку</h2>
       <ul>
         <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Розширення для браузера (Chrome Web Store)</a> · <a href="extension.html">сторінка розширення</a></li>
-        <li><a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Застосунок у Microsoft Store (MSIX)</a></li>
+        <li><a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Застосунок із Microsoft Store (MSIX)</a></li>
         <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Завантажити останній реліз</a> · <a href="install-trust.html?l=uk">«Windows protected your PC»? Що натиснути</a></li>
       </ul>
     </section>

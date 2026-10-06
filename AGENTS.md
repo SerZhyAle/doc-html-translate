@@ -90,7 +90,14 @@ Run from repository root in PowerShell.
   the code and the dependency set; the privacy pages, `extension/store/PRIVACY.md`, the permission
   justifications in `extension/store/LISTING.md` and the runFullTrust text in `msix/README.md` are
   rendered from those rows - edit the rows, then run it with `-Render`. A new permission, network call
-  or telemetry-shaped dependency fails it until a row covers it.
+  or telemetry-shaped dependency fails it until a row covers it. `scripts/site-addresses.ps1`: every
+  address of the site that a program, extension message, README, listing source, manifest or test holds is
+  in `configs/site-held-addresses.jsonl` and still answers (page, query, section anchor); a new holder or a
+  new address fails it until the list has it (`-Suggest` prints the record), and a moved page leaves a
+  forwarder - the policy is [docs/SITE_ADDRESSES.md](docs/SITE_ADDRESSES.md). `scripts/release-notes.ps1`: the site's
+  release-notes page is the render of `docs/release-notes.json` (one record per `v*` app tag, the same bullets in
+  en/ru/uk, newest first); the check fails on a tag with no record, a record out of order or a hand-edited block,
+  and a release adds its record first (`-Render` rewrites the page) - never edit the page per ticket.
 - "What must I read before touching this?": `./scripts/doc-query.ps1 -Area <area> -Trigger <trigger>`
   (`-Path <file>` for one file's record, `-List` for the vocabularies). Register a document before
   anything links to it.

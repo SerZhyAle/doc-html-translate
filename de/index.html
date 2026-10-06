@@ -29,7 +29,17 @@
   <link rel="icon" href="../assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
   <link rel="stylesheet" href="../assets/sza-kit.css">
   <link rel="stylesheet" href="../assets/site.css">
   <title>doc-html-translate - Dokumente in lokales HTML für Windows</title>
@@ -52,21 +62,23 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#top">Zum Inhalt springen</a>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
     <a class="brand" href="#top" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span dir="ltr">doc-html-translate<span class="dot">.</span></span></a>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Design wechseln">◐</button>
-    <a class="btn btn-primary btn-sm" href="#get">Installation</a>
+    <nav class="site-nav" aria-label="Hauptnavigation"><a class="btn btn-primary btn-sm" href="#get">Installation</a></nav>
   </header>
 
-  <main class="container" id="top">
+  <main class="container" id="top" tabindex="-1">
     <nav class="langs" aria-label="Sprache"><a href="../?l=en" lang="en" hreflang="en">English</a><a href="../?l=ru" lang="ru" hreflang="ru">Русский</a><a href="../?l=uk" lang="uk" hreflang="uk">Українська</a><span class="cur" lang="de">Deutsch</span><a href="../it/" lang="it" hreflang="it">Italiano</a><a href="../es/" lang="es" hreflang="es">Español</a><a href="../fr/" lang="fr" hreflang="fr">Français</a><a href="../pt/" lang="pt" hreflang="pt">Português</a><a href="../ar/" lang="ar" hreflang="ar">العربية</a><a href="../hi/" lang="hi" hreflang="hi">हिन्दी</a><a href="../bn/" lang="bn" hreflang="bn">বাংলা</a><a href="../ur/" lang="ur" hreflang="ur">اردو</a><a href="../zh/" lang="zh" hreflang="zh">中文</a></nav>
     <section class="hero">
-      <span class="eyebrow">Dokumentkonverter für Windows · GUI · CLI · Chromium-Erweiterung</span>
+      <div class="identity"><img src="../assets/doc-html-translate.ico" width="72" height="72" alt=""><div><span class="name" dir="ltr">Doc-HTML-Translate<span class="dot">.</span></span><span class="eyebrow">Dokumentkonverter für Windows · GUI · CLI · Chromium-Erweiterung</span></div></div>
       <h1>Jedes Buch, Dokument oder Comic als lokale Webseite</h1>
       <span class="tagline">Lesen, durchsuchen und mit der Seitenübersetzung des Browsers übersetzen - kostenlos, ohne Schlüssel.</span>
       <p class="lead">Für alle, die Bücher und Dokumente in einer anderen Sprache lesen: EPUB, PDF, MOBI, FB2, RTF, TXT, Markdown, HTML, Comics und Bilder werden zu lokalem HTML mit Inhaltsverzeichnis und Navigation. Für Bilder steht Texterkennung (OCR) bereit.</p>
       <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ / ..</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>Lesen und Übersetzen</span></div>
+      <div class="button-group help-links"><a class="btn btn-ghost btn-sm" href="../docs.html">Dokumentation auf Englisch</a></div>
     </section>
 
     <section class="get" id="get">

@@ -182,7 +182,7 @@ Write-Host ""
 
 Step "1" "Docs & site (local commit, free)"
 Note "Update versioned/dated content, then commit:"
-Note "README.md, docs.html / docs.ru.html / docs.uk.html, index.html, extension.html,"
+Note "README.md, docs.html / docs.ru.html / docs.uk.html, index.html, extension.html, and the release's record in docs/release-notes.json (then ./scripts/release-notes.ps1 -Render),"
 Note "extension/store/LISTING.md, extension/README.md, DEV/CHANGELOG.md"
 Cmd  "./scripts/build-local.ps1 -Message ""docs: release $Version"""
 Write-Host ""

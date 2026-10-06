@@ -19,11 +19,11 @@ Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb
 
 doc-html-translate comes in several forms - pick whichever fits; they all share the same converter:
 
-- **CLI** - `doc-html-translate.exe`, the command-line converter and Windows file-association handler. See [Quick Usage](#quick-usage).
-- **GUI desktop app** - `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (multi-file queue, file picker, drag & drop, options dialog, a **default-handler toggle** - opt-in, off by default).
+- **Desktop app** - two programs on one converter: `doc-html-translate.exe`, the command-line converter and Windows file-association handler (see [Quick Usage](#quick-usage)), and `doc-html-ui.exe`, a windowed front-end that exposes every CLI option (multi-file queue, file picker, drag & drop, options dialog, a **default-handler toggle** - opt-in, off by default).
 - **Microsoft Store app** - the same desktop app (GUI + CLI) shipped as an MSIX package: Store-signed, auto-updating, no manual download. Under MSIX, `-register` is a no-op (file associations come from the package manifest). Packaging details: [`msix/README.md`](msix/README.md).
-- **Browser extension** - a Chromium MV3 extension that re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML, and CBZ/CBT comics) as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). (Edge Add-ons listing planned.) It also reads the text in **every picture on an ordinary web page** from the right-click menu and lays it over the pictures as real text without leaving the page - a webcomic or a scanned archive keeps its layout, its links and its reading order, and "Translate page" translates the recognized words along with the rest.
-- **Website & docs** - the [landing page](https://serzhyale.github.io/doc-html-translate/), multi-language documentation, and a dedicated [extension page](https://serzhyale.github.io/doc-html-translate/extension.html).
+- **Browser extension** - a Chromium MV3 extension that re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, local HTML, and CBZ/CBT comics) as clean HTML right in the browser, so the built-in **Translate page** works on them without installing the app. Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic) or [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh); source and docs in [`extension/`](extension/) and [`extension/README.md`](extension/README.md). It also reads the text in **every picture on an ordinary web page** from the right-click menu and lays it over the pictures as real text without leaving the page - a webcomic or a scanned archive keeps its layout, its links and its reading order, and "Translate page" translates the recognized words along with the rest.
+
+The website and the documentation: the [landing page](https://serzhyale.github.io/doc-html-translate/), multi-language documentation, and a dedicated [extension page](https://serzhyale.github.io/doc-html-translate/extension.html).
 
 The desktop app and the extension are independent and complementary: the app converts a file into a local HTML folder you keep; the extension does the same reflow live inside a browser tab. Both lean on the same "free" idea - hand the browser clean HTML and let its built-in translator do the rest.
 
@@ -89,7 +89,7 @@ Each release contains:
 
 - `doc-html-translate-setup-<version>.exe` - **universal installer** (x86 + x64, per-user, no admin) - the easiest option: installs the GUI + CLI, with optional "Open with" + right-click "Convert to HTML" and browser-extension tasks
 - `doc-html-translate-<version>-windows-x64.exe` - command-line tool (portable)
-- `doc-html-ui-<version>-windows-x64.exe` - GUI desktop app (portable)
+- `doc-html-ui-<version>-windows-x64.exe` - the desktop app window (portable)
 - `doc-html-translate-<version>-windows-x64.zip` - full archive (both binaries + LICENSE + README)
 
 The installer runs on both 32- and 64-bit Windows and needs no administrator rights (it installs into your user profile). The portable exe/zip stay available for a no-install workflow.

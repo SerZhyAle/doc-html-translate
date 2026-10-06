@@ -16,8 +16,10 @@ What this repo owes it:
   read as `ua`. The ten locale landings and the three docs pages are separate per-language pages.
 
 Deviations (each to be recorded as a dated registry exception in the catalog):
-- `--wide` is `min(1760px,94vw)` in `assets/site.css`, not 1100px - `PAGE-CONTENT` asks for the full width
-  (ticket 26, B3).
+- `--wide` is the viewport less a gutter (`calc(100vw - 2 * var(--gutter))`) in `assets/site.css`, with no pixel
+  cap, not 1100px - `PAGE-CONTENT` asks for the full width and the owner ruled on 2026-10-06 that a page is
+  never a centred column on a wide screen (ticket 26, B3). `tests/site_test.go` (`TestSiteUsesFullDeviceWidth`)
+  fails if a cap returns.
 - The ten locale landings have the text-only secondary language list now admitted by 1.2. The remaining
   deviation is its EN-first order and lack of `sza-lang` writes on core-locale navigation; the documentation
   trio is admitted by section 6 and no longer excepted.

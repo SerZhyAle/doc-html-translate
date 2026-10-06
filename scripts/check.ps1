@@ -49,6 +49,8 @@ $defaultPlan = @(
     'scripts/typo.ps1'
     'scripts/parity-check.ps1'
     'scripts/doc-registry.ps1'
+    'scripts/site-addresses.ps1'
+    'scripts/release-notes.ps1'
     'scripts/security-posture.ps1'
 )
 if (-not $Plan) { $Plan = $defaultPlan }

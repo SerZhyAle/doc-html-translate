@@ -232,6 +232,31 @@ func TestSecurityPostureOutcomes(t *testing.T) {
 	run("a rendered block edited by hand", 1, "security-posture: FAIL", "page.html block 'blk' is not the render")
 	run("-Render restores it", 0, "security-posture: PASS", "", "-Render")
 
+	siteRow := `{"id": "net-site", "edition": "site", "kind": "outbound", "surface": "a stylesheet from fonts.test", "defaultOn": true,
+     "turnedOnBy": "opening a page", "lifetime": "the page view", "leaves": "what any web request carries",
+     "origins": ["fonts.test"], "evidence": [{"file": "site.html", "contains": "fonts.test"}],
+     "public": {"en": "**Fonts** - from ` + "`fonts.test`" + `.", "ru": "**Шрифты** - с ` + "`fonts.test`" + `.", "uk": "**Шрифти** - з ` + "`fonts.test`" + `."}}`
+	siteInv := strings.Replace(scratchInventory, "}}\n  ],\n  \"networkCallSites\"", "}},\n    "+siteRow+"\n  ],\n  \"siteOrigins\": {\"firstParty\": [\"example.test\"], \"pages\": [\"^[^/]+\\\\.html$\"], \"scripts\": \"assets/*.js\"},\n  \"networkCallSites\"", 1)
+	siteInv = strings.Replace(siteInv, `["ext-storage", "net-doc"]`, `["ext-storage", "net-doc", "net-site"]`, 1)
+	if siteInv == scratchInventory {
+		t.Fatal("the site rows were not spliced into the scratch inventory")
+	}
+	const fontLink = `<link rel="stylesheet" href="https://fonts.test/x.css">` + "\n"
+	w("docs/security-posture.json", siteInv)
+	w("site.html", "<html><head>\n<link rel=\"canonical\" href=\"https://elsewhere.test/\">\n"+fontLink+"</head></html>\n")
+	git("add", "-A")
+	run("a declared site origin, a canonical link to another host", 0, "security-posture: PASS", "", "-Render")
+	w("site.html", "<html><head>\n"+fontLink+"<script src=\"https://cdn.other.test/a.js\"></script>\n</head></html>\n")
+	run("a page loading an origin no site row declares", 1, "security-posture: FAIL", "the site contacts cdn.other.test")
+	w("assets/site.js", "fetch('https://api.other.test/latest');\n")
+	w("site.html", "<html><head>\n"+fontLink+"</head></html>\n")
+	git("add", "-A")
+	run("a script fetching an origin no site row declares", 1, "security-posture: FAIL", "the site contacts api.other.test")
+	w("assets/site.js", "var x = 1;\n")
+	w("site.html", "<html><head></head></html>\n")
+	git("add", "-A")
+	run("a declared origin nothing loads", 1, "security-posture: FAIL", "which no site page or script contacts any more")
+
 	if err := os.Remove(filepath.Join(dir, "docs", "security-posture.json")); err != nil {
 		t.Fatal(err)
 	}

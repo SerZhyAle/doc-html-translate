@@ -172,6 +172,11 @@ function Get-PostureDoc {
         & $w ("| ``{0}`` | {1} | {2} | {3} | {4} | {5} | {6} | {7} |" -f $r.id, $r.edition, $r.kind, (Format-Cell $r.surface), $on, (Format-Cell $r.turnedOnBy), (Format-Cell $r.lifetime), (Format-Cell $r.leaves))
     }
     & $w ''
+    $siteRows = @($inv.networkSurfaces | Where-Object { $_.edition -eq 'site' })
+    if ($siteRows.Count -gt 0) {
+        & $w ('The product website contacts these third-party origins, no others (SITE-EXPERIENCE rule 14; the check reads every site page and script): {0}.' -f ((@($siteRows | ForEach-Object { @($_.origins) }) | ForEach-Object { "``$_``" }) -join ', '))
+        & $w ''
+    }
     & $w 'Every source file under these roots that contains a network primitive is the evidence of a row above, or is listed here as not reaching the network:'
     & $w ''
     foreach ($rt in @($inv.networkCallSites.roots)) { & $w ("- ``{0}`` - {1}" -f $rt.glob, ((@($rt.patterns) | ForEach-Object { "``$_``" }) -join ', ')) }
@@ -257,7 +262,9 @@ foreach ($kind in 'permissions', 'networkSurfaces') {
         $at = "$invPath $kind/$($r.id)"
         if (-not $r.id) { Add-Finding "${invPath}: a $kind row without an id"; continue }
         if ($seen.ContainsKey($r.id)) { Add-Finding "${at}: id used twice" } else { $seen[$r.id] = $true }
-        if ($r.edition -notin 'app', 'extension') { Add-Finding "${at}: edition must be app or extension" }
+        if ($r.edition -notin 'app', 'extension', 'site') { Add-Finding "${at}: edition must be app, extension or site" }
+        if ($r.edition -eq 'site' -and @($r.origins | Where-Object { $_ }).Count -eq 0) { Add-Finding "${at}: a site row names no origin in 'origins'" }
+        if ($r.edition -ne 'site' -and $r.origins) { Add-Finding "${at}: 'origins' belongs to site rows only" }
         $req = if ($kind -eq 'permissions') { 'declares', 'declaredIn', 'shownWhere' } else { 'kind', 'surface', 'turnedOnBy', 'lifetime', 'leaves' }
         foreach ($f in $req) { if (-not $r.$f) { Add-Finding "${at}: '$f' is empty" } }
         if ($kind -eq 'permissions') {
@@ -327,6 +334,51 @@ foreach ($rt in @($inv.networkCallSites.roots)) {
 foreach ($k in $notNetwork.Keys) {
     if (-not $primitiveFiles.Contains($k)) { Add-Finding "$invPath notNetwork ${k}: no network primitive there any more - drop the entry" }
     if ($evidenceFiles.Contains($k)) { Add-Finding "$invPath notNetwork ${k}: also cited as a network surface - pick one" }
+}
+
+# ── the website's third-party origins (SITE-EXPERIENCE rule 14) ──
+# Every origin a tracked site page or script contacts is declared in a site row's origins and named
+# in its public sentence; a declared origin nothing loads any more is dropped.
+if ($inv.siteOrigins) {
+    $declaredOrigins = @{}
+    foreach ($r in @($inv.networkSurfaces | Where-Object { $_.edition -eq 'site' })) {
+        foreach ($o in @($r.origins)) {
+            if (-not $o) { continue }
+            $declaredOrigins[[string]$o] = $r
+            foreach ($l in 'en', 'ru', 'uk') {
+                if ($r.public -and -not ([string]$r.public.$l).Contains('`' + $o + '`')) { Add-Finding "$invPath networkSurfaces/$($r.id): public.$l does not name ``$o`` in code form" }
+            }
+        }
+    }
+    $firstParty = @($inv.siteOrigins.firstParty)
+    $observed = @{}
+    $note = { param([string]$Origin, [string]$Where) if ($Origin -and $firstParty -notcontains $Origin) { if (-not $observed.ContainsKey($Origin)) { $observed[$Origin] = [System.Collections.Generic.List[string]]::new() }; $observed[$Origin].Add($Where) } }
+    $pageRx = @($inv.siteOrigins.pages)
+    foreach ($f in @($files | Where-Object { $f = $_; @($pageRx | Where-Object { $f -match $_ }).Count -gt 0 })) {
+        $text = Get-FileText $f
+        if ($null -eq $text) { continue }
+        foreach ($m in [regex]::Matches($text, '(?is)<link\b[^>]*>')) {
+            $tag = $m.Value
+            if ($tag -notmatch '(?i)\brel\s*=\s*"?[^">]*\b(stylesheet|preconnect|preload|prefetch|dns-prefetch|modulepreload|icon)\b') { continue }
+            $h = [regex]::Match($tag, '(?i)\bhref\s*=\s*"https?://([^/"]+)')
+            if ($h.Success) { & $note $h.Groups[1].Value.ToLowerInvariant() $f }
+        }
+        foreach ($m in [regex]::Matches($text, '(?is)<(?:script|img|iframe|source|video|audio|embed)\b[^>]*\bsrc\s*=\s*"https?://([^/"]+)')) { & $note $m.Groups[1].Value.ToLowerInvariant() $f }
+        foreach ($m in [regex]::Matches($text, '(?i)@import\s+(?:url\()?["'']?https?://([^/"'')]+)')) { & $note $m.Groups[1].Value.ToLowerInvariant() $f }
+    }
+    foreach ($f in (Resolve-RegistryPath ([string]$inv.siteOrigins.scripts) $files)) {
+        $text = Get-FileText $f
+        if ($null -eq $text) { continue }
+        foreach ($m in [regex]::Matches($text, '(?i)\b(?:fetch|open|importScripts|EventSource|WebSocket)\(\s*(?:[^,)''"]*,\s*)?[''"](?:https?|wss?)://([^/''"]+)')) { & $note $m.Groups[1].Value.ToLowerInvariant() $f }
+    }
+    foreach ($o in ($observed.Keys | Sort-Object)) {
+        if (-not $declaredOrigins.ContainsKey($o)) {
+            Add-Finding "the site contacts $o ($(@($observed[$o] | Select-Object -Unique | Select-Object -First 3) -join ', ')) and no site row in $invPath declares it in origins - declare and name it, or remove it"
+        }
+    }
+    foreach ($o in ($declaredOrigins.Keys | Sort-Object)) {
+        if (-not $observed.ContainsKey($o)) { Add-Finding "$invPath networkSurfaces/$($declaredOrigins[$o].id): declares $o, which no site page or script contacts any more - drop it" }
+    }
 }
 
 # ── the telemetry claim against the dependency set (item 6) ──

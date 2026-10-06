@@ -557,8 +557,54 @@
         "ru": "**tessdata.projectnaptha.com, для дополнительных языков OCR** - только когда вы нажимаете *Скачать* для языка: его файл данных загружается - как данные, а не код - с этого открытого хоста и сохраняется на вашем устройстве. Английский входит в состав расширения.",
         "uk": "**tessdata.projectnaptha.com, для додаткових мов OCR** - лише коли ви натискаєте *Завантажити* для мови: його файл даних завантажується - як дані, а не код - із цього відкритого хоста й зберігається на вашому пристрої. Англійська входить до складу розширення."
       }
+    },
+    {
+      "id": "net-site-fonts",
+      "edition": "site",
+      "kind": "outbound",
+      "surface": "Stylesheet and font files that the head of every site page requests from fonts.googleapis.com and fonts.gstatic.com",
+      "defaultOn": true,
+      "turnedOnBy": "opening any page of the product website; the desktop app and the browser extension never load them",
+      "lifetime": "one request per page view, cached by the browser",
+      "leaves": "what any web request carries - the visitor's IP address, the browser's user agent and the address of the page; the site itself sets no cookie and adds nothing",
+      "origins": ["fonts.googleapis.com", "fonts.gstatic.com"],
+      "evidence": [
+        { "file": "privacy.html", "contains": "https://fonts.googleapis.com/css2?family=Outfit" },
+        { "file": "privacy.html", "contains": "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>" }
+      ],
+      "public": {
+        "en": "**Google Fonts, for the page typefaces** - opening any page of this website makes your browser request the typefaces from `fonts.googleapis.com` and `fonts.gstatic.com`, both run by Google. Google receives your IP address, your browser's user agent and the address of the page you are on, as any web request carries them. The website itself sets no cookies and sends nothing else. The desktop app and the browser extension do not load them.",
+        "ru": "**Google Fonts, для шрифтов страниц** - при открытии любой страницы этого сайта браузер запрашивает шрифты у `fonts.googleapis.com` и `fonts.gstatic.com`, оба принадлежат Google. Google получает ваш IP-адрес, user agent браузера и адрес страницы, на которой вы находитесь, - как при любом веб-запросе. Сам сайт не устанавливает cookie и ничего больше не отправляет. Настольное приложение и расширение для браузера их не загружают.",
+        "uk": "**Google Fonts, для шрифтів сторінок** - під час відкриття будь-якої сторінки цього сайту браузер запитує шрифти в `fonts.googleapis.com` і `fonts.gstatic.com`, обидва належать Google. Google отримує вашу IP-адресу, user agent браузера й адресу сторінки, на якій ви перебуваєте, - як за будь-якого вебзапиту. Сам сайт не встановлює cookie і нічого більше не надсилає. Настільний застосунок і розширення для браузера їх не завантажують."
+      }
+    },
+    {
+      "id": "net-site-release-tag",
+      "edition": "site",
+      "kind": "outbound",
+      "surface": "HTTPS GET to api.github.com for the latest published release, made by assets/site.js on the home page and its translations",
+      "defaultOn": true,
+      "turnedOnBy": "opening the home page or one of its translations; no other page makes the request",
+      "lifetime": "one request per page view",
+      "leaves": "what any web request carries - the visitor's IP address and the browser's user agent; nothing else",
+      "origins": ["api.github.com"],
+      "evidence": [
+        { "file": "assets/site.js", "contains": "fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest'" }
+      ],
+      "public": {
+        "en": "**GitHub, for the latest version number** - on the home page and its translations, a small script asks `api.github.com` for the latest published release and shows its tag beside the download link. GitHub receives your IP address and your browser's user agent, as any web request carries them; nothing else is sent. If the request is blocked, the page works the same without the tag.",
+        "ru": "**GitHub, для номера последней версии** - на главной странице и её переводах небольшой скрипт запрашивает у `api.github.com` последний опубликованный релиз и показывает его тег рядом со ссылкой на загрузку. GitHub получает ваш IP-адрес и user agent браузера - как при любом веб-запросе; ничего больше не отправляется. Если запрос заблокирован, страница работает так же, только без тега.",
+        "uk": "**GitHub, для номера останньої версії** - на головній сторінці та її перекладах невеликий скрипт запитує в `api.github.com` останній опублікований реліз і показує його тег поруч із посиланням на завантаження. GitHub отримує вашу IP-адресу та user agent браузера - як за будь-якого вебзапиту; нічого більше не надсилається. Якщо запит заблоковано, сторінка працює так само, лише без тега."
+      }
     }
   ],
+
+  "siteOrigins": {
+    "$comment": "The third-party origins the product website's pages contact (SITE-EXPERIENCE rule 14). The check reads every tracked site page and script, and fails while a page loads an origin no network-surface row declares in its origins list, or a declared origin is loaded nowhere, or a declared origin is not named in the row's public sentence.",
+    "firstParty": ["serzhyale.github.io"],
+    "pages": ["^[^/]+\\.html$", "^[a-z]{2}/index\\.html$"],
+    "scripts": "assets/*.js"
+  },
 
   "networkCallSites": {
     "$comment": "Reverse coverage for the network-surface inventory: every source file below a root that contains a network primitive must be the evidence file of a surface row, or be listed in notNetwork with a reason.",
@@ -617,6 +663,24 @@
         "ru": "Эти файлы никогда не покидают ваше устройство.",
         "uk": "Ці файли ніколи не залишають ваш пристрій."
       }
+    },
+    {
+      "target": "privacy.html",
+      "block": "site-origins",
+      "format": "html-lists",
+      "rows": ["net-site-fonts", "net-site-release-tag"]
+    },
+    {
+      "target": "extension-privacy.html",
+      "block": "site-origins",
+      "format": "html-lists",
+      "rows": ["net-site-fonts", "net-site-release-tag"]
+    },
+    {
+      "target": "install-trust.html",
+      "block": "site-origins",
+      "format": "html-lists",
+      "rows": ["net-site-fonts", "net-site-release-tag"]
     },
     {
       "target": "extension-privacy.html",

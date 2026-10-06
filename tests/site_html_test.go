@@ -19,7 +19,7 @@ import (
 const siteBase = "https://serzhyale.github.io/doc-html-translate/"
 
 // inPageTrioPages carry en, ru and ua in one file, each block marked data-l.
-var inPageTrioPages = []string{"index.html", "extension.html", "privacy.html", "install-trust.html", "extension-privacy.html"}
+var inPageTrioPages = []string{"index.html", "extension.html", "privacy.html", "install-trust.html", "release-notes.html", "extension-privacy.html"}
 
 func parseSitePage(t *testing.T, page string) *html.Node {
 	t.Helper()

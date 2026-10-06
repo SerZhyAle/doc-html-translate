@@ -77,7 +77,9 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
    `release.ps1` exits 1 while either line blocks the tag.
 1. **Docs & site** (free) - update README.md, `docs.html` / `docs.ru.html` / `docs.uk.html`,
    `index.html`, `extension.html`, `extension/store/LISTING.md`, `extension/README.md`,
-   `DEV/CHANGELOG.md`; commit via `build-local.ps1`.
+   `DEV/CHANGELOG.md`; add this release's record (en, ru, uk, the same bullets) to `docs/release-notes.json`
+   and run `./scripts/release-notes.ps1 -Render` - the site's release-notes page is assembled from it at
+   the release, never per ticket, and the check fails on a tag with no record; commit via `build-local.ps1`.
 2. **GitHub Release - app** `[PAID]` - push a `v*` tag → `.github/workflows/release.yml` builds
    the exes and creates the GitHub Release:
    `git tag -a v<ver> -m "Release v<ver>"; git push origin v<ver>`. Push only while the gate-evidence line

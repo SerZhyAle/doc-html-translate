@@ -17,7 +17,7 @@ the image as real text, so the browser's **Translate page** reaches that too. Th
 order, and the recognized words sit on top of the art where they belong. English is bundled; more
 languages download on demand.
 
-**Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic)** (Chrome and Edge / Chromium). An Edge Add-ons listing is still planned; you can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
+**Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic) and on [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh)**. You can also load it unpacked from this folder (see below). This extension is one of several forms of the same project - the desktop CLI/GUI, the Microsoft Store app, and this extension; see [Editions](../README.md#editions).
 
 The make-or-break decision for PDF (see [the spec](../DEV/research/pdf_translate_extension_spec.md)):
 reflow to flowing `<p>` / `<h2>` text, **not** the PDF.js canvas + text-layer overlay. The overlay

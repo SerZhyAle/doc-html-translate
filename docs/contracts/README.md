@@ -22,6 +22,9 @@ pointer that grows a second page has become a copy, and two copies drift - which
 | [SITE-FAMILY-MAP.md](SITE-FAMILY-MAP.md) | `SITE-FAMILY-MAP` | 1.2 | consumer - the footer family grid and the one contact on every site page |
 | [PAGE-STYLE.md](PAGE-STYLE.md) | `PAGE-STYLE` | 1.2 | consumer - the kit `assets/sza-kit.css` byte-identical, page rules in `assets/site.css` |
 | [PAGE-CONTENT.md](PAGE-CONTENT.md) | `PAGE-CONTENT` | 1.2 | consumer - landing page order, "Medium app" variant |
+| [SITE-STRUCTURE.md](SITE-STRUCTURE.md) | `SITE-STRUCTURE` | 0.1 draft | consumer - guide tier, `partial`; gaps in tickets 97, 103; the held-addresses list and gate (rule 8) are ticket 98 |
+| [SITE-EXPERIENCE.md](SITE-EXPERIENCE.md) | `SITE-EXPERIENCE` | 0.1 draft | consumer - guide tier, `partial`; gaps in tickets 99, 100, 102 |
+| [SITE-REPRESENTATION.md](SITE-REPRESENTATION.md) | `SITE-REPRESENTATION` | 0.1 draft | consumer - guide tier, `partial`; gaps in tickets 101, 102 |
 | [APP-BEHAVIOUR.md](APP-BEHAVIOUR.md) | `APP-BEHAVIOUR` | 0.12 draft | consumer - GUI launcher behaviour (`cmd/doc-html-ui`) |
 | [APP-SETTINGS.md](APP-SETTINGS.md) | `APP-SETTINGS` | 0.2 draft | consumer - the GUI launcher's settings surface, adopted 2026-10-05 (ticket 93) |
 | [APP-STYLE.md](APP-STYLE.md) | `APP-STYLE` | 0.12 draft | consumer - desktop GUI and reader styling |

@@ -33,7 +33,18 @@
   <link rel="icon" href="assets/doc-html-translate.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>(function(){try{var d=document.documentElement,t=localStorage.getItem('sza-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'),q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1],l=q||localStorage.getItem('sza-lang');if(l==='uk')l='ua';if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')===0?'ru':n.indexOf('uk')===0?'ua':'en'}d.setAttribute('data-theme',t);d.setAttribute('data-lang',l)}catch(e){}})();</script>
+  <script>
+(function(){try{
+  var t=localStorage.getItem('sza-theme');
+  if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var l=localStorage.getItem('sza-lang');
+  if(l==='uk')l='ua';
+  if(l!=='ru'&&l!=='en'&&l!=='ua'){var n=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}
+  document.documentElement.setAttribute('data-lang',l);
+}catch(e){}})();
+  </script>
+  <script>(function(){try{var q=(location.search.match(/[?&]l=(ru|uk|ua|en)\b/)||[])[1];if(q)document.documentElement.setAttribute('data-lang',q==='uk'?'ua':q)}catch(e){}})();</script>
   <link rel="stylesheet" href="assets/sza-kit.css">
   <link rel="stylesheet" href="assets/site.css">
   <style>
@@ -46,6 +57,7 @@
   <meta name="description" content="Privacy policy for the Doc-HTML-Translate browser extension: no data collection, no telemetry, no remote code. Documents are processed entirely on your device.">
 </head>
 <body>
+  <a class="skip-link" href="#top"><span data-l="ru">К содержимому</span><span data-l="en">Skip to content</span><span data-l="ua">До змісту</span></a>
   <div class="bg-blobs" aria-hidden="true"><i class="blob blob-1"></i><i class="blob blob-2"></i><i class="blob blob-3"></i></div>
   <header class="site-header">
     <a class="brand" href="./" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
@@ -53,12 +65,12 @@
       <button type="button" data-set-lang="ru">RU</button><button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="ua">UA</button>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">◐</button>
-    <a class="btn btn-ghost btn-sm" href="index.html"><span data-l="ru">Главная</span><span data-l="en">Home</span><span data-l="ua">Головна</span></a>
+    <nav class="site-nav" data-nav aria-label="Main navigation"><a class="btn btn-ghost btn-sm" href="index.html"><span data-l="ru">Главная</span><span data-l="en">Home</span><span data-l="ua">Головна</span></a></nav>
   </header>
 
-  <main class="container prose" id="top">
+  <main class="container prose" id="top" tabindex="-1">
     <h1><span data-l="ru">Политика конфиденциальности</span><span data-l="en">Privacy Policy</span><span data-l="ua">Політика конфіденційності</span></h1>
-    <p class="meta"><span data-l="ru">Расширение Doc-HTML-Translate для браузера &middot; обновлено 2026-09-25</span><span data-l="en">Doc-HTML-Translate browser extension &middot; last updated 2026-09-25</span><span data-l="ua">Розширення Doc-HTML-Translate для браузера &middot; оновлено 2026-09-25</span></p>
+    <p class="meta"><span data-l="ru">Расширение Doc-HTML-Translate для браузера &middot; обновлено 2026-10-06</span><span data-l="en">Doc-HTML-Translate browser extension &middot; last updated 2026-10-06</span><span data-l="ua">Розширення Doc-HTML-Translate для браузера &middot; оновлено 2026-10-06</span></p>
 
     <p class="lead" data-l="ru"><strong>Расширение Doc-HTML-Translate для браузера обрабатывает документы (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown и локальный HTML) полностью на вашем устройстве.</strong> Оно не собирает, не хранит и не передаёт ваши документы или какие-либо персональные данные ни нам, ни третьим лицам. У него нет серверов, телеметрии, аналитики, рекламы и учётных записей, и оно не загружает никакой удалённый код.</p>
     <p class="lead" data-l="en"><strong>The Doc-HTML-Translate browser extension processes documents (PDF, EPUB,
@@ -173,6 +185,25 @@
     </ul>
     <!-- security-posture:end ext-permissions -->
 
+    <h2><span data-l="ru">Этот сайт</span><span data-l="en">This website</span><span data-l="ua">Цей сайт</span></h2>
+    <p data-l="ru">Страницы этого сайта подгружают у третьих лиц только перечисленное ниже. Приложение и расширение для браузера этого не делают.</p>
+    <p data-l="en">The pages of this website load only the following from third parties. The app and the browser extension do not.</p>
+    <p data-l="ua">Сторінки цього сайту підвантажують у третіх осіб лише перелічене нижче. Застосунок і розширення для браузера цього не роблять.</p>
+    <!-- security-posture:begin site-origins (rendered from docs/security-posture.json by scripts/security-posture.ps1 -Render; edit the rows there) -->
+    <ul data-l="ru">
+      <li><strong>Google Fonts, для шрифтов страниц</strong> - при открытии любой страницы этого сайта браузер запрашивает шрифты у <code>fonts.googleapis.com</code> и <code>fonts.gstatic.com</code>, оба принадлежат Google. Google получает ваш IP-адрес, user agent браузера и адрес страницы, на которой вы находитесь, - как при любом веб-запросе. Сам сайт не устанавливает cookie и ничего больше не отправляет. Настольное приложение и расширение для браузера их не загружают.</li>
+      <li><strong>GitHub, для номера последней версии</strong> - на главной странице и её переводах небольшой скрипт запрашивает у <code>api.github.com</code> последний опубликованный релиз и показывает его тег рядом со ссылкой на загрузку. GitHub получает ваш IP-адрес и user agent браузера - как при любом веб-запросе; ничего больше не отправляется. Если запрос заблокирован, страница работает так же, только без тега.</li>
+    </ul>
+    <ul data-l="en">
+      <li><strong>Google Fonts, for the page typefaces</strong> - opening any page of this website makes your browser request the typefaces from <code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>, both run by Google. Google receives your IP address, your browser's user agent and the address of the page you are on, as any web request carries them. The website itself sets no cookies and sends nothing else. The desktop app and the browser extension do not load them.</li>
+      <li><strong>GitHub, for the latest version number</strong> - on the home page and its translations, a small script asks <code>api.github.com</code> for the latest published release and shows its tag beside the download link. GitHub receives your IP address and your browser's user agent, as any web request carries them; nothing else is sent. If the request is blocked, the page works the same without the tag.</li>
+    </ul>
+    <ul data-l="ua">
+      <li><strong>Google Fonts, для шрифтів сторінок</strong> - під час відкриття будь-якої сторінки цього сайту браузер запитує шрифти в <code>fonts.googleapis.com</code> і <code>fonts.gstatic.com</code>, обидва належать Google. Google отримує вашу IP-адресу, user agent браузера й адресу сторінки, на якій ви перебуваєте, - як за будь-якого вебзапиту. Сам сайт не встановлює cookie і нічого більше не надсилає. Настільний застосунок і розширення для браузера їх не завантажують.</li>
+      <li><strong>GitHub, для номера останньої версії</strong> - на головній сторінці та її перекладах невеликий скрипт запитує в <code>api.github.com</code> останній опублікований реліз і показує його тег поруч із посиланням на завантаження. GitHub отримує вашу IP-адресу та user agent браузера - як за будь-якого вебзапиту; нічого більше не надсилається. Якщо запит заблоковано, сторінка працює так само, лише без тега.</li>
+    </ul>
+    <!-- security-posture:end site-origins -->
+
     <h2><span data-l="ru">Конфиденциальность детей</span><span data-l="en">Children's privacy</span><span data-l="ua">Конфіденційність дітей</span></h2>
     <p data-l="ru">Расширение - это утилита для чтения документов, и оно сознательно не собирает никаких данных ни от кого, включая детей.</p>
     <p data-l="en">The extension is a document-reading utility and does not knowingly collect any data from anyone,
@@ -192,9 +223,9 @@
   <footer class="site-footer"><div class="container"><h2><span data-l="ru">Другие инструменты SZA</span><span data-l="en">More tools by SZA</span><span data-l="ua">Інші інструменти SZA</span></h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>FastMediaSorter v2</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 Serhii Zhyhunenko</span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{
-    ru:{title:'Политика конфиденциальности - расширение Doc-HTML-Translate',desc:'Расширение Doc-HTML-Translate для браузера: никакого сбора данных, телеметрии и удалённого кода. Документы обрабатываются полностью на вашем устройстве.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы'},
-    en:{title:'Privacy Policy - Doc-HTML-Translate browser extension',desc:'Privacy policy for the Doc-HTML-Translate browser extension: no data collection, no telemetry, no remote code. Documents are processed entirely on your device.',copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top'},
-    ua:{title:'Політика конфіденційності - розширення Doc-HTML-Translate',desc:'Розширення Doc-HTML-Translate для браузера: жодного збору даних, телеметрії й віддаленого коду. Документи обробляються повністю на вашому пристрої.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки'}}};</script>
+    ru:{title:'Политика конфиденциальности - расширение Doc-HTML-Translate',desc:'Расширение Doc-HTML-Translate для браузера: никакого сбора данных, телеметрии и удалённого кода. Документы обрабатываются полностью на вашем устройстве.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы',nav:'Основная навигация'},
+    en:{title:'Privacy Policy - Doc-HTML-Translate browser extension',desc:'Privacy policy for the Doc-HTML-Translate browser extension: no data collection, no telemetry, no remote code. Documents are processed entirely on your device.',copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',nav:'Main navigation'},
+    ua:{title:'Політика конфіденційності - розширення Doc-HTML-Translate',desc:'Розширення Doc-HTML-Translate для браузера: жодного збору даних, телеметрії й віддаленого коду. Документи обробляються повністю на вашому пристрої.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',nav:'Основна навігація'}}};</script>
   <script src="assets/site.js"></script>
 </body>
 </html>

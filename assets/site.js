@@ -6,7 +6,8 @@
      window.SITE = {strings: {page: {...}}}                        - single-language page (locale landings)
      A per-language page (docs.ru.html) fixes data-lang in its markup, declares only its own
      language's strings, and gives each switch button a data-href to the sibling page.
-   Keys: title, desc, copied, toLight, toDark, toTop, expand, collapse - each optional.
+   Keys: title, desc, copied, toLight, toDark, toTop, nav, expand, collapse - each optional.
+   nav labels every <nav data-nav> (the header link row); a page whose nav carries a fixed aria-label omits it.
 
    The language value space is ru|en|ua. Every SZA page shares one origin and therefore one
    localStorage 'sza-lang'; a stored 'uk' (written by older pages) is read as 'ua'. */
@@ -40,6 +41,7 @@
     if (t) { document.title = t; meta('meta[property="og:title"]', t); meta('meta[name="twitter:title"]', t); }
     if (desc) { meta('meta[name="description"]', desc); meta('meta[property="og:description"]', desc); meta('meta[name="twitter:description"]', desc); }
     var top = $('toTop'); if (top && str('toTop')) top.setAttribute('aria-label', str('toTop'));
+    each('[data-nav]', function (n) { if (str('nav')) n.setAttribute('aria-label', str('nav')); });
     each('[data-sec="open"]', function (b) { if (str('expand')) b.textContent = str('expand'); });
     each('[data-sec="close"]', function (b) { if (str('collapse')) b.textContent = str('collapse'); });
     paintTheme();
@@ -102,8 +104,20 @@
 
   var top = $('toTop');
   if (top) {
-    addEventListener('scroll', function () { top.classList.toggle('show', scrollY > 600); }, { passive: true });
-    top.addEventListener('click', function () { scrollTo({ top: 0, behavior: 'smooth' }); });
+    // shown after 600 px, hidden again while the footer is on screen: the fixed button would sit over the contact
+    // links (and the copyright line on right-to-left pages), so it stays clear of the footer instead
+    var foot = document.querySelector('.site-footer');
+    var paintTop = function () {
+      var clear = !foot || foot.getBoundingClientRect().top >= innerHeight;
+      top.classList.toggle('show', scrollY > 600 && clear);
+    };
+    addEventListener('scroll', paintTop, { passive: true });
+    addEventListener('resize', paintTop);
+    paintTop();
+    top.addEventListener('click', function () {
+      var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+    });
   }
 
   var tag = $('releaseTag');
