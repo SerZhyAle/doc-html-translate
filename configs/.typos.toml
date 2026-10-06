@@ -15,6 +15,11 @@ extend-ignore-re = [
   # inventoried them: the MinGW runtime DLL, and a misspelling inside the Qt licence text.
   "libgcc_s_seh-1\\.dll",
   "command line utilties do not require Qt",
+  # The page-style pre-paint resolver in tests/site_test.go, whitespace removed on purpose (the test
+  # compares it with the page's script after strip-all-whitespace), so "var t=" reads "vart=" and
+  # "var n=" reads "varn=". Scoped to the two exact fragments.
+  "try\\{vart=localStorage",
+  "\\{varn=\\(navigator",
 ]
 
 # Project proper nouns / format acronyms typos misreads as misspellings.
@@ -55,6 +60,7 @@ extend-exclude = [
   "extension/test/reflow.test.mjs", # multilingual reflow fixtures (German "ist ein", hyphenation)
   "DEV/doccorpus/expect",           # verbatim reference text of the multilingual corpus (ticket 68), OCR spellings kept
   "tests/testdata/pdf_lang_cases.json", # multilingual language-detection samples (fr, de, ..)
+  "DEV/research/RESEARCH_site-checklist-browser-run_2026-10-06/report-*.txt", # raw captured page text of the live site run, cut mid-word by the capture
 
   # Non-English interface copy. `typos` carries an English dictionary and has no per-language mode, so
   # correct German "lokales"/"oder", French "ressources", Italian and Portuguese words all read as

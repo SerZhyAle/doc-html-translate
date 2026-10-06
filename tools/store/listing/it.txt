@@ -98,5 +98,9 @@ fumetti cbz cbr
 traduzione offline
 
 @@ReleaseNotes
-- Il testo riconosciuto su un'immagine non viene più unito da un lato all'altro della figura. Un fumetto con i ballon ai due lati di una figura, o una pagina su due colonne, produceva una fascia larga sopra il disegno in cui le parole di due personaggi diventavano una sola frase. Ora ogni blocco ha la propria targhetta, sul proprio testo e nell'ordine di lettura.
+- I file segreti FileDO (.fd-sec) si aprono direttamente: il convertitore chiede la password, converte e rimuove la copia temporanea.
+- Il riconoscimento del testo recupera righe che prima andavano perse e copre più da vicino la scritta originale.
+- Ctrl+F in un libro convertito apre la ricerca in tutto il libro, anche con layout di tastiera non latini; i selettori di lingua mostrano ogni lingua con il suo nome.
+- Rifinitura della finestra: un doppio clic non avvia più una seconda esecuzione, nelle conferme il focus è sulla risposta sicura, gli errori indicano la causa, le lingue da destra a sinistra si specchiano correttamente, aree di tocco più grandi, rispetto del movimento ridotto.
+- I report diagnostici nascondono ora anche i segreti brevi.
 - Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.

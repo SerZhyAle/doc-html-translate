@@ -99,5 +99,9 @@ bd cbz cbr
 traduction hors ligne
 
 @@ReleaseNotes
-- Le texte reconnu sur une image n'est plus recollé d'un bord à l'autre. Une bande dessinée avec des bulles de part et d'autre d'un personnage, ou une page sur deux colonnes, donnait un large bandeau sur le dessin où les mots de deux personnages n'en faisaient qu'une phrase. Chaque bloc a désormais sa propre plaque, sur son propre texte et dans l'ordre de lecture.
+- Les fichiers secrets FileDO (.fd-sec) s'ouvrent directement : le convertisseur demande le mot de passe, convertit et supprime la copie temporaire.
+- La reconnaissance de texte retrouve des lignes autrefois perdues et recouvre plus précisément le lettrage d'origine.
+- Ctrl+F dans un livre converti ouvre la recherche dans tout le livre, y compris avec des dispositions de clavier non latines ; les sélecteurs de langue affichent chaque langue sous son propre nom.
+- Mise au point de la fenêtre : un double clic ne lance plus une seconde exécution, le focus reste sur la réponse sûre dans les confirmations, les échecs indiquent leur cause, les langues de droite à gauche sont correctement inversées, cibles tactiles plus grandes, mouvement réduit respecté.
+- Les rapports de diagnostic masquent désormais aussi les secrets courts.
 - Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.

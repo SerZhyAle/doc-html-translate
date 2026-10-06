@@ -314,7 +314,7 @@ if (want('E')) {
   add('E10b', 'landing', lang13.length === 13 ? 'pass' : 'fail', `landing: ${lang13.length} locales published (${lang13.join(' ')}), declared 13`, {});
   add('E10c', 'manual', 'pass', `manual: ${DOCS.length} files (en ru uk), declared 3`, {});
   // is there a search? (D)
-  const sp = await open(ctx, url('index.html')); const hasSearch = await sp.evaluate(() => !!document.querySelector('[role=search], input[type=search], [aria-label*=earch i], [data-search]')); await sp.close();
+  const sp = await open(ctx, url('index.html')); const hasSearch = await sp.evaluate(() => !!document.querySelector('[role=search], input[type=search], [aria-label*=search i], [data-search]')); await sp.close();
   add('D1', 'site', 'na', `no search control on the landing (${hasSearch ? 'FOUND' : 'none'}); the corpus is ${FILES.length} pages, under the 25-page threshold of SITE-STRUCTURE section 2, and the guide tier does not require search`, {});
   await ctx.close();
 }

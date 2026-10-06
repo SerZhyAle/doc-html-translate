@@ -48,6 +48,7 @@
 {"kind":"held","holder":"scripts/release.ps1","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/sitemap.xml"]}
 {"kind":"held","holder":"tests/site_html_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"tests/site_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"tools/sitecheck/lib.mjs","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.ar-SA.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.bn-BD.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.de-DE.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}

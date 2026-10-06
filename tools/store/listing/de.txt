@@ -99,5 +99,9 @@ comic cbz cbr
 offline übersetzung
 
 @@ReleaseNotes
-- Auf einem Bild erkannter Text wird nicht mehr quer über das ganze Bild zusammengezogen. Ein Comic mit Sprechblasen zu beiden Seiten einer Figur oder eine zweispaltige Seite ergab bisher ein breites Band über der Zeichnung, in dem die Worte zweier Sprecher zu einem Satz verschmolzen. Jeder Block bekommt jetzt seine eigene Fläche - auf seinem eigenen Text und in Lesereihenfolge.
+- FileDO-Geheimdateien (.fd-sec) lassen sich direkt öffnen: Der Konverter fragt nach dem Passwort, konvertiert und entfernt die temporäre Kopie.
+- Die Texterkennung findet Zeilen wieder, die früher verloren gingen, und deckt die Originalschrift genauer ab.
+- Strg+F in einem konvertierten Buch öffnet die Suche im ganzen Buch, auch bei nicht-lateinischen Tastaturlayouts; Sprachauswahlen zeigen jede Sprache unter ihrem eigenen Namen.
+- Feinschliff am Fenster: Ein Doppelklick startet keinen zweiten Lauf mehr, in Bestätigungen ist die sichere Antwort fokussiert, Fehler nennen ihre Ursache, Rechts-nach-links-Sprachen werden korrekt gespiegelt, Touch-Ziele sind größer, reduzierte Bewegung wird beachtet.
+- Diagnoseberichte blenden jetzt auch kurze Geheimnisse aus.
 - Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.

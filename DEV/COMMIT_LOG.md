@@ -1026,3 +1026,39 @@ Changed files:
 - tests/testdata/pdf_mrc_pair.json
 - tests/testdata/rtf_cases.json
 
+| 2026-10-07 01:16:34 | main | 2c2277b | docs: release 26.1007.0054 - what's new, store listings and gate hygiene
+
+Release-notes record 26.1007.0054 (en, ru, uk) rendered into release-notes.html,
+@@ReleaseNotes in all 13 store listings and the Partner Center CSV, two ledger rows
+(ticket 91, tickets 93 and 95). Gate fixes: two empty stray files at the repo root
+removed, typos ignores for the whitespace-stripped page resolver and the raw site-run
+captures, the sitecheck holder listed in site-held-addresses.jsonl.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> |
+
+Changed files:
+- 103_2026-10-06_site-release-notes-page.md
+- DEV/CHANGELOG.md
+- RELEASE_QUEUE.md
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- configs/.typos.toml
+- configs/site-held-addresses.jsonl
+- docs/release-notes.json
+- release-notes.html
+- tools/sitecheck/run.mjs
+- tools/store/listing/ar.txt
+- tools/store/listing/bn.txt
+- tools/store/listing/de.txt
+- tools/store/listing/en.txt
+- tools/store/listing/es.txt
+- tools/store/listing/fr.txt
+- tools/store/listing/hi.txt
+- tools/store/listing/it.txt
+- tools/store/listing/pt.txt
+- tools/store/listing/ru.txt
+- tools/store/listing/uk.txt
+- tools/store/listing/ur.txt
+- tools/store/listing/zh.txt
+- tools/store/listingData.csv
+

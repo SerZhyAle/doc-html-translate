@@ -98,5 +98,9 @@ banda desenhada cbz cbr
 tradução offline
 
 @@ReleaseNotes
-- O texto reconhecido numa imagem já não é juntado de um lado ao outro da figura. Uma banda desenhada com balões dos dois lados de uma figura, ou uma página a duas colunas, dava uma faixa larga sobre o desenho onde as palavras de duas personagens formavam uma só frase. Agora cada bloco tem a sua própria placa, sobre o seu próprio texto e por ordem de leitura.
+- Os arquivos secretos do FileDO (.fd-sec) abrem diretamente: o conversor pede a senha, converte e remove a cópia temporária.
+- O reconhecimento de texto recupera linhas que antes se perdiam e cobre com mais precisão o letreiro original.
+- Ctrl+F em um livro convertido abre a busca no livro inteiro, inclusive em layouts de teclado não latinos; os seletores de idioma mostram cada idioma com o próprio nome.
+- Acabamento na janela: um clique duplo não inicia mais uma segunda execução, nas confirmações o foco fica na resposta segura, as falhas indicam a causa, idiomas da direita para a esquerda são espelhados corretamente, alvos de toque maiores e movimento reduzido respeitado.
+- Os relatórios de diagnóstico agora ocultam também segredos curtos.
 - Esta tradução é automática e não revista - correções para sza@ukr.net.

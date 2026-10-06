@@ -4,6 +4,33 @@
   "link": {"en": "Downloads and checksums on GitHub", "ru": "Файлы и контрольные суммы на GitHub", "uk": "Файли та контрольні суми на GitHub"},
   "releases": [
     {
+      "version": "26.1007.0054",
+      "date": "2026-10-07",
+      "notes": {
+        "en": [
+          "Open FileDO secret files (.fd-sec) directly: the converter asks for the password, decrypts through your installed FileDO into a private temporary copy, converts it and removes the copy. It works from the window, the command line, \"Open with\" and the right-click menu.",
+          "Text recognition recovers lines that a partly duplicated rescue pass used to drop and fits the masks over the original lettering more tightly, in the desktop app and the browser extension alike.",
+          "Ctrl+F in a converted book and in the extension viewer opens the whole-book search, also on non-Latin keyboard layouts, and language pickers show every language in its own name.",
+          "The desktop window got a polish pass: a double click no longer starts a second run, risky confirmations focus the safe answer, a failed run names its cause, right-to-left languages mirror correctly, and controls meet the touch-target floor and respect reduced motion.",
+          "Diagnostic reports now hide short secrets too: values in JSON fields, query parameters, connection strings and credentials inside a path."
+        ],
+        "ru": [
+          "Файлы FileDO с паролем (.fd-sec) открываются напрямую: конвертер спрашивает пароль, расшифровывает через установленный FileDO во временную приватную копию, конвертирует и удаляет копию. Работает из окна, из командной строки, через «Открыть с помощью» и контекстное меню.",
+          "Распознавание текста возвращает строки, которые терялись при частично дублированном дополнительном проходе, и точнее закрывает исходные надписи - в приложении и в расширении для браузера одинаково.",
+          "Ctrl+F на готовой странице и в просмотрщике расширения открывает поиск по всей книге, в том числе на нелатинских раскладках, а выбор языка показывает каждый язык его собственным названием.",
+          "Окно приложения доведено до ума: двойной щелчок больше не запускает второй прогон, рискованные подтверждения ставят фокус на безопасный ответ, сбой называет свою причину, языки с письмом справа налево зеркалятся правильно, а элементы управления не меньше минимального размера для касания и учитывают просьбу уменьшить анимацию.",
+          "Диагностические отчёты теперь скрывают и короткие секреты: значения в полях JSON, параметры запросов, строки подключения и учётные данные внутри пути."
+        ],
+        "uk": [
+          "Файли FileDO з паролем (.fd-sec) відкриваються напряму: конвертер питає пароль, розшифровує через встановлений FileDO у тимчасову приватну копію, конвертує й видаляє копію. Працює з вікна, з командного рядка, через «Відкрити за допомогою» та контекстне меню.",
+          "Розпізнавання тексту повертає рядки, які губилися при частково дубльованому додатковому проході, і точніше закриває вихідні написи - у застосунку та в розширенні для браузера однаково.",
+          "Ctrl+F на готовій сторінці та в переглядачі розширення відкриває пошук по всій книжці, зокрема на нелатинських розкладках, а вибір мови показує кожну мову її власною назвою.",
+          "Вікно застосунку доведено до ладу: подвійне клацання більше не запускає другий прогін, ризиковані підтвердження ставлять фокус на безпечну відповідь, збій називає свою причину, мови з письмом справа наліво дзеркаляться правильно, а елементи керування не менші за мінімальний розмір для дотику й враховують прохання зменшити анімацію.",
+          "Діагностичні звіти тепер ховають і короткі секрети: значення в полях JSON, параметри запитів, рядки підключення та облікові дані всередині шляху."
+        ]
+      }
+    },
+    {
       "version": "26.0930.1107",
       "date": "2026-09-30",
       "notes": {

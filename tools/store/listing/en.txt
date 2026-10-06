@@ -93,4 +93,8 @@ comic cbz cbr
 offline translation
 
 @@ReleaseNotes
-- Text recognized on a picture is no longer run together across the image. A comic with balloons on both sides of a figure, or a page in two columns, used to come back as a wide band over the artwork carrying two speakers' words as one sentence. Each block now gets its own patch, on its own text and in reading order.
+- Open FileDO secret files (.fd-sec) directly: the converter asks for the password, converts, and removes the temporary copy.
+- Text recognition recovers lines that used to be dropped and covers the original lettering more tightly.
+- Ctrl+F in a converted book opens the whole-book search, also on non-Latin keyboard layouts; language pickers show each language in its own name.
+- A polish pass on the window: no second run on a double click, the safe answer is focused in confirmations, failures name their cause, right-to-left languages mirror correctly, larger touch targets, reduced motion respected.
+- Diagnostic reports hide short secrets too.

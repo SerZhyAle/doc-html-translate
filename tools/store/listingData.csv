@@ -285,16 +285,68 @@ Google Cloud Translation API，或者完全本地的 Ollama 模型，这样任�
 AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
 
 没有账号，没有广告，没有遥测。开源地址：https://github.com/SerZhyAle/doc-html-translate"
-ReleaseNotes,3,Text,,"- Text recognized on a picture is no longer run together across the image. A comic with balloons on both sides of a figure, or a page in two columns, used to come back as a wide band over the artwork carrying two speakers' words as one sentence. Each block now gets its own patch, on its own text and in reading order.","- Текст, распознанный на картинке, больше не сшивается через всю ширину. Комикс с пузырями по обе стороны от фигуры или страница в две колонки раньше давали широкую полосу поверх изображения, в которой реплики двух говорящих шли одной фразой. Теперь каждый блок получает свою плашку - по своему тексту и в порядке чтения.","- Текст, розпізнаний на зображенні, більше не зшивається через усю ширину. Комікс із бульбашками обабіч постаті або сторінка у дві колонки раніше давали широку смугу поверх малюнка, де репліки двох мовців ішли одним реченням. Тепер кожен блок отримує власну плашку - за своїм текстом і в порядку читання.","- Auf einem Bild erkannter Text wird nicht mehr quer über das ganze Bild zusammengezogen. Ein Comic mit Sprechblasen zu beiden Seiten einer Figur oder eine zweispaltige Seite ergab bisher ein breites Band über der Zeichnung, in dem die Worte zweier Sprecher zu einem Satz verschmolzen. Jeder Block bekommt jetzt seine eigene Fläche - auf seinem eigenen Text und in Lesereihenfolge.
-- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.","- Il testo riconosciuto su un'immagine non viene più unito da un lato all'altro della figura. Un fumetto con i ballon ai due lati di una figura, o una pagina su due colonne, produceva una fascia larga sopra il disegno in cui le parole di due personaggi diventavano una sola frase. Ora ogni blocco ha la propria targhetta, sul proprio testo e nell'ordine di lettura.
-- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.","- El texto reconocido en una imagen ya no se une de un lado a otro de la figura. Un cómic con bocadillos a ambos lados de una figura, o una página a dos columnas, daba una banda ancha sobre el dibujo en la que las palabras de dos personajes formaban una sola frase. Ahora cada bloque tiene su propia placa, sobre su propio texto y en orden de lectura.
-- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.","- Le texte reconnu sur une image n'est plus recollé d'un bord à l'autre. Une bande dessinée avec des bulles de part et d'autre d'un personnage, ou une page sur deux colonnes, donnait un large bandeau sur le dessin où les mots de deux personnages n'en faisaient qu'une phrase. Chaque bloc a désormais sa propre plaque, sur son propre texte et dans l'ordre de lecture.
-- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.","- O texto reconhecido numa imagem já não é juntado de um lado ao outro da figura. Uma banda desenhada com balões dos dois lados de uma figura, ou uma página a duas colunas, dava uma faixa larga sobre o desenho onde as palavras de duas personagens formavam uma só frase. Agora cada bloco tem a sua própria placa, sobre o seu próprio texto e por ordem de leitura.
-- Esta tradução é automática e não revista - correções para sza@ukr.net.","- لم يعد النص المتعرَّف عليه في الصورة يُدمج عبر عرض الصورة كله. كانت القصة المصورة ذات الفقاعات على جانبي الشخصية، أو الصفحة ذات العمودين، تُنتج شريطًا عريضًا فوق الرسم يجمع كلام متحدثَين في جملة واحدة. الآن يحصل كل مقطع على لوحته الخاصة، فوق نصه هو وبترتيب القراءة.
-- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.","- चित्र पर पहचाना गया पाठ अब पूरी चौड़ाई में जोड़ा नहीं जाता। किसी आकृति के दोनों ओर संवाद-बुलबुलों वाली कॉमिक, या दो कॉलम वाला पृष्ठ, पहले चित्र के ऊपर एक चौड़ी पट्टी देता था जिसमें दो वक्ताओं के शब्द एक ही वाक्य बन जाते थे। अब हर खंड को अपनी अलग पट्टिका मिलती है - अपने ही पाठ पर और पढ़ने के क्रम में।
-- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।","- ছবিতে শনাক্ত করা লেখা আর গোটা প্রস্থ জুড়ে জোড়া লাগে না। কোনো অবয়বের দুই পাশে সংলাপ-বুদবুদসহ কমিক, বা দুই কলামের পাতা, আগে ছবির উপরে একটি চওড়া পটি তৈরি করত যেখানে দুই বক্তার কথা এক বাক্য হয়ে যেত। এখন প্রতিটি অংশ নিজস্ব ফলক পায় - নিজের লেখার উপরে ও পড়ার ক্রমে।
-- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।","- تصویر پر شناخت شدہ متن اب پوری چوڑائی میں جوڑا نہیں جاتا۔ کسی شخصیت کے دونوں طرف مکالماتی بلبلوں والی کامک، یا دو کالم والا صفحہ، پہلے تصویر کے اوپر ایک چوڑی پٹی دیتا تھا جس میں دو بولنے والوں کے الفاظ ایک ہی جملہ بن جاتے تھے۔ اب ہر حصے کو اپنی الگ تختی ملتی ہے - اپنے ہی متن پر اور پڑھنے کی ترتیب میں۔
-- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔","- 图片上识别出的文字不再横跨整幅图拼接在一起。人物两侧带对话气泡的漫画，或分两栏的页面，以前会在画面上得到一条宽带，把两个说话人的话连成一句。现在每一段文字都有自己的色块，落在自己的文字上，并按阅读顺序排列。
+ReleaseNotes,3,Text,,"- Open FileDO secret files (.fd-sec) directly: the converter asks for the password, converts, and removes the temporary copy.
+- Text recognition recovers lines that used to be dropped and covers the original lettering more tightly.
+- Ctrl+F in a converted book opens the whole-book search, also on non-Latin keyboard layouts; language pickers show each language in its own name.
+- A polish pass on the window: no second run on a double click, the safe answer is focused in confirmations, failures name their cause, right-to-left languages mirror correctly, larger touch targets, reduced motion respected.
+- Diagnostic reports hide short secrets too.","- Файлы FileDO с паролем (.fd-sec) открываются напрямую: конвертер спрашивает пароль, конвертирует и удаляет временную копию.
+- Распознавание текста возвращает строки, которые раньше терялись, и точнее закрывает исходные надписи.
+- Ctrl+F на готовой странице открывает поиск по всей книге, в том числе на нелатинских раскладках; выбор языка показывает каждый язык его собственным названием.
+- Окно приложения доведено до ума: двойной щелчок не запускает второй прогон, в подтверждениях в фокусе безопасный ответ, сбой называет причину, языки справа налево зеркалятся правильно, цели для касания крупнее, учитывается просьба уменьшить анимацию.
+- Диагностические отчёты скрывают и короткие секреты.","- Файли FileDO з паролем (.fd-sec) відкриваються напряму: конвертер питає пароль, конвертує й видаляє тимчасову копію.
+- Розпізнавання тексту повертає рядки, які раніше губилися, і точніше закриває вихідні написи.
+- Ctrl+F на готовій сторінці відкриває пошук по всій книжці, зокрема на нелатинських розкладках; вибір мови показує кожну мову її власною назвою.
+- Вікно застосунку доведено до ладу: подвійне клацання не запускає другий прогін, у підтвердженнях у фокусі безпечна відповідь, збій називає причину, мови справа наліво дзеркаляться правильно, цілі для дотику більші, враховується прохання зменшити анімацію.
+- Діагностичні звіти ховають і короткі секрети.","- FileDO-Geheimdateien (.fd-sec) lassen sich direkt öffnen: Der Konverter fragt nach dem Passwort, konvertiert und entfernt die temporäre Kopie.
+- Die Texterkennung findet Zeilen wieder, die früher verloren gingen, und deckt die Originalschrift genauer ab.
+- Strg+F in einem konvertierten Buch öffnet die Suche im ganzen Buch, auch bei nicht-lateinischen Tastaturlayouts; Sprachauswahlen zeigen jede Sprache unter ihrem eigenen Namen.
+- Feinschliff am Fenster: Ein Doppelklick startet keinen zweiten Lauf mehr, in Bestätigungen ist die sichere Antwort fokussiert, Fehler nennen ihre Ursache, Rechts-nach-links-Sprachen werden korrekt gespiegelt, Touch-Ziele sind größer, reduzierte Bewegung wird beachtet.
+- Diagnoseberichte blenden jetzt auch kurze Geheimnisse aus.
+- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.","- I file segreti FileDO (.fd-sec) si aprono direttamente: il convertitore chiede la password, converte e rimuove la copia temporanea.
+- Il riconoscimento del testo recupera righe che prima andavano perse e copre più da vicino la scritta originale.
+- Ctrl+F in un libro convertito apre la ricerca in tutto il libro, anche con layout di tastiera non latini; i selettori di lingua mostrano ogni lingua con il suo nome.
+- Rifinitura della finestra: un doppio clic non avvia più una seconda esecuzione, nelle conferme il focus è sulla risposta sicura, gli errori indicano la causa, le lingue da destra a sinistra si specchiano correttamente, aree di tocco più grandi, rispetto del movimento ridotto.
+- I report diagnostici nascondono ora anche i segreti brevi.
+- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.","- Los archivos secretos de FileDO (.fd-sec) se abren directamente: el conversor pide la contraseña, convierte y elimina la copia temporal.
+- El reconocimiento de texto recupera líneas que antes se perdían y cubre con más precisión la rotulación original.
+- Ctrl+F en un libro convertido abre la búsqueda en todo el libro, también con distribuciones de teclado no latinas; los selectores de idioma muestran cada idioma con su propio nombre.
+- Retoques en la ventana: un doble clic ya no inicia una segunda ejecución, en las confirmaciones el foco queda en la respuesta segura, los fallos indican su causa, los idiomas de derecha a izquierda se reflejan bien, zonas táctiles mayores y se respeta el movimiento reducido.
+- Los informes de diagnóstico ocultan también los secretos cortos.
+- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.","- Les fichiers secrets FileDO (.fd-sec) s'ouvrent directement : le convertisseur demande le mot de passe, convertit et supprime la copie temporaire.
+- La reconnaissance de texte retrouve des lignes autrefois perdues et recouvre plus précisément le lettrage d'origine.
+- Ctrl+F dans un livre converti ouvre la recherche dans tout le livre, y compris avec des dispositions de clavier non latines ; les sélecteurs de langue affichent chaque langue sous son propre nom.
+- Mise au point de la fenêtre : un double clic ne lance plus une seconde exécution, le focus reste sur la réponse sûre dans les confirmations, les échecs indiquent leur cause, les langues de droite à gauche sont correctement inversées, cibles tactiles plus grandes, mouvement réduit respecté.
+- Les rapports de diagnostic masquent désormais aussi les secrets courts.
+- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.","- Os arquivos secretos do FileDO (.fd-sec) abrem diretamente: o conversor pede a senha, converte e remove a cópia temporária.
+- O reconhecimento de texto recupera linhas que antes se perdiam e cobre com mais precisão o letreiro original.
+- Ctrl+F em um livro convertido abre a busca no livro inteiro, inclusive em layouts de teclado não latinos; os seletores de idioma mostram cada idioma com o próprio nome.
+- Acabamento na janela: um clique duplo não inicia mais uma segunda execução, nas confirmações o foco fica na resposta segura, as falhas indicam a causa, idiomas da direita para a esquerda são espelhados corretamente, alvos de toque maiores e movimento reduzido respeitado.
+- Os relatórios de diagnóstico agora ocultam também segredos curtos.
+- Esta tradução é automática e não revista - correções para sza@ukr.net.","- تُفتح ملفات FileDO السرية (.fd-sec) مباشرةً: يطلب المحوِّل كلمة المرور ثم يحوّل الملف ويحذف النسخة المؤقتة.
+- يستعيد التعرّف على النص أسطرًا كانت تضيع سابقًا ويغطّي الكتابة الأصلية بدقة أكبر.
+- يفتح Ctrl+F في الكتاب المحوَّل البحثَ في الكتاب كله، حتى مع تخطيطات لوحة المفاتيح غير اللاتينية؛ وتعرض قوائم اختيار اللغة كل لغة باسمها الخاص.
+- تحسينات على النافذة: لا يبدأ النقر المزدوج تشغيلًا ثانيًا، ويستقر التركيز على الإجابة الآمنة في رسائل التأكيد، وتذكر الأعطال سببها، وتنعكس اللغات من اليمين إلى اليسار بشكل صحيح، وأهداف اللمس أكبر، ويُحترم تقليل الحركة.
+- تُخفي تقارير التشخيص الآن الأسرار القصيرة أيضًا.
+- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.","- FileDO की गोपनीय फ़ाइलें (.fd-sec) सीधे खुलती हैं: कन्वर्टर पासवर्ड पूछता है, कन्वर्ट करता है और अस्थायी प्रति हटा देता है।
+- टेक्स्ट पहचान अब वे पंक्तियाँ लौटाती है जो पहले छूट जाती थीं और मूल अक्षरों को अधिक सटीकता से ढकती है।
+- कन्वर्ट की गई किताब में Ctrl+F पूरी किताब में खोज खोलता है, गैर-लैटिन कीबोर्ड लेआउट पर भी; भाषा चयनकर्ता हर भाषा को उसके अपने नाम से दिखाते हैं।
+- विंडो में सुधार: डबल क्लिक अब दूसरा रन शुरू नहीं करता, पुष्टि संवादों में सुरक्षित उत्तर पर फ़ोकस रहता है, विफलता अपना कारण बताती है, दाएँ से बाएँ की भाषाएँ सही ढंग से उलटी दिखती हैं, स्पर्श लक्ष्य बड़े हैं और कम गति की सेटिंग का सम्मान होता है।
+- डायग्नोस्टिक रिपोर्ट अब छोटे गोपनीय मान भी छिपाती हैं।
+- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।","- FileDO-র গোপন ফাইল (.fd-sec) সরাসরি খোলা যায়: কনভার্টার পাসওয়ার্ড চায়, রূপান্তর করে এবং অস্থায়ী কপি মুছে দেয়।
+- টেক্সট শনাক্তকরণ এখন আগে হারিয়ে যাওয়া লাইনগুলো ফিরিয়ে আনে এবং মূল লেখাকে আরও নিখুঁতভাবে ঢাকে।
+- রূপান্তরিত বইয়ে Ctrl+F পুরো বইয়ে অনুসন্ধান খোলে, ল্যাটিন নয় এমন কীবোর্ড বিন্যাসেও; ভাষা বাছাইয়ে প্রতিটি ভাষা তার নিজের নামে দেখা যায়।
+- উইন্ডোর পরিমার্জন: ডাবল ক্লিকে আর দ্বিতীয় রান শুরু হয় না, নিশ্চিতকরণে নিরাপদ উত্তরে ফোকাস থাকে, ব্যর্থতা তার কারণ জানায়, ডান-থেকে-বামের ভাষা ঠিকভাবে উল্টে যায়, টাচ লক্ষ্য বড় এবং কম গতির সেটিং মানা হয়।
+- ডায়াগনস্টিক রিপোর্ট এখন ছোট গোপন মানও লুকায়।
+- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।","- FileDO کی خفیہ فائلیں (.fd-sec) براہِ راست کھلتی ہیں: کنورٹر پاس ورڈ پوچھتا ہے، تبدیل کرتا ہے اور عارضی کاپی ہٹا دیتا ہے۔
+- متن کی شناخت اب وہ سطریں واپس لاتی ہے جو پہلے رہ جاتی تھیں اور اصل تحریر کو زیادہ درستی سے ڈھانپتی ہے۔
+- تبدیل شدہ کتاب میں Ctrl+F پوری کتاب میں تلاش کھولتا ہے، غیر لاطینی کی بورڈ لے آؤٹ پر بھی؛ زبان کے انتخاب میں ہر زبان اپنے نام سے دکھائی دیتی ہے۔
+- ونڈو میں بہتری: ڈبل کلک سے اب دوسرا رن شروع نہیں ہوتا، تصدیقی ڈائیلاگ میں محفوظ جواب پر فوکس رہتا ہے، ناکامی اپنی وجہ بتاتی ہے، دائیں سے بائیں کی زبانیں درست طور پر الٹ جاتی ہیں، ٹچ ہدف بڑے ہیں اور کم حرکت کی ترتیب کا احترام کیا جاتا ہے۔
+- تشخیصی رپورٹیں اب چھوٹے راز بھی چھپاتی ہیں۔
+- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔","- 可直接打开 FileDO 加密文件（.fd-sec）：转换器会询问密码、完成转换并删除临时副本。
+- 文字识别找回了以前丢失的行，并更精确地覆盖原有文字。
+- 在转换后的书中按 Ctrl+F 可搜索整本书，非拉丁键盘布局同样适用；语言选择器以每种语言自己的名称显示。
+- 窗口细节打磨：双击不再启动第二次运行，确认对话框默认聚焦在安全选项上，失败会说明原因，从右到左的语言正确镜像，触控目标更大，并遵循“减少动态效果”设置。
+- 诊断报告现在也会隐藏较短的密钥。
 - 本翻译为机器翻译且未经校对 - 更正请发送至 sza@ukr.net。"
 Title,4,Text,,doc-html-translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate
 ShortTitle,5,Text,,,,,,,,,,,,,,

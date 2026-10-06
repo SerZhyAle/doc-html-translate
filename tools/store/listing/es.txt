@@ -98,5 +98,9 @@ cómics cbz cbr
 traducción sin conexión
 
 @@ReleaseNotes
-- El texto reconocido en una imagen ya no se une de un lado a otro de la figura. Un cómic con bocadillos a ambos lados de una figura, o una página a dos columnas, daba una banda ancha sobre el dibujo en la que las palabras de dos personajes formaban una sola frase. Ahora cada bloque tiene su propia placa, sobre su propio texto y en orden de lectura.
+- Los archivos secretos de FileDO (.fd-sec) se abren directamente: el conversor pide la contraseña, convierte y elimina la copia temporal.
+- El reconocimiento de texto recupera líneas que antes se perdían y cubre con más precisión la rotulación original.
+- Ctrl+F en un libro convertido abre la búsqueda en todo el libro, también con distribuciones de teclado no latinas; los selectores de idioma muestran cada idioma con su propio nombre.
+- Retoques en la ventana: un doble clic ya no inicia una segunda ejecución, en las confirmaciones el foco queda en la respuesta segura, los fallos indican su causa, los idiomas de derecha a izquierda se reflejan bien, zonas táctiles mayores y se respeta el movimiento reducido.
+- Los informes de diagnóstico ocultan también los secretos cortos.
 - Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.
