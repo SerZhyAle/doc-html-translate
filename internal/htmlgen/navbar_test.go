@@ -212,8 +212,12 @@ func TestReaderChromeAccessibilityFloor(t *testing.T) {
 		"flex-wrap: wrap",            // the bar reflows at 200% zoom instead of clipping
 		".dht-navbar :focus-visible", // the chrome carries a theme-accent focus ring
 		"outline: 2px solid var(--dht-accent)",
-		"box-sizing:border-box; min-height:24px", // buttons and selects, floor included
-		"margin-inline-start: auto",              // RTL mirrors through logical properties
+		"box-sizing:border-box; min-height:28px", // buttons and selects, fine-pointer floor included
+		"min-width:28px",                         // glyph target width, independent of its drawing
+		"@media (pointer: coarse)",               // touch raises the target floor
+		"min-height:44px; min-width:44px",
+		`.dht-navbar[dir="rtl"] .nav-turn .dht-glyph { transform:scaleX(-1); }`,
+		"margin-inline-start: auto", // RTL mirrors through logical properties
 		"padding-inline-end: 12px",
 		"color:var(--dht-bg)",       // accent buttons take theme ink, never white
 		"#dht-search-close{padding", // the close word clears the floor too

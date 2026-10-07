@@ -18,3 +18,5 @@ What this repo owes it:
 - No showcase page exists, so rule 11 does not apply.
 
 **Adopted 2026-10-06 (ticket 96), verdict `partial 0.1`.** Rules 5-10 were not run (ticket 102).
+
+**Review 2026-10-07 (ticket 108).** Rules 1-12 reviewed against positioning sources and ticket 107 manual anatomy. The missing capability-to-edition matrix (rule 9) remains an explicit exception; no capability is invented by synchronization.

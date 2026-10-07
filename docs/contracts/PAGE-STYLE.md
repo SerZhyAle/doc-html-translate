@@ -1,7 +1,7 @@
 # Pointer: PAGE-STYLE
 
 - **Id:** `PAGE-STYLE`
-- **Version:** 1.2
+- **Version:** 1.6
 - **Home:** the shared contracts catalog, `product-web-pages/PAGE-STYLE.md`, reference kit `product-web-pages/reference/sza-kit.css` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - role "App - medium" (the distribution block is required)
 - **Wire carrier:** `assets/sza-kit.css` - the one machine-checkable artifact of the domain
@@ -15,16 +15,15 @@ What this repo owes it:
 - RU / EN / UA switch keyed `ru|en|ua` in `data-lang`, `data-l` and `localStorage` `sza-lang`; a stored `uk` is
   read as `ua`. The ten locale landings and the three docs pages are separate per-language pages.
 
-Deviations (each to be recorded as a dated registry exception in the catalog):
-- `--wide` is the viewport less a gutter (`calc(100vw - 2 * var(--gutter))`) in `assets/site.css`, with no pixel
-  cap, not 1100px - `PAGE-CONTENT` asks for the full width and the owner ruled on 2026-10-06 that a page is
-  never a centred column on a wide screen (ticket 26, B3). `tests/site_test.go` (`TestSiteUsesFullDeviceWidth`)
-  fails if a cap returns.
-- The ten locale landings have the text-only secondary language list now admitted by 1.2. The remaining
-  deviation is its EN-first order and lack of `sza-lang` writes on core-locale navigation; the documentation
-  trio is admitted by section 6 and no longer excepted.
-- The copy button's done state is the word "Copied" alone (`ICON-SET` 0.15), not section 4.7's "✓ Copied" (B13).
+**1.6 review (2026-10-07, ticket 108).** The current reference kit still hashes to
+`aea958f805249d300b7417373e4cad18b44d7eed9765954df19ed710276c4c9e`.
+Section 5's all-pointer 44 px targets and pseudo-element reduced-motion coverage live in
+the page layer until the hub revises the kit; only then re-vendor it and remove the
+duplicate motion rule. Copied is a localized word (section 4.7). The new non-landing
+picker is optional; existing language controls need no replacement (section 4.2).
+Theme labeling/glyphs, secondary-locale order/storage and landing identity differences
+remain dated exceptions in the catalog registry.
 
-**Conformance.** `tests/site_test.go` pins the kit's SHA-256 and checks that every page links the kit then
-`assets/site.css`, keys the language `ru|en|ua` and maps a stored `uk`. The section 11 checklist is a rendered
-check (360 / 768 / 1280 px, light and dark) and is recorded in the ticket, not asserted here.
+**Conformance.** `tests/site_test.go` pins the kit bytes, resolver and page width;
+`tests/site_a11y_test.go` holds the target and motion rules. The rendered checklist
+is run by `tools/sitecheck`; ticket 108 records its command and verdicts.

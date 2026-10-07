@@ -1,7 +1,7 @@
 # Pointer: SITE-EXPERIENCE
 
 - **Id:** `SITE-EXPERIENCE`
-- **Version:** 0.1 (draft)
+- **Version:** 0.3 (draft)
 - **Home:** the shared contracts catalog, `product-site/SITE-EXPERIENCE.md`, with the run-list `product-site/SITE-CHECKLIST.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - guide tier; there is no portal layer, the page layer is `assets/site.css`
 - **Wire carrier:** none - a stylesheet layer, a set of components and a behaviour contract
@@ -20,3 +20,5 @@ What this repo owes it:
 
 **Adopted 2026-10-06 (ticket 96), verdict `partial 0.1`.** Tab order, contrast numbers, reduced-motion
 emulation and the 360 px layout were not run (ticket 102).
+
+**Review 2026-10-07 (ticket 108).** Rules 10 and 20 read at 0.3: a picker is optional, current controls remain; width, resolver and motion fixes are in the tree. The 1.3 reference kit is still canonical. Speech and publication checks are not claimed by this source synchronization.

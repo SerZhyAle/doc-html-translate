@@ -3,6 +3,7 @@ package tests
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -85,7 +86,9 @@ func TestConvertedChromeLanguage(t *testing.T) {
 			if !strings.Contains(page, c.theme) {
 				t.Errorf("chrome is not in %s: %q not found", c.lang, c.theme)
 			}
-			if got := strings.Contains(page, `dir="rtl"`); got != c.rtl {
+			// Read the chrome element, not CSS selectors that mention an RTL attribute.
+			chrome := regexp.MustCompile(`<div\b[^>]*class="dht-navbar"[^>]*>`).FindString(page)
+			if got := strings.Contains(chrome, `dir="rtl"`); got != c.rtl {
 				t.Errorf("dir=rtl present = %v, want %v", got, c.rtl)
 			}
 			// The document is English prose; the interface language must not have leaked into

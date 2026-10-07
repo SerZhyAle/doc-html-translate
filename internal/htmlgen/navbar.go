@@ -468,12 +468,17 @@ var readerCSS = `
      and the image fills that, so the plates stay pinned to what they cover. */
   .pdf-page-scan { margin-left:50%; transform:translateX(-50%); }
   .pdf-page-scan img { display:block; width:100%; height:auto; max-height:none; margin:0; }
-  /* box-sizing + min-height hold every control to WCAG 2.2's 24px target-size floor
-     (2.5.8) whatever the book's own CSS does; the border-box keeps the padding inside it. */
+  /* ICON-RENDER section 13 E: web targets are 28px for a fine pointer, 44px for touch.
+     The border-box keeps padding inside the target, independent of the book's CSS. */
   .dht-btn, .dht-navbar select, .dht-toolbar select {
     background:transparent; color:var(--dht-bar-fg); border:1px solid var(--dht-border);
     border-radius:6px; padding:3px 8px; font:inherit; font-size:13px; cursor:pointer;
-    box-sizing:border-box; min-height:24px;
+    box-sizing:border-box; min-height:28px; min-width:28px;
+  }
+  @media (pointer: coarse) {
+    .dht-btn, .dht-navbar select, .dht-toolbar select {
+      min-height:44px; min-width:44px;
+    }
   }
   .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
   @media (prefers-reduced-motion: reduce) {
@@ -508,6 +513,8 @@ var readerCSS = `
   .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:var(--dht-bg); text-decoration:none; padding:4px 10px; border-radius:6px; }
   .dht-toolbar a.dht-continue:hover { filter:brightness(1.08); }
   .dht-glyph { width:1.15em; height:1.15em; vertical-align:-0.22em; flex:none; }
+  /* ICON-RENDER section 13 C: document paging mirrors; transport glyphs stay fixed. */
+  .dht-navbar[dir="rtl"] .nav-turn .dht-glyph { transform:scaleX(-1); }
   .dht-btn[aria-pressed="true"] { background:var(--dht-border); border-color:var(--dht-accent); }
   .dht-sel { display:inline-flex; align-items:center; gap:3px; font-size:13px; }
   /* The chrome's focus ring draws in the reading theme's accent: the browser default can

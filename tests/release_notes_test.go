@@ -59,6 +59,10 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 		t.Error("the render does not keep the source order, newest first")
 	}
 	run("a clean second run", 0, "release-notes: PASS", "")
+	w("release-notes.html", strings.ReplaceAll(page, "\n", "\r\n"))
+	run("a Windows CRLF checkout is the same render", 0, "release-notes: PASS", "")
+	w("release-notes.html", strings.ReplaceAll(strings.Replace(page, "<li>Newer.</li>", "<li>Changed on Windows.</li>", 1), "\n", "\r\n"))
+	run("CRLF does not hide a content edit", 1, "release-notes: FAIL", "is not the render")
 
 	w("release-notes.html", strings.Replace(page, "<li>Newer.</li>", "<li>Newer, by hand.</li>", 1))
 	run("a rendered block edited by hand", 1, "release-notes: FAIL", "is not the render")

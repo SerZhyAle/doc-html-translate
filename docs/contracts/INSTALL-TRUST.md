@@ -1,7 +1,7 @@
 # Pointer: INSTALL-TRUST
 
 - **Id:** `INSTALL-TRUST`
-- **Version:** 1.1
+- **Version:** 1.2
 - **Home:** the shared contracts catalog, `install-trust/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - bound by the contract and adopted (2026-09-28): the page is live on the site and
   the catalog registry row is closed
@@ -33,3 +33,5 @@ closed as of 2026-09-28 (the page is published and the registry row reads adopte
 - What it says about "what the app never does" must match the privacy page and the Store data-safety form
   word for word in substance.
 - When the artifacts become signed the page is updated, not deleted.
+
+**Review 2026-10-07 (ticket 108).** Section 6 K/L read: the trust page has the four sections and contains no Unblock instruction; no user-facing page teaches removal of the mark of the web. No machine vectors; the shipped document is the artifact.

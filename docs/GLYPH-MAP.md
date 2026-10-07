@@ -1,7 +1,7 @@
 # Glyph map
 
-This product's inventory against the shared icon vocabulary (`ICON-SET` 0.15, `ICON-RENDER` 0.13,
-`ICON-EXTERNAL` 0.10 - pointers in [`contracts/`](contracts/)). It is the product's rung-2 record
+This product's inventory against the shared icon vocabulary (`ICON-SET` 0.28, `ICON-RENDER` 0.18,
+`ICON-EXTERNAL` 0.12 - pointers in [`contracts/`](contracts/)). It is the product's rung-2 record
 (`ICON-SET` section 6: every glyph it shows maps to an id, or is declared artwork). Mapped on
 2026-09-25 by ticket 24 (`DEV/plan/done/24_2026-09-23_contract-iconography-sync.md`).
 
@@ -24,8 +24,8 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 
 | Control | Glyph before | Id | Name (en / ru / uk) | Status |
 | --- | --- | --- | --- | --- |
-| Previous page link | `◀` + "Back" | `media.previous` | Previous page / Предыдущая страница / Попередня сторінка | conforms |
-| Next page link | `▶` + "Forward" | `media.next` | Next page / Следующая страница / Наступна сторінка | conforms |
+| Previous page link | `◀` + "Back" | `media.previous` | Previous page / Предыдущая страница / Попередня сторінка | conforms; mirrored for RTL document paging (section 13 C) |
+| Next page link | `▶` + "Forward" | `media.next` | Next page / Следующая страница / Наступна сторінка | conforms; mirrored for RTL document paging (section 13 C) |
 | Table of contents link | `☰` | `nav.contents` | Table of contents / Оглавление / Зміст | conforms - "Оглавление" is the record's declared book-reader form (0.15) |
 | Contents panel close (single page) | `×` + "Close contents" | - (`nav.close` as its word) | Close / Закрыть / Закрити | conforms - a text button, the search panel's close word; the typed cross was no vocabulary drawing (`ICON-RENDER` rule 7, 2026-10-06) |
 | Continue reading (index) | `▸` | `feature.continue-reading` | Continue reading / Продолжить чтение / Продовжити читання | conforms |
@@ -83,7 +83,12 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | `.ico` (16-256 px), extension action icons (16/32/48/128), MSIX tiles and `Square44x44Logo` `targetsize-*` / `altform-unplated` / `altform-lightunplated` through `resources.pri` | the product mark: a white sheet with a folded corner and `</>` cut into it, on the navy plate `#1E3A8A` (16-20 px drawing with `<>` without slash for 1px stroke clarity; 24-64 px with full `</>`; 96-256 px with "DOC" header and "HTML" footer branding typography framing `</>`) | artwork (`ICON-SET` rule 7) in the platform forms of `ICON-RENDER` rule 9 - the extension icon is the mark on its own plate (plate at least 9.3 : 1 on a light toolbar, sheet at least 11.2 : 1 on a dark one) |
 | "Convert to HTML" shell verb | `action.convert`, mono, `#808080`, 16 px with 20, 24, 32 (`assets/convert-verb.ico`, exe icon resource 1) | conforms (rule 9: 3.9 : 1 on the light menu, 3.6 : 1 on `#2B2B2B`) |
 | Registered document type (`-register`, and the MSIX file type association) | `content.document`, mono, `#808080`, 16-256 px (`assets/document-type.ico`, exe icon resource 2; `DocumentType` in the package) | conforms (rule 9) |
-| A converted book's own images | the book's content | outside the vocabulary (`ICON-EXTERNAL`; the proposal's item 12 is still open) |
+| A converted book's own images | the book's content | user content (`ICON-EXTERNAL` section 13 F); missing-image replacement is a dated exception |
 
 No third-party mark is drawn anywhere (`ICON-EXTERNAL` rule 1 holds by absence): the store channels
 are text links.
+
+**Review 2026-10-07 (ticket 108).** The seven shipped records are active. Reader glyph targets
+are 28 px for a fine pointer and 44 px for a coarse pointer; the site uses 44 px for every pointer.
+The newly imported names in the ten further languages are not all aligned yet: the table's
+glyph conformity does not claim that label audit, which is a dated catalog exception.

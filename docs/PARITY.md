@@ -341,7 +341,8 @@ does not change the reader's selected theme.
 Both editions hold their reader chrome (navbar / toolbar, search panel, notices, dialogs) to the
 same floor, verified in ticket 57's checklist; the book's own content is out of scope:
 
-- Every control is at least 24x24 CSS px (WCAG 2.2 target size, 2.5.8) - compact controls carry an
+- Reader glyph controls are at least 28x28 CSS px for a fine pointer and 44x44 under
+  `@media (pointer: coarse)` (`ICON-RENDER` section 13 E) - compact controls carry an
   explicit `min-height`/padding rather than sizing to their line.
 - The chrome draws its own `:focus-visible` ring in the theme's accent colour, because the browser
   default can vanish on the dark and night bars; the book's own links keep the author's styling.
@@ -1726,6 +1727,16 @@ language selectors also use endonyms. Ticket 63's interface-dependent translatio
 by `ICON-EXTERNAL` rule 6.
 
 The GUI window has 28 px Windows mouse/pen targets and 44 px targets whenever a coarse pointer exists.
-The converted book, extension viewer and product site are web surfaces; their existing dated target-size
-exception remains, and the Windows floor does not close it. Both reader editions and the GUI honour the
+The converted book and extension viewer follow the web floor decided on 2026-10-07:
+28 CSS px for a fine pointer, 44 CSS px under `@media (pointer: coarse)`. The site keeps
+44 px for every pointer under `PAGE-STYLE` section 5. Both reader editions and the GUI honour the
 system reduced-motion preference; the extension switches scripted scrolling to instant when requested.
+
+### Contract sync (ticket 108, 2026-10-07)
+
+Reader glyph targets follow `ICON-RENDER` section 13 E in both editions: 28 CSS px for
+a fine pointer and 44 CSS px for a coarse pointer, including the extension TOC toggles.
+The desktop reader mirrors `media.previous` and `media.next` only inside the RTL document
+paging group (section 13 C); the extension has no paging glyph pair and needs no mirror.
+The vocabulary files are unchanged. Missing-image replacement and the newly imported names
+in further languages remain dated catalog exceptions for both editions.

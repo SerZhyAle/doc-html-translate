@@ -1,7 +1,7 @@
 # Pointer: SITE-FAMILY-MAP
 
 - **Id:** `SITE-FAMILY-MAP`
-- **Version:** 1.2
+- **Version:** 1.3
 - **Home:** the shared contracts catalog, `product-web-pages/SITE-FAMILY-MAP.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - this product's row is `https://serzhyale.github.io/doc-html-translate/`
 - **Wire carrier:** none - the footer tools grid of every site page
@@ -15,3 +15,5 @@ What this repo owes it:
 
 **Conformance.** `tests/site_test.go` checks the footer URLs and the contact string on every page. That each URL
 answers is the contract's section 5 command, run by hand before a release.
+
+**Review 2026-10-07 (ticket 108).** Section 2 now names the Android sibling Fast Media Sorter & Organizer in every local footer. The URL set is unchanged; footer labels and URLs are checked by the site suite.

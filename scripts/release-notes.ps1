@@ -156,7 +156,9 @@ function Get-Render {
     return $sb.ToString()
 }
 
-$pageText = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $PagePath), [Text.Encoding]::UTF8)
+# Git may check out HTML with CRLF on Windows. Compare the generated block in its
+# canonical LF form, so line endings cannot hide either marker or a real content edit.
+$pageText = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $PagePath), [Text.Encoding]::UTF8).Replace("`r`n", "`n")
 $begins = [regex]::Matches($pageText, "(?m)^[ \t]*<!-- release-notes:begin $Block\b[^\n]*-->[ \t]*\n")
 $ends = [regex]::Matches($pageText, "(?m)^[ \t]*<!-- release-notes:end $Block -->[ \t]*\n")
 if ($begins.Count -ne 1 -or $ends.Count -ne 1 -or $ends[0].Index -lt $begins[0].Index) {

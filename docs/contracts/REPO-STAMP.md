@@ -1,7 +1,7 @@
 # Pointer: REPO-STAMP
 
 - **Id:** `REPO-STAMP`
-- **Version:** 0.11 draft
+- **Version:** 0.12 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - [`.sza-canon.json`](../../.sza-canon.json) at the repository root
 - **Wire carrier:** none - `.sza-canon.json` JSON fields
@@ -23,3 +23,8 @@ The stamp declares canon version, core digest, adoption date, model (`reference`
 
 **Conformance.** The canon plugin's compliance gate (shipped with the plugin, not in this repository),
 run under PowerShell 7.
+
+**0.12 review (2026-10-07, ticket 108).** Rule 4 treats an unknown age as past the
+180-day window on digest drift. This repository produces a stamp with a parseable first
+adoption date and implements no age reader. Its producer shape is unchanged; adoption
+and reconciliation dates are written only by the adoption run (rule 8). No catalog vectors.

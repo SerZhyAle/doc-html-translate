@@ -1,7 +1,7 @@
 # Pointer: APP-SETTINGS
 
 - **Id:** `APP-SETTINGS`
-- **Version:** 0.2 draft
+- **Version:** 0.3 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/APP-SETTINGS.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the GUI launcher's settings surface (`cmd/doc-html-ui`), adopted 2026-10-05, ticket 93
 - **Wire carrier:** none - a shipped user-facing surface (the GUI's saved blob is this product's own store, wire: none)
@@ -42,3 +42,5 @@ README.md documents; a mechanical alignment check is future work), recorded in t
 **Conformance.** The same gates as [WINDOWS-UI](WINDOWS-UI.md) (`cmd/doc-html-ui/contract_test.go`, ticket 93;
 `cmd/doc-html-ui/conformance_test.go`, ticket 95),
 plus the standing dictionary and markup gates (`i18n_test.go`, `main_test.go`, `session_test.go`).
+
+**Review 2026-10-07 (ticket 108).** Section 9 permits dedicated, confirmed operations on this touch-commit surface. Clearing logs re-reads the count and reports an empty store without asking; clearing recent history is hidden when empty. No value control deletes data. Existing rule 11 and physical acceptance exceptions remain.

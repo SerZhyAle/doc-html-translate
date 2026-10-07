@@ -30,7 +30,7 @@ main:focus{outline:none}
 /* the kit lifts the language, theme and button targets to 44 px under pointer:coarse only; every pointer gets it here */
 .seg button{min-height:44px;min-width:44px}
 .theme-btn{width:44px;height:44px}
-.btn-sm,.site-header .btn{min-height:44px}
+.btn{min-height:44px}
 .langs a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 .35rem}
 
 /* light theme contrast: the kit's --acc (#2f8f3a) is 4.1 : 1 under white text and 3.6-4.0 : 1 as text on the light

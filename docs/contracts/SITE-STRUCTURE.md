@@ -23,3 +23,5 @@ What this repo owes it:
 
 **Adopted 2026-10-06 (ticket 96), verdict `partial 0.1`.** Measured on the published site, not on the source;
 the boxes that need real browser input are recorded as not run (ticket 102).
+
+**Review 2026-10-07 (ticket 108).** Guide tier, existing locale groups and held-address scheme retained (sections 2 and 3). The working tree now includes the release-notes page from ticket 103; not-found and capability-source gaps remain separately excepted.

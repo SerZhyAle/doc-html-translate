@@ -163,6 +163,9 @@ func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 		if !strings.Contains(footer, "mailto:sza@ukr.net") {
 			t.Errorf("%s: footer lacks the contact sza@ukr.net", p)
 		}
+		if !strings.Contains(footer, "Fast Media Sorter &amp; Organizer") || strings.Contains(footer, "FastMediaSorter v2") {
+			t.Errorf("%s: Android sibling name must match SITE-FAMILY-MAP 1.3", p)
+		}
 	}
 }
 

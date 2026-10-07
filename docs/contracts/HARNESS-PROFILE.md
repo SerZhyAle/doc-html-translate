@@ -1,7 +1,7 @@
 # Pointer: HARNESS-PROFILE
 
 - **Id:** `HARNESS-PROFILE`
-- **Version:** 0.10 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** not applicable - the canon's shipped harness is never run against this repository
 - **Wire carrier:** none - there is no `.sza-profile.json`
@@ -18,3 +18,5 @@ here, the same change adds `.sza-profile.json` mapping the ticket folder and id 
 pointer's role becomes consumer.
 
 **Conformance.** None to run - absence of `.sza-profile.json` is the declared state.
+
+**Review 2026-10-07 (ticket 108).** Rule 7 read at 0.11: the shipped harness is unused, no profile is owed. No reader of that format is added. No catalog vectors exist.

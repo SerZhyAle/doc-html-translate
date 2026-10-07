@@ -1,7 +1,7 @@
 # Pointer: REPO-LAYOUT
 
 - **Id:** `REPO-LAYOUT`
-- **Version:** 0.10 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - repository structure and named entry points
 - **Wire carrier:** none - file and directory names
@@ -14,14 +14,9 @@
 - Engineering ledger at `DEV/CHANGELOG.md` (ledger shape 2, as the stamp declares).
 - `DEV/plan/done/` is an archive and is left as it is (rule 6).
 
-**Not held: rule 3, a dated exception in the catalog registry (until 2026-12-31).** Documents outside
-`docs/contracts/` carry no type-first prefix:
+**0.11 review (2026-10-07, ticket 108).** Rule 3 admits the declared ticket scheme in
+`CLAUDE.md` and the release queue files named there. New research notes use `RESEARCH_`;
+the pre-existing archive names remain frozen (rule 6). No renaming is owed by this round.
 
-- Tickets are `DEV/plan/NN_<YYYY-MM-DD>_<slug>.md`, a scheme declared in `CLAUDE.md` ("Spec / plan
-  tickets"). The catalog is asked to let a declared scheme stand wherever it lives, not only under `PLAN/`
-  (`PROPOSAL-2026-09-23-own-spec-scheme.md`, seconded by
-  `PROPOSAL-2026-09-25-doc-html-translate-rule-adoption.md`). Tickets keep their names until it answers.
-- Notes under `DEV/research/` follow no declared scheme. That is an ordinary gap, not an adaptation, and
-  ticket `DEV/plan/31_2026-09-25_canon-resync-new-duties.md` closes it.
-
-**Conformance.** The canon plugin's compliance gate.
+**Conformance.** No catalog vectors; the document registry and research naming gates check
+the repository's declared shape. The canon plugin owns the general compliance reader.

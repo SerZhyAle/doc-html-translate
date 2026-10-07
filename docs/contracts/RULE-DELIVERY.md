@@ -1,7 +1,7 @@
 # Pointer: RULE-DELIVERY
 
 - **Id:** `RULE-DELIVERY`
-- **Version:** 0.11 draft
+- **Version:** 0.12 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - receives the canon rule set through the `sza` Claude Code plugin
 - **Wire carrier:** plugin version, derived from the canon's `CANON_VERSION`
@@ -14,10 +14,11 @@
 - A warning is cleared by reconciling the changed rule documents through the adopt-canon flow, which
   rewrites the stamp (rule 7 and `REPO-STAMP` rule 8).
 
-**Known state (2026-09-25).** Current - the stamp declares canon `2026.10.02.3` and its digest, written by
-the adopt-canon run that reconciled the 13 rule documents changed since `2026.09.06.1`. `canon.adoptedOn`
-stays `2026-08-18`, as the skill directs, so from 2027-02-14 the first drift reads as an error however
-recent the last reconciliation; which run should move that date is an open proposal in the catalog
-(`PROPOSAL-2026-09-23-adoption-date.md`, seconded by this repo).
+**Current reading (2026-10-07, ticket 108).** Rule 5 reads a parseable `canon.reconciledOn`,
+then `canon.adoptedOn`; with neither parseable the age is unknown, treated as past 180 days.
+An equal digest owes no finding; a differing digest with unknown age is an error. This product
+has no stamp-age reader: it receives the plugin's checker rather than copying it. The stamp
+still carries its actual adoption values; no synchronization claim is written by hand.
 
-**Conformance.** The canon plugin's compliance gate, finding `SZA-CANON03`.
+**Conformance.** No catalog vectors. The canon plugin owns the compliance reader and its tests;
+its missing-date case must be verified there, not implemented in this repository.

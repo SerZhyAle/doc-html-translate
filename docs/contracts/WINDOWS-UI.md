@@ -1,7 +1,7 @@
 # Pointer: WINDOWS-UI
 
 - **Id:** `WINDOWS-UI`
-- **Version:** 0.1 draft
+- **Version:** 0.3 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/WINDOWS-UI.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the GUI launcher (`cmd/doc-html-ui`), a browser-hosted Windows application (adopted 2026-10-05, ticket 93)
 - **Wire carrier:** none - observable Windows UI and UX
@@ -54,3 +54,10 @@ dates.
 of 2026-10-05 (`temp/ui93run/driven.log`: 14/14 - both themes, Light->Dark->Light cycle, trusted-Escape
 dialog, safe-answer focus, wheel guard, group/scroll restoration over a fresh load, Arabic RTL,
 forced-colors and 150/200% emulation, screenshots beside the log).
+
+**Review 2026-10-07 (ticket 108).** Section 2.6 does not apply: this compact launcher has no grouped navigation list. Sections 5 and 9 add first/repeat/dialog frame budgets; those timings and a visual comparison are not measured, explicitly excepted until 2026-12-31. Existing layout and physical acceptance evidence is retained, not promoted to a new driven pass.
+
+The catalog's source-derived reference snapshot is read by
+`TestWindowsUIReferenceTargetIfAvailable` with `SZA_CONTRACTS_ROOT`: its common MinTarget is
+compared with the launcher. The snapshot is not a pixel vector or a runtime verdict;
+the new frame budgets remain unverified. No machine runtime vectors exist.
