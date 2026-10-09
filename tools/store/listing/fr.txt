@@ -99,9 +99,7 @@ traduire bande dessinée
 traduire texte image
 
 @@ReleaseNotes
-- Les fichiers secrets FileDO (.fd-sec) s'ouvrent directement : le convertisseur demande le mot de passe, convertit et supprime la copie temporaire.
-- La reconnaissance de texte retrouve des lignes autrefois perdues et recouvre plus précisément le lettrage d'origine.
-- Ctrl+F dans un livre converti ouvre la recherche dans tout le livre, y compris avec des dispositions de clavier non latines ; les sélecteurs de langue affichent chaque langue sous son propre nom.
-- Mise au point de la fenêtre : un double clic ne lance plus une seconde exécution, le focus reste sur la réponse sûre dans les confirmations, les échecs indiquent leur cause, les langues de droite à gauche sont correctement inversées, cibles tactiles plus grandes, mouvement réduit respecté.
-- Les rapports de diagnostic masquent désormais aussi les secrets courts.
+- La reconnaissance de texte ne repousse plus les inscriptions traduites sous l'image sur les images basses (figures de la taille d'un téléphone, petites légendes), dans l'application et dans l'extension.
+- Les images situées sous des chemins de dossier très longs (260 caractères et plus) sont désormais reconnues au lieu de ne pas s'ouvrir.
+- Langues de droite à gauche : les flèches de changement de page d'un livre converti sont inversées, et les commandes du lecteur font au moins 28 px à la souris et 44 px au toucher.
 - Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.

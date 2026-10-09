@@ -99,9 +99,7 @@ comic übersetzen
 text im bild übersetzen
 
 @@ReleaseNotes
-- FileDO-Geheimdateien (.fd-sec) lassen sich direkt öffnen: Der Konverter fragt nach dem Passwort, konvertiert und entfernt die temporäre Kopie.
-- Die Texterkennung findet Zeilen wieder, die früher verloren gingen, und deckt die Originalschrift genauer ab.
-- Strg+F in einem konvertierten Buch öffnet die Suche im ganzen Buch, auch bei nicht-lateinischen Tastaturlayouts; Sprachauswahlen zeigen jede Sprache unter ihrem eigenen Namen.
-- Feinschliff am Fenster: Ein Doppelklick startet keinen zweiten Lauf mehr, in Bestätigungen ist die sichere Antwort fokussiert, Fehler nennen ihre Ursache, Rechts-nach-links-Sprachen werden korrekt gespiegelt, Touch-Ziele sind größer, reduzierte Bewegung wird beachtet.
-- Diagnoseberichte blenden jetzt auch kurze Geheimnisse aus.
+- Die Texterkennung schiebt übersetzte Beschriftungen auf kurzen Bildern (Figuren in Handygröße, kleine Bildunterschriften) nicht mehr unter das Bild - in der App und in der Erweiterung.
+- Bilder in sehr langen Ordnerpfaden (ab 260 Zeichen) werden jetzt erkannt, statt sich nicht öffnen zu lassen.
+- Rechts-nach-links-Sprachen: Die Blätterpfeile eines konvertierten Buches werden gespiegelt, und die Bedienelemente des Lesers sind mindestens 28 px (Maus) bzw. 44 px (Touch) groß.
 - Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.

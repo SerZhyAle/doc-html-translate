@@ -98,9 +98,7 @@ tradurre fumetto
 tradurre testo da immagine
 
 @@ReleaseNotes
-- I file segreti FileDO (.fd-sec) si aprono direttamente: il convertitore chiede la password, converte e rimuove la copia temporanea.
-- Il riconoscimento del testo recupera righe che prima andavano perse e copre più da vicino la scritta originale.
-- Ctrl+F in un libro convertito apre la ricerca in tutto il libro, anche con layout di tastiera non latini; i selettori di lingua mostrano ogni lingua con il suo nome.
-- Rifinitura della finestra: un doppio clic non avvia più una seconda esecuzione, nelle conferme il focus è sulla risposta sicura, gli errori indicano la causa, le lingue da destra a sinistra si specchiano correttamente, aree di tocco più grandi, rispetto del movimento ridotto.
-- I report diagnostici nascondono ora anche i segreti brevi.
+- Il riconoscimento del testo non sposta più le scritte tradotte sotto l'immagine nelle immagini basse (figure delle dimensioni di un telefono, piccole didascalie), nell'app e nell'estensione.
+- Le immagini sotto percorsi di cartelle molto lunghi (da 260 caratteri) ora vengono riconosciute invece di non aprirsi.
+- Lingue da destra a sinistra: le frecce di cambio pagina di un libro convertito si specchiano e i controlli del lettore sono di almeno 28 px con il mouse e 44 px al tocco.
 - Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.

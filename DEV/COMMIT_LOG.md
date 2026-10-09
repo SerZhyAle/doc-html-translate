@@ -1089,3 +1089,50 @@ Changed files:
 - internal/pdf/toc.go
 - internal/pdf/toc_test.go
 
+| 2026-10-10 01:50:33 | main | 0e7878c | docs: release 26.1010.0142 - what's new, locale fan-out, store listings, contract rows
+
+Release-notes record 26.1010.0142 (en, ru, uk) rendered into release-notes.html;
+@@ReleaseNotes in all 13 store listings and the Partner Center CSV, which also takes the
+search terms and Feature9 wording of ticket 111; the ten locale landings carry the demo
+block, the FileDO paragraph and the release-notes button and the translated pages are
+re-stamped; sitemap regenerated; ledger row.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> |
+
+Changed files:
+- DEV/CHANGELOG.md
+- ar/index.html
+- bn/index.html
+- build/doc-html-translate.exe
+- build/doc-html-ui.exe
+- de/index.html
+- docs/release-notes.json
+- es/index.html
+- extension-privacy.html
+- extension.html
+- fr/index.html
+- hi/index.html
+- index.html
+- install-trust.html
+- it/index.html
+- privacy.html
+- pt/index.html
+- release-notes.html
+- sitemap.xml
+- tools/store/listing/ar.txt
+- tools/store/listing/bn.txt
+- tools/store/listing/de.txt
+- tools/store/listing/en.txt
+- tools/store/listing/es.txt
+- tools/store/listing/fr.txt
+- tools/store/listing/hi.txt
+- tools/store/listing/it.txt
+- tools/store/listing/pt.txt
+- tools/store/listing/ru.txt
+- tools/store/listing/uk.txt
+- tools/store/listing/ur.txt
+- tools/store/listing/zh.txt
+- tools/store/listingData.csv
+- ur/index.html
+- zh/index.html
+

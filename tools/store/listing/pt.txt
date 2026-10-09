@@ -98,9 +98,7 @@ traduzir quadrinhos
 traduzir texto de imagem
 
 @@ReleaseNotes
-- Os arquivos secretos do FileDO (.fd-sec) abrem diretamente: o conversor pede a senha, converte e remove a cópia temporária.
-- O reconhecimento de texto recupera linhas que antes se perdiam e cobre com mais precisão o letreiro original.
-- Ctrl+F em um livro convertido abre a busca no livro inteiro, inclusive em layouts de teclado não latinos; os seletores de idioma mostram cada idioma com o próprio nome.
-- Acabamento na janela: um clique duplo não inicia mais uma segunda execução, nas confirmações o foco fica na resposta segura, as falhas indicam a causa, idiomas da direita para a esquerda são espelhados corretamente, alvos de toque maiores e movimento reduzido respeitado.
-- Os relatórios de diagnóstico agora ocultam também segredos curtos.
+- O reconhecimento de texto não empurra mais as inscrições traduzidas para baixo da imagem em imagens baixas (figuras do tamanho de um celular, legendas pequenas), na aplicação e na extensão.
+- Imagens em caminhos de pasta muito longos (a partir de 260 caracteres) agora são reconhecidas, em vez de não abrirem.
+- Idiomas da direita para a esquerda: as setas de virar página de um livro convertido são espelhadas, e os controles do leitor têm pelo menos 28 px para mouse e 44 px para toque.
 - Esta tradução é automática e não revista - correções para sza@ukr.net.
