@@ -418,6 +418,15 @@ function engineFor({ label, packs }) {
   let tesseract = "tesseract.js (version unknown)";
   const pkg = join(EXT_DIR, "node_modules", "tesseract.js", "package.json");
   if (existsSync(pkg)) tesseract = `tesseract.js ${JSON.parse(readFileSync(pkg, "utf8")).version}`;
+  // The engine files the viewer actually loads (ocr-lang.js workerAssets), by content: the same
+  // version string can sit over a different WASM core. Part of this string for the same reason the
+  // desktop's executable hash is part of its own - the reuse key and comparison hold it equal.
+  const loaded = ["worker.min.js", "tesseract-core-simd-lstm.wasm.js"].map((f) => join(EXT_DIR, "vendor", "tesseract", f));
+  if (loaded.every((f) => existsSync(f))) {
+    const h = createHash("sha256");
+    for (const f of loaded) h.update(readFileSync(f));
+    tesseract += ` (worker+core sha256:${h.digest("hex").slice(0, 12)})`;
+  }
 
   const identities = [];
   for (const code of packs.split("+")) {

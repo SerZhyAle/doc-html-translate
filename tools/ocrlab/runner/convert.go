@@ -71,8 +71,14 @@ func convertScene(bin, imgPath, workDir, lang string, opt Options) (pagePath str
 }
 
 // tesseractVersion is the engine's own first line of `--version`, e.g.
-// "tesseract 5.3.3". Unknown rather than fatal: a run whose engine cannot be named is still a
-// run, and the name is reporting metadata rather than a dependency.
+// "tesseract 5.3.3", followed by the executable's content hash when it can be read. Unknown
+// rather than fatal: a run whose engine cannot be named is still a run, and the name is reporting
+// metadata rather than a dependency.
+//
+// The hash is part of the same string on purpose. The version line names a release, two
+// distribution builds of one release read differently, and the string is already what a reuse key
+// and a comparison hold equal - so the binary that actually ran needs no second field to take part
+// in both.
 func tesseractVersion(bin string) string {
 	out, err := exec.Command(bin, "--version").CombinedOutput()
 	if err != nil {
@@ -80,10 +86,25 @@ func tesseractVersion(bin string) string {
 	}
 	for _, line := range strings.Split(string(out), "\n") {
 		if line = strings.TrimSpace(line); line != "" {
-			return line
+			return line + binaryIdentity(bin)
 		}
 	}
 	return "unknown"
+}
+
+// binaryIdentity is " (exe sha256:<12 hex>)" for the engine executable, or "" when it cannot be
+// read. A prefix is enough to tell two builds apart; the full digest would only lengthen every
+// report header.
+func binaryIdentity(bin string) string {
+	path, err := exec.LookPath(bin)
+	if err != nil {
+		return ""
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return " (exe sha256:" + evidence.Digest(data)[:12] + ")"
 }
 
 // tessdataFingerprint identifies the language data by the bytes actually loaded rather than by a
