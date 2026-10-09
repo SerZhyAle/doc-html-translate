@@ -2,9 +2,11 @@
 
 **README languages:** **English** · [Русский](README_RU.md) · [Українська](README_UK.md)
 
-Convert EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBR/CB7/CBT comics and FileDO secret files (`.fd-sec`, opened through the FileDO installed on your PC) into clean local HTML on Windows - with optional translation through Google Cloud or a local Ollama model. No cloud account required, no ceremony, and yes, it still runs on plain old Windows in 2026.
+Turn any book, document or comic into a local web page, then read it, search it and translate it with your browser's own page translation - free, with no key and no account. doc-html-translate converts EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, CBZ/CBR/CB7/CBT comics, standalone images and FileDO secret files (`.fd-sec`, opened through the FileDO installed on your PC) into clean HTML with a generated table of contents, reading themes and a remembered position, and recognises text in scans, pictures and comic pages (OCR) so that it can be translated too. Conversion and reading happen on your PC. Google Cloud Translation (your own key) and a local Ollama model are optional engines. Desktop app for Windows, Microsoft Store app and a browser extension for Chrome and Edge.
 
-Topics: `windows` `windows-app` `desktop` `cli` `golang` `epub` `pdf` `mobi` `fb2` `ebook` `html-converter` `translation` `ollama`
+![Demo, 42 seconds, no sound: converting a book, its table of contents, the reading themes and the text layer over a comic page.](assets/demo.gif)
+
+Topics: `azw3` `cbz` `chrome-extension` `cli` `comics` `ebook` `ebook-reader` `edge-extension` `epub` `epub-reader` `fb2` `golang` `html-converter` `mobi` `ocr` `pdf` `translation` `windows` `windows-app` `winget`
 
 ## Project Links
 - Website: https://serzhyale.github.io/doc-html-translate/

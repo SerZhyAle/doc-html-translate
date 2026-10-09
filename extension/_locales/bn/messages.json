@@ -32,7 +32,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "PDF, EPUB ও অন্যান্য নথিকে এমন পরিচ্ছন্ন HTML হিসেবে দেখায় যা ব্রাউজারের বিনামূল্যের পৃষ্ঠা-অনুবাদ পড়তে পারে - ছবির OCR সহ। ১০০% স্থানীয়।",
+    "message": "PDF, EPUB ও অন্যান্য নথি পরিচ্ছন্ন HTML-এ খুলুন, যা ব্রাউজারের বিনামূল্যের পৃষ্ঠা-অনুবাদ পড়তে পারে, ছবির OCR সহ। রূপান্তর স্থানীয়।",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {

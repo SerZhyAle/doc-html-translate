@@ -59,7 +59,7 @@ func fetchOne(client *http.Client, s *Scene, root string) FetchResult {
 	res := FetchResult{SceneID: s.ID}
 	path := s.Path(root)
 
-	if s.LicenceVerifiedBy == "" {
+	if !s.RightsReviewed() {
 		res.Status, res.Detail = "fail", "refused: licence not verified by a human"
 		return res
 	}

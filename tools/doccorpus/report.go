@@ -173,10 +173,12 @@ func BuildReport(m *Manifest, expectDir, runDir string) (*Report, string, error)
 				w(" - |")
 				continue
 			}
-			w(" %s%s |", abbrev[j.Auto], metricTail(j.Metrics))
+			w(" %s%s%s |", abbrev[j.Auto], reusedMark(p.Results[c.ID]), metricTail(j.Metrics))
 		}
 		w("\n")
 	}
+
+	writeReused(w, passes, m)
 
 	w("\n## Findings\n\nEvery failure, gap and advisory, by case. Evidence folders are under the run directory.\n")
 	for _, c := range m.Cases {

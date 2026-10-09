@@ -7,6 +7,7 @@
 //	doccorpus verify           validate the manifest, hash the media, print the coverage matrix
 //	doccorpus draft [id..]     write draft expectations from the sources' own bytes
 //	doccorpus report <run-dir> grade a run and write report.md / report.json into it
+//	doccorpus verdict <folder> grade one case folder with today's judge (run.mjs asks before reuse)
 package main
 
 import (
@@ -25,6 +26,7 @@ Usage:
   go run ./tools/doccorpus verify
   go run ./tools/doccorpus draft [-force] [case-id..]
   go run ./tools/doccorpus report <run-dir>
+  go run ./tools/doccorpus verdict <case-folder>
 
 Runs are made by: node tools/doccorpus/run.mjs --edition windows|extension (see tools/doccorpus/README.md)
 
@@ -69,6 +71,12 @@ func main() {
 		if err == nil {
 			fmt.Print(md)
 		}
+	case "verdict":
+		if fs.NArg() != 1 {
+			err = fmt.Errorf("verdict needs one case folder: %w", errCouldNotVerify)
+			break
+		}
+		err = cmdVerdict(m, expectDir, fs.Arg(0), os.Stdout)
 	case "-h", "--help", "help":
 		fmt.Print(usage)
 		return

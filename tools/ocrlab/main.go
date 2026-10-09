@@ -9,7 +9,8 @@
 //	ocrlab fetch [id..]        idempotently download licence-verified media
 //	ocrlab synth               regenerate the deterministic diagnostic scenes
 //	ocrlab seed <id..>         write an OCR-seeded annotation draft for a human to correct
-//	ocrlab run                 convert, render and record evidence
+//	ocrlab run                 convert, render and record evidence (reuses identical earlier scenes)
+//	ocrlab reuse               the extension producer's lookup-and-copy of one reusable scene
 //	ocrlab score <dir>         grade a saved run offline
 //	ocrlab report <dir>        render the reviewable report
 //	ocrlab gate <dir>          judge a scored run against the acceptance thresholds
@@ -25,6 +26,7 @@ import (
 	"sort"
 
 	"doc-html-translate/tools/ocrlab/corpus"
+	"doc-html-translate/tools/ocrlab/evidence"
 	"doc-html-translate/tools/ocrlab/truth"
 )
 
@@ -37,12 +39,18 @@ Commands:
   verify        validate the manifest, media hashes, annotations and coverage
   fetch [id..]  download media for licence-verified scenes (idempotent; all scenes if no id)
   add <img..>   register your own images (or any local file) as corpus scenes
-  harvest       pull licence-checked images from Wikimedia Commons by search or category
+  harvest       acquire candidate images and machine licence provenance for human review
   synth         regenerate the deterministic diagnostic scenes and their exact annotations
   seed <id..>   write an OCR-seeded annotation draft (never counts as truth)
   run           convert, render and record evidence for the selected scenes
   score <dir>   grade a saved run offline against the annotations
   report <dir>  render report.md and a side-by-side report.html
+  compare <before> <after> compare frozen inputs and per-scene measurements offline
+  cost <dir..> summarize compatible repeated stage timings without inventing a budget
+  review export|import export the offline annotation workspace or validate a draft
+  declare       freeze a new run's selected inputs before an external producer executes
+  reuse         copy one scene from an earlier identical complete run into a declared run and
+                print its record (null when none qualifies); used by the extension producer
   gate <dir>    judge a scored run against DEV/ocrlab/thresholds.json
                 (exit 1 on FAIL, 2 when a bound had nothing to judge or an input is missing)
   exchange <dir> write the OCR-OVERLAY section 7 record per scene from the run's diagnostics
@@ -63,6 +71,22 @@ func main() {
 
 	var err error
 	switch cmd {
+	case "finish":
+		if len(args) != 1 {
+			err = fmt.Errorf("finish requires one run directory")
+		} else {
+			err = evidence.Finish(args[0])
+		}
+	case "cost":
+		err = cmdCost(args)
+	case "review":
+		err = cmdReview(args)
+	case "compare":
+		err = cmdCompare(args)
+	case "declare":
+		err = cmdDeclare(args)
+	case "reuse":
+		err = cmdReuse(args)
 	case "verify":
 		err = cmdVerify(args)
 	case "fetch":
@@ -221,6 +245,19 @@ func printCoverage(m *corpus.Manifest, anns map[string]*truth.Annotation) {
 		}
 	}
 	fmt.Printf("truth:  %d annotation(s) on disk, %d scene(s) gradable\n", len(anns), gradable)
+	var rights, independent, derived int
+	for _, s := range m.Scenes {
+		if s.RightsReviewed() {
+			rights++
+		}
+		if s.DerivedFrom != "" || s.Licence == corpus.LicenceSynthetic {
+			derived++
+		}
+		if a := anns[s.ID]; s.Split == corpus.SplitHoldout && s.DerivedFrom == "" && s.Licence != corpus.LicenceSynthetic && s.RightsReviewed() && a != nil && a.IsTruth() && len(truth.Validate(a, &s)) == 0 {
+			independent++
+		}
+	}
+	fmt.Printf("readiness: %d acquired records, %d rights-reviewed, %d synthetic/derived, %d independently reviewed holdout (family validation still applies)\n", len(m.Scenes), rights, derived, independent)
 	fmt.Printf("\n%-10s %8s %8s %10s %10s\n", "category", "have", "need", "holdout", "share")
 	for _, cat := range corpus.Categories() {
 		have := c.ByCategory[cat]

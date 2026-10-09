@@ -185,3 +185,37 @@ func TestAdjacentBalloonsAreActuallyAdjacent(t *testing.T) {
 	}
 	t.Fatal("synth-adjacent-balloons was not generated")
 }
+
+// The lettering mask is the independent answer to "where was the lettering", so it must come from
+// the drawing and cover exactly the line boxes the annotation already declares.
+func TestGenerateLetteringMatchesTheDrawnLines(t *testing.T) {
+	dir := t.TempDir()
+	n, err := GenerateLettering(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, anns, err := Generate(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != len(anns) {
+		t.Fatalf("%d masks for %d scenes", n, len(anns))
+	}
+	for _, a := range anns {
+		m, err := truth.LoadLettering(dir, a.SceneID, a.ImageWidth, a.ImageHeight)
+		if err != nil || m == nil {
+			t.Fatalf("%s: %v %v", a.SceneID, m, err)
+		}
+		var lines []truth.Region
+		for _, g := range a.Groups {
+			lines = append(lines, g.Lines...)
+		}
+		inside := truth.RasterizeAll(lines, a.ImageWidth, a.ImageHeight)
+		if m.Area() == 0 {
+			t.Errorf("%s: an empty lettering mask", a.SceneID)
+		}
+		if m.IntersectArea(inside) != m.Area() {
+			t.Errorf("%s: lettering pixels outside every declared line box", a.SceneID)
+		}
+	}
+}

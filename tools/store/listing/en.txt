@@ -57,7 +57,7 @@ Ships a CLI (doc-html-translate) and a GUI launcher (doc-html-ui); no account, n
 One-click free translation using your browser's built-in page translate - no API key required
 
 @@Feature9
-Works fully offline; open source under the MIT license
+Conversion and reading run on your PC; open source under the MIT license
 
 @@Feature10
 Output is plain HTML - opens in any browser, on any device, and stays readable forever
@@ -72,25 +72,25 @@ Single long page or chapter-split output with a table of contents - your choice
 Interface in 13 languages, chosen automatically from your Windows language
 
 @@SearchTerm1
-epub to html
+epub to html converter
 
 @@SearchTerm2
-pdf to html
+translate epub
 
 @@SearchTerm3
-ebook converter
+translate pdf book
 
 @@SearchTerm4
-mobi azw3 fb2
+ebook converter
 
 @@SearchTerm5
-ocr translate document
+cbz reader
 
 @@SearchTerm6
-comic cbz cbr
+translate comic pages
 
 @@SearchTerm7
-offline translation
+ocr translate image
 
 @@ReleaseNotes
 - Open FileDO secret files (.fd-sec) directly: the converter asks for the password, converts, and removes the temporary copy.

@@ -1,10 +1,14 @@
 package runner
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/png"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -255,6 +259,92 @@ func (b *Browser) Screenshot(pagePath, fragment string, v evidence.Viewport, out
 	return os.WriteFile(out, png, 0o644)
 }
 
+// ImageScreenshot captures the complete image in bounded bands, including below the viewport.
+// The viewport remains pinned: only the screenshot clip changes, never the measured layout.
+func (b *Browser) ImageScreenshot(pagePath, fragment string, v evidence.Viewport, r *probeRect, w, h int, out string) error {
+	if r == nil || r.Width <= 0 || r.Height <= 0 || w <= 0 || h <= 0 {
+		return errors.New("invalid image capture geometry")
+	}
+	d, err := b.openProbed(pagePath, fragment, v)
+	if err != nil {
+		return err
+	}
+	raw, err := d.evaluate("document.getElementById('ocrlab-evidence').textContent")
+	if err != nil {
+		return err
+	}
+	var observed probeResult
+	if err := json.Unmarshal([]byte(raw), &observed); err != nil {
+		return err
+	}
+	if !observed.OK || observed.ImageRect == nil || *observed.ImageRect != *r {
+		return errors.New("image geometry changed before capture")
+	}
+	dsf := v.DeviceScaleFactor
+	renderW, renderH := int(math.Round(r.Width*dsf)), int(math.Round(r.Height*dsf))
+	if renderW <= 0 || renderH <= 0 {
+		return errors.New("empty rendered image")
+	}
+	assembled := image.NewRGBA(image.Rect(0, 0, renderW, renderH))
+	// Keep each CDP reply well below its four-megabyte transport ceiling, even for texture.
+	bandHeight := max(1, int(500000/(r.Width*dsf*dsf)))
+	for y := 0.; y < r.Height; y += float64(bandHeight) {
+		height := min(float64(bandHeight), r.Height-y)
+		// Chromium truncates fractional CSS clip dimensions before applying device scale.
+		// Capture an integer outer rectangle, then crop in device pixels; otherwise a
+		// 270.875 px phone image loses two rows instead of receiving a complete capture.
+		left, top := math.Floor(r.Left), math.Floor(r.Top+y)
+		clipW, clipH := math.Ceil(r.Left+r.Width)-left, math.Ceil(r.Top+y+height)-top
+		payload, err := d.send("Page.captureScreenshot", map[string]any{"format": "png", "captureBeyondViewport": true, "clip": map[string]any{"x": left, "y": top, "width": clipW, "height": clipH, "scale": 1}})
+		if err != nil {
+			return err
+		}
+		var response struct {
+			Data string `json:"data"`
+		}
+		if err := json.Unmarshal(payload, &response); err != nil {
+			return err
+		}
+		data, err := base64.StdEncoding.DecodeString(response.Data)
+		if err != nil {
+			return err
+		}
+		band, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
+			return err
+		}
+		y0, y1 := int(math.Round(y*dsf)), int(math.Round((y+height)*dsf))
+		if absInt(band.Bounds().Dx()-int(math.Round(clipW*dsf))) > 1 || absInt(band.Bounds().Dy()-int(math.Round(clipH*dsf))) > 1 {
+			return fmt.Errorf("incomplete screenshot band at %.1f: %v", y, band.Bounds())
+		}
+		x0 := int(math.Round((r.Left - left) * dsf))
+		cropY := int(math.Round((r.Top + y - top) * dsf))
+		crop := image.Rect(x0, cropY, x0+renderW, cropY+y1-y0)
+		if !crop.In(band.Bounds()) {
+			return fmt.Errorf("incomplete screenshot crop at %.1f: %v outside %v", y, crop, band.Bounds())
+		}
+		xdraw.CatmullRom.Scale(assembled, image.Rect(0, y0, renderW, y1), band, crop, xdraw.Src, nil)
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, w, h))
+	xdraw.CatmullRom.Scale(dst, dst.Bounds(), assembled, assembled.Bounds(), xdraw.Src, nil)
+	f, err := os.Create(out)
+	if err != nil {
+		return err
+	}
+	if err := png.Encode(f, dst); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
+func absInt(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
 // Close ends the browser instance that owns this run's profile.
 //
 // A headless launch leaves helper processes (gpu, utility, crashpad) alive after the process we
@@ -325,6 +415,11 @@ func CropToImage(shotPath string, r *probeRect, dsf float64, naturalW, naturalH 
 	x1 := int((r.Left + r.Width) * dsf)
 	y1 := int((r.Top + r.Height) * dsf)
 	b := src.Bounds()
+	// Never stretch the visible fragment of a tall/offscreen image into a complete source.
+	// A missing capture is unverifiable; resizing it would manufacture valid-looking evidence.
+	if x0 < b.Min.X || y0 < b.Min.Y || x1 > b.Max.X || y1 > b.Max.Y {
+		return fmt.Errorf("incomplete image capture: requested %d,%d-%d,%d, screenshot %v", x0, y0, x1, y1, b)
+	}
 	x0, y0 = max(x0, b.Min.X), max(y0, b.Min.Y)
 	x1, y1 = min(x1, b.Max.X), min(y1, b.Max.Y)
 	if x1-x0 < 2 || y1-y0 < 2 {

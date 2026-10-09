@@ -20,7 +20,12 @@ export async function resolve(specifier, context, next) {
 `;
 register(`data:text/javascript,${encodeURIComponent(HOOKS)}`, import.meta.url);
 
-const { collectLines } = await import("../src/ocr-overlay.js?under-test=collectLines");
+const { collectLines, ocrLangToHtmlLang } = await import("../src/ocr-overlay.js?under-test=collectLines");
+
+test("Japanese OCR choices declare Japanese page language", () => {
+  assert.equal(ocrLangToHtmlLang("jpn"), "ja");
+  assert.equal(ocrLangToHtmlLang("jpn_vert"), "ja");
+});
 
 // The word a recognizer returns: text, its own box, a confidence. Word heights of 30 px
 // throughout, so the split's ratio rule cuts a gap above 3.5 x 30 = 105 px.

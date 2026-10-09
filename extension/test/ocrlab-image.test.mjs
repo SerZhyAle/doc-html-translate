@@ -99,3 +99,23 @@ test("a band that caught nothing is refused", async () => {
     () => assembleToNatural([{ png: solid(1, 1, "#000"), y0: 0, y1: 1 }], 1, 1, 800, 600),
     /too small/);
 });
+
+test("integer outer capture is cropped before mapping to source coordinates", async () => {
+  const canvas = createCanvas(744, 544);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#f00"; ctx.fillRect(0, 0, 744, 544);
+  ctx.fillStyle = "#fff"; ctx.fillRect(2, 1, 741, 542);
+  ctx.fillStyle = "#000"; ctx.fillRect(2, 1, 370, 542);
+  const png = await assembleToNatural([{ png: canvas.toBuffer("image/png"), y0: 0, y1: 542,
+    expectedWidth: 744, expectedHeight: 544, crop: { x: 2, y: 1, width: 741, height: 542 } }], 741, 542, 900, 658);
+  const at = await readAt(png, 900, 658);
+  assert.ok(at(10, 640)<40);
+  assert.ok(at(890, 640)>215);
+});
+
+test("a truncated declared band cannot be stretched into complete evidence", async () => {
+  await assert.rejects(() => assembleToNatural([{ png: solid(740, 540, "#fff"), y0: 0, y1: 542,
+    expectedWidth: 744, expectedHeight: 544, crop: { x: 2, y: 1, width: 741, height: 542 } }], 741, 542, 900, 658), /incomplete captured band/);
+  await assert.rejects(() => assembleToNatural([{ png: solid(744, 544, "#fff"), y0: 0, y1: 542,
+    crop: { x: 4, y: 3, width: 741, height: 542 } }], 741, 542, 900, 658), /incomplete captured band crop/);
+});

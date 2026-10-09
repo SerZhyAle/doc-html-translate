@@ -16,7 +16,7 @@
 // Usage: npm run ocrlab -- --help (from extension/).
 
 import { createServer } from "node:http";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
@@ -25,6 +25,8 @@ import { die } from "./_lib.mjs";
 import { CDP, evaluate, findChrome, sleep, waitFor } from "./_ocrlab-cdp.mjs";
 import { EDITION_EXTENSION, makeDiagRecord, makeRun, makeScene, validateRun } from "./_ocrlab-evidence.mjs";
 import { assembleToNatural, bandsFor } from "./_ocrlab-image.mjs";
+import { DEFAULT_LANG, declarationProblems, loadAnnotation, missingLangData, runLangs, sceneLang } from "./_ocrlab-lang.mjs";
+import { reuseScene } from "./_ocrlab-reuse.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const EXT_DIR = resolve(HERE, "..");
@@ -34,6 +36,10 @@ const REPO_ROOT = resolve(EXT_DIR, "..");
 const DEFAULT_MANIFEST = join(REPO_ROOT, "DEV", "ocrlab", "corpus.json");
 const DEFAULT_ROOT = join(REPO_ROOT, "test_doc", "ocrlab");
 const MANIFEST_SCHEMA_VERSION = 1;
+
+// The only language data the lab will read: the packs vendored with the extension. Every other
+// language is a CDN download the user opts into, and the lab has no such opt-in.
+const LANG_DIR = join(EXT_DIR, "vendor", "tesseract", "lang");
 
 // Pinned, and identical to tools/ocrlab/runner.Viewports. A floating window would produce numbers
 // nobody could reproduce, and recording the same plate at deliberately different geometries is
@@ -75,15 +81,17 @@ const MIME = {
 // Local rather than _lib.parseFlags because --scene is repeatable, exactly as the Go runner's
 // -scene is, and parseFlags keeps only the last value of a repeated flag.
 function parseArgs(argv) {
-  const out = { split: "dev", lang: "eng", scene: [], manifest: DEFAULT_MANIFEST, root: DEFAULT_ROOT, out: "" };
+  const out = { split: "dev", lang: "", scene: [], manifest: DEFAULT_MANIFEST, root: DEFAULT_ROOT, out: "", purpose: "exploratory", annotations: join(REPO_ROOT, "DEV", "ocrlab", "annotations"), fresh: false, reuseFrom: "" };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") return { help: true };
     if (!a.startsWith("--")) die(`unexpected argument ${a} - see --help`);
     const key = a.slice(2);
+    if (key === "fresh") { out.fresh = true; continue; }
     const value = argv[++i];
     if (value === undefined || value.startsWith("--")) die(`--${key} needs a value`);
     if (key === "scene") out.scene.push(value);
+    else if (key === "reuse-from") out.reuseFrom = value;
     else if (key in out) out[key] = value;
     else die(`unknown flag --${key} - see --help`);
   }
@@ -98,10 +106,17 @@ Usage (from extension/):
 Flags:
   --split <dev|holdout|all>   which scenes to run (default dev)
   --scene <id>                run only this scene (repeatable)
-  --lang <code>               tesseract language (default eng)
+  --lang <code>               tesseract language for every scene (default: each scene's declared
+                              language, else eng; a language that is not vendored is unmeasured)
   --manifest <path>           default ../DEV/ocrlab/corpus.json
   --root <path>               corpus media root, default ../test_doc/ocrlab
+  --purpose <purpose>        exploratory, selected-dev or full-benchmark
+  --annotations <path>       ground-truth directory
   --out <dir>                 run directory (default ../temp/ocrlab/ext-<timestamp>)
+  --fresh                     collect every scene even when an earlier complete run with identical
+                              inputs could be reused
+  --reuse-from <dir>          search only this run directory (or folder of runs) for reusable
+                              scenes (default ../temp/ocrlab)
 
 Environment:
   CHROME=<path>               the browser to drive (Chrome or Edge)
@@ -195,6 +210,7 @@ const READ_PLATES = `(() => {
       ink: cs.color,
       mode: p.dataset.ocrMode || "fill",
       modeConfidence: parseFloat(p.dataset.ocrModeConf || "0") || 0,
+      scrollWidth: p.scrollWidth, clientWidth: p.clientWidth,
       scrollHeight: p.scrollHeight,
       clientHeight: p.clientHeight,
     });
@@ -250,7 +266,15 @@ async function settle(cdp, session) {
 // ---- one scene -------------------------------------------------------------
 
 async function runScene(ctx, s) {
-  const scene = { sceneId: s.id, plates: [], screenshots: { stress: {} } };
+  const scene = { sceneId: s.id, lang: s.lang, langSource: s.langSource, plates: [], screenshots: { stress: {} }, observations: [] };
+  const missing = missingLangData(s.lang, LANG_DIR);
+  if (missing.length) {
+    scene.imageWidth = s.width || 0;
+    scene.imageHeight = s.height || 0;
+    scene.unmeasured = `language data unavailable: ${missing.join("+")}`;
+    return scene;
+  }
+  await setOcrLang(ctx, s.lang);
   const viewerBase = `chrome-extension://${ctx.extensionId}/src/viewer.html?file=`;
   const url = viewerBase + encodeURIComponent(`${ctx.base}${s.route}`);
 
@@ -261,7 +285,7 @@ async function runScene(ctx, s) {
     }, ctx.session);
 
     const ocrStart = Date.now();
-    await ctx.cdp.send("Page.navigate", { url }, ctx.session);
+    if (v.name === PRIMARY_VIEWPORT) await ctx.cdp.send("Page.navigate", { url }, ctx.session);
     const state = await waitFor(`${s.id} to be recognized at ${v.name}`, async () => {
       try {
         const raw = await evaluate(ctx.cdp, ctx.session, PAGE_STATE);
@@ -290,11 +314,25 @@ async function runScene(ctx, s) {
         }
         await captureStress(ctx, s, read.image, scene, c.name);
       }
+      const rendered = join(ctx.outDir, "shots", s.id, `${v.name}-${c.name}.png`);
+      await captureImage(ctx, read.image, rendered);
+      const concealed = join(ctx.outDir, "shots", s.id, `${v.name}-${c.name}-hidden.png`);
+      const before = JSON.stringify(read.plates);
+      await evaluate(ctx.cdp, ctx.session, `(() => { const el=document.createElement("style");el.id="ocrlab-hidden";el.textContent=".ocr-plate,.ocr-plate *{color:transparent!important;text-shadow:none!important}";document.head.appendChild(el); })()`);
+      try {
+        const hidden = JSON.parse(await evaluate(ctx.cdp, ctx.session, READ_PLATES));
+        if (JSON.stringify(hidden.plates.map(p=>p.rect)) !== JSON.stringify(read.plates.map(p=>p.rect))) throw new Error("diagnostic concealment changed layout");
+        await captureImage(ctx, read.image, concealed);
+      } finally { await evaluate(ctx.cdp, ctx.session, `document.getElementById("ocrlab-hidden")?.remove()`); }
+      const restored=JSON.parse(await evaluate(ctx.cdp,ctx.session,READ_PLATES));
+      if (JSON.stringify(restored.plates)!==before) throw new Error("normal observation changed after diagnostic capture");
+      scene.observations.push({ viewport: v.name, stressCase: c.name, rendered:relTo(ctx.outDir,rendered), concealed:relTo(ctx.outDir,concealed) });
       for (const p of read.plates) scene.plates.push({ ...p, viewport: v.name, stressCase: c.name });
     }
   }
   scene.renderMs = Date.now() - renderStart - (scene.ocrMs || 0);
-  scene.peakRssBytes = await heapUsed(ctx);
+  scene.memoryKind = "browser-js-heap-used-snapshot";
+  scene.memoryBytes = await heapUsed(ctx);
   return scene;
 }
 
@@ -332,21 +370,29 @@ async function captureStress(ctx, s, imageRect, scene, caseName) {
 // Go runner resampling locally for the same reason.
 async function captureImage(ctx, r, file) {
   const parts = [];
-  for (const band of bandsFor(r.width, r.height)) {
+  const dsf = await evaluate(ctx.cdp, ctx.session, "window.devicePixelRatio");
+  const width = Math.round(r.width * dsf), height = Math.round(r.height * dsf);
+  for (const band of bandsFor(width, height)) {
+    const y = r.y + band.y0 / dsf;
+    const left = Math.floor(r.x), top = Math.floor(y);
+    const clipWidth = Math.ceil(r.x + r.width) - left;
+    const clipHeight = Math.ceil(r.y + band.y1 / dsf) - top;
     const shot = await ctx.cdp.send("Page.captureScreenshot", {
       format: "png",
       captureBeyondViewport: true,
       clip: {
-        x: r.x,
-        y: r.y + (band.y0 * r.height) / Math.round(r.height),
-        width: r.width,
-        height: ((band.y1 - band.y0) * r.height) / Math.round(r.height),
+        x: left,
+        y: top,
+        width: clipWidth,
+        height: clipHeight,
         scale: 1,
       },
     }, ctx.session);
-    parts.push({ png: Buffer.from(shot.data, "base64"), y0: band.y0, y1: band.y1 });
+    parts.push({ png: Buffer.from(shot.data, "base64"), y0: band.y0, y1: band.y1,
+      expectedWidth: Math.round(clipWidth * dsf), expectedHeight: Math.round(clipHeight * dsf),
+      crop: { x: Math.round((r.x - left) * dsf), y: Math.round((y - top) * dsf), width, height: band.y1 - band.y0 } });
   }
-  writeFileSync(file, await assembleToNatural(parts, r.width, r.height, r.naturalWidth, r.naturalHeight));
+  writeFileSync(file, await assembleToNatural(parts, width, height, r.naturalWidth, r.naturalHeight));
 }
 
 // heapUsed is the browser's own JS heap after the scene. Like the desktop runner's peakRSS it is
@@ -368,20 +414,36 @@ const relTo = (base, path) => resolve(path).slice(resolve(base).length + 1).spli
 // The engine is named from what is actually loaded, not from a mirrored constant. The traineddata
 // is fingerprinted by its bytes exactly as the desktop runner does, so the two editions' engine
 // records are directly comparable and a language-data swap shows up in both.
-function engineFor(lang) {
+function engineFor({ label, packs }) {
   let tesseract = "tesseract.js (version unknown)";
   const pkg = join(EXT_DIR, "node_modules", "tesseract.js", "package.json");
   if (existsSync(pkg)) tesseract = `tesseract.js ${JSON.parse(readFileSync(pkg, "utf8")).version}`;
 
-  let tessdataVersion = "";
-  const data = join(EXT_DIR, "vendor", "tesseract", "lang", `${lang.split("+")[0]}.traineddata`);
-  if (existsSync(data)) {
-    tessdataVersion = `sha256:${createHash("sha256").update(readFileSync(data)).digest("hex").slice(0, 16)}`;
+  const identities = [];
+  for (const code of packs.split("+")) {
+    const data = join(LANG_DIR, `${code}.traineddata`);
+    if (!existsSync(data)) { identities.length = 0; break; }
+    identities.push(`${code}=sha256:${createHash("sha256").update(readFileSync(data)).digest("hex")}`);
   }
-  return { tesseract, tessdataVersion, lang };
+  const tessdataVersion = identities.join(";");
+  return { tesseract, tessdataVersion, lang: label };
 }
 
 // ---- the browser ------------------------------------------------------------
+
+// setOcrLang pins the extension's OCR language from an extension page, so the run reads each scene
+// with the language it chose instead of inheriting whatever a profile happened to hold. Going
+// through the options page also leaves the viewer, so the next scene cannot be mistaken for the
+// overlay the previous one left behind.
+async function setOcrLang(ctx, lang, extra = {}) {
+  await ctx.cdp.send("Page.navigate", { url: `chrome-extension://${ctx.extensionId}/src/options.html` }, ctx.session);
+  await waitFor("the options page", async () => {
+    try { return await evaluate(ctx.cdp, ctx.session, "typeof chrome !== 'undefined' && !!chrome.storage"); }
+    catch { return false; }
+  }, 30_000);
+  const stored = { options: { ocrImages: true, ocrLang: lang }, ...extra };
+  await evaluate(ctx.cdp, ctx.session, `chrome.storage.local.set(${JSON.stringify(stored)})`, true);
+}
 
 // openBrowser launches a headless browser, loads the unpacked extension, opens one page and pins
 // the extension's options. It is a function rather than a stretch of main() because a scene can
@@ -433,15 +495,7 @@ async function openBrowser(args, outDir, base, seq) {
   await cdp.send("Runtime.enable", {}, sessionId);
   await cdp.send("Performance.enable", {}, sessionId).catch(() => { /* cost sample only */ });
 
-  // Seed the extension's own options from an extension page, so the run pins the OCR language
-  // instead of inheriting whatever a profile happened to hold.
-  await cdp.send("Page.navigate", { url: `chrome-extension://${extensionId}/src/options.html` }, sessionId);
-  await waitFor("the options page", async () => {
-    try { return await evaluate(cdp, sessionId, "typeof chrome !== 'undefined' && !!chrome.storage"); }
-    catch { return false; }
-  }, 30_000);
-  await evaluate(cdp, sessionId,
-    `chrome.storage.local.set({options: {ocrImages: true, ocrLang: ${JSON.stringify(args.lang)}}, uiLang: "en"})`, true);
+  await setOcrLang({ cdp, session: sessionId, extensionId }, args.lang || DEFAULT_LANG, { uiLang: "en" });
 
   // The browser's own words, kept for the scene that kills it. "the DevTools connection errored"
   // says a browser died; it does not say why, and a lab that records a death without its cause
@@ -460,16 +514,25 @@ async function main() {
     die("extension/vendor is empty - run `npm run vendor` first, the overlay needs tesseract.js");
   }
   const scenes = selectScenes(args);
+  for (const s of scenes) {
+    const choice = sceneLang({ explicit: args.lang, annotation: loadAnnotation(args.annotations, s.id), scene: s });
+    s.lang = choice.lang;
+    s.langSource = choice.source;
+  }
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "").replace("T", "-");
   const outDir = args.out ? resolve(args.out) : join(REPO_ROOT, "temp", "ocrlab", `ext-${stamp}`);
   mkdirSync(outDir, { recursive: true });
 
+  const declaration=spawnSync("go",["run","./tools/ocrlab","declare","-out",outDir,"-manifest",args.manifest,"-root",args.root,...(args.lang?["-lang",args.lang]:[]),"-purpose",args.purpose,"-annotations",args.annotations,...scenes.flatMap(s=>["-scene",s.id])],{cwd:REPO_ROOT,encoding:"utf8"});
+  if (declaration.status!==0) die(`cannot freeze declaration: ${declaration.stderr || declaration.error || declaration.stdout}`);
+  const drift = declarationProblems(scenes, JSON.parse(readFileSync(join(outDir, "declaration.json"), "utf8")));
+  if (drift.length) die(`the language choice drifted from the Go lab's:\n  ${drift.join("\n  ")}`);
   const { server, base } = await startSceneServer(scenes);
   const run = makeRun({
     runId: basename(outDir),
     startedAt: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
     edition: EDITION_EXTENSION,
-    engine: engineFor(args.lang),
+    engine: engineFor(runLangs(scenes, args.lang, LANG_DIR)),
     viewports: VIEWPORTS,
   });
   let browser;
@@ -480,14 +543,24 @@ async function main() {
 
     let relaunches = 0;
     for (const s of scenes) {
+      // Collection is the expensive stage; an earlier complete run with identical inputs stands in
+      // for it (the rule is the Go lab's, reached through `ocrlab reuse`). Scoring always reruns.
+      const hit = reuseScene({ repoRoot: REPO_ROOT, outDir, scene: s, engine: run.engine, browser: run.browser, reuseFrom: args.reuseFrom, fresh: args.fresh });
+      if (hit.scene) {
+        run.scenes.push(makeScene(hit.scene));
+        console.log(`  reused ${s.id} from ${hit.bundle}`);
+        continue;
+      }
+      if (!args.fresh) console.log(`  fresh  ${s.id}: ${hit.miss}`);
       try {
         run.scenes.push(makeScene(await runScene(browser.ctx, s)));
         const last = run.scenes[run.scenes.length - 1];
-        console.log(`  ok   ${s.id.padEnd(40)} ${last.plates.length} plate-record(s), ocr ${last.ocrMs}ms`);
+        if (last.unmeasured) console.log(`  skip ${s.id.padEnd(40)} unmeasured: ${last.unmeasured}`);
+        else console.log(`  ok   ${s.id.padEnd(40)} ${last.lang.padEnd(8)} ${last.plates.length} plate-record(s), ocr ${last.ocrMs}ms`);
       } catch (err) {
         const said = browser.cdp.dead ? browser.said() : "";
         const why = said ? `${err.message}; the browser said: ${said}` : err.message;
-        run.scenes.push(makeScene({ sceneId: s.id, error: why }));
+        run.scenes.push(makeScene({ sceneId: s.id, lang: s.lang, langSource: s.langSource, error: why }));
         console.log(`  FAIL ${s.id.padEnd(40)} ${why}`);
       }
       // A scene can take the renderer down with it, and the next scene is then not a measurement
@@ -507,8 +580,12 @@ async function main() {
     server.close();
   }
 
+  const reused = run.scenes.filter((s) => s.reusedFrom).length;
+  console.log(`ocrlab: collected ${run.scenes.length - reused}, reused ${reused} of ${scenes.length} scene(s)`);
   const evidence = join(outDir, "evidence.json");
   writeFileSync(evidence, `${JSON.stringify(run, null, 2)}\n`);
+  const finish = spawnSync("go", ["run", "./tools/ocrlab", "finish", outDir], { cwd: REPO_ROOT, encoding: "utf8" });
+  if (finish.status !== 0) die(`cannot record execution identity: ${finish.stderr || finish.error || finish.stdout}`);
   const problems = validateRun(run);
   console.log(`\nevidence: ${evidence}`);
   if (problems.length) {

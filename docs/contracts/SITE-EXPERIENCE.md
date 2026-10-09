@@ -16,7 +16,8 @@ What this repo owes it:
   (`siteOrigins`, the `site` rows), rendered as a "This website" block on `privacy.html`,
   `extension-privacy.html` and `install-trust.html`, and held by `scripts/security-posture.ps1`.
 - A skip link, a labelled `nav` per navigation, targets and contrast measured in both themes (rules 15-17):
-  implemented locally by ticket 100 (`tests/site_a11y_test.go`); the exception closes after the re-run on the published site. One `main`, one `h1`, ordered headings, `lang`, `dir` and `alt` already hold on 18 of 18.
+  ticket 100 (`tests/site_a11y_test.go`) was verified on the published site on 2026-10-08;
+  the exception is closed. One `main`, one `h1`, ordered headings, `lang`, `dir` and `alt` hold on 18 of 18.
 
 **Adopted 2026-10-06 (ticket 96), verdict `partial 0.1`.** Tab order, contrast numbers, reduced-motion
 emulation and the 360 px layout were not run (ticket 102).

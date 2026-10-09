@@ -166,7 +166,12 @@ export function fitPlate(b) {
   }
   const base = parseFloat(b.dataset.ocrCqw);
   b.style.height = "";
-  const target = parseFloat(getComputedStyle(b).minHeight) || 0;
+  // The plate's min-height is a percentage of the figure and Chrome reports it unresolved ("34.29%"),
+  // so a bare parseFloat would pin the box to 34.29 px - past the bottom of any figure under 100 px.
+  const mh = getComputedStyle(b).minHeight;
+  const target = /%$/.test(mh)
+    ? (parseFloat(mh) / 100 * b.parentNode.getBoundingClientRect().height || 0)
+    : (parseFloat(mh) || 0);
   if (target > 0) b.style.height = target + "px";
   if (base > 0) {
     let s = base; const floor = base * 0.5; let g = 0;

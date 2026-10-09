@@ -387,14 +387,14 @@ func TestRenderedContrastCatchesInvisibleText(t *testing.T) {
 
 	flat := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.Draw(flat, flat.Bounds(), &image.Uniform{color.RGBA{200, 200, 200, 255}}, image.Point{}, draw.Src)
-	if got := RenderedContrast(flat, plates, w, h); got.MinLuma > 5 {
+	if got := BackgroundContrast(flat, plates, w, h); got.MinLuma > 5 {
 		t.Errorf("a uniform plate has no readable text: min separation = %v, want ~0", got.MinLuma)
 	}
 
 	legible := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.Draw(legible, legible.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
 	draw.Draw(legible, image.Rect(20, 20, 80, 40), &image.Uniform{color.RGBA{0, 0, 0, 255}}, image.Point{}, draw.Src)
-	if got := RenderedContrast(legible, plates, w, h); got.MinLuma < 100 {
+	if got := BackgroundContrast(legible, plates, w, h); got.MinLuma < 100 {
 		t.Errorf("black on white: min separation = %v, want a large number", got.MinLuma)
 	}
 }
@@ -410,7 +410,7 @@ func TestDamageNamesTheProtectedRegionItHit(t *testing.T) {
 
 	// The correct overlay paints only inside the permitted area.
 	good := perfectPlates(a, PrimaryStressCase)
-	if d := Damage(good, a, a.ImageWidth, a.ImageHeight); d.ProtectedHit != 0 {
+	if d := RectangleIntrusion(good, a, a.ImageWidth, a.ImageHeight); d.ProtectedHit != 0 {
 		t.Errorf("a plate inside the balloon must not damage its outline, hit = %d px in %s",
 			d.ProtectedHit, d.WorstProtectedRegion)
 	}
@@ -419,7 +419,7 @@ func TestDamageNamesTheProtectedRegionItHit(t *testing.T) {
 	sloppy := []evidence.Plate{{
 		Rect: evidence.Rect{X0: 295, Y0: 55, X1: 525, Y1: 205}, Viewport: testViewport,
 	}}
-	d := Damage(sloppy, a, a.ImageWidth, a.ImageHeight)
+	d := RectangleIntrusion(sloppy, a, a.ImageWidth, a.ImageHeight)
 	if d.ProtectedHit == 0 {
 		t.Fatal("a plate covering the balloon outline must be reported as damage")
 	}
@@ -486,7 +486,7 @@ func TestScoreRefusesNonTruth(t *testing.T) {
 	draft.Origin = truth.OriginOCRSeed
 
 	sc := evScene(a, perfectPlates(a, PrimaryStressCase))
-	_, err := Score(run(evidence.EditionDesktop, sc), &sc, &draft, scs["synth-uniform-paper"], nil, nil)
+	_, err := Score(run(evidence.EditionDesktop, sc), &sc, &draft, scs["synth-uniform-paper"], Captures{})
 	if err == nil {
 		t.Fatal("an OCR-seeded annotation must not be scorable")
 	}
@@ -515,7 +515,7 @@ func TestScoreOnAPerfectOverlay(t *testing.T) {
 
 	plates := append(perfectPlates(a, PrimaryStressCase), perfectPlates(a, "long-latin")...)
 	sc := evScene(a, plates)
-	got, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs["synth-balloon-on-panel"], nil, nil)
+	got, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs["synth-balloon-on-panel"], Captures{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -531,14 +531,14 @@ func TestScoreOnAPerfectOverlay(t *testing.T) {
 	if len(got.Failures) != 0 {
 		t.Errorf("a flawless overlay must have no hard failures, got %v", got.Failures)
 	}
-	if _, ok := got.Stress["long-latin"]; !ok {
+	if _, ok := got.Stress["desktop/long-latin"]; !ok {
 		t.Error("every stress case in the evidence must appear in the breakdown")
 	}
 }
 
 // A failure must be named in words, because "the number went down" is not actionable.
 func TestScoreNamesItsFailures(t *testing.T) {
-	anns, scs, _ := scenes(t)
+	anns, scs, root := scenes(t)
 	a := anns["synth-balloon-on-panel"]
 	sloppy := []evidence.Plate{{
 		Text:     a.Groups[0].Transcript,
@@ -547,7 +547,11 @@ func TestScoreNamesItsFailures(t *testing.T) {
 		ScrollHeight: 200, ClientHeight: 100,
 	}}
 	sc := evScene(a, sloppy)
-	got, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs["synth-balloon-on-panel"], nil, nil)
+	// The block fill really painted over the outline: the text-hidden capture keeps the plate.
+	src := loadPNG(t, filepath.Join(root, filepath.FromSlash(scs["synth-balloon-on-panel"].File)))
+	sc.Observations = []evidence.Observation{{Viewport: testViewport, StressCase: PrimaryStressCase, Rendered: "hidden.png", Concealed: "hidden.png"}}
+	caps := Captures{Source: src, Open: func(string) image.Image { return paintOver(src, sloppy, color.RGBA{255, 255, 255, 255}) }}
+	got, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs["synth-balloon-on-panel"], caps)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -577,7 +581,7 @@ func TestAggregateKeepsSkippedVisible(t *testing.T) {
 	for _, id := range []string{"synth-uniform-paper", "synth-two-columns"} {
 		a := anns[id]
 		sc := evScene(a, perfectPlates(a, PrimaryStressCase))
-		s, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs[id], nil, nil)
+		s, err := Score(run(evidence.EditionDesktop, sc), &sc, a, scs[id], Captures{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -621,8 +625,11 @@ func TestCutGlyphInkFollowsStrokesNotNeighbours(t *testing.T) {
 		return out
 	}
 
-	whole := evidence.Rect{X0: 36, Y0: 46, X1: 104, Y1: 74}
-	_, cut, ink := residualAroundPlates(src, covered(whole), []evidence.Plate{{Rect: whole}}, w, h)
+	// Tall plates: a plate cropped tight to the stroke is half ink, and the median-luma estimate is
+	// then reported unmeasured instead of answering.
+	whole := evidence.Rect{X0: 36, Y0: 26, X1: 104, Y1: 94}
+	wholeInk := residualAroundPlates(src, covered(whole), []evidence.Plate{{Rect: whole}}, w, h)
+	cut, ink := wholeInk.cut, wholeInk.inkPx
 	if ink == 0 {
 		t.Fatal("the covered stroke must register as ink, or the measure has no sample")
 	}
@@ -630,8 +637,8 @@ func TestCutGlyphInkFollowsStrokesNotNeighbours(t *testing.T) {
 		t.Errorf("a plate that covers its whole stroke: cut = %.3f, want 0 - the neighbouring mark is not joined to it", cut)
 	}
 
-	short := evidence.Rect{X0: 36, Y0: 46, X1: 80, Y1: 74}
-	_, cutShort, _ := residualAroundPlates(src, covered(short), []evidence.Plate{{Rect: short}}, w, h)
+	short := evidence.Rect{X0: 36, Y0: 26, X1: 80, Y1: 94}
+	cutShort := residualAroundPlates(src, covered(short), []evidence.Plate{{Rect: short}}, w, h).cut
 	if cutShort <= 0 {
 		t.Errorf("a plate that stops mid-stroke: cut = %.3f, want above 0", cutShort)
 	}

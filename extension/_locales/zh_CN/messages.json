@@ -32,7 +32,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "把 PDF、EPUB 等文档重新呈现为干净的 HTML，让浏览器自带的免费网页翻译能够读取 - 含图片 OCR。100% 本地运行。",
+    "message": "把 PDF、EPUB 等文档打开为干净的 HTML，可用浏览器自带的免费网页翻译，含图片 OCR。转换在本地完成。",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {

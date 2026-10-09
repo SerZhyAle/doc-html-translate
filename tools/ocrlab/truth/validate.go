@@ -3,6 +3,7 @@ package truth
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"doc-html-translate/tools/ocrlab/corpus"
 )
@@ -72,6 +73,9 @@ func Validate(a *Annotation, s *corpus.Scene) []Problem {
 		add(RuleUnknownScene, "no scene with this id in the manifest")
 		return ps
 	}
+	if a.SceneID != s.ID {
+		add(RuleUnknownScene, "annotation identity differs from scene")
+	}
 	if !a.Ambiguity.Valid() {
 		add(RuleBadAmbiguity, fmt.Sprintf("ambiguity %q is not clear/partly-illegible/illegible", a.Ambiguity))
 	}
@@ -93,6 +97,15 @@ func Validate(a *Annotation, s *corpus.Scene) []Problem {
 	seenGroup := map[string]bool{}
 	orders := make([]int, 0, len(a.Groups))
 	for _, g := range a.Groups {
+		if strings.TrimSpace(g.ID) == "" {
+			add(RuleDuplicateGroup, "group id is empty")
+		}
+		if g.Bounds.Empty() {
+			add(RuleBadRegion, "group "+g.ID+" has no bounds")
+		}
+		if g.Direction != "" && g.Direction != DirLTR && g.Direction != DirRTL {
+			add(RuleBadRegion, "group "+g.ID+" has invalid direction")
+		}
 		if seenGroup[g.ID] {
 			add(RuleDuplicateGroup, "group id "+g.ID+" used more than once")
 		}
@@ -165,11 +178,11 @@ func validateReview(a *Annotation, s *corpus.Scene) []Problem {
 	if a.Origin == OriginOCRSeed {
 		add(RuleDraftInHoldout, "a holdout scene cannot be gated by an OCR-seeded draft")
 	}
-	if a.Review.CheckedBy == "" {
+	if strings.TrimSpace(a.Review.CheckedBy) == "" {
 		add(RuleUnreviewed, "holdout annotation has no independent check")
 		return ps
 	}
-	if a.Review.CheckedBy == a.Review.AnnotatedBy {
+	if strings.EqualFold(strings.TrimSpace(a.Review.CheckedBy), strings.TrimSpace(a.Review.AnnotatedBy)) {
 		add(RuleSelfChecked, "the independent check must not be the annotator ("+a.Review.CheckedBy+")")
 	}
 	return ps

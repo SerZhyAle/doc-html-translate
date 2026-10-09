@@ -31,6 +31,10 @@ const rimBandOutside = 0.12
 // plates cover. Descriptive only - nothing in this file gates anything.
 const cutGlyphBound = 0.05
 
+// lowBackgroundContrast is the luma separation below which a plate rectangle is worth a remark.
+// Descriptive only, and about the rectangle: it says nothing of the glyphs drawn inside it.
+const lowBackgroundContrast = 40
+
 // SelfScore is one scene measured without truth.
 type SelfScore struct {
 	SceneID  string           `json:"sceneId"`
@@ -56,9 +60,15 @@ type SelfScore struct {
 	// InkPxUnderPlates is the sample size, so a tiny number is not read as a clean result.
 	InkPxUnderPlates int `json:"inkPxUnderPlates"`
 
-	// MinContrast is the smallest luma separation between drawn text and drawn background over
-	// the scene's plates, read back from the render rather than from the sampled values.
-	MinContrast float64 `json:"minContrast"`
+	// ResidualUnmeasured and CutGlyphUnmeasured say why the two ink measures above are absent: the
+	// plates sit on a gradient or a texture, where the median-luma ink estimate is undefined.
+	ResidualUnmeasured string `json:"residualUnmeasured,omitempty"`
+	CutGlyphUnmeasured string `json:"cutGlyphUnmeasured,omitempty"`
+
+	// MinBackgroundContrast is the smallest luma separation inside a plate rectangle in the render.
+	// It describes the plate and what it sits on, not the replacement glyphs, and it is not a
+	// readability verdict.
+	MinBackgroundContrast float64 `json:"minBackgroundContrast"`
 
 	Clipped      int `json:"clipped"`
 	PlateOverlap int `json:"plateOverlap"`
@@ -94,9 +104,10 @@ func SelfDiagnose(run *evidence.Run, sc *evidence.Scene, source, rendered image.
 	}
 
 	if source != nil && rendered != nil {
-		under, cut, inkPx := residualAroundPlates(source, rendered, plates, w, h)
-		out.ResidualUnderPlates, out.CutGlyphInk, out.InkPxUnderPlates = under, cut, inkPx
-		out.MinContrast = RenderedContrast(rendered, plates, w, h).MinLuma
+		ink := residualAroundPlates(source, rendered, plates, w, h)
+		out.ResidualUnderPlates, out.CutGlyphInk, out.InkPxUnderPlates = ink.under, ink.cut, ink.inkPx
+		out.ResidualUnmeasured, out.CutGlyphUnmeasured = ink.underWhy, ink.cutWhy
+		out.MinBackgroundContrast = BackgroundContrast(rendered, plates, w, h).MinLuma
 	}
 
 	// Layout facts, from the DOM rather than from a guess.
@@ -149,9 +160,9 @@ func selfFindings(s *SelfScore) []string {
 				s.CutGlyphInk*100))
 		}
 	}
-	if s.MinContrast > 0 && s.MinContrast < 40 {
+	if s.MinBackgroundContrast > 0 && s.MinBackgroundContrast < lowBackgroundContrast {
 		out = append(out, fmt.Sprintf(
-			"a plate's text and background differ by only %.0f luma - the replacement is barely readable", s.MinContrast))
+			"a plate rectangle has only %.0f luma between its tones - low background contrast (not a readability verdict)", s.MinBackgroundContrast))
 	}
 	if s.Clipped > 0 {
 		out = append(out, fmt.Sprintf("%d plate(s) clip their own recognized text", s.Clipped))
@@ -165,20 +176,49 @@ func selfFindings(s *SelfScore) []string {
 	return out
 }
 
+// aroundPlates is the result of residualAroundPlates. A *Why field is set when that measure was
+// skipped because the background under it is not a single tone, and its number is then absent
+// rather than zero.
+type aroundPlates struct {
+	under, cut       float64
+	inkPx            int
+	underWhy, cutWhy string
+}
+
 // residualAroundPlates measures the original ink under each plate by comparing the source with
 // the render at the same pixels, and the ink that escapes past the plate edges by following the
 // source's own strokes across them.
-func residualAroundPlates(source, rendered image.Image, plates []evidence.Plate, w, h int) (under, cut float64, inkPx int) {
+//
+// Both rest on the median-luma ink estimate, which is undefined on a gradient or a texture. A
+// plate whose own rectangle is not a single tone is left out of the residual, and a rim area that
+// is not a single tone skips the escaped-ink measure, instead of asserting a cover that is "not
+// covering" on what is only background structure.
+func residualAroundPlates(source, rendered image.Image, plates []evidence.Plate, w, h int) aroundPlates {
+	var out aroundPlates
 	inner := truth.NewMask(w, h)
 	outer := truth.NewMask(w, h)
+	var skipped []string
 	for _, p := range plates {
 		r := p.Rect
+		if why := unsupportedBackground(regionLumas(source, r.Region(), w, h)); why != "" {
+			skipped = append(skipped, why)
+			continue
+		}
 		band := int(float64(min(r.Width(), r.Height())) * rimBandOutside)
 		if band < 2 {
 			band = 2
 		}
-		inner.Or(truth.Box("", r.X0, r.Y0, r.X1, r.Y1).Rasterize(w, h))
+		inner.Or(r.Region().Rasterize(w, h))
 		outer.Or(truth.Box("", r.X0-band, r.Y0-band, r.X1+band, r.Y1+band).Rasterize(w, h))
+	}
+	if inner.Area() == 0 {
+		if len(skipped) > 0 {
+			out.underWhy, out.cutWhy = skipped[0], skipped[0]
+		}
+		return out
+	}
+	if len(skipped) > 0 {
+		out.underWhy = fmt.Sprintf("%d of %d plate(s) left out: %s", len(skipped), len(plates), skipped[0])
 	}
 	// The rim is the grown box minus the plates themselves.
 	rim := truth.NewMask(w, h)
@@ -190,21 +230,33 @@ func residualAroundPlates(source, rendered image.Image, plates []evidence.Plate,
 		}
 	}
 
-	srcUnder := inkWithin(source, inner, w, h)
-	renUnder := inkWithin(rendered, inner, w, h)
-	inkPx = srcUnder.Area()
-	if inkPx > 0 {
-		under = float64(srcUnder.IntersectArea(renUnder)) / float64(inkPx)
+	srcUnder, why := inkWithin(source, inner, w, h)
+	if why != "" {
+		out.underWhy, out.cutWhy = why, why
+		return out
+	}
+	renUnder, renWhy := inkWithin(rendered, inner, w, h)
+	if renWhy != "" {
+		out.underWhy = renWhy
+	} else {
+		out.inkPx = srcUnder.Area()
+		if out.inkPx > 0 {
+			out.under = float64(srcUnder.IntersectArea(renUnder)) / float64(out.inkPx)
+		}
 	}
 
-	// One ink threshold has to span the plate edge or a stroke would break at the seam, so the
+	// One ink step has to span the plate edge or a stroke would break at the seam, so the
 	// escaped-ink measure takes its ink over the grown area as a whole rather than per side. The
 	// render is not consulted: nothing outside a plate can change.
-	all := inkWithin(source, outer, w, h)
-	if base := all.IntersectArea(inner); base > 0 {
-		cut = float64(cutGlyphPixels(all, inner, rim, w, h)) / float64(base)
+	all, why := inkWithin(source, outer, w, h)
+	if why != "" {
+		out.cutWhy = why
+		return out
 	}
-	return under, cut, inkPx
+	if base := all.IntersectArea(inner); base > 0 {
+		out.cut = float64(cutGlyphPixels(all, inner, rim, w, h)) / float64(base)
+	}
+	return out
 }
 
 // cutGlyphPixels counts rim ink joined, through ink, to ink under a plate. That is the shape a
@@ -250,10 +302,12 @@ func cutGlyphPixels(ink, inner, rim *truth.Mask, w, h int) int {
 
 // inkWithin marks pixels inside a mask that stand out from that region's own median luma - the
 // same local rule the annotated concealment metric uses, so the two numbers mean the same thing.
-func inkWithin(img image.Image, area *truth.Mask, w, h int) *truth.Mask {
+// The second result is why the rule is undefined for this area (a gradient or a texture), in
+// which case the mask is empty.
+func inkWithin(img image.Image, area *truth.Mask, w, h int) (*truth.Mask, string) {
 	out := truth.NewMask(w, h)
 	if img == nil {
-		return out
+		return out, ""
 	}
 	var lumas []int
 	for y := 0; y < h; y++ {
@@ -266,7 +320,10 @@ func inkWithin(img image.Image, area *truth.Mask, w, h int) *truth.Mask {
 		}
 	}
 	if len(lumas) == 0 {
-		return out
+		return out, ""
+	}
+	if why := unsupportedBackground(lumas); why != "" {
+		return out, why
 	}
 	sort.Ints(lumas)
 	med := lumas[len(lumas)/2]
@@ -281,7 +338,7 @@ func inkWithin(img image.Image, area *truth.Mask, w, h int) *truth.Mask {
 			}
 		}
 	}
-	return out
+	return out, ""
 }
 
 func sortedStress(sc *evidence.Scene) []string {
@@ -340,8 +397,8 @@ func findingClass(f string) string {
 		return "original lettering still visible under the plates"
 	case contains(f, "stop short"):
 		return "patches stop short of the glyphs"
-	case contains(f, "barely readable"):
-		return "replacement text barely readable"
+	case contains(f, "low background contrast"):
+		return "plate rectangle has low background contrast"
 	case contains(f, "clip their own"):
 		return "plate clips its own text"
 	case contains(f, "clips under the"):

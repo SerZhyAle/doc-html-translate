@@ -60,7 +60,16 @@ export async function assembleToNatural(parts, width, height, naturalWidth, natu
     if (img.width < 2 || img.height < 2) {
       throw new Error(`a captured band is ${img.width}x${img.height}, too small to have caught the page`);
     }
-    sctx.drawImage(img, 0, 0, img.width, img.height, 0, part.y0, w, part.y1 - part.y0);
+    if (part.expectedWidth !== undefined &&
+        (Math.abs(img.width - part.expectedWidth) > 1 || Math.abs(img.height - part.expectedHeight) > 1)) {
+      throw new Error(`incomplete captured band: ${img.width}x${img.height}, expected ${part.expectedWidth}x${part.expectedHeight}`);
+    }
+    const crop = part.crop ?? { x: 0, y: 0, width: img.width, height: img.height };
+    if (crop.x < 0 || crop.y < 0 || crop.width <= 0 || crop.height <= 0 ||
+        crop.x + crop.width > img.width || crop.y + crop.height > img.height) {
+      throw new Error("incomplete captured band crop");
+    }
+    sctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, part.y0, w, part.y1 - part.y0);
   }
 
   const canvas = createCanvas(naturalWidth, naturalHeight);

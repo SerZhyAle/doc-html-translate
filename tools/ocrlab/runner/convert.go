@@ -1,11 +1,8 @@
 package runner
 
 import (
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
+	"image"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +22,7 @@ import (
 // that matters (it is the same code the reader gets) while not requiring a build first. The
 // diagnostics sidecar is pointed into the run directory so the geometry the app computed is
 // recorded even for a scene whose render later fails.
-func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, res ocr.Result, err error) {
+func convertScene(bin, imgPath, workDir, lang string, opt Options) (pagePath string, res ocr.Result, err error) {
 	book, err := img.Extract(imgPath, workDir)
 	if err != nil {
 		return "", res, err
@@ -42,11 +39,11 @@ func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, r
 	}
 	defer func() { _ = os.Setenv("DOCHT_OCR_DIAG", old) }()
 
-	dataDir, err := ocr.DataDirFor(opt.Lang)
+	dataDir, err := ocr.DataDirFor(lang)
 	if err != nil {
 		return "", res, err
 	}
-	stats, err := ocr.OverlayFile(bin, pagePath, opt.Lang, dataDir, nil)
+	stats, err := ocr.OverlayFile(bin, pagePath, lang, dataDir, nil)
 	if err != nil {
 		return "", res, err
 	}
@@ -54,12 +51,17 @@ func convertScene(bin, imgPath, workDir string, opt Options) (pagePath string, r
 		return "", res, fmt.Errorf("overlay: %v", stats.Failed[0].Err)
 	}
 
-	// Geometry comes from the recognizer's own report of the page, which is what the plates were
-	// positioned against.
-	res, err = ocr.Recognize(context.Background(), bin, imgPath, opt.Lang, dataDir)
+	// Read image geometry without a second recognition pass.
+	im, err := os.Open(imgPath)
 	if err != nil {
 		return "", res, err
 	}
+	cfg, _, err := image.DecodeConfig(im)
+	im.Close()
+	if err != nil {
+		return "", res, err
+	}
+	res.Width, res.Height = cfg.Width, cfg.Height
 	if stats.Overlaid == 0 {
 		// Not an error: a scene may genuinely hold no recognizable text, and the metrics will
 		// report that as zero recall rather than as a broken run.
@@ -92,38 +94,40 @@ func tesseractVersion(bin string) string {
 // observable, is strictly more precise (it distinguishes two builds that both call themselves
 // 4.0.0) and needs no second source of truth.
 func tessdataFingerprint(lang string) string {
+	if lang == "" {
+		return ""
+	}
 	dir, err := ocr.DataDirFor(lang)
 	if err != nil || dir == "" {
 		return ""
 	}
-	code := strings.Split(lang, "+")[0]
-	f, err := os.Open(filepath.Join(dir, code+".traineddata"))
-	if err != nil {
-		return ""
+	var identities []string
+	for _, code := range strings.Split(lang, "+") {
+		data, err := os.ReadFile(filepath.Join(dir, strings.TrimSpace(code)+".traineddata"))
+		if err != nil {
+			return ""
+		}
+		identities = append(identities, strings.TrimSpace(code)+"=sha256:"+evidence.Digest(data))
 	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return ""
-	}
-	return "sha256:" + hex.EncodeToString(h.Sum(nil))[:16]
+	return strings.Join(identities, ";")
 }
 
-// engineFor fills the evidence's engine record from what can be observed.
-func engineFor(bin, lang string) evidence.Engine {
+// engineFor fills the evidence's engine record from what can be observed. lang is the run's
+// language label; packs are the traineddata files whose bytes identify the engine.
+func engineFor(bin, lang, packs string) evidence.Engine {
 	return evidence.Engine{
 		Tesseract:       tesseractVersion(bin),
-		TessdataVersion: tessdataFingerprint(lang),
+		TessdataVersion: tessdataFingerprint(packs),
 		Lang:            lang,
 	}
 }
 
-// peakRSS reports the Go runtime's total memory obtained from the OS.
+// runtimeSys reports the Go runtime's total memory obtained from the OS.
 //
 // Conversion happens in this process, so this is the honest in-process proxy for the cost
 // dimension: it is not the operating system's RSS and does not pretend to be, but it moves when
 // a scene makes the converter allocate and that is what the measurement is for.
-func peakRSS() int64 {
+func runtimeSys() int64 {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	return int64(m.Sys)

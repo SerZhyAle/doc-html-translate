@@ -9,7 +9,7 @@
 //
 // Everything geometric is in natural image pixels, exactly as on the desktop side.
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const EDITION_DESKTOP = "desktop";
 export const EDITION_EXTENSION = "extension";
@@ -52,6 +52,8 @@ export function makePlate(p = {}) {
     modeConfidence: num(p.modeConfidence),
     scrollHeight: int(p.scrollHeight),
     clientHeight: int(p.clientHeight),
+    scrollWidth: int(p.scrollWidth),
+    clientWidth: int(p.clientWidth),
   };
 }
 
@@ -96,12 +98,26 @@ export function makeDiagRecord(file, rec = {}) {
 export const CLIP_SLACK_PX = 4;
 
 // clipped reports whether the browser said this plate's content overflows its box.
-export const clipped = (plate) => plate.scrollHeight > plate.clientHeight + CLIP_SLACK_PX;
+export const clipped = (plate) => plate.scrollHeight > plate.clientHeight + CLIP_SLACK_PX || plate.scrollWidth > plate.clientWidth + CLIP_SLACK_PX;
 
 export function makeScreenshots({ source = "", rendered = "", stress = {} } = {}) {
   const out = { source: str(source), rendered: str(rendered) };
   if (stress && Object.keys(stress).length) out.stress = { ...stress };
   return out;
+}
+
+// makeReusedFrom is the provenance of a scene copied from an earlier complete run instead of being
+// collected (evidence.ReusedFrom). The copy itself is made by `ocrlab reuse`; the fields are pinned
+// here so a record passing through this file keeps exactly the Go field set.
+export function makeReusedFrom(r = {}) {
+  return {
+    bundle: str(r.bundle),
+    declarationSha256: str(r.declarationSha256),
+    producerDigest: str(r.producerDigest),
+    collectedAt: str(r.collectedAt),
+    reusedAt: str(r.reusedAt),
+    integrity: str(r.integrity),
+  };
 }
 
 // makeScene is one corpus scene's outcome. error is written when the runner could not process the
@@ -118,7 +134,18 @@ export function makeScene(s = {}) {
     renderMs: int(s.renderMs),
     peakRssBytes: int(s.peakRssBytes),
   };
+  if (s.observations?.length) out.observations = s.observations;
+  if (s.memoryKind) out.memoryKind = str(s.memoryKind);
+  if (s.memoryBytes) out.memoryBytes = int(s.memoryBytes);
+  // The OCR language the scene was read with and where that choice came from, and - instead of an
+  // error - the reason a scene that failed nothing was not run (evidence.Scene Lang, LangSource,
+  // Unmeasured).
+  if (s.lang) out.lang = str(s.lang);
+  if (s.langSource) out.langSource = str(s.langSource);
+  if (s.unmeasured) out.unmeasured = str(s.unmeasured);
   if (s.error) out.error = str(s.error);
+  // Present only on a scene copied from an earlier run; a collected scene never carries it.
+  if (s.reusedFrom) out.reusedFrom = makeReusedFrom(s.reusedFrom);
   return out;
 }
 
@@ -151,7 +178,7 @@ export function validateRun(run) {
   const bad = (where, what) => problems.push(`${where}: ${what}`);
 
   if (!run || typeof run !== "object") return ["run: not an object"];
-  if (run.schemaVersion !== SCHEMA_VERSION) {
+  if (![1, SCHEMA_VERSION].includes(run.schemaVersion)) {
     bad("schemaVersion", `is ${JSON.stringify(run.schemaVersion)}, this build understands ${SCHEMA_VERSION}`);
   }
   if (!run.runId) bad("runId", "empty");
@@ -180,17 +207,18 @@ export function validateRun(run) {
     if (!s.sceneId) bad(`${where}.sceneId`, "empty");
     else if (seen.has(s.sceneId)) bad(`${where}.sceneId`, `duplicate ${s.sceneId}`);
     else seen.add(s.sceneId);
-    if (s.error) return; // a failed scene carries its reason and nothing else worth checking
+    if (s.error || s.unmeasured) return; // a failed or unmeasured scene carries its reason and nothing else worth checking
     if (!(s.imageWidth > 0 && s.imageHeight > 0)) bad(`${where}`, "imageWidth and imageHeight must be positive");
     if (!Array.isArray(s.plates)) { bad(`${where}.plates`, "not an array"); return; }
-    s.plates.forEach((p, j) => validatePlate(p, `${where}.plates[${j}]`, known, bad));
+    s.plates.forEach((p, j) => validatePlate(p, `${where}.plates[${j}]`, known, bad, run.schemaVersion));
   });
   return problems;
 }
 
-function validatePlate(p, where, viewportNames, bad) {
+function validatePlate(p, where, viewportNames, bad, version) {
   if (!p || typeof p !== "object") { bad(where, "not an object"); return; }
   for (const key of Object.keys(makePlate())) {
+    if (version === 1 && ["scrollWidth", "clientWidth"].includes(key)) continue;
     if (!(key in p)) bad(`${where}.${key}`, "missing");
   }
   if (p.viewport && viewportNames.size && !viewportNames.has(p.viewport)) {

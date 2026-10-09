@@ -106,7 +106,7 @@ const probeTemplate = `<script id="ocrlab-probe">
           mode: p.dataset.ocrMode || "fill",
           modeConfidence: parseFloat(p.dataset.ocrModeConf || "0") || 0,
           scrollHeight: p.scrollHeight,
-          clientHeight: p.clientHeight
+          clientHeight: p.clientHeight, scrollWidth: p.scrollWidth, clientWidth: p.clientWidth
         });
       }
     });
@@ -164,16 +164,21 @@ const probeTemplate = `<script id="ocrlab-probe">
     emit({ ok: errors.length === 0, errors: errors, imageRect: imageRect(), plates: plates });
   }
 
-  async function stressOnly(name){
+  async function stressOnly(name, hidden){
     var c = CASES.filter(function(x){ return x.Name === name; })[0];
     await settle();
     if (c) { applyCase(c); await settle(); }
-    emit({ ok: !!c, errors: c ? [] : ["unknown stress case " + name], imageRect: imageRect(), plates: [] });
+    if(hidden){ var css=document.createElement("style");css.textContent=".ocr-box,.ocr-box *,.ocr-plate,.ocr-plate *{color:transparent!important;text-shadow:none!important}";document.head.appendChild(css); await settle(); }
+    emit({ ok: !!c, errors: c ? [] : ["unknown stress case " + name], imageRect: imageRect(), plates: readPlates(name) });
   }
 
   function start(){
     var h = decodeURIComponent(location.hash || "");
-    if (h.indexOf("#ocrlab-stress=") === 0) stressOnly(h.slice("#ocrlab-stress=".length));
+    if (h.indexOf("#ocrlab-stress=") === 0) {
+      var name=h.slice("#ocrlab-stress=".length), hidden=name.endsWith("-hidden");
+      if(hidden) name=name.slice(0,-7);
+      stressOnly(name, hidden);
+    }
     else collect();
   }
   if (document.readyState === "complete") start();
@@ -223,6 +228,8 @@ type probePlate struct {
 	ModeConfidence float64 `json:"modeConfidence"`
 	ScrollHeight   int     `json:"scrollHeight"`
 	ClientHeight   int     `json:"clientHeight"`
+	ScrollWidth    int     `json:"scrollWidth"`
+	ClientWidth    int     `json:"clientWidth"`
 }
 
 // injectProbe writes a probe-carrying copy of a converted page next to the original, so the

@@ -20,13 +20,10 @@ import (
 // LicenseShortName a person would read there, so a harvested entry records a real licence rather
 // than a guess from a search result - which is what the corpus rule is actually about.
 //
-// Every harvested scene is stamped `commons-api` in licenceVerifiedBy, never a person's name, so
-// a reviewer can always tell machine-read provenance from human-read provenance and re-check any
-// entry against its licenceUrl.
+// Harvest records candidate provenance only. Human rights fields remain empty until review.
 const (
-	commonsAPI      = "https://commons.wikimedia.org/w/api.php"
-	commonsVerifier = "commons-api"
-	harvestUA       = "doc-html-translate-ocrlab/1.0 (https://github.com/SerZhyAle/doc-html-translate)"
+	commonsAPI = "https://commons.wikimedia.org/w/api.php"
+	harvestUA  = "doc-html-translate-ocrlab/1.0 (https://github.com/SerZhyAle/doc-html-translate)"
 )
 
 // acceptedCommonsLicence maps what the file page says to our closed licence set. Anything not in
@@ -164,8 +161,8 @@ func cmdHarvest(args []string) error {
 			Licence:           licence,
 			LicenceURL:        in.DescriptionURL,
 			Attribution:       stripHTML(in.Artist),
-			LicenceVerifiedBy: commonsVerifier,
-			LicenceVerifiedOn: today,
+			LicenceVerifiedBy: "",
+			LicenceVerifiedOn: "",
 			SHA256:            sum,
 			Bytes:             info.Size(),
 			Width:             in.Width,

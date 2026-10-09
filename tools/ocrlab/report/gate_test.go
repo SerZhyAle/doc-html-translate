@@ -98,11 +98,15 @@ func TestGateFailsPreFixNavbarDefect(t *testing.T) {
 	// while the container stayed 1216 px wide. The plate rendered at x0=91, width=770 px.
 	// In 640x320 image space, the plate rect was [91, 63, 861, 167] instead of [48, 63, 453, 167].
 	truthGroup := truth.Group{
-		ID:         "p1",
-		Bounds:     truth.Box("p1", 48, 63, 453, 167),
-		Transcript: "Sample text line",
+		Type:         truth.GroupParagraph,
+		ReadingOrder: 1,
+		Lines:        []truth.Region{truth.Box("line", 48, 63, 453, 167)},
+		ID:           "p1",
+		Bounds:       truth.Box("p1", 48, 63, 453, 167),
+		Transcript:   "Sample text line",
 	}
 	ann := &truth.Annotation{
+		Ambiguity:     truth.AmbiguityClear,
 		SchemaVersion: truth.SchemaVersion,
 		SceneID:       "synth-uniform-paper",
 		Origin:        truth.OriginHuman,
@@ -149,7 +153,7 @@ func TestGateFailsPreFixNavbarDefect(t *testing.T) {
 		Scenes: []evidence.Scene{evSc},
 	}
 
-	score, err := metrics.Score(evRun, &evSc, ann, sceneMeta, nil, nil)
+	score, err := metrics.Score(evRun, &evSc, ann, sceneMeta, metrics.Captures{})
 	if err != nil {
 		t.Fatalf("Score failed: %v", err)
 	}

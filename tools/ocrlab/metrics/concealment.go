@@ -21,17 +21,56 @@ const (
 	haloBandFraction = 0.18
 )
 
+// Measurement states shared by every pixel metric. Anything that was not measured says so and
+// carries no number: a zero would be read as "perfect".
+const (
+	StateMeasured   = "measured"
+	StateUnmeasured = "unmeasured"
+)
+
+// How a residual was obtained. The known-mask basis is the only one that is independent of the
+// image content; the flat-region basis is an estimate that is valid on a single-tone background.
+const (
+	BasisKnownMask  = "known-mask"
+	BasisFlatRegion = "flat-region"
+	BasisMixed      = "mixed"
+)
+
 // ResidualScore is how much of the original lettering a reader can still see.
 //
-// Measured separates "the reader can still see nothing" from "this was never measured". They are
+// State separates "the reader can still see nothing" from "this was never measured". They are
 // the same zero in JSON and the aggregates used to take both, so a run that stored no render
 // scored as the best possible concealment - see the 2026-08-15 parity run. Anything reading
-// Residual or Halo for a gate, a worst-of or a mean must check Measured first.
+// Residual or Halo for a gate, a worst-of or a mean must check IsMeasured first.
+//
+// Scores written before State existed carry only Measured; IsMeasured reads those as before.
 type ResidualScore struct {
-	Residual float64 `json:"residual"` // fraction of the source ink mask still showing ink
+	Residual float64 `json:"residual"` // fraction of the old lettering still showing
 	Halo     float64 `json:"halo"`     // the same, measured only in the band inside the plate edge
-	InkPx    int     `json:"inkPx"`    // size of the source ink mask, so a tiny sample is visible
-	Measured bool    `json:"measured"` // false when there was no render to compare against
+	InkPx    int     `json:"inkPx"`    // size of the old-lettering sample, so a tiny sample is visible
+	Measured bool    `json:"measured"` // false when there was nothing to compare against
+	State    string  `json:"state,omitempty"`
+	Reason   string  `json:"reason,omitempty"` // why a measurement is unmeasured
+	Basis    string  `json:"basis,omitempty"`  // how the lettering was identified
+}
+
+// IsMeasured reports whether Residual and Halo mean anything.
+func (r ResidualScore) IsMeasured() bool {
+	switch r.State {
+	case StateMeasured:
+		return true
+	case StateUnmeasured:
+		return false
+	}
+	return r.Measured
+}
+
+func unmeasuredResidual(reason string) ResidualScore {
+	return ResidualScore{State: StateUnmeasured, Reason: reason}
+}
+
+func measuredResidual(basis string) ResidualScore {
+	return ResidualScore{State: StateMeasured, Measured: true, Basis: basis}
 }
 
 // luma is the same weighting internal/ocr uses for its contrast floor, so the lab and the app
@@ -40,11 +79,8 @@ func luma(r, g, b uint32) int {
 	return (299*int(r>>8) + 587*int(g>>8) + 114*int(b>>8)) / 1000
 }
 
-// inkMask marks the pixels inside a region that stand out from the region's own median luma.
-// Local by construction: the median is taken over the region, not the page, because a caption
-// on a dark panel and a line on white paper have opposite polarity and a global threshold gets
-// one of them wrong.
-func inkMask(img image.Image, r truth.Region, w, h int) *truth.Mask {
+// regionLumas collects the luma of every pixel inside a region.
+func regionLumas(img image.Image, r truth.Region, w, h int) []int {
 	region := r.Rasterize(w, h)
 	x0, y0, x1, y1 := r.Bounds()
 	x0, y0 = max(x0, 0), max(y0, 0)
@@ -60,6 +96,22 @@ func inkMask(img image.Image, r truth.Region, w, h int) *truth.Mask {
 			lumas = append(lumas, luma(cr, cg, cb))
 		}
 	}
+	return lumas
+}
+
+// inkMask marks the pixels inside a region that stand out from the region's own median luma.
+// Local by construction: the median is taken over the region, not the page, because a caption
+// on a dark panel and a line on white paper have opposite polarity and a global threshold gets
+// one of them wrong.
+//
+// Only meaningful where the background is a single tone; see unsupportedBackground.
+func inkMask(img image.Image, r truth.Region, w, h int) *truth.Mask {
+	region := r.Rasterize(w, h)
+	x0, y0, x1, y1 := r.Bounds()
+	x0, y0 = max(x0, 0), max(y0, 0)
+	x1, y1 = min(x1, w), min(y1, h)
+
+	lumas := regionLumas(img, r, w, h)
 	m := truth.NewMask(w, h)
 	if len(lumas) == 0 {
 		return m
@@ -82,13 +134,10 @@ func inkMask(img image.Image, r truth.Region, w, h int) *truth.Mask {
 }
 
 // Covered is the fraction of the group's own text area that an opaque plate hides. Geometric,
-// so it works without a rendered screenshot and is the cheap check; ResidualInk is the honest
-// one and needs the render.
+// so it works without a rendered screenshot and is the cheap check; the residual is the honest
+// one and needs a text-hidden capture.
 func Covered(plates []evidence.Plate, g truth.Group, w, h int) float64 {
-	regions := g.Lines
-	if len(regions) == 0 {
-		regions = []truth.Region{g.Bounds}
-	}
+	regions := groupRegions(g)
 	text := truth.RasterizeAll(regions, w, h)
 	area := text.Area()
 	if area == 0 {
@@ -97,23 +146,40 @@ func Covered(plates []evidence.Plate, g truth.Group, w, h int) float64 {
 	return float64(text.IntersectArea(PlateMask(plates, w, h))) / float64(area)
 }
 
-// ResidualInk measures what a reader can actually still see.
+// groupRegions is the group's line boxes, or its bounds when it has none.
+func groupRegions(g truth.Group) []truth.Region {
+	if len(g.Lines) == 0 {
+		return []truth.Region{g.Bounds}
+	}
+	return g.Lines
+}
+
+// ResidualInk estimates what a reader can still see when no independent lettering mask exists.
 //
-// The source image gives the ink mask - which pixels were lettering. The rendered image is then
+// The source gives an ink mask - pixels far from the region's median luma. The capture is then
 // asked, at exactly those pixels, whether something ink-like is still there. That catches the
 // two failures a geometric check cannot: a plate that is slightly too small and leaves ascenders
 // showing, and a plate whose sampled "paper" colour is transparent enough or wrong enough that
 // the original shows through.
-func ResidualInk(source, rendered image.Image, g truth.Group, w, h int) ResidualScore {
-	regions := g.Lines
-	if len(regions) == 0 {
-		regions = []truth.Region{g.Bounds}
+//
+// The estimate rests on the background being one tone. On a gradient or a texture the background
+// itself lands in the ink mask on both sides, so removing the real lettering barely moves the
+// ratio (measured 90.86% and 96.89% with the lettering exactly removed). Such a region returns
+// unmeasured with no percentage; ResidualKnownMask is the measurement that works there.
+//
+// Pass the text-hidden capture, not the normal render: replacement glyphs drawn on the old
+// coordinates would otherwise count as old ink.
+func ResidualInk(source, hidden image.Image, g truth.Group, w, h int) ResidualScore {
+	if source == nil || hidden == nil {
+		return unmeasuredResidual("source or text-hidden capture unavailable")
 	}
-	var s ResidualScore
-	if source == nil || rendered == nil {
-		return s // not measured; Measured stays false and the caller must not read the zeros
+	regions := groupRegions(g)
+	for _, r := range regions {
+		if reason := unsupportedBackground(regionLumas(source, r, w, h)); reason != "" {
+			return unmeasuredResidual(reason + "; no independent lettering mask declared")
+		}
 	}
-	s.Measured = true
+	s := measuredResidual(BasisFlatRegion)
 	srcInk := truth.NewMask(w, h)
 	for _, r := range regions {
 		srcInk.Or(inkMask(source, r, w, h))
@@ -122,17 +188,37 @@ func ResidualInk(source, rendered image.Image, g truth.Group, w, h int) Residual
 	if s.InkPx == 0 {
 		return s
 	}
-	renderedInk := truth.NewMask(w, h)
+	hiddenInk := truth.NewMask(w, h)
 	for _, r := range regions {
-		renderedInk.Or(inkMask(rendered, r, w, h))
+		hiddenInk.Or(inkMask(hidden, r, w, h))
 	}
-	s.Residual = float64(srcInk.IntersectArea(renderedInk)) / float64(s.InkPx)
+	s.Residual = float64(srcInk.IntersectArea(hiddenInk)) / float64(s.InkPx)
 
-	// The halo band: a ring just inside the group's bounds.
+	ring := haloRing(g, w, h)
+	if ring == nil {
+		return s
+	}
+	ringInk := truth.NewMask(w, h)
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			if ring.At(x, y) && srcInk.At(x, y) {
+				ringInk.Set(x, y)
+			}
+		}
+	}
+	if n := ringInk.Area(); n > 0 {
+		s.Halo = float64(ringInk.IntersectArea(hiddenInk)) / float64(n)
+	}
+	return s
+}
+
+// haloRing is the ring just inside the group's bounds, or nil when the group is too small to
+// have one.
+func haloRing(g truth.Group, w, h int) *truth.Mask {
 	x0, y0, x1, y1 := g.Bounds.Bounds()
 	band := int(float64(min(x1-x0, y1-y0)) * haloBandFraction)
 	if band < 1 {
-		return s
+		return nil
 	}
 	ring := truth.NewMask(w, h)
 	outer := g.Bounds.Rasterize(w, h)
@@ -144,35 +230,24 @@ func ResidualInk(source, rendered image.Image, g truth.Group, w, h int) Residual
 			}
 		}
 	}
-	ringInk := truth.NewMask(w, h)
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			if ring.At(x, y) && srcInk.At(x, y) {
-				ringInk.Set(x, y)
-			}
-		}
-	}
-	if n := ringInk.Area(); n > 0 {
-		s.Halo = float64(ringInk.IntersectArea(renderedInk)) / float64(n)
-	}
-	return s
+	return ring
 }
 
-// ContrastScore is whether the replacement text is legible where it was drawn.
+// ContrastScore is the luma separation of a plate's rectangle in a rendered image. It is a
+// property of the background and the plate fill, not a verdict on the replacement text: it reads
+// the same with no text drawn and with any font size (see ReplacementReadability for the glyphs).
 type ContrastScore struct {
 	MinLuma  float64 `json:"minLumaSeparation"`
 	MeanLuma float64 `json:"meanLumaSeparation"`
 	Plates   int     `json:"plates"`
 }
 
-// RenderedContrast measures the luma separation between a plate's drawn text and its drawn
-// background *in the rendered image*.
+// BackgroundContrast measures the luma separation inside each plate's rectangle in a rendered
+// image: the dominant tone against the 5th and 95th percentile tails.
 //
-// The strategic spec is explicit that colour adaptation is a quality aid and not permission to
-// draw unreadable text, and the sampled bg/ink values recorded in the evidence are what the code
-// intended - not what landed. A plate whose ink was sampled from a shadow, or whose background
-// was re-derived by the browser's own rendering, only shows up when the pixels are read back.
-func RenderedContrast(rendered image.Image, plates []evidence.Plate, w, h int) ContrastScore {
+// It deliberately does not know where the glyphs are. A texture with no replacement text at all
+// reports 140 here, and changing the plate's font from 1 px to 16 px changes nothing.
+func BackgroundContrast(rendered image.Image, plates []evidence.Plate, w, h int) ContrastScore {
 	s := ContrastScore{MinLuma: -1}
 	var seps []float64
 	for _, p := range plates {
@@ -194,8 +269,8 @@ func RenderedContrast(rendered image.Image, plates []evidence.Plate, w, h int) C
 			continue
 		}
 		sort.Ints(lumas)
-		// Background is the plate's dominant colour (median); text is the minority that stands
-		// away from it. The 5th/95th percentiles resist antialiasing at glyph edges.
+		// Background is the plate's dominant colour (median); the tails stand away from it. The
+		// 5th/95th percentiles resist antialiasing at glyph edges.
 		med := lumas[len(lumas)/2]
 		lo := lumas[len(lumas)*5/100]
 		hi := lumas[len(lumas)*95/100]

@@ -123,6 +123,8 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
 .shot{margin:.9rem 0 0}
 .shot img{display:block;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .shot figcaption{color:var(--muted);font-size:.8rem;margin-top:.35rem}
+.hero-video{max-width:960px}
+.hero-video video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .subject-index{columns:3 14rem;column-gap:1.5rem}
 .subject-index li{break-inside:avoid}
 .glossary dt{font-family:var(--font-heading);color:var(--text);font-weight:600;margin-top:.8rem}

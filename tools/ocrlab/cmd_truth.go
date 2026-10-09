@@ -45,8 +45,12 @@ func cmdSynth(args []string) error {
 	if err := corpus.Save(p.manifest, m); err != nil {
 		return err
 	}
-	fmt.Printf("synth: %d scene(s) drawn into %s, %d annotation(s) written to %s\n",
-		len(scenes), filepath.Join(p.root, synth.Dir), len(anns), p.annotations)
+	masks, err := synth.GenerateLettering(p.annotations)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("synth: %d scene(s) drawn into %s, %d annotation(s) and %d lettering mask(s) written to %s\n",
+		len(scenes), filepath.Join(p.root, synth.Dir), len(anns), masks, p.annotations)
 	return nil
 }
 

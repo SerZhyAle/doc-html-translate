@@ -43,6 +43,15 @@ func LoadData(dir string) (*Data, error) {
 	if err := readJSON(filepath.Join(dir, "summary.json"), &summary); err != nil {
 		return nil, err
 	}
+	d, _ := evidence.LoadDeclaration(dir)
+	summary.EvidenceIssues = append(summary.EvidenceIssues, evidence.Issues(dir, run, d)...)
+	summary.EvidenceIssues = append(summary.EvidenceIssues, evidence.SnapshotIssues(dir, run, d)...)
+	for _, pair := range []struct{ name, hash string }{{"evidence.json", summary.EvidenceDigest}, {"scores.json", summary.ScoresDigest}, {"declaration.json", summary.DeclarationDigest}} {
+		data, err := os.ReadFile(filepath.Join(dir, pair.name))
+		if err != nil || pair.hash == "" || evidence.Digest(data) != pair.hash {
+			summary.EvidenceIssues = append(summary.EvidenceIssues, pair.name+": unavailable or changed since scoring")
+		}
+	}
 	return &Data{Run: run, Scores: scores, Summary: &summary}, nil
 }
 
@@ -59,6 +68,10 @@ func WriteMarkdown(dir string, d *Data) error {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# OCR visual-fidelity report - %s (%s)\n\n", d.Run.RunID, d.Run.Edition)
 	fmt.Fprintf(&b, "**Started:** %s  \n", d.Run.StartedAt)
+	fmt.Fprintf(&b, "**Scope:** %s; procedure %s. No hard failure is not an acceptance PASS.\n\n", or(d.Summary.Purpose, "legacy unspecified"), or(d.Summary.Procedure, "legacy"))
+	for _, issue := range d.Summary.EvidenceIssues {
+		fmt.Fprintf(&b, "- Unavailable evidence: %s\n", issue)
+	}
 	fmt.Fprintf(&b, "**Engine:** %s, tessdata %s, lang %s  \n",
 		or(d.Run.Engine.Tesseract, "unknown"), or(d.Run.Engine.TessdataVersion, "unknown"), d.Run.Engine.Lang)
 	fmt.Fprintf(&b, "**Browser:** %s  \n", or(d.Run.Browser.Version, d.Run.Browser.Name))
@@ -68,6 +81,10 @@ func WriteMarkdown(dir string, d *Data) error {
 	// more, and a reader who skips this line will misread the rest of the page.
 	fmt.Fprintf(&b, "**Coverage:** %d scene(s) in the run, %d scored, %d skipped.\n\n",
 		len(d.Run.Scenes), len(d.Scores), len(d.Summary.Skipped))
+	fmt.Fprintf(&b, "**Evidence:** %s Scoring, the gate and this report always run on the evidence as it stands.\n\n", evidenceLine(d.Run))
+	writeReusedMarkdown(&b, d.Run)
+	fmt.Fprintf(&b, "**Not measured:** concealment in %d scene(s), painted damage in %d scene(s); those carry no number in the tables below.\n\n",
+		d.Summary.Overall.UnmeasuredConcealment, d.Summary.Overall.UnmeasuredDamage)
 	if len(d.Summary.Skipped) > 0 {
 		b.WriteString("| Skipped scene | Why |\n|---|---|\n")
 		for _, s := range d.Summary.Skipped {
@@ -91,24 +108,32 @@ func WriteMarkdown(dir string, d *Data) error {
 			for _, f := range s.Failures {
 				fmt.Fprintf(&b, "| `%s` | %s |\n", s.SceneID, f)
 			}
+			if s.Loss != nil {
+				fmt.Fprintf(&b, "| `%s` | loss point: %s |\n", s.SceneID, s.Loss)
+			}
 		}
 	}
 
 	b.WriteString("\n## Per scene\n\n")
-	b.WriteString("| Scene | Recall | CER | IoU | Covered | Residual | Damage px | Merges | Clipped | OCR ms |\n")
-	b.WriteString("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+	b.WriteString("| Scene | Recall | CER | IoU | Covered | Residual | Painted damage px | Rectangle intrusion px | Replacement glyphs | Merges | Clipped | OCR ms |\n")
+	b.WriteString("|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|\n")
 	for _, s := range sortedScores(d.Scores) {
-		fmt.Fprintf(&b, "| `%s` | %.2f | %.2f | %.2f | %.2f | %.2f | %d | %d | %d | %d |\n",
+		fmt.Fprintf(&b, "| `%s` | %.2f | %.2f | %.2f | %.2f | %s | %s | %d | %s | %d | %d | %d |\n",
 			s.SceneID, s.Detection.Recall, s.Text.MeanCER, s.Placement.MeanIoU, s.Covered,
-			s.Residual.Residual, s.Damage.ProtectedHit, s.Grouping.Merges, totalClipped(s), s.Cost.OcrMs)
+			residualCell(s.Residual), damageCell(s.Damage), s.RectangleIntrusion.ProtectedHit,
+			readabilityCell(s.Readability), s.Grouping.Merges, totalClipped(s), s.Cost.OcrMs)
 	}
+	b.WriteString("\nResidual is the share of the known old lettering still showing in the text-hidden capture; " +
+		"it is `unmeasured` where the background is not a single tone and no lettering mask is declared. " +
+		"Painted damage counts protected pixels the overlay changed; rectangle intrusion is the plates' bounding boxes over protected content. " +
+		"Replacement glyphs describe the text actually drawn, not the plate box.\n")
 	b.WriteString("\nOpen `report.html` for the side-by-side pictures of every scene.\n")
 
 	return os.WriteFile(filepath.Join(dir, "report.md"), []byte(b.String()), 0o644)
 }
 
 func writeBucketTable(b *strings.Builder, label string, rows []bucketRow) {
-	fmt.Fprintf(b, "| %s | Scenes | Recall | Precision | CER | IoU | Worst IoU | Covered | Worst residual | Merges | Splits | Damage px | Clipped | Cross-group | Drift | Failing |\n", label)
+	fmt.Fprintf(b, "| %s | Scenes | Recall | Precision | CER | IoU | Worst IoU | Covered | Worst residual (measured) | Merges | Splits | Painted damage px | Clipped | Cross-group | Drift | Failing |\n", label)
 	b.WriteString("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
 	if len(rows) == 0 {
 		fmt.Fprintf(b, "| _no scored scenes_ | | | | | | | | | | | | | | | |\n")

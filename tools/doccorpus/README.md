@@ -18,14 +18,44 @@ Run from the repository root, in PowerShell (Node and Go are on PATH there).
 | `node tools/doccorpus/run.mjs --edition windows` | Convert each case with the desktop CLI, open the generated page in headless Chrome, record the probe, text, DOM, log and screenshots. |
 | `node tools/doccorpus/run.mjs --edition extension` | Load the unpacked extension and open the same bytes in its viewer; same probe, same records. |
 | `go run ./tools/doccorpus report <run-dir>` | Grade every result and write `report.md` + `report.json` into the run. |
+| `go run ./tools/doccorpus verdict <case-folder>` | Grade one case folder with today's judge and print the verdict as one JSON line. `run.mjs` asks it before reusing a case. |
 
 `run.mjs` flags: `--case <id>` / `--class <class>` (repeatable), `--split dev|holdout|all`,
 `--ocr default|on`, `--cli <exe>` (default `temp/doccorpus/bin/doc-html-translate.exe`, build it with
 `go build -o temp/doccorpus/bin/doc-html-translate.exe ./cmd/doc-html-translate`), `--run <dir>`,
-`--budget <seconds>` per case. Each pass lands in `<run>/<edition>-<ocr mode>/<case>/`.
+`--budget <seconds>` per case, `--fresh`, `--reuse-from <dir>`. Each pass lands in
+`<run>/<edition>-<ocr mode>/<case>/`.
 
 A full run takes about an hour on the owner's machine; start it detached from anything with a
 short timeout.
+
+## Reusing an unchanged case
+
+A long case costs up to half an hour, so a case is not collected again when its inputs are identical
+to an earlier run that settled and passed. `run.mjs` computes a **reuse key** per case and records it
+(with the sizes of the case folder's files) in `result.json` as `reuse`; a later run copies the
+newest earlier case folder with the same key instead of rendering it again.
+
+| Key component | |
+|---|---|
+| source | the case's file hash, plus its file, class, language and effective OCR language |
+| edition and OCR mode | `windows` / `extension`, `default` / `on` - the two editions' keys cannot collide |
+| producer digest | every non-test byte of `internal`, `cmd/doc-html-translate`, `extension/src` and `tools/doccorpus` (test files and `testdata` excluded) |
+| browser and tools | the browser build; for `windows` the CLI's version and **exe bytes**, Tesseract, the installed pack's hash and the bundled helper; for `extension` its version and tesseract.js |
+| expectation | the hash of the case's `DEV/doccorpus/expect/<id>.json` |
+| platform | `process.platform/arch` |
+
+Reuse also needs `result.collection.outcome === "settled"`, no error, the case folder still holding
+exactly the files and sizes recorded when it finished, and **today's judge** (`doccorpus verdict`)
+answering `PASS` or `PASS WITH ADVISORIES`. An unsettled, timed-out, errored, failing or
+could-not-verify case, a folder that was edited, and a result from before this feature are collected
+again. Only the collection is reused: the report still grades every result.
+
+The copied `result.json` carries `reusedFrom` (`caseDir`, `keyDigest`, `producer`, `collectedAt`,
+`reusedAt`, `verdict`); `run.mjs` logs `reused <case> from <folder>` and ends with `collected N,
+reused M`, and `report.md` marks reused cells with `*` and lists them. `--fresh` collects every case
+(its results are still recorded under their key). `--reuse-from` takes one run directory or a folder
+of runs; the default is `temp/doccorpus`.
 
 ## Layout
 
@@ -39,6 +69,13 @@ temp/doccorpus/<run>/           result.json, convert.log, text.txt, plates.txt, 
 The case record is a layer beside the OCR lab's scene manifest (`DEV/ocrlab/corpus.json`), not a
 second account of the same asset: a case that is also an OCR scene names it in `ocrScene`, and the
 lab keeps its own annotations and scoring.
+
+The image lab's [declared evidence and review workflow](../ocrlab/README.md) keeps machine provenance,
+annotation drafts and human approvals distinct. Legacy `commons-api` licence stamps cannot supply
+a human rights decision. An image lab `selected-dev` verdict does not substitute for this campaign's
+document-level expectations, lazy OCR, navigation checks or per-edition campaign verdict. Existing
+shared CDP support remains in place; ticket 109 does not remove a document runner without equivalent
+evidence.
 
 ## Verdicts
 
@@ -58,6 +95,39 @@ The two text-survival bounds in `judge.go` (under 50 % of the source text layer 
 under 85 % an advisory) are gross-damage detectors set on 2026-09-29 for run 1, not quality
 thresholds. OCR text quality is reported as a measurement (`letteringRecall`) with **no** bound:
 a bound needs a dated baseline and a measured reason, which the campaign has not produced yet.
+
+## When the collector calls a page finished
+
+A page is not finished because the DOM stopped changing: the extension renders a PDF in chunks of
+100 pages built off-DOM, so the tree is frozen at a chunk boundary while the status bar still reads
+`Rendering page 13 / 184`. `collect.mjs` (pure, tested without a browser in
+`extension/test/doccorpus-collect.test.mjs`) classifies every probe into one stage, first match wins:
+
+| Stage | Meaning |
+|---|---|
+| `starting` | Reader not ready, or a loader status (`Downloading..`, `Reading EPUB..`) with nothing on the page yet. |
+| `rendering-active` | Status `Rendering page n / N`, or fewer page sections than the page total, or pictures still decoding. |
+| `awaiting-scroll` | Status `Pages 1-K of N - keep scrolling`: the next chunk builds when the page is scrolled. |
+| `extracting` | Page-image extraction still pending (`data-pdf-page` / `.pdf-page-pending`). |
+| `ocr-active` | `OCR: done/total` below the total, a `.ocr-pending` wrapper, or `Recognizing text..`. |
+| `settled` | None of the above. |
+| `producer-error` | The viewer replaced the document with a notice heading (the "Little or no text" banner is a result, not an error). |
+
+`collect` reports `settled` only when the stage is `settled`, the scroll is at the bottom and the
+page signature held for three polls. Otherwise the run ends with `outcome` `timeout` (budget spent)
+or `producer-error`, written to `result.json` as `collection`:
+`{outcome, stage, rendered, total, ocrDone, ocrTotal, extractionPending, polls}`. `truncated` stays
+and equals `outcome !== "settled"`.
+
+**An unsettled run is incomplete evidence about the collector, never a product failure.** The judge
+reports `incomplete evidence: stage S, a/b` (rendered/total pages, OCR done/total, or extracted/rendered
+pages, by stage) as `COULD NOT VERIFY` and does not grade page loss, the OCR-plate check or the
+partial-text counts on it. A settled run with missing pages still fails. Re-run the case with a larger
+`--budget` to get a verdict.
+
+The status literals the classifier matches are listed in `VIEWER_STATUS`; a test asserts each one still
+exists in `extension/src/viewer.js` and the English catalog, so a reworded status fails a test instead of
+quietly bringing back the early "settled".
 
 ## The rules a contributor must not break
 

@@ -61,7 +61,7 @@ CLI (doc-html-translate) और GUI (doc-html-ui) दोनों शामि�
 ब्राउज़र के अंतर्निहित पृष्ठ अनुवाद से एक क्लिक में मुफ़्त अनुवाद - API कुंजी की ज़रूरत नहीं
 
 @@Feature9
-पूरी तरह ऑफ़लाइन काम करता है; MIT लाइसेंस के तहत मुक्त स्रोत
+रूपांतरण और पढ़ना आपके पीसी पर होता है; MIT लाइसेंस के तहत मुक्त स्रोत
 
 @@Feature10
 परिणाम सादा HTML है - किसी भी ब्राउज़र में, किसी भी उपकरण पर खुलता है और पढ़ने योग्य बना रहता है
@@ -76,25 +76,25 @@ CLI (doc-html-translate) और GUI (doc-html-ui) दोनों शामि�
 13 भाषाओं में इंटरफ़ेस, आपकी Windows भाषा के अनुसार अपने आप चुना जाता है
 
 @@SearchTerm1
-epub से html
+epub to html
 
 @@SearchTerm2
-pdf से html
+translate epub
 
 @@SearchTerm3
-ईबुक कनवर्टर
+pdf book translate
 
 @@SearchTerm4
-mobi azw3 fb2
+ebook कन्वर्टर
 
 @@SearchTerm5
-ocr दस्तावेज़ अनुवाद
+comic translate
 
 @@SearchTerm6
-कॉमिक cbz cbr
+cbz reader
 
 @@SearchTerm7
-ऑफ़लाइन अनुवाद
+फोटो से टेक्स्ट अनुवाद
 
 @@ReleaseNotes
 - FileDO की गोपनीय फ़ाइलें (.fd-sec) सीधे खुलती हैं: कन्वर्टर पासवर्ड पूछता है, कन्वर्ट करता है और अस्थायी प्रति हटा देता है।

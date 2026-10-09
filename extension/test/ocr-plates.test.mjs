@@ -103,12 +103,22 @@ test("renderPlates records the concealment mode and paints its background", () =
 // fakePlate is a plate whose text needs `perCqw` pixels of height per cqw of font. Its box is the
 // inline min-height unless fitPlate released it to height:auto, in which case it is as tall as its
 // text - which is what "released and grows" means in a browser.
-function fakePlate({ base, minHeight, perCqw }) {
+//
+// The plate sits in a figure `figureHeight` px tall. Like Chrome, the fake reports the computed
+// min-height as the unresolved percentage the stylesheet wrote: `minHeight` (px) is converted to
+// the percentage of the figure that yields it, or `minHeightPct` states the percentage directly.
+function fakePlate({ base, minHeight, minHeightPct, perCqw, figureHeight = 200 }) {
   const style = { fontSize: base > 0 ? `${base}cqw` : "", height: "" };
   const plate = {
     dataset: {},
     style,
     minHeight,
+    minHeightPct,
+    parentNode: { getBoundingClientRect: () => ({ height: figureHeight }) },
+    computedMinHeight() {
+      const pct = this.minHeightPct ?? (this.minHeight / figureHeight) * 100;
+      return `${pct}%`;
+    },
     get scrollHeight() {
       const m = /([0-9.]+)cqw/.exec(style.fontSize);
       return m ? parseFloat(m[1]) * perCqw : 0;
@@ -122,7 +132,7 @@ function fakePlate({ base, minHeight, perCqw }) {
 
 function withComputedStyle(fn) {
   const prev = globalThis.getComputedStyle;
-  globalThis.getComputedStyle = (el) => ({ minHeight: `${el.minHeight}px` });
+  globalThis.getComputedStyle = (el) => ({ minHeight: el.computedMinHeight ? el.computedMinHeight() : "" });
   try { fn(); } finally { globalThis.getComputedStyle = prev; }
 }
 const cqw = (plate) => parseFloat(/([0-9.]+)cqw/.exec(plate.style.fontSize)[1]);
@@ -180,6 +190,18 @@ test("fitPlate re-fits from the compile-time size, not from its own last answer"
     assert.equal(p.dataset.ocrCqw, "10");
     assert.ok(cqw(p) > first, "a shorter translation gets its size back");
     assert.ok(Math.abs(cqw(p) - 10 * FONT_GROW_CAP) < 1e-9);
+  });
+});
+
+test("fitPlate resolves a percentage min-height against the figure, so a short figure keeps its plate inside", () => {
+  withComputedStyle(() => {
+    // A phone-sized figure: 34.29% of 51 px is 17.49 px. Read as a bare number the percentage would be
+    // 34.29 px, two thirds of the figure, and the plate would hang past its bottom edge.
+    const p = fakePlate({ base: 1, minHeightPct: 34.29, perCqw: 1, figureHeight: 51 });
+    fitPlate(p);
+    const h = parseFloat(p.style.height);
+    assert.ok(Math.abs(h - 51 * 0.3429) < 1e-9, `height ${p.style.height}, want 34.29% of 51 px`);
+    assert.ok(h <= 51, "the plate is no taller than its figure");
   });
 });
 

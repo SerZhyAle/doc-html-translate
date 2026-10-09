@@ -62,7 +62,7 @@ Incluye una CLI (doc-html-translate) y una interfaz (doc-html-ui); sin cuenta, s
 Traducción gratuita con un clic usando la traducción de página del navegador - sin clave de API
 
 @@Feature9
-Funciona totalmente sin conexión; código abierto con licencia MIT
+La conversión y la lectura se ejecutan en su PC; código abierto con licencia MIT
 
 @@Feature10
 La salida es HTML sencillo - se abre en cualquier navegador, en cualquier dispositivo, y sigue siendo legible
@@ -77,25 +77,25 @@ Una página larga o dividida en capítulos con índice - tú eliges
 Interfaz en 13 idiomas, elegida automáticamente según el idioma de Windows
 
 @@SearchTerm1
-epub a html
+convertir epub a html
 
 @@SearchTerm2
-pdf a html
+traducir epub
 
 @@SearchTerm3
-conversor de ebooks
+traducir libro pdf
 
 @@SearchTerm4
-mobi azw3 fb2
+convertidor de ebook
 
 @@SearchTerm5
-ocr traducir documento
+lector epub
 
 @@SearchTerm6
-cómics cbz cbr
+traducir cómic
 
 @@SearchTerm7
-traducción sin conexión
+traducir texto de imagen
 
 @@ReleaseNotes
 - Los archivos secretos de FileDO (.fd-sec) se abren directamente: el conversor pide la contraseña, convierte y elimina la copia temporal.

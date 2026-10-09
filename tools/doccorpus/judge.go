@@ -24,20 +24,61 @@ const (
 
 // Result is one edition's record of one case, as tools/doccorpus/run.mjs writes it.
 type Result struct {
-	Schema                int      `json:"schema"`
-	CaseID                string   `json:"caseId"`
-	Edition               string   `json:"edition"`
-	OCRMode               string   `json:"ocrMode"`
-	Source                string   `json:"source"`
-	Error                 string   `json:"error"`
-	EnvironmentGap        string   `json:"environmentGap"`
-	IntentionalDifference string   `json:"intentionalDifference"`
-	Convert               *Convert `json:"convert"`
-	RenderMs              int      `json:"renderMs"`
-	Truncated             bool     `json:"truncated"`
-	Probe                 *Probe   `json:"probe"`
+	Schema                int         `json:"schema"`
+	CaseID                string      `json:"caseId"`
+	Edition               string      `json:"edition"`
+	OCRMode               string      `json:"ocrMode"`
+	Source                string      `json:"source"`
+	Error                 string      `json:"error"`
+	EnvironmentGap        string      `json:"environmentGap"`
+	IntentionalDifference string      `json:"intentionalDifference"`
+	Convert               *Convert    `json:"convert"`
+	RenderMs              int         `json:"renderMs"`
+	Truncated             bool        `json:"truncated"`
+	Collection            *Collection `json:"collection"`
+	Probe                 *Probe      `json:"probe"`
+	ReusedFrom            *ReusedFrom `json:"reusedFrom,omitempty"`
 
 	dir string // where the result's evidence lives
+}
+
+// Collection is how the collector's pass over the page ended (tools/doccorpus/collect.mjs). Any
+// outcome but "settled" means the reader was still producing the document when the pass stopped,
+// so what the probe holds is incomplete evidence about the collector, not a finding about the
+// product. The count fields are null when the page never showed that counter.
+type Collection struct {
+	Outcome           string `json:"outcome"`
+	Stage             string `json:"stage"`
+	Rendered          int    `json:"rendered"`
+	Total             *int   `json:"total"`
+	OCRDone           *int   `json:"ocrDone"`
+	OCRTotal          *int   `json:"ocrTotal"`
+	ExtractionPending int    `json:"extractionPending"`
+	Polls             int    `json:"polls"`
+}
+
+// Unsettled reports whether the pass ended before the reader finished.
+func (c *Collection) Unsettled() bool { return c != nil && c.Outcome != "" && c.Outcome != "settled" }
+
+// Progress is the "a/b" the stage is counting: recognised of queued images while OCR runs,
+// extracted of rendered pages while page images are pulled, otherwise rendered of total pages.
+func (c *Collection) Progress() string {
+	of := func(a int, b *int) string {
+		if b == nil {
+			return fmt.Sprintf("%d/?", a)
+		}
+		return fmt.Sprintf("%d/%d", a, *b)
+	}
+	switch c.Stage {
+	case "ocr-active":
+		if c.OCRDone != nil {
+			return of(*c.OCRDone, c.OCRTotal)
+		}
+	case "extracting":
+		total := c.Rendered
+		return of(max(total-c.ExtractionPending, 0), &total)
+	}
+	return of(c.Rendered, c.Total)
 }
 
 // Convert is the desktop conversion step.
@@ -192,7 +233,11 @@ func Judge(c Case, e *Expectation, r *Result) (j Judgement) {
 	if p.InternalLinksMissing > 0 {
 		j.fail("%d of %d in-page links point at no element (e.g. %s)", p.InternalLinksMissing, p.InternalLinks, strings.Join(p.MissingSample, " "))
 	}
-	if r.Truncated {
+	incomplete := r.incomplete()
+	switch {
+	case r.Collection.Unsettled():
+		j.gap("incomplete evidence: stage %s, %s", r.Collection.Stage, r.Collection.Progress())
+	case incomplete:
 		j.gap("the page did not settle within the probe budget - coverage is partial")
 	}
 
@@ -201,12 +246,10 @@ func Judge(c Case, e *Expectation, r *Result) (j Judgement) {
 	if e != nil && e.Pages > 0 && (c.Class == "comic-archive" || c.Class == "comic-image" || c.Class == "scanned-pdf") && !noTextNotice {
 		got := max(p.PageUnits, p.ImagesLoaded+p.Canvases)
 		j.Metrics["pages"] = float64(got)
-		if got < e.Pages {
-			if r.Truncated {
-				j.gap("%d of %d pages reached before the budget ran out", got, e.Pages)
-			} else {
-				j.fail("%d of %d pages reached the reader", got, e.Pages)
-			}
+		// An unsettled pass has already said so above, with its own counts: a page count taken
+		// while pages were still arriving is not a page loss.
+		if got < e.Pages && !incomplete {
+			j.fail("%d of %d pages reached the reader", got, e.Pages)
 		}
 	}
 
@@ -244,7 +287,7 @@ func Judge(c Case, e *Expectation, r *Result) (j Judgement) {
 	} else if (c.Class == "comic-image" || c.Class == "comic-archive") && p.Plates == 0 && !envBlocksOCR(r) {
 		j.advise("no OCR plate; whether the lettering is legible is not yet judged by a person")
 	}
-	if r.OCRMode == "on" && c.Class == "scanned-pdf" && e != nil && e.TextLayer == "none" && p.Plates == 0 && !envBlocksOCR(r) && !r.Truncated {
+	if r.OCRMode == "on" && c.Class == "scanned-pdf" && e != nil && e.TextLayer == "none" && p.Plates == 0 && !envBlocksOCR(r) && !incomplete {
 		j.fail("OCR enabled on an image-only scan and no plate was produced")
 	}
 
@@ -270,6 +313,15 @@ func Judge(c Case, e *Expectation, r *Result) (j Judgement) {
 		j.advise("ruby annotations are not preserved")
 	}
 	return j
+}
+
+// incomplete reports that the collector stopped before the reader finished. The collection record
+// is authoritative when present; the bare Truncated flag covers results written before it existed.
+func (r *Result) incomplete() bool {
+	if r.Collection != nil && r.Collection.Outcome != "" {
+		return r.Collection.Unsettled()
+	}
+	return r.Truncated
 }
 
 func envBlocksOCR(r *Result) bool { return strings.Contains(r.EnvironmentGap, "OCR language") }

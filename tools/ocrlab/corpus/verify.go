@@ -122,6 +122,7 @@ func Validate(m *Manifest, root string) []Problem {
 	var ps []Problem
 	add := func(r Rule, id, detail string) { ps = append(ps, Problem{Rule: r, SceneID: id, Detail: detail}) }
 
+	ps = append(ps, FamilyProblems(m)...)
 	seen := make(map[string]bool, len(m.Scenes))
 	ids := make(map[string]bool, len(m.Scenes))
 	for i := range m.Scenes {
@@ -141,7 +142,7 @@ func Validate(m *Manifest, root string) []Problem {
 		if s.Licence.NeedsAttribution() && s.Attribution == "" {
 			add(RuleNoAttribution, s.ID, string(s.Licence)+" requires attribution text")
 		}
-		if s.LicenceVerifiedBy == "" {
+		if !s.RightsReviewed() {
 			add(RuleNotVerified, s.ID, "no human has recorded reading the asset's own licence page")
 		}
 		if s.Licence.NeedsDownload() && s.SourceURL == "" {

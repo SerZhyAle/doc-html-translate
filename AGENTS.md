@@ -109,6 +109,7 @@ Run from repository root in PowerShell.
   slices a session can read line by line (`-Write` writes the manifest into the audit ticket's folder,
   `-Tail` slices files added since, `-Summary` measures the campaign and exits 0 only when it is closed).
   Hand-run; ticket 34 is its first campaign.
+- Free-promotion campaign (ticket 111; canon PROMOTION.md): `./scripts/promo-metrics.ps1` writes a dated, read-only counters checkpoint (GitHub, winget, Chrome, Edge, Store - `unknown` where unreadable, no telemetry); `tools/store/make-social-card.ps1` renders `assets/social-card-*.png`; `tools/store/make-demo.ps1` records and encodes `assets/demo.*`; the discoverability fields live in `docs/discoverability.json`. Every outward step of the campaign waits for the owner's go.
 - OCR visual-fidelity lab: go run ./tools/ocrlab verify | fetch | synth | seed | run | score | report | gate | exchange (see tools/ocrlab/README.md)
 
 Tool bootstrap (when missing):

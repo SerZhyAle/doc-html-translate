@@ -9,6 +9,11 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// maxEnginePath is the longest path, in characters, Tesseract can open: MAX_PATH (260) less the
+// terminator. The engine is a Win32 binary built without long-path support. A variable so a test
+// can inject another limit.
+var maxEnginePath = windows.MAX_PATH - 1
+
 // shortPath returns the 8.3 short name of an existing path, or p itself when the call fails or
 // the volume keeps no short names (then the long name comes back, and the ASCII check rejects it).
 func shortPath(p string) string {

@@ -28,6 +28,8 @@ import { release as osRelease } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { CDP, evaluate, findChrome, sleep, waitFor } from "../../extension/scripts/_ocrlab-cdp.mjs";
+import { collect, OCR_COUNTER, PAGE_TOTAL } from "./collect.mjs";
+import { caseKey, expectationSha, producerDigest, REUSE_SCHEMA, sizesOf, tryReuse } from "./reuse.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -55,7 +57,11 @@ const USAGE = `run.mjs - one edition's pass over the ticket 68 corpus
   --ocr <mode>         default (the shipped default path) | on (OCR enabled for every image)
   --cli <exe>          desktop CLI (default temp/doccorpus/bin/doc-html-translate.exe)
   --run <dir>          run directory (default temp/doccorpus/<timestamp>)
-  --budget <seconds>   probe budget per case before the result is marked truncated (default 300)
+  --budget <seconds>   probe budget per case before the result is marked incomplete (default 300)
+  --fresh              collect every case even when an earlier settled, passing result with
+                       identical inputs could be reused
+  --reuse-from <dir>   search only this run directory (or folder of runs) for reusable cases
+                       (default temp/doccorpus)
 `;
 
 function die(msg) {
@@ -64,16 +70,18 @@ function die(msg) {
 }
 
 function parseArgs(argv) {
-  const out = { edition: "", case: [], class: [], split: "all", ocr: "default", cli: "", run: "", budget: "300" };
+  const out = { edition: "", case: [], class: [], split: "all", ocr: "default", cli: "", run: "", budget: "300", fresh: false, reuseFrom: "" };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") return { help: true };
     if (!a.startsWith("--")) die(`unexpected argument ${a}`);
     const key = a.slice(2);
+    if (key === "fresh") { out.fresh = true; continue; }
     const value = argv[++i];
     if (value === undefined) die(`--${key} needs a value`);
     if (key === "case") out.case.push(value);
     else if (key === "class") out.class.push(value);
+    else if (key === "reuse-from") out.reuseFrom = value;
     else if (key in out) out[key] = value;
     else die(`unknown flag --${key}`);
   }
@@ -151,6 +159,8 @@ function environment(args, browserProduct) {
   if (args.edition === "windows") {
     env.cli = args.cli;
     env.cliVersion = firstLine(args.cli, ["-version"]);
+    // The exe's own bytes: the CLI under test may be older than the source tree it was built from.
+    env.cliSha256 = sha256(args.cli);
     env.tesseract = firstLine("tesseract", ["--version"]);
     env.tessdataDir = tessdataDir();
     env.installedOcrPacks = installedPacks();
@@ -231,6 +241,7 @@ const ROOT = `const ext = location.protocol === "chrome-extension:";
 
 // PROBE is taken on every scroll step, so it only counts. The text measure, the links and the
 // computed styles cost a walk over the whole document and are read once, after the walk (DETAIL).
+// The status patterns come from collect.mjs, which a test checks against the viewer's source.
 const PROBE = `(() => {
   ${ROOT}
   // An empty body is the desktop's location.replace stub (an EPUB index) on its way to the real page.
@@ -239,7 +250,8 @@ const PROBE = `(() => {
   const imgs = [...root.querySelectorAll("img")].filter((i) => i.getAttribute("src"));
   const toc = ext ? document.querySelectorAll("#toc a") : document.querySelectorAll(".dht-contents a");
   const status = ext ? (document.getElementById("status-text") || {}).textContent || "" : "";
-  const ocrProgress = /OCR: (\\d+)\\/(\\d+)/.exec(status);
+  const ocrProgress = new RegExp(${JSON.stringify(OCR_COUNTER.source)}).exec(status);
+  const totalMatch = ext ? new RegExp(${JSON.stringify(PAGE_TOTAL.source)}).exec((document.getElementById("page-total") || {}).textContent || "") : null;
   const notice = ext ? document.querySelector("#content .notice h1") : null;
   return JSON.stringify({
     state: "ready",
@@ -260,6 +272,11 @@ const PROBE = `(() => {
     status,
     ocrDone: ocrProgress ? Number(ocrProgress[1]) : null,
     ocrTotal: ocrProgress ? Number(ocrProgress[2]) : null,
+    ocrPending: root.querySelectorAll(".ocr-pending").length,
+    // A PDF page keeps data-pdf-page (and a reserved box, when it has no text) until its
+    // images are extracted; the desktop page has neither.
+    extractionPending: root.querySelectorAll("section[data-pdf-page], .pdf-page-pending").length,
+    pageTotal: totalMatch ? Number(totalMatch[1]) : null,
     notice: notice ? notice.textContent.trim() : "",
   });
 })()`;
@@ -305,57 +322,30 @@ const FULL_TEXT = `(() => {
   return JSON.stringify({ text: root.innerText, plates });
 })()`;
 
-const signature = (p) => [p.scrollHeight, p.textLen, p.images, p.imagesLoaded, p.canvases, p.plates, p.overlays, p.status, p.pageUnits].join("|");
-
 async function probe(b) {
   return JSON.parse(await evaluate(b.cdp, b.session, PROBE));
 }
 
-// walk scrolls the page top to bottom in viewport steps - lazy images, the viewer's deferred
-// PDF pages and its scroll-triggered OCR all load only when they are seen - then waits for the
-// page to hold still. It returns the last probe and whether the budget ran out first.
+// walk hands the page to collect(): scroll top to bottom, then wait until the reader has finished
+// producing the document - not merely until the DOM holds still (see collect.mjs). The result
+// carries the last ready probe and the collection record (outcome, stage, counts).
 async function walk(b, budgetMs, stepFactor) {
-  const deadline = Date.now() + budgetMs;
-  let y = 0;
-  let last = "";
-  let still = 0;
-  let stalled = 0;
-  let rewalks = 0;
-  let p = await probe(b);
-  while (Date.now() < deadline) {
-    const h = p.scrollHeight;
-    if (y < h) {
-      y += Math.round(VIEWPORT.height * stepFactor);
-      await evaluate(b.cdp, b.session, `window.scrollTo(0, ${y})`).catch((err) => { if (b.cdp.dead) throw err; });
-      await sleep(120);
-    } else {
-      await sleep(1000);
-    }
-    try {
-      const next = await probe(b);
-      if (next.state !== "ready") continue;
-      p = next;
-    } catch (err) {
-      if (b.cdp.dead) throw err;
-      continue; // a navigation in flight (the EPUB index stub) - the old context is gone, ask again
-    }
-    // A standalone image reports "Recognizing text.." rather than an "OCR: x/y" counter; its page
-    // appears only when recognition is done, so that status is busy too.
-    const ocrBusy = (p.ocrTotal !== null && p.ocrDone < p.ocrTotal) || /Recognizing|Loading/i.test(p.status);
-    const sig = signature(p);
-    if (y >= p.scrollHeight && !ocrBusy && p.imagesPending === 0 && sig === last) still += 1;
-    else still = 0;
-    // Recognition waits for a picture to be seen, and a page's pictures are extracted on the
-    // same scroll: one that lands after the walk has passed it stays unrecognized until the
-    // reader comes back. A reader would; so does the walk - once, from the top - when OCR
-    // stands still at the bottom.
-    if (y >= p.scrollHeight && ocrBusy && sig === last) stalled += 1;
-    else stalled = 0;
-    if (stalled >= 5 && rewalks < 1) { rewalks += 1; stalled = 0; y = -Math.round(VIEWPORT.height * stepFactor); }
-    last = sig;
-    if (still >= 3) return { probe: p, truncated: false };
-  }
-  return { probe: p, truncated: true };
+  const { probe: last, ...collection } = await collect({
+    probe: async () => {
+      try {
+        return await probe(b);
+      } catch (err) {
+        if (b.cdp.dead) err.fatal = true; // a dead browser is the case's error, not a retry
+        throw err;
+      }
+    },
+    scroll: (y) => evaluate(b.cdp, b.session, `window.scrollTo(0, ${y})`).catch((err) => { if (b.cdp.dead) throw err; }),
+    sleep,
+    now: Date.now,
+    budgetMs,
+    stepPx: Math.round(VIEWPORT.height * stepFactor),
+  });
+  return { probe: last, collection, truncated: collection.outcome !== "settled" };
 }
 
 // readLarge fetches a long string in slices. One reply carrying a whole CJK book's DOM - every
@@ -457,6 +447,13 @@ async function runCase(ctx, c) {
   }
   const ocrLang = offered && installed ? c.ocrLang : "";
 
+  // An earlier settled, passing result with an identical key stands in for the collection (see
+  // reuse.mjs); the verdict is still asked of today's judge afterwards.
+  const keyInfo = caseKey({ edition: ctx.args.edition, ocrMode: ctx.args.ocr, c, ocrLang, env: ctx.env, producer: ctx.producer, expectation: expectationSha(REPO, c.id) });
+  const reuse = tryReuse({ repo: REPO, searchRoot: ctx.searchRoot, passName: ctx.passName, c, source: got, keyInfo, to: dir, fresh: ctx.args.fresh });
+  if (reuse.result) return reuse.result;
+  if (!ctx.args.fresh) console.log(`  fresh  ${c.id}: ${reuse.miss}`);
+
   let url;
   if (ctx.args.edition === "windows") {
     const conv = convertWindows(ctx.args, c, dir, ocrLang);
@@ -479,8 +476,12 @@ async function runCase(ctx, c) {
   const walked = await walk(ctx.browser, ctx.budgetMs, ctx.args.edition === "extension" ? 0.9 : 2.5);
   res.renderMs = Date.now() - t0;
   res.truncated = walked.truncated;
+  res.collection = walked.collection;
+  if (!walked.probe) { save(); return res; } // the page never became ready: nothing to measure
   res.probe = { ...walked.probe, ...JSON.parse(await evaluate(ctx.browser.cdp, ctx.browser.session, DETAIL)) };
   res.screenshots = await capture(ctx.browser, dir, walked);
+  // Written last, over the finished folder: the key a later run compares and the sizes it checks.
+  res.reuse = { schema: REUSE_SCHEMA, key: keyInfo.key, keyDigest: keyInfo.digest, files: sizesOf(dir) };
   save();
   return res;
 }
@@ -518,9 +519,16 @@ async function main() {
   let browser = await openBrowser(runDir, args.edition === "extension", seq);
   const env = environment(args, browser.product);
   writeFileSync(join(editionDir, "environment.json"), `${JSON.stringify(env, null, 2)}\n`);
-  const ctx = { args, env, offered: env.offeredOcrPacks, editionDir, base, browser, budgetMs: Number(args.budget) * 1000 };
+  const ctx = {
+    args, env, offered: env.offeredOcrPacks, editionDir, base, browser, budgetMs: Number(args.budget) * 1000,
+    // Always computed, even for --fresh: a fresh result is recorded under its key so later runs can reuse it.
+    producer: producerDigest(REPO),
+    searchRoot: resolve(REPO, args.reuseFrom || join("temp", "doccorpus")),
+    passName: `${args.edition}-${args.ocr}`,
+  };
   console.log(`doccorpus: ${cases.length} case(s), ${args.edition}, ocr=${args.ocr}, ${browser.product}\n  -> ${editionDir}`);
 
+  let reused = 0;
   try {
     for (const c of cases) {
       let r;
@@ -533,10 +541,14 @@ async function main() {
         writeFileSync(join(editionDir, c.id, "result.json"), `${JSON.stringify(r, null, 2)}\n`);
       }
       const p = r.probe;
+      if (r.reusedFrom) {
+        reused += 1;
+        console.log(`  reused ${c.id} from ${r.reusedFrom.caseDir} (collected ${r.reusedFrom.collectedAt}, verdict ${r.reusedFrom.verdict})`);
+      }
       const line = r.error ? `ERROR ${r.error}`
         : r.source !== "ok" ? `source ${r.source}`
         : r.convert && r.convert.exitCode !== 0 ? `convert exit ${r.convert.exitCode}`
-        : p ? `text ${p.textChars} img ${p.imagesLoaded}/${p.images} plates ${p.plates} toc ${p.tocEntries}${r.truncated ? " TRUNCATED" : ""}${p.notice ? ` notice "${p.notice}"` : ""}`
+        : p ? `text ${p.textChars} img ${p.imagesLoaded}/${p.images} plates ${p.plates} toc ${p.tocEntries}${r.truncated ? ` INCOMPLETE (${r.collection.outcome}, ${r.collection.stage}, ${r.collection.rendered}/${r.collection.total ?? "?"})` : ""}${p.notice ? ` notice "${p.notice}"` : ""}`
         : "no probe";
       console.log(`  ${c.id.padEnd(40)} ${line}`);
       if (ctx.browser.cdp.dead) {
@@ -550,6 +562,7 @@ async function main() {
     ctx.browser.child.kill();
     server.close();
   }
+  console.log(`doccorpus: collected ${cases.length - reused}, reused ${reused} of ${cases.length} case(s)`);
 }
 
 main().catch((err) => die(err.stack || err.message));

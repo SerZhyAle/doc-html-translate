@@ -32,7 +32,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "Zeigt PDF, EPUB und andere Dokumente als sauberes HTML, das die kostenlose Seitenübersetzung des Browsers lesen kann - inkl. Bild-OCR. 100% lokal.",
+    "message": "PDF, EPUB und mehr als sauberes HTML öffnen, das die kostenlose Browser-Übersetzung lesen kann - mit Bild-OCR. Konvertierung lokal.",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {

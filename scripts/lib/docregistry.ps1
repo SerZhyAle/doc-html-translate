@@ -151,9 +151,29 @@ function Test-IsAnnounced($Record) { return [bool]($Record.published -and $Recor
 
 function ConvertTo-XmlText([string]$s) { return $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;') }
 
+# The date a page last changed, for <lastmod> (canon PROMOTION section 3: the source file's commit date,
+# never the build time). A file with uncommitted changes, or not committed yet, carries today's date -
+# the date the commit that lands the change will carry - so the sitemap rendered before that commit is
+# the one rendered after it. Returns $null when git has nothing to say, and the caller omits the element.
+function Get-PageLastMod([string]$Root, [string]$File) {
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    try {
+        $dirty = & git -C $Root -c core.quotepath=false status --porcelain -- $File 2>$null
+        if ($LASTEXITCODE -ne 0) { return $null }
+        if (@($dirty | Where-Object { $_ }).Count -gt 0) { return (Get-Date -Format 'yyyy-MM-dd') }
+        $date = & git -C $Root -c core.quotepath=false log -1 --format=%cs -- $File 2>$null
+        if ($LASTEXITCODE -ne 0) { return $null }
+    } finally { $ErrorActionPreference = $prev }
+    $date = ([string]$date).Trim()
+    if ($date -match '^\d{4}-\d{2}-\d{2}$') { return $date }
+    return $null
+}
+
 # The sitemap, rendered from the records that announce pages, in record order and path order. Each
 # address a page serves gets its own <url>, repeating the page's whole hreflang cluster including a
 # self-reference - a version listed only as someone else's alternate is routinely left unindexed.
+# <priority> and <changefreq> are never written: Google ignores both (canon PROMOTION section 3).
 function Get-SitemapText([string]$Root, $Records, $Files) {
     $nl = "`n"
     $sb = [System.Text.StringBuilder]::new()
@@ -167,10 +187,12 @@ function Get-SitemapText([string]$Root, $Records, $Files) {
             if ($excluded -contains $f) { continue }
             if ($f -notmatch '\.html?$') { continue }
             $page = Get-PageAddresses (Join-Path $Root $f)
+            $lastmod = Get-PageLastMod $Root $f
             foreach ($loc in (Get-PageOwnAddresses $page)) {
                 if (-not $announced.Add($loc)) { continue }
                 [void]$sb.Append('  <url>' + $nl)
                 [void]$sb.Append("    <loc>$(ConvertTo-XmlText $loc)</loc>" + $nl)
+                if ($lastmod) { [void]$sb.Append("    <lastmod>$lastmod</lastmod>" + $nl) }
                 foreach ($a in $page.Alternates) {
                     [void]$sb.Append("    <xhtml:link rel=`"alternate`" hreflang=`"$(ConvertTo-XmlText $a.Lang)`" href=`"$(ConvertTo-XmlText $a.Href)`"/>" + $nl)
                 }

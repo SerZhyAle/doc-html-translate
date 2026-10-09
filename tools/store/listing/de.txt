@@ -63,7 +63,7 @@ Enthält eine CLI (doc-html-translate) und eine Oberfläche (doc-html-ui); kein 
 Kostenlose Übersetzung mit einem Klick über die Seitenübersetzung des Browsers - kein API-Schlüssel nötig
 
 @@Feature9
-Funktioniert vollständig offline; Open Source unter der MIT-Lizenz
+Konvertieren und Lesen laufen auf Ihrem PC; Open Source unter der MIT-Lizenz
 
 @@Feature10
 Das Ergebnis ist einfaches HTML - öffnet sich in jedem Browser, auf jedem Gerät, und bleibt lesbar
@@ -78,25 +78,25 @@ Eine lange Seite oder in Kapitel geteilt mit Inhaltsverzeichnis - Sie entscheide
 Oberfläche in 13 Sprachen, automatisch nach Ihrer Windows-Sprache gewählt
 
 @@SearchTerm1
-epub zu html
+epub in html umwandeln
 
 @@SearchTerm2
-pdf zu html
+epub reader
 
 @@SearchTerm3
-ebook konverter
+epub übersetzen
 
 @@SearchTerm4
-mobi azw3 fb2
+pdf buch übersetzen
 
 @@SearchTerm5
-texterkennung dokument
+ebook konverter
 
 @@SearchTerm6
-comic cbz cbr
+comic übersetzen
 
 @@SearchTerm7
-offline übersetzung
+text im bild übersetzen
 
 @@ReleaseNotes
 - FileDO-Geheimdateien (.fd-sec) lassen sich direkt öffnen: Der Konverter fragt nach dem Passwort, konvertiert und entfernt die temporäre Kopie.

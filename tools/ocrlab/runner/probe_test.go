@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -147,6 +148,113 @@ func TestStressCasesAreDeterministicAndComplete(t *testing.T) {
 	}
 }
 
+func TestConcealmentDiagnosticHidesDesktopTextWithoutLayoutChange(t *testing.T) {
+	if testing.Short() {
+		t.Skip("browser check")
+	}
+	browser, err := FindBrowser(filepath.Join(t.TempDir(), "profile"))
+	if err != nil {
+		t.Skipf("browser absent: %v", err)
+	}
+	defer browser.Close()
+	page := writeFixture(t)
+	probe, err := injectProbe(page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var results []*probeResult
+	for _, fragment := range []string{"#ocrlab-stress=none", "#ocrlab-stress=none-hidden"} {
+		dom, err := browser.DumpDOM(probe, fragment, Viewports[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, err := extractProbeResult(dom)
+		if err != nil {
+			t.Fatal(err)
+		}
+		results = append(results, r)
+	}
+	if len(results[0].Plates) != 1 || len(results[1].Plates) != 1 {
+		t.Fatal("missing plate observation")
+	}
+	a, b := results[0].Plates[0], results[1].Plates[0]
+	if a.Rect != b.Rect || a.FontPx != b.FontPx || a.ScrollHeight != b.ScrollHeight || a.ScrollWidth != b.ScrollWidth {
+		t.Fatal("diagnostic changed layout")
+	}
+	if b.Ink != "rgba(0, 0, 0, 0)" {
+		t.Fatalf("desktop text was not concealed: %q", b.Ink)
+	}
+}
+
+func TestPartialScreenshotCannotBecomeCompleteEvidence(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "shot.png")
+	if err := os.WriteFile(path, makeGreyPNG(t, 100, 100), 0644); err != nil {
+		t.Fatal(err)
+	}
+	r := &probeRect{Left: 0, Top: 0, Width: 100, Height: 200}
+	if err := CropToImage(path, r, 1, 100, 200, filepath.Join(dir, "mapped.png")); err == nil || !strings.Contains(err.Error(), "incomplete image capture") {
+		t.Fatalf("partial screenshot accepted: %v", err)
+	}
+}
+
+func TestBandedCapturePreservesTallImageCoordinates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("browser check")
+	}
+	dir := t.TempDir()
+	browser, err := FindBrowser(filepath.Join(dir, "profile"))
+	if err != nil {
+		t.Skipf("browser absent: %v", err)
+	}
+	defer browser.Close()
+	if err := os.WriteFile(filepath.Join(dir, "img.png"), makeGreyPNG(t, 400, 2400), 0644); err != nil {
+		t.Fatal(err)
+	}
+	page := filepath.Join(dir, "page.html")
+	content := strings.Replace(fixturePage, "aspect-ratio:400 / 200", "aspect-ratio:400 / 2400", 1)
+	content = strings.Replace(content, "</head>", "<style>.ocr-fig{width:400px}</style></head>", 1)
+	start := strings.Index(content, `<span class="ocr-box"`)
+	end := start + strings.Index(content[start:], "</span>") + len("</span>")
+	content = content[:start] + content[end:]
+	if err := os.WriteFile(page, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	probe, err := injectProbe(page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dom, err := browser.DumpDOM(probe, "#ocrlab-stress=none", Viewports[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := extractProbeResult(dom)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(dir, "full.png")
+	if err := browser.ImageScreenshot(probe, "#ocrlab-stress=none", Viewports[0], r.ImageRect, 400, 2400, out); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if im.Bounds().Dx() != 400 || im.Bounds().Dy() != 2400 {
+		t.Fatal(im.Bounds())
+	}
+	dark, _, _, _ := im.At(100, 605).RGBA()
+	bottom, _, _, _ := im.At(100, 1800).RGBA()
+	if dark > 60*257 || bottom < 200*257 {
+		t.Fatalf("tall source coordinates changed: dark=%d bottom=%d", dark, bottom)
+	}
+}
+
 func TestViewportsArePinnedAndVaried(t *testing.T) {
 	if len(Viewports) < 2 {
 		t.Fatal("drift cannot be measured from a single viewport")
@@ -170,6 +278,58 @@ func TestViewportsArePinnedAndVaried(t *testing.T) {
 	}
 	if Viewports[0].Name != "desktop" {
 		t.Errorf("the primary viewport is %q; the report and the screenshots assume desktop", Viewports[0].Name)
+	}
+}
+
+func TestBandedCaptureFractionalPhoneGeometry(t *testing.T) {
+	if testing.Short() {
+		t.Skip("browser check")
+	}
+	dir := t.TempDir()
+	browser, err := FindBrowser(filepath.Join(dir, "profile"))
+	if err != nil {
+		t.Skipf("browser absent: %v", err)
+	}
+	defer browser.Close()
+	if err := os.WriteFile(filepath.Join(dir, "img.png"), makeGreyPNG(t, 400, 658), 0644); err != nil {
+		t.Fatal(err)
+	}
+	content := strings.Replace(fixturePage, "aspect-ratio:400 / 200", "aspect-ratio:400 / 658", 1)
+	content = strings.Replace(content, "</head>", "<style>body{margin:0}.ocr-fig{width:370.5px;max-width:none;margin-left:9.75px;margin-top:16.25px}.ocr-box{display:none}</style></head>", 1)
+	page := filepath.Join(dir, "page.html")
+	if err := os.WriteFile(page, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	probe, err := injectProbe(page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := Viewports[len(Viewports)-1]
+	dom, err := browser.DumpDOM(probe, "#ocrlab-stress=none", v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := extractProbeResult(dom)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(dir, "full.png")
+	if err := browser.ImageScreenshot(probe, "#ocrlab-stress=none", v, r.ImageRect, 400, 658, out); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dark, _, _, _ := im.At(100, 169).RGBA()
+	bottom, _, _, _ := im.At(100, 640).RGBA()
+	if im.Bounds().Dx() != 400 || im.Bounds().Dy() != 658 || dark > 60*257 || bottom < 200*257 {
+		t.Fatalf("fractional capture lost source coordinates: %v, dark=%d bottom=%d", im.Bounds(), dark, bottom)
 	}
 }
 
@@ -243,3 +403,88 @@ func TestInjectProbeKeepsTheOriginalPage(t *testing.T) {
 }
 
 var _ = evidence.SchemaVersion // the runner and the schema move together
+
+// shippedFitScript returns the desktop re-fit script exactly as the converted pages carry it. The
+// constant is unexported in internal/ocr, and a copy here would let this test pass against a script
+// nobody ships.
+func shippedFitScript(t *testing.T) string {
+	t.Helper()
+	src, err := os.ReadFile(filepath.Join("..", "..", "..", "internal", "ocr", "overlay.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const open = "const ocrScript = `"
+	i := strings.Index(string(src), open)
+	if i < 0 {
+		t.Fatal("internal/ocr/overlay.go no longer declares ocrScript as a raw string")
+	}
+	body := string(src)[i+len(open):]
+	j := strings.Index(body, "`")
+	if j < 0 {
+		t.Fatal("ocrScript raw string is not terminated")
+	}
+	return body[:j]
+}
+
+// A plate's min-height is a percentage of its figure and Chrome reports the computed value as that
+// percentage, so a fit that parses it as a pixel count pins a 34.29% plate to 34.29 px: two thirds of
+// a 51 px phone figure, hanging past its bottom edge. This is that figure, at every stress case,
+// under the shipped fit script.
+func TestPlateStaysInsideAShortPhoneFigure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("browser check")
+	}
+	dir := t.TempDir()
+	browser, err := FindBrowser(filepath.Join(dir, "profile"))
+	if err != nil {
+		t.Skipf("browser absent: %v", err)
+	}
+	defer browser.Close()
+	const w, h = 390, 51
+	if err := os.WriteFile(filepath.Join(dir, "img.png"), makeGreyPNG(t, w, h), 0644); err != nil {
+		t.Fatal(err)
+	}
+	content := strings.Replace(fixturePage, "aspect-ratio:400 / 200", "aspect-ratio:390 / 51", 1)
+	content = strings.Replace(content, "left:10.00%;top:20.00%;width:50.00%;min-height:15.00%;font-size:3cqw",
+		"left:5.00%;top:65.71%;width:90.00%;min-height:34.29%;font-size:2cqw", 1)
+	content = strings.Replace(content, "</head>", "<style>body{margin:0}</style></head>", 1)
+	content = strings.Replace(content, "</body>", "<script>"+shippedFitScript(t)+"</script></body>", 1)
+	page := filepath.Join(dir, "page.html")
+	if err := os.WriteFile(page, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	probe, err := injectProbe(page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dom, err := browser.DumpDOM(probe, "#ocrlab-collect", Viewports[len(Viewports)-1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := extractProbeResult(dom)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.OK {
+		t.Fatalf("probe reported: %v", res.Errors)
+	}
+	if res.ImageRect == nil || res.ImageRect.Height < h-1 || res.ImageRect.Height > h+1 {
+		t.Fatalf("image rect = %+v, want a figure about %d css px tall", res.ImageRect, h)
+	}
+	seen := map[string]bool{}
+	for _, p := range res.Plates {
+		seen[p.StressCase] = true
+		// Rects are in the image's own pixels, which are css pixels here (390 px wide at 390 px).
+		if p.Rect.Y1 > h+1 {
+			t.Errorf("stress %q: the plate ends at y=%d, past the %d px figure", p.StressCase, p.Rect.Y1, h)
+		}
+		if p.Rect.Y0 < 0 {
+			t.Errorf("stress %q: the plate starts at y=%d, above the figure", p.StressCase, p.Rect.Y0)
+		}
+	}
+	for _, name := range StressNames() {
+		if !seen[name] {
+			t.Errorf("no plate recorded for stress case %q", name)
+		}
+	}
+}

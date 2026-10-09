@@ -77,16 +77,16 @@ test("validateRun accepts a run the Go runner emitted", () => {
 });
 
 test("the schema version is the one the Go evidence package declares", () => {
-  assert.equal(SCHEMA_VERSION, 1);
-  assert.equal(GO_RUN.schemaVersion, SCHEMA_VERSION);
+  assert.equal(SCHEMA_VERSION, 2);
+  assert.equal(GO_RUN.schemaVersion, 1); // Historical evidence is still readable.
 });
 
 test("makePlate emits exactly the Go Plate fields, in the Go declaration order", () => {
   assert.deepEqual(Object.keys(makePlate()), [
     "text", "rect", "viewport", "stressCase", "fontPx", "background", "ink",
-    "mode", "modeConfidence", "scrollHeight", "clientHeight",
+    "mode", "modeConfidence", "scrollHeight", "clientHeight", "scrollWidth", "clientWidth",
   ]);
-  assert.deepEqual(Object.keys(makePlate(GO_RUN.scenes[0].plates[0])), Object.keys(GO_RUN.scenes[0].plates[0]));
+  assert.deepEqual(Object.keys(makePlate(GO_RUN.scenes[0].plates[0])), [...Object.keys(GO_RUN.scenes[0].plates[0]), "scrollWidth", "clientWidth"]);
 });
 
 test("makeRun and makeScene emit the Go Run and Scene fields, in order", () => {
@@ -103,7 +103,8 @@ test("makeRun and makeScene emit the Go Run and Scene fields, in order", () => {
 
 test("a rebuilt run round-trips the Go run unchanged", () => {
   const rebuilt = makeRun({ ...GO_RUN, edition: EDITION_DESKTOP });
-  assert.deepEqual(rebuilt, GO_RUN);
+  const expected=clone(GO_RUN);expected.schemaVersion=SCHEMA_VERSION;for(const s of expected.scenes)for(const p of s.plates){p.scrollWidth=0;p.clientWidth=0;}
+  assert.deepEqual(rebuilt, expected);
 });
 
 test("clipped mirrors the Go Plate.Clipped slack, which absorbs layout rounding", () => {
@@ -114,7 +115,7 @@ test("clipped mirrors the Go Plate.Clipped slack, which absorbs layout rounding"
 
 test("validateRun names a wrong schema version rather than passing it on", () => {
   const bad = clone(GO_RUN);
-  bad.schemaVersion = 2;
+  bad.schemaVersion = 3;
   assert.match(validateRun(bad).join("\n"), /schemaVersion/);
 });
 

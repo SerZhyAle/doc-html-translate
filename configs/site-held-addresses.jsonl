@@ -7,6 +7,7 @@
 {"kind":"held","holder":"cmd/doc-html-ui/ui.html","surface":"program","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/privacy.html"]}
 {"kind":"held","holder":"docs/contracts/SITE-FAMILY-MAP.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"docs/PARITY.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"docs/discoverability.json","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/_locales/ar/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/_locales/bn/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/_locales/de/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}

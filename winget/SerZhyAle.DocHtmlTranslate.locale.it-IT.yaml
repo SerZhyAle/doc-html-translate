@@ -12,7 +12,7 @@ PackageUrl: https://github.com/SerZhyAle/doc-html-translate
 License: MIT
 LicenseUrl: https://github.com/SerZhyAle/doc-html-translate/blob/main/LICENSE
 Copyright: Copyright (c) 2026 SerZhyAle
-ShortDescription: "Converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown e HTML in HTML locale pulito, con un vero indice, riconoscimento del testo nelle immagini e traduzione opzionale tramite Google o Ollama."
+ShortDescription: "Converte libri, documenti e fumetti (EPUB, PDF, MOBI, FB2, CBZ e altro) in HTML locale da leggere e da tradurre con la traduzione di pagina del browser. OCR per le scansioni. Opzionale: Google Cloud o Ollama."
 Description: |-
   doc-html-translate è un'applicazione Windows che converte documenti (EPUB, PDF, MOBI, AZW3, FB2,
   RTF, TXT, Markdown, HTML) in HTML locale pulito, con navigazione generata e un vero indice a più
@@ -27,20 +27,20 @@ Description: |-
   Apre anche gli archivi di fumetti (CBZ/CBR/CB7/CBT) e le singole immagini (PNG, JPG, WebP, GIF, BMP, TIFF) e sovrappone il testo riconosciuto a ogni pagina per tradurlo sul posto; CBR e CB7 richiedono 7-Zip.
 Tags:
 - azw3
+- cbz
 - cli
+- comics
+- converter
 - ebook
+- ebook-reader
 - epub
 - fb2
-- google-translate
 - html
-- markdown
 - mobi
 - ocr
-- ollama
 - pdf
-- rtf
+- reader
 - translation
-- txt
 - windows
 InstallationNotes: "Versione portatile non firmata: guida a Windows SmartScreen su https://serzhyale.github.io/doc-html-translate/install-trust.html"
 ManifestType: locale

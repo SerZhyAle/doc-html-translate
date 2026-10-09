@@ -54,6 +54,7 @@ type Dimension struct {
 
 // Thresholds is DEV/ocrlab/thresholds.json.
 type Thresholds struct {
+	Procedure     string `json:"procedure,omitempty"`
 	SchemaVersion int    `json:"schemaVersion"`
 	DerivedFrom   string `json:"derivedFrom"` // the run id the bounds were read off
 	DerivedOn     string `json:"derivedOn"`   // YYYY-MM-DD
@@ -164,6 +165,7 @@ type Check struct {
 // GateResult is the whole verdict, kept as data so the report and the exit code read the same
 // thing rather than two renderings of it.
 type GateResult struct {
+	Purpose string  `json:"purpose,omitempty"`
 	RunID   string  `json:"runId"`
 	Edition string  `json:"edition"`
 	Pass    bool    `json:"pass"`
@@ -195,7 +197,7 @@ func (r GateResult) ExitCode() int {
 // Gate judges a summary. prev may be nil - the first run has nothing to regress against, and
 // saying so is better than inventing a comparison.
 func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResult {
-	res := GateResult{RunID: sum.RunID, Edition: string(sum.Edition)}
+	res := GateResult{RunID: sum.RunID, Edition: string(sum.Edition), Purpose: sum.Purpose}
 	add := func(c Check) {
 		switch {
 		case c.Absent:
@@ -206,6 +208,25 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 		}
 		res.Checks = append(res.Checks, c)
 	}
+	if sum.Overall.Scenes == 0 {
+		add(Check{Dimension: "evidence", Scope: "overall", Measure: "non-empty scored selection", Absent: true, Detail: "no scored scenes"})
+	}
+	for _, s := range sum.Skipped {
+		add(Check{Dimension: "evidence", Scope: s.SceneID, Measure: "required scene scored", Absent: true, Detail: s.Reason})
+	}
+	for _, issue := range sum.EvidenceIssues {
+		add(Check{Dimension: "evidence", Scope: sum.Purpose, Measure: "complete frozen evidence", Absent: true, Detail: issue})
+	}
+	if sum.Overall.UnmeasuredConcealment > 0 {
+		add(Check{Dimension: DimConcealment, Scope: "overall", Measure: "measured concealment", Absent: true, Detail: fmt.Sprintf("%d scenes unmeasured", sum.Overall.UnmeasuredConcealment)})
+	}
+	if sum.Overall.UnmeasuredDamage > 0 {
+		add(Check{Dimension: DimDamage, Scope: "overall", Measure: "measured painted damage", Absent: true, Detail: fmt.Sprintf("%d scenes with painted damage not measured on every observation", sum.Overall.UnmeasuredDamage)})
+	}
+	compatibleThresholds := sum.Procedure == "" || th.Procedure == sum.Procedure
+	if !compatibleThresholds {
+		add(Check{Dimension: "baseline", Scope: sum.Purpose, Measure: "calibrated compatible thresholds", Absent: true, Detail: "thresholds do not cite this measurement procedure"})
+	}
 
 	// The four hard gates first: they are counts, they are fixed at zero, and a table of means
 	// underneath them must never be what a reader sees first.
@@ -214,7 +235,8 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 		got     int
 		limit   int
 	}{
-		{"protected-area damage (px)", sum.Overall.ProtectedHitPx, th.Hard.ProtectedDamagePx},
+		{"scenes with observed hard defects", sum.Overall.FailingScenes, 0},
+		{"painted protected-area damage (px)", sum.Overall.ProtectedHitPx, th.Hard.ProtectedDamagePx},
 		{"reading groups merged", sum.Overall.Merges, th.Hard.Merges},
 		{"clipped plates after stress", sum.Overall.Clipped, th.Hard.ClippedPlates},
 		{"plates crossing another group", sum.Overall.CrossGroup, th.Hard.CrossGroupOverlaps},
@@ -226,6 +248,9 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 	}
 
 	for _, name := range Dimensions() {
+		if !compatibleThresholds {
+			continue
+		}
 		d, ok := th.Dimensions[name]
 		if !ok {
 			continue
@@ -246,8 +271,12 @@ func Gate(sum *metrics.Summary, th *Thresholds, prev *metrics.Summary) GateResul
 			}
 			add(bucketCheck(name, string(cat), b, bucket))
 		}
-		if d.Tolerance != nil && prev != nil {
-			add(regressionCheck(name, *d.Tolerance, sum, prev))
+		if d.Tolerance != nil {
+			if prev == nil {
+				add(Check{Dimension: name, Scope: "regression", Measure: "reference run", Absent: true, Detail: "declared regression check has no reference run"})
+			} else {
+				add(regressionCheck(name, *d.Tolerance, sum, prev))
+			}
 		}
 	}
 	switch {
@@ -276,7 +305,7 @@ func measureOf(dimension string) string {
 	case DimConcealment:
 		return "worst residual ink"
 	case DimDamage:
-		return "protected-area damage (px)"
+		return "painted protected-area damage (px)"
 	case DimReplacement:
 		return "clipped + cross-group"
 	case DimReview:
@@ -330,6 +359,11 @@ func bucketCheck(dimension, scope string, b Bound, bucket *metrics.Bucket) Check
 // an intended improvement into a failure.
 func regressionCheck(dimension string, tolerance float64, sum, prev *metrics.Summary) Check {
 	c := Check{Dimension: dimension, Scope: "holdout", Measure: measureOf(dimension) + " vs the last accepted run", Pass: true}
+	if sum.Edition != prev.Edition || sum.Procedure != prev.Procedure || sum.InputDigest == "" || sum.InputDigest != prev.InputDigest {
+		c.Pass, c.Absent = false, true
+		c.Detail = "incompatible edition, measurement procedure or evaluated inputs"
+		return c
+	}
 	now, before := sum.BySplit[corpus.SplitHoldout], prev.BySplit[corpus.SplitHoldout]
 	if now == nil || before == nil || now.Scenes == 0 || before.Scenes == 0 {
 		c.Pass, c.Absent = false, true
@@ -354,7 +388,7 @@ func regressionCheck(dimension string, tolerance float64, sum, prev *metrics.Sum
 // ("ocrlab gate: PASS", "ocrlab gate: FAIL (n)", "ocrlab gate: COULD NOT VERIFY (n ..)").
 func (r GateResult) Render() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "ocrlab gate: subject = run %s, %s edition\n\n", r.RunID, r.Edition)
+	fmt.Fprintf(&b, "ocrlab gate: subject = run %s, %s edition, scope %s\n\n", r.RunID, r.Edition, or(r.Purpose, "legacy unspecified"))
 	for _, want := range []string{"FAIL", "ABSENT", "PASS"} {
 		for _, c := range r.Checks {
 			verdict := "PASS"

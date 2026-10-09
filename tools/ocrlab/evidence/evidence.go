@@ -23,7 +23,7 @@ import (
 )
 
 // SchemaVersion is the cross-edition contract version. Guarded by TestParityOCRLabEvidenceSchema.
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // Edition names which implementation produced the run.
 type Edition string
@@ -90,6 +90,8 @@ type Plate struct {
 
 	ScrollHeight int `json:"scrollHeight"`
 	ClientHeight int `json:"clientHeight"`
+	ScrollWidth  int `json:"scrollWidth"`
+	ClientWidth  int `json:"clientWidth"`
 }
 
 // ClipSlackPx is how much overflow is layout rounding rather than hidden text.
@@ -104,7 +106,9 @@ type Plate struct {
 const ClipSlackPx = 4
 
 // Clipped reports whether the browser said this plate's content overflows its box.
-func (p Plate) Clipped() bool { return p.ScrollHeight > p.ClientHeight+ClipSlackPx }
+func (p Plate) Clipped() bool {
+	return p.ScrollHeight > p.ClientHeight+ClipSlackPx || p.ScrollWidth > p.ClientWidth+ClipSlackPx
+}
 
 // Screenshots are paths relative to the run directory, so a run folder can be moved or zipped
 // and the report still opens.
@@ -113,6 +117,18 @@ type Screenshots struct {
 	Rendered string            `json:"rendered"`
 	Stress   map[string]string `json:"stress,omitempty"`
 }
+
+// ErrorKind says why a scene failed, decided from filesystem facts (is the input there, how long
+// is the longest path the run touched) and never from the text of an error, so a missing file and
+// a helper that cannot open a long path no longer look alike. Desktop-only: the extension has no
+// path limit, so its evidence never carries one.
+type ErrorKind string
+
+const (
+	ErrInputMissing           ErrorKind = "input-missing"
+	ErrEnginePathIncompatible ErrorKind = "engine-path-incompatible"
+	ErrEngineFailed           ErrorKind = "engine-failed"
+)
 
 // Scene is one corpus scene's outcome.
 //
@@ -130,7 +146,48 @@ type Scene struct {
 	RenderMs     int64 `json:"renderMs"`
 	PeakRSSBytes int64 `json:"peakRssBytes"`
 
+	Observations []Observation `json:"observations,omitempty"`
+	MemoryKind   string        `json:"memoryKind,omitempty"`
+	MemoryBytes  int64         `json:"memoryBytes,omitempty"`
+
+	// Lang is the Tesseract language the scene was read with and LangSource says where it came
+	// from (see SceneLang). Both editions record them; a score is attributable to a language only
+	// if the evidence names it.
+	Lang       string `json:"lang,omitempty"`
+	LangSource string `json:"langSource,omitempty"`
+	// Unmeasured is the reason a scene was not run although nothing failed - today only
+	// "language data unavailable: <code>". It is neither a failure (Error) nor a scene with no
+	// plates: the scene has no measurement at all, and the scorer lists it as skipped.
+	Unmeasured string `json:"unmeasured,omitempty"`
+
 	Error string `json:"error,omitempty"`
+
+	// ErrorKind and PathChars accompany Error only. PathChars is the longest absolute path (in
+	// characters) among the scene's input, page and screenshot files when it failed.
+	ErrorKind ErrorKind `json:"errorKind,omitempty"`
+	PathChars int       `json:"pathChars,omitempty"`
+
+	// ReusedFrom is set when this record was copied from an earlier complete run instead of being
+	// collected again (see Finder). Everything above then describes that earlier collection, so a
+	// reader must never take the scene for a measurement of this run.
+	ReusedFrom *ReusedFrom `json:"reusedFrom,omitempty"`
+}
+
+// ReusedFrom is the provenance of a reused scene. Both producers write it through Apply, and
+// TestParityOCRLabEvidenceSchema keeps the extension's makeReusedFrom on the same fields.
+type ReusedFrom struct {
+	// Bundle is the run directory the record was copied from, as the search found it.
+	Bundle string `json:"bundle"`
+	// DeclarationSHA256 and ProducerDigest identify what that run was declared against.
+	DeclarationSHA256 string `json:"declarationSha256"`
+	ProducerDigest    string `json:"producerDigest"`
+	// CollectedAt is when the files were first collected (the original run's start, carried through
+	// a chain of reuses); ReusedAt is when this copy was made.
+	CollectedAt string `json:"collectedAt"`
+	ReusedAt    string `json:"reusedAt"`
+	// Integrity says how the copied files were checked: "sizes" against the earlier run's file
+	// manifest, or the weaker "dimensions" for a run that wrote none.
+	Integrity string `json:"integrity"`
 }
 
 // PlatesFor returns the plates recorded for one viewport and stress case.
@@ -217,7 +274,7 @@ func LoadRun(path string) (*Run, error) {
 	if err := json.Unmarshal(data, &r); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
-	if r.SchemaVersion != SchemaVersion {
+	if r.SchemaVersion != 1 && r.SchemaVersion != SchemaVersion {
 		return nil, fmt.Errorf("%s: schemaVersion %d, this build understands %d",
 			path, r.SchemaVersion, SchemaVersion)
 	}

@@ -24,13 +24,20 @@ import (
 
 // Options configure one run.
 type Options struct {
-	Manifest string
-	Root     string
-	OutDir   string
-	Split    string
-	SceneIDs []string
-	Lang     string
-	Log      io.Writer
+	Manifest    string
+	Root        string
+	OutDir      string
+	Split       string
+	SceneIDs    []string
+	Annotations string
+	Purpose     string
+	Lang        string
+	Log         io.Writer
+	// Fresh collects every scene even when an earlier complete run could stand in for it.
+	Fresh bool
+	// ReuseFrom limits the search for reusable scenes to one run directory, or one folder of
+	// runs; empty searches DefaultReuseRoot.
+	ReuseFrom string
 }
 
 // Layout of a run directory. Everything is relative to OutDir so the folder can be moved,
@@ -40,9 +47,9 @@ const (
 	ScoresFile   = "scores.json"
 	SummaryFile  = "summary.json"
 	SelfFile     = "selftest.json"
-	DiagFile     = "ocr-diag.jsonl"
-	ShotsDir     = "shots"
-	PagesDir     = "pages"
+	DiagFile     = evidence.DiagFile
+	ShotsDir     = evidence.ShotsDir
+	PagesDir     = evidence.PagesDir
 )
 
 // Run converts, renders and records every selected scene.
@@ -53,9 +60,6 @@ const (
 func Run(opt Options) (*evidence.Run, error) {
 	if opt.Log == nil {
 		opt.Log = io.Discard
-	}
-	if opt.Lang == "" {
-		opt.Lang = "eng"
 	}
 	m, err := corpus.Load(opt.Manifest)
 	if err != nil {
@@ -69,6 +73,20 @@ func Run(opt Options) (*evidence.Run, error) {
 		return nil, fmt.Errorf("no scenes selected (split %q)", opt.Split)
 	}
 	if err := requireIntactMedia(scenes, opt.Root); err != nil {
+		return nil, err
+	}
+	if err := requirePathBudget(scenes, opt.OutDir); err != nil {
+		return nil, err
+	}
+
+	if opt.Annotations == "" {
+		opt.Annotations = "DEV/ocrlab/annotations"
+	}
+	if opt.Purpose == "" {
+		opt.Purpose = "exploratory"
+	}
+	decl, err := evidence.Freeze(opt.OutDir, opt.Purpose, opt.Root, opt.Annotations, opt.Lang, scenes, Viewports, StressNames(), m)
+	if err != nil {
 		return nil, err
 	}
 
@@ -86,27 +104,45 @@ func Run(opt Options) (*evidence.Run, error) {
 	defer browser.Close()
 
 	runID := filepath.Base(opt.OutDir)
+	langLabel, langPacks := runLangs(scenes, opt)
 	out := &evidence.Run{
 		SchemaVersion: evidence.SchemaVersion,
 		RunID:         runID,
 		StartedAt:     time.Now().UTC().Format(time.RFC3339),
 		Edition:       evidence.EditionDesktop,
-		Engine:        engineFor(bin, opt.Lang),
+		Engine:        engineFor(bin, langLabel, langPacks),
 		Browser:       evidence.Browser{Name: browser.Name, Version: browser.Version},
 		Viewports:     Viewports,
 	}
 
+	reuse, err := newReuser(opt, decl, out.Engine, out.Browser)
+	if err != nil {
+		return nil, err
+	}
 	fmt.Fprintf(opt.Log, "ocrlab run: %d scene(s), %s, %s\n", len(scenes), browser.Version, out.Engine.Tesseract)
+	reused := 0
 	for _, s := range scenes {
-		sc := runScene(browser, bin, s, opt)
+		sc, wasReused := reuse.obtain(s, opt, func() evidence.Scene { return runScene(browser, bin, s, opt) })
 		out.Scenes = append(out.Scenes, sc)
-		if sc.Error != "" {
-			fmt.Fprintf(opt.Log, "  FAIL %-40s %s\n", s.ID, sc.Error)
+		if wasReused {
+			reused++
 			continue
 		}
-		fmt.Fprintf(opt.Log, "  ok   %-40s %d plate-record(s), ocr %dms\n", s.ID, len(sc.Plates), sc.OcrMs)
+		if sc.Error != "" {
+			fmt.Fprintf(opt.Log, "  FAIL %-40s [%s] %s\n", s.ID, sc.ErrorKind, sc.Error)
+			continue
+		}
+		if sc.Unmeasured != "" {
+			fmt.Fprintf(opt.Log, "  skip %-40s unmeasured: %s\n", s.ID, sc.Unmeasured)
+			continue
+		}
+		fmt.Fprintf(opt.Log, "  ok   %-40s %-8s %d plate-record(s), ocr %dms\n", s.ID, sc.Lang, len(sc.Plates), sc.OcrMs)
 	}
+	fmt.Fprintf(opt.Log, "ocrlab run: collected %d, reused %d of %d scene(s)\n", len(scenes)-reused, reused, len(scenes))
 	if err := out.Save(filepath.Join(opt.OutDir, EvidenceFile)); err != nil {
+		return nil, err
+	}
+	if err := evidence.Finish(opt.OutDir); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -148,7 +184,15 @@ func requireIntactMedia(scenes []*corpus.Scene, root string) error {
 func runScene(browser *Browser, bin string, s *corpus.Scene, opt Options) evidence.Scene {
 	sc := evidence.Scene{SceneID: s.ID}
 	fail := func(format string, args ...any) evidence.Scene {
-		sc.Error = fmt.Sprintf(format, args...)
+		failureFor(&sc, s.Path(opt.Root), opt.OutDir, fmt.Sprintf(format, args...))
+		return sc
+	}
+
+	choice := evidence.SceneLang(opt.Annotations, opt.Lang, s)
+	sc.Lang, sc.LangSource = choice.Lang, choice.Source
+	if missing := missingLangData(choice.Lang); len(missing) > 0 {
+		sc.ImageWidth, sc.ImageHeight = s.Width, s.Height
+		sc.Unmeasured = "language data unavailable: " + strings.Join(missing, "+")
 		return sc
 	}
 
@@ -160,7 +204,7 @@ func runScene(browser *Browser, bin string, s *corpus.Scene, opt Options) eviden
 	// The scene is converted the way a user's image is: one page holding the picture, with the
 	// OCR overlay applied by the shipped code.
 	start := time.Now()
-	page, res, err := convertScene(bin, s.Path(opt.Root), workDir, opt)
+	page, res, err := convertScene(bin, s.Path(opt.Root), workDir, choice.Lang, opt)
 	if err != nil {
 		return fail("convert: %v", err)
 	}
@@ -205,6 +249,7 @@ func runScene(browser *Browser, bin string, s *corpus.Scene, opt Options) eviden
 				ModeConfidence: p.ModeConfidence,
 				ScrollHeight:   p.ScrollHeight,
 				ClientHeight:   p.ClientHeight,
+				ScrollWidth:    p.ScrollWidth, ClientWidth: p.ClientWidth,
 			})
 		}
 	}
@@ -213,56 +258,79 @@ func runScene(browser *Browser, bin string, s *corpus.Scene, opt Options) eviden
 		return fail("screenshots: %v", err)
 	}
 	sc.RenderMs = time.Since(renderStart).Milliseconds()
-	sc.PeakRSSBytes = peakRSS()
+	sc.MemoryKind = "go-runtime-sys-snapshot"
+	sc.MemoryBytes = runtimeSys()
 	return sc
 }
 
 // captureShots writes the source image and one render per stress case, each mapped back into
 // the source image's pixel space so the concealment measurement can compare them directly.
 func captureShots(browser *Browser, page string, s *corpus.Scene, rect *probeRect, w, h int, opt Options, sc *evidence.Scene) error {
-	v := Viewports[0] // the primary viewport; drift is measured from geometry, not from pixels
 	shots := filepath.Join(opt.OutDir, ShotsDir, s.ID)
-	if err := os.MkdirAll(shots, 0o755); err != nil {
+	if err := os.MkdirAll(shots, 0755); err != nil {
 		return err
 	}
-
-	// The source needs no browser: it is the corpus file itself, copied so the run folder is
-	// self-contained.
-	srcOut := filepath.Join(shots, "source.png")
-	if err := copyFile(s.Path(opt.Root), srcOut); err != nil {
+	source := filepath.Join(shots, "source.png")
+	if err := copyFile(s.Path(opt.Root), source); err != nil {
 		return err
 	}
-	sc.Screenshots.Source = relTo(opt.OutDir, srcOut)
+	sc.Screenshots.Source = relTo(opt.OutDir, source)
 	sc.Screenshots.Stress = map[string]string{}
-
-	// No image rect now means the page carries no image the probe could find at all, which is a
-	// malfunction rather than a result. A page whose recognizer found nothing still has its
-	// picture, and the probe falls back to it (see sceneImage), because that page is exactly the
-	// one whose concealment must be measured: nothing is concealed on it. Before that fallback
-	// existed, such a scene stored no mapped render, the scorer had nothing to compare, and it
-	// reported residual 0 - indistinguishable from perfect concealment. Measured 2026-08-15
-	// against the extension edition, which mapped the same scenes and scored them near 1.0:
-	// DEV/research/ocrlab/2026-08-15__extension-parity-run.md.
-	mapped := rect != nil
-
-	for _, c := range StressCases {
-		raw := filepath.Join(shots, "raw-"+c.Name+".png")
-		if err := browser.Screenshot(page, "#ocrlab-stress="+c.Name, v, raw); err != nil {
-			return err
+	for _, v := range Viewports {
+		for _, c := range StressCases {
+			dom, err := browser.DumpDOM(page, "#ocrlab-stress="+c.Name, v)
+			if err != nil {
+				return err
+			}
+			normal, err := extractProbeResult(dom)
+			if err != nil {
+				return err
+			}
+			if !normal.OK || normal.ImageRect == nil {
+				return fmt.Errorf("missing image or failed observation %s/%s", v.Name, c.Name)
+			}
+			obs := evidence.Observation{Viewport: v.Name, StressCase: c.Name}
+			for _, hidden := range []bool{false, true} {
+				name := v.Name + "-" + c.Name
+				fragment := "#ocrlab-stress=" + c.Name
+				if hidden {
+					name += "-hidden"
+					fragment += "-hidden"
+					dom, err := browser.DumpDOM(page, fragment, v)
+					if err != nil {
+						return err
+					}
+					diagnostic, err := extractProbeResult(dom)
+					if err != nil {
+						return err
+					}
+					if !diagnostic.OK || diagnostic.ImageRect == nil || *diagnostic.ImageRect != *normal.ImageRect || len(diagnostic.Plates) != len(normal.Plates) {
+						return fmt.Errorf("diagnostic capture changed layout")
+					}
+					for i, p := range diagnostic.Plates {
+						if p.Rect != normal.Plates[i].Rect || p.FontPx != normal.Plates[i].FontPx || p.ScrollWidth != normal.Plates[i].ScrollWidth || p.ScrollHeight != normal.Plates[i].ScrollHeight {
+							return fmt.Errorf("diagnostic capture changed plate layout")
+						}
+					}
+				}
+				out := filepath.Join(shots, name+".png")
+				if err := browser.ImageScreenshot(page, fragment, v, normal.ImageRect, w, h, out); err != nil {
+					return err
+				}
+				if hidden {
+					obs.Concealed = relTo(opt.OutDir, out)
+				} else {
+					obs.Rendered = relTo(opt.OutDir, out)
+				}
+			}
+			sc.Observations = append(sc.Observations, obs)
+			if v.Name == Viewports[0].Name {
+				sc.Screenshots.Stress[c.Name] = obs.Rendered
+				if c.Name == PrimaryStress {
+					sc.Screenshots.Rendered = obs.Rendered
+				}
+			}
 		}
-		if !mapped {
-			sc.Screenshots.Stress[c.Name] = relTo(opt.OutDir, raw)
-			continue
-		}
-		out := filepath.Join(shots, c.Name+".png")
-		if err := CropToImage(raw, rect, v.DeviceScaleFactor, w, h, out); err != nil {
-			return err
-		}
-		_ = os.Remove(raw) // the mapped copy is the one every measurement and the report use
-		if c.Name == PrimaryStress {
-			sc.Screenshots.Rendered = relTo(opt.OutDir, out)
-		}
-		sc.Screenshots.Stress[c.Name] = relTo(opt.OutDir, out)
 	}
 	return nil
 }

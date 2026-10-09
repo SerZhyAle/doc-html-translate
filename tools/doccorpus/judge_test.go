@@ -188,3 +188,78 @@ func TestCommittedManifestIsValid(t *testing.T) {
 		}
 	}
 }
+
+func intp(n int) *int { return &n }
+
+func TestJudgeUnsettledCollectionIsIncompleteEvidenceNotPageLoss(t *testing.T) {
+	c := baseCase("scanned-pdf")
+	e := &Expectation{Pages: 184, TextLayer: "none"}
+	r := resultWith(t, &Probe{Lang: "en", PageUnits: 12, Notice: ""}, "", "")
+	r.Truncated = true
+	r.Collection = &Collection{Outcome: "timeout", Stage: "rendering-active", Rendered: 12, Total: intp(184), Polls: 90}
+	j := Judge(c, e, r)
+	if len(j.Fails) != 0 {
+		t.Fatalf("an unsettled run failed: %v", j.Fails)
+	}
+	if j.Auto != CouldNotVerify {
+		t.Fatalf("auto = %s, want COULD NOT VERIFY", j.Auto)
+	}
+	if !hasGap(j, "incomplete evidence: stage rendering-active, 12/184") {
+		t.Fatalf("gaps %v lack the incomplete-evidence line", j.Gaps)
+	}
+
+	// The same page count from a settled run is a real loss.
+	r.Truncated = false
+	r.Collection = &Collection{Outcome: "settled", Stage: "settled", Rendered: 12, Total: intp(184)}
+	j = Judge(c, e, r)
+	if j.Auto != Fail || !strings.Contains(strings.Join(j.Fails, "|"), "12 of 184 pages reached the reader") {
+		t.Fatalf("settled run with 12/184 pages: auto %s fails %v, want the page-loss FAIL", j.Auto, j.Fails)
+	}
+}
+
+func TestJudgeIncompleteEvidenceProgress(t *testing.T) {
+	cases := []struct {
+		name string
+		c    Collection
+		want string
+	}{
+		{"ocr", Collection{Outcome: "timeout", Stage: "ocr-active", Rendered: 184, Total: intp(184), OCRDone: intp(55), OCRTotal: intp(184)}, "stage ocr-active, 55/184"},
+		{"extracting", Collection{Outcome: "timeout", Stage: "extracting", Rendered: 100, Total: intp(184), ExtractionPending: 30}, "stage extracting, 70/100"},
+		{"no total", Collection{Outcome: "timeout", Stage: "starting"}, "stage starting, 0/?"},
+		{"producer error", Collection{Outcome: "producer-error", Stage: "producer-error", Rendered: 3, Total: intp(9)}, "stage producer-error, 3/9"},
+	}
+	for _, tc := range cases {
+		r := resultWith(t, &Probe{Lang: "en"}, "", "")
+		r.Collection = &tc.c
+		if j := Judge(baseCase("epub"), &Expectation{}, r); !hasGap(j, "incomplete evidence: "+tc.want) {
+			t.Errorf("%s: gaps %v, want %q", tc.name, j.Gaps, tc.want)
+		}
+	}
+}
+
+func TestJudgeSettledCollectionAddsNoGap(t *testing.T) {
+	r := resultWith(t, &Probe{Lang: "en", TocEntries: 1}, "", "")
+	r.Collection = &Collection{Outcome: "settled", Stage: "settled", Rendered: 5, Total: intp(5)}
+	j := Judge(baseCase("epub"), &Expectation{}, r)
+	if hasGap(j, "incomplete evidence") || j.Auto != Pass {
+		t.Fatalf("settled run graded %s with gaps %v", j.Auto, j.Gaps)
+	}
+}
+
+func TestJudgeLegacyTruncatedResultStillCouldNotVerify(t *testing.T) {
+	r := resultWith(t, &Probe{Lang: "en", PageUnits: 2}, "", "")
+	r.Truncated = true
+	j := Judge(baseCase("scanned-pdf"), &Expectation{Pages: 9}, r)
+	if j.Auto != CouldNotVerify || len(j.Fails) != 0 {
+		t.Fatalf("legacy truncated result: auto %s fails %v, want COULD NOT VERIFY", j.Auto, j.Fails)
+	}
+}
+
+func hasGap(j Judgement, sub string) bool {
+	for _, g := range j.Gaps {
+		if strings.Contains(g, sub) {
+			return true
+		}
+	}
+	return false
+}

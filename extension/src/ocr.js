@@ -1,7 +1,7 @@
 // ocr.js - controller for the standalone image-OCR page opened from the right-click
 // "OCR & translate this image" menu. Reads ?src=, runs the shared overlay unit with the
-// user's preferred OCR language, shows progress, and sets <html lang> so the browser
-// offers "Translate page".
+// user's preferred OCR language, labels the page before recognized text arrives, and shows
+// progress so the browser offers "Translate page" for the selected source language.
 
 import { overlayImage, ocrLangToHtmlLang, makeBadge } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
@@ -135,6 +135,15 @@ async function main() {
     return;
   }
   const lang = await getOcrLang();
+  const htmlLang = ocrLangToHtmlLang(lang);
+  document.documentElement.lang = htmlLang;
+  let contentLang = document.querySelector('meta[http-equiv="content-language"]');
+  if (!contentLang) {
+    contentLang = document.createElement("meta");
+    contentLang.httpEquiv = "content-language";
+    document.head.append(contentLang);
+  }
+  contentLang.content = htmlLang;
   setStatus(msg("ocrProgress", "Recognizing text.."));
   try {
     const container = await overlayImage(src, {
@@ -145,7 +154,6 @@ async function main() {
       },
     });
     mount.replaceChildren(container);
-    document.documentElement.lang = ocrLangToHtmlLang(lang);
     setProgress(1);
     if (container.classList.contains("ocr-empty")) {
       // Short on the picture, the reason on the status line: what looks like a verdict on the

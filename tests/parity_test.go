@@ -1068,6 +1068,34 @@ func TestParityOCRLabEvidenceSchema(t *testing.T) {
 	}
 }
 
+// TestParityOCRLabReusedFrom: a scene reused from an earlier complete run carries its provenance in
+// the evidence, and both producers must write the same field. The desktop runner and the
+// extension's `ocrlab reuse` call go through evidence.Apply, so the Go struct is the one source;
+// this keeps the extension's makeReusedFrom (which every record passes through before it is saved)
+// on exactly its fields and keeps both Scene records carrying the optional field. See
+// docs/PARITY.md "OCR lab evidence schema".
+func TestParityOCRLabReusedFrom(t *testing.T) {
+	goSrc := readRepoFile(t, "tools", "ocrlab", "evidence", "evidence.go")
+	jsSrc := readRepoFile(t, "extension", "scripts", "_ocrlab-evidence.mjs")
+
+	goReused := jsonTags(between(goSrc, "type ReusedFrom struct {", "\n}"))
+	jsReused := objectKeys(between(jsSrc, "export function makeReusedFrom(r = {}) {\n  return {", "\n  };"))
+	if len(goReused) == 0 || strings.Join(goReused, ",") != strings.Join(jsReused, ",") {
+		t.Errorf("ReusedFrom field drift:\n  evidence.go          : %v\n  _ocrlab-evidence.mjs : %v", goReused, jsReused)
+	}
+	if !strings.Contains(between(goSrc, "type Scene struct {", "\n}"), `json:"reusedFrom,omitempty"`) {
+		t.Error("evidence.Scene no longer carries reusedFrom (omitempty)")
+	}
+	if !strings.Contains(between(jsSrc, "export function makeScene(s = {}) {", "\n}"), "out.reusedFrom = makeReusedFrom(") {
+		t.Error("makeScene no longer carries reusedFrom through")
+	}
+	// The extension producer must actually ask the Go lab; a producer that skipped the lookup would
+	// leave the two editions reusing by different rules.
+	if !strings.Contains(readRepoFile(t, "extension", "scripts", "ocrlab.mjs"), "reuseScene(") {
+		t.Error("ocrlab.mjs no longer looks scenes up through `ocrlab reuse`")
+	}
+}
+
 // jsonTags returns the `json:"name"` tags of a struct body, in declaration order, dropping any
 // option suffix so `error,omitempty` compares as `error`.
 func jsonTags(body string) []string {

@@ -61,7 +61,7 @@ CB7، CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہ�
 براؤزر کے بلٹ اِن صفحہ ترجمے سے ایک کلک میں مفت ترجمہ - API کلید کی ضرورت نہیں
 
 @@Feature9
-مکمل طور پر آف لائن چلتا ہے؛ MIT لائسنس کے تحت اوپن سورس
+تبدیلی اور مطالعہ آپ کے پی سی پر ہوتے ہیں؛ MIT لائسنس کے تحت اوپن سورس
 
 @@Feature10
 نتیجہ سادہ HTML ہے - ہر براؤزر میں، ہر آلے پر کھلتا ہے اور پڑھنے کے قابل رہتا ہے
@@ -76,25 +76,25 @@ CB7، CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہ�
 13 زبانوں میں انٹرفیس، آپ کی Windows زبان کے مطابق خود بخود منتخب
 
 @@SearchTerm1
-epub سے html
+epub to html
 
 @@SearchTerm2
-pdf سے html
+translate epub
 
 @@SearchTerm3
-ای بک کنورٹر
+pdf book translate
 
 @@SearchTerm4
-mobi azw3 fb2
+ای بک کنورٹر
 
 @@SearchTerm5
-دستاویز ترجمہ
+comic translate
 
 @@SearchTerm6
-کامک cbz cbr
+cbz reader
 
 @@SearchTerm7
-آف لائن ترجمہ
+image text translate
 
 @@ReleaseNotes
 - FileDO کی خفیہ فائلیں (.fd-sec) براہِ راست کھلتی ہیں: کنورٹر پاس ورڈ پوچھتا ہے، تبدیل کرتا ہے اور عارضی کاپی ہٹا دیتا ہے۔

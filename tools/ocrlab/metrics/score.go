@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"sort"
+	"strings"
 
 	"doc-html-translate/tools/ocrlab/corpus"
 	"doc-html-translate/tools/ocrlab/evidence"
@@ -24,9 +25,48 @@ var ErrNotTruth = errors.New("annotation is not truth")
 
 // CostScore is what the run cost, per scene.
 type CostScore struct {
-	OcrMs        int64 `json:"ocrMs"`
-	RenderMs     int64 `json:"renderMs"`
-	PeakRSSBytes int64 `json:"peakRssBytes"`
+	OcrMs        int64  `json:"ocrMs"`
+	RenderMs     int64  `json:"renderMs"`
+	PeakRSSBytes int64  `json:"peakRssBytes"`
+	MemoryKind   string `json:"memoryKind,omitempty"`
+	MemoryBytes  int64  `json:"memoryBytes,omitempty"`
+}
+
+// PixelDiagnostic is what one observation (a viewport and a stress case) shows at pixel level.
+// The five measurements are independent: old lettering still showing (against the text-hidden
+// capture), the plate rectangles' luma separation, the glyphs the plates drew, the rectangles'
+// geometric intrusion on protected content, and the protected pixels actually painted.
+type PixelDiagnostic struct {
+	Concealment            ResidualScore    `json:"concealment"`
+	BackgroundContrast     ContrastScore    `json:"backgroundContrast"`
+	ReplacementReadability ReadabilityScore `json:"replacementReadability"`
+	RectangleIntrusion     DamageScore      `json:"rectangleIntrusion"`
+	PaintedDamage          DamageScore      `json:"paintedDamage"`
+}
+
+// Captures are the images one scene is scored against. Every part may be absent; what cannot be
+// measured without it then reports unmeasured instead of zero.
+type Captures struct {
+	Source image.Image
+	// Rendered is the legacy single normal render, used for background contrast only when no
+	// observation carries a normal capture.
+	Rendered image.Image
+	// Open decodes a screenshot recorded in the evidence (a path relative to the run), or returns
+	// nil when it is missing. Observations name their normal and text-hidden captures this way.
+	Open func(rel string) image.Image
+	// Lettering is the independently known mask of the source lettering, or nil. Without it the
+	// residual is measured only where the background is a single tone.
+	Lettering *truth.Mask
+	// Diag is the scene's line of the diagnostics sidecar, or nil. Only the loss-point diagnosis
+	// of a scene with no plates reads it.
+	Diag *evidence.SidecarRecord
+}
+
+func (c Captures) open(rel string) image.Image {
+	if c.Open == nil || rel == "" {
+		return nil
+	}
+	return c.Open(rel)
 }
 
 // SceneScore is one scene measured across every dimension of the strategic table.
@@ -37,21 +77,32 @@ type SceneScore struct {
 	Split      corpus.Split      `json:"split"`
 	Viewport   string            `json:"viewport"`
 
-	Detection   DetectionScore   `json:"detection"`
-	Text        TextScore        `json:"text"`
-	Grouping    GroupingScore    `json:"grouping"`
-	Placement   PlacementScore   `json:"placement"`
-	Covered     float64          `json:"covered"`
-	Residual    ResidualScore    `json:"residual"`
-	Contrast    ContrastScore    `json:"contrast"`
-	Damage      DamageScore      `json:"damage"`
-	Replacement ReplacementScore `json:"replacement"`
-	Stress      StressBreakdown  `json:"stress"`
-	Cost        CostScore        `json:"cost"`
+	Detection DetectionScore `json:"detection"`
+	Text      TextScore      `json:"text"`
+	Grouping  GroupingScore  `json:"grouping"`
+	Placement PlacementScore `json:"placement"`
+	Covered   float64        `json:"covered"`
+	// Residual is measured on the primary observation's text-hidden capture.
+	Residual           ResidualScore    `json:"residual"`
+	BackgroundContrast ContrastScore    `json:"backgroundContrast"`
+	Readability        ReadabilityScore `json:"replacementReadability"`
+	// Damage is the protected pixels the overlay actually painted, the worst over every observation;
+	// RectangleIntrusion is the plates' bounding rectangles over protected content, worst over the
+	// matrix. Only Damage feeds hard failures and the gate.
+	Damage             DamageScore                `json:"damage"`
+	RectangleIntrusion DamageScore                `json:"rectangleIntrusion"`
+	Replacement        ReplacementScore           `json:"replacement"`
+	Stress             StressBreakdown            `json:"stress"`
+	Cost               CostScore                  `json:"cost"`
+	PixelDiagnostics   map[string]PixelDiagnostic `json:"pixelDiagnostics,omitempty"`
 
 	// Failures names, in words, every dimension that failed in a way the strategic spec calls
 	// hard. The report shows this string; an aggregate can never make it disappear.
 	Failures []string `json:"failures,omitempty"`
+
+	// Loss says where the text was lost when the scene has annotated text and no plates. It
+	// explains the "no plates at all" failure and never replaces or rewords it.
+	Loss *LossPoint `json:"loss,omitempty"`
 }
 
 // Skipped is a scene that could not be scored and why.
@@ -62,21 +113,27 @@ type Skipped struct {
 
 // Score measures one scene at the primary viewport, with drift taken across all viewports.
 //
-// source and rendered may be nil - the geometric dimensions still score, and the pixel-level
-// ones report zero with the sample size that says so. That is what lets `ocrlab score` re-run
-// offline over an old evidence file whose screenshots have been cleaned up.
+// Any part of caps may be absent - the geometric dimensions still score, and the pixel-level
+// ones report unmeasured. That is what lets `ocrlab score` re-run offline over an old evidence
+// file whose screenshots have been cleaned up.
 func Score(
 	run *evidence.Run,
 	sc *evidence.Scene,
 	a *truth.Annotation,
 	s *corpus.Scene,
-	source, rendered image.Image,
+	caps Captures,
 ) (*SceneScore, error) {
 	if !a.IsTruth() {
 		return nil, fmt.Errorf("%w: %s", ErrNotTruth, a.NotTruthReason())
 	}
+	if ps := truth.Validate(a, s); len(ps) > 0 {
+		return nil, fmt.Errorf("invalid annotation: %s", strings.TrimSpace(ps[0].String()))
+	}
 	if sc.Error != "" {
 		return nil, fmt.Errorf("scene errored during the run: %s", sc.Error)
+	}
+	if sc.Unmeasured != "" {
+		return nil, errors.New(sc.Unmeasured)
 	}
 	w, h := a.ImageWidth, a.ImageHeight
 	if w <= 0 || h <= 0 {
@@ -96,7 +153,7 @@ func Score(
 		Categories: s.Categories,
 		Split:      s.Split,
 		Viewport:   viewport,
-		Cost:       CostScore{OcrMs: sc.OcrMs, RenderMs: sc.RenderMs, PeakRSSBytes: sc.PeakRSSBytes},
+		Cost:       CostScore{OcrMs: sc.OcrMs, RenderMs: sc.RenderMs, PeakRSSBytes: sc.PeakRSSBytes, MemoryKind: sc.MemoryKind, MemoryBytes: sc.MemoryBytes},
 	}
 
 	plates := sc.PlatesFor(viewport, PrimaryStressCase)
@@ -110,9 +167,18 @@ func Score(
 	out.Placement.Drift, out.Placement.DriftGroup = Drift(
 		MatchesByViewport(sc, groups, run.Viewports, PrimaryStressCase, w, h), w, h)
 
-	out.Damage = Damage(plates, a, w, h)
+	out.RectangleIntrusion = RectangleIntrusion(plates, a, w, h)
 	out.Replacement = Replacement(plates, groups, matches, w, h)
-	out.Stress = ReplacementByStress(sc, groups, viewport, w, h)
+	out.Stress = StressBreakdown{}
+	for _, v := range run.Viewports {
+		for key, value := range ReplacementByStress(sc, groups, v.Name, w, h) {
+			out.Stress[v.Name+"/"+key] = value
+			intrusion := RectangleIntrusion(sc.PlatesFor(v.Name, key), a, w, h)
+			if intrusion.ProtectedHit > out.RectangleIntrusion.ProtectedHit {
+				out.RectangleIntrusion = intrusion
+			}
+		}
+	}
 
 	// Concealment over the whole scene: the mean over groups, plus the worst residual, because
 	// one legible original word is a failure however good the average is.
@@ -122,23 +188,81 @@ func Score(
 	}
 	out.Covered = mean(coveredVals)
 
-	if source != nil && rendered != nil {
-		out.Residual.Measured = true
-		for _, g := range groups {
-			r := ResidualInk(source, rendered, g, w, h)
-			out.Residual.InkPx += r.InkPx
-			if r.Residual > out.Residual.Residual {
-				out.Residual.Residual = r.Residual
-			}
-			if r.Halo > out.Residual.Halo {
-				out.Residual.Halo = r.Halo
-			}
+	out.PixelDiagnostics = map[string]PixelDiagnostic{}
+	for _, o := range sc.Observations {
+		out.PixelDiagnostics[o.Viewport+"/"+o.StressCase] = observationPixels(caps, o, sc.PlatesFor(o.Viewport, o.StressCase), a, w, h)
+	}
+	out.Damage = worstPainted(sc.Observations, out.PixelDiagnostics)
+
+	// The scene-level pixel measures describe the primary observation, the unmodified text.
+	primary, ok := out.PixelDiagnostics[viewport+"/"+PrimaryStressCase]
+	if ok {
+		out.Residual = primary.Concealment
+		out.BackgroundContrast = primary.BackgroundContrast
+		out.Readability = primary.ReplacementReadability
+	} else {
+		out.Residual = unmeasuredResidual("no observation recorded for the primary viewport")
+		out.Readability = unmeasuredReadability("no observation recorded for the primary viewport")
+		if caps.Rendered != nil {
+			out.BackgroundContrast = BackgroundContrast(caps.Rendered, plates, w, h)
 		}
-		out.Contrast = RenderedContrast(rendered, plates, w, h)
 	}
 
 	out.Failures = hardFailures(out)
+	if noPlatesOverText(out) {
+		loss := DiagnoseLoss(caps.Diag)
+		out.Loss = &loss
+	}
 	return out, nil
+}
+
+// observationPixels measures one observation. The normal capture shows what a reader sees; the
+// text-hidden one keeps the plates and hides the replacement glyphs, which is what separates new
+// text from old lettering and painted support from glyphs.
+func observationPixels(caps Captures, o evidence.Observation, plates []evidence.Plate, a *truth.Annotation, w, h int) PixelDiagnostic {
+	normal, hidden := caps.open(o.Rendered), caps.open(o.Concealed)
+	d := PixelDiagnostic{
+		Concealment:            ResidualAcross(caps.Source, hidden, caps.Lettering, a.Groups, w, h),
+		ReplacementReadability: ReplacementReadability(normal, hidden, plates, w, h),
+		RectangleIntrusion:     RectangleIntrusion(plates, a, w, h),
+		PaintedDamage:          PaintedDamage(caps.Source, hidden, plates, a, w, h),
+	}
+	if normal != nil {
+		d.BackgroundContrast = BackgroundContrast(normal, plates, w, h)
+	}
+	return d
+}
+
+// worstPainted is the largest painted protected-pixel count over the observed matrix. Pixels
+// proven painted over protected content are a floor, so they stay in the result and still fail
+// the scene when some other observation could not be measured; the scene is then marked
+// unmeasured so that a run missing captures can never read as clean.
+func worstPainted(observations []evidence.Observation, diags map[string]PixelDiagnostic) DamageScore {
+	worst := DamageScore{State: StateMeasured}
+	measured := 0
+	var missing []string
+	for _, o := range observations {
+		key := o.Viewport + "/" + o.StressCase
+		d := diags[key].PaintedDamage
+		if !d.IsMeasured() {
+			missing = append(missing, key+": "+d.Reason)
+			continue
+		}
+		if measured == 0 || d.ProtectedHit > worst.ProtectedHit {
+			worst = d
+		}
+		measured++
+	}
+	switch {
+	case len(observations) == 0:
+		return DamageScore{State: StateUnmeasured, Reason: "no observation recorded"}
+	case measured == 0:
+		return DamageScore{State: StateUnmeasured, Reason: missing[0]}
+	case len(missing) > 0:
+		worst.State = StateUnmeasured
+		worst.Reason = fmt.Sprintf("%d of %d observation(s) unmeasured - %s", len(missing), len(observations), missing[0])
+	}
+	return worst
 }
 
 // hardFailures lists the strategic spec's zero-tolerance conditions that this scene hit. It
@@ -148,7 +272,7 @@ func hardFailures(s *SceneScore) []string {
 	var out []string
 	// Not a bound, a fact: the scene has annotated text and the overlay drew nothing over any of
 	// it, so a reader sees the original lettering untouched and untranslatable.
-	if s.Replacement.Plates == 0 && s.Detection.FN > 0 {
+	if noPlatesOverText(s) {
 		out = append(out, fmt.Sprintf("no plates at all over %d annotated group(s) - the original text is left as-is", s.Detection.FN))
 	}
 	if s.Damage.ProtectedHit > 0 {
@@ -163,6 +287,9 @@ func hardFailures(s *SceneScore) []string {
 	}
 	for _, name := range sortedKeys(s.Stress) {
 		r := s.Stress[name]
+		if r.OutOfBounds > 0 {
+			out = append(out, fmt.Sprintf("%s: %d plate(s) outside image", name, r.OutOfBounds))
+		}
 		if r.Clipped > 0 {
 			out = append(out, fmt.Sprintf("%s: %d plate(s) clipped", name, r.Clipped))
 		}
@@ -217,8 +344,11 @@ type Bucket struct {
 	// Scenes whose concealment could not be measured, so WorstResidual and WorstHalo are silent
 	// about them. A non-zero value here means the two worst-ofs above cover fewer scenes than
 	// Scenes says, and must be reported rather than averaged away.
-	UnmeasuredConcealment int     `json:"unmeasuredConcealment"`
-	MinContrast           float64 `json:"minContrast"`
+	UnmeasuredConcealment int `json:"unmeasuredConcealment"`
+	// Scenes whose painted protected-pixel damage could not be measured for every observation,
+	// so ProtectedHitPx is a floor rather than the whole count. Same rule: report, never average.
+	UnmeasuredDamage      int     `json:"unmeasuredDamage"`
+	MinBackgroundContrast float64 `json:"minBackgroundContrast"`
 	Merges                int     `json:"merges"`
 	Splits                int     `json:"splits"`
 	ProtectedHitPx        int     `json:"protectedHitPx"`
@@ -231,12 +361,24 @@ type Bucket struct {
 
 // Summary is the whole run's result, sliced the ways a decision is actually made.
 type Summary struct {
-	Edition    evidence.Edition            `json:"edition"`
-	RunID      string                      `json:"runId"`
-	Overall    Bucket                      `json:"overall"`
-	ByCategory map[corpus.Category]*Bucket `json:"byCategory"`
-	BySplit    map[corpus.Split]*Bucket    `json:"bySplit"`
-	Skipped    []Skipped                   `json:"skipped"`
+	Edition           evidence.Edition            `json:"edition"`
+	RunID             string                      `json:"runId"`
+	Overall           Bucket                      `json:"overall"`
+	ByCategory        map[corpus.Category]*Bucket `json:"byCategory"`
+	BySplit           map[corpus.Split]*Bucket    `json:"bySplit"`
+	Procedure         string                      `json:"procedure,omitempty"`
+	Purpose           string                      `json:"purpose,omitempty"`
+	EvidenceIssues    []string                    `json:"evidenceIssues,omitempty"`
+	EvidenceDigest    string                      `json:"evidenceDigest,omitempty"`
+	ScoresDigest      string                      `json:"scoresDigest,omitempty"`
+	InputDigest       string                      `json:"inputDigest,omitempty"`
+	DeclarationDigest string                      `json:"declarationDigest,omitempty"`
+	ScorerDigest      string                      `json:"scorerDigest,omitempty"`
+	// CollectedScenes and ReusedScenes say how the run's evidence was obtained: a reused scene was
+	// copied from an earlier complete run (Scene.ReusedFrom) and only scored again here.
+	CollectedScenes int       `json:"collectedScenes,omitempty"`
+	ReusedScenes    int       `json:"reusedScenes,omitempty"`
+	Skipped         []Skipped `json:"skipped"`
 }
 
 // Aggregate folds per-scene scores into the summary. Skipped scenes are carried through
@@ -288,7 +430,9 @@ type accum struct {
 
 func (a *accum) add(s *SceneScore, b *Bucket) {
 	b.Scenes++
-	a.recall = append(a.recall, s.Detection.Recall)
+	if s.Detection.TP+s.Detection.FN > 0 {
+		a.recall = append(a.recall, s.Detection.Recall)
+	}
 	a.precision = append(a.precision, s.Detection.Precision)
 	if s.Text.Compared > 0 {
 		a.cer = append(a.cer, s.Text.MeanCER)
@@ -312,7 +456,7 @@ func (a *accum) add(s *SceneScore, b *Bucket) {
 	// Only a measured scene may move the worst-of. An unmeasured one carries a zero that reads as
 	// flawless concealment, which is how a run with no stored render scored better than one that
 	// had them - see DEV/research/ocrlab/2026-08-15__extension-parity-run.md.
-	if s.Residual.Measured {
+	if s.Residual.IsMeasured() {
 		if s.Residual.Residual > b.WorstResidual {
 			b.WorstResidual = s.Residual.Residual
 		}
@@ -322,8 +466,11 @@ func (a *accum) add(s *SceneScore, b *Bucket) {
 	} else {
 		b.UnmeasuredConcealment++
 	}
-	if s.Contrast.Plates > 0 && (b.MinContrast == 0 || s.Contrast.MinLuma < b.MinContrast) {
-		b.MinContrast = s.Contrast.MinLuma
+	if s.BackgroundContrast.Plates > 0 && (b.MinBackgroundContrast == 0 || s.BackgroundContrast.MinLuma < b.MinBackgroundContrast) {
+		b.MinBackgroundContrast = s.BackgroundContrast.MinLuma
+	}
+	if !s.Damage.IsMeasured() {
+		b.UnmeasuredDamage++
 	}
 	if s.Placement.Drift > b.WorstDrift {
 		b.WorstDrift = s.Placement.Drift

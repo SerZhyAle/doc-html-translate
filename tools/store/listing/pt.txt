@@ -9,7 +9,7 @@
 Doc-HTML-Translate
 
 @@ShortDescription
-Converte EPUB, PDF, MOBI, banda desenhada e mais em HTML local limpo, com um sumário de verdade, OCR e tradução opcional.
+Converte EPUB, PDF, MOBI, quadrinhos e mais em HTML local limpo, com um sumário de verdade, OCR e tradução opcional.
 
 @@Description
 Transforme os seus livros digitais e documentos em páginas web limpas e legíveis - no seu próprio PC, sem conta.
@@ -38,7 +38,7 @@ instalado (apenas ficheiros sem DRM).
 Sem conta, sem anúncios, sem telemetria. Código aberto: https://github.com/SerZhyAle/doc-html-translate
 
 @@Feature1
-Converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, arquivos de banda desenhada (CBZ/CBR/CB7/CBT) e imagens em HTML local limpo
+Converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, arquivos de quadrinhos (CBZ/CBR/CB7/CBT) e imagens em HTML local limpo
 
 @@Feature2
 Sumário real de vários níveis com navegação gerada
@@ -62,7 +62,7 @@ Traz uma CLI (doc-html-translate) e uma interface (doc-html-ui); sem conta, sem 
 Tradução gratuita num clique com a tradução de página do navegador - sem chave de API
 
 @@Feature9
-Funciona totalmente offline; código aberto sob a licença MIT
+A conversão e a leitura são feitas no seu computador; código aberto sob a licença MIT
 
 @@Feature10
 O resultado é HTML simples - abre em qualquer navegador, em qualquer dispositivo, e continua legível
@@ -77,25 +77,25 @@ Uma página longa ou dividida em capítulos com sumário - você escolhe
 Interface em 13 idiomas, escolhida automaticamente pelo idioma do Windows
 
 @@SearchTerm1
-epub para html
+converter epub para html
 
 @@SearchTerm2
-pdf para html
+traduzir epub
 
 @@SearchTerm3
-conversor de ebooks
+traduzir livro pdf
 
 @@SearchTerm4
-mobi azw3 fb2
+conversor de ebook
 
 @@SearchTerm5
-ocr traduzir documento
+leitor epub
 
 @@SearchTerm6
-banda desenhada cbz cbr
+traduzir quadrinhos
 
 @@SearchTerm7
-tradução offline
+traduzir texto de imagem
 
 @@ReleaseNotes
 - Os arquivos secretos do FileDO (.fd-sec) abrem diretamente: o conversor pede a senha, converte e remove a cópia temporária.

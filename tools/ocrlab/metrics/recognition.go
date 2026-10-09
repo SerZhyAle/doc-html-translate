@@ -166,12 +166,19 @@ func Detection(plates []evidence.Plate, a *truth.Annotation, groups []truth.Grou
 
 // TextScore is the reading accuracy over the groups that were both clear and matched.
 type TextScore struct {
-	MeanCER  float64 `json:"meanCer"`
-	MeanWER  float64 `json:"meanWer"`
-	WorstID  string  `json:"worstGroupId,omitempty"`
-	WorstCER float64 `json:"worstCer"`
-	Compared int     `json:"compared"`
-	Skipped  int     `json:"skipped"`
+	MeanCER          float64 `json:"meanCer"`
+	MeanWER          float64 `json:"meanWer"`
+	WorstID          string  `json:"worstGroupId,omitempty"`
+	WorstCER         float64 `json:"worstCer"`
+	Compared         int     `json:"compared"`
+	Measured         bool    `json:"measured"`
+	StrictCER        float64 `json:"strictCer"`
+	StrictWER        float64 `json:"strictWer"`
+	ReferenceChars   int     `json:"referenceChars"`
+	ReferenceWords   int     `json:"referenceWords"`
+	StrictCharErrors int     `json:"strictCharErrors"`
+	StrictWordErrors int     `json:"strictWordErrors"`
+	Skipped          int     `json:"skipped"`
 }
 
 // Text scores the recognized strings of matched pairs against their transcripts.
@@ -183,6 +190,12 @@ func Text(matches []Match, a *truth.Annotation) TextScore {
 			s.Skipped++
 			continue
 		}
+		g, w := []rune(m.Plate.Text), []rune(m.Group.Transcript)
+		s.ReferenceChars += len(w)
+		s.StrictCharErrors += levenshtein(g, w)
+		gw, ww := strings.Fields(m.Plate.Text), strings.Fields(m.Group.Transcript)
+		s.ReferenceWords += len(ww)
+		s.StrictWordErrors += levenshteinStr(gw, ww)
 		c := CER(m.Plate.Text, m.Group.Transcript)
 		cers = append(cers, c)
 		wers = append(wers, WER(m.Plate.Text, m.Group.Transcript))
@@ -190,6 +203,11 @@ func Text(matches []Match, a *truth.Annotation) TextScore {
 			s.WorstCER, s.WorstID = c, m.Group.ID
 		}
 		s.Compared++
+	}
+	s.Measured = s.Compared > 0
+	if s.Measured {
+		s.StrictCER = errorRate(s.ReferenceChars, s.StrictCharErrors)
+		s.StrictWER = errorRate(s.ReferenceWords, s.StrictWordErrors)
 	}
 	s.MeanCER, s.MeanWER = mean(cers), mean(wers)
 	return s

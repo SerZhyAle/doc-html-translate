@@ -76,6 +76,10 @@ var ocrCSS = appearance.OverlayCSS(OverlayStyleNames)
 // reading order in the document, so where one overlaps another the later one paints on top. Every fit
 // restores the source top first, so a lift is undone when the text shrinks back.
 //
+// The plate's min-height is a percentage of the figure and Chrome reports the computed value
+// unresolved ("34.29%"), so fit() resolves it against the figure's height itself; a bare parseFloat
+// would pin the box to 34.29 px, past the bottom of any figure under 100 px (a phone-sized one).
+//
 // Injected once per overlaid page. Without it nothing is clipped either: the plate carries only a
 // min-height, so overflow:hidden has no height to cut against and the box grows at the unfitted
 // size, over whatever lies below (measured, DEV/research/page_ocr_placement_2026-09-25). Mirrors
@@ -90,7 +94,7 @@ function fit(b){
   if(!b.dataset.ocrCqw){var m=/([0-9.]+)cqw/.exec(b.style.fontSize||"");b.dataset.ocrCqw=m?m[1]:"0";}
   var base=parseFloat(b.dataset.ocrCqw);
   b.style.height="";
-  var target=parseFloat(getComputedStyle(b).minHeight)||0;
+  var mh=getComputedStyle(b).minHeight,target=/%$/.test(mh)?(parseFloat(mh)/100*b.parentNode.getBoundingClientRect().height||0):(parseFloat(mh)||0);
   if(target>0)b.style.height=target+"px";
   if(base>0){var s=base,floor=base*0.5,g=0;b.style.fontSize=s+"cqw";
     while(b.scrollHeight>b.clientHeight+1&&s>floor&&g<40){s-=Math.max(0.3,s*0.08);g++;b.style.fontSize=s+"cqw";}

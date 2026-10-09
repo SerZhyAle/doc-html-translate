@@ -62,9 +62,9 @@ Document Page Translator - PDF, EPUB & more (Free & Local)
 > Jul 2026). Keep only the two headline formats (PDF, EPUB) + "other documents" - do NOT re-enumerate
 > all nine formats here. The full list still lives in the detailed description below, in prose.
 
-Re-render PDF, EPUB & other documents as clean HTML the browser's free Translate page can read - incl. image OCR. 100% local.
-- RU: Открывайте PDF, EPUB и другие документы как чистый HTML - браузер переводит бесплатно, плюс OCR текста на картинках. Локально.
-- UK: Відкривайте PDF, EPUB та інші документи як чистий HTML - браузер перекладає безкоштовно, плюс OCR тексту на зображеннях. Локально.
+Open PDF, EPUB and more as clean HTML that the browser's free Translate can read, with image OCR. Conversion happens locally.
+- RU: Открывайте PDF, EPUB и другое как чистый HTML, который читает бесплатный перевод браузера, плюс OCR картинок. Конвертация локально.
+- UK: Відкривайте PDF, EPUB та інше як чистий HTML, який читає безкоштовний переклад браузера, плюс OCR зображень. Конвертація локально.
 
 ## Category
 Productivity
@@ -192,9 +192,9 @@ the screenshot description) per language.
   so the window chrome is visible - the right-click menu "Translate to [language]" over the reflowed
   document, with the extension's toolbar popup (toggles) in the corner. A native context menu is drawn by
   the OS and does not appear in a headless capture, which is why this frame is not generated.
-  - EN: Right-click, "Translate to ..", done - 100% local, nothing leaves your device.
-  - RU: Правый клик, «Перевести на ..», готово - 100% локально, ничего не покидает ваше устройство.
-  - UK: Правий клік, «Перекласти на ..», готово - 100% локально, нічого не залишає ваш пристрій.
+  - EN: Right-click, "Translate to ..", done - the document is converted on your device.
+  - RU: Правый клик, «Перевести на ..», готово - документ преобразуется на вашем устройстве.
+  - UK: Правий клік, «Перекласти на ..», готово - документ перетворюється на вашому пристрої.
 - Small promo tile 440x280 (optional), marquee 1400x560 (optional).
 - Hosted privacy-policy URL: **already prepared** at `extension-privacy.html` in the repo root - once the
   GitHub Pages site is deployed it is served at

@@ -58,7 +58,7 @@ func resolveStagingRoot(candidates []string, short func(string) string) (string,
 			continue
 		}
 		safe, ok := asciiForm(dir, short)
-		if !ok || !writable(safe) {
+		if !ok || !fitsEngine(safe, stagingNameReserve) || !writable(safe) {
 			tried = append(tried, dir)
 			continue
 		}
@@ -68,14 +68,39 @@ func resolveStagingRoot(candidates []string, short func(string) string) (string,
 		strings.Join(tried, "; "))
 }
 
-// asciiForm returns p itself when it is ASCII, else its short name when that is ASCII. A volume
-// with short names turned off gives the long name back, which fails the check - that is the case
-// the fallback roots exist for.
+// stagingNameReserve is the room a staging root must leave for what is created under it: the
+// mirror folder plus a language pack name, which is the longest thing joined onto a root.
+const stagingNameReserve = 64
+
+// EnginePathLimit is the longest path, in characters, the engine can open itself; 0 means no
+// limit. Longer paths are staged under a short root, so callers use this to know when that
+// happened (the OCR lab classifies a failure by it) rather than to restrict anything.
+func EnginePathLimit() int { return maxEnginePath }
+
+// fitsEngine reports whether a path of p plus extra more characters is within the engine's path
+// limit (maxEnginePath, set per platform; 0 means no limit).
+func fitsEngine(p string, extra int) bool {
+	if maxEnginePath <= 0 {
+		return true
+	}
+	// The engine resolves a relative path against its working directory, so the limit applies to
+	// the absolute form: a short relative name can still be a 260-character path.
+	if abs, err := filepath.Abs(p); err == nil {
+		p = abs
+	}
+	return len(p)+extra <= maxEnginePath
+}
+
+// asciiForm returns p itself when it is ASCII and within the engine's path limit, else its short
+// name when that qualifies. A volume with short names turned off gives the long name back, which
+// fails the check - that is the case the fallback roots exist for. The limit matters as much as
+// the alphabet: Tesseract is a Win32 binary without long-path support, so a 260-character ASCII
+// path fails with "cannot read input file" exactly as a mangled one does.
 func asciiForm(p string, short func(string) string) (string, bool) {
-	if isASCIIPath(p) {
+	if isASCIIPath(p) && fitsEngine(p, 0) {
 		return p, true
 	}
-	if s := short(p); isASCIIPath(s) {
+	if s := short(p); isASCIIPath(s) && fitsEngine(s, 0) {
 		return s, true
 	}
 	return "", false
@@ -177,8 +202,8 @@ func writeTempPNG(img image.Image) (path string, cleanup func(), ok bool) {
 	return name, func() { _ = os.Remove(name) }, true
 }
 
-// stageASCIIPath returns a path safe to hand tesseract: the path itself when it is ASCII, its short
-// name when that is, else a copy under the staging root. The cleanup func removes any copy and is
+// stageASCIIPath returns a path safe to hand tesseract: the path itself when it is ASCII and short
+// enough, its short name when that is, else a copy under the staging root. The cleanup func removes any copy and is
 // never nil. A failed copy returns the original path, so the engine's own error reaches the report
 // for that image. Mirrors internal/pdf's stagePDFForPDFToText.
 func stageASCIIPath(imgPath string) (string, func()) {

@@ -104,12 +104,22 @@ type StressBreakdown map[string]ReplacementScore
 func ReplacementByStress(sc *evidence.Scene, groups []truth.Group, viewport string, w, h int) StressBreakdown {
 	out := StressBreakdown{}
 	cases := sc.StressCases()
+	for _, o := range sc.Observations {
+		if o.Viewport == viewport {
+			found := false
+			for _, c := range cases {
+				if c == o.StressCase {
+					found = true
+				}
+			}
+			if !found {
+				cases = append(cases, o.StressCase)
+			}
+		}
+	}
 	sort.Strings(cases)
 	for _, name := range cases {
 		plates := sc.PlatesFor(viewport, name)
-		if len(plates) == 0 {
-			continue
-		}
 		matches, _, _ := MatchPlates(plates, groups, w, h)
 		out[name] = Replacement(plates, groups, matches, w, h)
 	}

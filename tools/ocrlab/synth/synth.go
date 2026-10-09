@@ -49,13 +49,17 @@ const Dir = "synthetic"
 type canvas struct {
 	img *image.RGBA
 	ann *truth.Annotation
+	// lettering collects the coverage of every line drawn, separately from the picture, so the
+	// exact lettering mask exists independently of any pixel read back from the image.
+	lettering *image.Alpha
 }
 
 func newCanvas(sceneID string, w, h int, bg color.RGBA) *canvas {
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.Draw(img, img.Bounds(), &image.Uniform{bg}, image.Point{}, draw.Src)
 	return &canvas{
-		img: img,
+		img:       img,
+		lettering: image.NewAlpha(img.Bounds()),
 		ann: &truth.Annotation{
 			SchemaVersion: truth.SchemaVersion,
 			SceneID:       sceneID,
@@ -111,6 +115,7 @@ func (c *canvas) drawLine(text string, x, y int, ink color.RGBA, face font.Face)
 	}
 	advance := d.MeasureString(text)
 	d.DrawString(text)
+	(&font.Drawer{Dst: c.lettering, Src: image.Opaque, Face: face, Dot: fixed.P(x, baseline)}).DrawString(text)
 	return truth.Box("", x, y, x+advance.Ceil(), baseline+m.Descent.Ceil())
 }
 
@@ -536,4 +541,36 @@ func writePNG(path string, img image.Image) error {
 		return err
 	}
 	return f.Close()
+}
+
+// letteringCore is the coverage at or above which a glyph pixel is listed in the lettering mask.
+// A pixel covered less than that differs from the background by under half the ink contrast and
+// can fall within codec noise of it, so it could not be told from background after removal.
+const letteringCore = 128
+
+// GenerateLettering writes the exact lettering mask of every generated scene next to its
+// annotation, as <scene-id>.lettering.png: white where the drawing put a glyph's core. The mask
+// is a by-product of drawing the text, not something read back from the picture, which is what
+// makes it an independent answer to "where was the lettering".
+func GenerateLettering(dir string) (int, error) {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, b := range builders() {
+		c := b.draw()
+		mask := image.NewGray(c.lettering.Bounds())
+		for y := mask.Rect.Min.Y; y < mask.Rect.Max.Y; y++ {
+			for x := mask.Rect.Min.X; x < mask.Rect.Max.X; x++ {
+				if c.lettering.AlphaAt(x, y).A >= letteringCore {
+					mask.SetGray(x, y, color.Gray{Y: 255})
+				}
+			}
+		}
+		if err := writePNG(truth.LetteringPath(dir, b.id), mask); err != nil {
+			return n, fmt.Errorf("%s: %w", b.id, err)
+		}
+		n++
+	}
+	return n, nil
 }

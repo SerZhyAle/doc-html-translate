@@ -58,7 +58,7 @@ AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
 用浏览器内置的页面翻译一键免费翻译 - 无需 API 密钥
 
 @@Feature9
-完全离线可用；基于 MIT 许可证开源
+转换和阅读都在您的电脑上完成；基于 MIT 许可证开源
 
 @@Feature10
 输出是普通 HTML - 任何浏览器、任何设备都能打开，并且长久可读
@@ -73,25 +73,25 @@ AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
 13 种语言的界面，按你的 Windows 语言自动选择
 
 @@SearchTerm1
-epub 转 html
+epub 翻译
 
 @@SearchTerm2
-pdf 转 html
+pdf翻译
 
 @@SearchTerm3
-电子书转换器
+电子书格式转换
 
 @@SearchTerm4
-mobi azw3 fb2
+epub阅读器
 
 @@SearchTerm5
-文字识别 文档翻译
+漫画翻译
 
 @@SearchTerm6
-漫画 cbz cbr
+cbz阅读器
 
 @@SearchTerm7
-离线翻译
+图片 ocr 翻译
 
 @@ReleaseNotes
 - 可直接打开 FileDO 加密文件（.fd-sec）：转换器会询问密码、完成转换并删除临时副本。

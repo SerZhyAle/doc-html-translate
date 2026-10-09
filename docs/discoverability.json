@@ -1,0 +1,35 @@
+{
+  "$comment": "The discoverability fields of doc-html-translate, typed once (ticket 111, canon PROMOTION section 2): what GitHub, winget, the Store and the extension listings are told to be found by. Derived from docs/POSITIONING.md; tests/discoverability_test.go holds the build-owned lists (winget Tags, Store search terms) against this file. A term enters a list only through allowedTags; a competitor's name never enters this file - the closed vocabulary is what keeps one out.",
+  "github": {
+    "description": "Ebook and document converter to local HTML: read EPUB, PDF, MOBI, FB2 and comic archives (CBZ/CBR) as a clean page with a table of contents, then translate it with your browser's own page translation - free, no key. OCR for scans. Windows app, Chrome and Edge extension.",
+    "homepage": "https://serzhyale.github.io/doc-html-translate/",
+    "topics": [
+      "azw3", "cbz", "chrome-extension", "cli", "comics", "ebook", "ebook-reader", "edge-extension",
+      "epub", "epub-reader", "fb2", "golang", "html-converter", "mobi", "ocr", "pdf",
+      "translation", "windows", "windows-app", "winget"
+    ]
+  },
+  "winget": {
+    "moniker": "doc-html-translate",
+    "tags": [
+      "azw3", "cbz", "cli", "comics", "converter", "ebook", "ebook-reader", "epub",
+      "fb2", "html", "mobi", "ocr", "pdf", "reader", "translation", "windows"
+    ]
+  },
+  "allowedTags": [
+    "azw3", "cbz", "chrome-extension", "cli", "comics", "converter", "ebook", "ebook-reader",
+    "edge-extension", "epub", "epub-reader", "fb2", "golang", "html", "html-converter", "markdown",
+    "mobi", "ocr", "pdf", "reader", "rtf", "translation", "txt", "windows", "windows-app", "winget"
+  ],
+  "droppedTerms": [
+    { "term": "google-translate", "reason": "names a translation service as a keyword: the free path is the browser's own page translation, and Google Cloud Translation is an optional engine on the user's own key" },
+    { "term": "ollama", "reason": "an optional local engine, not what the product is; it brought a community the product does not serve first" },
+    { "term": "desktop", "reason": "too generic to rank for and implied by windows-app" }
+  ],
+  "droppedPhrases": [
+    { "phrase": "offline translation", "reason": "the free path is the browser's online page translation, which sends the page text out; only conversion and reading are local" },
+    { "phrase": "100% local", "reason": "over-claims for the same reason" },
+    { "phrase": "nothing leaves your pc", "reason": "the user-initiated log report and the optional Google Cloud path leave the machine" }
+  ],
+  "forbiddenPhrases": ["alternative to", "alternatives to", " vs ", "instead of", "replacement for", "better than"]
+}

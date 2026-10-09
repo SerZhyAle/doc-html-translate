@@ -32,7 +32,7 @@
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
-    "message": "Відкривайте PDF, EPUB та інші документи як чистий HTML - браузер перекладає безкоштовно, плюс OCR тексту на зображеннях. Локально.",
+    "message": "Відкривайте PDF, EPUB та інше як чистий HTML, який читає безкоштовний переклад браузера, плюс OCR зображень. Конвертація локально.",
     "description": "Manifest description and store short description (max 132 chars)."
   },
   "actionTitle": {
@@ -52,7 +52,7 @@
     "description": "Screenshot 2 caption."
   },
   "shot3Caption": {
-    "message": "Правий клік, «Перекласти на ..», готово - 100% локально, нічого не залишає ваш пристрій.",
+    "message": "Правий клік, «Перекласти на ..», готово - документ перетворюється на вашому пристрої.",
     "description": "Screenshot 3 caption."
   },
   "rootMenu": {
