@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -34,6 +35,10 @@ type injectionResult struct {
 	wantBoundary  string // a phrase the combined output or the run log must contain
 	wantBoundary2 string // an alternative accepted phrase
 	expectSuccess bool   // true when the injection must NOT abort the conversion (best-effort decisions)
+	// extra is the member's own continuation assertion over the captured console output (for the
+	// best-effort members: the run went on, and the rest of the book was still handled). It
+	// returns whether it holds and a short reason for the record.
+	extra func(output string) (bool, string)
 }
 
 // s16Members is the subset implemented now; the rest are named with their owning phase.
@@ -43,10 +48,10 @@ var s16Members = []s16Member{
 	{name: "missing-7zip", run: runMissingHelperCbr},
 	{name: "corrupt-archive", run: runCorruptArchive},
 	{name: "unreadable-file", run: runUnreadableFile},
-	{name: "disk-full", pending: "phase 01 step 01.01 (a sparse-target volume the stand creates)"},
+	{name: "ocr-image-failure", run: runOcrImageFailure},
+	{name: "missing-filedo", run: runMissingFileDO},
+	{name: "disk-full", pending: "phase 01 step 01.01 (a size-capped volume the stand creates; creating one needs an elevated one-time action the owner approves)"},
 	{name: "network-dead", pending: "phase 01 step 01.01 (a blocked-firewall profile the owner pre-approves)"},
-	{name: "ocr-image-failure", pending: "phase 01 step 01.01 (a planted half-image in a fixture)"},
-	{name: "missing-filedo", pending: "phase 01 step 01.03 (needs the FileDO container of S07)"},
 }
 
 func runSceneS16(env *runEnv, ctx context.Context, cycles int) (*record, error) {
@@ -75,23 +80,7 @@ func runSceneS16(env *runEnv, ctx context.Context, cycles int) (*record, error) 
 				appendNote(rec, "member %s could not run: %v", m.name, err)
 				continue
 			}
-			oc := outcomeCheck{Injection: m.name, ExitCode: inj.res.ExitCode}
-			named := inj.res.ExitCode == 0
-			if !inj.expectSuccess {
-				named = inj.res.ExitCode != 0
-			}
-			oc.NamedOutcome = named
-			oc.BoundaryLogFound = containsAny(inj.res.combinedTail, inj.wantBoundary, inj.wantBoundary2)
-			oc.StateConsistent = stateConsistentAfter(inj)
-			if log, lerr := findRunLog(inj.profile); lerr == nil {
-				if hits, where := countCanary([]string{log}, rec.Canary); hits > 0 {
-					oc.CanaryHits = hits
-					oc.CanaryWhere = strings.Join(where, ", ")
-				}
-			}
-			oc.Detail = fmt.Sprintf("exit %d, boundary %q / %q, wall %.0f ms",
-				inj.res.ExitCode, inj.wantBoundary, inj.wantBoundary2, inj.res.WallMs)
-			rec.OutcomeChecks = append(rec.OutcomeChecks, oc)
+			rec.OutcomeChecks = append(rec.OutcomeChecks, judgeInjection(m.name, inj, rec.Canary))
 		}
 	}
 
@@ -112,6 +101,35 @@ func runSceneS16(env *runEnv, ctx context.Context, cycles int) (*record, error) 
 		return rec, err
 	}
 	return rec, nil
+}
+
+// judgeInjection applies H8's assertions to one member's raw outcome: a named outcome (the exit
+// code the member's decision calls for), one boundary-naming line, no canary in the run log, and
+// a consistent state.
+func judgeInjection(name string, inj *injectionResult, canary string) outcomeCheck {
+	oc := outcomeCheck{Injection: name, ExitCode: inj.res.ExitCode}
+	named := inj.res.ExitCode == 0
+	if !inj.expectSuccess {
+		named = inj.res.ExitCode != 0
+	}
+	oc.NamedOutcome = named
+	oc.BoundaryLogFound = containsAny(inj.res.combinedTail, inj.wantBoundary, inj.wantBoundary2)
+	extraNote := ""
+	if inj.extra != nil {
+		ok, why := inj.extra(inj.res.combinedTail)
+		oc.BoundaryLogFound = oc.BoundaryLogFound && ok
+		extraNote = "; " + why
+	}
+	oc.StateConsistent = stateConsistentAfter(inj)
+	if log, lerr := findRunLog(inj.profile); lerr == nil {
+		if hits, where := countCanary([]string{log}, canary); hits > 0 {
+			oc.CanaryHits = hits
+			oc.CanaryWhere = strings.Join(where, ", ")
+		}
+	}
+	oc.Detail = fmt.Sprintf("exit %d, boundary %q / %q, wall %.0f ms%s",
+		inj.res.ExitCode, inj.wantBoundary, inj.wantBoundary2, inj.res.WallMs, extraNote)
+	return oc
 }
 
 // runMissingTesseract strips PATH so tesseract cannot be found, then converts the standalone
@@ -227,6 +245,83 @@ func runUnreadableFile(env *runEnv, rec *record, runDir string) (*injectionResul
 	}, nil
 }
 
+// overlaidRe reads the pipeline's OCR summary line ("OCR overlay: 2 image(s) overlaid, 1 failed").
+var overlaidRe = regexp.MustCompile(`OCR overlay: (\d+) image\(s\) overlaid(?:, \d+ with no text found)?, (\d+) failed`)
+
+// runOcrImageFailure converts a book whose middle page image is cut off mid-file, with OCR on.
+// OCR is best-effort by decision: the failed image is named, the other pages are still
+// recognized and the book is produced - the decision's measured consequence, not a finding
+// about the decision.
+func runOcrImageFailure(env *runEnv, rec *record, runDir string) (*injectionResult, error) {
+	profile := filepath.Join(runDir, "profile-ocr-image-failure")
+	out := filepath.Join(runDir, "out-ocr-image-failure")
+	res, err := env.execApp(context.Background(), rec.Binaries["app"].Path,
+		[]string{filepath.Join(env.fixturesDir, "epub-ocr-halfimage.epub"), "-noopen", "-ocr", "-folder", out},
+		execOptions{ProfileDir: profile, Dir: runDir}, rec.Canary)
+	if err != nil {
+		return nil, err
+	}
+	return &injectionResult{
+		res:           res,
+		profile:       profile,
+		outDir:        out,
+		wantBoundary:  "OCR failed on page2.png",
+		expectSuccess: true, // best-effort: one failed image never aborts the book
+		extra: func(output string) (bool, string) {
+			m := overlaidRe.FindStringSubmatch(output)
+			if m == nil {
+				return false, "no OCR summary line (OCR did not run: is tesseract installed?)"
+			}
+			if m[2] != "1" {
+				return false, fmt.Sprintf("expected exactly 1 failed image, summary says %s", m[2])
+			}
+			if m[1] == "0" {
+				return false, "the failed image took the whole book's OCR with it (0 images overlaid)"
+			}
+			return true, fmt.Sprintf("%s image(s) overlaid around the failed one", m[1])
+		},
+	}, nil
+}
+
+// runMissingFileDO opens a .fd-sec file with the FileDO override pointing at nothing, so FileDO
+// is unfindable whatever is installed. Locate runs before the password question and before the
+// length screen, so any file of the container extension is enough, and no password dialog may
+// appear.
+func runMissingFileDO(env *runEnv, rec *record, runDir string) (*injectionResult, error) {
+	if err := os.MkdirAll(runDir, 0o755); err != nil {
+		return nil, err
+	}
+	container := filepath.Join(runDir, "audit-container.fd-sec")
+	// 5632 bytes is the smallest size the credential-free length screen accepts; the content is
+	// zeros and never read, because FileDO is looked for first.
+	if err := os.WriteFile(container, make([]byte, 5632), 0o600); err != nil {
+		return nil, err
+	}
+	profile := filepath.Join(runDir, "profile-missing-filedo")
+	out := filepath.Join(runDir, "out-missing-filedo")
+	res, err := env.execApp(context.Background(), rec.Binaries["app"].Path,
+		[]string{container, "-noopen", "-folder", out},
+		execOptions{
+			ProfileDir: profile, Dir: runDir,
+			ExtraEnv: []string{"DOCHT_FILEDO=" + filepath.Join(runDir, "no-such-filedo", "filedo.exe")},
+		}, rec.Canary)
+	if err != nil {
+		return nil, err
+	}
+	return &injectionResult{
+		res:          res,
+		profile:      profile,
+		outDir:       out,
+		wantBoundary: "FileDO",
+		extra: func(output string) (bool, string) {
+			if !containsAny(output, "No password was asked") {
+				return false, "the message does not say that no password was asked"
+			}
+			return true, "no password was asked"
+		},
+	}, nil
+}
+
 // containsAny reports whether s contains any of the accepted phrases (case-insensitive).
 func containsAny(s string, phrases ...string) bool {
 	ls := strings.ToLower(s)
@@ -258,13 +353,18 @@ func noCompletionRecordOnFailure(inj *injectionResult) bool {
 		return true // a success is judged by its own member's expectations
 	}
 	// A failed run must not have left a completion record: no output of a failed conversion
-	// may later read as complete (the completion-record invariant).
+	// may later read as complete (the completion-record invariant). The ownership record itself
+	// legitimately exists from the moment the folder is claimed - it is its "complete" section
+	// that must be absent.
 	if inj.outDir == "" {
 		return true
 	}
 	found := false
 	_ = filepath.WalkDir(inj.outDir, func(path string, d os.DirEntry, err error) error {
-		if err == nil && !d.IsDir() && d.Name() == outputpath.MarkerName {
+		if err != nil || d.IsDir() || d.Name() != outputpath.MarkerName {
+			return nil
+		}
+		if m, rerr := outputpath.ReadMarker(filepath.Dir(path)); rerr == nil && m.Complete != nil {
 			found = true
 		}
 		return nil

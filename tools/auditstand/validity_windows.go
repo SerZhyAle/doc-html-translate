@@ -26,7 +26,11 @@ func processCPUTimes() (map[int]cpuCounter, error) {
 		if err == nil {
 			var created, exit, kernel, user windows.Filetime
 			if windows.GetProcessTimes(h, &created, &exit, &kernel, &user) == nil {
-				out[int(pe.ProcessID)] = cpuCounter{Ticks: (uint64(kernel.HighDateTime)<<32 | uint64(kernel.LowDateTime)) + (uint64(user.HighDateTime)<<32 | uint64(user.LowDateTime)), Parent: int(pe.ParentProcessID)}
+				out[int(pe.ProcessID)] = cpuCounter{
+					Ticks:  (uint64(kernel.HighDateTime)<<32 | uint64(kernel.LowDateTime)) + (uint64(user.HighDateTime)<<32 | uint64(user.LowDateTime)),
+					Parent: int(pe.ParentProcessID),
+					Image:  windows.UTF16ToString(pe.ExeFile[:]),
+				}
 			}
 			windows.CloseHandle(h)
 		}

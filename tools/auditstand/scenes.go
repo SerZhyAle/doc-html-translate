@@ -24,6 +24,8 @@ type sceneFunc func(env *runEnv, ctx context.Context, cycles int) (*record, erro
 // silent.
 var implementedScenes = map[sceneID]sceneFunc{
 	"S03": runSceneS03,
+	"S08": runSceneS08,
+	"S15": runSceneS15,
 	"S16": runSceneS16,
 }
 
@@ -111,6 +113,9 @@ func runScene(env *runEnv, id sceneID, cycles int) (res sceneResult, resultErr e
 		if reasons := env.watch.finish(); len(reasons) > 0 {
 			rec.Valid = false
 			rec.InvalidReasons = append(rec.InvalidReasons, reasons...)
+			if summary := env.watch.offenderSummary(); summary != "" {
+				appendNote(rec, "%s", summary)
+			}
 		}
 		env.watch = nil
 		rec.ControlRef = ctrl.RunID
@@ -195,9 +200,14 @@ func runScene(env *runEnv, id sceneID, cycles int) (res sceneResult, resultErr e
 		}
 	}
 	for _, oc := range rec.OutcomeChecks {
-		if !oc.NamedOutcome || !oc.BoundaryLogFound || oc.CanaryHits > 0 || !oc.StateConsistent {
-			fails = append(fails, fmt.Sprintf("outcome check %s violated (named=%v boundary_log=%v canary=%d consistent=%v)",
-				oc.Injection, oc.NamedOutcome, oc.BoundaryLogFound, oc.CanaryHits, oc.StateConsistent))
+		if !oc.NamedOutcome || !oc.BoundaryLogFound || oc.CanaryHits > 0 || !oc.StateConsistent || (oc.LocaleChecked && !oc.MessageInLocale) {
+			fails = append(fails, fmt.Sprintf("outcome check %s violated (named=%v boundary_log=%v canary=%d consistent=%v locale_checked=%v in_locale=%v)",
+				oc.Injection, oc.NamedOutcome, oc.BoundaryLogFound, oc.CanaryHits, oc.StateConsistent, oc.LocaleChecked, oc.MessageInLocale))
+		}
+	}
+	for _, sc := range rec.StateChecks {
+		if !sc.ok() {
+			fails = append(fails, fmt.Sprintf("toggle %s: observable=%v reverted=%v (%s)", sc.Toggle, sc.Observable, sc.Reverted, sc.Detail))
 		}
 	}
 	switch {

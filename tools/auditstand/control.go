@@ -97,6 +97,9 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 	if reasons := watch.finish(); len(reasons) > 0 {
 		rec.Valid = false
 		rec.InvalidReasons = append(rec.InvalidReasons, reasons...)
+		if summary := watch.offenderSummary(); summary != "" {
+			appendNote(rec, "%s", summary)
+		}
 	}
 	if len(rec.Measurements) == 0 {
 		rec.Valid = false
@@ -125,6 +128,9 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 	}
 	for _, r := range rec.InvalidReasons {
 		fmt.Printf("  INVALID: %s\n", r)
+	}
+	if summary := watch.offenderSummary(); summary != "" {
+		fmt.Printf("  %s\n", summary)
 	}
 	fmt.Printf("control.json: %s\n", dir)
 

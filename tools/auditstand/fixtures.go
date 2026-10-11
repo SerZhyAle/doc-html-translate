@@ -15,6 +15,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,6 +43,7 @@ type fixture struct {
 var fixtureCatalog = []fixture{
 	{"epub-small", "epub-small.epub", false, genEpubSmall},
 	{"epub-nested", "epub-nested.epub", false, genEpubNested},
+	{"epub-ocr-halfimage", "epub-ocr-halfimage.epub", false, genEpubOcrHalfImage},
 	{"pdf-text", "pdf-text.pdf", false, genPdfText},
 	{"pdf-scan", "pdf-scan.pdf", false, genPdfScan},
 	{"img-photo", "img-photo.png", false, genImgPhoto},
@@ -55,6 +57,7 @@ var fixtureCatalog = []fixture{
 	{"tiff-over-cap", "tiff-over-cap.tif", false, genOverCapTIFF},
 	{"comic-500", "comic-500.cbz", true, genComic500},
 	{"comic-big-2gb", "comic-big-2gb.cbz", true, genComicBig2gb},
+	{"comic-2gb-pages", "comic-2gb-pages.cbz", true, genComic2gbPages},
 	// The fd-sec container must be created by FileDO itself (FIXTURES.md).
 }
 
@@ -235,6 +238,88 @@ func nestedNavMap(chapters []epubChapter) string {
 	return b.String()
 }
 
+// genEpubOcrHalfImage is S16's "one OCR image failure mid-book": three pages that are each one
+// scanned image, the middle one cut off after 40% of its bytes. The first and last must still be
+// recognized and the run must finish - a failed image never aborts a book (OCR is best-effort by
+// decision; this fixture measures that decision's consequence).
+func genEpubOcrHalfImage(dir string) error {
+	f, err := os.Create(filepath.Join(dir, "epub-ocr-halfimage.epub"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := zip.NewWriter(f)
+	defer w.Close()
+	put := func(name string, content []byte, store bool) error {
+		h := &zip.FileHeader{Name: name, Method: zip.Deflate, Modified: fixtureTime}
+		if store {
+			h.Method = zip.Store
+		}
+		fw, err := w.CreateHeader(h)
+		if err != nil {
+			return err
+		}
+		_, err = fw.Write(content)
+		return err
+	}
+	if err := put("mimetype", []byte("application/epub+zip"), true); err != nil {
+		return err
+	}
+	if err := put("META-INF/container.xml", []byte(`<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+</container>`), false); err != nil {
+		return err
+	}
+	var manifest, spine, ncx strings.Builder
+	for i := 1; i <= 3; i++ {
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, scanPageImage(i)); err != nil {
+			return err
+		}
+		data := buf.Bytes()
+		if i == 2 {
+			data = data[:len(data)*4/10] // valid signature and header, then the file just ends
+		}
+		img := fmt.Sprintf("images/page%d.png", i)
+		if err := put("OEBPS/"+img, data, false); err != nil {
+			return err
+		}
+		id := fmt.Sprintf("ch%03d", i)
+		manifest.WriteString(fmt.Sprintf(`<item id="%s" href="%s.xhtml" media-type="application/xhtml+xml"/>`+"\n", id, id))
+		manifest.WriteString(fmt.Sprintf(`<item id="img%d" href="%s" media-type="image/png"/>`+"\n", i, img))
+		spine.WriteString(fmt.Sprintf(`<itemref idref="%s"/>`+"\n", id))
+		title := fmt.Sprintf("Scanned page %d", i)
+		if err := put("OEBPS/"+id+".xhtml", []byte(xhtmlDoc(title, fmt.Sprintf(`<p><img src="%s" alt="%s"/></p>`+"\n", img, title))), false); err != nil {
+			return err
+		}
+		ncx.WriteString(fmt.Sprintf(`<navPoint id="np%03d" playOrder="%d"><navLabel><text>%s</text></navLabel><content src="%s.xhtml"/></navPoint>`+"\n", i, i, title, id))
+	}
+	opf := fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Audit Half Image Book</dc:title>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">urn:uuid:11111111-2222-3333-4444-666666666666</dc:identifier>
+  </metadata>
+  <manifest>
+<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+%s  </manifest>
+  <spine toc="ncx">
+%s  </spine>
+</package>`, manifest.String(), spine.String())
+	if err := put("OEBPS/content.opf", []byte(opf), false); err != nil {
+		return err
+	}
+	return put("OEBPS/toc.ncx", []byte(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head><meta name="dtb:uid" content="urn:uuid:11111111-2222-3333-4444-666666666666"/></head>
+  <docTitle><text>Audit Half Image Book</text></docTitle>
+  <navMap>
+%s  </navMap>
+</ncx>`, ncx.String())), false)
+}
+
 func xhtmlDoc(title, body string) string {
 	return fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
@@ -413,9 +498,11 @@ func genComicSmallCbz(dir string) error {
 
 func genComic500(dir string) error { return writeComicZip(filepath.Join(dir, "comic-500.cbz"), 500) }
 
-// genComicBig2gb writes a stored (uncompressed) zip whose single page entry is ~2 GiB of zeros -
-// ticket 12's owed hands-on input. The zeros compress to nothing honest, so the entry is stored,
-// and the file on disk really is 2 GiB.
+// genComicBig2gb writes a stored (uncompressed) zip whose single page entry is ~2 GiB of zeros.
+// The entry is over the 200 MB per-page cap, so this is the "input above a published cap" case:
+// the app must refuse it from the listing, naming the limit, without unpacking a byte. The zeros
+// compress to nothing honest, so the entry is stored, and the file on disk really is 2 GiB.
+// (The memory half of ticket 12's owed check is comic-2gb-pages.)
 func genComicBig2gb(dir string) error {
 	f, err := os.Create(filepath.Join(dir, "comic-big-2gb.cbz"))
 	if err != nil {
@@ -448,6 +535,51 @@ func genComicBig2gb(dir string) error {
 			return err
 		}
 		written += int64(n)
+	}
+	return w.Close()
+}
+
+// The two sides of ticket 12's "2 GB CBZ". comic-big-2gb is one page entry ~2 GiB of zeros: over
+// the 200 MB per-page cap, it is the *refusal* case (listing check, nothing unpacked). It cannot
+// measure what converting a large archive costs, because the app never converts it. This one
+// does: 256 valid 8 MP grayscale pages, stored (no compression), 2.0 GiB in total - under the
+// 4 GiB archive budget and every page under its cap, so the whole archive is really extracted,
+// decoded and OCRed and the process's peak memory is the number ticket 12 asked for.
+const (
+	comicPagesCount = 256
+	comicPagesSide  = 2896 // 2896 x 2896 = 8.39 MP, 8.39 MB of noise per page
+)
+
+func genComic2gbPages(dir string) error {
+	return writeNoiseComic(filepath.Join(dir, "comic-2gb-pages.cbz"), comicPagesCount, comicPagesSide)
+}
+
+// writeNoiseComic writes n stored-PNG pages of seeded noise. Noise does not compress, so the
+// archive really is n * side * side bytes, and every page is a valid image the app must decode.
+func writeNoiseComic(path string, n, side int) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := zip.NewWriter(f)
+	raw := make([]byte, side*side)
+	var buf bytes.Buffer
+	enc := png.Encoder{CompressionLevel: png.NoCompression}
+	for i := 1; i <= n; i++ {
+		rng := rand.New(rand.NewSource(int64(i)))
+		_, _ = rng.Read(raw)
+		buf.Reset()
+		if err := enc.Encode(&buf, &image.Gray{Pix: raw, Stride: side, Rect: image.Rect(0, 0, side, side)}); err != nil {
+			return err
+		}
+		fw, err := w.CreateHeader(&zip.FileHeader{Name: fmt.Sprintf("page%04d.png", i), Method: zip.Store, Modified: fixtureTime})
+		if err != nil {
+			return err
+		}
+		if _, err := fw.Write(buf.Bytes()); err != nil {
+			return err
+		}
 	}
 	return w.Close()
 }

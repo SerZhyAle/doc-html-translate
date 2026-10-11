@@ -31,6 +31,8 @@ func hostPing(baseURL string, n int, timeout time.Duration) (measurement, error)
 
 func takeFocusTransitions() []focusEvent { return nil }
 
+func takeShellEvents() shellEvents { return shellEvents{Counts: map[uint32]int{}} }
+
 // setKeyInject is a no-op off Windows: the hook probe does not exist there either.
 func setKeyInject(bool) {}
 

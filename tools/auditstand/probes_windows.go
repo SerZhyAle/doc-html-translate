@@ -100,6 +100,12 @@ func platformProbes() []latencyProbe {
 			available:   func() (bool, string) { return true, "" },
 			run:         runFocusObserverProbe,
 		},
+		{
+			name:        "P6.shell-notify",
+			budgetNames: []string{"H11"},
+			available:   func() (bool, string) { return true, "" },
+			run:         runShellNotifyProbe,
+		},
 	}
 }
 

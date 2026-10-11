@@ -78,7 +78,11 @@ type outcomeCheck struct {
 	CanaryHits       int    `json:"canary_hits"`
 	CanaryWhere      string `json:"canary_where,omitempty"`
 	StateConsistent  bool   `json:"state_consistent"`
-	Detail           string `json:"detail,omitempty"`
+	// LocaleChecked is set when the run used a non-English interface language and the scene
+	// asserted H8's fifth part: the outcome message must be present in that language.
+	LocaleChecked   bool   `json:"locale_checked,omitempty"`
+	MessageInLocale bool   `json:"message_in_locale,omitempty"`
+	Detail          string `json:"detail,omitempty"`
 }
 
 // binaryID identifies one binary a run started, with its content hash.
@@ -106,6 +110,7 @@ type record struct {
 	Samples          []sample            `json:"samples"`
 	Measurements     []measurement       `json:"measurements"`
 	OutcomeChecks    []outcomeCheck      `json:"outcome_checks"`
+	StateChecks      []toggleCheck       `json:"state_checks,omitempty"` // P8, one per exercised GUI toggle
 	Cells            []cellResult        `json:"cells"`
 	Notes            string              `json:"notes"`
 	RecoveryManifest string              `json:"recovery_manifest,omitempty"`

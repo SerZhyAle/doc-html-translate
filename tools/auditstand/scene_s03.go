@@ -56,8 +56,9 @@ func runSceneS03(env *runEnv, ctx context.Context, cycles int) (*record, error) 
 		if err != nil {
 			return rec, err
 		}
-		marker := filepath.Join(out1, outputpath.MarkerName)
-		markerOK := fileExists(marker)
+		// -folder names the parent: the book and its record live in <out1>/<name>/.
+		bookDir := bookDirUnder(out1)
+		markerOK := bookDir != "" && fileExists(filepath.Join(bookDir, outputpath.MarkerName))
 		rec.OutcomeChecks = append(rec.OutcomeChecks, outcomeCheck{
 			Injection:        "S03-first-conversion",
 			ExitCode:         r1.ExitCode,
@@ -99,7 +100,7 @@ func runSceneS03(env *runEnv, ctx context.Context, cycles int) (*record, error) 
 			ExitCode:         r3.ExitCode,
 			NamedOutcome:     r3.ExitCode == 0 && forced,
 			BoundaryLogFound: forced,
-			StateConsistent:  fileExists(marker),
+			StateConsistent:  bookDir != "" && fileExists(filepath.Join(bookDir, outputpath.MarkerName)),
 			Detail:           fmt.Sprintf("force wall %.0f ms, forced-rebuild line present: %v", r3.WallMs, forced),
 		})
 		rec.Samples = append(rec.Samples, r3.P4Samples...)

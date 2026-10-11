@@ -82,7 +82,11 @@ are deleted at campaign end - the ticket folder gets verdicts and aggregates onl
     fixtures.go     the synthetic corpus and its manifest
     runenv.go       the redirected environment, output capture, the P4 sampler loop
     scenes.go       the runner discipline (control, fixtures, isolation, verdict folding)
-    scene_s03.go / scene_s16.go  the implemented scenes
+    scene_s03.go / scene_s08.go / scene_s15.go / scene_s16.go  the implemented CLI scenes
+    shellnotify_windows.go  P6 shell-notification listener (H11)
+    stateprobe.go   P8 state-diff primitives and the H14 toggle verdict
+    outputs.go      shared readers of what a CLI run left on disk
+    validity.go     the foreign-load validity rule (names the offending images)
     slope.go        P5: OLS slope with its 95% confidence band
     record.go       the run-record format
     summary.go      -Summary
@@ -102,8 +106,17 @@ No implemented scene currently closes the whole scene matrix.
 `browser_probe.go` provides a loopback-only CDP transport, DOM/heap counters and a Tab focus-change
 measurement helper. `input_windows.go` requires explicit key-injection opt-in and the audit window
 already in foreground. Synthetic target tests verify transport and counters; instrumented browser
-launch, desktop wiring and capture-diff fallback remain pending. Shell notification, keyboard-hook
-negative control, UI Automation and the remaining scenes are also pending in the tactical plan.
+launch, desktop wiring and capture-diff fallback remain pending. The keyboard-hook negative
+control, UI Automation and the GUI scenes are also pending in the tactical plan.
+
+The third increment adds the CLI scenes S08 (translate-guards) and S15 (big-inputs), two more S16
+members (`ocr-image-failure`, `missing-filedo`), the shell-notification listener
+(`P6.shell-notify`), the P8 state-diff primitives, and names the foreign images in a rejected
+control. The scenes are tested against a stub CLI: the test binary doubles as the app
+(`stubcli_test.go`, switched on by `AUDITSTAND_STUB_CLI=1`), so what the stand calls a pass, a
+leak or an English message under `-ui-lang ru` is pinned without a real binary or desktop.
+`-Control` refuses to run while any `doc-html-ui.exe` / `doc-html-translate.exe` is active - the
+owner's installed build included; the stand never closes a program it did not start.
 
 Clipboard control measures reader contention without retaining or replacing content. Clipboard
 writer coverage requires a disposable desktop and reports unavailable on the owner's desktop.

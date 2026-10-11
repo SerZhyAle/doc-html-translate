@@ -190,6 +190,34 @@ type focusEvent struct {
 	Title  string    `json:"title"`
 }
 
+// shellEvents is what the shell-notification listener saw: per SHCNE_* event id, plus how many
+// marker notifications the stand itself sent (they arrive as SHCNE_UPDATEITEM).
+type shellEvents struct {
+	Counts      map[uint32]int
+	MarkersSent int
+}
+
+// assocChangedEvent is SHCNE_ASSOCCHANGED, the broadcast the app's registration ends with.
+const assocChangedEvent = 0x08000000
+
+// associationBroadcasts is how many association-change events the listener saw.
+func (e shellEvents) associationBroadcasts() int { return e.Counts[assocChangedEvent] }
+
+// otherEvents is every event that is neither the stand's own markers nor an association change:
+// the "burst" half of a broadcast storm.
+func (e shellEvents) otherEvents() int {
+	total := 0
+	for _, n := range e.Counts {
+		total += n
+	}
+	total -= e.Counts[assocChangedEvent]
+	total -= e.MarkersSent
+	if total < 0 {
+		total = 0
+	}
+	return total
+}
+
 // auditWindowMarker is the title substring the app's visible window carries (the browser window
 // the GUI host opens is titled DOC-HTML-UI; the host itself owns no window - strategic
 // section 4). Overridable for tests and stand-in windows.
