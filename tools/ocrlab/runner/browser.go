@@ -375,16 +375,19 @@ func (b *Browser) Close() {
 	case <-time.After(versionTimeout):
 		killTree(cmd)
 	}
+	time.Sleep(150 * time.Millisecond)
 }
 
 // killTree ends the browser and the helpers it spawned. Killing only the process we started
 // leaves the children running, and a corpus run would accumulate hundreds of them.
 func killTree(cmd *exec.Cmd) {
-	if cmd.Process == nil {
+	if cmd == nil || cmd.Process == nil {
 		return
 	}
 	if runtime.GOOS == "windows" {
 		_ = exec.Command("taskkill", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid)).Run()
+		_ = cmd.Wait()
+		time.Sleep(50 * time.Millisecond)
 		return
 	}
 	_ = cmd.Process.Kill()

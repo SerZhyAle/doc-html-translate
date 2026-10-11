@@ -174,6 +174,27 @@ button:active { background: var(--control-pressed); }
 button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allowed; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* WINDOWS-UI 0.4 section 11: every command button carries its meaning's glyph at the reading
+   start, a 6 logical px gap between glyph and caption, 16 px tier. Flex mirrors the row in a
+   right-to-left window, so the glyph moves to the reading start on its own; captions are
+   verbs or short nouns and are never truncated - a row that does not fit wraps whole buttons
+   (APP-BEHAVIOUR rule 2). The drop zone, the output-path link and the queue row's file
+   selector keep their own display: they are not caption buttons. */
+button:not(.drop):not(.path-btn):not(.qsel) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+/* ICON-RENDER rule 7: a record marked rtl: mirror (nav.open-external, nav.go-to) flips in a
+   right-to-left layout; the fixed records never do. */
+:root[dir="rtl"] button .glyph.mirror { transform: scaleX(-1); }
+/* The OCR download button is its own Cancel while a download runs: the glyph changes with the
+   caption (one meaning, one glyph), the class is set by the download handler. */
+#btnOcrDownload .ico-cancel { display: none; }
+#btnOcrDownload.busy .ico-dl { display: none; }
+#btnOcrDownload.busy .ico-cancel { display: block; }
+
 /* drop zone: a real button, so "choose a file" is reachable from the keyboard (APP-BEHAVIOUR
    rule 9); the button look is reset to the zone's own. */
 .drop {
@@ -372,7 +393,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 .queue-head > .inline-btn { margin-inline-start: auto; padding: 2px 9px; font-size: 11px; }
 /* The log header carries two tools after its title; only a direct-child button is pushed
    to the far edge, so the paired buttons inside .log-tools keep their gap. */
-.log-tools { margin-inline-start: auto; display: flex; gap: 6px; }
+.log-tools { margin-inline-start: auto; display: flex; gap: 8px; }
 .queue-head > .log-tools .inline-btn { margin-inline-start: 0; }
 #queueList {
     list-style: none; margin: 6px 0 2px; padding: 2px 0;
@@ -438,9 +459,50 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
 .dlg-secret input { width: 100%; }
 .dlg-secret .hint { margin: 0; }
 .dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.dlg-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.dlg-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+/* WINDOWS-UI 0.4 section 11 items 4-6 / ICON-RENDER 0.19 section 14: the answer buttons of a
+   dialog draw the eye, and colour is spent there and nowhere else. The hue rides the glyph,
+   from this product's own state.* palette pairs (day tone on light, night tone on dark), with
+   the reference treatment of about 12 percent of the hue over the control face; both resolve
+   per paint from light-dark(), so a live theme change reaches them. The shapes still differ
+   and every answer keeps its caption, so nothing rests on colour alone. The acting button of
+   an irreversible confirmation keeps the danger face with its own ink (.danger); there the
+   dismissing answer shows the red glyph with no tint (.bare) - the only red face in the window
+   is the one that cannot be undone. Under forced colors the system colours replace hue and
+   tint by themselves; an unavailable answer mutes glyph and caption together and shows no hue. */
+.dlg-actions button.ans-ok     { --ans-hue: var(--success); }
+.dlg-actions button.ans-cancel { --ans-hue: var(--danger); }
+.dlg-actions button.ans-warn   { --ans-hue: var(--warning); }
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) {
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--ans-hue) 12%, var(--control));
+}
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):hover {
+    background: color-mix(in srgb, var(--ans-hue) 18%, var(--control));
+}
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):active {
+    background: color-mix(in srgb, var(--ans-hue) 24%, var(--control));
+}
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) .glyph { color: var(--ans-hue); }
+/* The dismissing answer of an irreversible confirmation: red glyph, ordinary control face. */
+.dlg-actions button.ans-cancel.bare { background: var(--control); }
+.dlg-actions button.ans-cancel.bare:hover { background: var(--control-hover); }
+.dlg-actions button.ans-cancel.bare:active { background: var(--control-pressed); }
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):disabled {
+    background: var(--control);
+    color: var(--text-disabled);
+}
+.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):disabled .glyph { color: var(--text-disabled); }
 .dlg-actions button.danger { background: var(--danger); color: var(--danger-ink); border-color: var(--danger); }
+/* WINDOWS-UI 0.4 section 11 item 6: under high contrast the system colours replace the answer
+   hue too - the glyph rides the system text colour like the caption does. The block sits after
+   the answer rules and repeats their selector, so it wins by order. */
+@media (forced-colors: active) {
+    button .glyph,
+    .dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) .glyph {
+        forced-color-adjust: none;
+        color: CanvasText;
+    }
+}
 /* ICON-RENDER rule 5: Windows desktop targets follow the pointer. The label is
    the target for radios and checkboxes; the visible input may stay compact. */
 button, select, input:not([type="checkbox"]):not([type="radio"]),
@@ -490,9 +552,9 @@ a { display: inline-flex; align-items: center; }
 <div id="assocPrompt" class="assoc-prompt" role="region" aria-labelledby="assocPromptText" style="display:none">
     <span id="assocPromptText" data-i18n="assocPromptText">Add this app to Windows? You can get a "Convert to HTML" entry in the right-click menu of supported files and a place under "Open with", or also make it the default app for them. Nothing changes unless you pick it here or later under "Windows integration".</span>
     <div class="assoc-prompt-actions">
-        <button class="primary" id="assocPromptShell" onclick="assocPromptAnswer('shell')" data-i18n="assocPromptShell">Add the right-click entry</button>
-        <button id="assocPromptBoth" onclick="assocPromptAnswer('both')" data-i18n="assocPromptBoth">Add it and make this app the default</button>
-        <button id="assocPromptNo" onclick="assocPromptAnswer('none')" data-i18n="assocPromptNo">No, thanks</button>
+        <button class="primary" id="assocPromptShell" onclick="assocPromptAnswer('shell')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptShell">Add the right-click entry</span></button>
+        <button id="assocPromptBoth" onclick="assocPromptAnswer('both')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptBoth">Add it and make this app the default</span></button>
+        <button id="assocPromptNo" onclick="assocPromptAnswer('none')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="assocPromptNo">No, thanks</span></button>
     </div>
 </div>
 
@@ -508,8 +570,8 @@ a { display: inline-flex; align-items: center; }
             <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
         </span>
     </button>
-    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n="btnConvert" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)">Convert</button>
-    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n="btnCancel" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)">Cancel</button>
+    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><span data-i18n="btnConvert">Convert</span></button>
+    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancel">Cancel</span></button>
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="readiness" role="status" aria-live="polite" style="display:none"></div>
@@ -520,8 +582,8 @@ a { display: inline-flex; align-items: center; }
 <div class="hint" id="dropStatus" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
 <div class="hint" id="prevResultHint" style="display:none">
     <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
-    <button type="button" class="inline-btn" id="btnOpenPrev" data-i18n="btnOpenPrev">Open result</button>
-    <button type="button" class="inline-btn" id="btnDeletePrev" data-i18n="btnDeletePrev">Delete previous result</button>
+    <button type="button" class="inline-btn" id="btnOpenPrev"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenPrev">Open result</span></button>
+    <button type="button" class="inline-btn" id="btnDeletePrev"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2L18,7H6v12ZM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4Z"/></svg><span data-i18n="btnDeletePrev">Delete previous result</span></button>
     <!-- Where it landed. A dropped file is copied into the app's own data folder and the
          result lands beside it, so without this the reader has no idea where it went. -->
     <div class="prev-dir" id="prevDirRow">
@@ -538,7 +600,7 @@ a { display: inline-flex; align-items: center; }
 <div id="recentSection" style="display:none">
     <div class="queue-head">
         <span class="stitle" data-i18n="secRecent">Recent</span>
-        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n="recentClear" data-i18n-title="ttRecentClear" title="Forget every recent document">Clear all</button>
+        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n-title="ttRecentClear" title="Forget every recent document"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="recentClear">Clear all</span></button>
     </div>
     <ul id="recentList" data-i18n-aria="ariaRecentList" aria-label="Recently chosen documents"></ul>
 </div>
@@ -553,12 +615,12 @@ a { display: inline-flex; align-items: center; }
     <div class="queue-head">
         <span class="stitle" data-i18n="secQueue">Queue</span>
         <span class="count" id="queueProgress" role="status" aria-live="polite"></span>
-        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n="queueClear" data-i18n-title="ttQueueClear" title="Clear the whole queue; the files themselves stay on disk">Clear</button>
+        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n-title="ttQueueClear" title="Clear the whole queue; the files themselves stay on disk"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="queueClear">Clear</span></button>
     </div>
     <ol id="queueList" data-i18n-aria="ariaQueueList" aria-label="Files queued for conversion"></ol>
     <div class="queue-foot">
-        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n="btnRetryFailed" data-i18n-title="ttRetryFailed" title="Convert again only the files that did not" disabled>Retry failed</button>
-        <button type="button" class="inline-btn" id="btnCancelQueue" style="display:none" data-i18n="btnCancelQueue">Cancel queue</button>
+        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n-title="ttRetryFailed" title="Convert again only the files that did not" disabled><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span data-i18n="btnRetryFailed">Retry failed</span></button>
+        <button type="button" class="inline-btn" id="btnCancelQueue" style="display:none"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancelQueue">Cancel queue</span></button>
         <label class="chk" for="queueConcurrency"><span data-i18n="queueParallel">Parallel:</span></label>
         <select id="queueConcurrency" data-i18n-aria="queueParallel" aria-label="Parallel conversions">
             <option value="1" selected>1</option>
@@ -574,7 +636,7 @@ a { display: inline-flex; align-items: center; }
 <div class="field" id="outputRow" style="margin-top:10px">
     <label for="outputFolder" data-i18n="lblOutput">Output:</label>
     <input type="text" id="outputFolder" dir="ltr" data-i18n-ph="phOutput" placeholder="Leave empty - lands next to the input">
-    <button onclick="browseFolder()" data-i18n="btnBrowse">Browse..</button>
+    <button onclick="browseFolder()"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM7.1 12.4a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z"/></svg><span data-i18n="btnBrowse">Browse..</span></button>
 </div>
 <!-- APP-SETTINGS rule 3: the placeholder says what empty means, but it is gone once a path is
      set; the hint keeps saying it. -->
@@ -603,7 +665,7 @@ a { display: inline-flex; align-items: center; }
     <div class="field" style="margin-top:8px">
         <label for="googleKey" data-i18n="lblGoogleKey">Google key:</label>
         <input type="password" id="googleKey" dir="ltr" data-i18n-ph="phGoogleKey" placeholder="Paste your Google Cloud Translation API key..">
-        <button onclick="saveGoogleKey()" data-i18n="btnSave">Save</button>
+        <button onclick="saveGoogleKey()"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17,3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2V7l-4,-4zM12,19c-1.66,0 -3,-1.34 -3,-3s1.34,-3 3,-3 3,1.34 3,3 -1.34,3 -3,3zM15,9H5V5h10v4z"/></svg><span data-i18n="btnSave">Save</span></button>
         <label class="chk"><input type="checkbox" id="chkRevealKey" onchange="revealKey(this.checked)"> <span data-i18n="btnShow">Show</span></label>
     </div>
     <div class="hint" id="googleKeyStatus" data-i18n="googleKeySearching">Rummaging for a saved key..</div>
@@ -638,7 +700,7 @@ a { display: inline-flex; align-items: center; }
         <label class="chk"><input type="checkbox" id="chkOCR"> <span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
         <div class="hint chk-hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
         <div class="field" style="margin-top:8px"><label for="ocrLang" data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
-        <div class="field"><label for="ocrDownloadSel" data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button" data-i18n="btnDownload">Download</button></div>
+        <div class="field"><label for="ocrDownloadSel" data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button"><svg class="glyph ico-dl" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g transform="translate(12 12) scale(0.917 0.917) translate(-12 -12)"><path fill="currentColor" d="M19.35,10.04C18.67,6.59 15.64,4 12,4 9.11,4 6.6,5.64 5.35,8.04 2.34,8.36 0,10.91 0,14c0,3.31 2.69,6 6,6h13c2.76,0 5,-2.24 5,-5 0,-2.64 -2.05,-4.78 -4.65,-4.96zM17,13l-5,5 -5,-5h3V9h4v4h3z"/></g></svg><svg class="glyph ico-cancel" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnDownload">Download</span></button></div>
         <div class="hint" id="ocrStatus" role="status" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
     </div>
 </details>
@@ -670,7 +732,7 @@ a { display: inline-flex; align-items: center; }
         <label class="chk"><input type="checkbox" id="chkShellEntries" onchange="toggleShellEntries()"> <span data-i18n="chkShellEntries">Right-click "Convert to HTML" and "Open with"</span></label>
         <div class="hint chk-hint" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</div>
         <label class="chk" style="margin-top:8px"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
-        <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()" data-i18n="btnOpenDefaultApps">Open Default apps</button>
+        <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenDefaultApps">Open Default apps</span></button>
         <div class="hint chk-hint" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</div>
     </div>
 </details>
@@ -690,7 +752,7 @@ a { display: inline-flex; align-items: center; }
              a hint about a control that is not there is a half-hidden control. -->
         <div id="updateControls">
             <div class="about-row">
-                <button type="button" class="inline-btn" id="btnUpdateCheck" data-i18n="btnUpdateCheck">Check for updates</button>
+                <button type="button" class="inline-btn" id="btnUpdateCheck"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z"/></svg><span data-i18n="btnUpdateCheck">Check for updates</span></button>
                 <label class="chk"><input type="checkbox" id="chkAutoUpdates"> <span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label>
             </div>
             <div class="hint chk-hint" data-i18n="hintAutoUpdate">Checks the release feed once a day and only reports - nothing is downloaded or installed without you.</div>
@@ -706,9 +768,9 @@ a { display: inline-flex; align-items: center; }
             <a id="aboutMail" href="#" data-i18n="aboutFeedback">Feedback</a>
         </div>
         <div class="about-row">
-            <button type="button" class="inline-btn" id="btnSendLogs" data-i18n="btnSendLogs">Send logs to the author</button>
-            <button type="button" class="inline-btn" id="btnOpenArchive" style="display:none" data-i18n="btnOpenArchive">Open the archive</button>
-            <button type="button" class="inline-btn" id="btnClearLogs" data-i18n="btnClearLogs">Clear stored logs</button>
+            <button type="button" class="inline-btn" id="btnSendLogs"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM20,8l-8,5 -8,-5V6l8,5 8,-5v2z"/></svg><span data-i18n="btnSendLogs">Send logs to the author</span></button>
+            <button type="button" class="inline-btn" id="btnOpenArchive" style="display:none"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenArchive">Open the archive</span></button>
+            <button type="button" class="inline-btn" id="btnClearLogs"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="btnClearLogs">Clear stored logs</span></button>
         </div>
         <div class="hint" id="sendLogsMsg" role="status"></div>
     </div>
@@ -720,15 +782,15 @@ a { display: inline-flex; align-items: center; }
     <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
     <div class="cmdbar">
         <div class="cmdline console" id="cmdLine" dir="ltr"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
-        <button class="cmdcopy" id="btnCopyCmd" data-i18n="btnCopy" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard">Copy</button>
+        <button class="cmdcopy" id="btnCopyCmd" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="btnCopy">Copy</span></button>
     </div>
     <!-- The log's tools (ticket 63): copy the selected lines - or the whole log when nothing
          is selected - and jump back to the latest line after scrolling up. -->
     <div class="queue-head log-head">
         <span class="stitle" data-i18n="secLog">Log</span>
         <span class="log-tools">
-            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n="logCopySel" data-i18n-title="ttLogCopy" title="Copy the selected log lines">Copy selection</button>
-            <button type="button" class="inline-btn" id="btnLogJump" data-i18n="logJumpLatest" data-i18n-title="ttLogJump" title="Scroll the log to the newest line">Jump to latest</button>
+            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n-title="ttLogCopy" title="Copy the selected log lines"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="logCopySel">Copy selection</span></button>
+            <button type="button" class="inline-btn" id="btnLogJump" data-i18n-title="ttLogJump" title="Scroll the log to the newest line"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,13h-3V3h-2v10H8l4,4 4,-4zM4,19v2h16v-2H4z"/></svg><span data-i18n="logJumpLatest">Jump to latest</span></button>
         </span>
     </div>
     <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
@@ -884,11 +946,47 @@ document.getElementById('themeSwitch').addEventListener('change', e => {
 // recommended answer has the focus, so Enter picks it. Requests queue: a second one waits for
 // the first to be answered.
 //
-//   buttons: [{id, key, kind: 'primary'|'danger'|'', focus: true}]; cancel: the no-action id
+// WINDOWS-UI 0.4 section 11 / ICON-RENDER 0.19 section 14: every answer button carries its
+// meaning's glyph before its caption. The answer's hue rides the glyph (.ans-ok / .ans-cancel /
+// .ans-warn, about 12 percent of the same hue over the control face); the acting button of an
+// irreversible confirmation keeps the danger face (kind 'danger', glyph in the face's own ink)
+// and its dismissing answer takes 'ans-cancel bare' - the red glyph, no tint. 'send' stays
+// neutral mono. Escape, focus and order follow APP-BEHAVIOUR rules 1 and 5 and do not move.
+//
+//   buttons: [{id, key, kind: 'ok'|'warn'|'danger'|'', ans, glyph, focus: true}]; cancel: the no-action id
 //   secret: true adds a masked password field (a FileDO secret file); the dialog then resolves to
 //   {choice, value}. The field is created for this one question, wiped and removed when the
 //   dialog closes, and its value goes nowhere but the caller (never the log, the console or
 //   any storage). Enter confirms with the primary button, Escape cancels.
+
+// The button glyphs: the vendored path data of assets/glyphs/<id>.svg (tests/iconography_test.go
+// holds every inline copy to those files), plus the two provisional meanings this product draws
+// under ICON-SET section 15 until the owner folds them in - action.retry (Material Icons
+// `replay`) and app.update (Material Icons `update`), proposed in
+// iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md.
+// A record marked rtl: mirror draws its .glyph with the mirror class (ICON-RENDER rule 7).
+const BTN_GLYPHS = {
+    'action.cancel': '<path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/>',
+    'action.confirm': '<path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z"/>',
+    'action.delete': '<path fill="currentColor" d="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2L18,7H6v12ZM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4Z"/>',
+    'action.convert': '<path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/>',
+    'action.translate': '<path fill="currentColor" d="M12.87,15.07l-2.54,-2.51 0.03,-0.03c1.74,-1.94 2.98,-4.17 3.71,-6.53L17,6L17,4h-7L10,2L8,2v2L1,4v1.99h11.17C11.5,7.92 10.44,9.75 9,11.35 8.07,10.32 7.3,9.19 6.69,8h-2c0.73,1.63 1.73,3.17 2.98,4.56l-5.09,5.02L4,19l5,-5 3.11,3.11 0.76,-2.04zM18.5,10h-2L12,22h2l1.12,-3h4.75L21,22h2l-4.5,-12zM15.88,17l1.62,-4.33L19.12,17h-3.24z"/>',
+    'action.email': '<path fill="currentColor" d="M20,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM20,8l-8,5 -8,-5V6l8,5 8,-5v2z"/>',
+    'action.retry': '<path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>',
+    'app.update': '<path fill="currentColor" d="M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z"/>',
+    'nav.open-external': '<path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/>',
+    'nav.go-to': '<path fill="currentColor" d="M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z"/>',
+    'action.remove': '<path fill="currentColor" d="M7,11v2h10v-2H7zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8z"/>',
+};
+// rtl: mirror records (ICON-RENDER section 3 rule 7) - the drawing flips in a right-to-left layout.
+const BTN_MIRROR = new Set(['nav.open-external', 'nav.go-to']);
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c])); }
+// btnFace builds one button's face: the meaning's glyph at the reading start, then the caption.
+function btnFace(glyph, label) {
+    const g = glyph && BTN_GLYPHS[glyph];
+    const svg = g ? '<svg class="glyph' + (BTN_MIRROR.has(glyph) ? ' mirror' : '') + '" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">' + g + '</svg>' : '';
+    return svg + '<span>' + esc(label) + '</span>';
+}
 let dlgQueue = Promise.resolve();
 let dlgOpen = null; // {tag, close()} of the dialog on screen, so its owning run can withdraw it
 function openDialog(opts) {
@@ -904,11 +1002,11 @@ function openDialog(opts) {
             for (const b of opts.buttons) {
                 const btn = document.createElement('button');
                 btn.value = b.id;
-                btn.textContent = t(b.key);
-                if (b.kind) btn.className = b.kind;
+                btn.innerHTML = btnFace(b.glyph, t(b.key));
+                btn.className = [b.kind, b.ans].filter(Boolean).join(' ');
                 actions.appendChild(btn);
                 if (b.focus) focus = btn;
-                if (b.kind === 'primary' && !primary) primary = btn;
+                if ((b.kind === 'primary' || b.kind === 'ok') && !primary) primary = btn;
             }
             if (opts.secret) {
                 secretBox = document.createElement('div');
@@ -953,13 +1051,23 @@ function openDialog(opts) {
 }
 // informDialog shows a notice with one button.
 function informDialog(title, message) {
-    return openDialog({title, message, buttons: [{id: 'ok', key: 'dlgOK', kind: 'primary', focus: true}], cancel: 'ok'});
+    return openDialog({title, message, buttons: [{id: 'ok', key: 'dlgOK', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm', focus: true}], cancel: 'ok'});
 }
-// confirmDialog asks a yes/no question; safe says whether "no" is the recommended answer.
+// confirmDialog asks a yes/no question; safe says whether "no" is the recommended answer. The
+// acting answer's face comes in as kind: 'danger' (an irreversible act - its verb is delete,
+// the glyph rides the danger face), 'warn' (a caution - continue without something), 'ok'
+// (a plain affirmative). Its dismissing answer is action.cancel: red, tinted - unless the
+// acting button is the irreversible danger face, where it stays bare (WINDOWS-UI section 11
+// item 7: the only red face is the acting one).
 async function confirmDialog(message, yesKey, kind, safe) {
+    const yes = {danger: {glyph: 'action.delete', ans: ''},
+        warn: {glyph: 'action.convert', ans: 'ans-warn'},
+        ok: {glyph: 'action.confirm', ans: 'ans-ok'},
+        primary: {glyph: 'action.confirm', ans: 'ans-ok'}}[kind || 'primary'];
     const choice = await openDialog({
         title: t('dlgConfirmTitle'), message,
-        buttons: [{id: 'yes', key: yesKey, kind: kind || 'primary', focus: !safe}, {id: 'no', key: 'btnCancel', focus: !!safe}],
+        buttons: [{id: 'yes', key: yesKey, kind: kind || 'primary', ans: yes.ans, glyph: yes.glyph, focus: !safe},
+            {id: 'no', key: 'btnCancel', ans: kind === 'danger' ? 'ans-cancel bare' : 'ans-cancel', glyph: 'action.cancel', focus: !!safe}],
         cancel: 'no',
     });
     return choice === 'yes';
@@ -1583,7 +1691,8 @@ el('ocrLang').addEventListener('change', () => {
     syncOcrLangToSource();
 });
 // The download reports real progress and can be cancelled (APP-BEHAVIOUR rule 3): while it runs
-// the button is its Cancel, and the language list is locked so it cannot be started twice.
+// the button is its Cancel, and the language list is locked so it cannot be started twice. The
+// glyph changes with the caption (one meaning, one glyph): .busy swaps the cloud for the cross.
 let ocrAbort = null;
 el('btnOcrDownload').addEventListener('click', async () => {
     if (ocrAbort) { ocrAbort.abort(); return; }
@@ -1592,8 +1701,10 @@ el('btnOcrDownload').addEventListener('click', async () => {
     if (!lang) return;
     const name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : lang;
     ocrAbort = new AbortController();
-    btn.dataset.i18n = 'btnCancel';
-    btn.textContent = t('btnCancel');
+    btn.classList.add('busy');
+    const cap = btn.querySelector('span[data-i18n]');
+    cap.dataset.i18n = 'btnCancel';
+    cap.textContent = t('btnCancel');
     sel.disabled = true;
     setStatus('ocrStatus', 'ocrDownloading', {lang: name});
     let result = null;
@@ -1622,8 +1733,9 @@ el('btnOcrDownload').addEventListener('click', async () => {
         if (!result) console.error(e);
     }
     ocrAbort = null;
-    btn.dataset.i18n = 'btnDownload';
-    btn.textContent = t('btnDownload');
+    btn.classList.remove('busy');
+    cap.dataset.i18n = 'btnDownload';
+    cap.textContent = t('btnDownload');
     sel.disabled = false;
     if (result && result.ok) {
         setStatus('ocrStatus', 'ocrInstalledMsg', {lang: name}, 'ok');
@@ -1782,7 +1894,8 @@ function renderReadiness(result) {
             ollamaModel:['readinessChooseModel', () => {el('ollamaDetails').open=true; el('ollamaModel').focus();}]}[issue.code];
         if (action) {
             const button = document.createElement('button');
-            button.type = 'button'; button.className = 'inline-btn'; button.textContent = t(action[0]);
+            button.type = 'button'; button.className = 'inline-btn';
+            button.innerHTML = btnFace('nav.go-to', t(action[0]));
             button.addEventListener('click', action[1]); row.append(' ', button);
         }
         box.appendChild(row);
@@ -2157,7 +2270,7 @@ async function convertSingle() {
     if (engine === 'google') {
         try {
             const d = await (await api('/api/google-key')).json();
-            if (!d.exists && !await confirmDialog(t('confirmNoKey'), 'btnConvertAnyway', 'primary', true)) return;
+            if (!d.exists && !await confirmDialog(t('confirmNoKey'), 'btnConvertAnyway', 'warn', true)) return;
         } catch(e) { /* let the CLI report it */ }
     }
 
@@ -2218,7 +2331,11 @@ const MARK = '\x1edht:';
 async function askForTheRun(cfg, q, run) {
     const choice = await openDialog({
         title: q.title, message: q.message, tag: run, run,
-        buttons: [{id: 'yes', key: 'costYes', kind: 'danger'}, {id: 'no', key: 'costNo', focus: true}],
+        // The cost question is the product's registered irreversible-acting confirmation: the
+        // acting answer keeps the danger face (its verb is translate, glyph in the face's own
+        // ink), the safe answer holds the focus and its dismissing glyph stays untinted red.
+        buttons: [{id: 'yes', key: 'costYes', kind: 'danger', glyph: 'action.translate'},
+            {id: 'no', key: 'costNo', ans: 'ans-cancel bare', glyph: 'action.cancel', focus: true}],
         cancel: 'no',
     });
     if (!run.active) return;
@@ -2242,7 +2359,8 @@ async function askSecretForTheRun(cfg, q, run) {
     if (queueBusy && queueSecret !== null && !q.retry) { await post({value: queueSecret}); return; }
     const res = await openDialog({
         title: q.title, message: q.message, tag: run, run, secret: true,
-        buttons: [{id: 'open', key: 'btnOpenSecret', kind: 'primary'}, {id: 'cancel', key: 'btnCancel'}],
+        buttons: [{id: 'open', key: 'btnOpenSecret', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm'},
+            {id: 'cancel', key: 'btnCancel', ans: 'ans-cancel', glyph: 'action.cancel'}],
         cancel: 'cancel',
     });
     if (!run.active) return;
@@ -2288,7 +2406,9 @@ function reportRunEnd(end, append, result) {
     append(msg + '\n', 'end failed');
     openDialog({
         title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'),
-        buttons: [{id: 'send', key: 'btnSendLogs'}, {id: 'retry', key: 'btnRetry', kind: 'primary'}, {id: 'close', key: 'dlgClose', focus: true}],
+        buttons: [{id: 'send', key: 'btnSendLogs', glyph: 'action.email'},
+            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'},
+            {id: 'close', key: 'dlgClose', ans: 'ans-cancel', glyph: 'action.cancel', focus: true}],
         cancel: 'close',
     }).then(choice => {
         if (choice === 'send') sendLogs();
@@ -2423,7 +2543,7 @@ function queueRow(it, sel) {
         const open = document.createElement('button');
         open.type = 'button';
         open.className = 'inline-btn';
-        open.textContent = t('btnOpenPrev');
+        open.innerHTML = btnFace('nav.open-external', t('btnOpenPrev'));
         open.dataset.i18n = 'btnOpenPrev';
         open.addEventListener('click', () => openQueueResult(it));
         li.appendChild(open);
@@ -2432,7 +2552,7 @@ function queueRow(it, sel) {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'inline-btn qdel';
-        del.textContent = t('queueRemoveItem');
+        del.innerHTML = btnFace('action.remove', t('queueRemoveItem'));
         del.dataset.i18n = 'queueRemoveItem';
         del.title = t('ttQueueRemove');
         // WCAG 2.5.3: the accessible name starts with the visible word, then says which file.

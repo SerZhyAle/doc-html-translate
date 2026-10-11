@@ -1,7 +1,7 @@
 # Glyph map
 
-This product's inventory against the shared icon vocabulary (`ICON-SET` 0.28, `ICON-RENDER` 0.18,
-`ICON-EXTERNAL` 0.12 - pointers in [`contracts/`](contracts/)). It is the product's rung-2 record
+This product's inventory against the shared icon vocabulary (`ICON-SET` 0.29 carrier / 0.30 README,
+`ICON-RENDER` 0.19, `ICON-EXTERNAL` 0.12 - pointers in [`contracts/`](contracts/)). It is the product's rung-2 record
 (`ICON-SET` section 6: every glyph it shows maps to an id, or is declared artwork). Mapped on
 2026-09-25 by ticket 24 (`DEV/plan/done/24_2026-09-23_contract-iconography-sync.md`).
 
@@ -58,11 +58,40 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 
 ## GUI launcher (`cmd/doc-html-ui/ui.html`)
 
+Every command button of the launcher carries its meaning's glyph before its caption at the 16 px
+tier (WINDOWS-UI 0.4 section 11, adopted 2026-10-11, ticket 112): mono in the window's own
+colour everywhere, and on a dialog's answer buttons the colour look of `ICON-RENDER` 0.19
+section 14 - the affirmative in the product's `state.ok` pair, the dismissing answer in
+`state.error`, a caution in `state.warning`, each at about 12 percent tint over the control
+face, the acting button of an irreversible confirmation alone on the `danger` face with the
+dismissing answer's red glyph untinted.
+
 | Control | Glyph before | Id | Name (en) | Status |
 | --- | --- | --- | --- | --- |
 | Section disclosure | `▸` / `▾` (did not mirror in RTL) | `nav.expand` / `nav.collapse` | section title | conforms (`rtl: fixed`, symmetric) |
-| Drop zone | `⤓` (`nav.scroll-bottom`'s shape) | `content.document` | Drag a document here, or click to choose one | conforms |
-| Swap source and target | `⇄` | `action.swap` | Swap source and target | conforms |
+| Drop zone | `⤓` (`nav.scroll-bottom`'s shape) | `content.document` | Drag a document here, or click to choose one | conforms - the zone is a drop target showing its content kind, not a bare command button |
+| Swap source and target | `⇄` | `action.swap` | Swap source and target | conforms (glyph-only, tooltip and accessible name, 28 px target) |
+| Convert | text only | `action.convert` | Convert | conforms (glyph on the accent fill, the primary action outside a dialog) |
+| Cancel a run / Cancel the queue / No, thanks | text only | `action.cancel` | Cancel / Cancel queue / No, thanks | conforms |
+| First-run add buttons | text only | `action.add` | Add the right-click entry / Add it and make this app the default | conforms (the caption's own verb, `rule 3`) |
+| Open result / Open Default apps / Open the archive / a queue row's result | text only | `nav.open-external` | Open result / Open Default apps / Open the archive | conforms (`rtl: mirror` mirrored in the right-to-left window) |
+| Delete previous result | text only | `action.delete` | Delete previous result | conforms |
+| Clear all (recent) / Clear (queue) / Clear stored logs | text only | `action.clear-all` | Clear all / Clear / Clear stored logs | conforms |
+| Retry failed / Try again (failure dialog) | text only | `action.retry` | Retry failed / Try again | provisional (`ICON-SET` section 15): drawn Material `replay`, proposed in `PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md`, no catalog file yet |
+| Browse.. (output folder) | text only | `action.choose-folder` | Browse.. | conforms (qualified form: the field names the folder) |
+| Save (API key) | text only | `action.save` | Save | conforms |
+| Download OCR data | text only | `action.download` | Download | conforms; while downloading the button is its Cancel and shows `action.cancel` |
+| Check for updates | text only | `app.update` | Check for updates | provisional (`ICON-SET` section 15): drawn Material `update`, proposed with `action.retry` |
+| Send logs to the author (button and failure dialog) | text only | `action.email` | Send logs to the author | conforms; first shipper of the `proposed` record (`ICON-SET` 0.19), named in the same proposal |
+| Copy (command line) / Copy selection | text only | `action.copy` | Copy / Copy selection | conforms |
+| Jump to latest | text only | `nav.scroll-bottom` | Jump to latest | conforms (the record's qualified journal form) |
+| A queue row's Remove | text only | `action.remove` | Remove | conforms (the file stays; the accessible name adds the file after the visible word) |
+| Readiness shortcuts (Choose OCR data / Save API key / Choose model) | text only | `nav.go-to` | Choose OCR data / Save API key / Choose model | conforms as a judgment call: the buttons jump the reader to the setting that answers the readiness issue, and `nav.go-to` is the vocabulary's to-destination meaning; recorded in the registry row (`rtl: mirror` mirrored) |
+| Dialog OK / Open (secret file) | text only | `action.confirm` | OK / Open | conforms - the affirmative answer, `state.ok` glyph and tint |
+| Dialog Cancel / No / Close / Don't translate | text only | `action.cancel` | Cancel / Don't translate / Close | conforms - the dismissing answer, `state.error` glyph; no tint in an irreversible confirmation |
+| Dialog Delete / Delete the logs / Delete and rebuild | text only | `action.delete` | Delete / Delete the logs / Delete and rebuild | conforms - the acting button on the `danger` face, glyph in the face's own ink |
+| Dialog Convert without translating | text only | `action.convert` | Convert without translating | conforms - the caution answer, `state.warning` glyph and tint |
+| Dialog Translate and pay | text only | `action.translate` | Translate and pay | conforms - the acting button on the `danger` face (the product's registered cost confirmation), glyph in the face's own ink |
 
 ## Site (`index.html`, the ten language pages, `extension.html`)
 

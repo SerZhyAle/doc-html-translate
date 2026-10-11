@@ -64,7 +64,7 @@ $ackFiles = @($mapDoc.acknowledge)
 
 # ── the change set ───────────────────────────────────────────
 function Get-GitNames([string[]]$gitArgs) {
-    $out = & git @gitArgs 2>$null
+    $out = & git -c core.safecrlf=false @gitArgs 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Host "parity-check: 'git $($gitArgs -join ' ')' failed (exit $LASTEXITCODE) - the change set cannot be determined."
         Exit-Verdict 'parity-check' 2 'git diff failed'

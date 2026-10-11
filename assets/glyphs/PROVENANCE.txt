@@ -47,3 +47,27 @@ The two 2026-09-29 files (ticket 59, reading-comfort controls) were re-checked a
 vocabulary.jsonl as of that date: both records are `active` with Android refs ic_night_mode
 (dark_mode) and ic_restore_defaults (settings_backup_restore); the files are unchanged byte
 copies of iconography/glyphs/.
+
+Re-checked 2026-10-11 (WINDOWS-UI 0.4 section 11 adoption, ticket 112): the twelve files below
+were added as byte copies of iconography/glyphs/; the twenty-three earlier drawings are
+unchanged. All twelve records are in vocabulary.jsonl (ICON-SET 0.29 carrier; `action.email`
+is `proposed`, the rest `active`). The two glyphs the GUI draws without a catalog record -
+`action.retry` (Material Icons `replay`) and `app.update` (Material Icons `update`) - are NOT
+vendored here, because no catalog file exists to copy. They are drawn to the catalog's style
+under ICON-SET section 15, carried inline in cmd/doc-html-ui/ui.html, and proposed in
+iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md; until the owner folds
+them in they are provisional and marked so in docs/GLYPH-MAP.md.
+
+sha256                                                            file                          Material Icons origin
+0b2ee602dece67950e801b3df344297e311e8bc33c592c7ae8cc9f5d4195c873  action.cancel.svg             cancel (2026-10-11, ticket 112)
+ca97ceac8371975e7f8d21d26ef404858bb137a0b18d80ed0a64d34a20903f69  action.confirm.svg            check (2026-10-11, ticket 112)
+efb3a1894e53b080471cb062bf20721159f6c4d7e178b70a407265f7aadebfe8  action.delete.svg             delete (2026-10-11, ticket 112)
+b8da7d02e71a0cc1340f3e90be6e64cb5617ea96aed7448c4c1f2590b10cf3de  action.clear-all.svg          delete_sweep (2026-10-11, ticket 112)
+bd143081599ceaea4b237c9ff7069c50b46fda6b783133fb35da8952dcc2159e  action.remove.svg             remove_circle_outline (2026-10-11, ticket 112)
+98cece8c14e972a3a5b6b440d667a1caff32da7f75c0bee2a896a1d8da5ac011  action.add.svg                add (2026-10-11, ticket 112)
+979efb47ab29998c91e627c11bc256e389524d8a0d3b559b4afaf6fef8e6a113  action.choose-folder.svg      folder with three dots, drawn for the contract (2026-10-11, ticket 112)
+fd9096874574d18ff0cac8bcf92df67cf1f5f40ea19dbca3ceea7ea8d6910273  action.download.svg           cloud_download (2026-10-11, ticket 112)
+0141c5cf232697e6a7299f2fc77c1b79298f2414060220dd776b48869682e014  action.email.svg              mail (2026-10-11, ticket 112)
+f63a4d96328e52ee0aca695c302057ecba8f48b789d22131d90a6669f0ca8595  action.copy.svg               content_copy (2026-10-11, ticket 112)
+76aead8efca416cabd5ead45d7f9414584cd70cd2180799a73357b57ff9a1231  nav.scroll-bottom.svg         vertical_align_bottom (2026-10-11, ticket 112)
+df11c775889f6dbf6a1e2136695cc98502b3b75d2a8c7ac7f1fcf05a951997a1  action.translate.svg          translate (2026-10-11, ticket 112; the cost dialog's acting answer)

@@ -286,7 +286,9 @@ func TestFailuresNameTheirCause(t *testing.T) {
 	}
 	for _, want := range []string{
 		"t(RUN_FAILURE_CAUSES[end.code] || 'runCauseUnknown', {code: end.code})",
-		"buttons: [{id: 'send', key: 'btnSendLogs'}, {id: 'retry', key: 'btnRetry', kind: 'primary'}, {id: 'close', key: 'dlgClose', focus: true}]",
+		// WINDOWS-UI 0.4 section 11: the failure dialog's answers carry their glyphs - send is a
+		// neutral command, retry the affirmative, close the dismissing answer with the focus.
+		"buttons: [{id: 'send', key: 'btnSendLogs', glyph: 'action.email'},\n            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'},\n            {id: 'close', key: 'dlgClose', ans: 'ans-cancel', glyph: 'action.cancel', focus: true}],",
 	} {
 		if !strings.Contains(uiHTML, want) {
 			t.Errorf("ui.html lost %q", want)

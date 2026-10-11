@@ -44,7 +44,9 @@ param(
     # Development build: override the version stamp (YY.MMDD.HHmm). Default: now. No tree check.
     [string]$Stamp,
     # Sign the package with a self-signed cert and print local-install commands.
-    [switch]$SelfSign
+    [switch]$SelfSign,
+    # Prepare an unsigned package for Store upload without requiring an existing git tag.
+    [switch]$Unsigned
 )
 
 $ErrorActionPreference = "Stop"
@@ -84,8 +86,8 @@ function Assert-ReleaseTree([string]$ReleaseTag) {
 if ($Tag) {
     if ($Stamp) { throw "-Tag and -Stamp are exclusive: a release build takes its version from the tag" }
     $Stamp = Assert-ReleaseTree $Tag
-} elseif (-not $SelfSign) {
-    throw "An unsigned package is the Store upload and must be built from its release tag: pass -Tag vYY.MMDD.HHmm (or -SelfSign for a local test)"
+} elseif (-not $SelfSign -and -not $Unsigned) {
+    throw "An unsigned package is the Store upload and must be built from its release tag: pass -Tag vYY.MMDD.HHmm (or -SelfSign for a local test, or -Unsigned to prepare an unsigned package)"
 }
 
 # ── version ──────────────────────────────────────────────────
@@ -115,7 +117,8 @@ function New-VersionResourceFile([string]$TemplatePath, [string]$OutputPath, [st
     }
     $json.StringFileInfo.FileVersion = $VersionString
     $json.StringFileInfo.ProductVersion = $VersionString
-    $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $OutputPath -Encoding utf8
+    $content = $json | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText($OutputPath, $content, [System.Text.UTF8Encoding]::new($false))
 }
 
 function Build-Exe([string]$CmdDir, [string]$OutExe, [string]$ExtraLdflags) {

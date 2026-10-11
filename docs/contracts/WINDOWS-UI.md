@@ -1,7 +1,7 @@
 # Pointer: WINDOWS-UI
 
 - **Id:** `WINDOWS-UI`
-- **Version:** 0.3 draft
+- **Version:** 0.4 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/WINDOWS-UI.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the GUI launcher (`cmd/doc-html-ui`), a browser-hosted Windows application (adopted 2026-10-05, ticket 93)
 - **Wire carrier:** none - observable Windows UI and UX

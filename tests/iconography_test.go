@@ -137,13 +137,17 @@ func TestExtensionDrawsOnlyTabledGlyphs(t *testing.T) {
 }
 
 // The GUI and the site carry inline copies (static pages with no shared script); each copy is
-// the vendored path, verbatim - also where it sits URL-encoded inside a CSS mask.
+// the vendored path, verbatim - also where it sits URL-encoded inside a CSS mask, and in the
+// GUI's BTN_GLYPHS button-glyph table.
 func TestInlineGlyphCopiesAreVerbatim(t *testing.T) {
 	vendored := vendoredGlyphs(t)
 	pages := map[string][]string{
-		"cmd/doc-html-ui/ui.html": {"nav.expand", "nav.collapse", "action.swap", "content.document"},
-		"extension.html":          {"nav.go-to", "nav.expand", "nav.collapse", "action.install"},
-		"index.html":              {"nav.scroll-top"},
+		"cmd/doc-html-ui/ui.html": {"nav.expand", "nav.collapse", "action.swap", "content.document",
+			"action.cancel", "action.confirm", "action.delete", "action.clear-all", "action.remove",
+			"action.add", "action.choose-folder", "action.download", "action.email", "action.copy",
+			"action.translate", "nav.scroll-bottom", "nav.open-external", "action.convert", "action.save"},
+		"extension.html": {"nav.go-to", "nav.expand", "nav.collapse", "action.install"},
+		"index.html":     {"nav.scroll-top"},
 	}
 	for _, code := range []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ur", "zh"} {
 		pages[code+"/index.html"] = []string{"nav.scroll-top"}
@@ -161,6 +165,19 @@ func TestInlineGlyphCopiesAreVerbatim(t *testing.T) {
 			if !strings.Contains(decoded, `d="`+d+`"`) && !strings.Contains(decoded, `d='`+d+`'`) {
 				t.Errorf("%s does not carry %s verbatim (assets/glyphs/%s.svg)", page, id, id)
 			}
+		}
+	}
+	// The two provisional meanings the GUI draws under ICON-SET section 15 have no catalog file
+	// to copy yet (iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md), so
+	// the drawn paths are pinned here until the owner folds them in and they are vendored.
+	provisional := map[string]string{
+		"action.retry": "M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z",
+		"app.update":   "M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z",
+	}
+	uiDecoded := readRepoFile(t, "cmd", "doc-html-ui", "ui.html")
+	for id, d := range provisional {
+		if !strings.Contains(uiDecoded, `d="`+d+`"`) {
+			t.Errorf("ui.html does not carry the provisional %s drawing pinned here (ICON-SET section 15)", id)
 		}
 	}
 }

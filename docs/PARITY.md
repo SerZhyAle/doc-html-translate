@@ -491,6 +491,17 @@ and `nav.open-external` exist only in the extension's viewer and popup. `nav.exp
 in both, drawn differently by surface: a button in the extension's table of contents, a CSS mask over the
 `<details>` marker in the desktop index. The GUI launcher and the site carry their own inline copies, held to the same vendored files.
 
+The GUI launcher's buttons are a deliberate divergence by surface (2026-10-11, ticket 112): as a
+Windows desktop window it adopts `WINDOWS-UI` 0.4 section 11 - every command button carries its
+meaning's glyph, and its one modal dialog's answer buttons carry the colour look of `ICON-RENDER`
+0.19 section 14 (the affirmative in the product's `state.ok`, the dismissing answer in
+`state.error`, a caution in `state.warning`). The converted book and the extension are browser
+surfaces, which section 11 does not reach: their chrome stays mono, and nothing here asks a
+future editor to "fix" the launcher's coloured answers or its window buttons' glyphs. The
+launcher's inline glyph table is `BTN_GLYPHS` in `cmd/doc-html-ui/ui.html`, held to the vendored
+files by the same guard (the two provisional meanings it draws under `ICON-SET` section 15 are
+pinned in the test until the catalog takes them).
+
 ### PDF reflow heuristics
 
 **Guard:** Guarded by `TestParityReflowConstants`.

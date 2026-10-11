@@ -43,7 +43,7 @@ function harness() {
             return {ok: true, body: {getReader: () => ({read: () => streams.get(cfg.input).promise})}};
         },
     });
-    vm.runInContext(section('let dlgQueue = Promise.resolve();', '// informDialog shows'), context);
+    vm.runInContext(section('const BTN_GLYPHS', '// informDialog shows'), context);
     vm.runInContext('const MARK = "\\x1edht:";\n' +
         section('async function streamRun(cfg, hooks)', 'async function runConvert()') +
         section('async function askForTheRun(cfg, q, run)', '// reportRunEnd words'), context);
@@ -196,7 +196,7 @@ function secretHarness() {
         api: async (path, opts) => { secrets.push({path, body: JSON.parse(opts.body)}); return {}; },
     });
     vm.runInContext('let queueBusy = false;', context);
-    vm.runInContext(section('let dlgQueue = Promise.resolve();', '// informDialog shows') +
+    vm.runInContext(section('const BTN_GLYPHS', '// informDialog shows') +
         section('let queueSecret = null;', '// APP-BEHAVIOUR rule 6'), context);
     return {
         ask: (q) => vm.runInContext('askSecretForTheRun', context)({input: 'A.fd-sec', output: ''}, q, {active: true}),

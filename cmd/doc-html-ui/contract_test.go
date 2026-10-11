@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"math"
 	"regexp"
 	"slices"
 	"strconv"
@@ -99,6 +100,55 @@ func paletteThemes(t *testing.T) [2]map[string]color.RGBA {
 		themes[0][m[1]], themes[1][m[1]] = hex(m[2]), hex(m[3])
 	}
 	return themes
+}
+
+// mix overlays part of a hue over a base: the dialog answer faces mix about 12 percent of the
+// answer's state hue over the control face (WINDOWS-UI 0.4 section 11 item 4's reference value).
+func mixTint(hue, base color.RGBA, part float64) color.RGBA {
+	ch := func(a, b uint8) uint8 {
+		return uint8(math.Round(float64(a)*part + float64(b)*(1-part)))
+	}
+	return color.RGBA{ch(hue.R, base.R), ch(hue.G, base.G), ch(hue.B, base.B), 0xFF}
+}
+
+// WINDOWS-UI 0.4 section 11 items 4 and 6 / ICON-RENDER 0.19 section 14, measured for this
+// product: on a dialog's answer buttons the glyph rides the answer's state hue and the caption
+// stays body text, both on the tinted face they are actually drawn on - the glyph at least 3:1,
+// the caption at least 4.5:1, in both themes; the untinted dismissing answer (.bare) holds the
+// same floors on the plain control face. The hue and the tint come from the stylesheet's own
+// answer rules, so a restyle is measured, not assumed.
+func TestDialogAnswerFacesMeetContrast(t *testing.T) {
+	themes := paletteThemes(t)
+	part := 0.12
+	if m := regexp.MustCompile(`--ans-hue\) ([0-9]+)%`).FindStringSubmatch(uiStyle(t)); m != nil {
+		n, err := strconv.Atoi(m[1])
+		if err != nil {
+			t.Fatalf("bad tint percentage %q: %v", m[1], err)
+		}
+		part = float64(n) / 100
+	}
+	for i, name := range []string{"light", "dark"} {
+		control := themes[i]["control"]
+		for _, ans := range []struct{ cls, hue string }{
+			{"ans-ok", "success"}, {"ans-cancel", "danger"}, {"ans-warn", "warning"},
+		} {
+			hue, ok := themes[i][ans.hue]
+			if !ok {
+				t.Fatalf("%s: --%s is not a hex light-dark() pair", name, ans.hue)
+			}
+			face := mixTint(hue, control, part)
+			if r := iconart.Contrast(hue, face); r < 3 {
+				t.Errorf("%s, %s: the glyph hue on its 12 percent tint is %.2f:1, want >= 3", name, ans.cls, r)
+			}
+			if r := iconart.Contrast(themes[i]["text-primary"], face); r < 4.5 {
+				t.Errorf("%s, %s: the caption on the tinted face is %.2f:1, want >= 4.5", name, ans.cls, r)
+			}
+		}
+		// The bare dismissing answer of an irreversible confirmation: red glyph on the control face.
+		if r := iconart.Contrast(themes[i]["danger"], control); r < 3 {
+			t.Errorf("%s: the bare dismissing glyph on the control face is %.2f:1, want >= 3", name, r)
+		}
+	}
 }
 
 // APP-STYLE section 8 (contrast), measured for this product: every text role clears WCAG 2.1 AA

@@ -13,10 +13,19 @@ registered document-type icons embedded in the executables - the icon vocabulary
 media.previous, media.next, nav.contents, feature.continue-reading, nav.expand, nav.collapse,
 action.save, action.export, nav.open-external, action.swap, content.document, nav.scroll-top,
 nav.go-to, action.text-smaller, action.text-larger, view.text-layer, app.theme, nav.go-to-page,
-action.install, action.convert, app.night-mode and action.reset. Each is the path data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
+action.install, action.convert, app.night-mode, action.reset, action.cancel, action.confirm,
+action.delete, action.clear-all, action.remove, action.add, action.choose-folder,
+action.download, action.email, action.copy, action.translate and nav.scroll-bottom, plus the
+two provisional
+meanings the GUI's launcher draws under ICON-SET section 15 while
+iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md waits on the owner
+(action.retry and app.update, carried inline in cmd/doc-html-ui/ui.html). Each is the path data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
 menu_book, expand_more, expand_less, save, upload, open_in_new, swap_horiz, description,
 vertical_align_top, chevron_right, text_decrease, text_increase, subtitles, contrast, 123,
-install_desktop, transform, dark_mode, settings_backup_restore); nav.contents moves the toc bullets to the left edge. They reach
+install_desktop, transform, dark_mode, settings_backup_restore, cancel, check, delete,
+delete_sweep, remove_circle_outline, add, folder, cloud_download, mail, content_copy,
+translate, vertical_align_bottom, replay, update); nav.contents moves the toc bullets to the left edge
+and action.choose-folder cuts three dots out of the folder. They reach
 this product through the portfolio's shared icon vocabulary, and their per-file SHA-256 is recorded
 in assets/glyphs/PROVENANCE.txt.
 
