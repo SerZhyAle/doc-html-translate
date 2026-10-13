@@ -21,6 +21,9 @@ func TestMain(m *testing.M) {
 	if os.Getenv("AUDITSTAND_STUB_CLI") == "1" {
 		os.Exit(stubCLI(os.Args[1:]))
 	}
+	if os.Getenv("AUDITSTAND_STUB_BROWSER") == "1" {
+		os.Exit(stubBrowser(os.Args[1:]))
+	}
 	os.Exit(m.Run())
 }
 

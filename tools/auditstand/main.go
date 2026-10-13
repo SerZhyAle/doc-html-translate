@@ -22,6 +22,7 @@ Usage:
   auditstand -SelfTest
   auditstand -Fixtures [-Big]
   auditstand -Control
+  auditstand -BrowserCheck [-allow-key-inject]
   auditstand -Scene <id> [-Cycles N]
   auditstand -Summary
   auditstand -Plan
@@ -34,6 +35,9 @@ Actions (exactly one per run):
   -Fixtures      generate the synthetic corpus deterministically into -fixtures
   -Control       run every available probe on the idle desktop, no app started (exit 2 when the
                  machine's own noise exceeds a budget's jitter threshold)
+  -BrowserCheck  pre-launch the instrumented browser (step 00.08: touches the real browser
+                 profile) and verify the marker page, the optional injected key, the
+                 capture-diff fallback and the closed port
   -Scene <id>    run a scene; refuses without a same-day control and without fixtures; scenes
                  that can write the registry refuse until the Level-B key backup exists
   -Summary       campaign state from the recorded runs; exit 0 only when every cell is measured
@@ -59,6 +63,7 @@ func main() {
 
 	selfTest := fs.Bool("SelfTest", false, "matrix integrity, capability coverage, fixture presence")
 	control := fs.Bool("Control", false, "run the probe set on the idle desktop")
+	browserCheck := fs.Bool("BrowserCheck", false, "pre-launch the instrumented browser and verify step 00.08")
 	fixtures := fs.Bool("Fixtures", false, "generate the synthetic corpus")
 	big := fs.Bool("Big", false, "with -Fixtures: also build the multi-GB fixtures")
 	summary := fs.Bool("Summary", false, "print the campaign state")
@@ -119,7 +124,7 @@ func main() {
 	}
 
 	actions := 0
-	for _, b := range []*bool{selfTest, control, fixtures, summary, plan} {
+	for _, b := range []*bool{selfTest, control, browserCheck, fixtures, summary, plan} {
 		if *b {
 			actions++
 		}
@@ -240,6 +245,17 @@ func main() {
 		res, err := runControl(env, *probeDuration)
 		if err != nil {
 			fmt.Fprintln(os.Stdout, "auditstand -Control:", err)
+			emitVerdict(check, verdictCouldNotVerify, err.Error())
+			os.Exit(2)
+		}
+		emitVerdict(check, res.verdict, res.detail)
+		os.Exit(exitCode(res.verdict))
+
+	case *browserCheck:
+		check := "-BrowserCheck"
+		res, err := runBrowserCheck(env, *keyInjectFlag)
+		if err != nil {
+			fmt.Fprintln(os.Stdout, "auditstand -BrowserCheck:", err)
 			emitVerdict(check, verdictCouldNotVerify, err.Error())
 			os.Exit(2)
 		}

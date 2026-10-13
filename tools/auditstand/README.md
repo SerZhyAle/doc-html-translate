@@ -18,6 +18,7 @@ From the repository root (PowerShell or a shell with `go` on PATH):
     go run ./tools/auditstand -SelfTest
     go run ./tools/auditstand -Fixtures
     go run ./tools/auditstand -Control
+    go run ./tools/auditstand -BrowserCheck [-allow-key-inject]
     go run ./tools/auditstand -Scene S03 -isolation B-full
     go run ./tools/auditstand -Summary
     go run ./tools/auditstand -Plan
@@ -37,6 +38,12 @@ From the repository root (PowerShell or a shell with `go` on PATH):
   attempts persist; a newer invalid control supersedes the earlier valid one that day. Probes that are unavailable are named
   advisories (the window ping needs the app's window; the keyboard-hook probe is behind
   `-allow-key-inject` and lands with phase 02).
+- **-BrowserCheck** - step 00.08's verification: pre-launch the instrumented browser (it touches
+  the real browser profile - the owner's approval names this step), observe the marker page
+  through the debugging port, time an injected key when `-allow-key-inject` is passed,
+  cross-check the capture-diff fallback on the same window, kill the instance and verify the
+  port closed. Exit `2` when a running browser absorbed the launch (the fallback carries the
+  timing then and the DOM-level cells become n/a).
 - **-Scene** - runs a scene's implemented steps. Refuses (exit `2`) without a same-day valid
   control, without fixtures, and, for registry-touching scenes, without the Level-B named-key
   backup (phase 0 step 05 - no backup, no run). A subset run exits `3` and closes no cell.
@@ -83,6 +90,9 @@ are deleted at campaign end - the ticket folder gets verdicts and aggregates onl
     runenv.go       the redirected environment, output capture, the P4 sampler loop
     scenes.go       the runner discipline (control, fixtures, isolation, verdict folding)
     scene_s03.go / scene_s08.go / scene_s15.go / scene_s16.go  the implemented CLI scenes
+    browserlaunch.go       the instrumented-browser prelaunch, marker server and session (step 00.08)
+    browsercheck.go        -BrowserCheck: step 00.08's verification action
+    capturediff_windows.go / capturediff_other.go  P3's capture-diff fallback timing
     shellnotify_windows.go  P6 shell-notification listener (H11)
     stateprobe.go   P8 state-diff primitives and the H14 toggle verdict
     outputs.go      shared readers of what a CLI run left on disk
@@ -104,10 +114,15 @@ Phase 0's pending work; controls default to unsigned. Empty and subset scenes re
 No implemented scene currently closes the whole scene matrix.
 
 `browser_probe.go` provides a loopback-only CDP transport, DOM/heap counters and a Tab focus-change
-measurement helper. `input_windows.go` requires explicit key-injection opt-in and the audit window
-already in foreground. Synthetic target tests verify transport and counters; instrumented browser
-launch, desktop wiring and capture-diff fallback remain pending. The keyboard-hook negative
-control, UI Automation and the GUI scenes are also pending in the tactical plan.
+measurement helper. `browserlaunch.go` (step 00.08, owner-approved) pre-launches the browser the
+app's own `openAppWindow` will pick, with a debugging port and a stand-owned marker page on
+loopback; the session owns only what it started (an absorbed launch reports the fallback sentinel
+and kills nothing), and closing verifies the port shut. `capturediff_windows.go` is P3's
+capture-diff fallback timing. `-BrowserCheck` is the step's verification action - its live run
+needs the same quiet owner-present window as the scenes. Synthetic target and stub-browser tests
+verify transport, counters, prelaunch, the merged-launch sentinel and the port-close discipline.
+Instrumented-browser desktop wiring into the GUI scenes, the keyboard-hook negative control, UI
+Automation and the GUI scenes themselves remain pending in the tactical plan.
 
 The third increment adds the CLI scenes S08 (translate-guards) and S15 (big-inputs), two more S16
 members (`ocr-image-failure`, `missing-filedo`), the shell-notification listener
