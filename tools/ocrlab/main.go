@@ -15,6 +15,7 @@
 //	ocrlab report <dir>        render the reviewable report
 //	ocrlab gate <dir>          judge a scored run against the acceptance thresholds
 //	ocrlab exchange <dir>      write the OCR-OVERLAY section 7 comparison record per scene
+//	ocrlab holdout             freeze the holdout split, record its uses and audit the record
 package main
 
 import (
@@ -47,6 +48,10 @@ Commands:
   report <dir>  render report.md and a side-by-side report.html
   compare <before> <after> compare frozen inputs and per-scene measurements offline
   cost <dir..> summarize compatible repeated stage timings without inventing a budget
+  holdout freeze|used|replace|audit
+                             freeze the holdout before tuning, record each acceptance use,
+                             record a membership change, and audit the record against
+                             the corpus and the run history
   review export|import export the offline annotation workspace or validate a draft
   declare       freeze a new run's selected inputs before an external producer executes
   reuse         copy one scene from an earlier identical complete run into a declared run and
@@ -87,6 +92,8 @@ func main() {
 		err = cmdDeclare(args)
 	case "reuse":
 		err = cmdReuse(args)
+	case "holdout":
+		err = cmdHoldout(args)
 	case "verify":
 		err = cmdVerify(args)
 	case "fetch":
@@ -148,6 +155,7 @@ type paths struct {
 	manifest    string
 	root        string
 	annotations string
+	holdout     string
 }
 
 func addCommonFlags(fs *flag.FlagSet) *paths {

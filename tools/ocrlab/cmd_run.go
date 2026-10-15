@@ -306,6 +306,7 @@ func reportDir(dir string) error {
 func cmdGate(args []string) error {
 	fs := flag.NewFlagSet("gate", flag.ExitOnError)
 	thresholds := fs.String("thresholds", filepath.Join("DEV", "ocrlab", "thresholds.json"), "acceptance bounds")
+	holdout := fs.String("holdout", filepath.Join("DEV", "ocrlab", "holdout.json"), "holdout freeze record required by a full-benchmark verdict")
 	against := fs.String("against", "", "run directory of the last accepted run, for the holdout non-regression check")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -355,6 +356,9 @@ func cmdGate(args []string) error {
 	if summary.EvidenceDigest != evidence.Digest(evBytes) || summary.ScoresDigest != evidence.Digest(scoreBytes) {
 		summary.EvidenceIssues = append(summary.EvidenceIssues, "evidence or scores changed since scoring; rescore before judging")
 	}
+	// A full-benchmark verdict may only be produced over a frozen holdout whose membership
+	// matches what this run actually judged; anything else is missing evidence, never a pass.
+	summary.EvidenceIssues = append(summary.EvidenceIssues, holdoutGateIssues(*holdout, summary.Purpose, dir)...)
 	res := report.Gate(&summary, th, prev)
 
 	if err := writeJSON(filepath.Join(dir, "gate.json"), res); err != nil {

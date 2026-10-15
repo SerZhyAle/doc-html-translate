@@ -25,9 +25,10 @@ Run from the repository root.
 | `go run ./tools/ocrlab gate [-against <run-dir>] <run-dir>` | Judge a scored run against `DEV/ocrlab/thresholds.json`. Exits 1 on FAIL. |
 | `go run ./tools/ocrlab exchange <run-dir>` | Write the `OCR-OVERLAY` section 7 comparison record, one `exchange/<scene>.json` per scene, from the run's diagnostics. Offline; works on either edition's run. |
 | `go run ./tools/ocrlab compare <before-dir> <after-dir>` | Write per-scene `comparison.json`, `comparison.md` and an offline `comparison.html` with embedded aligned renders. Changed inputs, removed scenes and missing observations cannot certify regression safety. |
+| `go run ./tools/ocrlab holdout freeze\|used\|replace\|audit` | Govern the holdout split's lifecycle. `freeze` writes `DEV/ocrlab/holdout.json` from the corpus as it stands and refuses any scene that is not independent, rights-reviewed, independently checked truth, or that any earlier `selected-dev` / `full-benchmark` run already judged (exploratory diagnosis is allowed and recorded as `priorUse`). `used` records one scored full-benchmark run in the use ledger. `replace -add/-remove` records a membership change with a reason. `audit` confronts the record with the corpus and the local run history: membership drift, unrecorded acceptance use, holdout scenes used in development selections, and replacement bookkeeping (exit 1 on any problem). |
 | `go run ./tools/ocrlab review export [-out <html>]` | Export an offline annotation workspace with rights, annotation and independent-review queues, geometry preview, JSON editing, undo and local draft storage. |
 | `go run ./tools/ocrlab review import <draft.json>` | Validate geometry and write a draft beside reviewed truth. Both signatures are cleared; disagreements survive. Never approves or replaces reviewed truth. |
-| `go run ./tools/ocrlab cost [-condition cold\|warm\|unclassified] [-out <json>] <run-dir..>` | Summarize compatible repeated per-scene conversion and rendering wall times: sample count, median, nearest-rank p95, range and population standard deviation. Memory keeps its actual snapshot semantics. No budget is inferred. |
+| `go run ./tools/ocrlab cost [-condition cold\|warm\|unclassified] [-conditions <file.json>] [-out <json>] <run-dir..>` | Summarize compatible repeated per-scene conversion and rendering wall times: sample count, median, nearest-rank p95, range and population standard deviation, grouped per scene **and per condition**. `-conditions` maps a run id to its condition so one cold first repetition and its warm repeats land in one report without mixing their samples. Memory keeps its actual snapshot semantics. No budget is inferred. |
 
 Flags shared by most commands: `-manifest` (default `DEV/ocrlab/corpus.json`), `-root` (default
 `test_doc/ocrlab`), `-annotations` (default `DEV/ocrlab/annotations`).
@@ -116,6 +117,39 @@ folder stays self-contained.
 limits the search to one run directory, or to a folder of run directories; the default is
 `temp/ocrlab`. The extension producer asks the same Go rule through `ocrlab reuse`, so both editions
 reuse by one implementation and write one field.
+
+## Holdout lifecycle
+
+The strategic spec (109 section 5.5) requires the holdout to be frozen before algorithm tuning,
+used for acceptance rather than parameter selection, and to keep a visible record of repeated
+use and any later replacement. `ocrlab holdout` is that record; the file is
+`DEV/ocrlab/holdout.json` and only these commands write it.
+
+- **`holdout freeze -by <operator>`** refuses to freeze a corpus that has no holdout scenes, and
+  refuses every candidate that is not eligible: a derived or synthetic scene (tunable by
+  definition), a scene whose rights no human has reviewed, an annotation that is not signed
+  human truth, an annotation without an independent check, a source family that crosses splits,
+  or a scene an earlier `selected-dev` / `full-benchmark` run already judged - "previously tuned
+  scenes cannot become a fresh holdout by moving a label". Exploratory diagnosis before the
+  freeze is allowed, because diagnosing that a scene renders is not tuning against it, and it is
+  disclosed per scene under `priorUse` rather than kept silent.
+- **`holdout used -run <dir>`** appends one scored full-benchmark run to the use ledger. A run
+  that declares another purpose is refused: the holdout is for acceptance, not iterative
+  parameter selection.
+- **`holdout replace -add <id>` / `-remove <id>` `-reason` `-by`** records one membership change.
+  An addition is re-judged by the same eligibility rules as a freeze, so a scene tuned in the
+  meantime cannot slip in through the side door.
+- **`holdout audit`** confronts the record with the corpus and the local run history and exits 1
+  on any problem: membership drift in either direction, a changed media hash, an acceptance use
+  that is not in the ledger, a ledger entry naming a run that does not exist or is not scored, a
+  use dated before the freeze, a duplicate entry, a holdout scene inside a post-freeze
+  development selection, and replacement records without a reason or an operator.
+
+`gate` enforces the record on the verdict side: a `full-benchmark` gate over a run whose frozen
+holdout is missing, absent from the run, or different from the frozen membership yields
+`COULD NOT VERIFY` (exit 2) - a verdict that judged an unfrozen set is missing evidence, never a
+pass. Nothing here invents human approvals: freezing records the state, and the rights and truth
+gates it checks are the ones a person still has to fill.
 
 ## Calibration and cost limitations
 
@@ -215,8 +249,8 @@ background tone. `declare` freezes the sidecar into the run's `truth/` and recor
 (`self-diagnosis.json`) still reads the normal render, so replacement glyphs aligned on old
 lettering can count as old ink there; it applies the same single-tone guard but not the hidden
 capture. Metric false-positive fixtures for real (non-generated) scenes, exact actually-loaded
-dependency tracing, holdout freezing/use history and a human usability review remain tracked in
-ticket 109.
+dependency tracing and a human usability review remain tracked in ticket 109; the holdout
+freeze/use-history governance landed with it (see "Holdout lifecycle").
 
 
 `ocrMs` now means the desktop conversion/recognition stage, without a second OCR call to recover
@@ -225,6 +259,33 @@ time. `renderMs` is a separate browser stage. `memoryKind` distinguishes Go runt
 from browser JS heap snapshots; `peakRssBytes` is unavailable on new runs. Cost summaries require
 compatible complete evidence and the same edition, engine and environment. Cache conditions are
 operator-labelled; the tool does not reset caches. Two smoke repeats do not establish latency budgets.
+
+### The controlled cold/warm cost procedure
+
+The instrument cannot reset operating-system caches or reboot the machine, so a "cold" claim is
+defined by what it can control. The procedure the lab's cost records follow:
+
+1. **Selection.** Declare the scene ids before the first repetition. Today only rights-reviewed
+   scenes can enter it, because a `selected-dev` run (the purpose a cost repeat must use to have
+   complete evidence) requires every declared scene's rights to be reviewed - on the current
+   corpus that means the synthetic scenes and the one owner-verified real scene. A cost record
+   over third-party real media waits on the human rights gate by design.
+2. **Session.** An otherwise idle machine; no builds, tests or other campaigns run concurrently.
+3. **Repetitions.** Every repetition is a fresh `run -purpose selected-dev -fresh` over the whole
+   declared selection, back to back. Every run uses its own fresh browser profile
+   (`.browser-profile` inside the run directory), so browser caches are cold in *every* repetition;
+   what separates the conditions is first-session versus immediately repeated state.
+4. **Labelling.** The first repetition of the session is `cold` (first launches of the session's
+   browser and recognizer processes); the repetitions that immediately follow are `warm`. A
+   reboot-level cold state is not claimed and cannot be measured here.
+5. **Summary.** `cost -conditions <file>` with one entry per run id groups the samples per scene
+   and per condition, so a cold first-launch outlier never inflates a warm median. The report
+   keeps each condition's run list, sample counts, medians, p95, range and standard deviation.
+
+The extension lab reads the packs vendored in `extension/vendor/tesseract/lang` (today `eng`
+only), so a scene whose truth declares another language is unmeasured there unless the operator
+forces `--lang eng` - the documented fallback - or vendors the pack. Read a cost record's
+declaration for which of the two happened; the settings travel with the evidence.
 
 Rights metadata acquired by `harvest` remains pending human review. Legacy `commons-api` approval
 stamps do not count as human decisions. Verification reports acquired, rights-reviewed,
