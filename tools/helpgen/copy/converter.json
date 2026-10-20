@@ -1,0 +1,259 @@
+{
+  "id": "converter",
+  "surface": "main",
+  "kind": "window",
+  "title": { "en": "DOC-HTML-UI", "ru": "DOC-HTML-UI", "uk": "DOC-HTML-UI" },
+  "lead": {
+    "en": "Turn an e-book or a document into a local HTML book that opens in your browser, with the translation of your choice. Pick a file, press {k:btnConvert}, read the result.",
+    "ru": "Превратите электронную книгу или документ в локальную HTML-книгу, которая открывается в браузере, при желании с переводом. Выберите файл, нажмите {k:btnConvert} и читайте результат.",
+    "uk": "Перетворіть електронну книгу чи документ на локальну HTML-книгу, яка відкривається в браузері, за бажання з перекладом. Виберіть файл, натисніть {k:btnConvert} і читайте результат."
+  },
+  "shots": [
+    {
+      "id": "ready", "setup": "converter-ready", "capture": "window",
+      "alt": {
+        "en": "The DOC-HTML-UI window with a book chosen: the file box and the Convert button, the status lines, the previous result, the recent list, the output folder, the translation engine and languages, the four options, the command line and the log, and the Help button in the top-right corner.",
+        "ru": "Окно DOC-HTML-UI с выбранной книгой: поле файла и кнопка «Конвертировать», строки состояния, предыдущий результат, список недавних, папка вывода, движок перевода и языки, четыре параметра, командная строка и журнал, а в правом верхнем углу кнопка справки.",
+        "uk": "Вікно DOC-HTML-UI з обраною книгою: поле файла й кнопка «Конвертувати», рядки стану, попередній результат, список недавніх, тека виводу, рушій перекладу й мови, чотири параметри, командний рядок і журнал, а в правому верхньому куті кнопка довідки."
+      }
+    },
+    {
+      "id": "states", "setup": "converter-states", "capture": "window", "sometimes": true,
+      "alt": {
+        "en": "The same window in a busier state: the first-run question about Windows at the top, a queue of three files with their states, and the Google key row that appears with the Google Cloud engine.",
+        "ru": "То же окно в более занятом состоянии: вопрос о Windows при первом запуске вверху, очередь из трёх файлов с их состояниями и строка ключа Google, которая появляется с движком Google Cloud.",
+        "uk": "Те саме вікно в більш зайнятому стані: питання про Windows під час першого запуску вгорі, черга з трьох файлів з їхніми станами та рядок ключа Google, який з'являється з рушієм Google Cloud."
+      }
+    }
+  ],
+  "order": [
+    { "en": "Choose the document {ref:drop}: click the box or drop a file on the window. Several files at once go to the queue {ref:queue}.", "ru": "Выберите документ {ref:drop}: щёлкните по полю или перетащите файл на окно. Несколько файлов сразу попадут в очередь {ref:queue}.", "uk": "Виберіть документ {ref:drop}: клацніть по полю або перетягніть файл на вікно. Кілька файлів одразу потрапляють до черги {ref:queue}." },
+    { "en": "Read the line under it {ref:status}: it says whether everything the conversion needs is in place.", "ru": "Прочитайте строку под ним {ref:status}: она говорит, всё ли нужное для конвертации на месте.", "uk": "Прочитайте рядок під ним {ref:status}: він каже, чи все потрібне для конвертації на місці." },
+    { "en": "Say where the result goes {ref:output}. Leave it empty to get the book next to the document.", "ru": "Укажите, куда сохранить результат {ref:output}. Оставьте пустым, чтобы книга появилась рядом с документом.", "uk": "Вкажіть, куди зберегти результат {ref:output}. Залиште порожнім, щоб книга з'явилася поруч із документом." },
+    { "en": "Choose how to translate {ref:translation} and between which languages {ref:languages}. {k:engChrome} converts only; you translate afterwards in the browser.", "ru": "Выберите способ перевода {ref:translation} и языки {ref:languages}. {k:engChrome} только конвертирует; переводите потом в браузере.", "uk": "Виберіть спосіб перекладу {ref:translation} і мови {ref:languages}. {k:engChrome} лише конвертує; перекладаєте потім у браузері." },
+    { "en": "Look at the options {ref:options} if you want one long page, no browser window afterwards, or a rebuild.", "ru": "Загляните в параметры {ref:options}, если нужна одна длинная страница, не нужно открывать браузер или нужна пересборка.", "uk": "Загляньте до параметрів {ref:options}, якщо потрібна одна довга сторінка, не потрібно відкривати браузер або потрібне перезбирання." },
+    { "en": "Press {k:btnConvert} {ref:run}. The {k:secCmdLine} {ref:command} shows exactly what runs; the {k:secLog} {ref:log} shows how it goes.", "ru": "Нажмите {k:btnConvert} {ref:run}. {k:secCmdLine} {ref:command} показывает, что именно запускается, а {k:secLog} {ref:log} - как всё идёт.", "uk": "Натисніть {k:btnConvert} {ref:run}. {k:secCmdLine} {ref:command} показує, що саме запускається, а {k:secLog} {ref:log} - як усе йде." },
+    { "en": "Open the finished book from {ref:previous}, or let the browser open it for you.", "ru": "Откройте готовую книгу из блока {ref:previous} или дождитесь, пока её откроет браузер.", "uk": "Відкрийте готову книгу з блока {ref:previous} або дочекайтеся, поки її відкриє браузер." }
+  ],
+  "elements": [
+    {
+      "id": "help", "shot": "ready", "sel": "#btnHelp", "pin": "l",
+      "nameKey": "titleHelp",
+      "one": { "en": "Opens the help for the part of the window you are in.", "ru": "Открывает справку о той части окна, где вы находитесь.", "uk": "Відкриває довідку про ту частину вікна, де ви перебуваєте." },
+      "text": {
+        "en": "Opens this page, or the page of the question that is open. With the focus inside a part of the window it opens the entry of that part.",
+        "ru": "Открывает эту страницу или страницу вопроса, который сейчас открыт. Если фокус внутри какой-то части окна, открывается описание именно этой части.",
+        "uk": "Відкриває цю сторінку або сторінку запитання, яке зараз відкрите. Якщо фокус усередині якоїсь частини вікна, відкривається опис саме цієї частини."
+      },
+      "why": { "en": "It explains the window with a picture, without a network and without leaving the app.", "ru": "Объясняет окно с картинкой, без сети и не выходя из программы.", "uk": "Пояснює вікно з картинкою, без мережі й не виходячи з програми." },
+      "next": { "en": "The help opens in its own window; this window stays as it is, and so does an open question.", "ru": "Справка открывается в своём окне; это окно остаётся как есть, как и открытый вопрос.", "uk": "Довідка відкривається у своєму вікні; це вікно лишається як є, як і відкрите запитання." },
+      "undo": { "en": "Close the help window.", "ru": "Закройте окно справки.", "uk": "Закрийте вікно довідки." },
+      "shortcut": { "en": "{kbd:F1} does the same from anywhere in the window.", "ru": "{kbd:F1} делает то же самое из любого места окна.", "uk": "{kbd:F1} робить те саме з будь-якого місця вікна." }
+    },
+    {
+      "id": "header", "shot": "ready", "sel": [".prefs"], "pin": "b",
+      "nameKeys": ["titleTheme", "titleUiLang"],
+      "one": { "en": "How the window looks and which language it speaks.", "ru": "Как выглядит окно и на каком языке оно говорит.", "uk": "Як виглядає вікно і якою мовою воно говорить." },
+      "text": {
+        "en": "At the start of the window is the list of pages; at its top, beside the page title, are two lists: the theme ({k:themeSystem}, {k:themeLight}, {k:themeDark}) and the interface language (13 languages). The line under the title says what the page is for, and the links in the header lead to the product site, the SZA hub and a message to the author. In a narrow window the list of pages opens from the Pages button. The interface language is also the language of the reader's own buttons in the converted book; the text of the book keeps its own language.",
+        "ru": "В начале окна стоит список страниц; вверху, рядом с названием страницы, два списка: тема ({k:themeSystem}, {k:themeLight}, {k:themeDark}) и язык интерфейса (13 языков). Строка под заголовком говорит, зачем эта страница, а ссылки в шапке ведут на сайт программы, на портал SZA и к письму автору. В узком окне список страниц открывается кнопкой «Страницы». Язык интерфейса - это ещё и язык собственных кнопок читалки в готовой книге; текст книги остаётся на своём языке.",
+        "uk": "На початку вікна стоїть список сторінок; угорі, поруч із назвою сторінки, два списки: тема ({k:themeSystem}, {k:themeLight}, {k:themeDark}) і мова інтерфейсу (13 мов). Рядок під заголовком каже, навіщо ця сторінка, а посилання в шапці ведуть на сайт програми, на портал SZA та до листа авторові. У вузькому вікні список сторінок відкривається кнопкою «Сторінки». Мова інтерфейсу - це ще й мова власних кнопок читалки в готовій книзі; текст книги лишається своєю мовою."
+      },
+      "why": { "en": "Until you choose, the window follows the system theme and the Windows language.", "ru": "Пока вы не выбрали, окно следует системной теме и языку Windows.", "uk": "Поки ви не обрали, вікно слідує системній темі та мові Windows." },
+      "next": { "en": "A change applies at once and is remembered for next time. Nothing is converted or reloaded.", "ru": "Изменение применяется сразу и запоминается. Ничего не конвертируется и не перезагружается.", "uk": "Зміна застосовується одразу і запам'ятовується. Нічого не конвертується і не перезавантажується." },
+      "undo": { "en": "Pick the previous value in the same list.", "ru": "Выберите прежнее значение в том же списке.", "uk": "Виберіть попереднє значення в тому ж списку." }
+    },
+    {
+      "id": "drop", "shot": "ready", "sel": "#dropZone", "pin": "gt",
+      "name": { "en": "Choose a file", "ru": "Выбор файла", "uk": "Вибір файла" },
+      "one": { "en": "The document to convert: click to choose it, or drop it on the window.", "ru": "Документ для конвертации: щёлкните, чтобы выбрать, или перетащите его на окно.", "uk": "Документ для конвертації: клацніть, щоб вибрати, або перетягніть його на вікно." },
+      "text": {
+        "en": "Click the box to open the file picker, or drag one or more files onto the window. Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comic archives (CBZ, CBR, CB7, CBT) and pictures (PNG, JPG, WebP and others). A FileDO secret file (.fd-sec) is opened with its password. A dropped file is copied into the app's own folder first, so its result lands there unless you set an output folder.",
+        "ru": "Щёлкните по полю, чтобы открыть окно выбора файла, или перетащите на окно один или несколько файлов. Поддерживаются EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, архивы комиксов (CBZ, CBR, CB7, CBT) и картинки (PNG, JPG, WebP и другие). Секретный файл FileDO (.fd-sec) открывается по паролю. Перетащенный файл сначала копируется в собственную папку программы, поэтому результат окажется там, пока вы не укажете папку вывода.",
+        "uk": "Клацніть по полю, щоб відкрити вікно вибору файла, або перетягніть на вікно один чи кілька файлів. Підтримуються EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, архіви коміксів (CBZ, CBR, CB7, CBT) і картинки (PNG, JPG, WebP та інші). Секретний файл FileDO (.fd-sec) відкривається за паролем. Перетягнутий файл спершу копіюється до власної теки програми, тому результат опиниться там, доки ви не вкажете теку виводу."
+      },
+      "why": { "en": "Everything else in the window is about this file. Choosing several files at once builds a queue.", "ru": "Всё остальное в окне относится к этому файлу. Если выбрать сразу несколько файлов, получится очередь.", "uk": "Усе інше у вікні стосується цього файла. Якщо вибрати одразу кілька файлів, вийде черга." },
+      "next": { "en": "The line under the box reports whether the file can be converted. Nothing is read or written until you press {k:btnConvert}.", "ru": "Строка под полем сообщает, можно ли конвертировать файл. Пока вы не нажали {k:btnConvert}, ничего не читается и не пишется.", "uk": "Рядок під полем повідомляє, чи можна конвертувати файл. Доки ви не натиснули {k:btnConvert}, нічого не читається й не пишеться." },
+      "undo": { "en": "Choose another file; choosing changes nothing on disk.", "ru": "Выберите другой файл; выбор ничего не меняет на диске.", "uk": "Виберіть інший файл; вибір нічого не змінює на диску." },
+      "shortcut": { "en": "{kbd:Ctrl+Shift+F} puts the keyboard on this box.", "ru": "{kbd:Ctrl+Shift+F} ставит клавиатурный фокус на это поле.", "uk": "{kbd:Ctrl+Shift+F} ставить клавіатурний фокус на це поле." }
+    },
+    {
+      "id": "run", "shot": "ready", "sel": "#btnRun", "pin": "in",
+      "nameKey": "btnConvert",
+      "one": { "en": "Starts the conversion; while it runs the same button is Cancel.", "ru": "Запускает конвертацию; пока она идёт, эта же кнопка - «Отмена».", "uk": "Запускає конвертацію; доки вона йде, ця сама кнопка - «Скасувати»." },
+      "text": {
+        "en": "Converts the chosen file into a folder of local HTML pages with a table of contents, then opens it in the browser unless {k:chkNoOpen} is ticked. While a conversion runs the button becomes {k:btnCancel} and a progress line names the stage and counts pages or images. If a finished result for the same file and the same options already exists, it is opened instead of rebuilt; {k:chkForce} rebuilds.",
+        "ru": "Превращает выбранный файл в папку локальных HTML-страниц с оглавлением и открывает её в браузере, если не отмечено {k:chkNoOpen}. Пока идёт конвертация, кнопка превращается в {k:btnCancel}, а строка хода работы называет этап и считает страницы или картинки. Если готовый результат для того же файла и тех же параметров уже есть, он открывается, а не собирается заново; {k:chkForce} пересобирает.",
+        "uk": "Перетворює вибраний файл на теку локальних HTML-сторінок зі змістом і відкриває її в браузері, якщо не відмічено {k:chkNoOpen}. Доки йде конвертація, кнопка перетворюється на {k:btnCancel}, а рядок ходу роботи називає етап і рахує сторінки чи картинки. Якщо готовий результат для того самого файла й тих самих параметрів уже є, він відкривається, а не збирається знову; {k:chkForce} перезбирає."
+      },
+      "why": { "en": "It is the only button that writes files; everything above it is a choice.", "ru": "Это единственная кнопка, которая записывает файлы; всё выше - выбор.", "uk": "Це єдина кнопка, яка записує файли; усе вище - вибір." },
+      "next": { "en": "The log fills, the progress line moves, and at the end the window says it is done, done with warnings, or what went wrong and what to do about it.", "ru": "Журнал заполняется, строка хода работы движется, а в конце окно сообщает, что всё готово, готово с предупреждениями или что пошло не так и что с этим делать.", "uk": "Журнал заповнюється, рядок ходу роботи рухається, а наприкінці вікно повідомляє, що все готово, готово з попередженнями або що пішло не так і що з цим робити." },
+      "undo": { "en": "{k:btnCancel} stops the conversion at once. What was already written stays in the output folder and the next {k:btnConvert} rebuilds it. A finished result can be deleted under the previous result.", "ru": "{k:btnCancel} останавливает конвертацию сразу. Уже записанное остаётся в папке вывода, а следующая {k:btnConvert} соберёт всё заново. Готовый результат можно удалить в блоке предыдущего результата.", "uk": "{k:btnCancel} зупиняє конвертацію одразу. Уже записане лишається в теці виводу, а наступне {k:btnConvert} збере все заново. Готовий результат можна видалити в блоці попереднього результату." },
+      "shortcut": { "en": "{kbd:Ctrl+Enter} converts; {kbd:Esc} cancels a running conversion.", "ru": "{kbd:Ctrl+Enter} запускает конвертацию; {kbd:Esc} отменяет идущую.", "uk": "{kbd:Ctrl+Enter} запускає конвертацію; {kbd:Esc} скасовує ту, що йде." }
+    },
+    {
+      "id": "status", "shot": "ready", "sel": ["#readiness", "#dropStatus"], "pin": "gt",
+      "name": { "en": "Status lines", "ru": "Строки состояния", "uk": "Рядки стану" },
+      "one": { "en": "Tells you whether the file and the helper tools are ready, then how far the conversion is.", "ru": "Говорят, готовы ли файл и вспомогательные программы, а затем - как далеко продвинулась конвертация.", "uk": "Кажуть, чи готові файл і допоміжні програми, а потім - як далеко просунулася конвертація." },
+      "text": {
+        "en": "Up to three lines sit under the file box. The first says what the conversion still needs: a missing helper, a missing key, an unreadable file, with a button that jumps to the setting. The second names the stage of a running conversion and counts pages or images. The last lists the supported formats and the helpers some of them need: Calibre for MOBI and AZW3, 7-Zip for CBR and CB7, Tesseract for text in pictures, FileDO for secret files.",
+        "ru": "Под полем файла до трёх строк. Первая говорит, чего конвертации ещё не хватает: нет вспомогательной программы, нет ключа, файл не читается; рядом кнопка, которая ведёт к нужной настройке. Вторая называет этап идущей конвертации и считает страницы или картинки. Последняя перечисляет поддерживаемые форматы и программы, нужные некоторым из них: Calibre для MOBI и AZW3, 7-Zip для CBR и CB7, Tesseract для текста на картинках, FileDO для секретных файлов.",
+        "uk": "Під полем файла до трьох рядків. Перший каже, чого конвертації ще бракує: немає допоміжної програми, немає ключа, файл не читається; поруч кнопка, яка веде до потрібного налаштування. Другий називає етап конвертації, що йде, і рахує сторінки чи картинки. Останній перелічує підтримувані формати та програми, потрібні деяким із них: Calibre для MOBI і AZW3, 7-Zip для CBR і CB7, Tesseract для тексту на картинках, FileDO для секретних файлів."
+      },
+      "why": { "en": "A missing helper is found before the conversion starts, not after a long wait.", "ru": "Нехватка вспомогательной программы обнаруживается до начала конвертации, а не после долгого ожидания.", "uk": "Брак допоміжної програми виявляється до початку конвертації, а не після довгого очікування." },
+      "next": { "en": "Each message says what is missing and what will happen without it, for example that the book is converted without translation.", "ru": "Каждое сообщение говорит, чего не хватает и что будет без этого, например что книга сконвертируется без перевода.", "uk": "Кожне повідомлення каже, чого бракує і що буде без цього, наприклад що книга сконвертується без перекладу." },
+      "undo": { "en": "These lines only report; they change nothing.", "ru": "Эти строки только сообщают; ничего не меняют.", "uk": "Ці рядки лише повідомляють; нічого не змінюють." }
+    },
+    {
+      "id": "previous", "shot": "ready", "sel": "#prevResultHint", "pin": "gt",
+      "name": { "en": "Previous result", "ru": "Предыдущий результат", "uk": "Попередній результат" },
+      "one": { "en": "Shown when this file has already been converted.", "ru": "Показывается, если этот файл уже был сконвертирован.", "uk": "Показується, якщо цей файл уже було сконвертовано." },
+      "text": {
+        "en": "{k:btnOpenPrev} opens the finished book. The path after {k:prevResultIn} is the folder it sits in; click it to open the folder. {k:btnDeletePrev} removes the result.",
+        "ru": "{k:btnOpenPrev} открывает готовую книгу. Путь после {k:prevResultIn} - папка, где она лежит; щёлкните по нему, чтобы открыть папку. {k:btnDeletePrev} удаляет результат.",
+        "uk": "{k:btnOpenPrev} відкриває готову книгу. Шлях після {k:prevResultIn} - тека, де вона лежить; клацніть по ньому, щоб відкрити теку. {k:btnDeletePrev} видаляє результат."
+      },
+      "why": { "en": "Opening an existing result is instant and free; deleting it is for a clean rebuild.", "ru": "Открыть готовый результат - мгновенно и бесплатно; удалять его нужно ради чистой пересборки.", "uk": "Відкрити готовий результат - миттєво і безкоштовно; видаляти його потрібно задля чистого перезбирання." },
+      "next": { "en": "Deleting asks first and removes only the result folder; the original file is not touched.", "ru": "Удаление сначала спрашивает и убирает только папку результата; исходный файл не затрагивается.", "uk": "Видалення спершу питає і прибирає лише теку результату; вихідний файл не зачіпається." },
+      "undo": { "en": "A deleted result cannot be brought back; the next {k:btnConvert} builds it again from the original.", "ru": "Удалённый результат не вернуть; следующая {k:btnConvert} соберёт его заново из оригинала.", "uk": "Видалений результат не повернути; наступне {k:btnConvert} збере його знову з оригіналу." }
+    },
+    {
+      "id": "recent", "shot": "ready", "sel": "#recentSection", "pin": "gt",
+      "nameKey": "secRecent",
+      "one": { "en": "The last eight documents you chose or dropped.", "ru": "Последние восемь документов, которые вы выбирали или перетаскивали.", "uk": "Останні вісім документів, які ви вибирали чи перетягували." },
+      "text": {
+        "en": "Click a name to put that file back in the file box. A file that is no longer on disk is greyed out and marked unavailable, so a stale path is never converted by mistake. The arrow keys move through the list.",
+        "ru": "Щёлкните по имени, чтобы вернуть этот файл в поле выбора. Файл, которого уже нет на диске, затенён и помечен как недоступный, поэтому устаревший путь не сконвертируется по ошибке. По списку можно ходить стрелками.",
+        "uk": "Клацніть по імені, щоб повернути цей файл до поля вибору. Файл, якого вже немає на диску, затінений і позначений як недоступний, тому застарілий шлях не сконвертується помилково. Списком можна ходити стрілками."
+      },
+      "why": { "en": "Converting the same book again with other options is a common task.", "ru": "Сконвертировать ту же книгу ещё раз с другими параметрами - частая задача.", "uk": "Сконвертувати ту саму книгу ще раз з іншими параметрами - часте завдання." },
+      "next": { "en": "{k:recentClear} asks first and forgets the list only; the documents stay where they are.", "ru": "{k:recentClear} сначала спрашивает и забывает только список; сами документы остаются на месте.", "uk": "{k:recentClear} спершу питає і забуває лише список; самі документи лишаються на місці." },
+      "undo": { "en": "A forgotten list cannot be brought back; choose the files again.", "ru": "Забытый список не вернуть; выберите файлы заново.", "uk": "Забутий список не повернути; виберіть файли знову." }
+    },
+    {
+      "id": "output", "shot": "ready", "sel": "#outputRow", "pin": "gt",
+      "nameKey": "lblOutput",
+      "oneKey": "hintOutput",
+      "text": {
+        "en": "The folder that receives the results. Each document gets its own subfolder named after it. {k:btnBrowse} opens the folder picker; you can also type or paste a path.",
+        "ru": "Папка, куда попадают результаты. Каждый документ получает свою подпапку с его именем. {k:btnBrowse} открывает окно выбора папки; путь можно и набрать или вставить.",
+        "uk": "Тека, куди потрапляють результати. Кожен документ отримує свою підтеку з його іменем. {k:btnBrowse} відкриває вікно вибору теки; шлях можна й набрати чи вставити."
+      },
+      "why": { "en": "Leave it empty for the simplest case: the book lands next to the document. Set it to keep all your converted books in one place.", "ru": "Оставьте пустым для простейшего случая: книга появится рядом с документом. Укажите папку, чтобы хранить все сконвертированные книги в одном месте.", "uk": "Залиште порожнім для найпростішого випадку: книга з'явиться поруч із документом. Вкажіть теку, щоб зберігати всі сконвертовані книги в одному місці." },
+      "next": { "en": "The path is remembered, and the command line shows it after -folder.", "ru": "Путь запоминается, а командная строка показывает его после -folder.", "uk": "Шлях запам'ятовується, а командний рядок показує його після -folder." },
+      "undo": { "en": "Empty the field to go back to \"next to the document\". Results already written stay where they are.", "ru": "Очистите поле, чтобы вернуться к варианту «рядом с документом». Уже записанные результаты остаются на месте.", "uk": "Очистіть поле, щоб повернутися до варіанта «поруч із документом». Уже записані результати лишаються на місці." }
+    },
+    {
+      "id": "translation", "shot": "ready", "sel": "#engine", "pin": "gt",
+      "nameKey": "secTranslation",
+      "oneKey": "hintEngine",
+      "text": {
+        "en": "Four ways to treat the language of the book:<ul><li>{k:engChrome} - convert only, then open the book in Chrome and use its built-in page translation. No key, no account, nothing is sent from this app.</li><li>{k:engGoogle} - translates while converting, with your own Cloud Translation key. Google charges for it; the cost is estimated and asked about first.</li><li>{k:engOllama} - translates while converting with a model running on your own computer. Free, slower, needs Ollama running.</li><li>{k:engNone} - convert only, the explicit form of the default.</li></ul>",
+        "ru": "Четыре способа обойтись с языком книги:<ul><li>{k:engChrome} - только конвертировать, затем открыть книгу в Chrome и воспользоваться его встроенным переводом страниц. Без ключа и аккаунта, из программы ничего не отправляется.</li><li>{k:engGoogle} - переводит во время конвертации по вашему ключу Cloud Translation. Google берёт за это плату; стоимость сначала оценивается, и вас спрашивают.</li><li>{k:engOllama} - переводит во время конвертации моделью, запущенной на вашем компьютере. Бесплатно, медленнее, нужен запущенный Ollama.</li><li>{k:engNone} - только конвертировать, явная форма варианта по умолчанию.</li></ul>",
+        "uk": "Чотири способи впоратися з мовою книги:<ul><li>{k:engChrome} - лише конвертувати, потім відкрити книгу в Chrome і скористатися його вбудованим перекладом сторінок. Без ключа й облікового запису, із програми нічого не надсилається.</li><li>{k:engGoogle} - перекладає під час конвертації за вашим ключем Cloud Translation. Google бере за це плату; вартість спершу оцінюється, і вас питають.</li><li>{k:engOllama} - перекладає під час конвертації моделлю, запущеною на вашому комп'ютері. Безкоштовно, повільніше, потрібен запущений Ollama.</li><li>{k:engNone} - лише конвертувати, явна форма варіанта за замовчуванням.</li></ul>"
+      },
+      "why": { "en": "Start with the free flow; choose a paid or local engine only when you want the translation saved inside the book.", "ru": "Начните с бесплатного варианта; платный или локальный движок нужен, только если перевод должен быть сохранён внутри книги.", "uk": "Почніть з безкоштовного варіанта; платний чи локальний рушій потрібен, лише якщо переклад має бути збережений усередині книги." },
+      "next": { "en": "Google Cloud shows the key row, Ollama's own settings are on the Ollama page, and the command line shows the engine flag.", "ru": "Google Cloud показывает строку ключа, собственные настройки Ollama лежат на странице Ollama, а командная строка показывает флаг движка.", "uk": "Google Cloud показує рядок ключа, Ollama вмикає свою групу налаштувань, а командний рядок показує прапорець рушія." },
+      "undo": { "en": "Switch back at any time. An existing translated result stays as it was until you rebuild it.", "ru": "Переключитесь обратно в любой момент. Готовый переведённый результат остаётся прежним, пока вы его не пересоберёте.", "uk": "Перемкніться назад будь-коли. Готовий перекладений результат лишається таким, як був, доки ви його не перезберете." }
+    },
+    {
+      "id": "languages", "shot": "ready", "sel": "#langsRow", "pin": "gt",
+      "nameKey": "lblLanguages",
+      "oneKey": "hintLangs",
+      "text": {
+        "en": "The first list is the source: the language the document is written in. The second is the target: the language Google or Ollama translate into. The button between them swaps the two ({k:titleSwap}).",
+        "ru": "Первый список - исходный язык: язык, на котором написан документ. Второй - целевой: язык, на который переводят Google или Ollama. Кнопка между ними меняет их местами ({k:titleSwap}).",
+        "uk": "Перший список - мова джерела: мова, якою написано документ. Другий - цільова: мова, на яку перекладають Google або Ollama. Кнопка між ними міняє їх місцями ({k:titleSwap})."
+      },
+      "why": { "en": "The source language also picks the text-recognition language for pictures while the OCR language is on Automatic.", "ru": "Исходный язык заодно выбирает язык распознавания текста на картинках, пока язык OCR стоит на «Автоматически».", "uk": "Мова джерела заодно обирає мову розпізнавання тексту на картинках, доки мова OCR стоїть на «Автоматично»." },
+      "next": { "en": "Both are remembered and shown in the command line as -src and -dst.", "ru": "Оба запоминаются и показываются в командной строке как -src и -dst.", "uk": "Обидві запам'ятовуються і показуються в командному рядку як -src і -dst." },
+      "undo": { "en": "Pick the previous language, or press the swap button again.", "ru": "Выберите прежний язык или нажмите кнопку обмена ещё раз.", "uk": "Виберіть попередню мову або натисніть кнопку обміну ще раз." }
+    },
+    {
+      "id": "options", "shot": "ready", "sel": "#togglesRow", "pin": "gt",
+      "name": { "en": "Options", "ru": "Параметры", "uk": "Параметри" },
+      "one": { "en": "Four switches for the shape of the result and how the run behaves.", "ru": "Четыре переключателя: вид результата и поведение запуска.", "uk": "Чотири перемикачі: вигляд результату й поведінка запуску." },
+      "items": [
+        { "nameKey": "chkSingle", "oneKey": "hintSingle" },
+        { "nameKey": "chkNoOpen", "oneKey": "hintNoOpen" },
+        { "nameKey": "chkForce", "oneKey": "hintForce" },
+        { "nameKey": "chkVerbose", "oneKey": "hintVerbose" }
+      ],
+      "why": { "en": "The defaults give one long page with a table of contents and open it in the browser, which suits most books.", "ru": "По умолчанию получается одна длинная страница с оглавлением, которая открывается в браузере; для большинства книг этого достаточно.", "uk": "За замовчуванням виходить одна довга сторінка зі змістом, яка відкривається в браузері; для більшості книг цього досить." },
+      "next": { "en": "A change is used by the next {k:btnConvert} and shows in the command line.", "ru": "Изменение используется со следующей {k:btnConvert} и видно в командной строке.", "uk": "Зміна використовується з наступного {k:btnConvert} і видна в командному рядку." },
+      "undo": { "en": "Tick or untick again. Results already built are not changed.", "ru": "Отметьте или снимите отметку снова. Уже собранные результаты не меняются.", "uk": "Позначте або зніміть позначку знову. Уже зібрані результати не змінюються." }
+    },
+    {
+      "id": "command", "shot": "ready", "sel": ".cmdbar", "pin": "t",
+      "nameKey": "secCmdLine",
+      "one": { "en": "The exact command this window will run.", "ru": "Точная команда, которую запустит это окно.", "uk": "Точна команда, яку запустить це вікно." },
+      "text": {
+        "en": "The line shows the converter's command with every setting you chose. It is built by the same code that starts the conversion, so it always matches. {k:btnCopy} puts it on the clipboard, for a script or a scheduled task.",
+        "ru": "Строка показывает команду конвертера со всеми выбранными настройками. Её строит тот же код, что запускает конвертацию, поэтому она всегда совпадает. {k:btnCopy} кладёт её в буфер обмена - для скрипта или задания по расписанию.",
+        "uk": "Рядок показує команду конвертера з усіма вибраними налаштуваннями. Його будує той самий код, що запускає конвертацію, тому він завжди збігається. {k:btnCopy} кладе його в буфер обміну - для скрипту чи завдання за розкладом."
+      },
+      "why": { "en": "It shows what each setting does, and lets you repeat a conversion without the window.", "ru": "Показывает, что делает каждая настройка, и позволяет повторить конвертацию без окна.", "uk": "Показує, що робить кожне налаштування, і дає змогу повторити конвертацію без вікна." },
+      "next": { "en": "Nothing runs until you press {k:btnConvert}.", "ru": "Ничего не запускается, пока вы не нажали {k:btnConvert}.", "uk": "Нічого не запускається, доки ви не натиснули {k:btnConvert}." }
+    },
+    {
+      "id": "log", "shot": "ready", "sel": [".log-head", "#logArea"], "pin": "t",
+      "nameKey": "secLog",
+      "one": { "en": "What the converter reports while it works.", "ru": "Что сообщает конвертер, пока работает.", "uk": "Що повідомляє конвертер, поки працює." },
+      "text": {
+        "en": "The converter's messages, line by line. {k:logCopySel} copies the selected lines, or the whole log when nothing is selected; {k:logJumpLatest} scrolls to the newest line. Tick {k:chkVerbose} to include the converter's full output.",
+        "ru": "Сообщения конвертера построчно. {k:logCopySel} копирует выделенные строки или весь журнал, если ничего не выделено; {k:logJumpLatest} прокручивает к новейшей строке. Отметьте {k:chkVerbose}, чтобы видеть весь вывод конвертера.",
+        "uk": "Повідомлення конвертера построково. {k:logCopySel} копіює виділені рядки або весь журнал, якщо нічого не виділено; {k:logJumpLatest} прокручує до найновішого рядка. Позначте {k:chkVerbose}, щоб бачити весь вивід конвертера."
+      },
+      "why": { "en": "When something does not work, the last lines say how far the conversion got. The Support and diagnostics group of the About page packs them for the author.", "ru": "Если что-то не получилось, последние строки показывают, докуда дошла конвертация. Группа «Поддержка и диагностика» на странице «О программе» упаковывает их для автора.", "uk": "Якщо щось не вийшло, останні рядки показують, докіля дійшла конвертація. Група «Підтримка та діагностика» на сторінці «Про програму» пакує їх для автора." },
+      "next": { "en": "Each run writes its own log to a folder on this computer; see the About page.", "ru": "Каждый запуск пишет свой журнал в папку на этом компьютере; см. страницу «О программе».", "uk": "Кожен запуск пише свій журнал до теки на цьому комп'ютері; див. сторінку «Про програму»." }
+    },
+    {
+      "id": "first-run", "shot": "states", "sel": "#assocPrompt", "pin": "gt",
+      "name": { "en": "Windows question", "ru": "Вопрос о Windows", "uk": "Питання про Windows" },
+      "one": { "en": "Asked once, on the first start: should the app add itself to Windows?", "ru": "Задаётся один раз, при первом запуске: добавлять ли программу в Windows?", "uk": "Ставиться один раз, під час першого запуску: чи додавати програму до Windows?" },
+      "text": {
+        "en": "Offers a \"Convert to HTML\" entry in the right-click menu of supported files and a place under \"Open with\", or the same plus making this app the default for those files. {k:assocPromptNo} is a real answer: nothing is written to Windows, and the app works the same.",
+        "ru": "Предлагает пункт «Convert to HTML» в меню правой кнопки для поддерживаемых файлов и место в «Открыть с помощью», либо то же самое плюс назначение этой программы по умолчанию. {k:assocPromptNo} - полноценный ответ: в Windows ничего не записывается, а программа работает так же.",
+        "uk": "Пропонує пункт «Convert to HTML» у меню правої кнопки для підтримуваних файлів і місце в «Відкрити за допомогою», або те саме плюс призначення цієї програми за замовчуванням. {k:assocPromptNo} - повноцінна відповідь: до Windows нічого не записується, а програма працює так само."
+      },
+      "why": { "en": "The app writes nothing to Windows on its own; it asks first.", "ru": "Сама по себе программа ничего не записывает в Windows; сначала она спрашивает.", "uk": "Сама собою програма нічого не записує до Windows; спершу вона питає." },
+      "next": { "en": "The question does not come back. The same choices are on the Windows page.", "ru": "Вопрос больше не возвращается. Те же варианты есть на странице Windows.", "uk": "Питання більше не повертається. Ті самі варіанти є в групі «Інтеграція з Windows» в налаштуваннях." },
+      "undo": { "en": "Switch the entries off again on the Windows page.", "ru": "Отключите пункты снова на странице Windows.", "uk": "Вимкніть пункти знову в групі «Інтеграція з Windows»." }
+    },
+    {
+      "id": "queue", "shot": "states", "sel": "#queueSection", "pin": "gt",
+      "nameKey": "secQueue",
+      "one": { "en": "Several files converted one after another.", "ru": "Несколько файлов, конвертируемых один за другим.", "uk": "Кілька файлів, що конвертуються один за одним." },
+      "text": {
+        "en": "Choosing or dropping two or more files fills the queue. Each row shows the file and its state ({k:statePending}, {k:stateRunning}, {k:stateDone}, {k:stateFailed}, {k:stateCancelled}, {k:stateBlocked}); click a name to see that file's command and readiness above. {k:btnRetryFailed} converts only the files that did not finish, {k:btnCancelQueue} stops the running ones and starts nothing further, and {k:queueParallel} sets how many run at once.",
+        "ru": "Если выбрать или перетащить два файла и больше, заполняется очередь. В каждой строке - файл и его состояние ({k:statePending}, {k:stateRunning}, {k:stateDone}, {k:stateFailed}, {k:stateCancelled}, {k:stateBlocked}); щёлкните по имени, чтобы увидеть команду и готовность этого файла выше. {k:btnRetryFailed} конвертирует только те файлы, что не завершились, {k:btnCancelQueue} останавливает идущие и ничего больше не запускает, а {k:queueParallel} задаёт, сколько файлов идёт одновременно.",
+        "uk": "Якщо вибрати чи перетягнути два файли й більше, заповнюється черга. У кожному рядку - файл і його стан ({k:statePending}, {k:stateRunning}, {k:stateDone}, {k:stateFailed}, {k:stateCancelled}, {k:stateBlocked}); клацніть по імені, щоб побачити команду й готовність цього файла вище. {k:btnRetryFailed} конвертує лише ті файли, що не завершилися, {k:btnCancelQueue} зупиняє ті, що йдуть, і нічого більше не запускає, а {k:queueParallel} задає, скільки файлів іде одночасно."
+      },
+      "why": { "en": "One at a time is the default because OCR and translation helpers compete for the same machine.", "ru": "По умолчанию файлы идут по одному: программы OCR и перевода конкурируют за один и тот же компьютер.", "uk": "За замовчуванням файли йдуть по одному: програми OCR і перекладу конкурують за той самий комп'ютер." },
+      "next": { "en": "The settings are shared by the whole queue and read when each file starts.", "ru": "Настройки общие для всей очереди и читаются, когда начинается каждый файл.", "uk": "Налаштування спільні для всієї черги й читаються, коли починається кожен файл." },
+      "undo": { "en": "{k:queueRemoveItem} takes one file out of the queue and {k:queueClear} empties it; the files themselves stay on disk.", "ru": "{k:queueRemoveItem} убирает один файл из очереди, {k:queueClear} очищает её; сами файлы остаются на диске.", "uk": "{k:queueRemoveItem} прибирає один файл із черги, {k:queueClear} очищає її; самі файли лишаються на диску." }
+    },
+    {
+      "id": "google-key", "shot": "states", "sel": "#googleKeySection", "pin": "gt",
+      "nameKey": "lblGoogleKey",
+      "one": { "en": "Shown only with the Google Cloud engine: your Cloud Translation key.", "ru": "Показывается только с движком Google Cloud: ваш ключ Cloud Translation.", "uk": "Показується лише з рушієм Google Cloud: ваш ключ Cloud Translation." },
+      "text": {
+        "en": "Paste the key and press {k:btnSave}; {k:btnShow} reveals what you typed. The key stays in your user folder on this computer and is sent to Google only, in a request header, when you translate. A saved key is never shown again; save a new one to replace it.",
+        "ru": "Вставьте ключ и нажмите {k:btnSave}; {k:btnShow} показывает набранное. Ключ хранится в вашей пользовательской папке на этом компьютере и уходит только в Google, в заголовке запроса, когда вы переводите. Сохранённый ключ больше не показывается; чтобы заменить его, сохраните новый.",
+        "uk": "Вставте ключ і натисніть {k:btnSave}; {k:btnShow} показує набране. Ключ зберігається у вашій користувацькій теці на цьому комп'ютері й іде лише до Google, у заголовку запиту, коли ви перекладаєте. Збережений ключ більше не показується; щоб замінити його, збережіть новий."
+      },
+      "why": { "en": "A paid engine needs your own key; the app has none of its own.", "ru": "Платному движку нужен ваш собственный ключ; своего у программы нет.", "uk": "Платному рушієві потрібен ваш власний ключ; власного в програми немає." },
+      "next": { "en": "Before any request the converter estimates the cost and asks you; see the page about the paid-translation question.", "ru": "Перед любым запросом конвертер оценивает стоимость и спрашивает вас; см. страницу о вопросе про платный перевод.", "uk": "Перед будь-яким запитом конвертер оцінює вартість і питає вас; див. сторінку про питання про платний переклад." },
+      "undo": { "en": "Choose another engine and no request is ever made. The saved key stays until you replace it.", "ru": "Выберите другой движок - и ни один запрос не будет отправлен. Сохранённый ключ остаётся, пока вы его не замените.", "uk": "Виберіть інший рушій - і жоден запит не буде надіслано. Збережений ключ лишається, доки ви його не замінте." }
+    }
+  ],
+  "related": [
+    { "to": "settings", "pill": "window", "name": { "en": "Settings", "ru": "Настройки", "uk": "Налаштування" }, "one": { "en": "The pages of the window: Ollama, Image OCR, Windows, Interface, Advanced and About.", "ru": "Страницы окна: Ollama, OCR изображений, Windows, интерфейс, дополнительно и о программе.", "uk": "Сторінки вікна: Ollama, OCR зображень, Windows, інтерфейс, додатково та про програму." } },
+    { "to": "cost-question", "pill": "dialog", "name": { "en": "Paid translation", "ru": "Платный перевод", "uk": "Платний переклад" }, "one": { "en": "The question asked before Google is paid.", "ru": "Вопрос, который задают перед оплатой Google.", "uk": "Питання, яке ставлять перед оплатою Google." } },
+    { "to": "secret-file-password", "pill": "dialog", "name": { "en": "FileDO secret file", "ru": "Секретный файл FileDO", "uk": "Секретний файл FileDO" }, "one": { "en": "The password question for a .fd-sec file.", "ru": "Вопрос о пароле для файла .fd-sec.", "uk": "Питання про пароль для файла .fd-sec." } },
+    { "to": "run-failed", "pill": "dialog", "name": { "en": "The conversion did not finish", "ru": "Конвертация не завершилась", "uk": "Конвертація не завершилася" }, "one": { "en": "What the window offers when a run fails.", "ru": "Что предлагает окно, когда запуск не удался.", "uk": "Що пропонує вікно, коли запуск не вдався." } },
+    { "site": "docs#quick-start", "pill": "site", "name": { "en": "Guide: quick start", "ru": "Руководство: быстрый старт", "uk": "Посібник: швидкий старт" }, "one": { "en": "The whole task, start to finish, with pictures.", "ru": "Вся задача от начала до конца, с картинками.", "uk": "Усе завдання від початку до кінця, з картинками." } },
+    { "site": "docs#flags", "pill": "site", "name": { "en": "Command-line flags", "ru": "Флаги командной строки", "uk": "Прапорці командного рядка" }, "one": { "en": "Every option of the command shown in the window.", "ru": "Все параметры команды, которую показывает окно.", "uk": "Усі параметри команди, яку показує вікно." } },
+    { "portal": true, "pill": "portal", "name": { "en": "SZA tools", "ru": "Программы SZA", "uk": "Програми SZA" }, "one": { "en": "The author's other free tools.", "ru": "Другие бесплатные программы автора.", "uk": "Інші безкоштовні програми автора." } }
+  ]
+}

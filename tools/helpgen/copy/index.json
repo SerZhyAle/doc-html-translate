@@ -1,0 +1,24 @@
+{
+  "id": "index",
+  "kind": "index",
+  "titleKey": "aboutHelp",
+  "windows": [
+    { "to": "converter", "pill": "window", "name": { "en": "DOC-HTML-UI", "ru": "DOC-HTML-UI", "uk": "DOC-HTML-UI" }, "one": { "en": "The converter window: choose a file, pick a translation, press Convert.", "ru": "Окно конвертера: выберите файл, способ перевода и нажмите «Конвертировать».", "uk": "Вікно конвертера: виберіть файл, спосіб перекладу й натисніть «Конвертувати»." } },
+    { "to": "settings", "pill": "window", "name": { "en": "Settings", "ru": "Настройки", "uk": "Налаштування" }, "one": { "en": "Ollama, Image OCR, Windows, Interface, Advanced and About.", "ru": "Ollama, OCR изображений, Windows, интерфейс, дополнительно и «О программе».", "uk": "Ollama, OCR зображень, Windows, інтерфейс, додатково і «Про програму»." } },
+    { "to": "cost-question", "pill": "dialog", "name": { "en": "Paid translation", "ru": "Платный перевод", "uk": "Платний переклад" }, "one": { "en": "The question asked before Google is paid.", "ru": "Вопрос, который задают перед оплатой Google.", "uk": "Питання, яке ставлять перед оплатою Google." } },
+    { "to": "secret-file-password", "pill": "dialog", "name": { "en": "FileDO secret file", "ru": "Секретный файл FileDO", "uk": "Секретний файл FileDO" }, "one": { "en": "The password question for a .fd-sec file.", "ru": "Вопрос о пароле для файла .fd-sec.", "uk": "Питання про пароль для файла .fd-sec." } },
+    { "to": "run-failed", "pill": "dialog", "name": { "en": "The conversion did not finish", "ru": "Конвертация не завершилась", "uk": "Конвертація не завершилася" }, "one": { "en": "What the window offers when a run fails.", "ru": "Что предлагает окно, когда запуск не удался.", "uk": "Що пропонує вікно, коли запуск не вдався." } }
+  ],
+  "elsewhere": [
+    { "site": "docs#quick-start", "pill": "site", "name": { "en": "Guide", "ru": "Руководство", "uk": "Посібник" }, "one": { "en": "The tasks start to finish, the flags, the subject index and the glossary.", "ru": "Задачи от начала до конца, флаги, предметный указатель и словарь.", "uk": "Завдання від початку до кінця, прапорці, предметний покажчик і словник." } },
+    { "site": "home", "pill": "site", "name": { "en": "Product site", "ru": "Сайт программы", "uk": "Сайт програми" }, "one": { "en": "Downloads, the browser extension and the news.", "ru": "Загрузки, расширение для браузера и новости.", "uk": "Завантаження, розширення для браузера й новини." } },
+    { "portal": true, "pill": "portal", "name": { "en": "SZA tools", "ru": "Программы SZA", "uk": "Програми SZA" }, "one": { "en": "The author's other free tools.", "ru": "Другие бесплатные программы автора.", "uk": "Інші безкоштовні програми автора." } },
+    { "sibling": "FileDO", "pill": "sibling", "name": { "en": "FileDO", "ru": "FileDO", "uk": "FileDO" }, "one": { "en": "Makes and opens the secret files this app can convert.", "ru": "Создаёт и открывает секретные файлы, которые эта программа умеет конвертировать.", "uk": "Створює й відкриває секретні файли, які ця програма вміє конвертувати." } }
+  ],
+  "keys": [
+    { "keys": "F1", "what": { "en": "Help for the part of the window you are in.", "ru": "Справка о той части окна, где вы находитесь.", "uk": "Довідка про ту частину вікна, де ви перебуваєте." } },
+    { "keys": "Ctrl+Enter", "what": { "en": "Convert.", "ru": "Конвертировать.", "uk": "Конвертувати." } },
+    { "keys": "Esc", "what": { "en": "Cancel a running conversion; close a question.", "ru": "Отменить идущую конвертацию; закрыть вопрос.", "uk": "Скасувати конвертацію, що йде; закрити питання." } },
+    { "keys": "Ctrl+Shift+F", "what": { "en": "Put the keyboard on the file box.", "ru": "Поставить клавиатурный фокус на поле файла.", "uk": "Поставити клавіатурний фокус на поле файла." } }
+  ]
+}

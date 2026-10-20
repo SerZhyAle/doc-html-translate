@@ -60,13 +60,21 @@ func roleOf(t *testing.T, decls, property string) string {
 	return m[1]
 }
 
-// WINDOWS-UI section 2.3: the pane starts with its title and one short, muted purpose line.
+// WINDOWS-UI section 2.3 / SETTINGS-NAVIGATION 4.1: every page starts with its title and one short, muted
+// purpose line, in the same page shell.
 func TestPaneStartsWithTitleAndPurpose(t *testing.T) {
-	if !regexp.MustCompile(`<h1>DOC-HTML-UI</h1>[\s\S]*?<p class="hint purpose" data-i18n="appPurpose">[^<]+</p>\s*</div>`).MatchString(uiHTML) {
-		t.Error("the header does not end with the muted, translated purpose line under the title")
+	if n := strings.Count(uiHTML, `<section class="page" id="page-`); n != 7 {
+		t.Fatalf("found %d pages, want 7 (convert, ollama, ocr, windows, interface, advanced, about)", n)
 	}
-	if !strings.Contains(cssRule(t, ".head .purpose"), "flex-basis: 100%") {
-		t.Error("the purpose line does not take its own row below the header items")
+	for _, id := range []string{"convert", "ollama", "ocr", "windows", "interface", "advanced", "about"} {
+		start := strings.Index(uiHTML, `id="page-`+id+`"`)
+		head := uiHTML[start:min(start+1500, len(uiHTML))]
+		if !regexp.MustCompile(`<h2[^>]*data-i18n="page[A-Za-z]+"[^>]*>[^<]+</h2>\s*(?:<!--[^>]*-->\s*)?<p class="hint purpose" data-i18n="[A-Za-z]+">[^<]+</p>`).MatchString(head) {
+			t.Errorf("page %s does not start with its title and a muted, translated purpose line", id)
+		}
+	}
+	if !strings.Contains(cssRule(t, ".purpose"), "margin-top:") {
+		t.Error("the purpose line lost its place under the title")
 	}
 }
 
@@ -195,10 +203,8 @@ func TestMaskGlyphsSurviveForcedColors(t *testing.T) {
 // roles are read from the rules themselves, so a restyle is measured, not assumed.
 func TestListRowStatesMeetWCAGAA(t *testing.T) {
 	themes := paletteThemes(t)
-	rest := roleOf(t, cssRule(t, "#queueList"), "background")
-	if got := roleOf(t, cssRule(t, "#recentList"), "background"); got != rest {
-		t.Fatalf("queue and recent lists rest on different surfaces (%s, %s)", rest, got)
-	}
+	// The two lists share one rule, so they rest on one surface by construction.
+	rest := roleOf(t, cssRule(t, "#queueList, #recentList"), "background")
 	text := roleOf(t, cssRule(t, ".qsel"), "color")
 	hover := roleOf(t, cssRule(t, ".qsel:hover"), "background")
 	selected := roleOf(t, cssRule(t, ".qsel.selected"), "color")
@@ -288,7 +294,9 @@ func TestFailuresNameTheirCause(t *testing.T) {
 		"t(RUN_FAILURE_CAUSES[end.code] || 'runCauseUnknown', {code: end.code})",
 		// WINDOWS-UI 0.4 section 11: the failure dialog's answers carry their glyphs - send is a
 		// neutral command, retry the affirmative, close the dismissing answer with the focus.
-		"buttons: [{id: 'send', key: 'btnSendLogs', glyph: 'action.email'},\n            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'},\n            {id: 'close', key: 'dlgClose', ans: 'ans-cancel', glyph: 'action.cancel', focus: true}],",
+		// BUTTONS 2.0 section 4 rule 4: Cancel (Close) first, the helping action, then the final affirmative.
+		// Close draws nav.close, the glyph of its own name (ICON-SET rule 2).
+		"buttons: [{id: 'close', key: 'dlgClose', glyph: 'nav.close', focus: true},\n            {id: 'send', key: 'btnSendLogs', glyph: 'action.email'},\n            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'}],",
 	} {
 		if !strings.Contains(uiHTML, want) {
 			t.Errorf("ui.html lost %q", want)
@@ -378,9 +386,9 @@ func TestFocusRingIsNeverSuppressed(t *testing.T) {
 	if !strings.Contains(style, ":focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }") {
 		t.Error("the shared :focus-visible ring is gone")
 	}
-	pane := cssRule(t, ".col-main")
+	pane := cssRule(t, ".pane")
 	if !strings.Contains(pane, "padding: 4px;") || !strings.Contains(pane, "margin: -4px;") {
-		t.Errorf(".col-main clips the ring of its edge controls: %q", pane)
+		t.Errorf(".pane clips the ring of its edge controls: %q", pane)
 	}
 }
 

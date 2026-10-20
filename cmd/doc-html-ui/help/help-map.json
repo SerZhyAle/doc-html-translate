@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "product": "DOC-HTML-UI",
+  "helpRoot": "help",
+  "pageTemplate": "{locale}/{help}.html",
+  "index": "index",
+  "sourceLocale": "en",
+  "locales": ["en", "ru", "uk"],
+  "surfaces": [
+    {
+      "id": "main",
+      "name": "DOC-HTML-UI",
+      "form": "page",
+      "help": "converter",
+      "pages": [
+        { "id": "main.header", "anchor": "header" },
+        { "id": "main.help", "anchor": "help" },
+        { "id": "main.first-run", "anchor": "first-run" },
+        { "id": "main.drop", "anchor": "drop" },
+        { "id": "main.run", "anchor": "run" },
+        { "id": "main.status", "anchor": "status" },
+        { "id": "main.previous", "anchor": "previous" },
+        { "id": "main.recent", "anchor": "recent" },
+        { "id": "main.queue", "anchor": "queue" },
+        { "id": "main.output", "anchor": "output" },
+        { "id": "main.translation", "anchor": "translation" },
+        { "id": "main.languages", "anchor": "languages" },
+        { "id": "main.google-key", "anchor": "google-key" },
+        { "id": "main.options", "anchor": "options" },
+        { "id": "main.command", "anchor": "command" },
+        { "id": "main.log", "anchor": "log" }
+      ]
+    },
+    {
+      "id": "settings",
+      "name": "Settings",
+      "form": "page",
+      "help": "settings",
+      "pages": [
+        { "id": "settings.advanced", "anchor": "advanced" },
+        { "id": "settings.ollama", "anchor": "ollama" },
+        { "id": "settings.ocr", "anchor": "ocr" },
+        { "id": "settings.integration", "anchor": "integration" },
+        { "id": "settings.interface", "anchor": "interface" },
+        { "id": "settings.about", "anchor": "about" }
+      ]
+    },
+    {
+      "id": "dlg-cost",
+      "name": "Paid translation",
+      "form": "page",
+      "help": "cost-question"
+    },
+    {
+      "id": "dlg-secret",
+      "name": "FileDO secret file",
+      "form": "page",
+      "help": "secret-file-password"
+    },
+    {
+      "id": "dlg-run-failed",
+      "name": "Conversion failed",
+      "form": "page",
+      "help": "run-failed"
+    },
+    {
+      "id": "dlg-confirm",
+      "name": "Confirmation",
+      "form": "none",
+      "reason": "A one-question confirmation: the question and its two answers are the whole explanation (CONTEXT-HELP rule 4). Six questions today: delete the previous result, clear the stored logs, convert without a saved Google key, rebuild after a changed option, rebuild queued items, clear the recent list."
+    },
+    {
+      "id": "dlg-notice",
+      "name": "Notice",
+      "form": "none",
+      "reason": "A single message with one OK: the text is the whole explanation (CONTEXT-HELP rule 4)."
+    },
+    {
+      "id": "os-file-picker",
+      "name": "Choose a file",
+      "form": "none",
+      "source": "route:/api/browse-file",
+      "reason": "Operating-system common dialog (CONTEXT-HELP rule 4)."
+    },
+    {
+      "id": "os-folder-picker",
+      "name": "Choose a folder",
+      "form": "none",
+      "source": "route:/api/browse-folder",
+      "reason": "Operating-system common dialog (CONTEXT-HELP rule 4)."
+    }
+  ]
+}

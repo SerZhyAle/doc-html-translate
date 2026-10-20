@@ -70,6 +70,11 @@ Run from repository root in PowerShell.
 - Test: ./scripts/test.ps1 (Go edition) and ./scripts/test-extension.ps1 (extension edition, node --test)
 - Lint: ./scripts/lint.ps1
 - Full local checks: ./scripts/check.ps1
+- Every go command that reaches internal/jxl (the app, its pipeline, tests/, tools/ocrlab) needs the
+  `nodynamic` build tag, or `internal/jxl/nodynamic_guard.go` stops the compile (ticket 115, see Pitfalls).
+  The scripts set it through `scripts/lib/gobuildtags.ps1` (GOFLAGS), CI through release.yml's `env`,
+  golangci-lint through its config and VS Code through `go.buildTags`. By hand:
+  `$env:GOFLAGS = '-tags=nodynamic'` once per shell, or `go test -tags nodynamic ./tests/`.
 - Every check speaks `CHECK-VERDICT` (pointer: docs/contracts/CHECK-VERDICT.md): exit `0` PASS, `1` FAIL,
   `2` COULD NOT VERIFY (a missing tool, input or git result - **never a pass**), `3` PASS WITH ADVISORIES,
   and the **last line** is the verdict (`check: PASS`, `test: COULD NOT VERIFY (1)`, ..). Quote that line
@@ -110,7 +115,9 @@ Run from repository root in PowerShell.
   `-Tail` slices files added since, `-Summary` measures the campaign and exits 0 only when it is closed).
   Hand-run; ticket 34 is its first campaign.
 - Free-promotion campaign (ticket 111; canon PROMOTION.md): `./scripts/promo-metrics.ps1` writes a dated, read-only counters checkpoint (GitHub, winget, Chrome, Edge, Store - `unknown` where unreadable, no telemetry); `tools/store/make-social-card.ps1` renders `assets/social-card-*.png`; `tools/store/make-demo.ps1` records and encodes `assets/demo.*`; the discoverability fields live in `docs/discoverability.json`. Every outward step of the campaign waits for the owner's go.
-- OCR visual-fidelity lab: go run ./tools/ocrlab verify | fetch | synth | seed | run | score | report | gate | exchange (see tools/ocrlab/README.md)
+- In-app help: ./scripts/help-check.ps1 (the gate child, no browser); node tools/helpgen/generate.mjs regenerates the set after any change of what the window shows (needs the Go toolchain and tools/sitecheck's Playwright Chromium); node tools/helpgen/walk.mjs drives F1 and the button on every surface in five locales and both themes
+- UI contracts (ticket 119; `UI-SIZING`, `BUTTONS`, `BOOLEAN-OPTION`, `COLLAPSIBLE-GROUP`, `SETTINGS-NAVIGATION`): `node tools/uicheck/run.mjs` measures the real GUI window in headless Chromium (geometry, contrast, keyboard, negative cases, page-switch timings with every raw sample; `--quick`, `--only <scenario>`; last line is the CHECK-VERDICT line; see [tools/uicheck/README.md](tools/uicheck/README.md)); the product's size-profile record, permanent variants and what is still owed are in [docs/UI_PROFILE.md](docs/UI_PROFILE.md). Run it after any change to `ui.html`, and `--only reader` after any change to the generated reader chrome (`internal/htmlgen` `chromeUICSS`, `navbar.go`, `search.go`) or the extension viewer's toolbar (`extension/src/viewer.*`); regenerate the help set (`node tools/helpgen/generate.mjs`) - the window's regions are the help's inputs
+- OCR visual-fidelity lab: go run -tags nodynamic ./tools/ocrlab verify | fetch | synth | seed | run | score | report | gate | exchange (see tools/ocrlab/README.md)
 
 Tool bootstrap (when missing):
 
@@ -151,6 +158,12 @@ Notes:
     `i18n.S()` works process-wide instead of threading a language through htmlgen's signatures.
   - internal/app/splash/*.txt: the console splash, one embedded file per language.
   - cmd/doc-html-ui/i18n.js (GUI dictionary), extension/_locales/<code>/messages.json (extension).
+- GUI window structure (ticket 119): `cmd/doc-html-ui/ui.html` is one page of three layers. The **token block** (`html { --ui .. --tx .. --tgt .. }`, `html[data-input=touch]`, `data-size`, `data-text`) is the one resolver for every covered component (never hard-code a px size in a component; use the tokens and `var(--s)`); the **components** are `button` (ranks `.primary` / `.secondary` / `.danger`, rows `.btn-row`, stateful `.state-stack`), `.opt` (a boolean option; `.opt-help-wrap` for local help), `.group` (a `<details>` group) and `.rail-item` (the page rail); the **pages** are seven `<section class="page" id="page-..">` shown one at a time by `showPage()` (`convert`, `ollama`, `ocr`, `windows`, `interface`, `advanced`, `about`; ids are stable and saved). The dialog answers read Cancel first, the affirmative last (BUTTONS 4.4). `/api/resources` is the About page's local, no-network resource lookup.
+- In-app help (ticket 118, `CONTEXT-HELP`; pointer [docs/contracts/CONTEXT-HELP.md](docs/contracts/CONTEXT-HELP.md)):
+  - `cmd/doc-html-ui/help/help-map.json` is the **help map** (CONTEXT-HELP rule 17): one row per surface of the GUI launcher, its form, its help id and the `none` / `inherit` reasons. It ships inside the exe with the generated pages (`go:embed all:help`, served under `/help/`) and the gate reads the same file.
+  - `cmd/doc-html-ui/help.js` is the one resolver: F1 (bare, on the page only) and every `?` button call it. A region of `ui.html` is marked `data-help="<surface>.<region>"`, a dialog names its `surface:`; the gate counts both against the map.
+  - `tools/helpgen` generates the pages, the screenshots with their pins and `help/` (the site copy, the same bytes) from the copy deck `tools/helpgen/copy/*.json`, the GUI dictionary `i18n.js` and the real build. **Never edit `cmd/doc-html-ui/help/` or `help/` by hand**; change the window, the dictionary or the copy deck and run `node tools/helpgen/generate.mjs` from PowerShell (see [tools/helpgen/README.md](tools/helpgen/README.md)). `node tools/helpgen/walk.mjs` is the automated F1 / button walk.
+  - `internal/helpcheck` is the gate (`scripts/help-check.ps1`, also `tests/help_test.go`): surfaces against the map, pages against the locale set, links, rule 12, text style, the two copies, and as an advisory the freshness of the set against the digests of its inputs. The locales the GUI ships and the help has no pages in are the set baseline `configs/help-baseline.txt` - it may fall, never rise.
 - Developer tooling, not shipped:
   - tools/ocrlab: the OCR visual-fidelity lab - a licence-gated corpus manifest, engine-independent
     ground truth, the eight quality measures from the spec's table, and a runner that converts each
@@ -186,6 +199,7 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - Windows and non-Windows behavior is split via *_windows.go and *_nonwindows.go files in several packages.
 - The interface language dresses the **chrome only**. A converted page keeps the *document's* `<html lang>`; the navbar and reader controls carry their own `lang`/`dir` and mirror for `ar`/`ur`. Putting the UI language on `<html lang>` stops Chrome offering "Translate page" - the product's entire free workflow. Guarded by `TestConvertedChromeLanguage` in tests/smoke_test.go and by the RTL assertions in tools/store/make-screenshot.ps1.
 - The canon's house text style (DOCUMENTATION_CONCEPT.md §5) is **scoped by language here**: it binds `en`, `ru` and `uk` only. The other ten interface languages follow their own script and are exempt - tests/typography_test.go enforces that scoping, so do not widen the check to all thirteen.
+- A change that alters what the user sees in the GUI launcher (a control, a label, a region, a dialog) changes its help in the same edit (CONTEXT-HELP rule 18): the window's own strings are the help's names and one-line summaries, the explanation is in `tools/helpgen/copy/`, and the screenshots are regenerated, not edited. A new region gets `data-help`, a new dialog a `surface:` and a row in the help map, or the gate fails.
 - Optional OCR overlay (-ocr): internal/ocr shells out to the external Tesseract binary (parses TSV for bboxes) and rewrites document images into positioned, translatable text plates. It runs in internal/pipeline/pipeline.go after nav injection and before translation (so overlay text is translated too), and is strictly best-effort - a missing tesseract or a failed image never aborts the conversion. English data ships in <exe>/tessdata; other languages download on demand (-ocr-download / GUI) into the per-user folder (os.UserCacheDir()/doc-html-translate/tessdata), catalogue codes only, verified against pinned SHA-256 digests (internal/ocr/download.go). Applies to EPUB and PDF (formats whose images exist at HTML stage).
 - Plate concealment modes: every OCR plate records how it hides the source lettering as
   `data-ocr-mode` = `fill` / `reconstruct` / `mask` (decided from the colour ring just outside the
@@ -201,6 +215,12 @@ separate parity backlog and no ticket template file - copy the shape from the ne
 - Build scripts embed Windows resources with goversioninfo pinned in `scripts/lib/goversioninfo.ps1` (`go run module@v1.7.0`), never the copy on PATH: `IconPath` lists three ICOs (mark, verb, document type) whose resource indexes internal/windowsreg writes into the registry, anything older than v1.5.0 fails opening the comma-joined path, and the shared `%USERPROFILE%\go\bin` copy gets reinstalled at v1.4.1 by another repo on this machine.
 - System-surface icons (the program ICO and its favicon copies, `assets/convert-verb.ico`, `assets/document-type.ico`, `extension/icons/*`, the MSIX assets) are render targets of internal/iconart: redraw them with `scripts/generate-icon.ps1` (`go run ./tools/icongen`), never by hand - tests/icons_test.go compares every pixel.
 - MOBI/AZW3 conversion depends on Calibre at runtime; CBR/CB7 comics depend on 7-Zip at runtime (CBZ/CBT need nothing).
+- JPEG XL goes through `github.com/gen2brain/jpegxl`, whose package init, unless built with `nodynamic`, loads
+  `libjxl.dll` by bare name - so a planted DLL in the current directory or on PATH would run inside every start
+  of the app (ticket 115). Hence the tag on every go command (Build, Test, Lint above) and the guard file that
+  refuses to compile without it; `TestNoNativeDecoder` proves the tag still disables the native path after a
+  module update. Never drop the tag to make a build pass, and never add a native library load:
+  `scripts/security-posture.ps1` holds the app's own code to the Windows system DLLs it lists.
 
 ## Editing Guidance
 

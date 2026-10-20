@@ -1,11 +1,21 @@
-// options.js - default on/off, reading theme, source-language hint, image OCR + language
-// downloads, the site mode and both site lists. Persists the shared `options` object.
+// options.js - the options page: default on/off, interface language and theme, reading theme, source-language
+// hint, image OCR + language downloads, the site mode and both site lists, the interface size and controls, the
+// settings file and About. Persists the shared `options` object; the page and group memory is `uiState`.
+//
+// The page is a rail of destinations and a pane (options-nav.js). This file wires the editors of the first
+// four and the interface page, and starts the rest.
 
 import { renderOcrLangs } from "./ocr-lang-ui.js";
+import { glyph, applyGlyphs } from "./glyphs.js";
 import { DEFAULT_OPTIONS } from "./defaults.js";
-import { reportText } from "./diagnostics.js";
-import { makeSettingsFile, validateSettingsFile, changedSettings } from "./settings-transfer.js";
+import { getOptions, setOptions } from "./options-store.js";
 import { t, initI18n, applyI18n, loadMessages, setUiLang, uiLang } from "./i18n.js";
+import { applyUiProfile, revealPage } from "./ui-profile.js";
+import { initOptionHelp, refreshOptionHelp } from "./ui-help.js";
+import { bindGroups } from "./ui-groups.js";
+import { initNav } from "./options-nav.js";
+import { initSettingsTransfer } from "./options-data.js";
+import { renderAbout, initDiagnostics } from "./options-about.js";
 
 // UI languages the extension ships, by endonym - the only label that helps a reader who cannot
 // read the language currently on screen. Mirrors internal/i18n.Codes on the desktop side.
@@ -15,35 +25,28 @@ const UI_LANGUAGES = [
   ["ar", "العربية"], ["hi", "हिन्दी"], ["bn", "বাংলা"], ["ur", "اردو"], ["zh", "中文"],
 ];
 
-const enabledEl = document.getElementById("enabled");
-const themeEl = document.getElementById("theme");
-const langEl = document.getElementById("lang");
-const hostsEl = document.getElementById("hosts");
-const allowedHostsEl = document.getElementById("allowed-hosts");
-const siteModeEl = document.getElementById("site-mode");
-const ocrImagesEl = document.getElementById("ocr-images");
-const allowRemoteEl = document.getElementById("allow-remote");
-const ocrLangsEl = document.getElementById("ocr-langs");
+const $ = (id) => document.getElementById(id);
+const enabledEl = $("enabled");
+const themeEl = $("theme");
+const langEl = $("lang");
+const hostsEl = $("hosts");
+const allowedHostsEl = $("allowed-hosts");
+const siteModeEl = $("site-mode");
+const ocrImagesEl = $("ocr-images");
+const allowRemoteEl = $("allow-remote");
+const ocrLangsEl = $("ocr-langs");
+const INTERFACE_EDITORS = [["ui-size", "uiSize"], ["text-size", "textSize"], ["input-profile", "inputProfile"], ["chrome-theme", "chromeTheme"]];
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
-const verEl = document.getElementById("ver");
-if (verEl) verEl.textContent = "v" + chrome.runtime.getManifest().version;
+$("ver").textContent = `v${chrome.runtime.getManifest().version}`;
 
 // Routed through i18n.js so the interface-language override below applies to these strings too,
 // not only to the ones Chrome serves by browser language.
-const msg = (key, fallback) => t(key, fallback);
+const msg = (key, fallback, ...args) => t(key, fallback, ...args);
 
 // renderLangList is the shared OCR-language renderer (ocr-lang-ui.js); the options page
 // labels the block in its own markup, so no extra hint line is needed here.
 const renderLangList = () => renderOcrLangs(ocrLangsEl);
-
-async function getOptions() {
-  const got = await chrome.storage.local.get("options");
-  return { ...DEFAULT_OPTIONS, ...(got.options || {}) };
-}
-async function setOptions(opts) {
-  await chrome.storage.local.set({ options: opts });
-}
 
 // flash shows a ".saved" confirmation. The span is a role="status" live region that is empty
 // until it flashes: a status message is announced when its text appears (WCAG 4.1.3), and an
@@ -51,7 +54,7 @@ async function setOptions(opts) {
 // The wording comes from the span's data-saved-key with an English data-saved-fallback, the
 // same degrade-to-English rule every t() call site follows.
 function flash(id) {
-  const e = document.getElementById(id);
+  const e = $(id);
   if (!e) return;
   e.textContent = msg(e.dataset.savedKey, e.dataset.savedFallback || "");
   e.classList.add("show");
@@ -63,23 +66,30 @@ function renderHosts(hosts, element, key) {
   element.replaceChildren();
   if (!hosts.length) {
     const li = document.createElement("li");
-    li.className = "hint";
+    li.className = "none";
     li.textContent = msg("optNoSites", "None");
     element.append(li);
     return;
   }
   for (const h of hosts) {
     const li = document.createElement("li");
+    const name = document.createElement("span");
+    name.textContent = h;
     const btn = document.createElement("button");
-    btn.textContent = msg("optHostRemove", "Remove");
+    btn.type = "button";
+    const caption = document.createElement("span");
+    caption.textContent = msg("optHostRemove", "Remove");
+    btn.append(glyph("action.remove"), caption);
+    // The visible word stays first and the site follows it, so the accessible name still contains the
+    // visible label and tells apart the rows of one list.
+    btn.setAttribute("aria-label", `${caption.textContent}: ${h}`);
     btn.addEventListener("click", async () => {
       const o = await getOptions();
       o[key] = (o[key] || []).filter((x) => x !== h);
       await setOptions(o);
       renderHosts(o[key], element, key);
     });
-    li.textContent = h;
-    li.append(btn);
+    li.append(name, btn);
     element.append(li);
   }
 }
@@ -91,176 +101,83 @@ function renderSourceLangHint() {
   code.textContent = "<html lang>";
   const [before, after = ""] = msg("optSourceLangHint",
     "Sets {1} so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.").split("{1}");
-  document.getElementById("source-lang-hint").replaceChildren(before, code, after);
+  $("source-lang-hint").replaceChildren(before, code, after);
 }
 
-async function init() {
-  // The interface language first: the site lists, the OCR rows and the source-language hint are
-  // built in script, and under a stored override they would otherwise speak the browser's language.
-  await initUiLanguage();
-  renderSourceLangHint();
-  const o = await getOptions();
+// fillFields puts the stored options into the editors. It sets values only, so no change event fires.
+function fillFields(o) {
   enabledEl.checked = o.enabledByDefault;
   siteModeEl.value = o.siteMode === "allowlist" ? "allowlist" : "all";
   themeEl.value = o.theme;
   langEl.value = o.sourceLang;
+  ocrImagesEl.checked = o.ocrImages;
+  allowRemoteEl.checked = o.allowRemoteContent === true;
+  for (const [id, key] of INTERFACE_EDITORS) {
+    $(id).value = o[key];
+    // A stored value this build does not offer leaves the select blank; show the default it falls back to.
+    if ($(id).value !== o[key]) $(id).value = DEFAULT_OPTIONS[key];
+  }
   renderHosts(o.disabledHosts || [], hostsEl, "disabledHosts");
   renderHosts(o.allowedHosts || [], allowedHostsEl, "allowedHosts");
-  siteModeEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.siteMode = siteModeEl.value;
-    await setOptions(opts);
-  });
+}
 
-  ocrImagesEl.checked = o.ocrImages;
+// update merges one change into the stored options. Each editor commits on its own change, as it always has.
+async function update(patch) {
+  const opts = await getOptions();
+  Object.assign(opts, patch);
+  await setOptions(opts);
+  return opts;
+}
+
+function bindEditors() {
+  siteModeEl.addEventListener("change", () => update({ siteMode: siteModeEl.value }));
   ocrImagesEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.ocrImages = ocrImagesEl.checked;
-    await setOptions(opts);
+    await update({ ocrImages: ocrImagesEl.checked });
     renderLangList();
   });
-  renderLangList();
-
-  allowRemoteEl.checked = o.allowRemoteContent === true;
-  allowRemoteEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.allowRemoteContent = allowRemoteEl.checked;
-    await setOptions(opts);
-  });
-
-  enabledEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.enabledByDefault = enabledEl.checked;
-    await setOptions(opts);
-  });
+  allowRemoteEl.addEventListener("change", () => update({ allowRemoteContent: allowRemoteEl.checked }));
+  enabledEl.addEventListener("change", () => update({ enabledByDefault: enabledEl.checked }));
   themeEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.theme = themeEl.value;
-    await setOptions(opts);
+    await update({ theme: themeEl.value });
     flash("saved-theme");
   });
-  langEl.addEventListener("change", async () => {
-    const opts = await getOptions();
-    opts.sourceLang = langEl.value;
-    await setOptions(opts);
-  });
+  langEl.addEventListener("change", () => update({ sourceLang: langEl.value }));
+  // The interface settings apply at once, without a restart: the root's attributes change and
+  // ui-sizing.css does the rest, so every open component takes the new size or theme together.
+  for (const [id, key] of INTERFACE_EDITORS) {
+    $(id).addEventListener("change", async () => {
+      applyUiProfile(await update({ [key]: $(id).value }));
+      if (id === "chrome-theme") flash("saved-chrome-theme");
+    });
+  }
+}
 
+// A change made elsewhere - the popup writes the same options - keeps this page coherent (SETTINGS-NAVIGATION
+// 3 rule 1): the editors follow, and the lists and the OCR rows are redrawn only when their data changed.
+function followStorage() {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.options) {
-      const next = changes.options.newValue || {};
-      siteModeEl.value = next.siteMode === "allowlist" ? "allowlist" : "all";
-      renderHosts(next.disabledHosts || [], hostsEl, "disabledHosts");
-      renderHosts(next.allowedHosts || [], allowedHostsEl, "allowedHosts");
-    }
-  });
-
-  initDiagnostics();
-  initSettingsTransfer();
-}
-
-function showTransferStatus(message, error = false) {
-  const status = document.getElementById("settings-status");
-  status.textContent = message;
-  status.classList.toggle("error", error);
-}
-
-async function currentSettings() {
-  const stored = await chrome.storage.local.get(["options", "uiLang"]);
-  return makeSettingsFile(stored.options, stored.uiLang || "");
-}
-
-function initSettingsTransfer() {
-  const input = document.getElementById("import-file");
-  document.getElementById("export-settings").addEventListener("click", async () => {
-    try {
-      const file = await currentSettings();
-      const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2) + "\n"], { type: "application/json" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "doc-html-translate-settings.json";
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-      showTransferStatus(msg("optSettingsExported", "Settings file downloaded."));
-    } catch (error) { showTransferStatus(error.message, true); }
-  });
-  document.getElementById("import-settings").addEventListener("click", () => input.click());
-  input.addEventListener("change", async () => {
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file) return;
-    try {
-      if (file.size > 1024 * 1024) throw new Error("Settings file is too large");
-      let parsed;
-      try { parsed = JSON.parse(await file.text()); }
-      catch { throw new Error("Invalid JSON in settings file"); }
-      const next = validateSettingsFile(parsed);
-      const changed = changedSettings(await currentSettings(), next);
-      if (changed.length) {
-        await chrome.storage.local.set({ options: next.options, uiLang: next.uiLang });
-        await initI18n();
-        await loadMessages(next.uiLang);
-        applyI18n(document);
-        await renderSettings();
-      }
-      showTransferStatus(msg("optSettingsImported", "Imported. Changed: {1}", changed.length ? changed.join(", ") : msg("optSettingsNone", "none")));
-    } catch (error) { showTransferStatus(error.message, true); }
-  });
-  document.getElementById("reset-settings").addEventListener("click", async () => {
-    if (!confirm(msg("optSettingsResetConfirm", "Reset all extension settings to their defaults?"))) return;
-    try {
-      await chrome.storage.local.set({ options: structuredClone(DEFAULT_OPTIONS), uiLang: "" });
-      await initI18n();
-      applyI18n(document);
-      await renderSettings();
-      showTransferStatus(msg("optSettingsResetDone", "Settings reset to defaults."));
-    } catch (error) { showTransferStatus(error.message, true); }
+    if (area !== "local" || !changes.options) return;
+    const next = { ...changes.options.newValue };
+    const ocrChanged = next.ocrImages !== undefined && next.ocrImages !== ocrImagesEl.checked;
+    getOptions().then((o) => {
+      fillFields(o);
+      applyUiProfile(o);
+      if (ocrChanged) renderLangList();
+    });
   });
 }
 
+// renderSettings redraws what applyI18n cannot reach - the editors' values, the site rows, the OCR rows, the
+// source-language hint, the About tables and the help labels - after a language change, an import or a reset.
 async function renderSettings() {
   const o = await getOptions();
-  enabledEl.checked = o.enabledByDefault;
-  siteModeEl.value = o.siteMode;
-  themeEl.value = o.theme;
-  langEl.value = o.sourceLang;
-  ocrImagesEl.checked = o.ocrImages;
-  allowRemoteEl.checked = o.allowRemoteContent;
-  document.getElementById("ui-lang").value = (await chrome.storage.local.get("uiLang")).uiLang || "";
-  renderHosts(o.disabledHosts, hostsEl, "disabledHosts");
-  renderHosts(o.allowedHosts, allowedHostsEl, "allowedHosts");
+  fillFields(o);
+  applyUiProfile(o);
+  $("ui-lang").value = (await chrome.storage.local.get("uiLang")).uiLang || "";
   renderLangList();
   renderSourceLangHint();
-}
-
-// initDiagnostics wires the About block's one action: put a short English summary on the
-// clipboard so a bug report can carry facts instead of a memory. Nothing is uploaded and no
-// permission is needed - a clipboard write from the user's own click requires none.
-function initDiagnostics() {
-  const btn = document.getElementById("copy-diag");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const text = await reportText(chrome.runtime.getManifest().version, await getOptions());
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(text);
-      ok = true;
-    } catch (e) {
-      // The clipboard API can be refused; fall back to a hidden textarea + execCommand.
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        ok = document.execCommand("copy");
-        document.body.removeChild(ta);
-      } catch (e2) { ok = false; }
-    }
-    if (ok) flash("saved-diag");
-  });
+  renderAbout();
+  refreshOptionHelp();
 }
 
 // initUiLanguage fills the interface-language selector and applies the stored choice. The first
@@ -268,9 +185,7 @@ function initDiagnostics() {
 // just not the only reasonable one - someone on an English work browser still reads in their own
 // language.
 async function initUiLanguage() {
-  const sel = document.getElementById("ui-lang");
-  if (!sel) return;
-
+  const sel = $("ui-lang");
   const stored = await initI18n();
   if (stored) await loadMessages(stored);
 
@@ -295,8 +210,37 @@ async function initUiLanguage() {
     await renderSettings();
     flash("saved-ui-lang");
   });
+}
 
+async function init() {
+  // The interface language and size first: the site lists, the OCR rows, the About tables and the
+  // source-language hint are built in script, and under a stored override they would otherwise speak the
+  // browser's language - and the window stays hidden until all of it is in place (no flash of English).
+  await initUiLanguage();
+  const o = await getOptions();
+  applyUiProfile(o);
+  applyGlyphs(document);
   applyI18n(document);
+  fillFields(o);
+  renderSourceLangHint();
+  renderLangList();
+  renderAbout();
+  bindEditors();
+  followStorage();
+  initOptionHelp();
+  initDiagnostics();
+  const groups = await bindGroups();
+  initSettingsTransfer({
+    groups,
+    onApplied: async () => {
+      await initI18n();
+      await loadMessages(uiLang());
+      applyI18n(document);
+      await renderSettings();
+    },
+  });
+  await initNav();
+  revealPage();
 }
 
 init();

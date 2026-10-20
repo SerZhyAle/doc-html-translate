@@ -8,7 +8,7 @@ import "errors"
 var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf", ".html", ".htm", ".mobi", ".azw3", ".cbz", ".cbr", ".cb7", ".cbt"}
 
 // ShellOnlyExtensions mirrors the Windows implementation.
-var ShellOnlyExtensions = []string{".fd-sec"}
+var ShellOnlyExtensions = []string{".fd-sec", ".jxl"}
 
 var errUnsupported = errors.New("windows registry registration is supported only on Windows")
 

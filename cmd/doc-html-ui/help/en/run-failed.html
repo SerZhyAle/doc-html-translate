@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Help - The conversion did not finish</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Breadcrumb">
+    <a href="index.html">Help index</a><span class="sep" aria-hidden="true">/</span><span>The conversion did not finish</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Dialog help</p>
+    <h1>The conversion did not finish</h1>
+    <p class="lead">When a conversion stops before the end, the window names the cause in plain words and offers three ways on: send the logs, try again, or close.</p>
+  </header>
+
+  <figure class="shot" id="shot-dialog">
+    <div class="frame">
+      <img class="on-dark" src="run-failed-dialog-dark.png" width="600" height="250" alt="The failure question: the title The conversion did not finish, the cause in plain words, the advice to try again or send the logs, the buttons Send logs to the author, Try again and Close, and the Help button in the top-right corner.">
+      <img class="on-light" src="run-failed-dialog-light.png" width="600" height="250" alt="">
+      <a class="pin" style="--x:92.5%;--y:31.7%" href="#help" aria-label="1, Help (F1)">1</a>
+      <a class="pin" style="--x:3.83%;--y:46.4%" href="#message" aria-label="2, The cause">2</a>
+      <a class="pin" style="--x:59.48%;--y:92.3%" href="#send" aria-label="3, Send logs to the author">3</a>
+      <a class="pin" style="--x:84.71%;--y:92.3%" href="#retry" aria-label="4, Try again">4</a>
+      <a class="pin" style="--x:35.94%;--y:92.3%" href="#close" aria-label="5, Close">5</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the dialog.</figcaption>
+  </figure>
+
+  <h2>In this order</h2>
+  <ol class="order">
+    <li>Read the cause <a class="ref" href="#message">2</a>. It tells you whether to look at the file, the disk, the translation settings or nothing at all.</li>
+    <li>If the cause is something you can fix, fix it and press <b>Try again</b> <a class="ref" href="#retry">4</a>.</li>
+    <li>If it is not clear, press <b>Send logs to the author</b> <a class="ref" href="#send">3</a> so the author can find it.</li>
+    <li>Otherwise press <b>Close</b> <a class="ref" href="#close">5</a>.</li>
+  </ol>
+
+  <h2>The elements</h2>
+  <div class="elements">
+
+    <details class="el" id="help">
+      <summary><span class="mk">1</span><span><span class="name">Help (F1)</span><span class="one">Opens this page without closing the question.</span></span></summary>
+      <div class="full">
+        <p>The question stays open and waits while you read. <kbd>F1</kbd> does the same.</p>
+      </div>
+    </details>
+
+    <details class="el" id="message">
+      <summary><span class="mk">2</span><span><span class="name">The cause</span><span class="one">Why the conversion stopped, in plain words.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>The input was refused</b> - The conversion did not finish: the converter refused the input - the file is missing, empty or a folder, or a setting was rejected.</li>
+          <li><b>Reading or writing failed</b> - The conversion did not finish: reading the document or writing the result failed - the disk may be full, the output folder read-only, or another program converting into it.</li>
+          <li><b>The document could not be read</b> - The conversion did not finish: the document could not be read - it may be damaged, copy-protected, or not the format its name says.</li>
+          <li><b>Translation failed</b> - The conversion did not finish: translation failed and no usable result was saved. Check the Google key, the network, or that Ollama is running, then try again.</li>
+          <li><b>Interrupted</b> - The conversion was interrupted before it finished; what was written is incomplete, and the next Convert rebuilds it.</li>
+          <li><b>Any other stop</b> - The window shows the converter's exit code. Send the logs so the cause can be found.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>A cause you can name is a cause you can act on; the raw error stays in the log.</dd>
+          <dt>Next</dt><dd>The same line is added to the log of the window.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="send">
+      <summary><span class="mk">3</span><span><span class="name">Send logs to the author</span><span class="one">The archive is selected in the folder and its path is on the clipboard - attach it to the message before sending.</span></span></summary>
+      <div class="full">
+        <p>Packs the stored logs into one archive, puts its path on the clipboard and starts a message to the author. The archive is attached by you; nothing is sent by itself.</p>
+        <dl class="facts">
+          <dt>Undo</dt><dd>Close the mail window without sending, and nothing leaves your computer.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="retry">
+      <summary><span class="mk">4</span><span><span class="name">Try again</span><span class="one">Runs the same conversion again with the same settings.</span></span></summary>
+      <div class="full">
+        <p>What the failed run wrote is rebuilt, because a run that did not finish leaves no completion record.</p>
+      </div>
+    </details>
+
+    <details class="el" id="close">
+      <summary><span class="mk">5</span><span><span class="name">Close</span><span class="one">Closes the question; nothing else changes.</span></span></summary>
+      <div class="full">
+        <p>The log keeps the cause, and what was written stays in the output folder; the next <b>Convert</b> rebuilds it. Pressing <kbd>Esc</kbd> is the same answer.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>It is the safe answer, so it has the focus.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Related</h2>
+  <ul class="related">
+    <li><a href="converter.html#log"><b>Log</b><span class="pill">Window</span><small>Where the last step the converter reached is written.</small></a></li>
+    <li><a href="settings.html#about"><b>About the program</b><span class="pill">Window</span><small>Send the logs, open the archive, clear the stored logs.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#logs" target="_blank" rel="noopener"><b>Logs and sending them</b><span class="pill gold">Site</span><small>What the archive holds and how to send it.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Captured against DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Help index</a>
+    <a href="mailto:sza@ukr.net">Ask a question or report a problem</a>
+  </footer>
+
+</main>
+</body>
+</html>

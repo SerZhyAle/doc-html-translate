@@ -3,10 +3,14 @@ package htmlgen
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	"doc-html-translate/internal/epub"
+	"doc-html-translate/internal/i18n"
+
+	gohtml "golang.org/x/net/html"
 )
 
 func TestRelativePath(t *testing.T) {
@@ -203,28 +207,81 @@ func TestInjectNavBars(t *testing.T) {
 }
 
 // TestReaderChromeAccessibilityFloor pins the injected chrome to the floor the 2026-09-29
-// accessibility pass (ticket 57) established; docs/PARITY.md "Reader chrome accessibility
-// floor" holds the extension edition to the same list. A control under 24px, a chrome without
-// a theme-accent focus ring, or white ink on an accent button regresses here first.
+// accessibility pass (ticket 57) established, as ticket 119 (slice R1) re-based it on UI-SIZING 1.1
+// and BUTTONS 2.0: the 28 / 44 floors of ticket 57 are superseded for the covered buttons by the
+// ordinary 32 (fine pointer) and 48 (coarse pointer) targets, so the pins below are the tokens, not
+// the old literals. docs/PARITY.md "Reader chrome accessibility floor" holds the extension edition
+// to the same list. A control under its token, a chrome without a theme-accent focus ring, or white
+// ink on an accent button regresses here first.
 func TestReaderChromeAccessibilityFloor(t *testing.T) {
 	css := navBarCSS + readerCSS + searchCSS
 	for _, want := range []string{
 		"flex-wrap: wrap",            // the bar reflows at 200% zoom instead of clipping
 		".dht-navbar :focus-visible", // the chrome carries a theme-accent focus ring
 		"outline: 2px solid var(--dht-accent)",
-		"box-sizing:border-box; min-height:28px", // buttons and selects, fine-pointer floor included
-		"min-width:28px",                         // glyph target width, independent of its drawing
-		"@media (pointer: coarse)",               // touch raises the target floor
-		"min-height:44px; min-width:44px",
-		`.dht-navbar[dir="rtl"] .nav-turn .dht-glyph { transform:scaleX(-1); }`,
-		"margin-inline-start: auto", // RTL mirrors through logical properties
-		"padding-inline-end: 12px",
-		"color:var(--dht-bg)",       // accent buttons take theme ink, never white
-		"#dht-search-close{padding", // the close word clears the floor too
+		"--dht-tgt: calc(32px * var(--dht-s))", // UI-SIZING 2 rule 4: the ordinary pointer target
+		"--dht-tgt: calc(48px * var(--dht-s))", // ... and the touch target
+		"@media (pointer: coarse)",             // the profile is the primary pointer, chosen once
+		"min-width: var(--dht-tgt); min-height: var(--dht-tgt)",
+		"--dht-s: clamp(0.875, var(--dht-ui), 2)", // an unknown scale cannot give a zero-size target
+		"--dht-radius: calc(4px * var(--dht-s))",  // BUTTONS 3: rectangular, radius 4
+		"--dht-gap: calc(8px * var(--dht-s))",
+		`.dht-navbar[dir="rtl"] .nav-turn .dht-glyph { transform: scaleX(-1); }`,
+		"padding-inline-end: 12px", // RTL mirrors through logical properties
+		"color: var(--dht-bg)",     // accent buttons take theme ink, never white
+		"align-items: stretch",     // one visual line, one height (BUTTONS 3 rule 4)
+		"@media (forced-colors: active)",
+		"box-shadow: inset 0 calc(-3px * var(--dht-s)) 0 currentColor", // a selected state that is not colour alone
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("injected reader chrome lost %q - the accessibility floor regressed", want)
 		}
+	}
+	// BUTTONS 4 rule 2: spare space stays empty - no group is pinned to the far end of the bar, and
+	// the old 28 / 44 literals and the pill-adjacent radius 6 are gone from the covered buttons.
+	for _, banned := range []string{"margin-inline-start: auto", "margin-inline-start:auto", "min-height:28px", "min-height:44px", "border-radius:6px"} {
+		if strings.Contains(css, banned) {
+			t.Errorf("injected reader chrome still carries %q", banned)
+		}
+	}
+}
+
+// TestReaderChromeButtonMarkup pins what the markup owes BUTTONS 2.0 section 2: every command button
+// is a real <button> with a stable id, glyph-only ones carry the square class and a name, the
+// disclosure buttons expose aria-expanded, the disabled paging ends say so, the glyph comes before the
+// caption on both paging links, the Search button draws action.search and names its chord, and the
+// controls travel in groups rather than one long row.
+func TestReaderChromeButtonMarkup(t *testing.T) {
+	defer i18n.SetLanguage(i18n.Language())
+	i18n.SetLanguage("en")
+	bar := buildNavBarHTML(NavInfo{IndexHref: "index.html", NextHref: "ch02.xhtml", Current: 1, Total: 3})
+	if strings.Count(bar, `aria-disabled="true"`) != 1 || !strings.Contains(bar, `<a class="disabled" aria-disabled="true">`+glyphSVG("media.previous")) {
+		t.Errorf("the disabled previous link is not announced as disabled with its glyph first: %s", anchorByClass(t, bar, "disabled"))
+	}
+	if !strings.Contains(bar, `class="dht-nav-link dht-next" href="ch02.xhtml">`+glyphSVG("media.next")+" Next page</a>") {
+		t.Error("the next link does not lead with its glyph (BUTTONS 2.0 section 2 rule 4)")
+	}
+	if n := strings.Count(bar, `<div class="dht-group">`); n != 4 {
+		t.Errorf("the controls travel in %d groups, want 4 (text size, toggles, selects, search)", n)
+	}
+	search := regexp.MustCompile(`(?s)<button id="dht-search-button"[^>]*>.*?</button>`).FindString(bar)
+	for _, want := range []string{`aria-expanded="false"`, `title="Search (Ctrl+F)"`, `d="` + Glyphs["action.search"] + `"`, "Search</button>"} {
+		if !strings.Contains(search, want) {
+			t.Errorf("the Search button lacks %q: %s", want, search)
+		}
+	}
+	for _, id := range []string{"dht-font-dec", "dht-font-inc", "dht-size-reset", "dht-night-toggle", "dht-ocr-toggle"} {
+		btn := regexp.MustCompile(`(?s)<button id="` + id + `"[^>]*>`).FindString(bar)
+		if !strings.Contains(btn, `class="dht-btn dht-ico"`) || !strings.Contains(btn, "aria-label=") || !strings.Contains(btn, "title=") {
+			t.Errorf("%s is not a named glyph-only button: %s", id, btn)
+		}
+	}
+	// The version link is an external destination; its marker is a CSS mask of nav.open-external.
+	if !strings.Contains(chromeUICSS, `a.nav-version::after`) || !strings.Contains(chromeUICSS, "mask:") {
+		t.Error("the version link lost its external-navigation marker")
+	}
+	if !strings.Contains(searchControlsHTML(), `id="dht-search-close"`) {
+		t.Error("the search panel lost its Close button")
 	}
 }
 
@@ -260,6 +317,9 @@ func TestReaderComfortControls(t *testing.T) {
 		`e.key === "ArrowUp"`, `e.key === "ArrowLeft"`,
 		`e.key === " "`, `e.shiftKey`,
 		`t !== document.body`, // never fight a focused control or an in-book link
+		// INPUT-PARITY: a Shift-modified arrow or PageUp/PageDown extends the selection and is
+		// the browser's; only Shift+Space turns a page back.
+		`if (e.shiftKey && e.key !== " ") return;`,
 		// Fit width: per-session like the zoom, applied as a class + zoom-compensated width.
 		`"dht_fitw"`, `classList.toggle("dht-fitw"`, `--dht-fitw`,
 	} {
@@ -285,6 +345,42 @@ func TestReaderComfortControls(t *testing.T) {
 	} {
 		if !strings.Contains(readerCSS, want) {
 			t.Errorf("reader CSS lost %q", want)
+		}
+	}
+}
+
+// The groups and the version link are wrappers inside the bar, not new chrome roots: the translation step
+// leaves a subtree out by the root's class (IsReaderChrome, chromeRootClasses), so a wrapper that sat outside
+// the bar would send the chrome's words to the paid engine. Every group of both bars must be inside a root.
+func TestChromeGroupsStayInsideTheTranslationExclusion(t *testing.T) {
+	bars := map[string]string{
+		"chapter bar":        buildNavBarHTML(NavInfo{PrevHref: "a.xhtml", NextHref: "b.xhtml", IndexHref: "index.html", Current: 2, Total: 3}),
+		"single-page header": buildSinglePageHeader("book.epub", "Book", 3, true),
+	}
+	for name, markup := range bars {
+		doc, err := gohtml.Parse(strings.NewReader(markup))
+		if err != nil {
+			t.Fatal(err)
+		}
+		groups := 0
+		var walk func(n *gohtml.Node, inside bool)
+		walk = func(n *gohtml.Node, inside bool) {
+			if IsReaderChrome(n) {
+				inside = true
+			}
+			if n.Type == gohtml.ElementNode && (nodeHasClass(n, "dht-group") || nodeHasClass(n, "nav-turn") || nodeHasClass(n, "nav-actions")) {
+				groups++
+				if !inside {
+					t.Errorf("%s: a %q wrapper sits outside every chrome root", name, nodeAttr(n, "class"))
+				}
+			}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				walk(c, inside)
+			}
+		}
+		walk(doc, false)
+		if groups == 0 {
+			t.Errorf("%s: no group wrapper found - the scan is stale", name)
 		}
 	}
 }

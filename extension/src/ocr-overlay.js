@@ -1,3 +1,4 @@
+import { imageBlob, isJxl } from "./jxl.js";
 // ocr-overlay.js - the reusable OCR-overlay unit shared by the context-menu page and
 // the PDF/EPUB viewer. Recognizes text in an image with a single shared Tesseract worker
 // (one image at a time via a FIFO queue), groups results into block-level plates, and
@@ -141,6 +142,9 @@ const BITMAP_OPTS = { imageOrientation: "from-image" };
 async function toBitmap(src) {
   if (src instanceof Blob) {
     // Decoded only for its size: the decoded pixels are the biggest thing here, so they go at once.
+    if (src.type === "image/jxl" || isJxl(await src.slice(0, 12).arrayBuffer())) {
+      src = await imageBlob(await src.arrayBuffer(), "image/jxl");
+    }
     const bmp = await createImageBitmap(src, BITMAP_OPTS);
     const { width, height } = bmp;
     if (bmp.close) bmp.close();

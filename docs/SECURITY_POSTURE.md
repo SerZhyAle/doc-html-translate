@@ -57,6 +57,7 @@ Every source file under these roots that contains a network primitive is the evi
 - `extension/src/*.js` - `\bfetch\(`, `XMLHttpRequest`, `new WebSocket\(`, `sendBeacon\(`, `new EventSource\(`
 - `cmd/doc-html-ui/*.html` - `\bfetch\(`, `XMLHttpRequest`, `new WebSocket\(`, `sendBeacon\(`, `mailto:`
 
+- not network: `extension/src/jxl.js` - fetches only blob: and data:image/jxl URLs already present in the parsed book; the codec and WASM are packaged extension resources, with no remote decoder or upload
 - not network: `extension/src/i18n.js` - fetches the extension's own bundled _locales file through chrome.runtime.getURL; no request leaves the browser
 - not network: `extension/src/ebook.js` - fetches a blob: URL of a book section already unpacked in memory; no request leaves the browser
 
@@ -71,7 +72,20 @@ It is proven against the dependency set, not against the wording of a page: `go.
 - `extension/store/PRIVACY.md`
 - `extension/store/LISTING.md`
 
-## 4. The public forms rendered from these rows
+## 4. Native code the app loads
+
+**Claim:** The desktop app loads no native codec or plugin library. JPEG XL pictures are decoded by libjxl compiled to WebAssembly and run by wazero inside the process, built without the module's native path, and the only libraries the app's own code names are Windows system DLLs. A format the app does not read itself goes to a separate helper program (row app-run-helpers), never into the process.
+
+The build guard and the build settings that keep it true are cited, and a citation the file no longer contains fails the check:
+
+- `internal/jxl/nodynamic_guard.go` - `//go:build !nodynamic`
+- `internal/jxl/jxl_test.go` - `func TestNoNativeDecoder(`
+- `scripts/lib/gobuildtags.ps1` - `$GoBuildTags = @('nodynamic')`
+- `.github/workflows/release.yml` - `GOFLAGS: -tags=nodynamic`
+
+Every non-test Go file under `cmd/**/*.go` and `internal/**/*.go` is read for a library load: its library must be named as a literal, and be one of `kernel32.dll`, `user32.dll`, `shell32.dll`.
+
+## 5. The public forms rendered from these rows
 
 - `privacy.html`, block `app-access` (html-lists): `app-read-documents`, `app-open-browser`, `net-app-gui-server`, `net-app-google`, `net-app-ollama`, `net-app-ocr-languages`, `net-app-update-check`, `app-explorer-registration`, `app-run-helpers`, `app-filedo-secret-files`, `net-app-report-mail`
 - `privacy.html`, block `app-writes` (html-lists): `app-write-output`, `app-user-folder`
@@ -85,10 +99,11 @@ It is proven against the dependency set, not against the wording of a page: `go.
 - `extension/store/LISTING.md`, block `ext-justifications` (md-justifications): `ext-declarativenetrequest`, `ext-host-all-urls`, `ext-scripting`, `ext-offscreen`, `ext-contextmenus`, `ext-storage`
 - `msix/README.md`, block `msix-justification` (md-fence): `app-msix-runfulltrust`
 
-## 5. How this is kept true
+## 6. How this is kept true
 
 - A permission added to `extension/manifest.json` or a capability added to `msix/AppxManifest.xml` without a row fails the check, and so does a row naming something no manifest declares.
 - Every row names its consumers and cites the code that consumes it; a citation the code no longer contains fails the check. A shown string a row cites must still be in the strings file it names.
 - A new network call site under the roots above fails the check until a row or a not-network reason covers it.
 - An analytics, crash-reporting or advertising dependency entering either dependency set fails the check while section 3 claims none.
+- A library load in the app's code that names its library by a computed value, or names one outside section 4's list, fails the check, and so does a guard or build setting section 4 cites going missing.
 - A public form edited by hand, or a row edited without `-Render`, fails the check. The consumers, the lifetimes and the "what leaves" column are authored: no mechanism can derive which features share a permission.

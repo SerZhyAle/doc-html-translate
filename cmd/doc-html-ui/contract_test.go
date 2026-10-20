@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"math"
 	"regexp"
 	"slices"
 	"strconv"
@@ -27,16 +26,19 @@ func uiStyle(t *testing.T) string {
 	return uiHTML[start:end]
 }
 
-// ICON-RENDER rule 5 (ticket 90): compact Windows desktop controls clear the 28px
-// target-size floor, the chrome mirrors for RTL through logical properties, the log does not
-// flood screen readers (the stage line announces instead), and stage text is a status region.
-// docs/PARITY.md "Reader chrome accessibility floor" holds the extension to the same list.
+// UI-SIZING 1.1 (ticket 119): every covered control takes its size from the one token resolver, so the
+// ordinary pointer target is 32 and the ordinary touch target 48 logical pixels and compact scales both
+// down to the declared 28 / 42 floor; the chrome mirrors for RTL through logical properties, the log
+// does not flood screen readers (the stage line announces instead), and stage text is a status region.
+// docs/PARITY.md "Reader chrome accessibility floor" holds the extension to its own list.
 func TestUIKeepsTheAccessibilityFloor(t *testing.T) {
 	for _, want := range []string{
-		".inline-btn { min-height: 28px; }",
-		"max-width: 150px; min-height: 28px", // the theme/language selects
-		"min-width: 0; min-height: 28px",     // the output-path button
-		".switches { margin-inline-start: auto",
+		"--s: clamp(0.875, var(--ui), 2);", // the declared range: compact 0.875 .. huge 2, never zero
+		"--tgt: calc(32px * var(--s));",
+		"--tgt: calc(48px * var(--s));",
+		"min-height: var(--tgt);", // buttons, rail rows, selects, fields
+		".help-btn { padding: 0; width: var(--tgt); height: var(--tgt); }",
+		".head-help { margin-inline-start: auto; }",
 		`id="logArea" role="log" aria-live="off"`,
 		`id="progressStage" role="status"`,
 		`id="readiness" role="status" aria-live="polite"`,
@@ -102,51 +104,36 @@ func paletteThemes(t *testing.T) [2]map[string]color.RGBA {
 	return themes
 }
 
-// mix overlays part of a hue over a base: the dialog answer faces mix about 12 percent of the
-// answer's state hue over the control face (WINDOWS-UI 0.4 section 11 item 4's reference value).
-func mixTint(hue, base color.RGBA, part float64) color.RGBA {
-	ch := func(a, b uint8) uint8 {
-		return uint8(math.Round(float64(a)*part + float64(b)*(1-part)))
-	}
-	return color.RGBA{ch(hue.R, base.R), ch(hue.G, base.G), ch(hue.B, base.B), 0xFF}
-}
-
-// WINDOWS-UI 0.4 section 11 items 4 and 6 / ICON-RENDER 0.19 section 14, measured for this
-// product: on a dialog's answer buttons the glyph rides the answer's state hue and the caption
-// stays body text, both on the tinted face they are actually drawn on - the glyph at least 3:1,
-// the caption at least 4.5:1, in both themes; the untinted dismissing answer (.bare) holds the
-// same floors on the plain control face. The hue and the tint come from the stylesheet's own
-// answer rules, so a restyle is measured, not assumed.
+// BUTTONS 2.0 section 3 rules 5 and 6, measured for this product: a dialog answer's face is the plain
+// control face - no green or red tint on a non-destructive answer - and the meaning rides the glyph
+// only (the affirmative in state.ok, a caution in state.warning, Cancel in the ordinary ink). The
+// glyph clears 3:1 and the caption 4.5:1 on the control face in its normal, hover and pressed states,
+// and the destructive confirmation's own ink clears 4.5:1 on the danger face, in both themes.
 func TestDialogAnswerFacesMeetContrast(t *testing.T) {
-	themes := paletteThemes(t)
-	part := 0.12
-	if m := regexp.MustCompile(`--ans-hue\) ([0-9]+)%`).FindStringSubmatch(uiStyle(t)); m != nil {
-		n, err := strconv.Atoi(m[1])
-		if err != nil {
-			t.Fatalf("bad tint percentage %q: %v", m[1], err)
-		}
-		part = float64(n) / 100
+	style := uiStyle(t)
+	if strings.Contains(style, "color-mix(") {
+		t.Error("the stylesheet tints a face with color-mix(): a non-destructive answer must not acquire a decorative hue")
 	}
+	for _, bad := range []string{"ans-cancel", "--ans-hue"} {
+		if strings.Contains(style, bad) {
+			t.Errorf("the stylesheet still carries %q: the red dismissing glyph and the tinted answer faces were retired by BUTTONS 2.0", bad)
+		}
+	}
+	themes := paletteThemes(t)
 	for i, name := range []string{"light", "dark"} {
-		control := themes[i]["control"]
-		for _, ans := range []struct{ cls, hue string }{
-			{"ans-ok", "success"}, {"ans-cancel", "danger"}, {"ans-warn", "warning"},
-		} {
-			hue, ok := themes[i][ans.hue]
-			if !ok {
-				t.Fatalf("%s: --%s is not a hex light-dark() pair", name, ans.hue)
+		for _, face := range []string{"control", "control-hover", "control-pressed"} {
+			bg := themes[i][face]
+			for _, hue := range []string{"success", "warning"} {
+				if r := iconart.Contrast(themes[i][hue], bg); r < 3 {
+					t.Errorf("%s: the %s glyph on --%s is %.2f:1, want >= 3", name, hue, face, r)
+				}
 			}
-			face := mixTint(hue, control, part)
-			if r := iconart.Contrast(hue, face); r < 3 {
-				t.Errorf("%s, %s: the glyph hue on its 12 percent tint is %.2f:1, want >= 3", name, ans.cls, r)
-			}
-			if r := iconart.Contrast(themes[i]["text-primary"], face); r < 4.5 {
-				t.Errorf("%s, %s: the caption on the tinted face is %.2f:1, want >= 4.5", name, ans.cls, r)
+			if r := iconart.Contrast(themes[i]["text-primary"], bg); r < 4.5 {
+				t.Errorf("%s: the caption on --%s is %.2f:1, want >= 4.5", name, face, r)
 			}
 		}
-		// The bare dismissing answer of an irreversible confirmation: red glyph on the control face.
-		if r := iconart.Contrast(themes[i]["danger"], control); r < 3 {
-			t.Errorf("%s: the bare dismissing glyph on the control face is %.2f:1, want >= 3", name, r)
+		if r := iconart.Contrast(themes[i]["danger-ink"], themes[i]["danger"]); r < 4.5 {
+			t.Errorf("%s: --danger-ink on --danger is %.2f:1, want >= 4.5", name, r)
 		}
 	}
 }
@@ -171,6 +158,12 @@ func TestPaletteTextMeetsWCAGAA(t *testing.T) {
 		{"warning", []string{"surface-window", "surface-sunken"}, 4.5},
 		{"accent-ink", []string{"accent", "accent-hover"}, 4.5},
 		{"danger-ink", []string{"danger"}, 4.5},
+		// COLLAPSIBLE-GROUP 3.1 / BOOLEAN-OPTION 3.5 / SETTINGS-NAVIGATION 2.3 (ticket 119): a group
+		// header's caption on its face in rest and hover, and the checkbox outline (a meaningful
+		// graphic, 3:1) on every surface a checkbox is drawn on.
+		{"text-primary", []string{"surface-header", "surface-header-hover"}, 4.5},
+		{"border-strong", []string{"surface-window", "surface-raised", "surface-sunken", "control"}, 3},
+		{"accent", []string{"surface-header"}, 4.5},
 	}
 	for i, name := range []string{"light", "dark"} {
 		for _, c := range checks {
@@ -262,6 +255,13 @@ func TestGlyphOnlyControlsHaveAccessibleNames(t *testing.T) {
 		if letter.MatchString(text) || strings.Contains(m[1], "data-i18n=") {
 			continue
 		}
+		// An option's help button is named by script - "Help: <option>" - once the language is known.
+		if strings.Contains(m[1], `class="opt-help"`) {
+			if !strings.Contains(uiHTML, "btn.setAttribute('aria-label', t('helpOptLabel', {name}));") {
+				t.Error("the option help buttons are no longer given their accessible name")
+			}
+			continue
+		}
 		found++
 		if !strings.Contains(m[1], "data-i18n-aria=") {
 			t.Errorf("glyph-only button %q has no data-i18n-aria", strings.TrimSpace(m[0]))
@@ -281,7 +281,7 @@ func TestGlyphOnlyControlsHaveAccessibleNames(t *testing.T) {
 // and every <label> names something. A caption that merely sits beside a field names nothing:
 // clicking it focuses nothing and a screen reader announces the field unnamed.
 func TestEveryFieldIsNamedAndEveryLabelNamesOne(t *testing.T) {
-	body := uiHTML[strings.Index(uiHTML, "<body>"):strings.Index(uiHTML, "<script>")]
+	body := uiHTML[strings.Index(uiHTML, "<body>"):strings.Index(uiHTML, `<script src="/i18n.js">`)]
 	insideLabel := func(pos int) bool {
 		return strings.LastIndex(body[:pos], "<label") > strings.LastIndex(body[:pos], "</label>")
 	}
@@ -342,47 +342,82 @@ func TestRebuildConfirmationsChooseCancel(t *testing.T) {
 	}
 }
 
+// UI-SIZING 1.1 section 2 rule 1: the input profile is chosen once at opening and never follows a pointer
+// event, so no media query may switch the geometry live; the profile is a data attribute the page sets
+// from the primary pointer (or the reader's explicit choice). System motion preference still wins.
 func TestDesktopTargetsAndMotionFollowSystem(t *testing.T) {
 	style := uiStyle(t)
-	for _, want := range []string{"@media (any-pointer: coarse)", "min-width: 44px !important; min-height: 44px !important", "@media (prefers-reduced-motion: reduce)", "animation: none !important; transition: none !important; scroll-behavior: auto !important;"} {
+	for _, want := range []string{`html[data-input="touch"] {`, "@media (prefers-reduced-motion: reduce)", "animation: none !important; transition: none !important; scroll-behavior: auto !important;"} {
 		if !strings.Contains(style, want) {
 			t.Errorf("missing %q", want)
+		}
+	}
+	for _, bad := range []string{"any-pointer: coarse", "(pointer: coarse)", "min-width: 44px !important", "min-height: 28px !important"} {
+		if strings.Contains(style, bad) {
+			t.Errorf("the stylesheet carries %q: the profile must be stable (data-input), and the 28/44 floors were superseded by the tokens", bad)
+		}
+	}
+	for _, want := range []string{
+		"const autoInput = (matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: none)').matches) ? 'touch' : 'pointer';",
+		"root.dataset.input = (input === 'touch' || input === 'pointer') ? input : autoInput;",
+	} {
+		if !strings.Contains(uiHTML, want) {
+			t.Errorf("ui.html lost %q - the profile is no longer chosen once", want)
 		}
 	}
 }
 
 // ── WINDOWS-UI 0.1 / APP-SETTINGS 0.2 gates (ticket 93) ─────────────────────────────────────
 
-// WINDOWS-UI section 4 (Boolean) + APP-SETTINGS rules 3 and section 8: a boolean setting draws
-// its checkbox at the reading start inside the label (caption immediately beside it), and every
-// audited setting carries a muted description below the caption at the caption's inset (.chk-hint).
+// BOOLEAN-OPTION 2.0 (ticket 119): every boolean is an .opt row - the native checkbox first (the reading
+// start), then one text cell whose heading row holds the caption label (for= the checkbox: the checkbox,
+// the caption and the glyph are the activation regions) and, when present, the help wrapper as a SIBLING
+// of that label, never inside it, so help can never toggle the option; the explanation sits below the
+// heading and is the checkbox's description. No checkbox is styled or exposed as a command button.
 func TestBooleanRowsFollowTheCheckboxConvention(t *testing.T) {
-	// Every boolean label starts with the input - the control at the reading start. A .chk label
-	// without a checkbox (the queue's "Parallel:" caption, naming a select) is not a boolean row.
-	labels := regexp.MustCompile(`(?s)<label class="chk[^>]*>(.*?)</label>`)
-	n := 0
-	for _, m := range labels.FindAllStringSubmatch(uiHTML, -1) {
-		if !strings.Contains(m[1], `<input type="checkbox"`) {
+	for _, id := range []string{"chkSingle", "chkNoOpen", "chkForce", "chkVerbose", "chkOCR", "chkShellEntries", "chkDefaultHandler", "chkAutoUpdates", "chkRevealKey"} {
+		input := regexp.MustCompile(`<input type="checkbox" class="opt-box" id="` + id + `"[^>]*>`).FindString(uiHTML)
+		if input == "" {
+			t.Errorf("boolean %s is gone from the markup or is not an .opt-box", id)
 			continue
 		}
-		n++
-		if !strings.HasPrefix(strings.TrimSpace(m[1]), `<input type="checkbox"`) {
-			t.Errorf("boolean label does not start with its checkbox: %.80s", m[0])
+		pos := strings.Index(uiHTML, input)
+		// The checkbox is the first child of its .opt row.
+		if before := strings.TrimRight(uiHTML[:pos], " \n"); !regexp.MustCompile(`<div class="opt"( style="[^"]*")?>$`).MatchString(before) {
+			t.Errorf("boolean %s does not lead its .opt row", id)
 		}
-	}
-	if n < 8 {
-		t.Fatalf("found %d boolean labels; the scan is wrong", n)
-	}
-	// Every settings boolean has its description below the caption at the caption's inset.
-	for _, id := range []string{"chkOCR", "chkSingle", "chkNoOpen", "chkForce", "chkVerbose", "chkAutoUpdates", "chkShellEntries", "chkDefaultHandler"} {
-		pos := strings.Index(uiHTML, `id="`+id+`"`)
-		if pos < 0 {
-			t.Errorf("boolean %s is gone from the markup", id)
+		window := uiHTML[pos : pos+min(2600, len(uiHTML)-pos)]
+		label := regexp.MustCompile(`<label class="opt-name" for="` + id + `">(.*?)</label>`).FindStringSubmatch(window)
+		if label == nil {
+			t.Errorf("boolean %s has no heading label bound to it (for=)", id)
 			continue
 		}
-		window := uiHTML[pos:min(pos+900, len(uiHTML))]
-		if !strings.Contains(window, "chk-hint") {
-			t.Errorf("boolean %s has no description below its caption at the caption inset", id)
+		if strings.Contains(label[1], "opt-help") || strings.Contains(label[1], "<button") {
+			t.Errorf("boolean %s: the help button sits inside the activation label", id)
+		}
+		// The explanation (when there is one) is the checkbox's description.
+		if d := regexp.MustCompile(`aria-describedby="([A-Za-z]+)"`).FindStringSubmatch(input); d != nil {
+			if !strings.Contains(uiHTML, `id="`+d[1]+`"`) {
+				t.Errorf("boolean %s describes itself by #%s, which does not exist", id, d[1])
+			}
+		} else if id != "chkRevealKey" {
+			t.Errorf("boolean %s has an explanation but no aria-describedby", id)
+		}
+	}
+	if strings.Contains(uiHTML, `class="chk"`) || strings.Contains(uiHTML, "chk-hint") {
+		t.Error("an old .chk row or .chk-hint survives - every boolean is an .opt row now")
+	}
+	// The checkbox is a vector box at the box size inside a hit area of the target size, drawn from roles.
+	box := cssRule(t, ".opt-box")
+	for _, want := range []string{"appearance: none;", "width: var(--box); height: var(--box);", "padding: calc((var(--tgt) - var(--box)) / 2);", "margin: 0 calc((var(--tgt) - var(--box)) / -2);"} {
+		if !strings.Contains(box, want) {
+			t.Errorf(".opt-box lost %q", want)
+		}
+	}
+	// Help is outside the label, and it never toggles: its click stops here.
+	for _, want := range []string{"btn.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation();", "const optHelps = [];"} {
+		if !strings.Contains(uiHTML, want) {
+			t.Errorf("ui.html lost %q - option help may toggle its option", want)
 		}
 	}
 }
@@ -392,8 +427,9 @@ func TestBooleanRowsFollowTheCheckboxConvention(t *testing.T) {
 func TestNumericEditorsScaleDigitsAndSpinners(t *testing.T) {
 	style := uiStyle(t)
 	for _, want := range []string{
-		`input[type="number"] { font-size: 16px; min-height: 32px; }`,
-		`.field.num > input { width: 110px;`,
+		`input[type="number"] { font-size: calc(16px * var(--s) * var(--t)); }`,
+		`.field.num > input { width: calc(110px * var(--s));`,
+		"min-height: var(--tgt);",
 	} {
 		if !strings.Contains(style, want) {
 			t.Errorf("stylesheet lacks %q - the numeric editor lost its readable scale", want)
@@ -421,21 +457,23 @@ func TestWheelNeverEditsAnUnfocusedNumber(t *testing.T) {
 	}
 }
 
-// WINDOWS-UI sections 3.2-3.4: group expansion and the pane viewport are remembered by stable id,
-// restoring fires no user-edit save, and closing a group hands focus to its header.
+// WINDOWS-UI sections 3.2-3.4 / SETTINGS-NAVIGATION 4.3 / COLLAPSIBLE-GROUP 4.7: the selected page, each
+// group's state and every page's viewport are remembered by stable id, restoring fires no user-edit save,
+// and closing a group hands focus to its header.
 func TestGroupsAndPaneContextAreRemembered(t *testing.T) {
 	for _, want := range []string{
-		"openGroups:",                            // collected by stable id
-		"scroll:         paneScroll,",            // the pane viewport rides the settings blob
-		"d.tagName === 'DETAILS') d.open = true", // restore skips unknown ids, sets values only
-		"head.focus();",                          // focus handoff to the header before hiding focused children
-		"restorePaneScroll();",                   // the remembered anchor is applied after the window geometry
+		"page:           currentPage,",                                         // the selected page, by its stable id
+		"groups:         Object.fromEntries(",                                  // every group's state (open and closed) by stable id
+		"pageScrolls:    pageScrolls,",                                         // each page's viewport rides the settings blob
+		"d.tagName === 'DETAILS') d.open = !!s.groups[id]",                     // restore skips unknown ids, sets values only
+		"head.focus();",                                                        // focus handoff to the header before hiding focused children
+		"showPage(urlParam('page') || savedPage || 'convert', {force: true});", // the page, then its anchor
 		// Section 3.4: the restore's own toggle and scroll events arrive after settingsLoaded is
 		// set; the guard holds until they have run, and both listeners honour it.
 		"let restoring = true;",
 		"requestAnimationFrame(() => requestAnimationFrame(() => { restoring = false; }));",
 		"if (!restoring) saveSettings();",
-		"addEventListener('scroll', () => {\n    if (restoring) return;",
+		"el('pane').addEventListener('scroll', () => {\n    if (restoring) return;",
 		// A save before the OCR catalog answers carries the remembered pick, not the empty select.
 		"...ocrLangSetting(),",
 		"if (ocrCatalog.length) return {ocrLangChoice: sel.value};",
@@ -455,10 +493,10 @@ func TestGroupsAndPaneContextAreRemembered(t *testing.T) {
 	if strings.Contains(uiHTML, "ocrLangChoice:  el('ocrLang').value") {
 		t.Error("collectSettings reads the OCR select directly - a save before the catalog loads erases the pick")
 	}
-	// The group ids the context is keyed by are stable and present.
-	for _, id := range []string{`id="advancedDetails"`, `id="ollamaDetails"`, `id="ocrDetails"`, `id="integrationSection"`, `id="aboutSection"`, `id="togglesRow"`, `id="outputRow"`, `id="langsRow"`} {
+	// The page and group ids the context is keyed by are stable and present.
+	for _, id := range []string{`id="page-convert"`, `id="page-ollama"`, `id="page-ocr"`, `id="page-windows"`, `id="page-interface"`, `id="page-advanced"`, `id="page-about"`, `id="grpUpdates"`, `id="grpSupport"`, `id="grpResources"`, `id="grpRelated"`, `id="togglesRow"`, `id="outputRow"`, `id="langsRow"`} {
 		if !strings.Contains(uiHTML, id) {
-			t.Errorf("pane anchor %s is gone - the scroll key is not stable", id)
+			t.Errorf("context anchor %s is gone - the saved key is not stable", id)
 		}
 	}
 }
@@ -471,6 +509,30 @@ func TestSecretRevealsBehindAnExplicitCheckbox(t *testing.T) {
 	}
 	if !strings.Contains(uiHTML, `id="chkRevealKey"`) || !strings.Contains(uiHTML, "function revealKey(on)") {
 		t.Error("the Google key field has no reveal checkbox")
+	}
+}
+
+// Ticket 117: the FileDO password dialog is no <form>, and a typed type=password field that leaves
+// the DOM before a request is a login signal to the browser's password manager. The field is drawn
+// as a masked text input instead; losing either half would expose the password on screen or offer it
+// to the browser profile.
+func TestFileDOPasswordFieldIsMaskedButNotAPasswordField(t *testing.T) {
+	if !regexp.MustCompile(`\.dlg-secret input \{[^}]*-webkit-text-security: disc;`).MatchString(uiHTML) {
+		t.Error("the FileDO password field lost its CSS mask (-webkit-text-security)")
+	}
+	open := strings.Index(uiHTML, "secretInput = document.createElement('input');")
+	if open < 0 {
+		t.Fatal("the FileDO password field is no longer built in openDialog")
+	}
+	build := uiHTML[open:]
+	build = build[:strings.Index(build, "const note =")]
+	if strings.Contains(build, "'password'") {
+		t.Error("the FileDO password field is a type=password input again - the browser may offer to save it")
+	}
+	for _, want := range []string{"secretInput.type = 'text';", "secretInput.autocomplete = 'off';", "secretInput.autocapitalize = 'off';", "secretInput.spellcheck = false;"} {
+		if !strings.Contains(build, want) {
+			t.Errorf("the FileDO password field lost %q", want)
+		}
 	}
 }
 
@@ -498,18 +560,33 @@ func TestUnitsSitNextToTheValues(t *testing.T) {
 	}
 }
 
-// APP-SETTINGS rule 12: About carries the version, the licence, the support bundle and the
-// privacy policy link.
+// SETTINGS-NAVIGATION 3.3 / APP-SETTINGS rule 12: About is the last page and carries the whole set - the
+// description, the running version, the licence and privacy pages, help, the product site, support and
+// contact, the user-initiated diagnostic export, the update information, the repository, the index of
+// the program's resources and the related products.
 func TestAboutCarriesLicenceAndPrivacy(t *testing.T) {
-	about := uiHTML[strings.Index(uiHTML, `id="aboutSection"`):]
+	about := uiHTML[strings.Index(uiHTML, `id="page-about"`):]
 	if about == "" {
-		t.Fatal("the About section is gone")
+		t.Fatal("the About page is gone")
+	}
+	if strings.Index(uiHTML, `data-page="about"`) < strings.Index(uiHTML, `data-page="advanced"`) {
+		t.Error("About is not the last rail destination")
 	}
 	for _, want := range []string{
+		`data-i18n="appPurpose"`,
 		`data-i18n="aboutLicence"`,
+		`data-i18n="aboutLicenceLink"`,
 		`data-i18n="aboutPrivacy"`,
 		"privacy.html",
+		`data-help-open="index"`,
+		`data-i18n="aboutSite"`,
+		`id="aboutMail"`,
 		`id="btnSendLogs"`,
+		`id="btnUpdateCheck"`,
+		"releases/latest",
+		`data-i18n="aboutRepo"`,
+		`id="resTable"`,
+		`id="relTable"`,
 		`id="aboutVer"`,
 	} {
 		if !strings.Contains(about, want) {

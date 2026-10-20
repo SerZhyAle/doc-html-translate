@@ -66,6 +66,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
+. (Join-Path $PSScriptRoot 'scripts/lib/gobuildtags.ps1')
 
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments)][string[]]$GitArgs)

@@ -1,0 +1,33 @@
+/* ocr.css - the standalone image-OCR page: a status bar over the recognized picture. The colours come from the
+   shared chrome palette, the sizes from ui-sizing.css and the one button from ui-components.css. This page
+   declares no `lang` of its own for the chrome: ocr.js sets the document's language to the OCR language, so
+   the browser offers the right translation. */
+#status {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--gap) var(--pad);
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  border-bottom: 1px solid var(--border);
+}
+#status.done { display: none; }
+#progress-bar {
+  height: calc(4px * var(--s));
+  width: 0;
+  background: var(--accent);
+  border-radius: calc(2px * var(--s));
+  flex: 0 0 calc(140px * var(--s));
+  transition: width 0.2s;
+  align-self: center;
+}
+#status-text { flex: 1 1 auto; }
+main#ocr-mount { display: block; max-width: 1100px; margin: calc(16px * var(--s)) auto; padding: 0 calc(12px * var(--s)); }
+.ocr-hint { padding: calc(24px * var(--s)); text-align: center; color: var(--text-muted); }
+.ocr-hint p { max-width: 62ch; margin: 0 auto var(--gap-group); line-height: 1.5; }
+@media (forced-colors: active) {
+  #progress-bar { background: Highlight; }
+}

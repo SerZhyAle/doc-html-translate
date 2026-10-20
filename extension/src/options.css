@@ -1,0 +1,142 @@
+/* options.css - the options page's shell and page layouts (SETTINGS-NAVIGATION 2.0): a start-side rail of
+   pages and a content pane that shows one page. The components (buttons, options, groups, the dialog) are
+   ui-components.css; the sizes and colours are ui-sizing.css. The structure follows the desktop launcher's
+   (cmd/doc-html-ui/ui.html); docs/PARITY.md "Extension interface (ticket 119, slice X1)" lists what differs. */
+html, body { height: 100%; }
+/* The window is the frame: the page itself never scrolls. The pane scrolls one page at a time, so the rail
+   stays where it is while a long page is read. */
+body { overflow: hidden; }
+/* .win is the one container the layout query measures: em here is the pane's own text size, so the
+   breakpoint scales with the interface size and the text enlargement (a large interface folds the rail into
+   its drawer sooner, which is what keeps the content readable). */
+.win {
+  container: win / inline-size;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(12px * var(--s)) calc(16px * var(--s)) calc(16px * var(--s));
+  position: relative;
+}
+.head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--gap) calc(10px * var(--s)); margin-bottom: var(--gap); }
+h1 { margin: 0; font-size: var(--fs-title); font-weight: 600; letter-spacing: 0.02em; }
+.ver { font-size: var(--fs-note); color: var(--text-muted); }
+.shell { display: flex; flex: 1 1 auto; min-height: 0; gap: var(--gap-group); position: relative; }
+
+/* SETTINGS-NAVIGATION 2 rule 1-3 and 7: one vertical page menu at the reading start, one level, a short name
+   and a glyph each, one monochrome glyph treatment for the whole menu. The row is a navigation target, not a
+   command button: its hit area and selected face run the whole row. Selection is a face, a heavier weight and
+   an inline-start bar - never colour alone. */
+.rail { flex: 0 0 auto; width: max-content; min-width: calc(148px * var(--s)); max-width: calc(236px * var(--s)); overflow-y: auto; }
+.rail-list { display: flex; flex-direction: column; gap: calc(2px * var(--s)); }
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  width: 100%;
+  min-height: var(--tgt);
+  padding: calc(4px * var(--s)) var(--pad);
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: var(--fs);
+  text-align: start;
+  justify-content: flex-start;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.rail-item:hover { background: var(--control-hover); }
+.rail-item:active { background: var(--control-pressed); }
+.rail-item[aria-selected="true"] {
+  background: var(--accent-soft);
+  font-weight: 700;
+  box-shadow: inset calc(3px * var(--s)) 0 0 var(--accent);
+}
+:root[dir="rtl"] .rail-item[aria-selected="true"] { box-shadow: inset calc(-3px * var(--s)) 0 0 var(--accent); }
+.rail-item > span:last-child { min-width: 0; }
+.rail-toggle { display: none; }
+.rail-scrim { display: none; }
+.pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  container: pane / inline-size;
+  /* The focus ring (2px plus its 2px offset) overflows every full-width field and edge button and the pane
+     clips what overflows its padding box; the padding gives the ring room and the equal negative margin
+     keeps the content where it was. */
+  padding: 4px;
+  margin: -4px;
+}
+.page[hidden] { display: none; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--gap) var(--gap-group); margin-bottom: var(--gap-group); }
+.page-title { flex: 1 1 auto; min-width: 0; }
+h2 { margin: 0; font-size: var(--fs-title); font-weight: 600; letter-spacing: 0.01em; }
+.page-title .hint { margin-top: calc(2px * var(--s)); }
+.stitle { margin: var(--gap-group) 0 var(--gap); font-size: var(--fs-note); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.pane .field > select { min-width: min(100%, 14em); }
+.pane .field .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); }
+.saved { color: var(--text-primary); font-size: var(--fs-note); opacity: 0; transition: opacity 0.2s; }
+.saved.show { opacity: 1; }
+
+/* The site lists: one row per site, the name and its Remove button. */
+ul.hosts { list-style: none; margin: 0; padding: 0; }
+ul.hosts li { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap); min-height: var(--tgt); }
+ul.hosts li > span { flex: 1 1 8em; min-width: 0; overflow-wrap: anywhere; }
+ul.hosts li.none { color: var(--text-muted); }
+
+
+.sep { margin-top: var(--gap-group); }
+.hint-gap { margin-top: var(--gap); }
+.hint.flush { margin-top: 0; }
+#settings-status { min-height: 1.4em; }
+#settings-status.error { color: var(--danger); font-weight: 600; }
+
+/* About: label/value lines, link rows and the resource and related-product tables. */
+.about-desc { margin: 0 0 var(--gap); }
+.about-row { font-size: var(--fs-note); color: var(--text-muted); display: flex; flex-wrap: wrap; align-items: baseline; gap: calc(4px * var(--s)) calc(6px * var(--s)); margin: calc(4px * var(--s)) 0; }
+.about-row code { color: var(--text-primary); }
+.about-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap-group); margin: var(--gap) 0; padding: 0; list-style: none; }
+.about-links a { text-decoration: none; }
+.about-links a:hover, .res-table a:hover, .rel-table a:hover { text-decoration: underline; }
+.about-links .label { color: var(--text-muted); font-size: var(--fs-note); }
+.about-links a, .res-table a, .rel-table a { min-height: var(--tgt); display: inline-flex; align-items: center; gap: calc(4px * var(--s)); }
+.res-table, .rel-table { display: grid; gap: calc(4px * var(--s)) var(--gap-group); font-size: var(--fs-note); align-items: center; }
+.res-table { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+.rel-table { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+.res-table > .res-name, .rel-table > .res-name { color: var(--text-primary); font-weight: 600; }
+.res-table > .res-what, .rel-table > .res-what { color: var(--text-muted); }
+.res-table a, .rel-table a { color: var(--link); }
+@container pane (max-width: 40em) {
+  .res-table, .rel-table { grid-template-columns: minmax(0, 1fr); }
+  .res-table > .res-name, .rel-table > .res-name { margin-top: var(--gap); }
+}
+
+/* SETTINGS-NAVIGATION 2 rule 6: when the window cannot hold the rail and the pane accessibly, the same menu
+   moves into a start-side drawer opened from the header's Pages button; choosing a page closes it and the
+   selected page and its viewport are exactly where they were. The breakpoint is 60em of the window's own
+   text size (840 CSS px ordinary, wider as the interface grows). */
+@container win (max-width: 60em) {
+  .rail-toggle { display: inline-flex; }
+  .rail {
+    position: absolute;
+    z-index: 30;
+    inset-block: 0;
+    inset-inline-start: 0;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: var(--gap);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    visibility: hidden;
+  }
+  .rail.open { visibility: visible; }
+  .rail.open ~ .rail-scrim { display: block; position: absolute; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.35); }
+}
+
+@media (forced-colors: active) {
+  .rail-item[aria-selected="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .rail-item[aria-selected="true"] .glyph { color: HighlightText; }
+  .rail { border: 1px solid CanvasText; }
+}

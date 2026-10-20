@@ -1,0 +1,286 @@
+/* ui-components.css - the shared components of the extension's own pages (the options page, the toolbar
+   popup, the image-OCR page): BUTTONS 2.0, BOOLEAN-OPTION 2.0, COLLAPSIBLE-GROUP 1.1 and the product
+   dialog, drawn with the tokens of ui-sizing.css. The rules follow the desktop launcher's
+   (cmd/doc-html-ui/ui.html), the reference implementation, with the names and the palette of this
+   edition; docs/PARITY.md "Extension interface (ticket 119, slice X1)" records the differences.
+   Logical properties throughout, so a right-to-left interface mirrors on its own. */
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: var(--fs);
+  line-height: 1.4;
+}
+/* The first frame is held back until the saved language, theme, size and page are applied
+   (SETTINGS-NAVIGATION 5 rule 1); ui-boot.js reveals it anyway if the settings never arrive. */
+html[data-boot] body { visibility: hidden; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--link); }
+code { font-family: "Cascadia Code", Consolas, monospace; font-size: 0.92em; background: var(--control); padding: 1px 4px; border-radius: calc(3px * var(--s)); }
+.hint { font-size: var(--fs-note); color: var(--text-muted); margin: calc(4px * var(--s)) 0 0; line-height: 1.4; }
+.hint.fail { color: var(--danger); }
+
+/* Vocabulary glyphs (glyphs.js): the colour of the text around them, the tier of the profile. */
+.glyph { display: block; flex: none; width: var(--glyph); height: var(--glyph); }
+[data-glyph] { display: inline-flex; flex: none; }
+:root[dir="rtl"] .glyph-mirror { transform: scaleX(-1); }
+/* A link that leaves the extension's own pages carries the external marker (BUTTONS 2 rule 3). */
+a.ext { display: inline-flex; align-items: center; gap: calc(4px * var(--s)); min-height: var(--tgt); }
+
+/* BUTTONS 2.0. One command button: a rectangle with the baseline corner, a neutral face, content width plus
+   padding (never stretched, never a percentage), the glyph before the caption, the caption whole - a button
+   wraps to the next row before its caption does, and only a button that cannot fit alone wraps its caption
+   and grows. Ranks are separate from behaviour: ordinary (the neutral face), secondary (a transparent face),
+   primary (the accent, one per task surface) and destructive (the danger face of a confirmation's acting
+   button). */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  min-height: var(--tgt);
+  min-width: var(--tgt);
+  max-width: 100%;
+  margin: 0;
+  padding: calc(5px * var(--s)) var(--pad);
+  background: var(--control);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--fs);
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+button:hover { background: var(--control-hover); }
+button:active { background: var(--control-pressed); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+button:disabled:hover { background: var(--control); }
+button.secondary { background: transparent; }
+button.secondary:hover { background: var(--control-hover); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+button.danger { background: var(--danger); color: var(--danger-ink); border-color: var(--danger); }
+button.danger:hover { background: var(--danger); filter: brightness(1.12); }
+/* A command panel is a wrapping flex row: whole buttons wrap to the next line, widths stay their content
+   widths and spare space stays empty, and every button of one line takes the height of that line's tallest
+   member (flex-line stretch), recomputed by the engine after every wrap. */
+.btn-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap); }
+.btn-row > * { flex: 0 0 auto; }
+/* A stateful button reserves its widest known state (BUTTONS 3 rule 3): the caption cell also holds an
+   invisible copy of the longest alternative caption (data-reserve), so Download and Downloading 100% share
+   one width at any size, language and font without a script measuring it. The copy is out of the
+   accessibility tree (visibility: hidden, empty alternative text) and adds no height. */
+.cap { display: inline-grid; }
+.cap[data-reserve]::after {
+  content: attr(data-reserve);
+  content: attr(data-reserve) / "";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Editors keep the platform's own arrow and popup but take the target height; they are not buttons
+   (BUTTONS 6). */
+select, input[type="text"] {
+  min-height: var(--tgt);
+  padding: calc(4px * var(--s)) calc(10px * var(--s));
+  background: var(--control);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: var(--fs);
+}
+select { cursor: pointer; max-width: 100%; }
+select option { background: var(--control); color: var(--text-primary); }
+select:disabled { opacity: 0.6; cursor: not-allowed; }
+/* A labelled editor: the caption, the editor and its note, one topic of a page. */
+.field { margin: var(--gap-group) 0; }
+.field > label, .field > .label { display: block; font-weight: 600; margin-bottom: calc(4px * var(--s)); }
+/* An exclusive choice (the OCR language list): a native radio at the box size inside a row whose label is
+   the target. Not a command and not a boolean option. */
+.choice { display: flex; align-items: center; gap: var(--gap); min-height: var(--tgt); cursor: pointer; }
+.choice input { accent-color: var(--accent); width: var(--box); height: var(--box); margin: 0; flex: none; cursor: pointer; }
+
+/* The OCR language list both the popup and the options page draw (ocr-lang-ui.js): a row is a radio choice,
+   or a name and its Download button; a failed download reports inline beside its own Retry. */
+.ocr-lang { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap); min-height: var(--tgt); }
+/* The name takes a column of its own, so the Download buttons line up one gap after the names instead of
+   being pinned to the far end of a wide row (BUTTONS 4 rule 2). */
+.ocr-lang > .choice, .ocr-lang > .name { flex: 0 1 7.5em; min-width: 0; }
+.ocr-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); margin: 0 0 var(--gap); color: var(--text-primary); font-size: var(--fs-note); }
+.ocr-error > span { flex: 1 1 8em; }
+/* BOOLEAN-OPTION 2.0. One option: a visible square checkbox at the reading start, one text cell at its end -
+   a heading row (optional meaning glyph, the caption, optional help button) and the explanation below. The
+   checkbox is the native input drawn as a vector at the box size, its hit area extended to the target size
+   by padding that a negative margin takes back, so the box sits on the first heading line and no target
+   overlaps its neighbour. A click on the checkbox, the caption or the glyph toggles once; the explanation
+   and the help button never do. */
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19em), 1fr)); gap: var(--gap) var(--gap-group); margin: calc(4px * var(--s)) 0; }
+.opt { display: grid; grid-template-columns: var(--box) minmax(0, 1fr); column-gap: var(--gap); align-items: start; margin: var(--gap) 0; }
+.opts > .opt { margin: 0; }
+.opt-box {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: content-box;
+  position: relative;
+  width: var(--box);
+  height: var(--box);
+  padding: calc((var(--tgt) - var(--box)) / 2);
+  margin: 0 calc((var(--tgt) - var(--box)) / -2);
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.opt-box::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--tgt) - var(--box)) / 2);
+  border: calc(2px * var(--s)) solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--control);
+}
+.opt-box:checked::before { background: var(--accent); border-color: var(--accent); }
+.opt-box:checked::after {
+  content: "";
+  position: absolute;
+  inset: calc((var(--tgt) - var(--box)) / 2);
+  background-color: var(--accent-ink);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M9%2016.17L4.83%2012l-1.42%201.41L9%2019%2021%207l-1.41-1.41z%27%2F%3E%3C%2Fsvg%3E") center / 82% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M9%2016.17L4.83%2012l-1.42%201.41L9%2019%2021%207l-1.41-1.41z%27%2F%3E%3C%2Fsvg%3E") center / 82% no-repeat;
+}
+.opt-box:disabled { cursor: not-allowed; }
+.opt-box:disabled::before { border-color: var(--text-disabled); border-style: dashed; background: transparent; }
+.opt-box:disabled:checked::before { background: var(--text-disabled); border-style: solid; }
+.opt-cell { min-width: 0; }
+.opt-headrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap); min-height: var(--tgt); }
+.opt-name { display: inline-flex; align-items: center; gap: var(--gap); min-height: var(--tgt); font-size: var(--fs); cursor: pointer; overflow-wrap: anywhere; }
+.opt-box:disabled ~ .opt-cell .opt-name { color: var(--text-muted); cursor: not-allowed; }
+.opt-expl { margin: calc(-4px * var(--s)) 0 calc(4px * var(--s)); font-size: var(--fs-note); color: var(--text-muted); line-height: 1.4; overflow-wrap: anywhere; }
+.opt-extra { margin-top: calc(4px * var(--s)); }
+/* Option-local help: the app.help button follows the name by one gap; a short non-modal summary shows on hover
+   or focus and stays open while the pointer is inside it; a click or Enter opens the full explanation, which
+   closes with its Close button, Escape or a click outside. Both come from one authored string and neither
+   toggles the option. */
+.opt-help-wrap { position: relative; display: inline-flex; }
+.opt-help { padding: 0; width: var(--tgt); height: var(--tgt); background: transparent; border-color: transparent; }
+.opt-pop {
+  position: absolute;
+  z-index: 20;
+  inset-inline-start: 0;
+  inset-block-start: 100%;
+  width: max-content;
+  max-width: min(30em, calc(100cqw - 24px));
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: var(--gap) var(--pad);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  font-size: var(--fs-note);
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.opt-pop[hidden] { display: none; }
+.opt-pop .btn-row { margin-top: var(--gap); }
+
+/* COLLAPSIBLE-GROUP 1.1. A group answers one topic; its header is a distinct face with a heavier weight, a
+   vector state triangle at the reading start (right when folded, down when open; leftward when folded in a
+   right-to-left interface) and the whole header is the one toggle target. The body opens in normal flow below
+   it, and nothing resizes the window. The triangle is drawn by a mask, never typed as an arrow the font could
+   replace. */
+.group { border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface-raised); margin: var(--gap) 0; }
+.group > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  min-height: var(--tgt);
+  padding: calc(4px * var(--s)) var(--pad);
+  background: var(--surface-header);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: var(--fs);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  overflow-wrap: anywhere;
+}
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary:hover { background: var(--surface-header-hover); }
+.group[open] > summary { border-end-start-radius: 0; border-end-end-radius: 0; border-bottom: 1px solid var(--border-strong); }
+.group > summary::before {
+  content: "";
+  flex: none;
+  width: var(--glyph);
+  height: var(--glyph);
+  background-color: var(--text-primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+}
+:root[dir="rtl"] .group > summary::before { transform: scaleX(-1); }
+.group[open] > summary::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E");
+}
+:root[dir="rtl"] .group[open] > summary::before { transform: none; }
+.group > .body { padding: var(--gap) calc(12px * var(--s)) calc(12px * var(--s)); }
+
+/* The product dialog (BUTTONS 4 rules 4 and 5): modal, centred, sized by its text. The answers read Cancel
+   first, then the acting one; the safe answer holds the focus; the acting button of an irreversible
+   confirmation alone takes the danger face. */
+dialog.dlg {
+  margin: auto;
+  max-width: min(calc(560px * var(--s)), calc(100vw - 32px));
+  min-width: min(calc(340px * var(--s)), calc(100vw - 32px));
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: calc(9px * var(--s));
+  padding: calc(18px * var(--s)) calc(20px * var(--s)) calc(16px * var(--s));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  font-size: var(--fs);
+}
+dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dlg h2 { margin: 0 0 var(--gap); font-size: calc(16px * var(--s) * var(--t)); font-weight: 600; }
+.dlg p { margin: 0; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dlg-actions { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: flex-end; gap: var(--gap); margin-top: calc(16px * var(--s)); }
+.dlg-actions > button { flex: 0 0 auto; }
+.dlg-actions button.danger .glyph { color: var(--danger-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Forced colours repaint a background with Canvas, which would leave a mask-drawn marker or a checkbox mark
+   Canvas-on-Canvas - invisible. They opt out and take system colours instead; the inline glyphs fill with
+   currentColor, which forced colours already resolve. The visible focus ring stays (a system colour). */
+@media (forced-colors: active) {
+  .group > summary::before { forced-color-adjust: none; background-color: CanvasText; }
+  .opt-box:checked::after { forced-color-adjust: none; background-color: CanvasText; }
+  .opt-box::before { border-color: CanvasText; background: Canvas; }
+  .opt-box:checked::before { border-color: CanvasText; background: Canvas; }
+  .opt-box:disabled::before, .opt-box:disabled:checked::before { border-color: GrayText; }
+  button .glyph { forced-color-adjust: none; color: ButtonText; }
+  /* The accent and danger faces are replaced by the system face, and a shadow is dropped, so a rank names its
+     system colours itself: the primary takes the selection pair, the destructive acting button the inverted
+     button pair. */
+  button.primary { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
+  button.primary .glyph { color: HighlightText; }
+  button.danger { forced-color-adjust: none; background: ButtonText; color: ButtonFace; border-color: ButtonText; }
+  button.danger .glyph { color: ButtonFace; }
+  :focus-visible { outline-color: Highlight; }
+}
+@media (prefers-contrast: more) {
+  button, select, input[type="text"], .group { border-color: currentColor; }
+}

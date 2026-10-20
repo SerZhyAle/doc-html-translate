@@ -13,10 +13,11 @@ import { spawnSync } from "node:child_process";
 
 // reuseArgv is the argument list of `go run ./tools/ocrlab reuse` for one scene. The engine and
 // browser are what only this producer knows: the key compares them with what the earlier run
-// recorded, restricted to the language packs the scene reads.
+// recorded, restricted to the language packs the scene reads. The lab links the app's pipeline, so
+// it builds with the nodynamic tag like every go command of the repo (ticket 115).
 export function reuseArgv({ outDir, sceneId, engine, browser, reuseFrom }) {
   return [
-    "run", "./tools/ocrlab", "reuse",
+    "run", "-tags", "nodynamic", "./tools/ocrlab", "reuse",
     "-run", outDir,
     "-edition", "extension",
     "-scene", sceneId,

@@ -147,16 +147,19 @@ const singleContentsCSS = `<style id="dht-contents-css">
      the palette on purpose - neutral overlays that carry no text, so one value reads on all four
      reading themes while the words keep their themed colours. */
   .dht-contents[hidden] { display: none; }
-  .dht-contents { position: fixed; z-index: 9998; inset-block-start: 3.5rem; inset-inline-start: 0; width: min(20rem, calc(100vw - 1rem)); max-height: calc(100dvh - 4rem); overflow: auto; box-sizing: border-box; padding: .75rem 1rem; background: var(--dht-bar-bg); color: var(--dht-bar-fg); border: 1px solid var(--dht-border); box-shadow: 0 6px 20px #0003; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
-  .dht-contents-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .dht-contents-head button { color: inherit; background: transparent; border: 1px solid var(--dht-border); border-radius: 4px; font: inherit; padding: .25em .7em; cursor: pointer; }
+  /* The panel hangs under the sticky bar at the bar's real height (--dht-bar-h, set by the reader script):
+     the bar wraps onto several lines in a narrow window, and a fixed offset would leave it covering the
+     panel's head. */
+  .dht-contents { position: fixed; z-index: 9998; inset-block-start: var(--dht-bar-h, 3.5rem); inset-inline-start: 0; width: min(20rem, calc(100vw - 1rem)); max-height: calc(100dvh - var(--dht-bar-h, 3.5rem) - .5rem); overflow: auto; box-sizing: border-box; padding: .75rem 1rem; background: var(--dht-bar-bg); color: var(--dht-bar-fg); border: 1px solid var(--dht-border); box-shadow: 0 6px 20px #0003; font: var(--dht-fs, 14px)/1.5 "Segoe UI", system-ui, sans-serif; }
+  /* The Close word is a command button of the chrome (chromeUICSS). */
+  .dht-contents-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dht-gap, 1rem); }
   .dht-contents ul { list-style: none; padding-inline-start: 1rem; margin: .3rem 0; }
   .dht-contents > ul { padding-inline-start: 0; }
   .dht-contents li { margin: .2rem 0; }
   .dht-contents a { color: inherit; display: inline-block; padding: .2rem .4rem; border-radius: 4px; text-decoration: none; }
   .dht-contents a:hover, .dht-contents a[aria-current="location"] { color: var(--dht-accent); background: rgba(127,127,127,.14); }
   .dht-contents :focus-visible, #dht-contents-button:focus-visible { outline: 2px solid var(--dht-accent); outline-offset: 2px; }
-  main.dht-single [id] { scroll-margin-top: 4rem; }
+  main.dht-single [id] { scroll-margin-top: calc(var(--dht-bar-h, 3.5rem) + .5rem); }
 </style>
 `
 

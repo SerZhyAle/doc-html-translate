@@ -36,6 +36,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\.."))
+. (Join-Path $RepoRoot "scripts/lib/gobuildtags.ps1")
 $OutDir   = [IO.Path]::GetFullPath($OutDir)
 $Work     = Join-Path $RepoRoot "temp\demo"
 

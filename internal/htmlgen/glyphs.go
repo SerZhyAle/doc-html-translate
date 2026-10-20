@@ -25,13 +25,15 @@ var Glyphs = map[string]string{
 	"nav.go-to-page":           "M7 15H5.5v-4.5H4V9h3v6zm6.5-1.5h-3v-1h2c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1H9v1.5h3v1h-2c-.55 0-1 .45-1 1V15h4.5v-1.5zm6 .5v-4c0-.55-.45-1-1-1H15v1.5h3v1h-2v1h2v1h-3V15h3.5c.55 0 1-.45 1-1z",
 	"nav.expand":               "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z",
 	"nav.collapse":             "M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z",
+	"nav.open-external":        "M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z",
+	"action.search":            "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
 	"feature.continue-reading": "M21,5c-1.11,-0.35 -2.33,-0.5 -3.5,-0.5 -1.95,0 -4.05,0.4 -5.5,1.5 -1.45,-1.1 -3.55,-1.5 -5.5,-1.5S2.45,4.9 1,6v14.65c0,0.25 0.25,0.5 0.5,0.5 0.1,0 0.15,-0.05 0.25,-0.05C3.1,20.45 5.05,20 6.5,20c1.95,0 4.05,0.4 5.5,1.5 1.35,-0.85 3.8,-1.5 5.5,-1.5 1.65,0 3.35,0.3 4.75,1.05 0.1,0.05 0.15,0.05 0.25,0.05 0.25,0 0.5,-0.25 0.5,-0.5V6c-0.6,-0.45 -1.25,-0.75 -2,-1zM10,17.5l-3,-2v-7l3,2v7zM21,17.5l-3,2v-7l3,-2v7z",
 }
 
 // glyphSVG returns the inline drawing of a vocabulary glyph for the chrome. It is decorative
 // (aria-hidden): the control around it carries the meaning's name as text or as aria-label
 // (ICON-RENDER rule 8). The colour is the surrounding text colour (ICON-RENDER rule 2), and the
-// size is 1.15em of the chrome's own font, which lands on the 16 px tier in the 14 px bar.
+// size is the chrome's glyph token --dht-glyph (chromeUICSS): the 16 px tier, 20 px under a coarse pointer.
 //
 // Inline SVG rather than a stylesheet mask: a converted book is a folder of self-contained
 // pages opened from file://, and one drawing costs about 150 bytes a page.

@@ -88,24 +88,41 @@ func searchableNodes(root *gohtml.Node) ([]string, []bool) {
 }
 
 const searchCSS = `<style id="dht-search-css">
-.dht-search-panel{position:fixed;z-index:10001;inset-block-start:3.5em;inset-inline-end:1em;width:min(30em,calc(100vw - 2em));max-height:75vh;overflow:auto;padding:1em;background:var(--dht-bar-bg);color:var(--dht-bar-fg);border:1px solid var(--dht-border);box-shadow:0 8px 24px #0005;font:14px/1.4 system-ui,sans-serif}
-.dht-search-panel[hidden]{display:none}.dht-search-panel input{width:100%;box-sizing:border-box;padding:.5em;background:var(--dht-bg);color:var(--dht-fg);border:1px solid var(--dht-border)}
-.dht-search-panel ol{padding-inline-start:1.5em}.dht-search-panel li{margin:.4em 0}.dht-search-panel button{cursor:pointer}.dht-search-panel .dht-result{background:none;border:0;color:var(--dht-link);text-align:start;font:inherit}
-/* The close button is a bare word at the panel's corner; padding puts it over the 24px
-   target-size floor (WCAG 2.2, 2.5.8). */
-#dht-search-close{padding:.25em .7em}
+/* Under the sticky bar the panel is anchored to the bar's own bottom edge (below), so a bar that wraps onto
+   several lines, or one that the page's own margin pushes down at the top of the page, never covers it. The
+   index toolbar is not sticky and keeps a fixed place. (100% resolves against the bar's padding box: the 1px is
+   its border, the half gap a little air.) Its controls are the chrome's (chromeUICSS): the Close
+   word is a button, the scope a native select with the target height; the panel is a wrapping row. */
+.dht-search-panel{position:fixed;z-index:10001;inset-block-start:3.5em;inset-inline-end:1em;width:min(30em,calc(100vw - 2em));max-height:75vh;overflow:auto;box-sizing:border-box;padding:1em;background:var(--dht-bar-bg);color:var(--dht-bar-fg);border:1px solid var(--dht-border);box-shadow:0 8px 24px #0005;font:var(--dht-fs,14px)/1.4 system-ui,sans-serif}
+.dht-navbar .dht-search-panel{position:absolute;inset-block-start:calc(100% + 1px + var(--dht-gap) / 2);width:min(30em,calc(100% - 2em))}
+.dht-search-panel[hidden]{display:none}
+.dht-search-panel:not([hidden]){display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--dht-gap)}
+.dht-search-panel label{align-self:center}
+.dht-search-panel input{flex:1 1 100%;min-width:0;box-sizing:border-box;min-height:var(--dht-tgt);padding:0 var(--dht-gap);background:var(--dht-bg);color:var(--dht-fg);border:1px solid var(--dht-border);border-radius:var(--dht-radius);font:inherit}
+.dht-search-panel #dht-search-status,.dht-search-panel ol{flex:1 1 100%;margin:0}
+.dht-search-panel ol{padding-inline-start:1.5em}.dht-search-panel li{margin:0}.dht-search-panel button{cursor:pointer}
+/* A result is a row of a list, not a command: it keeps its link look, fills its row (the number sits on its first
+   line) and takes the target height. */
+.dht-search-panel .dht-result{display:block;width:100%;min-height:var(--dht-tgt);padding:0 .25em;background:none;border:0;color:var(--dht-link);text-align:start;font:inherit}
 /* APP-STYLE section 5: search hits are a deliberate out-of-theme surface carrying their own
    dark text - a highlighter yellow, the current hit orange with a blue ring - so a hit looks
    the same in every reading theme. The panel's black shadow is a neutral overlay with no text. */
 mark.dht-search-hit{background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00}mark.dht-search-current{background:#ff8b46!important;color:#191919!important;outline:3px solid #3156c9}
 </style>`
 
+// searchShortcutLabel is the chord the search button's tooltip names (BUTTONS 2.0 section 4 rule 7:
+// show supported shortcuts in tooltips). The binding itself is searchRuntime's INPUT-PARITY chord;
+// the runtime renames it for macOS.
+const searchShortcutLabel = "Ctrl+F"
+
 func searchControlsHTML() string {
 	labels := []string{"Search", "Search text", "Scope", "This page", "Whole book", "Close"}
 	for i, label := range labels {
 		labels[i] = htmlEscape(i18n.S(label))
 	}
-	return fmt.Sprintf(`<button id="dht-search-button" class="dht-btn" type="button" aria-controls="dht-search-panel" aria-expanded="false" title="%[1]s">%[1]s</button><section id="dht-search-panel" class="dht-search-panel" lang="%[7]s"%[8]s hidden><label for="dht-search-input">%[2]s</label><input id="dht-search-input" type="search" autocomplete="off"><label for="dht-search-scope">%[3]s</label><select id="dht-search-scope"><option value="page">%[4]s</option><option value="book">%[5]s</option></select><button id="dht-search-close" type="button" aria-label="%[6]s">%[6]s</button><p id="dht-search-status" role="status" aria-live="polite"></p><ol id="dht-search-results"></ol></section>`, labels[0], labels[1], labels[2], labels[3], labels[4], labels[5], i18n.Language(), chromeDirAttr())
+	// The Search button is a disclosure (aria-expanded) that keeps its action glyph, action.search,
+	// before its caption; the open state shows through the selected face (chromeUICSS).
+	return fmt.Sprintf(`<button id="dht-search-button" class="dht-btn" type="button" aria-controls="dht-search-panel" aria-expanded="false" title="%[1]s (%[9]s)">%[10]s %[1]s</button><section id="dht-search-panel" class="dht-search-panel" lang="%[7]s"%[8]s hidden><label for="dht-search-input">%[2]s</label><input id="dht-search-input" type="search" autocomplete="off"><label for="dht-search-scope">%[3]s</label><select id="dht-search-scope"><option value="page">%[4]s</option><option value="book">%[5]s</option></select><button id="dht-search-close" type="button" aria-label="%[6]s">%[6]s</button><p id="dht-search-status" role="status" aria-live="polite"></p><ol id="dht-search-results"></ol></section>`, labels[0], labels[1], labels[2], labels[3], labels[4], labels[5], i18n.Language(), chromeDirAttr(), searchShortcutLabel, glyphSVG("action.search"))
 }
 
 func htmlEscape(s string) string {
@@ -198,6 +215,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!panel.hidd
 // Pressed again inside the field it passes through, so the browser's own find bar stays one press
 // away. A non-Latin layout types another letter on that key, so there its position stands in.
 var mac=/Mac|iP(hone|ad|od)/.test(navigator.platform||'');
+if(mac)button.title=button.title.replace('Ctrl+F','Cmd+F');
 document.addEventListener('keydown',function(e){
  if(e.altKey||e.shiftKey||(mac?!e.metaKey||e.ctrlKey:!e.ctrlKey||e.metaKey))return;
  if(!(e.key==='f'||e.key==='F'||(e.code==='KeyF'&&!/^[a-z]$/i.test(e.key))))return;

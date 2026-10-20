@@ -64,10 +64,15 @@ func handleAlive(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// shouldExit reports whether the page is gone: no stream, no work, no ping for the grace.
+// shouldExit reports whether the page is gone: no stream, no work, no ping for the grace. A help
+// page served a moment ago keeps the server up for its own, longer grace (help.go), so the help window
+// of a converter that has just closed still follows its links.
 func shouldExit(now time.Time) bool {
 	if activeRuns.Load() > 0 || aliveStreams.Load() > 0 {
 		lastPing.Store(now.Unix())
+		return false
+	}
+	if helpRecentlyServed(now) {
 		return false
 	}
 	return now.Unix()-lastPing.Load() > int64(aliveGrace/time.Second)

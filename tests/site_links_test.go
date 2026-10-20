@@ -9,6 +9,7 @@ package tests
 import (
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -133,10 +134,12 @@ func TestResolveSiteRef(t *testing.T) {
 	cases := []struct{ page, raw, file, frag string }{
 		{"index.html", "#get", "index.html", "get"},
 		{"index.html", "de/", "de/index.html", ""},
+		{"index.html", "?lang=ru", "index.html", ""},
 		{"index.html", "?l=ru", "index.html", ""},
 		{"docs.html", "./", "index.html", ""},
 		{"docs.html", "index.html#get", "index.html", "get"},
 		{"de/index.html", "../", "index.html", ""},
+		{"de/index.html", "../?lang=uk", "index.html", ""},
 		{"de/index.html", "../?l=uk", "index.html", ""},
 		{"de/index.html", "../fr/", "fr/index.html", ""},
 		{"de/index.html", "../assets/site.css", "assets/site.css", ""},
@@ -153,6 +156,77 @@ func TestResolveSiteRef(t *testing.T) {
 	for _, raw := range []string{"https://github.com/SerZhyAle/doc-html-translate", "mailto:sza@ukr.net"} {
 		if _, _, ok := resolveSiteRef("index.html", raw); ok {
 			t.Errorf("resolveSiteRef treats %q as internal", raw)
+		}
+	}
+}
+
+// languageQueryPages read the locale query in the head, before first paint: the pages that carry
+// their three languages in one file, and the 404 page, which does the same for any path it answers.
+func languageQueryPages() []string { return append(append([]string{}, inPageTrioPages...), "404.html") }
+
+// PAGE-STYLE 3.1 amendment 1: ?lang= is the canonical locale query, ?l= the legacy spelling a reader
+// still accepts, and a valid lang wins over l. The reader is a page-local script that never touches
+// sza-theme (TestSitePagesCarryTheCatalogResolver), so it is found by what it reads.
+func TestSitePagesReadTheLanguageQuery(t *testing.T) {
+	script := regexp.MustCompile(`(?s)<script>(.*?)</script>`)
+	for _, p := range languageQueryPages() {
+		src := readRepoFile(t, p)
+		var reader string
+		for _, m := range script.FindAllStringSubmatch(src[:strings.Index(src, "</head>")], -1) {
+			if strings.Contains(m[1], "location.search") {
+				reader = m[1]
+			}
+		}
+		lang := strings.Index(reader, "[?&]lang=(ru|uk|ua|en)")
+		legacy := strings.Index(reader, "[?&]l=(ru|uk|ua|en)")
+		if lang < 0 || legacy < 0 || lang > legacy {
+			t.Errorf("%s: the head query reader must try ?lang= first and ?l= second, over ru|uk|ua|en only: %q", p, reader)
+		}
+	}
+}
+
+// The addresses the site emits - hreflang, the language links of the landings, links between its own
+// pages, the sitemap - use the canonical spelling. The legacy one stays readable, not written.
+func TestSiteEmitsTheCanonicalLanguageQuery(t *testing.T) {
+	legacy := regexp.MustCompile(`[?&]l=[a-z]{2}\b`)
+	files := append(append([]string{}, languageQueryPages()...), sitePages()...)
+	files = append(files, "sitemap.xml")
+	seen := map[string]bool{}
+	for _, f := range files {
+		if seen[f] {
+			continue
+		}
+		seen[f] = true
+		if m := legacy.FindString(readRepoFile(t, strings.Split(f, "/")...)); m != "" {
+			t.Errorf("%s writes %q; the canonical spelling is ?lang= (docs/SITE_ADDRESSES.md, policy 6)", f, m)
+		}
+	}
+}
+
+// SITE-STRUCTURE 8.B: a page opened by ?lang= (or a page of one language) hands its language to the pages that carry
+// their languages in one file. assets/site.js names those pages in one pattern; a page added to the in-page set
+// without being named there would silently drop the visitor's language, so the two lists are held together.
+func TestSiteCarriesTheVisitorLanguageToEveryInPagePage(t *testing.T) {
+	js := readRepoFile(t, "assets", "site.js")
+	m := regexp.MustCompile(`var CARRY = /\^\(\?:([^)]*)\)`).FindStringSubmatch(js)
+	if m == nil {
+		t.Fatal("assets/site.js no longer declares the CARRY pattern of the pages that take the carried language")
+	}
+	named := map[string]bool{}
+	for _, alt := range strings.Split(m[1], "|") {
+		named[strings.ReplaceAll(alt, `\`, "")] = true
+	}
+	for _, p := range inPageTrioPages {
+		if !named[p] {
+			t.Errorf("assets/site.js CARRY does not name %s; a visitor on a ?lang= page would lose the language there", p)
+		}
+	}
+	if !named["./"] {
+		t.Error("assets/site.js CARRY does not name the landing address ./")
+	}
+	for _, p := range languageQueryPages() {
+		if !strings.Contains(readRepoFile(t, p), "'data-lang-src','query'") {
+			t.Errorf("%s: the head reader does not mark a query-selected language (data-lang-src), so site.js cannot carry it", p)
 		}
 	}
 }

@@ -44,6 +44,8 @@ match and the intentional differences live in [docs/PARITY.md](docs/PARITY.md), 
 ## Environment (this machine)
 
 - **PowerShell is the shell, and `go` is on PATH in PowerShell - not in the Bash tool.** Run Go via PowerShell.
+- **An ad-hoc go command needs `-tags nodynamic`** (or `$env:GOFLAGS = '-tags=nodynamic'` in the same call) once
+  it reaches `internal/jxl`; without it the compile stops on the guard (ticket 115, AGENTS.md "Pitfalls").
 - Prefer the `scripts/` flow over ad-hoc commands: `scripts/build.ps1`, `scripts/test.ps1`, `scripts/lint.ps1`,
   `scripts/check.ps1`.
 - **Line endings are settled, don't re-litigate them:** `.gitattributes` pins `*.go text eol=lf`, so `gofmt`

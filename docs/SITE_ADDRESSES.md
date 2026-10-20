@@ -27,8 +27,8 @@ Only addresses of this site are held addresses. A link out to another site, incl
 
 - a file that is not ignored carries an address of this site that its record does not list (a new holder,
   or a new address in an old one);
-- a listed address no longer answers: the file it names is not in the tree, its query is not `l=en|ru|uk`,
-  or the section it names is not an id of that page;
+- a listed address no longer answers: the file it names is not in the tree, its query is not
+  `lang=en|ru|uk` (or the legacy `l=` spelling), or the section it names is not an id of that page;
 - a listed holder is gone or no longer carries the address (the entry is stale);
 - an ignore matches no file, or has no reason.
 
@@ -49,8 +49,13 @@ writes the list.
 5. **The held list outlives the forwarder.** A forwarder is removed only when no listed holder carries the
    old address any more and a release has shipped without it; the winget and Store manifests of released
    versions are frozen, so their addresses stay answering for as long as those versions are installable.
-6. **The language query is part of the scheme.** `?l=ru` and `?l=uk` on a page that carries its languages
-   in-page; the per-language landings are folders (`de/`, `it/`, ..) with one page each. No holder builds an
-   address from a locale scheme today; one that starts to lists each address it can produce.
+6. **The language query is part of the scheme.** `?lang=ru` and `?lang=uk` are the canonical spelling on a
+   page that carries its languages in-page (`PAGE-STYLE` 3.1, amendment 1); the legacy `?l=ru` and `?l=uk`
+   keep answering, because a README or a released build may hold them (rule 1 above, `SITE-STRUCTURE` 8.D),
+   so the site never retires the reader. When both occur a valid `lang` wins, else a valid `l`; `uk` and
+   `ua` both select Ukrainian; a query selects only a language the page ships, so `lang=de` on a page with
+   no German is ignored. The per-language landings are folders (`de/`, `it/`, ..) with one page each. A
+   holder that starts to build an address from the scheme writes `lang` and lists each address it can
+   produce; the gate accepts both spellings, and an old holder keeps the spelling it was listed with.
 
 No forwarder exists today: every listed address answers with the page it meant.

@@ -15,7 +15,7 @@ import (
 )
 
 func TestIsImage(t *testing.T) {
-	for _, ext := range []string{".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff"} {
+	for _, ext := range []string{".png", ".jpg", ".jpeg", ".webp", ".jxl", ".gif", ".bmp", ".tif", ".tiff"} {
 		if !IsImage(ext) {
 			t.Errorf("IsImage(%q) = false, want true", ext)
 		}

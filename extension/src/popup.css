@@ -1,0 +1,17 @@
+/* popup.css - the toolbar popup: a task panel (not a settings surface, so no rail) that holds the one primary
+   command, the three switches people reach for most and the way to the full settings. The components are
+   ui-components.css and the sizes ui-sizing.css; docs/PARITY.md "Extension interface (ticket 119, slice X1)"
+   records the popup's decisions. */
+/* The width follows the text size, so a larger interface or larger text widens the panel instead of
+   squeezing it; a browser caps a popup at 800 CSS px, so the width never passes that. */
+body { width: min(22em, 780px); padding: calc(12px * var(--s)) calc(14px * var(--s)); }
+h1 { margin: 0 0 var(--gap); font-size: calc(15px * var(--s) * var(--t)); font-weight: 600; }
+.ver { color: var(--text-muted); font-size: var(--fs-note); font-weight: normal; }
+#tab-state { margin: 0 0 var(--gap); }
+.btn-row { margin: var(--gap) 0; }
+hr { border: 0; border-top: 1px solid var(--border); margin: var(--gap-group) 0; }
+.host { display: block; color: var(--text-muted); font-size: var(--fs-note); font-weight: normal; overflow-wrap: anywhere; }
+#site-reason { display: block; }
+.links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap-group); margin-top: var(--gap); font-size: var(--fs-note); }
+.links a { text-decoration: none; }
+.links a:hover { text-decoration: underline; }

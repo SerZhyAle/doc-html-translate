@@ -10,7 +10,8 @@
    nav labels every <nav data-nav> (the header link row); a page whose nav carries a fixed aria-label omits it.
 
    The language value space is ru|en|ua. Every SZA page shares one origin and therefore one
-   localStorage 'sza-lang'; a stored 'uk' (written by older pages) is read as 'ua'. */
+   localStorage 'sza-lang'; a stored 'uk' (written by older pages) is read as 'ua'. A page opened by ?lang= or ?l= takes
+   that language for the visit without storing it (the head reader of each page), and carryLang below passes it on. */
 (function () {
   var d = document.documentElement;
   var S = (window.SITE && window.SITE.strings) || {};
@@ -22,6 +23,24 @@
   function $(id) { return document.getElementById(id); }
   function meta(sel, v) { var e = document.querySelector(sel); if (e && v) e.setAttribute('content', v); }
   function each(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
+
+  // SITE-STRUCTURE 8.B: the language a visitor arrived in is kept while the visitor moves. When storage does not hold
+  // it - the page was opened by ?lang= (the head reader marks that with data-lang-src) or is a page of one language
+  // (the docs trio: language links, no buttons) - the next page would fall back to the browser's language, so the links
+  // to the pages that carry their languages in one file get ?lang=<code> here, at run time. The markup keeps its canonical
+  // hrefs; a page whose language came from storage or from the browser changes nothing.
+  var CARRY = /^(?:\.\/|index\.html|extension\.html|extension-privacy\.html|install-trust\.html|privacy\.html|release-notes\.html|support\.html)(?=[?#]|$)/;
+  var LANG_QUERY = /[?&](?:lang|l)=/;
+  function carryLang(l) {
+    if (!d.hasAttribute('data-lang-src') && !document.querySelector('.seg a[data-set-lang]')) return;
+    each('a[href]', function (a) {
+      if (a.siteHref === undefined) a.siteHref = a.getAttribute('href');
+      var h = a.siteHref;
+      if (!CARRY.test(h) || LANG_QUERY.test(h)) return;
+      var i = h.indexOf('#'), base = i < 0 ? h : h.slice(0, i), frag = i < 0 ? '' : h.slice(i);
+      a.setAttribute('href', base + (base.indexOf('?') < 0 ? '?' : '&') + 'lang=' + (l === 'ua' ? 'uk' : l) + frag);
+    });
+  }
 
   function paintTheme() {
     var dark = d.getAttribute('data-theme') !== 'light';
@@ -35,7 +54,13 @@
       l = norm(l) || 'en';
       d.setAttribute('data-lang', l);
       d.setAttribute('lang', l === 'ua' ? 'uk' : l);
-      each('[data-set-lang]', function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set-lang') === l)); });
+      each('[data-set-lang]', function (b) {
+        var on = b.getAttribute('data-set-lang') === l;
+        // a language LINK (the docs pages, one page per language) says which one is current; a button says it is pressed
+        if (b.tagName === 'A') { if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); }
+        else b.setAttribute('aria-pressed', String(on));
+      });
+      carryLang(l);
     }
     var t = str('title'), desc = str('desc');
     if (t) { document.title = t; meta('meta[property="og:title"]', t); meta('meta[name="twitter:title"]', t); }
@@ -51,7 +76,9 @@
     b.addEventListener('click', function () {
       var l = b.getAttribute('data-set-lang');
       try { localStorage.setItem('sza-lang', l); } catch (e) {}
-      // Per-language pages (the docs) switch by navigating to the sibling page.
+      // A language link (the docs pages, one page per language) navigates by itself: BUTTONS 2.5 - navigation to a
+      // web address is a link, so the choice is stored and the browser follows the href.
+      if (b.tagName === 'A') return;
       var href = b.getAttribute('data-href');
       if (href) { location.href = href; return; }
       applyLang(l);

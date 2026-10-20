@@ -14,8 +14,9 @@
       (a glob and a reason of four words or more); no holder is listed twice;
     - every holder exists, still carries each address it is listed with, and is not also ignored;
     - every address starts with the site base (the one robots.txt names), resolves to a file the
-      repository serves (a directory address to its index.html), carries only an `l=en|ru|uk` query on
-      an html page, and - when it names a section - an id that exists in that page;
+      repository serves (a directory address to its index.html), carries only a `lang=en|ru|uk` query
+      (or the legacy `l=` spelling the pages still read) on an html page, and - when it names a section -
+      an id that exists in that page;
     - every ignore glob still matches a file.
 
   Tree -> list
@@ -136,7 +137,7 @@ function Resolve-HeldAddress([string]$Address) {
     if (-not $fileSet.Contains($path)) { return "answers with no file ($path is not in the tree) - restore the page or leave a forwarder there" }
     if ($null -ne $query) {
         if ($path -notmatch '\.html$') { return "carries a query on a file that is not a page" }
-        if ($query -notmatch '^l=([a-z]+)$' -or $Matches[1] -notin $Languages) { return "carries the query '$query'; only l=$($Languages -join '|') is part of the address scheme" }
+        if ($query -notmatch '^(?:lang|l)=([a-z]+)$' -or $Matches[1] -notin $Languages) { return "carries the query '$query'; only lang=$($Languages -join '|') (legacy l=) is part of the address scheme" }
     }
     if ($fragment) {
         if ($path -notmatch '\.html$') { return "names the section '$fragment' of a file that is not a page" }

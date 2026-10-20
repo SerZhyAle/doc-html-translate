@@ -44,9 +44,7 @@ param(
     # Development build: override the version stamp (YY.MMDD.HHmm). Default: now. No tree check.
     [string]$Stamp,
     # Sign the package with a self-signed cert and print local-install commands.
-    [switch]$SelfSign,
-    # Prepare an unsigned package for Store upload without requiring an existing git tag.
-    [switch]$Unsigned
+    [switch]$SelfSign
 )
 
 $ErrorActionPreference = "Stop"
@@ -63,6 +61,7 @@ function Get-SdkTool([string]$Name) {
 }
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 . (Join-Path $RepoRoot "scripts/lib/goversioninfo.ps1")
+. (Join-Path $RepoRoot "scripts/lib/gobuildtags.ps1")
 $MakeAppx = Get-SdkTool "makeappx.exe"
 $MakePri  = Get-SdkTool "makepri.exe"
 
@@ -86,8 +85,8 @@ function Assert-ReleaseTree([string]$ReleaseTag) {
 if ($Tag) {
     if ($Stamp) { throw "-Tag and -Stamp are exclusive: a release build takes its version from the tag" }
     $Stamp = Assert-ReleaseTree $Tag
-} elseif (-not $SelfSign -and -not $Unsigned) {
-    throw "An unsigned package is the Store upload and must be built from its release tag: pass -Tag vYY.MMDD.HHmm (or -SelfSign for a local test, or -Unsigned to prepare an unsigned package)"
+} elseif (-not $SelfSign) {
+    throw "An unsigned package is the Store upload and must be built from its release tag: pass -Tag vYY.MMDD.HHmm (or -SelfSign for a local test)"
 }
 
 # ── version ──────────────────────────────────────────────────

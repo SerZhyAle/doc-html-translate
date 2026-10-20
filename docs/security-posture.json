@@ -615,6 +615,7 @@
       { "glob": "cmd/doc-html-ui/*.html", "skip": null, "patterns": ["\\bfetch\\(", "XMLHttpRequest", "new WebSocket\\(", "sendBeacon\\(", "mailto:"] }
     ],
     "notNetwork": [
+      { "file": "extension/src/jxl.js", "reason": "fetches only blob: and data:image/jxl URLs already present in the parsed book; the codec and WASM are packaged extension resources, with no remote decoder or upload" },
       { "file": "extension/src/i18n.js", "reason": "fetches the extension's own bundled _locales file through chrome.runtime.getURL; no request leaves the browser" },
       { "file": "extension/src/ebook.js", "reason": "fetches a blob: URL of a book section already unpacked in memory; no request leaves the browser" }
     ]
@@ -639,6 +640,21 @@
       "^(@sentry|@bugsnag|@newrelic|@datadog|@amplitude|@segment|@firebase|@fullstory|@opentelemetry|@vercel/analytics|@microsoft/applicationinsights)(/|$)",
       "^(bugsnag-js|rollbar|newrelic|dd-trace|posthog-js|posthog-node|mixpanel|mixpanel-browser|amplitude-js|launchdarkly-js-client-sdk|statsig-js|analytics-node|universal-analytics|react-ga|react-ga4|firebase|applicationinsights|logrocket|hotjar|countly-sdk-web|plausible-tracker)$"
     ]
+  },
+
+  "nativeCode": {
+    "claim": "The desktop app loads no native codec or plugin library. JPEG XL pictures are decoded by libjxl compiled to WebAssembly and run by wazero inside the process, built without the module's native path, and the only libraries the app's own code names are Windows system DLLs. A format the app does not read itself goes to a separate helper program (row app-run-helpers), never into the process.",
+    "evidence": [
+      { "file": "internal/jxl/nodynamic_guard.go", "contains": "//go:build !nodynamic" },
+      { "file": "internal/jxl/jxl_test.go", "contains": "func TestNoNativeDecoder(" },
+      { "file": "scripts/lib/gobuildtags.ps1", "contains": "$GoBuildTags = @('nodynamic')" },
+      { "file": ".github/workflows/release.yml", "contains": "GOFLAGS: -tags=nodynamic" }
+    ],
+    "libraryLoads": {
+      "roots": ["cmd/**/*.go", "internal/**/*.go"],
+      "call": "\\b(?:NewLazyDLL|NewLazySystemDLL|LoadDLL|MustLoadDLL|LoadLibrary|LoadLibraryEx)\\(\\s*(\"([^\"]*)\")?",
+      "systemLibraries": ["kernel32.dll", "user32.dll", "shell32.dll"]
+    }
   },
 
   "renders": [

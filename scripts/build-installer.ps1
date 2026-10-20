@@ -64,6 +64,7 @@ $Iscc = Get-Iscc
 
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 . (Join-Path $PSScriptRoot "lib/goversioninfo.ps1")
+. (Join-Path $PSScriptRoot "lib/gobuildtags.ps1")
 
 # ── release tree (ticket 37) ─────────────────────────────────
 # -Tag: HEAD must be the tag's commit and nothing may be uncommitted, so the working tree the build

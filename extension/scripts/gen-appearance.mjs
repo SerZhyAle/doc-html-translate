@@ -82,8 +82,13 @@ export function paletteCSS(src, names = PALETTE_NAMES) {
 export function chromePaletteCSS(src) {
   const decls = (theme) => Object.entries(src.themes[theme]).map(([token, value]) =>
     ({ property: `--${tokenProperty(token)}`, value }));
+  // The two forced rules serve the interface theme setting (SETTINGS-NAVIGATION 3 rule 1): the
+  // pages pin data-chrome-theme to light or dark and the attribute outranks the media query, while
+  // "system" sets nothing and the query keeps following the browser live.
   return [rule("chrome light", ":root", decls("light")),
-    `@media (prefers-color-scheme: dark) {\n${rule("chrome dark", ":root", decls("dark"))}\n}`].join("\n\n");
+    `@media (prefers-color-scheme: dark) {\n${rule("chrome dark", ":root", decls("dark"))}\n}`,
+    rule("chrome light forced", 'html[data-chrome-theme="light"]', decls("light")),
+    rule("chrome dark forced", 'html[data-chrome-theme="dark"]', decls("dark"))].join("\n\n");
 }
 
 // replaceRegion swaps the content between the one marker pair in css for body. Throws when the

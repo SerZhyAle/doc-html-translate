@@ -218,6 +218,9 @@ async function zip() {
     console.error("vendor/pdf.mjs missing - run `npm run vendor` before zipping.");
     process.exit(1);
   }
+  for (const file of ["decode.js", "utils.js", "LICENSE", "THIRD-PARTY-NOTICES.txt", "codec/dec/jxl_dec.js", "codec/dec/jxl_dec.wasm"]) {
+    if (!existsSync(join(vendor, "jxl", file))) throw new Error(`JPEG XL decoder missing: ${file}; run npm run vendor`);
+  }
   // The overlay and palette rules are generated from ../internal/appearance; a package built from
   // a region nobody regenerated would ship a plate the desktop app does not draw.
   const fresh = spawnSync(process.execPath, [join(root, "scripts", "gen-appearance.mjs"), "--check"], { stdio: "inherit" });
@@ -272,6 +275,18 @@ function dateVersion() {
   return `${yy}.${mmdd}.${hhmm}`;
 }
 
+// Ship only the decoder and its local WASM, with the upstream licence.
+async function vendorJxl() {
+  const source = join(root, "node_modules", "@jsquash", "jxl");
+  const target = join(vendor, "jxl");
+  await mkdir(join(target, "codec", "dec"), { recursive: true });
+  for (const file of ["decode.js", "utils.js", "LICENSE", "codec/dec/jxl_dec.js", "codec/dec/jxl_dec.wasm"]) {
+    await cp(join(source, file), join(target, file));
+  }
+  await cp(join(root, "..", "THIRD-PARTY-NOTICES.txt"), join(target, "THIRD-PARTY-NOTICES.txt"));
+  console.log("Vendored @jsquash/jxl decoder into vendor/jxl/");
+}
+
 async function stamp() {
   const version = dateVersion();
   for (const file of ["manifest.json", "package.json"]) {
@@ -286,9 +301,10 @@ async function stamp() {
 
 const cmd = process.argv[2];
 if (cmd === "stamp") { await stamp(); }
-else if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); }
+else if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); await vendorJxl(); }
+else if (cmd === "vendor-jxl") await vendorJxl();
 else if (cmd === "zip") await zip();
 else {
-  console.error("usage: node build.mjs <stamp|vendor|zip>");
+  console.error("usage: node build.mjs <stamp|vendor|vendor-jxl|zip>");
   process.exit(1);
 }

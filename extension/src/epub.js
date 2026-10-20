@@ -1,3 +1,4 @@
+import { imageBlob, isJxl } from "./jxl.js";
 // epub.js - load an EPUB (a ZIP of XHTML) and turn it into one clean, reflowed
 // HTML document the browser can translate in place.
 //
@@ -199,7 +200,7 @@ function decodeText(bytes) {
 const MIME_BY_EXT = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif",
   webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", tif: "image/tiff",
-  tiff: "image/tiff", avif: "image/avif",
+  tiff: "image/tiff", jxl: "image/jxl", avif: "image/avif",
 };
 function guessMime(path) {
   const ext = path.slice(path.lastIndexOf(".") + 1).toLowerCase();
@@ -565,6 +566,14 @@ export async function loadEpub(arrayBuffer) {
   const pathToIndex = new Map();
   spine.forEach((zp, i) => pathToIndex.set(zp, i));
 
+  // Decode JPEG XL once; synchronous chapter rewriting can then reuse PNG blobs.
+  const jxlBlobs = new Map();
+  for (const [path, bytes] of files) {
+    if (isJxl(bytes) || /\.jxl$/i.test(path) || mediaByPath.get(path) === "image/jxl") {
+      jxlBlobs.set(path, await imageBlob(bytes, "image/jxl"));
+    }
+  }
+
   // Lazily mint (and cache) one blob: URL per referenced in-archive image.
   const blobUrls = new Map();
   const blobFor = (zipPath) => {
@@ -572,7 +581,7 @@ export async function loadEpub(arrayBuffer) {
     const bytes = files.get(zipPath);
     if (!bytes) return null;
     const type = mediaByPath.get(zipPath) || guessMime(zipPath);
-    const url = URL.createObjectURL(new Blob([bytes], { type }));
+    const url = URL.createObjectURL(jxlBlobs.get(zipPath) || new Blob([bytes], { type }));
     blobUrls.set(zipPath, url);
     return url;
   };

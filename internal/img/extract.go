@@ -23,15 +23,17 @@ import (
 
 	"doc-html-translate/internal/epub"
 	"doc-html-translate/internal/fsutil"
+	"doc-html-translate/internal/jxl"
 	"doc-html-translate/internal/limits"
 	"doc-html-translate/internal/logging"
 )
 
 // exts are the standalone image extensions (lower-case, leading dot) treated as
-// image input. tesseract reads all of these directly; the overlay's colour
-// sampling has Go decoders for every one except .bmp (which falls back to plain
+// image input. JPEG XL is decoded to PNG first; tesseract reads the other types
+// directly. The overlay's colour sampling has Go decoders for every one except .bmp (which falls back to plain
 // white plates - still correct, just not colour-matched).
 //
+// JPEG XL uses a bundled decoder and becomes PNG before display and OCR.
 // TIFF is a special case: Chrome cannot display it, so a .tif/.tiff is transcoded
 // to PNG on the way in rather than copied (see extractTIFF). It stays in this set
 // because it is still accepted input - it is just converted, not passed through.
@@ -44,6 +46,7 @@ var exts = map[string]bool{
 	".bmp":  true,
 	".tif":  true,
 	".tiff": true,
+	".jxl":  true,
 }
 
 // IsImage reports whether ext (lower-case, with leading dot) is a supported
@@ -66,7 +69,14 @@ func Extract(imgPath, outputDir string) (*epub.Book, error) {
 	}
 
 	imgName := filepath.Base(imgPath)
-	if err := copyFile(imgPath, filepath.Join(outputDir, imgName)); err != nil {
+	var copyErr error
+	if strings.EqualFold(filepath.Ext(imgPath), ".jxl") {
+		imgName += ".png"
+		copyErr = jxl.Transcode(imgPath, filepath.Join(outputDir, imgName))
+	} else {
+		copyErr = copyFile(imgPath, filepath.Join(outputDir, imgName))
+	}
+	if err := copyErr; err != nil {
 		return nil, fmt.Errorf("copy image: %w", err)
 	}
 

@@ -62,6 +62,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | HTML `<body>` extract | [`internal/htmlconv/`](../internal/htmlconv/) | [`extension/src/html.js`](../extension/src/html.js) |
 | HTML input charset | [`internal/htmlconv/extract.go`](../internal/htmlconv/extract.go) (`parseDocument`) | [`extension/src/charset.js`](../extension/src/charset.js) (`decodeHtml`) |
 | MOBI / AZW3 (KF8) | [`internal/mobi/`](../internal/mobi/) (shells out to Calibre) | [`extension/src/ebook.js`](../extension/src/ebook.js) (vendored `foliate-js`) |
+| JPEG XL decode and PNG normalization | [`internal/jxl/`](../internal/jxl/), [`internal/img/`](../internal/img/) | [`extension/src/jxl.js`](../extension/src/jxl.js) |
 | Comic archive -> page book | [`internal/comic/`](../internal/comic/) (CBZ/CBT stdlib; CBR/CB7 shell out to 7-Zip) | [`extension/src/comic.js`](../extension/src/comic.js) (CBZ/CBT only; CBR/CB7 declined) |
 | Comic natural page order + entry filter | [`internal/comic/natural.go`](../internal/comic/natural.go), `extract.go` (`isPageEntry`) | [`extension/src/comic.js`](../extension/src/comic.js) (`naturalCompare`, `isPageEntry`) |
 | Comic forced-OCR decision | [`internal/pipeline/pipeline.go`](../internal/pipeline/pipeline.go) (`comic.IsComic` -> `forceOCR`) | [`extension/src/viewer.js`](../extension/src/viewer.js) (`loadComicData` -> `registerImagesForOcr(.., true)`) |
@@ -74,7 +75,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | OCR halftone-screen detection (rescue rung, additive line sweep) | [`internal/ocr/screen.go`](../internal/ocr/screen.go) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) | [`extension/src/ocr-screen.js`](../extension/src/ocr-screen.js) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) |
 | OCR plate concealment mode (fill / reconstruct / mask) | [`internal/ocr/conceal.go`](../internal/ocr/conceal.go) (`measureRing`, `decideMode`, `plateBackground`) | [`extension/src/ocr-conceal.js`](../extension/src/ocr-conceal.js) (`measureRing`, `decideMode`, `plateBackground`) |
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
-| Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
+| Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`), [`chromecss.go`](../internal/htmlgen/chromecss.go) (`chromeUICSS`: sizes, buttons, groups) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
 | Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
 | Source-language detection | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`DominantScript`, `DeclarationContradicted` - the guard half only; Go declares only a stated language, see "Declared source language") | [`extension/src/lang.js`](../extension/src/lang.js) |
 | Declared-language tag | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`NormalizeLangTag`) | [`extension/src/lang.js`](../extension/src/lang.js) (`normalizeLangTag`) |
@@ -341,9 +342,11 @@ does not change the reader's selected theme.
 Both editions hold their reader chrome (navbar / toolbar, search panel, notices, dialogs) to the
 same floor, verified in ticket 57's checklist; the book's own content is out of scope:
 
-- Reader glyph controls are at least 28x28 CSS px for a fine pointer and 44x44 under
-  `@media (pointer: coarse)` (`ICON-RENDER` section 13 E) - compact controls carry an
-  explicit `min-height`/padding rather than sizing to their line.
+- Reader command controls are at least 32x32 CSS px for a fine pointer and 48x48 under
+  `@media (pointer: coarse)` (`UI-SIZING` 1.1 section 2, `BUTTONS` 2.0 section 3). The 28 / 44 floors of
+  `ICON-RENDER` section 13 E (tickets 57, 90 and 108) are superseded for the covered buttons since ticket 119
+  (slice R1, 2026-10-20): see
+  [Reader chrome: sizes, buttons and groups](#reader-chrome-sizes-buttons-and-groups-ticket-119-slice-r1-2026-10-20).
 - The chrome draws its own `:focus-visible` ring in the theme's accent colour, because the browser
   default can vanish on the dark and night bars; the book's own links keep the author's styling.
 - Accent-filled buttons take the theme's `bg` as their ink, not white: white passes 4.5:1 only on
@@ -352,6 +355,165 @@ same floor, verified in ticket 57's checklist; the book's own content is out of 
   per stage - never per log line or per OCR event.
 - Right-to-left interface languages mirror the chrome through logical properties
   (`margin-inline-start`, `border-inline-end`), never `left`/`right`.
+
+### Reader chrome: sizes, buttons and groups (ticket 119, slice R1, 2026-10-20)
+
+**Guard:** Guarded by `TestReaderChromeAccessibilityFloor` and `TestReaderChromeButtonMarkup`
+([`internal/htmlgen/navbar_test.go`](../internal/htmlgen/navbar_test.go)) for the generated CSS and markup, by
+`TestEditionGlyphTablesAreTheVendoredDrawings` ([`tests/iconography_test.go`](../tests/iconography_test.go)) for the
+glyphs, and - measured in a real browser, both editions against one rule set - by
+`node tools/uicheck/run.mjs --only reader` ([`tools/uicheck/README.md`](../tools/uicheck/README.md)).
+
+Both editions' reader chrome - the chapter bar, the single-page bar, the index toolbar and the extension viewer's
+toolbar, with their search and contents panels - meets `BUTTONS` 2.0 and `UI-SIZING` 1.1 with the same numbers.
+`BOOLEAN-OPTION`, `SETTINGS-NAVIGATION` and `COLLAPSIBLE-GROUP` do not apply to a reading page: the mode toggles
+are not options, and the contents tree is navigation. The size-profile record is
+[`UI_PROFILE.md`](UI_PROFILE.md) "Reader chrome".
+
+| Token | Fine pointer | Coarse pointer |
+|---|---|---|
+| Single-line height and target | 32 | 48 |
+| Padding per side | 12 | 16 |
+| Glyph tier | 16 | 20 |
+| Radius, border, button and wrapped-row gap, glyph-to-caption gap | 4, 1, 8, 8 | 4, 1, 8, 8 |
+| Type: controls, note text | 14, 12 | 14, 12 |
+
+All of them are CSS custom properties on the chrome root (`--dht-*` in `chromeUICSS`, `--*` in `viewer.css`),
+multiplied by `clamp(0.875, ui, 2)`; `--dht-ui` / `--ui` is 1 and no size selector is exposed yet, so the clamp
+(smallest target 28 / 42) is the contract for a later one, not a shipped setting. The profile is the primary pointer
+(`@media (pointer: coarse)`), never an event.
+
+- **Flow.** Controls travel in task groups (`.dht-group` / `.group`) that flow from the reading start and wrap whole
+  buttons before a caption; nothing is pinned to the far end; every button of one visual line takes the line's
+  height (`align-items: stretch`); widths are content widths. Text members (file name, title, counter) centre
+  themselves.
+- **Names.** The glyph precedes the caption (Next page included). Glyph-only commands (text size, reset, night, text
+  layer, the single-page contents button) carry the meaning's name as `title` and `aria-label`. Search is
+  `action.search` and its word. **Fit width is word-only** (no vocabulary meaning; a private picture is not an
+  option) and so are Open file, Original PDF and the panels' Close (`nav.close` and `action.choose-file` are not
+  vendored; `BUTTONS` 2 rule 1 allows text-only).
+- **State.** Toggles carry `aria-pressed`, the Search and Contents disclosures `aria-expanded` (they keep their action
+  glyphs, as the GUI's Pages button does), a paging end with no page `aria-disabled="true"`. A selected control is a
+  distinct face plus an inset bar along the block end in the ink colour - not colour alone. Forced colours replace
+  that with the system's selected pair and keep the progress fill and the mask-drawn markers in system colours;
+  `prefers-contrast: more` draws the borders in the ink.
+- **Panels.** The search panel of a sticky bar is anchored to the bar's own bottom edge (Go) or the bar's measured
+  height (`--bar-h`, extension), and the Go contents panel and every jump target (`scroll-margin-top`) follow
+  `--dht-bar-h`, so a bar that wraps never covers them. The index toolbar is not sticky and keeps a fixed place.
+- **External links.** The Go version link and the extension viewer's two outside links draw `nav.open-external` (a CSS
+  mask in Go, an inline glyph in JS; `rtl: mirror`).
+- **Shortcuts.** The Search tooltip names the chord, "Search (Ctrl+F)", "Cmd+F" on macOS.
+
+Decisions recorded here (ticket 119): the bar stays an ordinary Tab row (no `role="toolbar"`); the reader pages get
+**no help button** (ticket 118 decision 5 stands); the Go reader's Ctrl+wheel page zoom (`navBarScript`, 50 to 300
+percent) is **unchanged and an open decision for the owner** (`BUTTONS` 4 rule 7: bindings must not override browser
+ownership - and the zoom also scales the chrome's own targets, a 32 px target is 16 px at 50 percent); the touch naming
+route for glyph-only buttons (`BUTTONS` 8 rule 3) is not built - the tooltip is the only naming route; the extension
+viewer's notices, resume offer, export card and status Cancel were taken by the extension slice (X1, "Viewer notices and the
+export card" below); the contents tree rows
+are navigation, not buttons (the extension's chevron `<button>` takes the target token). One extension fix rode along:
+the OCR group (`#grp-ocr`) is `hidden` until a document has plates, but a `display` rule beat `[hidden]`, so it was
+always visible - it now hides as documented.
+
+### Extension interface: options page, popup, image-OCR page, OCR bar (ticket 119, slice X1, 2026-10-20)
+
+**Guard:** Guarded in `npm test` by `extension/test/ui-sizing.test.mjs` (the token numbers equal the viewer's, the clamp
+and the declared 28 / 42 floors), `options-structure.test.mjs` (rail, pages, groups, option rows, no sliding switch),
+`settings-transfer.test.mjs` (version 2 round trip, version 1 still imports), `popup.test.mjs`, `ocr-lang-ui.test.mjs`,
+`page-agent.test.mjs` (the bar's four drawings are the table's), `product-inventory.test.mjs` and `i18n.test.mjs`; by
+`TestExtensionDrawsOnlyTabledGlyphs` ([`tests/iconography_test.go`](../tests/iconography_test.go)) for the glyphs; and measured in a
+real browser by `node tools/uicheck/run.mjs --only extension` ([`tools/uicheck/README.md`](../tools/uicheck/README.md)).
+
+The extension's own pages meet `UI-SIZING` 1.1, `BUTTONS` 2.0, `BOOLEAN-OPTION` 2.0, `COLLAPSIBLE-GROUP` 1.1 and, on the
+options page, `SETTINGS-NAVIGATION` 2.0 with the desktop launcher's numbers and component rules (record:
+[`UI_PROFILE.md`](UI_PROFILE.md)). The shared tokens are one file, [`ui-sizing.css`](../extension/src/ui-sizing.css), with the
+launcher's names (`--ui --tx --s --t --gm --tgt --pad --glyph --box --gap --gap-group --radius --fs`); the shared components are
+[`ui-components.css`](../extension/src/ui-components.css) (buttons, rows, options, groups, the dialog); the scripts are
+`ui-boot.js` + `ui-profile.js` (profile, resolved once), `ui-help.js` (option-local help), `ui-dialog.js`, `ui-groups.js`. The
+viewer's toolbar keeps the scoped copy slice R1 wrote in `viewer.css`; a test holds the two blocks to the same pixels.
+
+| Edition | Surface | Rail pages | Notes |
+|---|---|---|---|
+| Desktop launcher | one window | `convert ollama ocr windows interface advanced about` | the launcher runs conversions |
+| Extension | options tab | `general ocr sites data interface about` | six pages; About last; the popup is a task panel with no rail |
+
+Intentional differences (do NOT "fix"):
+
+- **Pages.** The extension has no conversion run, Ollama or Windows integration, so six pages, not seven. Their order,
+  ids, drawer breakpoint (60 text-em of the window container: 840 CSS px ordinary, the launcher's 780 because its base text is
+  13 px) and memory rules are the launcher's.
+- **Palette.** The launcher draws from its own APP-STYLE table in `light-dark()`; the extension keeps the shared chrome
+  palette ([`chrome-palette.css`](../extension/src/chrome-palette.css), generated from `internal/appearance`) and writes only
+  the roles that palette lacks (state hues, the veils) in `ui-sizing.css`, because `minimum_chrome_version` 105 has no
+  `light-dark()`. The control border and the checkbox outline use the muted ink (5:1 against the page), not the palette's
+  quiet `--border` (1.3:1), so a 3:1 outline holds; the viewer's toolbar still draws the quiet border (open item, section 6
+  of `UI_PROFILE.md`).
+- **Interface theme.** System / Light / Dark is `data-chrome-theme` on the root, which outranks the media query; "System"
+  sets nothing and the browser's own setting keeps deciding live. The two forced rules are generated with the palette
+  (`chromePaletteCSS` in `scripts/gen-appearance.mjs`).
+- **Persistence.** `uiSize`, `textSize`, `inputProfile` and `chromeTheme` are keys of the stored `options` (defaults in
+  `defaults.js`), exported and imported with the settings file (format version 2; a version 1 file still imports, the missing
+  keys take their defaults; an unknown value falls back instead of refusing the file). The last page and the group states
+  are **not** in `options`: they are the separate key `uiState`, because every write of `options` makes `background.js` rebuild
+  the interception rules and refresh every tab's badge, and a click on the rail must not run an operation
+  (`SETTINGS-NAVIGATION` 4 rule 3). The file carries the page and groups (`ui`, so an export and an import round-trip); page
+  viewports stay out, like reading positions.
+- **Input profile.** `ui-boot.js` reads the primary pointer once, in `<head>`, before the first paint (a coarse pointer or
+  none is touch); the saved setting is Automatic / Mouse and keyboard / Touch, as in the launcher. The viewer's toolbar and the
+  generated reader still use `@media (pointer: coarse)` with no selector (slice R1).
+- **Diagnostics.** The clipboard summary stays (ADR-4: the browser sandbox has no run-log store) and a user-initiated
+  "Save diagnostics as a file" hands over the same text through a Blob and an anchor, no `downloads` permission; the desktop
+  edition's bundle is its logs archive. Neither contains document text.
+- **About.** Updates are the browser store's (the extension never checks; the listings and the releases page are linked);
+  the resource index is a static inventory with each bundled component's own licence file, not a local lookup; the related
+  products and every link come from one module, [`product-inventory.js`](../extension/src/product-inventory.js), whose
+  addresses are only ones the repository already publishes. Opening About requests nothing.
+- **Reset and import.** Both ask in the product's own dialog (Cancel first and focused, the acting answer on the danger face,
+  no native `confirm()`); a reset of settings that already are the defaults, and an import that changes nothing, ask nothing.
+- **Image-OCR page.** It follows the chrome palette (it was a fixed dark page), sizes and profile like the other pages, and still
+  declares no `lang` of its own for the chrome: the page's language is the OCR language, so the browser offers the right
+  translation.
+- **OCR bar on a web page** ([`page-overlay.css`](../extension/src/page-overlay.css), `page-agent.js`). It keeps its own dark
+  surface over any page and takes the same tokens under the `--dht-` prefix, declared on the bar itself, never on the page's
+  root; the saved size, text size and controls are read once when the bar is made (hidden until then). A content script cannot
+  import `glyphs.js` (not web accessible), so the bar carries its four drawings itself and a test holds them to the table.
+  Select text is a stable-name toggle (`aria-pressed`, no second caption), Hide and Show text swap with a width reserve.
+  `page-agent.js` is 610 lines (581 before this slice): splitting the bar out needs a second injected file in `page-ocr.js`
+  and is not done here.
+
+**Viewer notices and the export card** (the second part of slice X1, 2026-10-20; the viewer's own chrome, so this text is the
+record both the toolbar's and these surfaces' behaviour is pinned by - `extension/test/viewer.test.mjs` for the structure,
+`--only extension` for the geometry). The export card (`.export-dialog`), the remote-images notice (`.remote-notice`), the
+resume offer (`.resume-notice`), the generic notices (`.notice`: empty state, failures, the little-text banners, the password
+prompt) and the status bar's Cancel (`#status-stop`) take `BUTTONS` 2.0 and `UI-SIZING` 1.1 with the toolbar's own buttons and
+tokens (`viewer.css` extends the token scope to them; `viewer-answers.js` builds the answers):
+
+- **Order and rank.** The answers of a surface that asks something read in reading order - the dismissing answer first, any
+  helping action, the final affirmative last - and at most one is primary (`BUTTONS` 4 rule 4, 2 rule 2). The export card reads
+  Cancel, Export partial, Prepare all (the one primary); when a complete export is not possible it reads Cancel, Export partial
+  (the primary). The resume offer reads Start over, Continue reading (the primary): the order changed, Continue used to come
+  first. The remote-images notice has no primary (neither answer is the recommended one; the blocked state is the safe default)
+  and reads Load them, Always load remote content. A generic notice puts its buttons in one row and makes the first the primary
+  (Open a document, or Open original PDF when that is all it has); the second recovery is an ordinary answer. Faces are neutral
+  (transparent, the theme's border) except the primary's accent; no answer carries a tint.
+- **Focus and keys.** The export card, the one dialog-like surface, takes its focus on Cancel when it opens (it used to focus
+  Export partial) and Escape is its Cancel, returning focus to Export; Enter on the default focus is therefore Cancel. The inline
+  offers take no focus (`role="status"` in the flow). What the actions do is unchanged.
+- **Shape and type.** Radius 4, the 32 / 48 targets, content widths, whole-button wrapping with equal line heights and the 8 px
+  gap, the glyph before the caption (Cancel `action.cancel`, Export partial and Prepare all `action.export`, Start over
+  `action.cancel`, Continue reading `feature.continue-reading`, the remote answers `action.download`, Open a document
+  `content.document`; Open original PDF and Unlock are words) with every caption kept. The surfaces set their own type from the
+  chrome tokens (14 px at the ordinary scale), so the reader's A+ / A- no longer reaches them; before, they inherited the body's
+  `--reader-size` (28 px by default).
+- **Placement.** The two offers are inserted above `#layout` (the contents-and-text row) instead of before `#content` inside it:
+  `#layout` is a flex row, so an offer placed there became a third column shrunk to its own width beside the text, not the bar
+  across the page its comment described.
+- **Status Cancel.** A glyph and a caption on the shared button rule; the rule sets `display`, so `#status-stop[hidden]` says
+  `display: none` again - without it the control showed on every page.
+
+Not part of this slice and still owed (also in `UI_PROFILE.md`, section 6): a help route for the extension (ticket 118
+decision 5), the password prompt and the little-text banners of the EPUB and PDF paths (the rule is applied; no encrypted PDF or
+image-only EPUB was opened in the harness).
 
 ### Reader search (2026-09-29)
 
@@ -486,21 +648,24 @@ Glyphs one edition has and the other does not, by surface rather than by drift: 
 (`media.previous` / `media.next`) exists only in the desktop book, which pages
 and has an index page; the extension's viewer is one scrolling document. `feature.continue-reading`
 is drawn by both since 2026-09-29 (ticket 53): the desktop index page's continue link and the
-extension's resume offer. `action.save`, `action.export`
-and `nav.open-external` exist only in the extension's viewer and popup. `nav.expand` / `nav.collapse` are
+extension's resume offer. `action.save` and `action.export` exist only in the extension's viewer and popup (and, since slice X1 of ticket 119, its options
+page, which also draws `app.settings`, `system.internet`, `action.import`, `action.extract-text`, `action.text-settings`,
+`app.info`, `action.copy`, `action.remove`, `action.download`, `action.retry`, `action.cancel`, `app.help` and `content.document`,
+the launcher's meanings; the first three were vendored with that slice);
+`nav.open-external` marks the outside links of the extension's viewer and popup and, since ticket 119 (slice R1), the
+desktop reader's version link (a CSS mask); `action.search` is the Search button of both readers. `nav.expand` / `nav.collapse` are
 in both, drawn differently by surface: a button in the extension's table of contents, a CSS mask over the
 `<details>` marker in the desktop index. The GUI launcher and the site carry their own inline copies, held to the same vendored files.
 
-The GUI launcher's buttons are a deliberate divergence by surface (2026-10-11, ticket 112): as a
-Windows desktop window it adopts `WINDOWS-UI` 0.4 section 11 - every command button carries its
-meaning's glyph, and its one modal dialog's answer buttons carry the colour look of `ICON-RENDER`
-0.19 section 14 (the affirmative in the product's `state.ok`, the dismissing answer in
-`state.error`, a caution in `state.warning`). The converted book and the extension are browser
-surfaces, which section 11 does not reach: their chrome stays mono, and nothing here asks a
-future editor to "fix" the launcher's coloured answers or its window buttons' glyphs. The
-launcher's inline glyph table is `BTN_GLYPHS` in `cmd/doc-html-ui/ui.html`, held to the vendored
-files by the same guard (the two provisional meanings it draws under `ICON-SET` section 15 are
-pinned in the test until the catalog takes them).
+The GUI launcher's buttons are a deliberate divergence by surface (2026-10-11, ticket 112, revised
+2026-10-20 by tickets 119 and 120): as a desktop window it follows `BUTTONS` 2.0 - every command button
+carries its meaning's glyph (the product's recorded policy, `docs/UI_PROFILE.md`), and its one modal
+dialog's answers are neutral faces (Cancel first, the affirmative last, the safe answer focused; the
+state hues of `ICON-RENDER` 0.19 section 14 are retired). The converted book and the extension are
+browser surfaces: their chrome stays mono, and nothing here asks a future editor to "fix" the
+launcher's window buttons' glyphs. The launcher's inline glyph table is `BTN_GLYPHS` in
+`cmd/doc-html-ui/ui.html`, held to the vendored files by the same guard; `action.retry` and
+`action.update` are catalogued meanings since `ICON-SET` 0.31/0.33 and no longer pinned as provisional.
 
 ### PDF reflow heuristics
 
@@ -1327,6 +1492,11 @@ The extension alone has a site mode for automatic interception: all sites except
 always-on website interception surface, so this control has no desktop counterpart. The global
 auto-interception switch remains off by default in either mode.
 
+The extension's `options` also hold the interface settings the launcher keeps under the same meanings (ticket 119, slice
+X1): `uiSize` ordinary, `textSize` ordinary, `inputProfile` auto and `chromeTheme` system (see
+[Extension interface](#extension-interface-options-page-popup-image-ocr-page-ocr-bar-ticket-119-slice-x1-2026-10-20)).
+The settings file is format version 2; its page and group memory is the separate `uiState` key.
+
 ### Product URL and feedback address
 
 **Guard:** Prose only. Spot-checked consistent on 2026-08-15 across the 13 splash files, the GUI and the
@@ -1352,10 +1522,37 @@ worse than none. The two blocks are produced independently, so the labels they s
 |---|---|---|
 | Producer | [`report.Environment`](../internal/report/environment.go) -> `environment.txt` in the archive | [`reportText`](../extension/src/diagnostics.js) -> the clipboard |
 | Shared labels | `edition`, `version`, `platform`, `interface language`, `ocr` | same five, same spelling |
-| Rest of the block | `ocr languages`, `ocr data dir`, `ollama model` | `user agent`, `auto reflow`, `theme`, `source language`, `ocr language`, `disabled hosts`, `last format`, `last pages`, `last error`, `last run at` |
+| Rest of the block | `ocr languages`, `ocr data dir`, `ollama model`, and `logs left out` (only when the archive size rules left run logs out; additive, last line) | `user agent`, `auto reflow`, `theme`, `source language`, `ocr language`, `disabled hosts`, `last format`, `last pages`, `last error`, `last run at` |
 
 Renaming a shared label on one side only makes two reports that cannot be read the same way. Guarded by
 `TestParityReportFields`.
+
+### Contract variants (ticket 120, 2026-10-20)
+
+The design record of the supported variants of shared contracts that are not UI profile choices (those are in
+[UI_PROFILE.md](UI_PROFILE.md) section 4). Each is recorded as a permanent supported variant in the catalog registry,
+with a review condition and no deadline; the registry row names the clause and the proposal filed for it.
+
+- **Diagnostic report (`DIAGNOSTIC-REPORT`).** (1) *Carriers, 8 A:* the extension has no archive and no JSON envelope,
+  only the clipboard text and the saved `doc-html-translate-diagnostics.txt` - the sandbox hosts no run-log store (see
+  "Sending logs to the author differs in shape, by decision" under Intentional divergences, ADR-4). (2) *Environment
+  text, 2 and 8 B:* plain `key: value` lines with spaced English labels and no `schema_version` (absent means 1), the
+  table above, held by `TestParityReportFields`. (3) *User-authored names, 2 and 8 B:* the desktop run logs keep the
+  names of the documents and `settings.json` keeps the recent paths, because a log whose document cannot be
+  identified cannot be acted on (`internal/report/redact.go`; `TestRedactKeepsDocumentFileNames`,
+  `TestBuildRedactsRecentPathsInSettings`); profile names, credentials and tokens are redacted, and the export is
+  user-initiated and local. (4) *Placeholders, 3:* a personal path reads `%USERPROFILE%` or `%LOCALAPPDATA%`, not
+  `<USER>` or `<APP_DATA>`.
+- **Media classification (`MEDIA-CLASSIFICATION`).** The converter is a scoped reader, not a classifier: it
+  converts what it is given and refuses binary content by signature. A `.svg` and a text `STREAM` file such as
+  `.m3u8` are read as text and converted as prose, and `.tif`, `.cb7`, `.cbt`, `.azw3`, `.html` and `.htm` are
+  converted although the contract's tables do not list them (`internal/pipeline/pipeline.go`).
+- **Secret files (`FDSEC-BEHAVIOUR` section 18).** FileDO's output is never read (invariant 8), so when it cannot write
+  the sealed name at the destination the product cannot say why: the I/O text names a full disk, no access or a file
+  in use, never this cause and never the sealed name; the original container is preserved and nothing is committed.
+- **Demo video captions (`DOC-EXTERNAL-QUALITY` section 9 F).** `assets/demo.mp4` (made by `tools/store/make-demo.mjs`)
+  shows the product's English interface with burned-in English captions, also on the RU and UK pages; the video's
+  accessible name and the figcaption on all three languages say so.
 
 ### OCR lab evidence schema
 
@@ -1508,6 +1705,8 @@ in [`make-screenshot.ps1`](../tools/store/make-screenshot.ps1), and the extensio
 [`viewer.test.mjs`](../extension/test/viewer.test.mjs) language-attribution test.
 
 ## Intentional divergences (do NOT "fix")
+
+- **In-app help.** F1, the `?` button and the help pages (CONTEXT-HELP, ticket 118) exist in the desktop GUI launcher only. The browser extension's popup, options and viewer and the converted reader pages are other interfaces of this product that the contract does not name; they get no help button and no F1 until the owner opens a follow-up ticket (decision 5 of ticket 118). No help code is ported between the editions.
 
 - **Update checks.** The desktop GUI offers a manual GitHub release check and an optional daily check,
   off by default. The CLI has no update request. The MSIX GUI reports that Microsoft Store handles
@@ -1780,15 +1979,40 @@ by `ICON-EXTERNAL` rule 6.
 
 The GUI window has 28 px Windows mouse/pen targets and 44 px targets whenever a coarse pointer exists.
 The converted book and extension viewer follow the web floor decided on 2026-10-07:
-28 CSS px for a fine pointer, 44 CSS px under `@media (pointer: coarse)`. The site keeps
+28 CSS px for a fine pointer, 44 CSS px under `@media (pointer: coarse)` (the converted book and the extension
+viewer moved to 32 / 48 on 2026-10-20, ticket 119 slice R1, see "Reader chrome: sizes, buttons and groups"). The site keeps
 44 px for every pointer under `PAGE-STYLE` section 5. Both reader editions and the GUI honour the
 system reduced-motion preference; the extension switches scripted scrolling to instant when requested.
 
 ### Contract sync (ticket 108, 2026-10-07)
 
 Reader glyph targets follow `ICON-RENDER` section 13 E in both editions: 28 CSS px for
-a fine pointer and 44 CSS px for a coarse pointer, including the extension TOC toggles.
+a fine pointer and 44 CSS px for a coarse pointer, including the extension TOC toggles (superseded for the covered
+buttons by the 32 / 48 targets of ticket 119, slice R1).
 The desktop reader mirrors `media.previous` and `media.next` only inside the RTL document
 paging group (section 13 C); the extension has no paging glyph pair and needs no mirror.
 The vocabulary files are unchanged. Missing-image replacement and the newly imported names
 in further languages remain dated catalog exceptions for both editions.
+
+### JPEG XL pictures (ticket 114, 2026-10-15)
+
+Both editions accept `.jxl` standalone pictures and comic pages, and decode JPEG XL
+book resources before rendering or OCR. Raw codestreams and ISO containers are accepted.
+Desktop uses the bundled libjxl codec through `github.com/gen2brain/jpegxl`, built with
+the `nodynamic` tag so only its WASM decoder exists and no native `libjxl.dll` is ever
+looked up (ticket 115, desktop-only: a browser has no DLL search path); the
+extension packages `@jsquash/jxl` and its decoder WASM, with no runtime download.
+PNG output preserves transparency, remains viewable without a browser JPEG XL codec,
+and reaches the existing OCR and export paths. Animation is deliberately represented
+by its first displayed frame in both editions; this converter supplies a static,
+translatable picture rather than an animation timeline. Browser output is display RGBA8;
+desktop PNG also retains a decoder's 16-bit samples. No encoder is exposed to users.
+Both check 100 megapixels / 32768 pixels per side before raster decode, and cap a
+JPEG XL input at 200 MB (archive readers may impose their stricter entry budget).
+Windows offers `.jxl` in the file picker and shell conversion; default image ownership
+is unchanged. MSIX declares the new type. CBR/CB7 remain desktop-only.
+
+**Guard:** `internal/jxl` and `extension/test/jxl.test.mjs` decode the same generated
+RGBA fixture in codestream and container form and check transparency, bad headers,
+size refusal and embedded resource conversion. Existing comic parity checks pin `.jxl`
+in both page filters.

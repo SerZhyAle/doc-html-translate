@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Справка - Конвертация не завершилась</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Навигация">
+    <a href="index.html">Содержание справки</a><span class="sep" aria-hidden="true">/</span><span>Конвертация не завершилась</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Справка по диалогу</p>
+    <h1>Конвертация не завершилась</h1>
+    <p class="lead">Когда конвертация останавливается, не дойдя до конца, окно называет причину простыми словами и предлагает три пути: отправить журналы, попробовать снова или закрыть.</p>
+  </header>
+
+  <figure class="shot" id="shot-dialog">
+    <div class="frame">
+      <img class="on-dark" src="run-failed-dialog-dark.png" width="600" height="250" alt="Вопрос о неудаче: заголовок «Конвертация не завершилась», причина простыми словами, совет попробовать снова или отправить журналы, кнопки «Отправить журналы автору», «Попробовать снова» и «Закрыть», а в правом верхнем углу кнопка справки.">
+      <img class="on-light" src="run-failed-dialog-light.png" width="600" height="250" alt="">
+      <a class="pin" style="--x:92.5%;--y:31.7%" href="#help" aria-label="1, Справка (F1)">1</a>
+      <a class="pin" style="--x:3.83%;--y:46.4%" href="#message" aria-label="2, Причина">2</a>
+      <a class="pin" style="--x:45.89%;--y:92.3%" href="#send" aria-label="3, Отправить журналы автору">3</a>
+      <a class="pin" style="--x:79.14%;--y:92.3%" href="#retry" aria-label="4, Попробовать снова">4</a>
+      <a class="pin" style="--x:18.44%;--y:92.3%" href="#close" aria-label="5, Закрыть">5</a>
+    </div>
+    <figcaption>Демонстрационные данные. Выберите номер, чтобы прочитать об этой части диалога.</figcaption>
+  </figure>
+
+  <h2>По порядку</h2>
+  <ol class="order">
+    <li>Прочитайте причину <a class="ref" href="#message">2</a>. Она подскажет, смотреть ли на файл, диск, настройки перевода или ни на что.</li>
+    <li>Если причину можно устранить, устраните её и нажмите <b>Попробовать снова</b> <a class="ref" href="#retry">4</a>.</li>
+    <li>Если непонятно, нажмите <b>Отправить журналы автору</b> <a class="ref" href="#send">3</a>, чтобы автор мог найти причину.</li>
+    <li>Иначе нажмите <b>Закрыть</b> <a class="ref" href="#close">5</a>.</li>
+  </ol>
+
+  <h2>Элементы</h2>
+  <div class="elements">
+
+    <details class="el" id="help">
+      <summary><span class="mk">1</span><span><span class="name">Справка (F1)</span><span class="one">Открывает эту страницу, не закрывая вопрос.</span></span></summary>
+      <div class="full">
+        <p>Вопрос остаётся открытым и ждёт, пока вы читаете. <kbd>F1</kbd> делает то же самое.</p>
+      </div>
+    </details>
+
+    <details class="el" id="message">
+      <summary><span class="mk">2</span><span><span class="name">Причина</span><span class="one">Почему конвертация остановилась, простыми словами.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Вход отклонён</b> - Конвертация не завершилась: конвертер отклонил входные данные - файла нет, он пустой или это папка, либо не принята какая-то настройка.</li>
+          <li><b>Не удалось прочитать или записать</b> - Конвертация не завершилась: не удалось прочитать документ или записать результат - возможно, диск заполнен, папка вывода только для чтения или в неё уже пишет другая программа.</li>
+          <li><b>Документ не удалось прочитать</b> - Конвертация не завершилась: документ не удалось разобрать - возможно, он повреждён, защищён от копирования или его формат не тот, что указан в имени.</li>
+          <li><b>Перевод не удался</b> - Конвертация не завершилась: перевод не удался, и годного результата не сохранилось. Проверьте ключ Google, сеть или то, что Ollama запущен, и попробуйте ещё раз.</li>
+          <li><b>Прервано</b> - Конвертацию прервали до завершения; записанное неполно, и следующая конвертация соберёт его заново.</li>
+          <li><b>Любая другая остановка</b> - Окно показывает код завершения конвертера. Отправьте журналы, чтобы причину можно было найти.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Зачем</dt><dd>Причину, которую можно назвать, можно и устранить; сырая ошибка остаётся в журнале.</dd>
+          <dt>Что дальше</dt><dd>Та же строка добавляется в журнал окна.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="send">
+      <summary><span class="mk">3</span><span><span class="name">Отправить журналы автору</span><span class="one">Архив выделен в папке, а путь к нему скопирован в буфер обмена - прикрепите его к письму перед отправкой.</span></span></summary>
+      <div class="full">
+        <p>Упаковывает сохранённые журналы в один архив, кладёт его путь в буфер обмена и начинает письмо автору. Архив прикладываете вы; само ничего не отправляется.</p>
+        <dl class="facts">
+          <dt>Отмена</dt><dd>Закройте окно письма, не отправляя, и ничего не покинет ваш компьютер.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="retry">
+      <summary><span class="mk">4</span><span><span class="name">Попробовать снова</span><span class="one">Запускает ту же конвертацию снова с теми же настройками.</span></span></summary>
+      <div class="full">
+        <p>То, что записал неудавшийся запуск, собирается заново: у незавершённого запуска нет отметки о завершении.</p>
+      </div>
+    </details>
+
+    <details class="el" id="close">
+      <summary><span class="mk">5</span><span><span class="name">Закрыть</span><span class="one">Закрывает вопрос; больше ничего не меняется.</span></span></summary>
+      <div class="full">
+        <p>Журнал сохраняет причину, а записанное остаётся в папке вывода; следующая <b>Конвертировать</b> соберёт всё заново. Нажатие <kbd>Esc</kbd> - тот же ответ.</p>
+        <dl class="facts">
+          <dt>Зачем</dt><dd>Это безопасный ответ, поэтому фокус на нём.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Связанное</h2>
+  <ul class="related">
+    <li><a href="converter.html#log"><b>Лог</b><span class="pill">Окно</span><small>Где записан последний шаг, до которого дошёл конвертер.</small></a></li>
+    <li><a href="settings.html#about"><b>О программе</b><span class="pill">Окно</span><small>Отправить журналы, открыть архив, очистить сохранённые журналы.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.ru.html#logs" target="_blank" rel="noopener"><b>Журналы и их отправка</b><span class="pill gold">Сайт</span><small>Что в архиве и как его отправить.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Снято с DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Содержание справки</a>
+    <a href="mailto:sza@ukr.net">Задать вопрос или сообщить о проблеме</a>
+  </footer>
+
+</main>
+</body>
+</html>

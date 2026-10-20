@@ -21,6 +21,12 @@ concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
+# Ticket 115: every go command builds with nodynamic, or github.com/gen2brain/jpegxl loads libjxl.dll
+# from the DLL search path at every start of the app; internal/jxl refuses to compile without it.
+# scripts/lib/gobuildtags.ps1 is the same list for the local builds.
+env:
+  GOFLAGS: -tags=nodynamic
+
 jobs:
   release:
     # A dispatch runs the workflow file of the branch it was started from; only main's is trusted.

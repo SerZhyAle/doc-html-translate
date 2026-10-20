@@ -17,12 +17,16 @@
   translation older than its English source): something found that the change under test cannot be
   charged with. Advisories are named above the verdict and make it PASS WITH ADVISORIES, exit 3.
 
+  A run in which no test executed (a module without test files, or every test skipped) is not a
+  pass either: "test: COULD NOT VERIFY (no test ran)".
+
   Last line: "test: PASS (run=N skipped=M)", "test: PASS WITH ADVISORIES (run=N skipped=M
   advisories=A)", "test: FAIL (n)" or "test: COULD NOT VERIFY (n)".
   Raw events go to temp/logs/test.json, the readable log to temp/logs/test.log.
 #>
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/lib/verdict.ps1"
+. "$PSScriptRoot/lib/gobuildtags.ps1"
 
 New-Item -ItemType Directory -Force -Path "temp/logs" | Out-Null
 
@@ -38,7 +42,26 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Exit-Verdict 'test' 2 'go toolchain absent'
 }
 $goVersion = (& go env GOVERSION).Trim()
-Write-Subject 'test' "Go edition, windows/amd64, CGO off, $goVersion, $(Get-TreeLabel); the extension edition is scripts/test-extension.ps1"
+
+# Three suites compare this repo with the shared contracts catalog when SZA_CONTRACTS_ROOT names it
+# (the vendored glyph bytes, the WINDOWS-UI reference, the DIAGNOSTIC-REPORT redaction vectors) and skip
+# without it - so a gate run on a machine that has the catalog proved nothing against it unless the
+# variable was set by hand. Resolve the catalog the way scripts/contract-gate.ps1 does (the path AGENTS.md
+# states) and say which way it went; an unreachable catalog keeps the skips, which the verdict counts.
+$catalogNote = 'catalog probes skip'
+if (-not $env:SZA_CONTRACTS_ROOT) {
+    if ($env:SZA_CONTRACTS_CATALOG) { $env:SZA_CONTRACTS_ROOT = $env:SZA_CONTRACTS_CATALOG }
+    elseif (Test-Path -LiteralPath 'AGENTS.md') {
+        $m = [regex]::Match((Get-Content -LiteralPath 'AGENTS.md' -Raw -Encoding utf8), 'The shared contracts catalog is at `([^`]+)`')
+        if ($m.Success) { $env:SZA_CONTRACTS_ROOT = $m.Groups[1].Value }
+    }
+}
+if ($env:SZA_CONTRACTS_ROOT -and (Test-Path -LiteralPath $env:SZA_CONTRACTS_ROOT -PathType Container)) {
+    $catalogNote = 'catalog probes run'
+} else {
+    $env:SZA_CONTRACTS_ROOT = $null
+}
+Write-Subject 'test' "Go edition, windows/amd64, CGO off, GOFLAGS $env:GOFLAGS, $goVersion, $(Get-TreeLabel), $catalogNote; the extension edition is scripts/test-extension.ps1"
 
 $logPath = Join-Path (Get-Location) "temp/logs/test.log"
 $jsonPath = Join-Path (Get-Location) "temp/logs/test.json"
@@ -136,6 +159,13 @@ if ($inputAbsent.Count -gt 0) {
     Write-Host "declared input absent - these tests inspected nothing:" -ForegroundColor Magenta
     foreach ($s in $inputAbsent) { Write-Host "  - $s" -ForegroundColor Magenta }
     Exit-Verdict 'test' 2 "$($inputAbsent.Count)"
+}
+
+# go test exits 0 over a module with no test file, and over a run whose tests all skipped. Nothing
+# was executed, so nothing was inspected: CHECK-VERDICT 2.13 - a zero-test input is never a pass.
+if ($passed -eq 0) {
+    Write-Host "go test ran no test - see temp/logs/test.log"
+    Exit-Verdict 'test' 2 'no test ran'
 }
 
 if ($advisories.Count -gt 0) {

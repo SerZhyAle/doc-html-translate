@@ -1,5 +1,9 @@
 run:
   timeout: 3m
+  # Ticket 115: without it github.com/gen2brain/jpegxl loads libjxl.dll from the DLL search path, and
+  # internal/jxl/nodynamic_guard.go refuses to compile (scripts/lib/gobuildtags.ps1 sets the same tag).
+  build-tags:
+    - nodynamic
 
 linters:
   disable-all: true

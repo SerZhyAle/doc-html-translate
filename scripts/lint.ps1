@@ -2,6 +2,7 @@
 # a missing linter is "could not verify" (2), never "failed" - nothing was inspected.
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/lib/verdict.ps1"
+. "$PSScriptRoot/lib/gobuildtags.ps1"
 
 New-Item -ItemType Directory -Force -Path "temp/logs" | Out-Null
 

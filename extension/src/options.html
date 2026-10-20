@@ -1,150 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-boot>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>doc-html-translate - options</title>
   <link rel="stylesheet" href="chrome-palette.css">
-  <style>
-    html { background: var(--bg); }
-    body { font-family: "Segoe UI", system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1.2rem; background: var(--bg); color: var(--fg); line-height: 1.5; color-scheme: light dark; }
-    h1 { font-size: 1.4rem; }
-    .field { margin: 1.2rem 0; }
-    label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
-    .hint { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
-    select, input[type="text"] { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; min-width: 14rem; background: var(--bar-bg); color: var(--bar-fg); }
-    input[type="checkbox"] { transform: scale(1.2); margin-inline-end: 0.5rem; }
-    .saved { color: var(--fg); font-size: 0.85rem; margin-inline-start: 0.6rem; opacity: 0; transition: opacity 0.2s; }
-    .saved.show { opacity: 1; }
-    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    ul.hosts { padding-inline-start: 1.1rem; }
-    code { background: var(--bar-bg); padding: 0.1em 0.35em; border-radius: 4px; }
-    .ocr-langs.disabled { opacity: 0.5; }
-    .ocr-lang { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0; }
-    .ocr-lang label { font-weight: 400; margin: 0; display: inline; }
-    .ocr-lang button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--accent);
-      color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; }
-    .ocr-lang button:disabled { opacity: 0.5; cursor: not-allowed; }
-    /* A failed download says so where it happened, with its own retry action. */
-    .ocr-error { display: flex; align-items: center; gap: 0.6rem; margin: 0.3rem 0;
-      color: var(--fg); font-size: 0.85rem; }
-    .ocr-error button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--border);
-      color: var(--fg); background: var(--bar-bg); border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
-    /* The per-host remove button gets the same treatment as the OCR-language buttons: a real
-       target size (WCAG 2.2, 2.5.8) and the page's own link blue. */
-    ul.hosts button { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; margin-inline-start: 0.6rem;
-      border: 1px solid var(--accent); color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; }
-    #copy-diag, .settings-action { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--accent);
-      color: var(--link); background: var(--bar-bg); border-radius: 6px; cursor: pointer; margin: 0.2rem; }
-    #settings-status { min-height: 1.5em; color: var(--fg); }
-    #settings-status.error { color: var(--fg); font-weight: 600; }
-    a { color: var(--link); }
-  </style>
+  <link rel="stylesheet" href="ui-sizing.css">
+  <link rel="stylesheet" href="ui-components.css">
+  <link rel="stylesheet" href="options.css">
+  <script src="ui-boot.js"></script>
 </head>
 <body>
-  <h1>doc-html-translate</h1>
-  <p class="hint" data-i18n="optIntro">Re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean, reflowed HTML so the browser's built-in "Translate page" works. Everything runs locally; the only thing that phones home is the browser's own translator - and only when you ask it to.</p>
+<div class="win" id="win">
 
-  <div class="field">
-    <label><input type="checkbox" id="enabled"> <span data-i18n="optReflowAuto">Reflow documents automatically</span></label>
-    <div class="hint" data-i18n="optReflowAutoHint">Auto-intercepts PDF, EPUB, MOBI, AZW3, FB2 and RTF links. When off, they open or download the way the browser normally handles them - i.e. back to square one. (Other formats always open via the file picker.)</div>
+  <!-- The window header: title and version. The Pages button appears only when the window is too narrow for
+       the rail and opens the same menu as a drawer (SETTINGS-NAVIGATION 2 rule 6). -->
+  <div class="head">
+    <button type="button" class="rail-toggle secondary" id="btnPages" aria-controls="rail" aria-expanded="false" data-i18n-title="pagesLabel" title="Pages"><span data-glyph="nav.contents"></span><span data-i18n="pagesLabel">Pages</span></button>
+    <h1>doc-html-translate</h1>
+    <span class="ver" id="ver"></span>
   </div>
 
-  <div class="field">
-    <label for="ui-lang" data-i18n="optUiLang">Interface language</label>
-    <select id="ui-lang"></select>
-    <span class="saved" id="saved-ui-lang" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span>
-    <div class="hint" data-i18n="optUiLangHint">The language of this extension's own buttons and menus. "Follow the browser" uses your browser's language. Applies to the viewer the next time you open a document.</div>
+  <div class="shell">
+    <!-- SETTINGS-NAVIGATION 2.0: the page rail. A vertical list of pages at the reading start; choosing one
+         changes what the pane shows and nothing else - no resize of the window, no commit, no operation. -->
+    <nav class="rail" id="rail" aria-label="Pages" data-i18n-aria="pagesLabel">
+      <div role="tablist" aria-orientation="vertical" class="rail-list" id="railList">
+        <button type="button" role="tab" class="rail-item" id="tab-general" data-page="general" aria-controls="page-general" aria-selected="true" tabindex="0"><span data-glyph="app.settings"></span><span data-i18n="pageGeneral">General</span></button>
+        <button type="button" role="tab" class="rail-item" id="tab-ocr" data-page="ocr" aria-controls="page-ocr" aria-selected="false" tabindex="-1"><span data-glyph="action.extract-text"></span><span data-i18n="pageOcr">Image OCR</span></button>
+        <button type="button" role="tab" class="rail-item" id="tab-sites" data-page="sites" aria-controls="page-sites" aria-selected="false" tabindex="-1"><span data-glyph="system.internet"></span><span data-i18n="pageSites">Sites</span></button>
+        <button type="button" role="tab" class="rail-item" id="tab-data" data-page="data" aria-controls="page-data" aria-selected="false" tabindex="-1"><span data-glyph="action.export"></span><span data-i18n="pageData">Data</span></button>
+        <button type="button" role="tab" class="rail-item" id="tab-interface" data-page="interface" aria-controls="page-interface" aria-selected="false" tabindex="-1"><span data-glyph="action.text-settings"></span><span data-i18n="pageInterface">Interface</span></button>
+        <button type="button" role="tab" class="rail-item" id="tab-about" data-page="about" aria-controls="page-about" aria-selected="false" tabindex="-1"><span data-glyph="app.info"></span><span data-i18n="optAbout">About</span></button>
+      </div>
+    </nav>
+    <div class="rail-scrim" id="railScrim" aria-hidden="true"></div>
+
+    <main class="pane" id="pane">
+
+      <!-- General: the language and theme come first (SETTINGS-NAVIGATION 3 rule 1), then the settings most
+           people ever change. Every page is already in the document, so a page switch only toggles `hidden`. -->
+      <section class="page" id="page-general" role="tabpanel" aria-labelledby="tab-general">
+        <div class="page-head"><div class="page-title"><h2 data-i18n="pageGeneral">General</h2><p class="hint" data-i18n="purposeGeneral">Language, appearance and when documents are reflowed.</p></div></div>
+        <p class="hint" data-i18n="optIntro">Re-renders documents (PDF, EPUB, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML) as clean, reflowed HTML so the browser's built-in "Translate page" works. Everything runs locally; the only thing that phones home is the browser's own translator - and only when you ask it to.</p>
+
+        <div class="field">
+          <label for="ui-lang" data-i18n="optUiLang">Interface language</label>
+          <div class="row"><select id="ui-lang"></select><span class="saved" id="saved-ui-lang" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span></div>
+          <p class="hint" data-i18n="optUiLangHint">The language of this extension's own buttons and menus. "Follow the browser" uses your browser's language. Applies to the viewer the next time you open a document.</p>
+        </div>
+
+        <div class="field">
+          <label for="chrome-theme" data-i18n="optChromeTheme">Interface theme</label>
+          <div class="row">
+            <select id="chrome-theme">
+              <option value="system" data-i18n="optThemeSystem">System</option>
+              <option value="light" data-i18n="themeLight">Light</option>
+              <option value="dark" data-i18n="themeDark">Dark</option>
+            </select>
+            <span class="saved" id="saved-chrome-theme" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span>
+          </div>
+          <p class="hint" data-i18n="optChromeThemeHint">Colours of this page and the toolbar popup. "System" follows the browser's light or dark setting as it changes.</p>
+        </div>
+
+        <div class="field">
+          <label for="theme" data-i18n="optTheme">Reading theme</label>
+          <!-- role="status": the flash is a save confirmation, so a screen reader hears it (4.1.3).
+               The text is filled by flash(), not data-i18n - an announced message must change text,
+               and a permanently present invisible string would read as a ghost in browse mode. -->
+          <div class="row">
+            <select id="theme">
+              <option value="light" data-i18n="themeLight">Light</option>
+              <option value="sepia" data-i18n="themeSepia">Sepia</option>
+              <option value="dark" data-i18n="themeDark">Dark</option>
+              <option value="night" data-i18n="themeNight">Night</option>
+            </select>
+            <span class="saved" id="saved-theme" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span>
+          </div>
+        </div>
+
+        <div class="opt">
+          <input type="checkbox" class="opt-box" id="enabled" aria-describedby="enabled-expl">
+          <div class="opt-cell">
+            <div class="opt-headrow">
+              <label class="opt-name" for="enabled"><span data-i18n="optReflowAuto">Reflow documents automatically</span></label>
+              <span class="opt-help-wrap" data-opt-help="helpOptReflow" data-opt-name="optReflowAuto"><button type="button" class="opt-help"><span data-glyph="app.help"></span></button><div class="opt-pop" role="note" hidden></div></span>
+            </div>
+            <p class="opt-expl" id="enabled-expl" data-i18n="optReflowAutoHint">Auto-intercepts PDF, EPUB, MOBI, AZW3, FB2 and RTF links. When off, they open or download the way the browser normally handles them - i.e. back to square one. (Other formats always open via the file picker.)</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="lang" data-i18n="optSourceLang">Source language</label>
+          <select id="lang">
+            <option value="auto" data-i18n="optAutoDetect">Auto-detect</option>
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="uk">Українська</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Português</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="ar">العربية</option>
+          </select>
+          <!-- Filled by options.js: the attribute name stays a code literal inside the translated sentence. -->
+          <p class="hint" id="source-lang-hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.</p>
+        </div>
+      </section>
+
+      <section class="page" id="page-ocr" role="tabpanel" aria-labelledby="tab-ocr" hidden>
+        <div class="page-head"><div class="page-title"><h2 data-i18n="pageOcr">Image OCR</h2><p class="hint" data-i18n="purposeOcr">Recognize text in pictures so that translation reaches it too.</p></div></div>
+        <div class="opt">
+          <input type="checkbox" class="opt-box" id="ocr-images" aria-describedby="ocr-images-expl">
+          <div class="opt-cell">
+            <div class="opt-headrow">
+              <label class="opt-name" for="ocr-images"><span data-glyph="view.text-layer"></span><span data-i18n="ocrUseImages">Use OCR for images</span></label>
+            </div>
+            <p class="opt-expl" id="ocr-images-expl" data-i18n="optOcrHint">Recognize text baked into images - in your documents, and via the right-click "OCR &amp; translate this image" - then translate it with the browser's "Translate page". English works offline; other languages download on demand and are cached locally.</p>
+          </div>
+        </div>
+        <div id="ocr-langs"></div>
+      </section>
+
+      <section class="page" id="page-sites" role="tabpanel" aria-labelledby="tab-sites" hidden>
+        <div class="page-head"><div class="page-title"><h2 data-i18n="pageSites">Sites</h2><p class="hint" data-i18n="purposeSites">Which websites get automatic reflow, and whether documents may load remote images.</p></div></div>
+        <div class="field">
+          <label for="site-mode" data-i18n="siteModeLabel">Site mode</label>
+          <select id="site-mode">
+            <option value="all" data-i18n="siteModeAll">All sites except disabled sites</option>
+            <option value="allowlist" data-i18n="siteModeAllowlist">Only listed sites</option>
+          </select>
+          <p class="hint" data-i18n="siteModeHint">Automatic reflow is off by default. Turn it on above, then choose which sites it applies to. Switching modes keeps both lists.</p>
+        </div>
+        <div class="field">
+          <div class="label" id="hosts-label" data-i18n="optDisabledSites">Sites where reflow is off</div>
+          <ul class="hosts" id="hosts" aria-labelledby="hosts-label"><li class="none" data-i18n="optNoSites">None</li></ul>
+          <p class="hint" data-i18n="optDisabledSitesHint">Manage these from the toolbar popup's "On this site" switch.</p>
+        </div>
+        <div class="field">
+          <div class="label" id="allowed-hosts-label" data-i18n="optAllowedSites">Sites where reflow is on in only listed sites mode</div>
+          <ul class="hosts" id="allowed-hosts" aria-labelledby="allowed-hosts-label"><li class="none" data-i18n="optNoSites">None</li></ul>
+          <p class="hint" data-i18n="optAllowedSitesHint">Manage these from the toolbar popup's "On this site" switch while only listed sites mode is selected.</p>
+        </div>
+        <div class="opt">
+          <input type="checkbox" class="opt-box" id="allow-remote" aria-describedby="allow-remote-expl">
+          <div class="opt-cell">
+            <div class="opt-headrow">
+              <label class="opt-name" for="allow-remote"><span data-i18n="optAllowRemote">Load remote images in documents</span></label>
+              <span class="opt-help-wrap" data-opt-help="helpOptRemote" data-opt-name="optAllowRemote"><button type="button" class="opt-help"><span data-glyph="app.help"></span></button><div class="opt-pop" role="note" hidden></div></span>
+            </div>
+            <p class="opt-expl" id="allow-remote-expl" data-i18n="optAllowRemoteHint">Off by default: images a document pulls from the internet are blocked, so its author cannot see that you opened it. The viewer lets you load them for one document at a time.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-data" role="tabpanel" aria-labelledby="tab-data" hidden>
+        <div class="page-head"><div class="page-title"><h2 data-i18n="pageData">Data</h2><p class="hint" data-i18n="purposeData">Back up, restore or reset every extension setting in one file.</p></div></div>
+        <h3 class="stitle" data-i18n="optSettingsHeading">Settings file</h3>
+        <p class="hint" data-i18n="optSettingsHint">Exports extension options, interface language and both site lists. Reading positions, document content, OCR output and history are excluded. Reader text size and font remain in this browser profile.</p>
+        <div class="btn-row hint-gap">
+          <button type="button" id="export-settings"><span data-glyph="action.export"></span><span data-i18n="optSettingsExport">Export settings</span></button>
+          <button type="button" id="import-settings"><span data-glyph="action.import"></span><span data-i18n="optSettingsImport">Import settings</span></button>
+        </div>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
+        <div class="btn-row sep">
+          <button type="button" id="reset-settings"><span data-glyph="action.reset"></span><span data-i18n="optSettingsReset">Reset settings</span></button>
+        </div>
+        <p class="hint" id="settings-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="page" id="page-interface" role="tabpanel" aria-labelledby="tab-interface" hidden>
+        <div class="page-head"><div class="page-title"><h2 data-i18n="pageInterface">Interface</h2><p class="hint" data-i18n="purposeInterface">How large the controls and the text are, and how they are operated.</p></div></div>
+        <div class="field">
+          <label for="ui-size" data-i18n="optUiSize">Interface size</label>
+          <select id="ui-size">
+            <option value="compact" data-i18n="optSizeCompact">Compact</option>
+            <option value="ordinary" data-i18n="optSizeOrdinary">Ordinary</option>
+            <option value="large" data-i18n="optSizeLarge">Large</option>
+            <option value="xlarge" data-i18n="optSizeXlarge">Extra large</option>
+            <option value="huge" data-i18n="optSizeHuge">Huge</option>
+          </select>
+          <p class="hint" data-i18n="hintUiSize">Scales the buttons, options, headers and menu together - text, icons, spacing and click targets.</p>
+        </div>
+        <div class="field">
+          <label for="text-size" data-i18n="optTextSize">Text size</label>
+          <select id="text-size">
+            <option value="ordinary" data-i18n="optSizeOrdinary">Ordinary</option>
+            <option value="large" data-i18n="optSizeLarge">Large</option>
+            <option value="xlarge" data-i18n="optSizeXlarge">Extra large</option>
+            <option value="huge" data-i18n="optSizeHuge">Huge</option>
+          </select>
+          <p class="hint" data-i18n="hintTextSize">Enlarges the text first and the layout with it; the icons grow only moderately. It stacks with the interface size.</p>
+        </div>
+        <div class="field">
+          <label for="input-profile" data-i18n="optInputProfile">Controls</label>
+          <select id="input-profile">
+            <option value="auto" data-i18n="optInputAuto">Automatic</option>
+            <option value="pointer" data-i18n="optInputPointer">Mouse and keyboard</option>
+            <option value="touch" data-i18n="optInputTouch">Touch</option>
+          </select>
+          <p class="hint" data-i18n="hintInputProfile">Touch makes every target larger. Automatic picks once when the window opens; it never changes while you work. Choose here on a device that has both.</p>
+        </div>
+      </section>
+
+      <!-- About: the whole set SETTINGS-NAVIGATION 3 rule 3 names. The links, the resources and the related
+           projects are drawn from product-inventory.js; opening this page contacts nothing. -->
+      <section class="page" id="page-about" role="tabpanel" aria-labelledby="tab-about" hidden>
+        <div class="page-head"><div class="page-title"><h2 data-i18n="optAbout">About</h2><p class="hint" data-i18n="purposeAbout">The program, its version, help and where to get support.</p></div></div>
+        <p class="about-desc" data-i18n="appDesc">Open PDF, EPUB and more as clean HTML that the browser's free Translate can read, with image OCR. Conversion happens locally.</p>
+        <div class="about-row"><span data-i18n="aboutVersion">Version</span> <code id="about-ver"></code> <span aria-hidden="true">&#183;</span> <span data-i18n="aboutLicence">Licence</span> <code>MIT</code></div>
+        <ul class="about-links" id="about-links"></ul>
+        <ul class="about-links" id="about-updates"></ul>
+
+        <details class="group" id="aboutSupport" open>
+          <summary data-i18n="grpSupport">Support and diagnostics</summary>
+          <div class="body">
+            <ul class="about-links" id="about-support"></ul>
+            <div class="btn-row">
+              <button type="button" id="copy-diag"><span data-glyph="action.copy"></span><span data-i18n="btnCopyDiag">Copy diagnostics</span></button>
+              <button type="button" id="save-diag"><span data-glyph="action.save"></span><span data-i18n="btnSaveDiag">Save diagnostics as a file</span></button>
+            </div>
+            <p class="hint" data-i18n="diagHint">Copies a short technical summary - no document text - so you can paste it into a mail to the author.</p>
+            <p class="hint" id="diag-status" role="status" aria-live="polite"></p>
+          </div>
+        </details>
+
+        <details class="group" id="aboutResources">
+          <summary data-i18n="grpResources">Resources</summary>
+          <div class="body">
+            <p class="hint flush" data-i18n="optResIntro">What the extension carries inside it and what it fetches only when you ask. Nothing else is installed or contacted.</p>
+            <div class="res-table" id="res-table"></div>
+          </div>
+        </details>
+
+        <details class="group" id="aboutRelated">
+          <summary data-i18n="grpRelated">Related products</summary>
+          <div class="body">
+            <div class="rel-table" id="rel-table"></div>
+          </div>
+        </details>
+      </section>
+
+    </main>
   </div>
-
-  <div class="field">
-    <label for="theme" data-i18n="optTheme">Reading theme</label>
-    <select id="theme">
-      <option value="light" data-i18n="themeLight">Light</option>
-      <option value="sepia" data-i18n="themeSepia">Sepia</option>
-      <option value="dark" data-i18n="themeDark">Dark</option>
-      <option value="night" data-i18n="themeNight">Night</option>
-    </select>
-    <!-- role="status": the flash is a save confirmation, so a screen reader hears it (4.1.3).
-         The text is filled by flash(), not data-i18n - an announced message must change text,
-         and a permanently present invisible string would read as a ghost in browse mode. -->
-    <span class="saved" id="saved-theme" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span>
-  </div>
-
-  <div class="field">
-    <label for="lang" data-i18n="optSourceLang">Source language</label>
-    <select id="lang">
-      <option value="auto" data-i18n="optAutoDetect">Auto-detect</option>
-      <option value="en">English</option>
-      <option value="ru">Русский</option>
-      <option value="uk">Українська</option>
-      <option value="fr">Français</option>
-      <option value="de">Deutsch</option>
-      <option value="es">Español</option>
-      <option value="it">Italiano</option>
-      <option value="pt">Português</option>
-      <option value="zh">中文</option>
-      <option value="ja">日本語</option>
-      <option value="ko">한국어</option>
-      <option value="ar">العربية</option>
-    </select>
-    <!-- Filled by options.js: the attribute name stays a code literal inside the translated sentence. -->
-    <div class="hint" id="source-lang-hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.</div>
-  </div>
-
-  <div class="field">
-    <label><input type="checkbox" id="ocr-images"> <span data-i18n="ocrUseImages">Use OCR for images</span></label>
-    <div class="hint" data-i18n="optOcrHint">Recognize text baked into images - in your documents, and via the right-click "OCR &amp; translate this image" - then translate it with the browser's "Translate page". English works offline; other languages download on demand and are cached locally.</div>
-    <div id="ocr-langs" style="margin-top: 0.6rem"></div>
-  </div>
-
-  <div class="field">
-    <label><input type="checkbox" id="allow-remote"> <span data-i18n="optAllowRemote">Load remote images in documents</span></label>
-    <div class="hint" data-i18n="optAllowRemoteHint">Off by default: images a document pulls from the internet are blocked, so its author cannot see that you opened it. The viewer lets you load them for one document at a time.</div>
-  </div>
-
-  <div class="field">
-    <label for="site-mode" data-i18n="siteModeLabel">Site mode</label>
-    <select id="site-mode">
-      <option value="all" data-i18n="siteModeAll">All sites except disabled sites</option>
-      <option value="allowlist" data-i18n="siteModeAllowlist">Only listed sites</option>
-    </select>
-    <div class="hint" data-i18n="siteModeHint">Automatic reflow is off by default. Turn it on above, then choose which sites it applies to. Switching modes keeps both lists.</div>
-  </div>
-
-  <div class="field">
-    <label data-i18n="optDisabledSites">Sites where reflow is off</label>
-    <ul class="hosts" id="hosts"><li class="hint" data-i18n="optNoSites">None</li></ul>
-    <div class="hint" data-i18n="optDisabledSitesHint">Manage these from the toolbar popup's "On this site" switch.</div>
-  </div>
-  <div class="field">
-    <label data-i18n="optAllowedSites">Sites where reflow is on in only listed sites mode</label>
-    <ul class="hosts" id="allowed-hosts"><li class="hint" data-i18n="optNoSites">None</li></ul>
-    <div class="hint" data-i18n="optAllowedSitesHint">Manage these from the toolbar popup's "On this site" switch while only listed sites mode is selected.</div>
-  </div>
-
-  <section class="field" aria-labelledby="settings-heading">
-    <h2 id="settings-heading" data-i18n="optSettingsHeading">Settings file</h2>
-    <p class="hint" data-i18n="optSettingsHint">Exports extension options, interface language and both site lists. Reading positions, document content, OCR output and history are excluded. Reader text size and font remain in this browser profile.</p>
-    <button class="settings-action" id="export-settings" type="button" data-i18n="optSettingsExport">Export settings</button>
-    <button class="settings-action" id="import-settings" type="button" data-i18n="optSettingsImport">Import settings</button>
-    <input id="import-file" type="file" accept=".json,application/json" hidden>
-    <button class="settings-action" id="reset-settings" type="button" data-i18n="optSettingsReset">Reset settings</button>
-    <p id="settings-status" role="status" aria-live="polite"></p>
-  </section>
-
-  <footer style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted);">
-    <span id="ver" style="float: inline-end;"></span>
-    <div class="field">
-      <label data-i18n="optAbout">About</label>
-      <button id="copy-diag" data-i18n="btnCopyDiag">Copy diagnostics</button>
-      <span class="saved" id="saved-diag" role="status" data-saved-key="optCopied" data-saved-fallback="Copied"></span>
-      <div class="hint" data-i18n="diagHint">Copies a short technical summary - no document text - so you can paste it into a mail to the author.</div>
-    </div>
-    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="linkProductSite">Product site</a>
-    &#183;
-    <a href="mailto:sza@ukr.net" data-i18n="linkFeedback">Feedback</a>
-  </footer>
-
-  <script type="module" src="options.js"></script>
+</div>
+<script type="module" src="options.js"></script>
 </body>
 </html>

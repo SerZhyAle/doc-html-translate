@@ -79,7 +79,9 @@ func (e *runEnv) resolveApp() (binaryID, error) {
 		if err := os.MkdirAll(e.binDir, 0o755); err != nil {
 			return binaryID{}, err
 		}
-		cmd := exec.Command("go", "build", "-o", p, "./cmd/doc-html-translate")
+		// nodynamic as every build of the app (ticket 115): without it the binary under test would
+		// load libjxl.dll from the search path, which the shipped one does not.
+		cmd := exec.Command("go", "build", "-tags", "nodynamic", "-o", p, "./cmd/doc-html-translate")
 		cmd.Dir = repoRoot()
 		out, err := cmd.CombinedOutput()
 		if err != nil {

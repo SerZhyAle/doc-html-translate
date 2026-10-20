@@ -532,7 +532,7 @@ async function main() {
   const outDir = args.out ? resolve(args.out) : join(REPO_ROOT, "temp", "ocrlab", `ext-${stamp}`);
   mkdirSync(outDir, { recursive: true });
 
-  const declaration=spawnSync("go",["run","./tools/ocrlab","declare","-out",outDir,"-manifest",args.manifest,"-root",args.root,...(args.lang?["-lang",args.lang]:[]),"-purpose",args.purpose,"-annotations",args.annotations,...scenes.flatMap(s=>["-scene",s.id])],{cwd:REPO_ROOT,encoding:"utf8"});
+  const declaration=spawnSync("go",["run","-tags","nodynamic","./tools/ocrlab","declare","-out",outDir,"-manifest",args.manifest,"-root",args.root,...(args.lang?["-lang",args.lang]:[]),"-purpose",args.purpose,"-annotations",args.annotations,...scenes.flatMap(s=>["-scene",s.id])],{cwd:REPO_ROOT,encoding:"utf8"});
   if (declaration.status!==0) die(`cannot freeze declaration: ${declaration.stderr || declaration.error || declaration.stdout}`);
   const drift = declarationProblems(scenes, JSON.parse(readFileSync(join(outDir, "declaration.json"), "utf8")));
   if (drift.length) die(`the language choice drifted from the Go lab's:\n  ${drift.join("\n  ")}`);
@@ -593,7 +593,7 @@ async function main() {
   console.log(`ocrlab: collected ${run.scenes.length - reused}, reused ${reused} of ${scenes.length} scene(s)`);
   const evidence = join(outDir, "evidence.json");
   writeFileSync(evidence, `${JSON.stringify(run, null, 2)}\n`);
-  const finish = spawnSync("go", ["run", "./tools/ocrlab", "finish", outDir], { cwd: REPO_ROOT, encoding: "utf8" });
+  const finish = spawnSync("go", ["run", "-tags", "nodynamic", "./tools/ocrlab", "finish", outDir], { cwd: REPO_ROOT, encoding: "utf8" });
   if (finish.status !== 0) die(`cannot record execution identity: ${finish.stderr || finish.error || finish.stdout}`);
   const problems = validateRun(run);
   console.log(`\nevidence: ${evidence}`);

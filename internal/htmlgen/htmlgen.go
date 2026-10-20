@@ -99,6 +99,8 @@ func GenerateIndexWithSnippetsDepth(book *epub.Book, outputDir string, snippets 
 	sb.WriteString("    nav summary::before { content: \"\"; display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.22em; margin-inline-end: 0.2em; background-color: currentColor; -webkit-mask: " +
 		glyphMaskURL("nav.expand") + " center / contain no-repeat; mask: " + glyphMaskURL("nav.expand") + " center / contain no-repeat; }\n")
 	sb.WriteString("    nav details[open] > summary::before { -webkit-mask-image: " + glyphMaskURL("nav.collapse") + "; mask-image: " + glyphMaskURL("nav.collapse") + "; }\n")
+	// A mask is painted with the background colour, which forced colours replace; the system text colour keeps the marker visible.
+	sb.WriteString("    @media (forced-colors: active) { nav summary::before { background-color: CanvasText; } }\n")
 	sb.WriteString("    .toc-label { font-weight: bold; margin-inline-end: 0.4em; }\n")
 	sb.WriteString("    .toc-snippet { font-size: 0.9em; color: var(--dht-fg); font-style: italic; }\n")
 	sb.WriteString("    .toc-section { color: var(--dht-fg); }\n")

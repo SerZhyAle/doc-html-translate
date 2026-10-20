@@ -85,24 +85,42 @@ func TestCheckAggregatorOutcomes(t *testing.T) {
 	cnv := child("notool", 2, "notool: COULD NOT VERIFY (tool absent)")
 	fail := child("broken", 1, "broken: FAIL (1)")
 	mute := child("mute", 7, "")
+	// Exit 4 is "not looked at yet" (CHECK-VERDICT 2.1), never a verdict: an aggregator that does not
+	// queue answers it as a 2.
+	busy := child("busy", 4, "")
+	// NOT APPLICABLE travels with exit 0 and counts as skipped (10A); the exit code wins over the word.
+	dry := child("dryrun", 0, "dryrun: NOT APPLICABLE (--dry-run)")
+	off := child("off", 0, "off: NOT APPLICABLE")
+	liar := child("liar", 1, "liar: NOT APPLICABLE")
 
 	cases := []struct {
 		name     string
 		plan     []string
 		code     int
 		lastLine string
+		quoted   string // a summary line the aggregator must print for a child
 	}{
-		{"all pass", []string{pass, pass}, 0, "check: PASS"},
-		{"an advisory colours a clean run", []string{pass, adv}, 3, "check: PASS WITH ADVISORIES (1: drift)"},
-		{"could-not-verify is never a pass", []string{pass, adv, cnv}, 2, "check: COULD NOT VERIFY (1: notool)"},
-		{"a failure outranks everything", []string{fail, cnv, adv, pass}, 1, "check: FAIL (1: broken)"},
-		{"an unknown code without a line is a failure", []string{pass, mute}, 1, "check: FAIL (1: mute)"},
+		{"all pass", []string{pass, pass}, 0, "check: PASS", ""},
+		{"an advisory colours a clean run", []string{pass, adv}, 3, "check: PASS WITH ADVISORIES (1: drift)", ""},
+		{"could-not-verify is never a pass", []string{pass, adv, cnv}, 2, "check: COULD NOT VERIFY (1: notool)", ""},
+		{"a failure outranks everything", []string{fail, cnv, adv, pass}, 1, "check: FAIL (1: broken)", ""},
+		{"an unknown code without a line is a failure", []string{pass, mute}, 1, "check: FAIL (1: mute)", ""},
+		{"exit 4 is answered as could-not-verify", []string{pass, busy}, 2, "check: COULD NOT VERIFY (1: busy)", "[2] busy: (no verdict line; exit 4)"},
+		{"exit 4 does not outrank a failure", []string{busy, fail}, 1, "check: FAIL (1: broken)", ""},
+		{"a not-applicable child is skipped, not passed", []string{pass, dry}, 0, "check: PASS (1 skipped: dryrun)", "[0] dryrun: NOT APPLICABLE (--dry-run)"},
+		{"every child not applicable", []string{dry, off}, 0, "check: NOT APPLICABLE (2 skipped: dryrun, off)", ""},
+		{"not applicable never hides an unverified child", []string{dry, cnv}, 2, "check: COULD NOT VERIFY (1: notool)", ""},
+		{"not applicable never hides an advisory", []string{off, adv}, 3, "check: PASS WITH ADVISORIES (1: drift)", ""},
+		{"the exit code wins over the not-applicable word", []string{dry, liar}, 1, "check: FAIL (1: liar)", ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			code, last, out := runScript(t, pwsh, dir, check, "-Plan", strings.Join(c.plan, ","))
 			if code != c.code || last != c.lastLine {
 				t.Fatalf("exit %d, last line %q; want exit %d, %q\n%s", code, last, c.code, c.lastLine, out)
+			}
+			if c.quoted != "" && !strings.Contains(out, c.quoted) {
+				t.Errorf("the summary does not quote %q:\n%s", c.quoted, out)
 			}
 			// Rule 9: every child ran, whatever the ones before it returned.
 			for _, p := range c.plan {
@@ -113,6 +131,75 @@ func TestCheckAggregatorOutcomes(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestTestScriptNeverPassesAZeroTestRun: `go test` exits 0 over a module without a test file and
+// over a run whose tests all skipped, so scripts/test.ps1 counts executed tests itself and answers 2
+// when there are none (CHECK-VERDICT 2.13). The control case keeps the guard honest: a real
+// passing test is still a pass with its count.
+func TestTestScriptNeverPassesAZeroTestRun(t *testing.T) {
+	pwsh := findPwsh(t)
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("go not on PATH - scripts/test.ps1 cannot be driven here")
+	}
+	// test.ps1 writes temp/logs and runs `go test ./...` in its working directory, so it runs in a
+	// scratch module - never over the repository's own logs or packages.
+	dir, _ := scratchRepo(t, "test.ps1", "lib/verdict.ps1", "lib/gobuildtags.ps1")
+	script := filepath.Join(dir, "scripts", "test.ps1")
+	writeFile(t, filepath.Join(dir, "go.mod"), "module zerotest\n\ngo 1.21\n")
+	writeFile(t, filepath.Join(dir, "main.go"), "package main\n\nfunc main() {}\n")
+
+	run := func(what string, wantCode int, wantLast string) {
+		t.Helper()
+		code, last, out := runScript(t, pwsh, dir, script)
+		if code != wantCode || last != wantLast {
+			t.Fatalf("%s: exit %d, last line %q; want exit %d, %q\n%s", what, code, last, wantCode, wantLast, out)
+		}
+	}
+
+	run("a module without a test file", 2, "test: COULD NOT VERIFY (no test ran)")
+
+	writeFile(t, filepath.Join(dir, "main_test.go"), "package main\n\nimport \"testing\"\n\nfunc TestSkipped(t *testing.T) { t.Skip(\"no tool here\") }\n")
+	run("a run in which every test skipped", 2, "test: COULD NOT VERIFY (no test ran)")
+
+	writeFile(t, filepath.Join(dir, "main_test.go"), "package main\n\nimport \"testing\"\n\nfunc TestRan(t *testing.T) {}\n\nfunc TestSkipped(t *testing.T) { t.Skip(\"no tool here\") }\n")
+	run("one test ran, one skipped", 0, "test: PASS (run=1 skipped=1)")
+}
+
+// TestTestExtensionScriptCountsExecutedTests: Node's `tests` total includes the skipped tests, so
+// scripts/test-extension.ps1 prints run = tests - skipped - todo, names each skipped test above the
+// verdict line, and refuses a run in which nothing executed (CHECK-VERDICT 2.13).
+func TestTestExtensionScriptCountsExecutedTests(t *testing.T) {
+	pwsh := findPwsh(t)
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Skip("node not on PATH - scripts/test-extension.ps1 cannot be driven here")
+	}
+	dir, _ := scratchRepo(t, "test-extension.ps1", "lib/verdict.ps1")
+	script := filepath.Join(dir, "scripts", "test-extension.ps1")
+	// The script only checks that the dependency folder exists; the scratch tests import nothing.
+	if err := os.MkdirAll(filepath.Join(dir, "extension", "node_modules"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	spec := filepath.Join(dir, "extension", "test", "scratch.test.mjs")
+
+	run := func(what string, wantCode int, wantLast string, wantInOutput ...string) {
+		t.Helper()
+		code, last, out := runScript(t, pwsh, dir, script)
+		if code != wantCode || last != wantLast {
+			t.Fatalf("%s: exit %d, last line %q; want exit %d, %q\n%s", what, code, last, wantCode, wantLast, out)
+		}
+		for _, frag := range wantInOutput {
+			if !strings.Contains(out, frag) {
+				t.Errorf("%s: the output does not contain %q\n%s", what, frag, out)
+			}
+		}
+	}
+
+	writeFile(t, spec, "import test from 'node:test';\ntest('ran', () => {});\ntest('needs a tool', { skip: 'no tool here' }, () => {});\n")
+	run("one test ran, one skipped", 0, "test-extension: PASS (run=1 skipped=1)", "needs a tool")
+
+	writeFile(t, spec, "import test from 'node:test';\ntest('needs a tool', { skip: 'no tool here' }, () => {});\n")
+	run("every test skipped", 2, "test-extension: COULD NOT VERIFY (no test ran)", "needs a tool")
 }
 
 func TestParityCheckOutcomes(t *testing.T) {

@@ -5,8 +5,10 @@
 
 import { renderOcrLangs } from "./ocr-lang-ui.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
-import { DEFAULT_OPTIONS } from "./defaults.js";
 import { applyGlyphs } from "./glyphs.js";
+import { getOptions, setOptions } from "./options-store.js";
+import { applyUiProfile, revealPage } from "./ui-profile.js";
+import { bindGroups } from "./ui-groups.js";
 import { siteHost } from "./site-host.js";
 import { allowlistMode, hostInList, siteEnabled, setSiteEnabled } from "./site-mode.js";
 import { isInterceptableUrl } from "./intercept.js";
@@ -16,11 +18,14 @@ const siteEl = document.getElementById("site");
 const hostEl = document.getElementById("host");
 const modeEl = document.getElementById("site-mode");
 const membershipEl = document.getElementById("site-membership");
+const reasonEl = document.getElementById("site-reason");
 const ocrImagesEl = document.getElementById("ocr-images");
-const ocrLangsDetailsEl = document.getElementById("ocr-langs-details");
+const ocrLangsDetailsEl = document.getElementById("popupOcrLangs");
 const ocrLangsEl = document.getElementById("ocr-langs");
 const tabStateEl = document.getElementById("tab-state");
 const ctaEl = document.getElementById("open-pdf");
+// The caption is the CTA's last child: the glyph comes first, and a later caption change must keep it.
+const ctaCaption = ctaEl.lastElementChild;
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
 const verEl = document.getElementById("ver");
@@ -32,14 +37,6 @@ const msg = (key, fallback, ...args) => t(key, fallback, ...args);
 // renderLangList is the shared OCR-language renderer (ocr-lang-ui.js); the popup keeps its
 // compact heading line above the rows.
 const renderLangList = () => renderOcrLangs(ocrLangsEl, { hint: msg("ocrLangsHint", "Recognition language (English is built-in).") });
-
-async function getOptions() {
-  const got = await chrome.storage.local.get("options");
-  return { ...DEFAULT_OPTIONS, ...(got.options || {}) };
-}
-async function setOptions(opts) {
-  await chrome.storage.local.set({ options: opts });
-}
 
 // activeTab fetches the tab the popup is acting on; everything the popup says about "this
 // site" and "this document" is derived from its URL alone.
@@ -54,12 +51,13 @@ async function activeTab() {
 async function init() {
   await initI18n();
   await loadMessages(uiLang());
+  const opts = await getOptions();
+  applyUiProfile(opts);
   applyI18n(document);
   applyGlyphs(document);
   document.getElementById("convert-note").textContent = msg("popupConvertNote",
     "Off by default. Or right-click a document link and choose “{1}”.",
     msg("convertDocMenu", "Convert with doc-html-translate"));
-  const opts = await getOptions();
   const tab = await activeTab();
   const tabUrl = (tab && tab.url) || "";
   // activeHost is the site the per-site switch acts on (site-host.js): on the viewer's own
@@ -78,6 +76,16 @@ async function init() {
         ? msg("popupInDisablelist", "In the disable list") : msg("popupNotInDisablelist", "Not in the disable list");
   };
   showMembership(opts);
+  // A switch that cannot be used says why and how to enable it (BOOLEAN-OPTION 3 rule 5), beside the switch
+  // instead of leaving a dead control: the site switch needs a website and automatic reflow turned on.
+  const showReason = (o) => {
+    reasonEl.textContent = !host
+      ? msg("popupSiteNoSite", "This tab is not a website, so there is no site to switch.")
+      : !o.enabledByDefault
+        ? msg("popupSiteNeedsReflow", "Turn on “{1}” above first; then this switch sets it for this site.", msg("popupReflow", "Reflow PDFs & EPUBs"))
+        : "";
+  };
+  showReason(opts);
 
   ocrImagesEl.checked = opts.ocrImages;
   ocrImagesEl.addEventListener("change", async () => {
@@ -98,7 +106,7 @@ async function init() {
   if (docUrl) {
     tabStateEl.hidden = false;
     tabStateEl.textContent = msg("popupTabDocument", "The current tab is a supported document.");
-    ctaEl.textContent = msg("popupOpenInReader", "Open it in the reader");
+    ctaCaption.textContent = msg("popupOpenInReader", "Open it in the reader");
   } else if (host && opts.enabledByDefault && !siteEnabled(opts, host)) {
     tabStateEl.hidden = false;
     tabStateEl.textContent = msg("popupTabOff", "Reflow is off on {1} - documents open as usual.", host);
@@ -130,6 +138,7 @@ async function init() {
     await setOptions(o);
     siteEl.disabled = !o.enabledByDefault || !host;
     siteEl.checked = siteEnabled(o, host);
+    showReason(o);
   });
 
   siteEl.addEventListener("change", async () => {
@@ -140,10 +149,10 @@ async function init() {
     showMembership(o);
   });
 
-  document.getElementById("opts").addEventListener("click", (e) => {
-    e.preventDefault();
-    chrome.runtime.openOptionsPage();
-  });
+  document.getElementById("opts").addEventListener("click", () => chrome.runtime.openOptionsPage());
+
+  await bindGroups();
+  revealPage();
 }
 
 init();

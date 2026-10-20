@@ -39,13 +39,24 @@ function Get-Count([string]$label) {
 $tests = Get-Count 'tests'
 $fail = Get-Count 'fail'
 $skipped = Get-Count 'skipped'
+$todo = Get-Count 'todo'
+# Node's `tests` total includes the skipped and the todo tests, so it is not the number executed
+# (CHECK-VERDICT 2.13: the verdict line's run= is executed tests).
+$executed = $tests - $skipped - $todo
+
+# A skipped test is named above the verdict line; the spec reporter marks it with U+FE63.
+$skipNames = @($lines | Where-Object { $_ -match '^\s*﹣\s' } | ForEach-Object { ($_ -replace '^\s*﹣\s+', '').Trim() })
+if ($skipNames.Count -gt 0) {
+    Write-Host "skipped ($($skipNames.Count)) - an environment the run did not have, not a pass on that item:" -ForegroundColor Yellow
+    foreach ($s in $skipNames) { Write-Host "  - $s" -ForegroundColor Yellow }
+}
 
 if ($code -ne 0 -or $fail -gt 0) {
     Write-Host "See temp/logs/test-extension.log"
     Exit-Verdict 'test-extension' 1 "$(if ($fail -gt 0) { $fail } else { 1 })"
 }
-if ($tests -eq 0) {
-    Write-Host "node --test ran no test (no summary line with a count) - see temp/logs/test-extension.log"
+if ($executed -le 0) {
+    Write-Host "node --test executed no test (no summary line with a count, or every test skipped) - see temp/logs/test-extension.log"
     Exit-Verdict 'test-extension' 2 'no test ran'
 }
-Exit-Verdict 'test-extension' 0 "run=$tests skipped=$skipped"
+Exit-Verdict 'test-extension' 0 "run=$executed skipped=$skipped"

@@ -19,6 +19,9 @@
       notNetwork with a reason - reverse coverage for item 3;
     - a dependency in go.sum or extension/package-lock.json matching the telemetry denylist while
       the inventory claims none, or a public text that no longer states the claim (item 6);
+    - against the native-code claim (ticket 115): a guard or build setting it cites gone from its
+      file, or a library load in the app's Go code that names its library by a computed value or
+      names one outside the listed Windows system DLLs;
     - a public form that is not the render of the rows: the blocks in privacy.html,
       extension-privacy.html, extension/store/PRIVACY.md, extension/store/LISTING.md,
       msix/README.md, and all of docs/SECURITY_POSTURE.md (item 5);
@@ -191,19 +194,31 @@ function Get-PostureDoc {
     & $w ''
     foreach ($s in @($inv.telemetry.statedIn)) { & $w ("- ``{0}``" -f $s.file) }
     & $w ''
-    & $w '## 4. The public forms rendered from these rows'
+    & $w '## 4. Native code the app loads'
+    & $w ''
+    & $w "**Claim:** $($inv.nativeCode.claim)"
+    & $w ''
+    & $w 'The build guard and the build settings that keep it true are cited, and a citation the file no longer contains fails the check:'
+    & $w ''
+    foreach ($c in @($inv.nativeCode.evidence)) { & $w ("- ``{0}`` - ``{1}``" -f $c.file, $c.contains) }
+    & $w ''
+    $ll = $inv.nativeCode.libraryLoads
+    & $w ('Every non-test Go file under {0} is read for a library load: its library must be named as a literal, and be one of {1}.' -f ((@($ll.roots) | ForEach-Object { "``$_``" }) -join ' and '), ((@($ll.systemLibraries) | ForEach-Object { "``$_``" }) -join ', '))
+    & $w ''
+    & $w '## 5. The public forms rendered from these rows'
     & $w ''
     foreach ($r in @($inv.renders)) {
         if ($r.format -eq 'posture-doc') { continue }
         & $w ("- ``{0}``, block ``{1}`` ({2}): {3}" -f $r.target, $r.block, $r.format, ((@($r.rows) | ForEach-Object { "``$_``" }) -join ', '))
     }
     & $w ''
-    & $w '## 5. How this is kept true'
+    & $w '## 6. How this is kept true'
     & $w ''
     & $w '- A permission added to `extension/manifest.json` or a capability added to `msix/AppxManifest.xml` without a row fails the check, and so does a row naming something no manifest declares.'
     & $w '- Every row names its consumers and cites the code that consumes it; a citation the code no longer contains fails the check. A shown string a row cites must still be in the strings file it names.'
     & $w '- A new network call site under the roots above fails the check until a row or a not-network reason covers it.'
     & $w '- An analytics, crash-reporting or advertising dependency entering either dependency set fails the check while section 3 claims none.'
+    & $w '- A library load in the app''s code that names its library by a computed value, or names one outside section 4''s list, fails the check, and so does a guard or build setting section 4 cites going missing.'
     & $w '- A public form edited by hand, or a row edited without `-Render`, fails the check. The consumers, the lifetimes and the "what leaves" column are authored: no mechanism can derive which features share a permission.'
     return $sb.ToString()
 }
@@ -404,6 +419,33 @@ foreach ($set in @($inv.telemetry.dependencySets)) {
 $flagged = @($depNames | Where-Object { $n = $_; @($inv.telemetry.denylist | Where-Object { $n -match $_ }).Count -gt 0 } | Sort-Object)
 foreach ($d in $flagged) { Add-Finding "dependency '$d' is a telemetry, analytics or crash-reporting library, and $invPath claims: $($inv.telemetry.claim)" }
 foreach ($s in @($inv.telemetry.statedIn)) { Test-Cites $s "$invPath telemetry (stated claim)" }
+
+# ── native code: no codec or plugin library in the process (ticket 115) ──
+# The guard keeps the one module that had a native path on its WASM decoder; the scan holds the app's
+# own code to the Windows system DLLs. A computed name is refused rather than trusted: a scan that cannot
+# read the name cannot judge it.
+$nc = $inv.nativeCode
+if ($null -eq $nc) { Add-Finding "${invPath}: no nativeCode section - the native-code claim is unrecorded" } else {
+    if ((Get-Words $nc.claim) -lt 8) { Add-Finding "$invPath nativeCode: the claim is under eight words" }
+    if (@($nc.evidence).Count -eq 0) { Add-Finding "$invPath nativeCode: no evidence cited" }
+    foreach ($c in @($nc.evidence)) { Test-Cites $c "$invPath nativeCode" }
+    $systemLibs = @($nc.libraryLoads.systemLibraries | ForEach-Object { ([string]$_).ToLowerInvariant() })
+    $namedLibs = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($rt in @($nc.libraryLoads.roots)) {
+        foreach ($f in (Resolve-RegistryPath ([string]$rt) $files)) {
+            if ($f -like '*_test.go') { continue }
+            $text = Get-FileText $f
+            if ($null -eq $text) { continue }
+            foreach ($m in [regex]::Matches($text, [string]$nc.libraryLoads.call)) {
+                if (-not $m.Groups[2].Success) { Add-Finding "$f loads a library by a computed name ($($m.Value.Trim())) - name it as a literal, so $invPath nativeCode can judge it"; continue }
+                $lib = $m.Groups[2].Value.ToLowerInvariant()
+                [void]$namedLibs.Add($lib)
+                if ($systemLibs -notcontains $lib) { Add-Finding "$f loads $($m.Groups[2].Value), which is not a Windows system library on $invPath nativeCode.libraryLoads.systemLibraries" }
+            }
+        }
+    }
+    foreach ($l in $systemLibs) { if (-not $namedLibs.Contains($l)) { Add-Finding "$invPath nativeCode: lists $l, which no code under the roots loads any more - drop it" } }
+}
 
 # ── the public forms are renders of the rows (item 5) ─────────
 $rendered = [System.Collections.Generic.HashSet[string]]::new()

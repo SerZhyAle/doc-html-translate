@@ -1,0 +1,13 @@
+# The locales the GUI ships and the in-app help has no pages in yet (CHECK-BASELINE, a set baseline: one identifier per line, sorted).
+# It may only fall: a locale that gets its pages is removed from here, and a new GUI locale without pages fails the gate until it is listed on purpose.
+# Accepted by the portfolio owner's tier decision of ticket 118 (en, ru, uk authored; the others fall back to the English pages).
+locale:ar
+locale:bn
+locale:de
+locale:es
+locale:fr
+locale:hi
+locale:it
+locale:pt
+locale:ur
+locale:zh

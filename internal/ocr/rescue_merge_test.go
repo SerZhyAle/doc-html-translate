@@ -65,16 +65,28 @@ func TestRescueMergeRetainsUncoveredLines(t *testing.T) {
 					t.Fatal("lost line association")
 				}
 			}
-			// The catalog artifact is generated from actual results, never hand-edited.
+			row := map[string]any{"case": tc.name, "kept": tc.kept, "found": []Block{full}, "accepted": got, "rejected": dropped}
+			data, err := json.MarshalIndent(row, "", "  ")
+			if err != nil {
+				t.Fatal(err)
+			}
+			data = append(data, '\n')
+			// The catalog artifact is generated from actual results, never hand-edited. A clone has no
+			// catalog, so the ordinary suite compares the merger's output with the pinned copy of the
+			// catalog's vector under testdata (OCR-PIPELINE 1.9, reference/rescue-merge-v1.9): a merger
+			// change that moves a vector fails here until the vector is regenerated, in the catalog first.
 			if dir := os.Getenv("DOCHT_TEST_MERGE_VECTORS"); dir != "" {
-				row := map[string]any{"case": tc.name, "kept": tc.kept, "found": []Block{full}, "accepted": got, "rejected": dropped}
-				data, err := json.MarshalIndent(row, "", "  ")
-				if err != nil {
+				if err = os.WriteFile(dir+"/"+tc.name+".json", data, 0600); err != nil {
 					t.Fatal(err)
 				}
-				if err = os.WriteFile(dir+"/"+tc.name+".json", append(data, '\n'), 0600); err != nil {
-					t.Fatal(err)
-				}
+			}
+			pinned, err := os.ReadFile("testdata/rescue-merge-v1.9/" + tc.name + ".json")
+			if err != nil {
+				t.Fatalf("pinned vector missing: %v", err)
+			}
+			if string(pinned) != string(data) {
+				t.Fatalf("the merger's output for %s differs from the pinned copy of the catalog vector (testdata/rescue-merge-v1.9); "+
+					"regenerate it into the catalog with DOCHT_TEST_MERGE_VECTORS and copy it here", tc.name)
 			}
 		})
 	}

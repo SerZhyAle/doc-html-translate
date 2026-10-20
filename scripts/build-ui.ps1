@@ -4,6 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/goversioninfo.ps1")
+. (Join-Path $PSScriptRoot "lib/gobuildtags.ps1")
 
 function New-VersionResourceFile {
     param(

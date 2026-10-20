@@ -504,7 +504,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) { console.log(USAGE); return; }
   args.cli = resolve(REPO, args.cli || join("temp", "doccorpus", "bin", "doc-html-translate.exe"));
-  if (args.edition === "windows" && !existsSync(args.cli)) die(`no CLI at ${args.cli} - go build -o it first`);
+  if (args.edition === "windows" && !existsSync(args.cli)) die(`no CLI at ${args.cli} - go build -tags nodynamic -o it first`);
   if (args.edition === "extension" && !existsSync(join(EXT_DIR, "vendor", "tesseract", "tesseract.esm.min.js"))) {
     die("extension/vendor is empty - run `npm run vendor` in extension/ first");
   }

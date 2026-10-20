@@ -76,7 +76,11 @@ func main() {
 	srv := &http.Server{Handler: newAPIGuard(newMux(), addr, uiToken)}
 
 	go watchHeartbeat(srv)
-	go openAppWindow("http://" + addr)
+	// DOCHT_GUI_NO_WINDOW serves and opens nothing: the help screenshot generator and UI-automation runs
+	// drive their own browser against this server (tools/helpgen, ticket 118). A user never sets it.
+	if os.Getenv("DOCHT_GUI_NO_WINDOW") == "" {
+		go openAppWindow("http://" + addr)
+	}
 
 	_ = srv.Serve(ln)
 }
@@ -90,11 +94,14 @@ func newMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", getOnly(handleUI))
 	mux.HandleFunc("/i18n.js", getOnly(handleI18nJS))
+	mux.HandleFunc("/help.js", getOnly(handleHelpJS))
+	mux.Handle("/help/", newHelpHandler(helpFiles))
 	mux.HandleFunc("/favicon.ico", getOnly(handleFavicon))
 	mux.HandleFunc("/api/version", getOnly(handleVersion))
 	mux.HandleFunc("/api/update-check", jsonPost(handleUpdateCheck))
 	mux.HandleFunc("/api/initial", getOnly(handleInitial))
 	mux.HandleFunc("/api/env", getOnly(handleEnv))
+	mux.HandleFunc("/api/resources", getOnly(handleResources))
 	mux.HandleFunc("/api/assoc-status", getOnly(handleAssocStatus))
 	mux.HandleFunc("/api/ocr-langs", getOnly(handleOCRLangs))
 	mux.HandleFunc("/api/alive", getOnly(handleAlive))
@@ -1145,7 +1152,7 @@ func browseFile(ctx context.Context, title string) ([]string, error) {
 ` + dialogOwner + `
 $f = New-Object System.Windows.Forms.OpenFileDialog
 $f.Multiselect = $true
-$f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.cbz;*.cbr;*.cb7;*.cbt;*.fd-sec|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff|Comics|*.cbz;*.cbr;*.cb7;*.cbt|FileDO secret files|*.fd-sec|All files|*.*"
+$f.Filter = "Documents, images & comics|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.jxl;*.cbz;*.cbr;*.cb7;*.cbt;*.fd-sec|Documents|*.epub;*.mobi;*.azw3;*.fb2;*.pdf;*.txt;*.md;*.html;*.htm;*.rtf|Images|*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.jxl|Comics|*.cbz;*.cbr;*.cb7;*.cbt|FileDO secret files|*.fd-sec|All files|*.*"
 $f.Title = ` + psString(title) + `
 $res = $f.ShowDialog($owner)
 if ($res -eq 'OK') { $f.FileNames | ForEach-Object { [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($_)) } }`

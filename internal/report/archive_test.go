@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -64,8 +65,12 @@ func TestBuildProducesReadableArchive(t *testing.T) {
 	}
 
 	got := entries(t, path)
-	if _, ok := got["environment.txt"]; !ok {
+	env, ok := got["environment.txt"]
+	if !ok {
 		t.Error("archive has no environment.txt")
+	}
+	if strings.Contains(env, "logs left out") {
+		t.Errorf("environment.txt claims logs were left out although none were:\n%s", env)
 	}
 	if _, ok := got["settings.json"]; !ok {
 		t.Error("archive has no settings.json")
@@ -112,6 +117,105 @@ func TestBuildDropsOldestLogsOverCap(t *testing.T) {
 	}
 	if info.Size() > MaxArchiveBytes {
 		t.Errorf("archive is %d bytes, over the %d cap", info.Size(), MaxArchiveBytes)
+	}
+}
+
+// The archive says on its own that its history is partial: the count the caller gets back is also
+// a key of environment.txt, appended after the existing ones.
+func TestBuildRecordsLogsLeftOutInTheEnvironment(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 4, 6<<20)
+
+	path, dropped, err := Build(buildOpts())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if dropped != 2 {
+		t.Fatalf("dropped %d logs, want 2 (two 6 MB logs fit under the cap)", dropped)
+	}
+	env := entries(t, path)["environment.txt"]
+	lines := strings.Split(strings.TrimRight(env, "\n"), "\n")
+	if last, want := lines[len(lines)-1], "logs left out: 2"; last != want {
+		t.Errorf("last environment.txt line = %q, want %q (an additive key after the existing ones)\n%s", last, want, env)
+	}
+	if !strings.HasPrefix(env, "version: 26.0811.1400\n") {
+		t.Errorf("the existing keys moved: environment.txt begins %q", strings.SplitN(env, "\n", 2)[0])
+	}
+}
+
+// A log larger than the archive is decided from its size, not from its content: the run must not
+// pay the log's size in memory to learn that it does not fit.
+func TestBuildSkipsAnOversizedLogWithoutReadingIt(t *testing.T) {
+	setHome(t)
+	names := writeLogs(t, 2, 64)
+	huge := RunLogPath(time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), 1)
+	f, err := os.Create(huge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const hugeBytes = 64 << 20
+	if err := f.Truncate(hugeBytes); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	path, dropped, err := Build(buildOpts())
+	runtime.ReadMemStats(&after)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if dropped != 1 {
+		t.Errorf("dropped %d logs, want 1 (the oversized one)", dropped)
+	}
+	if grew := after.TotalAlloc - before.TotalAlloc; grew > MaxArchiveBytes {
+		t.Errorf("Build allocated %d bytes: the %d byte log was read into memory", grew, int64(hugeBytes))
+	}
+	got := entries(t, path)
+	if _, ok := got["logs/"+filepath.Base(huge)]; ok {
+		t.Error("the oversized log was archived")
+	}
+	for _, n := range names {
+		if _, ok := got["logs/"+n]; !ok {
+			t.Errorf("the small log %q was dropped along with the oversized one", n)
+		}
+	}
+	if env := got["environment.txt"]; !strings.Contains(env, "logs left out: 1\n") {
+		t.Errorf("environment.txt does not record the omission:\n%s", env)
+	}
+}
+
+// DIAGNOSTIC-REPORT 8A: <Product>-logs[-<version>]-yyyyMMdd-HHmmss.zip, and a second report in the
+// same second moves the stamp on instead of leaving that shape.
+func TestBuildNamesTheArchiveByTheContract(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+
+	opts := buildOpts()
+	first, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	second, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	opts.AppVersion = ""
+	unstamped, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	for _, c := range []struct{ path, want string }{
+		{first, "doc-html-translate-logs-26.0811.1400-20260811-140000.zip"},
+		{second, "doc-html-translate-logs-26.0811.1400-20260811-140001.zip"},
+		{unstamped, "doc-html-translate-logs-20260811-140000.zip"},
+	} {
+		if got := filepath.Base(c.path); got != c.want {
+			t.Errorf("archive named %q, want %q", got, c.want)
+		}
 	}
 }
 

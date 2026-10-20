@@ -5,6 +5,8 @@
 
 import { overlayImage, ocrLangToHtmlLang, makeBadge } from "./ocr-overlay.js";
 import { langLabel } from "./ocr-lang.js";
+import { getOptions } from "./options-store.js";
+import { applyUiProfile, revealPage } from "./ui-profile.js";
 
 const statusEl = document.getElementById("status");
 const barEl = document.getElementById("progress-bar");
@@ -69,7 +71,8 @@ function showNotice(lines, action) {
   if (action) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "ocr-action";
+    // The page's one optional action: the primary rank, the only one on this surface.
+    btn.className = "primary";
     btn.textContent = action.label;
     btn.addEventListener("click", action.onClick);
     box.append(btn);
@@ -110,7 +113,17 @@ async function getOcrLang() {
   }
 }
 
+// showPage applies the saved interface size, controls profile and theme, then reveals the page: one frame in
+// the reader's own sizes instead of a flash of the defaults. A storage failure still reveals it.
+async function showPage() {
+  try {
+    applyUiProfile(await getOptions());
+  } catch { /* the defaults draw a usable page */ }
+  revealPage();
+}
+
 async function main() {
+  await showPage();
   // This page fetches the URL it is given with the extension's host access. It is not
   // web-accessible, but it refuses a frame anyway, as the viewer does: a framed copy would let
   // the framing page choose what gets fetched.

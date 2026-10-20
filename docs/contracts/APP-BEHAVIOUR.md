@@ -32,8 +32,15 @@ wording of the rules is read through that - see ticket 23, Direction B):
   `internal/i18n.IsRTL` by a test.
 - **Rule 9 - accessible names, gated.** Glyph-only controls and every select carry a localized
   `aria-label`; the drop zone is a real button. A test fails on a missing name.
-- **Rule 10** has no saved geometry here. **Rule 12** applies to the autosaving settings surface: value
-  edits are reversible; deleting output and logs keeps a separate confirmed button.
+- **Rule 10 - window geometry.** The GUI saves and restores its rectangle (since 2026-09-29, ticket 63): the
+  restore is defensive (`saneGeometry`, `clampWindowToScreen` - a lost monitor lands on a surviving one) and a
+  maximized or full-screen box never overwrites the remembered normal rectangle (`windowFillsScreen`, pinned in
+  `session_test.go`, 2026-10-20). The one difference is timing: the rectangle is written after the window
+  settles (800 ms after the last move or resize), not on close, because a browser-hosted window has no
+  reliable close event - a permanent variant recorded in [`../UI_PROFILE.md`](../UI_PROFILE.md) section 4 and
+  in the catalog registry. (The earlier "no saved geometry here" was false since 2026-09-29.)
+- **Rule 12** applies to the autosaving settings surface: value edits are reversible; deleting output and logs
+  keeps a separate confirmed button.
 
 **Re-checked 2026-10-06 (ticket 95):** a second pass found a run could start twice from a double click
 (rule 3 - now blocked synchronously; a cancelled queue item is logged as its own outcome), the persisted
@@ -49,6 +56,10 @@ is English in Explorer - a dated exception in the shared registry (until 2026-12
 repair needs no new consent only within already enabled HKCU registration kinds. This product has no
 automatic repair path: the no-argument CLI asks again, and explicit registration flags authorize writes.
 
+**Read again 2026-10-20 (ticket 120)** at 0.12, which the consolidation of 2026-10-17 did not change: rules 1-9,
+11 and 12 were not re-read line by line, the whole package passes (`go test ./cmd/doc-html-ui`, and
+`ui_dialog_test.mjs` with `help_resolver_test.mjs`), and the dialog guards hold.
+
 **Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/conformance_test.go`, `cmd/doc-html-ui/hardening_test.go`
-(`TestQuestionIsAskedInTheWindow`, the cancel tests), `internal/dialog` tests, and a headless-Edge run of
-the real page (ticket 23, "Verification").
+(`TestQuestionIsAskedInTheWindow`, the cancel tests), `cmd/doc-html-ui/session_test.go` (the geometry guard),
+`internal/dialog` tests, and a headless-Edge run of the real page (ticket 23, "Verification").

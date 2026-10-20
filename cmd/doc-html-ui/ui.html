@@ -13,17 +13,21 @@
    live through prefers-color-scheme; data-theme pins one side. Names follow the role vocabulary
    (surface.window -> --surface-window, ..); the values are this product's own.
    Every text role clears WCAG AA (4.5:1) on each surface it is drawn on, and --text-muted - the
-   11-12px hints, field labels and placeholders - clears 6:1; --border clears roughly 3:1 so a
-   field's edge is visible. TestPaletteTextMeetsWCAGAA measures it. */
+   12px notes, field labels and placeholders - clears 6:1; --border clears roughly 3:1 on a field
+   face and --border-strong 3:1 on every surface, which is what a checkbox outline needs.
+   TestPaletteTextMeetsWCAGAA measures it. */
 :root {
     color-scheme: light dark;
     --surface-window:  light-dark(#eff1f5, #1e1e2e);
     --surface-raised:  light-dark(#ffffff, #2b2b3d);
     --surface-sunken:  light-dark(#e6e9ef, #232334);
+    --surface-header:  light-dark(#d3d9e8, #34344c);
+    --surface-header-hover: light-dark(#c4cce1, #3f3f5b);
     --control:         light-dark(#ffffff, #2b2b3d);
     --control-hover:   light-dark(#dce0e8, #45475a);
     --control-pressed: light-dark(#ccd0da, #585b70);
     --border:          light-dark(#8c8fa1, #6c7086);
+    --border-strong:   light-dark(#5c5f77, #9399b2);
     --text-primary:    light-dark(#1f2233, #cdd6f4);
     --text-muted:      light-dark(#4c4f69, #a6adc8);
     --text-disabled:   light-dark(#9ca0b0, #6c7086);
@@ -40,6 +44,51 @@
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
+
+/* UI-SIZING 1.1 (ticket 119): one token resolver for every covered component - buttons, option
+   rows, group headers and the page rail - so a large button never sits beside an unscaled
+   checkbox. --ui is the interface scale (compact 0.875, ordinary 1, large 1.25, extra large 1.5,
+   huge 2) and moves text, glyphs, padding, gaps, corners and targets together; --tx is the
+   text-only enlargement (1, 1.25, 1.5, 2): it grows text and layout first and the companion
+   glyphs only at half its multiplier (--gm, bounded by the clamp at 1.5). The input profile is
+   chosen once at opening (data-input) and never follows a pointer event. clamp() keeps an
+   unknown value from producing a zero-size or unboundedly shrinking target. The browser zoom
+   and the operating-system scale compose underneath: every length here is a CSS pixel, so
+   nothing is scaled twice. Declared smallest targets: 28 CSS px pointer, 42 CSS px touch
+   (compact); ordinary 32 and 48. */
+html {
+    --ui: 1;
+    --tx: 1;
+    --s: clamp(0.875, var(--ui), 2);
+    --t: clamp(1, var(--tx), 2);
+    --gm: calc(1 + (var(--t) - 1) * 0.5);
+    --tgt: calc(32px * var(--s));
+    --pad: calc(12px * var(--s));
+    --glyph: calc(16px * var(--s) * var(--gm));
+    --box: calc(20px * var(--s));
+    --gap: calc(8px * var(--s));
+    --gap-group: calc(16px * var(--s));
+    --radius: calc(4px * var(--s));
+    --fs: calc(13px * var(--s) * var(--t));
+    --fs-note: calc(12px * var(--s) * var(--t));
+    --fs-title: calc(17px * var(--s) * var(--t));
+    --fs-code: calc(11px * var(--s) * var(--t));
+    --fs-log: calc(11px * var(--s));
+}
+html[data-input="touch"] {
+    --tgt: calc(48px * var(--s));
+    --pad: calc(16px * var(--s));
+    --glyph: calc(20px * var(--s) * var(--gm));
+    --box: calc(24px * var(--s));
+}
+html[data-size="compact"] { --ui: 0.875; }
+html[data-size="large"]   { --ui: 1.25; }
+html[data-size="xlarge"]  { --ui: 1.5; }
+html[data-size="huge"]    { --ui: 2; }
+html[data-text="large"]   { --tx: 1.25; }
+html[data-text="xlarge"]  { --tx: 1.5; }
+html[data-text="huge"]    { --tx: 2; }
+
 /* APP-STYLE rule 5: the log and the command line are deliberately OUT of the theme. They are a
    console - light text on a dark field in every theme - and carry their own colours with them
    instead of inheriting the window's, so a light theme cannot turn them into light-on-light. */
@@ -53,100 +102,147 @@
     color: var(--console-text);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-/* The window is the frame: the page itself never scrolls or grows. Content is pinned
-   to the top-left (no max-width + auto margins centring it), and the only thing that
-   scrolls is whichever column overflows - normally the log, which a long OCR run fills
-   with thousands of lines. */
+/* The window is the frame: the page itself never scrolls or grows. The shell is a rail and a pane;
+   the pane scrolls one page at a time and the log scrolls on its own. The first frame is held back
+   until the saved language, theme and page are applied (SETTINGS-NAVIGATION section 5 rule 1), so
+   nobody sees English or the default theme flash before their own. */
+html[data-boot] body { visibility: hidden; }
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: var(--fs);
     background: var(--surface-window);
     color: var(--text-primary);
-    padding: 16px 22px 20px;
     margin: 0;
     height: 100vh;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     -webkit-font-smoothing: antialiased;
 }
+/* .win is the one container the layout queries measure: em here is the pane's own text size, so
+   every breakpoint scales with the interface size and the text enlargement (a large interface
+   folds the rail into its drawer sooner, which is what keeps the content readable). */
+.win {
+    container: win / inline-size;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: calc(12px * var(--s)) calc(16px * var(--s)) calc(16px * var(--s));
+    position: relative;
+}
+.shell { display: flex; flex: 1 1 auto; min-height: 0; gap: var(--gap-group); position: relative; }
 
-/* two-column layout: controls on the left at their natural width, log filling all the
-   landscape space that is left. Collapses to a single stacked column on a narrow window.
-   min-height:0 on the grid and its children is what lets .log scroll instead of growing:
-   a flex/grid item defaults to min-height:auto, which refuses to shrink below content. */
-.app {
-    display: grid;
-    grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
-    gap: 22px;
-    align-items: stretch;
-    flex: 1 1 auto;
-    min-height: 0;
+/* SETTINGS-NAVIGATION section 2: one vertical page menu at the reading start, one level, short
+   names with a glyph each, one monochrome glyph treatment for the whole menu (D4). The row is a
+   navigation target, not a command button: its hit area and selected face run the whole row.
+   Selection is a face, a heavier weight and an inline-start bar - never colour alone. */
+.rail {
+    flex: 0 0 auto;
+    width: max-content;
+    min-width: calc(148px * var(--s));
+    max-width: calc(236px * var(--s));
+    overflow-y: auto;
 }
-/* The pane clips what overflows its padding box, and the focus ring (2px plus its 2px offset)
-   overflows every full-width field and edge button. The padding gives the ring room and the
-   equal negative margin keeps the content where it was (APP-SETTINGS rule 10). */
-.col-main { min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 4px; margin: -4px; }
-.col-log { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-/* one-time first-run opt-in banner for the default-handler association */
-.assoc-prompt {
-    border: 1px solid var(--accent);
+.rail-list { display: flex; flex-direction: column; gap: calc(2px * var(--s)); }
+.rail-item {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    width: 100%;
+    min-height: var(--tgt);
+    padding: calc(4px * var(--s)) var(--pad);
+    background: none;
+    border: 0;
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: var(--fs);
+    text-align: start;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+.rail-item:hover { background: var(--control-hover); }
+.rail-item:active { background: var(--control-pressed); }
+.rail-item[aria-selected="true"] {
     background: var(--accent-soft);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 14px;
-    font-size: 12px;
-    line-height: 1.45;
+    font-weight: 700;
+    box-shadow: inset calc(3px * var(--s)) 0 0 var(--accent);
 }
-.assoc-prompt-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.assoc-prompt-actions button { padding: 5px 12px; font-size: 12px; }
-.assoc-prompt-actions button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.assoc-prompt-actions button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-/* Stacked on a narrow window: the log sits under the controls, so pinning everything
-   into one viewport would squeeze it to nothing. Hand scrolling back to the page and
-   give the log a real height of its own. */
-@media (max-width: 900px) {
-    .app { grid-template-columns: 1fr; }
-    body { height: auto; overflow: auto; }
-    .col-main { overflow: visible; }
-    .log { min-height: 260px; }
+:root[dir="rtl"] .rail-item[aria-selected="true"] { box-shadow: inset calc(-3px * var(--s)) 0 0 var(--accent); }
+.rail-item .glyph { flex: none; width: var(--glyph); height: var(--glyph); }
+.rail-item > span { min-width: 0; }
+.rail-toggle { display: none; }
+.rail-scrim { display: none; }
+.pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    container: pane / inline-size;
+    /* The focus ring (2px plus its 2px offset) overflows every full-width field and edge button and the
+       pane clips what overflows its padding box; the padding gives the ring room and the equal negative
+       margin keeps the content where it was (APP-SETTINGS rule 10). */
+    padding: 4px;
+    margin: -4px;
 }
-.head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; }
-h1 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
-.ver { font-size: 11px; color: var(--text-muted); }
-.byline { font-size: 11px; color: var(--text-muted); }
+.page[hidden] { display: none; }
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--gap) var(--gap-group);
+    margin-bottom: var(--gap-group);
+}
+.page-title { flex: 1 1 auto; min-width: 0; }
+h2 { font-size: var(--fs-title); font-weight: 600; letter-spacing: .01em; }
+/* One purpose line under every page title (WINDOWS-UI section 2.3). */
+.purpose { margin-top: calc(2px * var(--s)); }
+/* First-page preferences: theme and interface language, the two settings SETTINGS-NAVIGATION 3.1
+   puts on the first page. Each has a visible caption and is the only editor of its value. */
+.prefs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap) var(--gap-group); }
+.pref { display: flex; align-items: center; gap: var(--gap); }
+.pref > label { font-size: var(--fs-note); color: var(--text-muted); }
+.pref select { max-width: calc(170px * var(--s)); font-weight: 600; }
+
+/* The window header: title, version, links and the help button at the trailing corner (CONTEXT-HELP
+   rule 2); nothing else lives in that corner. */
+.head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--gap) calc(10px * var(--s)); margin-bottom: var(--gap); }
+h1 { font-size: var(--fs-title); font-weight: 600; letter-spacing: .02em; }
+.ver { font-size: var(--fs-note); color: var(--text-muted); }
+.byline { font-size: var(--fs-note); color: var(--text-muted); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 calc(6px * var(--s)); }
 .byline a { color: var(--link); text-decoration: none; }
 .byline a:hover { text-decoration: underline; }
-.byline .dot { color: var(--text-muted); margin: 0 3px; }
-/* WINDOWS-UI section 2.3: the purpose line under the title takes a row of its own below the
-   header items instead of squeezing between them. */
-.head .purpose { flex-basis: 100%; margin-top: 0; }
-/* theme and language switches, pushed to the far right of the header row */
-/* 13 endonyms do not fit a button row, so the switcher is a select */
-.switches { margin-inline-start: auto; align-self: center; display: flex; gap: 6px; }
-.langsw { padding: 3px 8px; font-size: 11px; font-weight: 600; max-width: 150px; min-height: 28px; }
-.hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.byline .dot { color: var(--text-muted); }
+.head-help { margin-inline-start: auto; }
+.help-btn { padding: 0; width: var(--tgt); height: var(--tgt); }
+.help-btn .glyph { width: var(--glyph); height: var(--glyph); }
+.dlg form { position: relative; }
+.dlg-help { position: absolute; inset-block-start: calc(-10px * var(--s)); inset-inline-end: calc(-12px * var(--s)); }
+.dlg-help[hidden] { display: none; }
+
+/* The muted note under a caption: what a setting does and what it costs (APP-SETTINGS rule 3). 12px
+   at ordinary scale - the next smaller readable role - and it grows with the text enlargement. */
+.hint { font-size: var(--fs-note); color: var(--text-muted); margin-top: calc(4px * var(--s)); line-height: 1.4; }
 /* APP-STYLE section 4: a failure or a refusal is danger; "this may not do what you expect" - a
    caveat beside something that did happen - is warning. */
 .hint.ok { color: var(--success); }
 .hint.warn { color: var(--warning); }
 .hint.fail { color: var(--danger); }
-code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 11px; background: var(--surface-raised); padding: 1px 4px; border-radius: 3px; }
+code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: var(--fs-code); background: var(--surface-raised); padding: 1px 4px; border-radius: calc(3px * var(--s)); }
 
-/* WINDOWS-UI section 6.1: accent marks interaction, so a static section heading takes muted ink;
-   only the clickable group headers (summary) keep the accent. */
+/* WINDOWS-UI section 6.1: accent marks interaction, so a static section heading takes muted ink. */
 .stitle {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--text-muted); margin: 14px 0 6px;
+    font-size: var(--fs-note); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted); margin: var(--gap-group) 0 var(--gap);
 }
 
-/* inputs / selects / buttons */
+/* inputs / selects */
 input[type="text"], input[type="number"], input[type="password"], select {
     background: var(--control);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: 7px 10px;
-    border-radius: 5px;
-    font-size: 13px;
+    min-height: var(--tgt);
+    padding: calc(4px * var(--s)) calc(10px * var(--s));
+    border-radius: var(--radius);
+    font-size: var(--fs);
     font-family: inherit;
     transition: border-color .15s;
 }
@@ -157,56 +253,81 @@ input::placeholder { color: var(--text-muted); }
    direction in an RTL window; while the field is empty it shows a translated placeholder, which
    follows the window instead. */
 :root[dir="rtl"] input[dir="ltr"]:placeholder-shown { direction: rtl; }
+
+/* BUTTONS 2.0 (ticket 119). One command button: a rectangle with the baseline corner, a neutral face,
+   content width plus padding (never stretched, never a percentage), the glyph before the caption,
+   the caption whole - a button wraps to the next row before its caption does, and only a button that
+   cannot fit alone wraps its caption and grows. Ranks are separate from behaviour: ordinary (the
+   neutral face), secondary (a transparent face), primary (the accent, one per task surface) and
+   destructive (the danger face of a confirmation's acting button). */
 button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    min-height: var(--tgt);
+    min-width: var(--tgt);
+    max-width: 100%;
+    padding: calc(5px * var(--s)) var(--pad);
     background: var(--control);
     color: var(--text-primary);
     border: 1px solid var(--border);
-    padding: 7px 14px;
-    border-radius: 5px;
+    border-radius: var(--radius);
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--fs);
     font-family: inherit;
-    white-space: nowrap;
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
     transition: background .15s;
 }
 button:hover { background: var(--control-hover); }
 button:active { background: var(--control-pressed); }
 button:disabled, select:disabled { color: var(--text-disabled); cursor: not-allowed; }
+button:disabled .glyph { color: var(--text-disabled); }
+button.secondary { background: transparent; }
+button.secondary:hover { background: var(--control-hover); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+button.primary:disabled { opacity: .45; }
+button.danger { background: var(--danger); color: var(--danger-ink); border-color: var(--danger); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* WINDOWS-UI 0.4 section 11: every command button carries its meaning's glyph at the reading
-   start, a 6 logical px gap between glyph and caption, 16 px tier. Flex mirrors the row in a
-   right-to-left window, so the glyph moves to the reading start on its own; captions are
-   verbs or short nouns and are never truncated - a row that does not fit wraps whole buttons
-   (APP-BEHAVIOUR rule 2). The drop zone, the output-path link and the queue row's file
-   selector keep their own display: they are not caption buttons. */
-button:not(.drop):not(.path-btn):not(.qsel) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-/* ICON-RENDER rule 7: a record marked rtl: mirror (nav.open-external, nav.go-to) flips in a
-   right-to-left layout; the fixed records never do. */
+/* The glyph rides the reading start; a flex row mirrors it in a right-to-left window on its own.
+   ICON-RENDER rule 7: a record marked rtl: mirror (nav.open-external, nav.go-to) flips there; the
+   fixed records never do. */
+.glyph { display: block; flex: none; width: var(--glyph); height: var(--glyph); }
 :root[dir="rtl"] button .glyph.mirror { transform: scaleX(-1); }
+/* A command panel is a wrapping flex row: whole buttons wrap to the next line, widths stay their
+   content widths and spare space stays empty, and every button of one line takes the height of
+   that line's tallest member (flex-line stretch), recomputed by the engine after every wrap. */
+.btn-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap); }
+.btn-row > * { flex: 0 0 auto; }
+/* A stateful button reserves its widest known state (BUTTONS section 3 rule 3): Convert and Cancel,
+   Download and Cancel share one box whose min-width script sets from the wider of the two, so the
+   neighbours do not move when the caption changes. */
+.state-stack { display: inline-flex; align-items: stretch; }
+.state-stack > button { flex: 1 1 auto; }
+.state-stack > button[hidden] { display: none; }
 /* The OCR download button is its own Cancel while a download runs: the glyph changes with the
    caption (one meaning, one glyph), the class is set by the download handler. */
 #btnOcrDownload .ico-cancel { display: none; }
 #btnOcrDownload.busy .ico-dl { display: none; }
 #btnOcrDownload.busy .ico-cancel { display: block; }
 
-/* drop zone: a real button, so "choose a file" is reachable from the keyboard (APP-BEHAVIOUR
-   rule 9); the button look is reset to the zone's own. */
+/* drop zone: a drop target and a file chooser, not a command button (D6). It is a real button so
+   "choose a file" is reachable from the keyboard (APP-BEHAVIOUR rule 9). */
 .drop {
     display: block;
     width: 100%;
+    min-height: calc(88px * var(--s));
     background: none;
     color: inherit;
     font: inherit;
-    white-space: normal;
+    font-size: var(--fs);
     border: 2px dashed var(--border);
-    border-radius: 9px;
-    padding: 16px 14px;
+    border-radius: calc(9px * var(--s));
+    padding: calc(16px * var(--s)) calc(14px * var(--s));
     text-align: center;
     cursor: pointer;
     user-select: none;
@@ -216,118 +337,159 @@ button:not(.drop):not(.path-btn):not(.qsel) {
 .drop > span { display: block; }
 .drop.dragover { border-color: var(--accent); background: var(--accent-soft); }
 .drop.has-file { border-style: solid; border-color: var(--accent); text-align: start; }
-.drop .ico { font-size: 20px; color: var(--accent); display: block; margin-bottom: 2px; }
-.drop .ico .glyph { margin: 0 auto; }
+.drop .ico { color: var(--accent); display: block; margin-bottom: calc(2px * var(--s)); }
+.drop .ico .glyph { margin: 0 auto; width: calc(22px * var(--s) * var(--gm)); height: calc(22px * var(--s) * var(--gm)); }
 .drop .ph, .drop .fname, .drop .sub { display: block; }
-.drop .ph { font-size: 13px; color: var(--text-muted); }
-.drop .fname { font-size: 13px; color: var(--text-primary); font-weight: 600; word-break: break-all; }
-.drop .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.drop .ph { font-size: var(--fs); color: var(--text-muted); }
+.drop .fname { font-size: var(--fs); color: var(--text-primary); font-weight: 600; word-break: break-all; }
+.drop .sub { font-size: var(--fs-note); color: var(--text-muted); margin-top: calc(2px * var(--s)); }
+.run-row { margin-top: var(--gap); }
+.run-row .state-stack > button { font-size: calc(15px * var(--s) * var(--t)); }
 
-/* generic field row: inline label + control */
-.field { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
-.field > label { font-size: 12px; color: var(--text-muted); min-width: 84px; }
-.field > input, .field > select { flex: 1; min-width: 0; }
+/* generic field row: caption, control, button. The row wraps whole items, so a button that does not
+   fit beside the control drops to the next line instead of squeezing it or wrapping its own caption. */
+.field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); margin: calc(6px * var(--s)) 0; }
+.field > label { font-size: var(--fs-note); color: var(--text-muted); min-width: calc(84px * var(--s)); }
+.field > input, .field > select { flex: 1 1 calc(11em); min-width: 0; }
+.page:not(#page-convert) .field > select { flex: 0 1 24em; }
+.page:not(#page-convert) .field > input[type="text"] { flex: 0 1 28em; }
 /* WINDOWS-UI section 4 (Numeric): readable digits and readable native spin controls - the whole
-   editor scales, not just the box. The 16px digit font / 110px editor width is the reference
-   baseline the profile names as a reusable starting point; the spin glyphs grow with the font. */
-input[type="number"] { font-size: 16px; min-height: 32px; }
-.field.num > input { width: 110px; flex: 0 0 auto; }
+   editor scales, not just the box. */
+input[type="number"] { font-size: calc(16px * var(--s) * var(--t)); }
+.field.num > input { width: calc(110px * var(--s)); flex: 0 0 auto; }
 /* WINDOWS-UI section 4 (Units): the unit sits immediately next to the value, the range and
    sentinel meaning stay in the hint below the row. */
-.field .unit { font-size: 12px; color: var(--text-muted); flex: none; }
+.field .unit { font-size: var(--fs-note); color: var(--text-muted); flex: none; }
 
-/* engine radios */
-.engine { display: flex; flex-wrap: wrap; gap: 7px 18px; margin: 4px 0 2px; }
-.engine label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
-.engine input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+/* engine radios: an exclusive choice, not a command and not a boolean option */
+.engine { display: flex; flex-wrap: wrap; gap: 0 calc(18px * var(--s)); margin: calc(4px * var(--s)) 0 calc(2px * var(--s)); }
+.engine label { display: flex; align-items: center; gap: var(--gap); min-height: var(--tgt); font-size: var(--fs); cursor: pointer; }
+.engine input { accent-color: var(--accent); width: var(--box); height: var(--box); cursor: pointer; flex: none; }
 
 /* languages */
-.langs { display: flex; align-items: center; gap: 8px; }
-.langs select { flex: 1; min-width: 0; }
-.swap { padding: 7px 11px; font-size: 14px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
-/* Vocabulary glyphs (content.document, action.swap; tests/iconography_test.go): colour from the text. */
-.glyph { display: block; flex: none; }
+.langs > select { flex: 1 1 calc(9em); min-width: 0; }
+.swap { padding: 0; width: var(--tgt); }
 
-/* checkbox toggles */
-/* WINDOWS-UI section 4 (Boolean) / APP-SETTINGS section 8: the checkbox sits at the reading
-   start with the caption immediately beside it, and a setting's description goes below the
-   caption at the same text inset (.chk-hint: 15px input + 7px gap). */
-.toggles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; margin: 4px 0; }
-@media (max-width: 700px) { .toggles { grid-template-columns: 1fr; } }
-.chk { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; }
-.chk input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex: none; }
-.chk-hint { margin-inline-start: 22px; margin-top: 1px; }
-
-/* collapsibles */
-details {
-    background: var(--surface-sunken);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    margin: 8px 0;
-}
-details > summary {
+/* BOOLEAN-OPTION 2.0 (ticket 119). One option: a visible square checkbox at the reading start, one
+   text cell at its end - a heading row (optional meaning glyph, the caption, optional help button)
+   and the explanation below. The checkbox is the native input, drawn as a vector at the box size with
+   its hit area extended to the target size by padding that a negative margin takes back, so the box
+   sits on the first heading line and no target overlaps its neighbour. A click on the checkbox, the
+   caption or the glyph toggles once; the explanation and the help button never do. */
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19em), 1fr)); gap: var(--gap) var(--gap-group); margin: calc(4px * var(--s)) 0; }
+.opt { display: grid; grid-template-columns: var(--box) minmax(0, 1fr); column-gap: var(--gap); align-items: start; }
+.opt-box {
+    appearance: none; -webkit-appearance: none;
+    box-sizing: content-box;
+    position: relative;
+    width: var(--box); height: var(--box);
+    padding: calc((var(--tgt) - var(--box)) / 2);
+    margin: 0 calc((var(--tgt) - var(--box)) / -2);
+    background: none; border: 0; border-radius: var(--radius);
     cursor: pointer;
-    padding: 9px 12px;
-    font-size: 11px;
+}
+.opt-box::before {
+    content: ''; position: absolute; inset: calc((var(--tgt) - var(--box)) / 2);
+    border: calc(2px * var(--s)) solid var(--border-strong); border-radius: var(--radius);
+    background: var(--control);
+}
+.opt-box:checked::before { background: var(--accent); border-color: var(--accent); }
+.opt-box:checked::after {
+    content: ''; position: absolute; inset: calc((var(--tgt) - var(--box)) / 2);
+    background-color: var(--accent-ink);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M9%2016.17L4.83%2012l-1.42%201.41L9%2019%2021%207l-1.41-1.41z%27%2F%3E%3C%2Fsvg%3E") center / 82% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M9%2016.17L4.83%2012l-1.42%201.41L9%2019%2021%207l-1.41-1.41z%27%2F%3E%3C%2Fsvg%3E") center / 82% no-repeat;
+}
+.opt-box:disabled { cursor: not-allowed; }
+.opt-box:disabled::before { border-color: var(--text-disabled); border-style: dashed; background: transparent; }
+.opt-box:disabled:checked::before { background: var(--text-disabled); border-style: solid; }
+.opt-cell { min-width: 0; }
+.opt-headrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gap); min-height: var(--tgt); }
+.opt-name { display: inline-flex; align-items: center; gap: var(--gap); min-height: var(--tgt); font-size: var(--fs); cursor: pointer; overflow-wrap: anywhere; }
+.opt-name .glyph { color: var(--text-primary); }
+.opt-box:disabled ~ .opt-cell .opt-name { color: var(--text-disabled); cursor: not-allowed; }
+.opt-expl { margin: calc(-4px * var(--s)) 0 calc(4px * var(--s)); font-size: var(--fs-note); color: var(--text-muted); line-height: 1.4; overflow-wrap: anywhere; }
+.opt-expl.ok { color: var(--success); }
+.opt-expl.warn { color: var(--warning); }
+.opt-expl.fail { color: var(--danger); }
+.opt-extra { margin-top: calc(4px * var(--s)); }
+/* Option-local help: the app.help button follows the name by one gap; a short non-modal summary
+   shows on hover or focus and stays open while the pointer is inside it; a click or Enter opens the
+   full explanation, which closes with its Close button, Escape or a click outside. Both come from
+   one authored string and neither toggles the option. */
+.opt-help-wrap { position: relative; display: inline-flex; }
+.opt-help { padding: 0; width: var(--tgt); height: var(--tgt); background: transparent; border-color: transparent; }
+.opt-help .glyph { width: var(--glyph); height: var(--glyph); }
+.opt-pop {
+    position: absolute; z-index: 20; inset-inline-start: 0; inset-block-start: 100%;
+    width: max-content; max-width: min(calc(30em), calc(100cqw - 24px));
+    background: var(--surface-raised); color: var(--text-primary);
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+    padding: var(--gap) var(--pad);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    font-size: var(--fs-note); line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere;
+}
+.opt-pop[hidden] { display: none; }
+.opt-pop .btn-row { margin-top: var(--gap); }
+
+/* COLLAPSIBLE-GROUP 1.1 (ticket 119). A group answers one topic; its header is a distinct face with a
+   heavier weight, a vector state triangle at the reading start (right when folded, down when open;
+   leftward when folded in a right-to-left window) and the whole header is the one toggle target. The
+   body opens in normal flow below it across the pane, and nothing resizes the window. The triangle is
+   drawn by a mask, never typed as an arrow the font could replace. */
+.group { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-sunken); margin: var(--gap) 0; }
+.group > summary {
+    display: flex; align-items: center; gap: var(--gap);
+    min-height: var(--tgt);
+    padding: calc(4px * var(--s)) var(--pad);
+    background: var(--surface-header);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: var(--fs);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: var(--accent);
+    cursor: pointer;
     list-style: none;
     user-select: none;
+    overflow-wrap: anywhere;
 }
-details > summary::-webkit-details-marker { display: none; }
-/* Disclosure chevrons are the vocabulary's nav.expand (folded: a click shows the section) and
-   nav.collapse (open), drawn from the catalog's path data (assets/glyphs, tests/iconography_test.go).
-   Both are rtl: fixed and symmetric, so a right-to-left layout needs no mirroring - the old
-   right-pointing triangle pointed into the text there. */
-details > summary { display: flex; align-items: center; gap: 6px; }
-details > summary::before {
-    content: ''; flex: none; width: 16px; height: 16px; background-color: var(--text-muted);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M16.59%208.59L12%2013.17%207.41%208.59%206%2010l6%206%206-6z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M16.59%208.59L12%2013.17%207.41%208.59%206%2010l6%206%206-6z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary:hover { background: var(--surface-header-hover); }
+.group[open] > summary { border-end-start-radius: 0; border-end-end-radius: 0; border-bottom: 1px solid var(--border); }
+.group > summary::before {
+    content: ''; flex: none; width: var(--glyph); height: var(--glyph); background-color: var(--text-primary);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
 }
-details[open] > summary::before {
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M12%208l-6%206%201.41%201.41L12%2010.83l4.59%204.58L18%2014z%27%2F%3E%3C%2Fsvg%3E");
+:root[dir="rtl"] .group > summary::before { transform: scaleX(-1); }
+.group[open] > summary::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E");
 }
+:root[dir="rtl"] .group[open] > summary::before { transform: none; }
+.group > .body { padding: var(--gap) calc(12px * var(--s)) calc(12px * var(--s)); }
 /* WINDOWS-UI section 6.5: forced colors repaint a background with Canvas, which would leave a
-   mask-drawn glyph Canvas-on-Canvas - invisible. The mask glyphs opt out and take the system
-   text colour instead. The inline SVG glyphs (content.document, action.swap) fill with
-   currentColor, which forced colors already resolve to the system text colour. */
+   mask-drawn marker or a checkbox mark Canvas-on-Canvas - invisible. They opt out and take system
+   colours instead; the inline SVG glyphs fill with currentColor, which forced colors already resolve. */
 @media (forced-colors: active) {
-    details > summary::before { forced-color-adjust: none; background-color: CanvasText; }
+    .group > summary::before { forced-color-adjust: none; background-color: CanvasText; }
+    .opt-box:checked::after { forced-color-adjust: none; background-color: CanvasText; }
+    .opt-box::before { border-color: CanvasText; background: Canvas; }
+    .opt-box:checked::before { border-color: CanvasText; background: Canvas; }
+    .rail-item[aria-selected="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+    .rail-item[aria-selected="true"] .glyph { color: HighlightText; }
+    button .glyph, .dlg-actions button .glyph { forced-color-adjust: none; color: CanvasText; }
 }
-details > .body { padding: 2px 12px 12px; }
 
-/* primary row: document picker + run button on one line */
-.toprow { display: flex; gap: 12px; align-items: stretch; }
-.toprow .drop { flex: 1; }
-.btn-run {
-    flex: 0 0 auto;
-    align-self: stretch;
-    background: var(--accent);
-    color: var(--accent-ink);
-    border: none;
-    font-weight: 700;
-    padding: 0 32px;
-    font-size: 15px;
-    border-radius: 9px;
-}
-.btn-run:hover { background: var(--accent-hover); }
-.btn-run:disabled { opacity: .45; cursor: not-allowed; }
-.btn-cancel { background: var(--control); color: var(--text-primary); border: 1px solid var(--border); }
-.btn-cancel:hover { background: var(--control-hover); }
-
+/* primary flow */
 .log {
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 10px 12px;
+    border-radius: var(--radius);
+    padding: calc(10px * var(--s)) calc(12px * var(--s));
     font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
-    font-size: 10px;
+    font-size: var(--fs-log);
     line-height: 1.35;
     flex: 1 1 auto;
-    min-height: 0; /* see .app - without this the log grows instead of scrolling */
+    min-height: 0; /* without this the log grows instead of scrolling */
     overflow: auto;
     white-space: pre;
     word-break: normal;
@@ -343,184 +505,195 @@ details > .body { padding: 2px 12px 12px; }
 .log .log-err { color: var(--console-danger); }
 .log .log-cmd { color: var(--console-command); }
 
-/* live command-line preview: shows the exact command the current settings will run,
-   with a Copy button to grab it for a terminal. */
-.cmdbar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 14px; }
+/* The Convert page: the controls and, beside them, the command line and the log. Wide enough, the two
+   sit side by side and the log fills the height; narrower, the log sits under the controls with a height
+   of its own (the page scrolls instead of squeezing the log to nothing). */
+.convert-cols { display: grid; grid-template-columns: minmax(0, calc(600px * var(--s))) minmax(0, 1fr); gap: var(--gap-group); align-items: start; }
+.convert-log { display: flex; flex-direction: column; min-width: 0; position: sticky; top: 0; height: var(--pane-h, 100vh); }
+@container pane (max-width: 62em) {
+    .convert-cols { grid-template-columns: minmax(0, 1fr); }
+    .convert-log { position: static; height: auto; }
+    .log { min-height: calc(260px * var(--s)); }
+}
+/* live command-line preview: the exact command the current settings will run, with a Copy button. */
+.cmdbar { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap); margin-bottom: var(--gap-group); }
 .cmdline {
-    flex: 1 1 auto;
+    flex: 1 1 calc(12em);
     min-width: 0;
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 8px 10px;
+    border-radius: var(--radius);
+    padding: calc(8px * var(--s)) calc(10px * var(--s));
     font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
-    font-size: 11px;
+    font-size: var(--fs-code);
     line-height: 1.4;
     color: var(--console-command);
     white-space: pre-wrap;
     word-break: break-all;
-    max-height: 92px;
+    max-height: calc(92px * var(--s));
     overflow-y: auto;
 }
 .cmdline .ph { color: var(--console-muted); }
-.cmdcopy { flex: 0 0 auto; align-self: stretch; }
 .cmdcopy.done { color: var(--success); border-color: var(--success); }
-hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: calc(12px * var(--s)) 0; }
 
-/* "previous result" hint: appears under the drop zone when the current input already
-   has a converted output, with an inline button to clear it. */
-/* The compact inline buttons ride in 11px hint lines; the 24px floor is WCAG 2.2's
-   target-size minimum (2.5.8), which a line-height-sized button misses. */
-.inline-btn { min-height: 28px; }
-.hint .inline-btn { padding: 2px 9px; font-size: 11px; margin-inline-start: 6px; }
-/* The output path, shown so a result is never lost, and clickable to reveal its folder.
-   The path is the long part, so it - and only it - is allowed to ellipsize. */
-.hint .prev-dir { display: flex; align-items: baseline; gap: 5px; margin-top: 4px; min-width: 0; }
-.hint .path-btn {
-    background: none; border: none; padding: 0; min-width: 0; min-height: 28px; cursor: pointer;
+/* one-time first-run opt-in banner for the default-handler association */
+.assoc-prompt {
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: calc(8px * var(--s));
+    padding: calc(10px * var(--s)) calc(12px * var(--s));
+    margin-bottom: var(--gap-group);
+    font-size: var(--fs-note);
+    line-height: 1.45;
+}
+.assoc-prompt .btn-row { margin-top: var(--gap); }
+
+/* "previous result" card: appears under the drop zone when the current input already has a
+   converted output, with its commands in a button row and the output path under them. */
+.card { margin-top: var(--gap); }
+.card .btn-row { margin-top: var(--gap); }
+/* The output path, shown so a result is never lost, and clickable to reveal its folder. The path is
+   the long part, so it - and only it - is allowed to ellipsize. */
+.prev-dir { display: flex; align-items: center; gap: var(--gap); margin-top: var(--gap); min-width: 0; font-size: var(--fs-note); color: var(--text-muted); }
+.path-btn {
+    display: block; background: none; border: none; padding: 0 calc(4px * var(--s)); min-width: 0; flex: 1 1 auto;
+    min-height: var(--tgt); cursor: pointer; text-align: start;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.hint .path-btn code { color: var(--link); text-decoration: underline; cursor: pointer; }
-.hint .path-btn:hover code { color: var(--accent-hover); }
-.conversion-progress { margin: 6px 0 12px; min-height: 20px; display: flex; flex-wrap: wrap; gap: 5px 10px; align-items: baseline; }
+.path-btn code { color: var(--link); text-decoration: underline; cursor: pointer; }
+.path-btn:hover code { color: var(--accent-hover); }
+.conversion-progress { margin: calc(6px * var(--s)) 0 var(--gap); min-height: calc(20px * var(--s)); display: flex; flex-wrap: wrap; gap: calc(5px * var(--s)) calc(10px * var(--s)); align-items: baseline; font-size: var(--fs-note); }
 .conversion-progress .count { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-/* batch queue: an ordered list of documents with each one's outcome. The list scrolls on
-   its own so a long queue cannot push the settings off screen; the row is a flex line -
-   the file name takes what it needs and ellipsizes, the state stays readable. */
-.queue-head { display: flex; align-items: baseline; gap: 10px; margin-top: 12px; }
+/* batch queue: an ordered list of documents with each one's outcome. The list scrolls on its own so a
+   long queue cannot push the settings off screen; a row is a flex line - the file name takes what it
+   needs and ellipsizes, the state stays readable. */
+.queue-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); margin-top: var(--gap-group); }
 .queue-head .stitle { margin: 0; }
-.queue-head .count { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.queue-head > .inline-btn { margin-inline-start: auto; padding: 2px 9px; font-size: 11px; }
-/* The log header carries two tools after its title; only a direct-child button is pushed
-   to the far edge, so the paired buttons inside .log-tools keep their gap. */
-.log-tools { margin-inline-start: auto; display: flex; gap: 8px; }
-.queue-head > .log-tools .inline-btn { margin-inline-start: 0; }
-#queueList {
-    list-style: none; margin: 6px 0 2px; padding: 2px 0;
-    border: 1px solid var(--border); border-radius: 7px; background: var(--surface-sunken);
-    max-height: 216px; overflow-y: auto;
-}
-/* Recent documents (ticket 63): the same row vocabulary as the queue, in a list of its
-   own. An entry that is no longer on disk is shown unavailable and cannot be chosen. */
-#recentList {
-    list-style: none; margin: 6px 0 2px; padding: 2px 0;
-    border: 1px solid var(--border); border-radius: 7px; background: var(--surface-sunken);
-    max-height: 216px; overflow-y: auto;
+.queue-head .count { font-size: var(--fs-note); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.queue-head > .btn-row { margin-inline-start: auto; }
+#queueList, #recentList {
+    list-style: none; margin: calc(6px * var(--s)) 0 calc(2px * var(--s)); padding: calc(2px * var(--s)) 0;
+    border: 1px solid var(--border); border-radius: calc(7px * var(--s)); background: var(--surface-sunken);
+    max-height: calc(216px * var(--s)); overflow-y: auto;
 }
 .qsel.is-gone { color: var(--text-disabled); cursor: not-allowed; }
-.qitem { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 12px; min-width: 0; }
+.qitem { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); padding: calc(4px * var(--s)) var(--gap); font-size: var(--fs-note); min-width: 0; }
 .qitem + .qitem { border-top: 1px solid var(--border); }
 .qsel {
-    flex: 1 1 auto; min-width: 0; background: none; border: none; padding: 2px 4px;
-    font: inherit; color: var(--text-primary); text-align: start; cursor: pointer;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 4px;
+    flex: 1 1 calc(8em); min-width: 0; background: none; border: none; padding: calc(2px * var(--s)) calc(4px * var(--s));
+    font: inherit; font-size: var(--fs-note); color: var(--text-primary); text-align: start; cursor: pointer; justify-content: flex-start;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: var(--radius);
 }
 .qsel:hover { background: var(--control-hover); }
 .qsel.selected { color: var(--accent); font-weight: 600; }
 /* WINDOWS-UI section 6.4: accent ink on the hover face falls under 4.5:1 in dark, so a hovered
    selected row takes the accent fill with its own ink (TestListRowStatesMeetWCAGAA). */
 .qsel.selected:hover { background: var(--accent); color: var(--accent-ink); }
-.qstate { flex: none; font-size: 11px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.qstate { flex: none; font-size: var(--fs-note); color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .qitem.is-running .qstate { color: var(--accent); }
 .qitem.is-done .qstate { color: var(--success); }
 .qitem.is-failed .qstate, .qitem.is-blocked .qstate { color: var(--danger); }
-.qitem .inline-btn { flex: none; padding: 2px 9px; font-size: 11px; }
-.queue-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 2px 0; }
-.queue-foot select { padding: 3px 8px; font-size: 12px; width: 64px; }
-.queue-foot .hint { margin: 0; flex: 1 1 220px; }
-.queue-foot .inline-btn { padding: 2px 9px; font-size: 11px; }
+.queue-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap) var(--gap-group); margin: calc(2px * var(--s)) 0; }
+.queue-foot select { width: calc(64px * var(--s)); }
+.queue-foot .hint { margin: 0; flex: 1 1 calc(14em); }
+.queue-foot label { font-size: var(--fs-note); color: var(--text-muted); }
 
-/* About section: label/value lines and the report controls. */
-.about-row { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+/* About: label/value lines, link rows and the resource index. */
+.about-row { font-size: var(--fs-note); color: var(--text-muted); margin-top: calc(4px * var(--s)); display: flex; flex-wrap: wrap; align-items: baseline; gap: calc(4px * var(--s)) calc(6px * var(--s)); }
 .about-row code { color: var(--text-primary); }
-.about-row a { color: var(--link); text-decoration: none; }
-.about-row a:hover { text-decoration: underline; }
-.about-row .inline-btn { padding: 2px 9px; font-size: 11px; }
+.about-links { display: flex; flex-wrap: wrap; gap: 0 var(--gap-group); margin: var(--gap) 0; font-size: var(--fs); }
+.about-links a, .about-row a { color: var(--link); text-decoration: none; min-height: var(--tgt); display: inline-flex; align-items: center; gap: calc(4px * var(--s)); }
+.about-links a:hover, .about-row a:hover { text-decoration: underline; }
+.about-links a .glyph { width: var(--glyph); height: var(--glyph); }
+.res-table, .rel-table { display: grid; gap: calc(4px * var(--s)) var(--gap-group); font-size: var(--fs-note); align-items: baseline; }
+.res-table { grid-template-columns: max-content minmax(0, 1fr) max-content max-content; }
+.rel-table { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+.res-table > .res-name, .rel-table > .res-name { color: var(--text-primary); font-weight: 600; }
+.res-table > .res-what, .rel-table > .res-what { color: var(--text-muted); }
+.res-table .res-state { font-variant-numeric: tabular-nums; }
+.res-table .res-state.ok { color: var(--success); }
+.res-table .res-state.miss { color: var(--warning); }
+.res-table a, .rel-table a { color: var(--link); text-decoration: none; }
+.res-table a:hover, .rel-table a:hover { text-decoration: underline; }
+@container pane (max-width: 40em) {
+    .res-table, .rel-table { grid-template-columns: minmax(0, 1fr); }
+    .res-table > .res-name, .rel-table > .res-name { margin-top: var(--gap); }
+}
 
 /* The one secondary window (APP-BEHAVIOUR rule 1): modal, centred on the window that owns it,
    sized by its text rather than a fixed box (rule 2). Escape, the Cancel button and closing it
    are one path - see openDialog. A destructive or costly choice is drawn in --danger. */
 dialog.dlg {
     margin: auto;
-    max-width: min(560px, calc(100vw - 32px));
-    min-width: min(340px, calc(100vw - 32px));
+    max-width: min(calc(560px * var(--s)), calc(100vw - 32px));
+    min-width: min(calc(340px * var(--s)), calc(100vw - 32px));
     background: var(--surface-raised);
     color: var(--text-primary);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 18px 20px 16px;
+    border-radius: calc(9px * var(--s));
+    padding: calc(18px * var(--s)) calc(20px * var(--s)) calc(16px * var(--s));
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    font-size: var(--fs);
 }
 dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
-.dlg h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-.dlg p { font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-.dlg-secret { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.dlg-secret label { font-size: 12px; font-weight: 600; }
-.dlg-secret input { width: 100%; }
+.dlg h2 { font-size: calc(15px * var(--s) * var(--t)); font-weight: 600; margin-bottom: var(--gap); padding-inline-end: calc(24px * var(--s)); }
+.dlg p { font-size: var(--fs); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dlg-secret { display: flex; flex-direction: column; gap: calc(6px * var(--s)); margin-top: calc(12px * var(--s)); }
+.dlg-secret label { font-size: var(--fs-note); font-weight: 600; }
+.dlg-secret input { width: 100%; -webkit-text-security: disc; }
 .dlg-secret .hint { margin: 0; }
-.dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-/* WINDOWS-UI 0.4 section 11 items 4-6 / ICON-RENDER 0.19 section 14: the answer buttons of a
-   dialog draw the eye, and colour is spent there and nowhere else. The hue rides the glyph,
-   from this product's own state.* palette pairs (day tone on light, night tone on dark), with
-   the reference treatment of about 12 percent of the hue over the control face; both resolve
-   per paint from light-dark(), so a live theme change reaches them. The shapes still differ
-   and every answer keeps its caption, so nothing rests on colour alone. The acting button of
-   an irreversible confirmation keeps the danger face with its own ink (.danger); there the
-   dismissing answer shows the red glyph with no tint (.bare) - the only red face in the window
-   is the one that cannot be undone. Under forced colors the system colours replace hue and
-   tint by themselves; an unavailable answer mutes glyph and caption together and shows no hue. */
-.dlg-actions button.ans-ok     { --ans-hue: var(--success); }
-.dlg-actions button.ans-cancel { --ans-hue: var(--danger); }
-.dlg-actions button.ans-warn   { --ans-hue: var(--warning); }
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) {
-    color: var(--text-primary);
-    background: color-mix(in srgb, var(--ans-hue) 12%, var(--control));
-}
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):hover {
-    background: color-mix(in srgb, var(--ans-hue) 18%, var(--control));
-}
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):active {
-    background: color-mix(in srgb, var(--ans-hue) 24%, var(--control));
-}
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) .glyph { color: var(--ans-hue); }
-/* The dismissing answer of an irreversible confirmation: red glyph, ordinary control face. */
-.dlg-actions button.ans-cancel.bare { background: var(--control); }
-.dlg-actions button.ans-cancel.bare:hover { background: var(--control-hover); }
-.dlg-actions button.ans-cancel.bare:active { background: var(--control-pressed); }
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):disabled {
-    background: var(--control);
-    color: var(--text-disabled);
-}
-.dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn):disabled .glyph { color: var(--text-disabled); }
-.dlg-actions button.danger { background: var(--danger); color: var(--danger-ink); border-color: var(--danger); }
-/* WINDOWS-UI 0.4 section 11 item 6: under high contrast the system colours replace the answer
-   hue too - the glyph rides the system text colour like the caption does. The block sits after
-   the answer rules and repeats their selector, so it wins by order. */
-@media (forced-colors: active) {
-    button .glyph,
-    .dlg-actions button:is(.ans-ok, .ans-cancel, .ans-warn) .glyph {
-        forced-color-adjust: none;
-        color: CanvasText;
-    }
-}
-/* ICON-RENDER rule 5: Windows desktop targets follow the pointer. The label is
-   the target for radios and checkboxes; the visible input may stay compact. */
-button, select, input:not([type="checkbox"]):not([type="radio"]),
-.engine label, .chk, summary, a { min-width: 28px !important; min-height: 28px !important; }
-a { display: inline-flex; align-items: center; }
-@media (any-pointer: coarse) {
-    button, select, input:not([type="checkbox"]):not([type="radio"]),
-    .engine label, .chk, summary, a { min-width: 44px !important; min-height: 44px !important; }
-}
+/* BUTTONS 2.0 section 4 rule 4: product-owned answers read Cancel, then any Apply, then the final
+   affirmative action; a destructive confirmation reads Cancel, then the destructive action. The row
+   wraps whole buttons and stays at the end edge; spare space stays empty. */
+.dlg-actions { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: flex-end; gap: var(--gap); margin-top: calc(16px * var(--s)); }
+.dlg-actions > button { flex: 0 0 auto; }
+/* BUTTONS section 3 rule 5: an answer's face is the neutral control face - no green or red tint on
+   a non-destructive answer. Meaning rides the glyph: the affirmative in state.ok, a caution in
+   state.warning, everything else (Cancel, No, Close) in the ordinary ink. The acting button of an
+   irreversible confirmation alone takes the danger face with its own ink (.danger). */
+.dlg-actions button.ans-ok .glyph { color: var(--success); }
+.dlg-actions button.ans-warn .glyph { color: var(--warning); }
+.dlg-actions button.danger .glyph { color: var(--danger-ink); }
 /* System motion preference wins over all product transitions. */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* SETTINGS-NAVIGATION section 2 rule 6: when the window cannot hold the rail and the pane
+   accessibly, the same menu moves into a start-side drawer opened from the header's Pages button;
+   choosing a page closes it and the selected page and its viewport are exactly where they were.
+   The breakpoint is 60em of the window's own text size (about 780 CSS px ordinary, wider as the
+   interface grows). */
+@container win (max-width: 60em) {
+    .rail-toggle { display: inline-flex; }
+    .rail {
+        position: absolute; z-index: 30;
+        inset-block: 0; inset-inline-start: 0;
+        background: var(--surface-raised);
+        border: 1px solid var(--border-strong); border-radius: var(--radius);
+        padding: var(--gap);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        visibility: hidden;
+    }
+    .rail.open { visibility: visible; }
+    .rail.open ~ .rail-scrim { display: block; position: absolute; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.35); }
+}
 </style>
+<script>
+// SETTINGS-NAVIGATION section 5 rule 1: the first frame is held back until the saved language, theme, size and
+// page are applied; the failsafe reveals the window anyway if the settings never arrive.
+(function () { var d = document.documentElement; d.setAttribute('data-boot', '1'); setTimeout(function () { d.removeAttribute('data-boot'); }, 2500); })();
+</script>
 </head>
 <body>
+<div class="win" id="win">
 
-<div class="head">
+<!-- The window header: title, version, links, and the help button at the trailing corner (CONTEXT-HELP
+     rule 2; F1 asks for the same, help.js). The Pages button appears only when the window is too narrow
+     for the rail and opens the same menu as a drawer (SETTINGS-NAVIGATION section 2 rule 6). -->
+<div class="head" data-help="main.header">
+    <button type="button" class="rail-toggle" id="btnPages" aria-controls="rail" aria-expanded="false" data-i18n-title="pagesLabel" title="Pages"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 7h2v2H3v-2zm0 4h2v2H3v-2zm0 4h2v2H3v-2zm4-8h14v2H7V7zm0 4h14v2H7v-2zm0 4h14v2H7v-2z"/></svg><span data-i18n="pagesLabel">Pages</span></button>
     <h1>DOC-HTML-UI</h1>
     <span class="ver" id="ver">loading..</span>
     <span class="byline">
@@ -530,60 +703,93 @@ a { display: inline-flex; align-items: center; }
         <span class="dot" aria-hidden="true">&#183;</span>
         <a href="mailto:sza@ukr.net" data-i18n="aboutFeedback">Feedback</a>
     </span>
-    <span class="switches">
-        <!-- APP-STYLE rule 2: system, light and dark, defaulting to system -->
-        <select class="langsw" id="themeSwitch" data-i18n-title="titleTheme" data-i18n-aria="titleTheme" title="Theme" aria-label="Theme">
-            <option value="system" data-i18n="themeSystem">System theme</option>
-            <option value="light" data-i18n="themeLight">Light</option>
-            <option value="dark" data-i18n="themeDark">Dark</option>
-        </select>
-        <select class="langsw" id="langSwitch" data-i18n-title="titleUiLang" data-i18n-aria="titleUiLang" title="Interface language" aria-label="Interface language"></select>
-    </span>
-    <!-- WINDOWS-UI section 2.3: the title, then one short line saying what the window is for. -->
-    <p class="hint purpose" data-i18n="appPurpose">Converts e-books and documents into a local HTML book you can read and translate in the browser.</p>
+    <button type="button" class="help-btn secondary head-help" id="btnHelp" data-help="main.help" data-help-open="main" data-i18n-title="titleHelp" data-i18n-aria="titleHelp" title="Help (F1)" aria-label="Help (F1)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11,18h2v-2h-2v2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-2.21,0 -4,1.79 -4,4h2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,2 -3,1.75 -3,5h2c0,-2.25 3,-2.5 3,-5 0,-2.21 -1.79,-4 -4,-4z"/></svg></button>
 </div>
 <div class="hint fail" id="cliWarn" style="display:none" data-i18n="cliWarn">Converter engine (doc-html-translate.exe) not found next to this app or on PATH - Convert won't work. Keep both files together.</div>
 
-<div class="app">
-<div class="col-main">
+<div class="shell">
+<!-- SETTINGS-NAVIGATION 2.0: the page rail. A vertical list of pages at the reading start; choosing one
+     changes what the pane shows and nothing else - no resize of the window, no commit, no operation. -->
+<nav class="rail" id="rail" aria-label="Pages" data-i18n-aria="pagesLabel" data-help="main.header">
+    <div role="tablist" aria-orientation="vertical" class="rail-list" id="railList">
+    <button type="button" role="tab" class="rail-item" id="tab-convert" data-page="convert" aria-controls="page-convert" aria-selected="true" tabindex="0"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><span data-i18n="pageConvert">Convert</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-ollama" data-page="ollama" aria-controls="page-ollama" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.87,15.07l-2.54,-2.51 0.03,-0.03c1.74,-1.94 2.98,-4.17 3.71,-6.53L17,6L17,4h-7L10,2L8,2v2L1,4v1.99h11.17C11.5,7.92 10.44,9.75 9,11.35 8.07,10.32 7.3,9.19 6.69,8h-2c0.73,1.63 1.73,3.17 2.98,4.56l-5.09,5.02L4,19l5,-5 3.11,3.11 0.76,-2.04zM18.5,10h-2L12,22h2l1.12,-3h4.75L21,22h2l-4.5,-12zM15.88,17l1.62,-4.33L19.12,17h-3.24z"/></svg><span data-i18n="pageOllama">Ollama</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-ocr" data-page="ocr" aria-controls="page-ocr" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M4.5,9h3c0.6,0 1,0.5 1,1v4c0,0.5 -0.4,1 -1,1h-3c-0.6,0 -1,-0.5 -1,-1v-4c0,-0.5 0.4,-1 1,-1zM5,10.5v3h2v-3zM13.5,9h-3c-0.6,0 -1,0.5 -1,1v4c0,0.5 0.4,1 1,1h3c0.6,0 1,-0.5 1,-1v-0.5h-3.5v-3h3.5V10c0,-0.5 -0.4,-1 -1,-1zM15.5,9v6h1.5v-2h1.1l1.4,2h1.7l-1.5,-2.1c0.5,-0.2 0.8,-0.7 0.8,-1.2V10c0,-0.6 -0.5,-1 -1,-1zM17,10.5h2v1h-2z"/></svg><span data-i18n="pageOcr">Image OCR</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-windows" data-page="windows" aria-controls="page-windows" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13zM6.8 19.6V14.7H12.8V16.3H8.4V19.6zM12.8 12.8 16.5 15.5 12.8 18.2z"/></svg><span data-i18n="pageWindows">Windows</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-interface" data-page="interface" aria-controls="page-interface" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg><span data-i18n="pageInterface">Interface</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-advanced" data-page="advanced" aria-controls="page-advanced" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3,17v2h6v-2H3zM3,5v2h10V5H3zM13,21v-2h8v-2h-8v-2h-2v6h2zM7,9v2H3v2h4v2h2V9H7zM21,13v-2H11v2h10zM15,9h2V7h4V5h-4V3h-2v6z"/></svg><span data-i18n="pageAdvanced">Advanced</span></button>
+    <button type="button" role="tab" class="rail-item" id="tab-about" data-page="about" aria-controls="page-about" aria-selected="false" tabindex="-1"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg><span data-i18n="pageAbout">About</span></button>
+    </div>
+</nav>
+<div class="rail-scrim" id="railScrim"></div>
 
-<!-- First run asks before anything is written to Windows, and "No, thanks" is a real answer
-     that leaves a working app (APP-BEHAVIOUR rules 4 and 11). -->
-<div id="assocPrompt" class="assoc-prompt" role="region" aria-labelledby="assocPromptText" style="display:none">
-    <span id="assocPromptText" data-i18n="assocPromptText">Add this app to Windows? You can get a "Convert to HTML" entry in the right-click menu of supported files and a place under "Open with", or also make it the default app for them. Nothing changes unless you pick it here or later under "Windows integration".</span>
-    <div class="assoc-prompt-actions">
-        <button class="primary" id="assocPromptShell" onclick="assocPromptAnswer('shell')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptShell">Add the right-click entry</span></button>
-        <button id="assocPromptBoth" onclick="assocPromptAnswer('both')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptBoth">Add it and make this app the default</span></button>
-        <button id="assocPromptNo" onclick="assocPromptAnswer('none')"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="assocPromptNo">No, thanks</span></button>
+<main class="pane" id="pane">
+
+<!-- ═══ page: Convert - the work, the run parameters, and the first-page preferences ═══ -->
+<section class="page" id="page-convert" role="tabpanel" aria-labelledby="tab-convert">
+<div class="page-head">
+    <div class="page-title">
+        <h2 id="title-convert" data-i18n="pageConvert">Convert</h2>
+        <!-- WINDOWS-UI section 2.3: the title, then one short line saying what the page is for. -->
+        <p class="hint purpose" data-i18n="appPurpose">Converts e-books and documents into a local HTML book you can read and translate in the browser.</p>
+    </div>
+    <!-- SETTINGS-NAVIGATION 3.1: theme and interface language are on the first page, each with its own caption and nowhere else. -->
+    <div class="prefs" data-help="main.header">
+        <div class="pref"><label for="themeSwitch" data-i18n="titleTheme">Theme</label>
+        <select id="themeSwitch" aria-label="Theme" data-i18n-aria="titleTheme">
+            <option value="system" data-i18n="themeSystem">System theme</option>
+            <option value="light" data-i18n="themeLight">Light</option>
+            <option value="dark" data-i18n="themeDark">Dark</option>
+        </select></div>
+        <div class="pref"><label for="langSwitch" data-i18n="titleUiLang">Interface language</label>
+        <select id="langSwitch" aria-label="Interface language" data-i18n-aria="titleUiLang"></select></div>
     </div>
 </div>
 
-<!-- primary flow: pick a document (left) and run (right), on one line -->
-<div class="toprow">
-    <button type="button" class="drop" id="dropZone" onclick="browseFile()" data-i18n-title="ttDropKbd" title="Choose a file (Ctrl+Shift+F)">
-        <span id="dropEmpty">
-            <span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M14,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8L14,2zM16,18H8v-2h8v2zM16,14H8v-2h8v2zM13,9V3.5L18.5,9H13z"/></svg></span>
-            <span class="ph" data-i18n="dropPlaceholder">Drag a document here, or click to choose one</span>
-        </span>
-        <span id="dropFilled" style="display:none">
-            <span class="fname" id="dropName"></span>
-            <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
-        </span>
-    </button>
-    <button class="btn-run" id="btnRun" onclick="runPressed()" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><span data-i18n="btnConvert">Convert</span></button>
-    <button class="btn-run btn-cancel" id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancel">Cancel</span></button>
+<div class="convert-cols">
+<div class="convert-main">
+
+<!-- First run asks before anything is written to Windows, and "No, thanks" is a real answer
+     that leaves a working app (APP-BEHAVIOUR rules 4 and 11). -->
+<div id="assocPrompt" class="assoc-prompt" data-help="main.first-run" role="region" aria-labelledby="assocPromptText" style="display:none">
+    <span id="assocPromptText" data-i18n="assocPromptText">Add this app to Windows? You can get a "Convert to HTML" entry in the right-click menu of supported files and a place under "Open with", or also make it the default app for them. Nothing changes unless you pick it here or later under "Windows integration".</span>
+    <div class="btn-row">
+        <button id="assocPromptNo" onclick="assocPromptAnswer('none')"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="assocPromptNo">No, thanks</span></button>
+        <button id="assocPromptBoth" onclick="assocPromptAnswer('both')"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptBoth">Add it and make this app the default</span></button>
+        <button class="primary" id="assocPromptShell" onclick="assocPromptAnswer('shell')"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg><span data-i18n="assocPromptShell">Add the right-click entry</span></button>
+    </div>
+</div>
+
+<!-- primary flow: pick a document, then run -->
+<button type="button" class="drop" id="dropZone" data-help="main.drop" onclick="browseFile()" data-i18n-title="ttDropKbd" title="Choose a file (Ctrl+Shift+F)">
+    <span id="dropEmpty">
+        <span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M14,2H6C4.9,2 4,2.9 4,4v16c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8L14,2zM16,18H8v-2h8v2zM16,14H8v-2h8v2zM13,9V3.5L18.5,9H13z"/></svg></span>
+        <span class="ph" data-i18n="dropPlaceholder">Drag a document here, or click to choose one</span>
+    </span>
+    <span id="dropFilled" style="display:none">
+        <span class="fname" id="dropName"></span>
+        <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
+    </span>
+</button>
+<div class="btn-row run-row">
+    <span class="state-stack" id="runStack" data-help="main.run">
+        <button class="primary" id="btnRun" onclick="runPressed()" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><span data-i18n="btnConvert">Convert</span></button>
+        <button id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancel">Cancel</span></button>
+    </span>
 </div>
 <input type="hidden" id="inputFile">
-<div class="hint" id="readiness" role="status" aria-live="polite" style="display:none"></div>
-<div class="conversion-progress" id="conversionProgress" style="display:none">
+<div class="hint" id="readiness" role="status" aria-live="polite" data-help="main.status" style="display:none"></div>
+<div class="conversion-progress" id="conversionProgress" data-help="main.status" style="display:none">
     <span id="progressStage" role="status" aria-live="polite"></span>
     <span id="progressCount" class="count"></span>
 </div>
-<div class="hint" id="dropStatus" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
-<div class="hint" id="prevResultHint" style="display:none">
-    <span data-i18n="prevResultFound">A previous result already exists for this file.</span>
-    <button type="button" class="inline-btn" id="btnOpenPrev"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenPrev">Open result</span></button>
-    <button type="button" class="inline-btn" id="btnDeletePrev"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2L18,7H6v12ZM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4Z"/></svg><span data-i18n="btnDeletePrev">Delete previous result</span></button>
+<div class="hint" id="dropStatus" data-help="main.status" role="status" data-i18n="dropSupported">Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comics (CBZ/CBR/CB7/CBT), and images (PNG/JPG/WebP/..). MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; image and comic text overlay needs Tesseract.</div>
+<div class="card" id="prevResultHint" data-help="main.previous" style="display:none">
+    <div class="hint" data-i18n="prevResultFound">A previous result already exists for this file.</div>
+    <div class="btn-row">
+        <button type="button" id="btnOpenPrev"><svg class="glyph mirror" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenPrev">Open result</span></button>
+        <button type="button" id="btnDeletePrev"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2L18,7H6v12ZM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4Z"/></svg><span data-i18n="btnDeletePrev">Delete previous result</span></button>
+    </div>
     <!-- Where it landed. A dropped file is copied into the app's own data folder and the
          result lands beside it, so without this the reader has no idea where it went. -->
     <div class="prev-dir" id="prevDirRow">
@@ -597,10 +803,10 @@ a { display: inline-flex; align-items: center; }
      the settings store with its atomic write and corruption set-aside. An entry is a
      convenience, not a promise: one that is no longer on disk is greyed out as
      unavailable and cannot be chosen, so a stale path is never converted silently. -->
-<div id="recentSection" style="display:none">
+<div id="recentSection" data-help="main.recent" style="display:none">
     <div class="queue-head">
         <span class="stitle" data-i18n="secRecent">Recent</span>
-        <button type="button" class="inline-btn" id="btnRecentClear" data-i18n-title="ttRecentClear" title="Forget every recent document"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="recentClear">Clear all</span></button>
+        <div class="btn-row"><button type="button" id="btnRecentClear" data-i18n-title="ttRecentClear" title="Forget every recent document"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="recentClear">Clear all</span></button></div>
     </div>
     <ul id="recentList" data-i18n-aria="ariaRecentList" aria-label="Recently chosen documents"></ul>
 </div>
@@ -611,17 +817,19 @@ a { display: inline-flex; align-items: center; }
      and, when there is one, a result action. Settings stay shared: they are read once per
      item when its run is prepared, so a change never silently alters an item already
      running (ticket 56). -->
-<div id="queueSection" style="display:none">
+<div id="queueSection" data-help="main.queue" style="display:none">
     <div class="queue-head">
         <span class="stitle" data-i18n="secQueue">Queue</span>
         <span class="count" id="queueProgress" role="status" aria-live="polite"></span>
-        <button type="button" class="inline-btn" id="btnQueueClear" data-i18n-title="ttQueueClear" title="Clear the whole queue; the files themselves stay on disk"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="queueClear">Clear</span></button>
+        <div class="btn-row"><button type="button" id="btnQueueClear" data-i18n-title="ttQueueClear" title="Clear the whole queue; the files themselves stay on disk"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="queueClear">Clear all</span></button></div>
     </div>
     <ol id="queueList" data-i18n-aria="ariaQueueList" aria-label="Files queued for conversion"></ol>
     <div class="queue-foot">
-        <button type="button" class="inline-btn" id="btnRetryFailed" data-i18n-title="ttRetryFailed" title="Convert again only the files that did not" disabled><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span data-i18n="btnRetryFailed">Retry failed</span></button>
-        <button type="button" class="inline-btn" id="btnCancelQueue" style="display:none"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancelQueue">Cancel queue</span></button>
-        <label class="chk" for="queueConcurrency"><span data-i18n="queueParallel">Parallel:</span></label>
+        <div class="btn-row">
+            <button type="button" id="btnRetryFailed" data-i18n-title="ttRetryFailed" title="Convert again only the files that did not" disabled><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span data-i18n="btnRetryFailed">Retry failed</span></button>
+            <button type="button" id="btnCancelQueue" style="display:none"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancelQueue">Cancel queue</span></button>
+        </div>
+        <label for="queueConcurrency" data-i18n="queueParallel">Parallel:</label>
         <select id="queueConcurrency" data-i18n-aria="queueParallel" aria-label="Parallel conversions">
             <option value="1" selected>1</option>
             <option value="2">2</option>
@@ -633,17 +841,17 @@ a { display: inline-flex; align-items: center; }
 </div>
 
 <!-- output folder -->
-<div class="field" id="outputRow" style="margin-top:10px">
+<div class="field" id="outputRow" data-help="main.output" style="margin-top:12px">
     <label for="outputFolder" data-i18n="lblOutput">Output:</label>
     <input type="text" id="outputFolder" dir="ltr" data-i18n-ph="phOutput" placeholder="Leave empty - lands next to the input">
-    <button onclick="browseFolder()"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM7.1 12.4a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z"/></svg><span data-i18n="btnBrowse">Browse..</span></button>
+    <button type="button" onclick="browseFolder()"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM7.1 12.4a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2zm4.9 0a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z"/></svg><span data-i18n="btnBrowse">Browse..</span></button>
 </div>
 <!-- APP-SETTINGS rule 3: the placeholder says what empty means, but it is gone once a path is
      set; the hint keeps saying it. -->
 <div class="hint" data-i18n="hintOutput">The folder that receives the results; each document gets its own subfolder named after it. Empty = next to the document itself (a dropped file is copied into the app's own folder first, so its result lands there).</div>
 
 <div class="stitle" data-i18n="secTranslation">Translation</div>
-<div class="engine" id="engine">
+<div class="engine" id="engine" data-help="main.translation" role="radiogroup" aria-label="Translation" data-i18n-aria="secTranslation">
     <label><input type="radio" name="engine" value="chrome" checked> <span data-i18n="engChrome">Chrome (free)</span></label>
     <label><input type="radio" name="engine" value="google"> <span data-i18n="engGoogle">Google Cloud</span></label>
     <label><input type="radio" name="engine" value="ollama"> <span data-i18n="engOllama">Ollama (local)</span></label>
@@ -651,165 +859,258 @@ a { display: inline-flex; align-items: center; }
 </div>
 <div class="hint" data-i18n="hintEngine">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</div>
 
-<div class="field langs" id="langsRow" style="margin-top:8px">
+<div class="field langs" id="langsRow" data-help="main.languages" style="margin-top:8px">
     <label for="srcLang" data-i18n="lblLanguages">Languages:</label>
     <select id="srcLang" data-i18n-aria="ariaSrcLang" aria-label="Source language"></select>
-    <button class="swap" id="btnSwap" data-i18n-title="titleSwap" data-i18n-aria="titleSwap" title="Swap source and target" aria-label="Swap source and target"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z"/></svg></button>
+    <button type="button" class="swap" id="btnSwap" data-i18n-title="titleSwap" data-i18n-aria="titleSwap" title="Swap source and target" aria-label="Swap source and target"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z"/></svg></button>
     <select id="dstLang" data-i18n-aria="ariaDstLang" aria-label="Target language"></select>
 </div>
 <div class="hint" data-i18n="hintLangs">Source - the language the document is written in; target - the language Google or Ollama translate into. "Chrome (free)" and "Don't translate" use only the source: it picks the OCR language while that is "Automatic".</div>
 
 <!-- Google API key (only when Google is selected). WINDOWS-UI section 4 (Text/password): masked
      by default, revealed only by the ordinary checkbox beside it. -->
-<div id="googleKeySection" style="display:none">
+<div id="googleKeySection" data-help="main.google-key" style="display:none">
     <div class="field" style="margin-top:8px">
         <label for="googleKey" data-i18n="lblGoogleKey">Google key:</label>
         <input type="password" id="googleKey" dir="ltr" data-i18n-ph="phGoogleKey" placeholder="Paste your Google Cloud Translation API key..">
-        <button onclick="saveGoogleKey()"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17,3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2V7l-4,-4zM12,19c-1.66,0 -3,-1.34 -3,-3s1.34,-3 3,-3 3,1.34 3,3 -1.34,3 -3,3zM15,9H5V5h10v4z"/></svg><span data-i18n="btnSave">Save</span></button>
-        <label class="chk"><input type="checkbox" id="chkRevealKey" onchange="revealKey(this.checked)"> <span data-i18n="btnShow">Show</span></label>
+        <button type="button" onclick="saveGoogleKey()"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17,3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2V7l-4,-4zM12,19c-1.66,0 -3,-1.34 -3,-3s1.34,-3 3,-3 3,1.34 3,3 -1.34,3 -3,3zM15,9H5V5h10v4z"/></svg><span data-i18n="btnSave">Save</span></button>
+    </div>
+    <div class="opt" style="margin-top:4px">
+        <input type="checkbox" class="opt-box" id="chkRevealKey" onchange="revealKey(this.checked)">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkRevealKey"><span data-i18n="btnShow">Show</span></label></div></div>
     </div>
     <div class="hint" id="googleKeyStatus" data-i18n="googleKeySearching">Rummaging for a saved key..</div>
 </div>
 
-<details id="advancedDetails">
-    <summary data-i18n="secAdvanced">Advanced</summary>
-    <div class="body">
-        <div class="field num"><label for="splitSize" data-i18n="lblSplitSize">Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="unit" data-i18n="unitChars">chars</span></div>
-        <div class="hint" data-i18n-html="hintSplit">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
-        <div class="field num"><label for="tocDepth" data-i18n="lblTocDepth">TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"></div>
-        <div class="field num"><label for="maxCost" data-i18n="lblMaxCost">Max cost:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="unit" data-i18n="unitUsd">$</span></div>
-        <div class="hint" data-i18n-html="hintTocCost">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
+<!-- BOOLEAN-OPTION 2.0: the four conversion options. Each is a leading checkbox, a caption that toggles it,
+     and the explanation beneath; none needs a local help button (the explanation says everything). -->
+<div class="stitle" data-i18n="secOptions">Options</div>
+<div class="opts" id="togglesRow" data-help="main.options">
+    <div class="opt">
+        <input type="checkbox" class="opt-box" id="chkSingle" checked aria-describedby="chkSingleD">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkSingle"><span data-i18n="chkSingle">Single page (contents available)</span></label></div>
+        <p class="opt-expl" id="chkSingleD" data-i18n="hintSingle">One long page with a linked table of contents at the top, instead of a page per chapter.</p></div>
     </div>
-</details>
-
-<details id="ollamaDetails">
-    <summary data-i18n="secOllama">Ollama settings</summary>
-    <div class="body">
-        <div class="field"><label for="ollamaModel" data-i18n="lblModel">Model:</label><input type="text" id="ollamaModel" dir="ltr" value="gemma3:12b"></div>
-        <div class="hint" data-i18n-html="hintOllamaModel">A model already pulled into your local Ollama; <code>gemma3:12b</code> is the default. A larger model translates better but needs more memory and runs slower.</div>
-        <div class="field num"><label for="ollamaParallel" data-i18n="lblParallel">Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"></div>
-        <div class="hint" data-i18n-html="hintOllamaParallel">How many batches go to Ollama at once; <code>1</code> (the minimum) sends them one by one. More helps only when Ollama itself runs with <code>OLLAMA_NUM_PARALLEL</code> set to the same number, and costs memory.</div>
-        <div class="field num"><label for="ollamaCtx" data-i18n="lblContext">Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="unit" data-i18n="unitTokens">tokens</span></div>
-        <div class="hint" data-i18n-html="hintOllamaCtx">The model's working window per request, in tokens: minimum <code>512</code>, default <code>8192</code>. Smaller is faster and uses less memory, but below about <code>4000</code> a batch of text may not fit; larger only costs memory.</div>
+    <div class="opt">
+        <input type="checkbox" class="opt-box" id="chkNoOpen" aria-describedby="chkNoOpenD">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkNoOpen"><span data-i18n="chkNoOpen">Don't open browser</span></label></div>
+        <p class="opt-expl" id="chkNoOpenD" data-i18n="hintNoOpen">Convert without opening the result; find it afterwards through the output path shown under the picker.</p></div>
     </div>
-</details>
-
-<details id="ocrDetails">
-    <summary data-i18n="secOCR">Image OCR (translate text in pictures)</summary>
-    <div class="body">
-        <label class="chk"><input type="checkbox" id="chkOCR"> <span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
-        <div class="hint chk-hint" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</div>
-        <div class="field" style="margin-top:8px"><label for="ocrLang" data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
-        <div class="field"><label for="ocrDownloadSel" data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select><button id="btnOcrDownload" type="button"><svg class="glyph ico-dl" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g transform="translate(12 12) scale(0.917 0.917) translate(-12 -12)"><path fill="currentColor" d="M19.35,10.04C18.67,6.59 15.64,4 12,4 9.11,4 6.6,5.64 5.35,8.04 2.34,8.36 0,10.91 0,14c0,3.31 2.69,6 6,6h13c2.76,0 5,-2.24 5,-5 0,-2.64 -2.05,-4.78 -4.65,-4.96zM17,13l-5,5 -5,-5h3V9h4v4h3z"/></g></svg><svg class="glyph ico-cancel" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnDownload">Download</span></button></div>
-        <div class="hint" id="ocrStatus" role="status" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
+    <div class="opt">
+        <input type="checkbox" class="opt-box" id="chkForce" aria-describedby="chkForceD">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkForce"><span data-i18n="chkForce">Force re-process</span></label></div>
+        <p class="opt-expl" id="chkForceD" data-i18n="hintForce">Rebuild even when a finished result for this file already exists; otherwise the existing result is reused.</p></div>
     </div>
-</details>
-
-<!-- APP-SETTINGS rule 3: every setting carries its caption, its control and a muted hint that
-     says what it does and what it costs; the hint sits below the caption at the caption's inset. -->
-<div class="toggles" id="togglesRow">
-    <div class="chk-block">
-        <label class="chk"><input type="checkbox" id="chkSingle" checked> <span data-i18n="chkSingle">Single page (contents available)</span></label>
-        <div class="hint chk-hint" data-i18n="hintSingle">One long page with a linked table of contents at the top, instead of a page per chapter.</div>
-    </div>
-    <div class="chk-block">
-        <label class="chk"><input type="checkbox" id="chkNoOpen"> <span data-i18n="chkNoOpen">Don't open browser</span></label>
-        <div class="hint chk-hint" data-i18n="hintNoOpen">Convert without opening the result; find it afterwards through the output path shown under the picker.</div>
-    </div>
-    <div class="chk-block">
-        <label class="chk"><input type="checkbox" id="chkForce"> <span data-i18n="chkForce">Force re-process</span></label>
-        <div class="hint chk-hint" data-i18n="hintForce">Rebuild even when a finished result for this file already exists; otherwise the existing result is reused.</div>
-    </div>
-    <div class="chk-block">
-        <label class="chk"><input type="checkbox" id="chkVerbose"> <span data-i18n="chkVerbose">Verbose log</span></label>
-        <div class="hint chk-hint" data-i18n="hintVerbose">Copy the converter's full log into the log panel; it is what "Send logs to the author" packs.</div>
+    <div class="opt">
+        <input type="checkbox" class="opt-box" id="chkVerbose" aria-describedby="chkVerboseD">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkVerbose"><span data-i18n="chkVerbose">Verbose log</span></label></div>
+        <p class="opt-expl" id="chkVerboseD" data-i18n="hintVerbose">Copy the converter's full log into the log panel; it is what "Send logs to the author" packs.</p></div>
     </div>
 </div>
 
-<details id="integrationSection">
-    <summary data-i18n="secIntegration">Windows integration</summary>
-    <div class="body">
-        <label class="chk"><input type="checkbox" id="chkShellEntries" onchange="toggleShellEntries()"> <span data-i18n="chkShellEntries">Right-click "Convert to HTML" and "Open with"</span></label>
-        <div class="hint chk-hint" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</div>
-        <label class="chk" style="margin-top:8px"><input type="checkbox" id="chkDefaultHandler" onchange="toggleDefaultHandler()"> <span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
-        <button id="btnDefaultApps" style="display:none" onclick="openDefaultApps()"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenDefaultApps">Open Default apps</span></button>
-        <div class="hint chk-hint" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</div>
-    </div>
-</details>
+</div><!-- /convert-main -->
 
-<!-- About: what is installed, and the one button that turns a broken run into a report the
-     author can act on. The mail address is not written here - it comes from /api/env, so the
-     product defines it in one place. -->
-<details id="aboutSection">
-    <summary data-i18n="secAbout">About the program</summary>
+<div class="convert-log">
+    <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
+    <div class="cmdbar" data-help="main.command">
+        <div class="cmdline console" id="cmdLine" dir="ltr"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
+        <button type="button" class="cmdcopy" id="btnCopyCmd" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="btnCopy">Copy</span></button>
+    </div>
+    <!-- The log's tools (ticket 63): copy the selected lines - or the whole log when nothing
+         is selected - and jump back to the latest line after scrolling up. -->
+    <div class="queue-head log-head" data-help="main.log">
+        <span class="stitle" data-i18n="secLog">Log</span>
+        <div class="btn-row">
+            <button type="button" id="btnLogCopy" data-i18n-title="ttLogCopy" title="Copy the selected log lines"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="logCopySel">Copy selection</span></button>
+            <button type="button" id="btnLogJump" data-i18n-title="ttLogJump" title="Scroll the log to the newest line"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,13h-3V3h-2v10H8l4,4 4,-4zM4,19v2h16v-2H4z"/></svg><span data-i18n="logJumpLatest">Jump to latest</span></button>
+        </div>
+    </div>
+    <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
+         region would read out every appended chunk of a long conversion. The stage line
+         (#progressStage) and the end outcome announce what matters, so the flood is off. -->
+    <div class="log console" id="logArea" role="log" aria-live="off" data-help="main.log" dir="ltr"></div>
+</div>
+</div><!-- /convert-cols -->
+</section>
+
+<!-- ═══ page: Ollama - the local translation engine ═══ -->
+<section class="page" id="page-ollama" role="tabpanel" aria-labelledby="tab-ollama" data-help="settings.ollama" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageOllama">Ollama</h2><p class="hint purpose" data-i18n="purposeOllama">Settings of the local Ollama translation engine.</p></div></div>
+<div class="field"><label for="ollamaModel" data-i18n="lblModel">Model:</label><input type="text" id="ollamaModel" dir="ltr" value="gemma3:12b"></div>
+<div class="hint" data-i18n-html="hintOllamaModel">A model already pulled into your local Ollama; <code>gemma3:12b</code> is the default. A larger model translates better but needs more memory and runs slower.</div>
+<div class="field num"><label for="ollamaParallel" data-i18n="lblParallel">Parallel:</label><input type="number" id="ollamaParallel" value="1" min="1"></div>
+<div class="hint" data-i18n-html="hintOllamaParallel">How many batches go to Ollama at once; <code>1</code> (the minimum) sends them one by one. More helps only when Ollama itself runs with <code>OLLAMA_NUM_PARALLEL</code> set to the same number, and costs memory.</div>
+<div class="field num"><label for="ollamaCtx" data-i18n="lblContext">Context:</label><input type="number" id="ollamaCtx" value="8192" min="512"><span class="unit" data-i18n="unitTokens">tokens</span></div>
+<div class="hint" data-i18n-html="hintOllamaCtx">The model's working window per request, in tokens: minimum <code>512</code>, default <code>8192</code>. Smaller is faster and uses less memory, but below about <code>4000</code> a batch of text may not fit; larger only costs memory.</div>
+</section>
+
+<!-- ═══ page: Image OCR ═══ -->
+<section class="page" id="page-ocr" role="tabpanel" aria-labelledby="tab-ocr" data-help="settings.ocr" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageOcr">Image OCR</h2><p class="hint purpose" data-i18n="purposeOcr">Recognize text in pictures so that translation reaches it too.</p></div></div>
+<div class="opt">
+    <input type="checkbox" class="opt-box" id="chkOCR" aria-describedby="chkOCRD">
+    <div class="opt-cell">
+        <div class="opt-headrow">
+            <label class="opt-name" for="chkOCR"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg><span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
+            <span class="opt-help-wrap" data-opt-help="helpOptOcr" data-opt-name="chkOCRLabel"><button type="button" class="opt-help" aria-expanded="false"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11,18h2v-2h-2v2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-2.21,0 -4,1.79 -4,4h2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,2 -3,1.75 -3,5h2c0,-2.25 3,-2.5 3,-5 0,-2.21 -1.79,-4 -4,-4z"/></svg></button><div class="opt-pop" role="note" hidden></div></span>
+        </div>
+        <p class="opt-expl" id="chkOCRD" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</p>
+    </div>
+</div>
+<div class="field" style="margin-top:12px"><label for="ocrLang" data-i18n="lblOcrLang">OCR language:</label><select id="ocrLang"></select></div>
+<div class="field"><label for="ocrDownloadSel" data-i18n="lblAddLang">Add language:</label><select id="ocrDownloadSel"></select>
+    <span class="state-stack" id="ocrDlStack"><button id="btnOcrDownload" type="button"><svg class="glyph ico-dl" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="translate(12 12) scale(0.917 0.917) translate(-12 -12)"><path fill="currentColor" d="M19.35,10.04C18.67,6.59 15.64,4 12,4 9.11,4 6.6,5.64 5.35,8.04 2.34,8.36 0,10.91 0,14c0,3.31 2.69,6 6,6h13c2.76,0 5,-2.24 5,-5 0,-2.64 -2.05,-4.78 -4.65,-4.96zM17,13l-5,5 -5,-5h3V9h4v4h3z"/></g></svg><svg class="glyph ico-cancel" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnDownload">Download</span></button></span></div>
+<div class="hint" id="ocrStatus" role="status" data-i18n="ocrStatusDefault">English is built-in; download other languages as needed.</div>
+</section>
+
+<!-- ═══ page: Windows integration ═══ -->
+<section class="page" id="page-windows" role="tabpanel" aria-labelledby="tab-windows" data-help="settings.integration" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageWindows">Windows</h2><p class="hint purpose" data-i18n="purposeWindows">Optional entries in Windows. Nothing changes unless you choose it here.</p></div></div>
+<div id="integrationSection">
+<div class="opt">
+    <input type="checkbox" class="opt-box" id="chkShellEntries" onchange="toggleShellEntries()" aria-describedby="shellStatus">
+    <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkShellEntries"><span data-i18n="chkShellEntries">Right-click "Convert to HTML" and "Open with"</span></label></div>
+    <p class="opt-expl" id="shellStatus" role="status" data-i18n="shellHint">Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</p></div>
+</div>
+<div class="opt" style="margin-top:8px">
+    <input type="checkbox" class="opt-box" id="chkDefaultHandler" onchange="toggleDefaultHandler()" aria-describedby="registerStatus">
+    <div class="opt-cell">
+        <div class="opt-headrow">
+            <label class="opt-name" for="chkDefaultHandler"><span data-i18n="chkDefaultHandler">Make this app the default handler for EPUB, PDF, ..</span></label>
+            <span class="opt-help-wrap" data-opt-help="helpOptHandler" data-opt-name="chkDefaultHandler"><button type="button" class="opt-help" aria-expanded="false"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11,18h2v-2h-2v2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-2.21,0 -4,1.79 -4,4h2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,2 -3,1.75 -3,5h2c0,-2.25 3,-2.5 3,-5 0,-2.21 -1.79,-4 -4,-4z"/></svg></button><div class="opt-pop" role="note" hidden></div></span>
+        </div>
+        <p class="opt-expl" id="registerStatus" role="status" data-i18n="registerHint">Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</p>
+        <div class="btn-row opt-extra"><button type="button" id="btnDefaultApps" style="display:none" onclick="openDefaultApps()"><svg class="glyph mirror" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenDefaultApps">Open Default apps</span></button></div>
+    </div>
+</div>
+</div>
+</section>
+
+<!-- ═══ page: Interface - size, text size and the controls profile (UI-SIZING) ═══ -->
+<section class="page" id="page-interface" role="tabpanel" aria-labelledby="tab-interface" data-help="settings.interface" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageInterface">Interface</h2><p class="hint purpose" data-i18n="purposeInterface">How large the controls and the text are, and how they are operated.</p></div></div>
+<div class="field"><label for="uiSize" data-i18n="lblUiSize">Interface size:</label>
+    <select id="uiSize"><option value="compact" data-i18n="uiSizeCompact">Compact</option><option value="ordinary" data-i18n="uiSizeOrdinary" selected>Ordinary</option><option value="large" data-i18n="uiSizeLarge">Large</option><option value="xlarge" data-i18n="uiSizeXlarge">Extra large</option><option value="huge" data-i18n="uiSizeHuge">Huge</option></select></div>
+<div class="hint" data-i18n="hintUiSize">Scales the buttons, options, headers and menu together - text, icons, spacing and click targets.</div>
+<div class="field"><label for="textSize" data-i18n="lblTextSize">Text size:</label>
+    <select id="textSize"><option value="ordinary" data-i18n="uiSizeOrdinary" selected>Ordinary</option><option value="large" data-i18n="uiSizeLarge">Large</option><option value="xlarge" data-i18n="uiSizeXlarge">Extra large</option><option value="huge" data-i18n="uiSizeHuge">Huge</option></select></div>
+<div class="hint" data-i18n="hintTextSize">Enlarges the text first and the layout with it; the icons grow only moderately. It stacks with the interface size.</div>
+<div class="field"><label for="inputProfile" data-i18n="lblInputProfile">Controls:</label>
+    <select id="inputProfile"><option value="auto" data-i18n="inputAuto" selected>Automatic</option><option value="pointer" data-i18n="inputPointer">Mouse and keyboard</option><option value="touch" data-i18n="inputTouch">Touch</option></select></div>
+<div class="hint" id="inputProfileHint" data-i18n="hintInputProfile">Touch makes every target larger. Automatic picks once when the window opens; it never changes while you work. Choose here on a device that has both.</div>
+</section>
+
+<!-- ═══ page: Advanced ═══ -->
+<section class="page" id="page-advanced" role="tabpanel" aria-labelledby="tab-advanced" data-help="settings.advanced" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageAdvanced">Advanced</h2><p class="hint purpose" data-i18n="purposeAdvanced">Rarely needed conversion limits.</p></div></div>
+<div class="field num"><label for="splitSize" data-i18n="lblSplitSize">Split size:</label><input type="number" id="splitSize" value="0" min="0"><span class="unit" data-i18n="unitChars">chars</span></div>
+<div class="hint" data-i18n-html="hintSplit">Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</div>
+<div class="field num"><label for="tocDepth" data-i18n="lblTocDepth">TOC depth:</label><input type="number" id="tocDepth" value="0" min="0"></div>
+<div class="field num"><label for="maxCost" data-i18n="lblMaxCost">Max cost:</label><input type="number" id="maxCost" value="0" min="0" step="0.5"><span class="unit" data-i18n="unitUsd">$</span></div>
+<div class="hint" data-i18n-html="hintTocCost">TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</div>
+</section>
+
+<!-- ═══ page: About - the last page: the program, its resources and the way to ask for help ═══ -->
+<section class="page" id="page-about" role="tabpanel" aria-labelledby="tab-about" data-help="settings.about" hidden>
+<div class="page-head"><div class="page-title"><h2 data-i18n="pageAbout">About</h2><p class="hint purpose" data-i18n="purposeAbout">The program, its version, help and where to get support.</p></div></div>
+<div class="about-row"><span data-i18n="appPurpose">Converts e-books and documents into a local HTML book you can read and translate in the browser.</span></div>
+<div class="about-row"><span data-i18n="aboutVersion">Version:</span> <code id="aboutVer"></code></div>
+<div class="about-row"><span data-i18n="aboutEdition">Edition:</span> <span id="aboutEd"></span></div>
+<div class="about-row"><span data-i18n="aboutLicence">Licence:</span> <span>MIT</span></div>
+<div class="about-links">
+    <!-- CONTEXT-HELP rule 11: the About page links to the help index (ticket 118). -->
+    <a href="/help/en/index.html" data-help-open="index" data-i18n="aboutHelp">Help</a>
+    <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="aboutSite">Product site</a>
+    <a href="https://serzhyale.github.io/doc-html-translate/privacy.html" target="_blank" rel="noopener" data-i18n="aboutPrivacy">Privacy</a>
+    <a href="https://github.com/SerZhyAle/doc-html-translate/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceLink">Licence text</a>
+    <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener" data-i18n="aboutRepo">Source code</a>
+</div>
+
+<!-- COLLAPSIBLE-GROUP: About has several distinct topics, so they are groups; Support starts open. -->
+<details class="group" id="grpUpdates" data-help="settings.about">
+    <summary data-i18n="grpUpdates">Updates</summary>
     <div class="body">
-        <div class="about-row"><span data-i18n="aboutVersion">Version:</span> <code id="aboutVer"></code></div>
-        <div class="about-row"><span data-i18n="aboutEdition">Edition:</span> <span id="aboutEd"></span></div>
-        <!-- APP-SETTINGS rule 12: the About page carries the version, the licence, the support
-             bundle (below) and the privacy policy link - what a reader needs to ask for help. -->
-        <div class="about-row"><span data-i18n="aboutLicence">Licence:</span> <span>MIT</span></div>
         <!-- APP-BEHAVIOUR rule 11: the packaged build hides this whole block, the hint included -
              a hint about a control that is not there is a half-hidden control. -->
         <div id="updateControls">
-            <div class="about-row">
-                <button type="button" class="inline-btn" id="btnUpdateCheck"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z"/></svg><span data-i18n="btnUpdateCheck">Check for updates</span></button>
-                <label class="chk"><input type="checkbox" id="chkAutoUpdates"> <span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label>
+            <div class="btn-row">
+                <button type="button" id="btnUpdateCheck"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z"/></svg><span data-i18n="btnUpdateCheck">Check for updates</span></button>
             </div>
-            <div class="hint chk-hint" data-i18n="hintAutoUpdate">Checks the release feed once a day and only reports - nothing is downloaded or installed without you.</div>
+            <div class="opt" style="margin-top:8px">
+                <input type="checkbox" class="opt-box" id="chkAutoUpdates" aria-describedby="hintAutoUpdate">
+                <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkAutoUpdates"><span data-i18n="autoUpdateCheck">Check automatically (once a day)</span></label></div>
+                <p class="opt-expl" id="hintAutoUpdate" data-i18n="hintAutoUpdate">Checks the release feed once a day and only reports - nothing is downloaded or installed without you.</p></div>
+            </div>
         </div>
         <div class="about-row" id="updateStatus" role="status"></div>
-        <div class="about-row"><span data-i18n="aboutEngine">Converter engine:</span> <span id="aboutEng"></span></div>
+        <div class="about-links"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener" data-i18n="aboutReleases">Download page</a></div>
+    </div>
+</details>
+
+<details class="group" id="grpSupport" open data-help="settings.about">
+    <summary data-i18n="grpSupport">Support and diagnostics</summary>
+    <div class="body">
+        <div class="about-row"><a id="aboutMail" href="#" data-i18n="aboutFeedback">Feedback</a></div>
         <div class="about-row"><span id="aboutLogs"></span></div>
-        <div class="about-row">
-            <a href="https://serzhyale.github.io/doc-html-translate/" target="_blank" rel="noopener" data-i18n="aboutSite">Product site</a>
-            <span class="dot">&#183;</span>
-            <a href="https://serzhyale.github.io/doc-html-translate/privacy.html" target="_blank" rel="noopener" data-i18n="aboutPrivacy">Privacy</a>
-            <span class="dot">&#183;</span>
-            <a id="aboutMail" href="#" data-i18n="aboutFeedback">Feedback</a>
-        </div>
-        <div class="about-row">
-            <button type="button" class="inline-btn" id="btnSendLogs"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM20,8l-8,5 -8,-5V6l8,5 8,-5v2z"/></svg><span data-i18n="btnSendLogs">Send logs to the author</span></button>
-            <button type="button" class="inline-btn" id="btnOpenArchive" style="display:none"><svg class="glyph mirror" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenArchive">Open the archive</span></button>
-            <button type="button" class="inline-btn" id="btnClearLogs"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="btnClearLogs">Clear stored logs</span></button>
+        <div class="btn-row" style="margin-top:8px">
+            <button type="button" id="btnSendLogs"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2zM20,8l-8,5 -8,-5V6l8,5 8,-5v2z"/></svg><span data-i18n="btnSendLogs">Send logs to the author</span></button>
+            <button type="button" id="btnOpenArchive" style="display:none"><svg class="glyph mirror" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7zM14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z"/></svg><span data-i18n="btnOpenArchive">Open the archive</span></button>
+            <button type="button" id="btnClearLogs"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M15,16h4v2h-4zM15,8h7v2h-7zM15,12h6v2h-6zM3,18c0,1.1 0.9,2 2,2h6c1.1,0 2,-0.9 2,-2V8H3v10zM14,5h-3l-1,-1H6L5,5H2v2h12V5z"/></svg><span data-i18n="btnClearLogs">Clear stored logs</span></button>
         </div>
         <div class="hint" id="sendLogsMsg" role="status"></div>
     </div>
 </details>
 
-</div><!-- /col-main -->
-
-<div class="col-log">
-    <div class="stitle" style="margin-top:0" data-i18n="secCmdLine">Command line</div>
-    <div class="cmdbar">
-        <div class="cmdline console" id="cmdLine" dir="ltr"><span class="ph" data-i18n="cmdPlaceholder">Pick a file and settings to see the command..</span></div>
-        <button class="cmdcopy" id="btnCopyCmd" data-i18n-title="titleCopyCmd" title="Copy command line to clipboard"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="btnCopy">Copy</span></button>
+<details class="group" id="grpResources" data-help="settings.about">
+    <summary data-i18n="grpResources">Resources</summary>
+    <div class="body">
+        <p class="hint" data-i18n="resIntro" style="margin:0 0 8px">What the program needs in order to run, and where to get it. Nothing is installed for you.</p>
+        <div class="about-row" style="margin:0 0 8px"><span data-i18n="aboutEngine">Converter engine:</span> <span id="aboutEng"></span></div>
+        <div class="res-table" id="resTable">
+            <span class="res-name">Tesseract</span><span class="res-what" data-i18n="resTesseract">Recognizes text in pictures</span><span class="res-state" id="resSt-tesseract"></span>
+            <a href="https://github.com/UB-Mannheim/tesseract/wiki" target="_blank" rel="noopener" data-i18n="resGet">Get</a>
+            <span class="res-name">Calibre</span><span class="res-what" data-i18n="resCalibre">Opens MOBI and AZW3 books</span><span class="res-state" id="resSt-calibre"></span>
+            <a href="https://calibre-ebook.com/download_windows" target="_blank" rel="noopener" data-i18n="resGet">Get</a>
+            <span class="res-name">7-Zip</span><span class="res-what" data-i18n="resSevenzip">Opens CBR and CB7 comics</span><span class="res-state" id="resSt-sevenzip"></span>
+            <a href="https://www.7-zip.org" target="_blank" rel="noopener" data-i18n="resGet">Get</a>
+            <span class="res-name">FileDO</span><span class="res-what" data-i18n="resFiledo">Opens encrypted secret files</span><span class="res-state" id="resSt-filedo"></span>
+            <a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener" data-i18n="resGet">Get</a>
+            <span class="res-name">Ollama</span><span class="res-what" data-i18n="resOllama">Translates on this computer</span><span class="res-state" id="resSt-ollama"></span>
+            <a href="https://ollama.com" target="_blank" rel="noopener" data-i18n="resGet">Get</a>
+        </div>
     </div>
-    <!-- The log's tools (ticket 63): copy the selected lines - or the whole log when nothing
-         is selected - and jump back to the latest line after scrolling up. -->
-    <div class="queue-head log-head">
-        <span class="stitle" data-i18n="secLog">Log</span>
-        <span class="log-tools">
-            <button type="button" class="inline-btn" id="btnLogCopy" data-i18n-title="ttLogCopy" title="Copy the selected log lines"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,1L4,1C2.9,1 2,1.9 2,3L2,17L4,17L4,3L16,3L16,1ZM19,5L8,5C6.9,5 6,5.9 6,7L6,21C6,22.1 6.9,23 8,23L19,23C20.1,23 21,22.1 21,21L21,7C21,5.9 20.1,5 19,5ZM19,21L8,21L8,7L19,7L19,21Z"/></svg><span data-i18n="logCopySel">Copy selection</span></button>
-            <button type="button" class="inline-btn" id="btnLogJump" data-i18n-title="ttLogJump" title="Scroll the log to the newest line"><svg class="glyph" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16,13h-3V3h-2v10H8l4,4 4,-4zM4,19v2h16v-2H4z"/></svg><span data-i18n="logJumpLatest">Jump to latest</span></button>
-        </span>
-    </div>
-    <!-- role="log" names the console for screen-reader browse mode; its implicit polite live
-         region would read out every appended chunk of a long conversion. The stage line
-         (#progressStage) and the end outcome announce what matters, so the flood is off. -->
-    <div class="log console" id="logArea" role="log" aria-live="off" dir="ltr"></div>
-</div><!-- /col-log -->
+</details>
 
-</div><!-- /app -->
+<details class="group" id="grpRelated" data-help="settings.about">
+    <summary data-i18n="grpRelated">Related products</summary>
+    <div class="body">
+        <div class="rel-table" id="relTable">
+            <span class="res-name">FileDO</span><span class="res-what" data-i18n="relFiledo">Opens and creates encrypted secret files that this program can read</span>
+            <a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener" data-i18n="relOpen">Open</a>
+            <span class="res-name">SZA</span><span class="res-what" data-i18n="relPortal">All projects of the same author</span>
+            <a href="https://sza.od.ua" target="_blank" rel="noopener" data-i18n="relOpen">Open</a>
+        </div>
+    </div>
+</details>
+</section>
+
+</main>
+</div><!-- /shell -->
+</div><!-- /win -->
 
 <dialog class="dlg" id="dlg" aria-labelledby="dlgTitle" aria-describedby="dlgMsg">
     <form method="dialog">
         <h2 id="dlgTitle"></h2>
         <p id="dlgMsg"></p>
         <div class="dlg-actions" id="dlgActions"></div>
+        <!-- CONTEXT-HELP rule 2: shown only for a dialog whose surface has help (openDialog decides); it sits
+             last in the tab order and in the top corner of the box. -->
+        <button type="button" class="help-btn secondary dlg-help" id="dlgHelp" data-help-open="dialog" hidden data-i18n-title="titleHelp" data-i18n-aria="titleHelp" title="Help (F1)" aria-label="Help (F1)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11,18h2v-2h-2v2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-2.21,0 -4,1.79 -4,4h2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,2 -3,1.75 -3,5h2c0,-2.25 3,-2.5 3,-5 0,-2.21 -1.79,-4 -4,-4z"/></svg></button>
     </form>
 </dialog>
 
 <script src="/i18n.js"></script>
+<script src="/help.js"></script>
 <script>
 // ── API access ──────────────────────────────────────────
 // Every API call carries this launch's token, which the server wrote into this page and
@@ -864,10 +1165,10 @@ function renderStatus(elId) {
     const node = document.getElementById(elId);
     if (!node) return;
     node.textContent = t(s.key, s.params);
-    // A status hint that also carries a layout class (.chk-hint's caption inset) keeps it
-    // through re-renders; only the state class (ok / warn / fail) turns over.
-    const keep = node.classList.contains('chk-hint') ? ' chk-hint' : '';
-    node.className = 'hint' + keep + (s.cls ? ' ' + s.cls : '');
+    // A status line that is an option's explanation (.opt-expl) keeps that role through re-renders;
+    // only the state class (ok / warn / fail) turns over.
+    const base = node.classList.contains('opt-expl') ? 'opt-expl' : 'hint';
+    node.className = base + (s.cls ? ' ' + s.cls : '');
 }
 
 function applyLang(lang) {
@@ -884,6 +1185,9 @@ function applyLang(lang) {
     if (typeof lastReadiness !== 'undefined' && lastReadiness) renderReadiness(lastReadiness);
     renderProgressCount();
     renderAbout();
+    renderResources();
+    refreshOptHelp();
+    reserveStacks();
     // The -src/-dst pickers word the translation languages in the interface language
     // (ticket 63), like every other string; the current picks survive the re-fill.
     fillLangs(el('srcLang'), el('srcLang').value);
@@ -946,26 +1250,27 @@ document.getElementById('themeSwitch').addEventListener('change', e => {
 // recommended answer has the focus, so Enter picks it. Requests queue: a second one waits for
 // the first to be answered.
 //
-// WINDOWS-UI 0.4 section 11 / ICON-RENDER 0.19 section 14: every answer button carries its
-// meaning's glyph before its caption. The answer's hue rides the glyph (.ans-ok / .ans-cancel /
-// .ans-warn, about 12 percent of the same hue over the control face); the acting button of an
-// irreversible confirmation keeps the danger face (kind 'danger', glyph in the face's own ink)
-// and its dismissing answer takes 'ans-cancel bare' - the red glyph, no tint. 'send' stays
-// neutral mono. Escape, focus and order follow APP-BEHAVIOUR rules 1 and 5 and do not move.
+// BUTTONS 2.0 (ticket 119): every answer button carries its meaning's glyph before its caption
+// (recorded policy D6) on a neutral face. Meaning rides the glyph only: the affirmative in
+// state.ok (.ans-ok), a caution in state.warning (.ans-warn), Cancel / No / Close in the plain
+// ink. The acting button of an irreversible confirmation keeps the danger face (kind 'danger',
+// glyph in the face's own ink). Answers read in reading order - Cancel, then any Apply, then the
+// final affirmative - and the safe answer holds the focus. Escape and focus follow
+// APP-BEHAVIOUR rules 1 and 5.
 //
+//   surface: the help-map id of this dialog (CONTEXT-HELP rule 4); every call names one, and
+//   tests/help_test.go counts them against cmd/doc-html-ui/help/help-map.json
 //   buttons: [{id, key, kind: 'ok'|'warn'|'danger'|'', ans, glyph, focus: true}]; cancel: the no-action id
 //   secret: true adds a masked password field (a FileDO secret file); the dialog then resolves to
 //   {choice, value}. The field is created for this one question, wiped and removed when the
 //   dialog closes, and its value goes nowhere but the caller (never the log, the console or
 //   any storage). Enter confirms with the primary button, Escape cancels.
 
-// The button glyphs: the vendored path data of assets/glyphs/<id>.svg (tests/iconography_test.go
-// holds every inline copy to those files), plus the two provisional meanings this product draws
-// under ICON-SET section 15 until the owner folds them in - action.retry (Material Icons
-// `replay`) and app.update (Material Icons `update`), proposed in
-// iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md.
+// The button glyphs: the vendored path data of assets/glyphs/<id>.svg, every one a catalog drawing
+// (tests/iconography_test.go holds every inline copy to those files).
 // A record marked rtl: mirror draws its .glyph with the mirror class (ICON-RENDER rule 7).
 const BTN_GLYPHS = {
+    'nav.close': '<path fill="currentColor" d="M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z"/>',
     'action.cancel': '<path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/>',
     'action.confirm': '<path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z"/>',
     'action.delete': '<path fill="currentColor" d="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2L18,7H6v12ZM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4Z"/>',
@@ -1003,7 +1308,7 @@ function openDialog(opts) {
                 const btn = document.createElement('button');
                 btn.value = b.id;
                 btn.innerHTML = btnFace(b.glyph, t(b.key));
-                btn.className = [b.kind, b.ans].filter(Boolean).join(' ');
+                btn.className = [b.kind === 'danger' ? 'danger' : '', b.ans].filter(Boolean).join(' ');
                 actions.appendChild(btn);
                 if (b.focus) focus = btn;
                 if ((b.kind === 'primary' || b.kind === 'ok') && !primary) primary = btn;
@@ -1015,9 +1320,14 @@ function openDialog(opts) {
                 label.htmlFor = 'dlgSecretInput';
                 label.textContent = t('secretLabel');
                 secretInput = document.createElement('input');
-                secretInput.type = 'password';
+                // Drawn masked by CSS, not type=password: the dialog is no <form>, and a typed password
+                // field that leaves the DOM before a request is a login signal to the browser's password
+                // manager (autocomplete=off is ignored there), which would offer to save the secret file's
+                // password into the browser profile. See ticket 117.
+                secretInput.type = 'text';
                 secretInput.id = 'dlgSecretInput';
                 secretInput.autocomplete = 'off';
+                secretInput.autocapitalize = 'off';
                 secretInput.spellcheck = false;
                 secretInput.setAttribute('dir', 'ltr');
                 secretInput.setAttribute('aria-describedby', 'dlgSecretNote');
@@ -1032,6 +1342,10 @@ function openDialog(opts) {
                 actions.before(secretBox);
             }
             dlg.returnValue = '';
+            // CONTEXT-HELP rules 3 and 7: the dialog names its surface, so F1 and the corner button open the
+            // same help while the modal stays open; a surface without help (a confirmation) shows no button.
+            dlg.dataset.surface = opts.surface;
+            el('dlgHelp').hidden = !(typeof DHTHelp !== 'undefined' && DHTHelp.has(opts.surface));
             dlg.addEventListener('close', () => {
                 dlgOpen = null;
                 const choice = dlg.returnValue || opts.cancel;
@@ -1051,23 +1365,23 @@ function openDialog(opts) {
 }
 // informDialog shows a notice with one button.
 function informDialog(title, message) {
-    return openDialog({title, message, buttons: [{id: 'ok', key: 'dlgOK', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm', focus: true}], cancel: 'ok'});
+    return openDialog({title, message, surface: 'dlg-notice', buttons: [{id: 'ok', key: 'dlgOK', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm', focus: true}], cancel: 'ok'});
 }
 // confirmDialog asks a yes/no question; safe says whether "no" is the recommended answer. The
 // acting answer's face comes in as kind: 'danger' (an irreversible act - its verb is delete,
 // the glyph rides the danger face), 'warn' (a caution - continue without something), 'ok'
-// (a plain affirmative). Its dismissing answer is action.cancel: red, tinted - unless the
-// acting button is the irreversible danger face, where it stays bare (WINDOWS-UI section 11
-// item 7: the only red face is the acting one).
+// (a plain affirmative). BUTTONS 2.0 section 4 rule 4: the answers read Cancel first, then the
+// acting one; the dismissing answer is neutral (section 3 rule 5), and the only coloured face
+// is the acting button of an irreversible confirmation.
 async function confirmDialog(message, yesKey, kind, safe) {
     const yes = {danger: {glyph: 'action.delete', ans: ''},
         warn: {glyph: 'action.convert', ans: 'ans-warn'},
         ok: {glyph: 'action.confirm', ans: 'ans-ok'},
         primary: {glyph: 'action.confirm', ans: 'ans-ok'}}[kind || 'primary'];
     const choice = await openDialog({
-        title: t('dlgConfirmTitle'), message,
-        buttons: [{id: 'yes', key: yesKey, kind: kind || 'primary', ans: yes.ans, glyph: yes.glyph, focus: !safe},
-            {id: 'no', key: 'btnCancel', ans: kind === 'danger' ? 'ans-cancel bare' : 'ans-cancel', glyph: 'action.cancel', focus: !!safe}],
+        title: t('dlgConfirmTitle'), message, surface: 'dlg-confirm',
+        buttons: [{id: 'no', key: 'btnCancel', glyph: 'action.cancel', focus: !!safe},
+            {id: 'yes', key: yesKey, kind: kind || 'primary', ans: yes.ans, glyph: yes.glyph, focus: !safe}],
         cancel: 'no',
     });
     return choice === 'yes';
@@ -1283,7 +1597,9 @@ api('/api/initial').then(r=>r.json()).then(d=>{
 
 api('/api/env').then(r=>r.json()).then(d=>{
     integrationHidden = !!d.packaged;
-    if (d.packaged) document.getElementById('integrationSection').style.display = 'none';
+    // The packaged build registers nothing in Windows itself, so the whole page and its rail row go
+    // (a page of controls that cannot act is a half-hidden control, APP-BEHAVIOUR rule 11).
+    if (d.packaged) { el('tab-windows').style.display = 'none'; if (currentPage === 'windows') showPage('convert'); }
     if (!d.cli) document.getElementById('cliWarn').style.display = '';
     aboutFacts.packaged = !!d.packaged;
     aboutFacts.cli = !!d.cli;
@@ -1321,12 +1637,7 @@ async function browseFolder() {
 
 // ── translation engine ──────────────────────────────────
 const googleKeySection = document.getElementById('googleKeySection');
-// Only a real pick (a change event) opens the Ollama group: syncEngineUI also runs on every
-// restore, where reopening it would override the collapse the reader left (WINDOWS-UI section 3.4).
-document.querySelectorAll('input[name="engine"]').forEach(r => r.addEventListener('change', () => {
-    syncEngineUI();
-    if (currentEngine() === 'ollama') el('ollamaDetails').open = true;
-}));
+document.querySelectorAll('input[name="engine"]').forEach(r => r.addEventListener('change', syncEngineUI));
 
 function currentEngine() {
     const r = document.querySelector('input[name="engine"]:checked');
@@ -1481,7 +1792,7 @@ async function assocPromptAnswer(answer) {
     assocPrompted = true;
     saveSettings();
     if (answer === 'none') return;
-    el('integrationSection').open = true;
+    showPage('windows');
     el('chkShellEntries').checked = true;
     await toggleShellEntries();
     if (answer === 'both') {
@@ -1524,11 +1835,17 @@ function collectSettings() {
         recent:         recentDocs,
         win:            winGeom,
         theme:          themePref,
-        // WINDOWS-UI section 3.3: remembered UI context - each group's expansion by its
-        // stable id, and the pane viewport as a stable section anchor plus relative offset.
+        // UI-SIZING: the interface size, the text size and the controls profile (auto = decided once
+        // when the window opens, from the primary pointer).
+        uiSize:         uiSize,
+        textSize:       textSize,
+        inputProfile:   inputProfile,
+        // WINDOWS-UI section 3.3 / SETTINGS-NAVIGATION 4.3: remembered UI context - the page, each
+        // group's state by its stable id, and every page's viewport as a stable anchor plus offset.
         // Translated captions and raw pixel offsets are never the key.
-        openGroups:     [...document.querySelectorAll('details[id]')].filter(d => d.open).map(d => d.id),
-        scroll:         paneScroll,
+        page:           currentPage,
+        groups:         Object.fromEntries([...document.querySelectorAll('details[id]')].map(d => [d.id, d.open])),
+        pageScrolls:    pageScrolls,
     };
 }
 // Until /api/ocr-langs has filled the select, its value ('') is not the reader's pick: the
@@ -1582,14 +1899,22 @@ function applySettings(s) {
     // Opening a group still dispatches a toggle event as a later task, after settingsLoaded is
     // set, so the toggle and scroll listeners ignore everything while `restoring` holds.
     // A retired or unknown group id is skipped, not fatal.
-    if (Array.isArray(s.openGroups)) {
-        for (const id of s.openGroups) {
+    if (s.groups && typeof s.groups === 'object') {
+        for (const id of Object.keys(s.groups)) {
             const d = document.getElementById(id);
-            if (d && d.tagName === 'DETAILS') d.open = true;
+            if (d && d.tagName === 'DETAILS') d.open = !!s.groups[id];
         }
     }
-    if (s.scroll && typeof s.scroll.id === 'string' && Number.isFinite(s.scroll.off)) {
-        paneScroll = {id: s.scroll.id, off: s.scroll.off};
+    if (typeof s.uiSize === 'string' && SIZE_KEYS.includes(s.uiSize)) uiSize = s.uiSize;
+    if (typeof s.textSize === 'string' && TEXT_KEYS.includes(s.textSize)) textSize = s.textSize;
+    if (typeof s.inputProfile === 'string' && INPUT_KEYS.includes(s.inputProfile)) inputProfile = s.inputProfile;
+    el('uiSize').value = uiSize; el('textSize').value = textSize; el('inputProfile').value = inputProfile;
+    if (typeof s.page === 'string') savedPage = s.page;
+    if (s.pageScrolls && typeof s.pageScrolls === 'object') {
+        for (const id of PAGES) {
+            const a = s.pageScrolls[id];
+            if (a && typeof a.id === 'string' && Number.isFinite(a.off)) pageScrolls[id] = {id: a.id, off: a.off};
+        }
     }
     syncEngineUI();
 }
@@ -1618,9 +1943,11 @@ api('/api/settings').then(r => {
     settingsLoaded = true;
     resolveLang();
     syncOcrLangToSource();
-    fitWindow();
+    applyProfile();
     restoreWindow(); // the saved size and position, clamped to the screen it opens on
-    restorePaneScroll(); // WINDOWS-UI section 3.3: the remembered pane anchor and offset
+    // SETTINGS-NAVIGATION 4.3 / 5.1: the remembered page and its viewport, then the one complete frame.
+    showPage(urlParam('page') || savedPage || 'convert', {force: true});
+    document.documentElement.removeAttribute('data-boot');
     // Toggle events run as tasks queued above and the scroll event in the next rendering
     // step, ahead of that frame's callbacks; two frames on, every restore-induced event has
     // been heard and ignored, and the next one is the reader's.
@@ -1706,6 +2033,7 @@ el('btnOcrDownload').addEventListener('click', async () => {
     cap.dataset.i18n = 'btnCancel';
     cap.textContent = t('btnCancel');
     sel.disabled = true;
+    // The glyph and the caption change together; the button keeps the width of its wider state (reserveStacks).
     setStatus('ocrStatus', 'ocrDownloading', {lang: name});
     let result = null;
     try {
@@ -1756,22 +2084,8 @@ el('btnOcrDownload').addEventListener('click', async () => {
 });
 loadOcrLangs();
 
-// ── fit the window height to its content (no dead space) ─
-// growOnly: only ever enlarge the window (used when expanding a group), never
-// shrink it back - the user asked for one-way growth.
-function fitWindow(growOnly) {
-    try {
-        const frame = Math.max(0, window.outerHeight - window.innerHeight);
-        const h = Math.min(Math.ceil(document.body.scrollHeight) + frame + 6, screen.availHeight);
-        if (h <= 200) return;
-        if (growOnly && h <= window.outerHeight) return;
-        window.resizeTo(window.outerWidth, h);
-    } catch(e) { /* app window may forbid resize; --window-size is the fallback */ }
-}
-window.addEventListener('load', () => setTimeout(fitWindow, 120));
-
-// WINDOWS-UI sections 3.2-3.3: collapsing a group changes visibility only - it never resizes
-// the window (long content scrolls in the pane), and a group closed while one of its children
+// WINDOWS-UI sections 3.2-3.3 / COLLAPSIBLE-GROUP 4: collapsing a group changes visibility only - it never
+// resizes the window (long content scrolls in the pane), and a group closed while one of its children
 // holds the focus hands that focus to its header before the children leave the traversal. The
 // expansion itself is remembered by stable id (see collectSettings), programmatic opens
 // included, so the context a run leaves behind is the context the next launch restores.
@@ -1796,7 +2110,7 @@ document.addEventListener('wheel', ev => {
     const n = ev.target && ev.target.closest ? ev.target.closest('input[type="number"]') : null;
     if (!n || n === document.activeElement) return;
     ev.preventDefault();
-    const pane = n.closest('.col-main, .log, #queueList, #recentList');
+    const pane = n.closest('.pane, .log, #queueList, #recentList');
     if (pane) pane.scrollTop += ev.deltaY;
 }, { passive: false });
 
@@ -1889,12 +2203,12 @@ function renderReadiness(result) {
     for (const issue of result.issues || []) {
         const row = document.createElement('div');
         row.textContent = readinessIssueText(issue);
-        const action = {ocrData:['readinessDownload', () => {el('ocrDetails').open=true; const code = issue.detail.split(',')[0].trim(); if (el('ocrDownloadSel').querySelector(`option[value="${code}"]`)) el('ocrDownloadSel').value = code; el('ocrDownloadSel').focus();}],
-            googleKey:['readinessSaveKey', () => {el('googleKeySection').scrollIntoView(); el('googleKey').focus();}],
-            ollamaModel:['readinessChooseModel', () => {el('ollamaDetails').open=true; el('ollamaModel').focus();}]}[issue.code];
+        const action = {ocrData:['readinessDownload', () => {showPage('ocr'); const code = issue.detail.split(',')[0].trim(); if (el('ocrDownloadSel').querySelector(`option[value="${code}"]`)) el('ocrDownloadSel').value = code; el('ocrDownloadSel').focus();}],
+            googleKey:['readinessSaveKey', () => {showPage('convert'); el('googleKeySection').scrollIntoView(); el('googleKey').focus();}],
+            ollamaModel:['readinessChooseModel', () => {showPage('ollama'); el('ollamaModel').focus();}]}[issue.code];
         if (action) {
             const button = document.createElement('button');
-            button.type = 'button'; button.className = 'inline-btn';
+            button.type = 'button'; button.className = 'secondary';
             button.innerHTML = btnFace('nav.go-to', t(action[0]));
             button.addEventListener('click', action[1]); row.append(' ', button);
         }
@@ -2050,7 +2364,8 @@ function renderReportMsg() {
 
 async function sendLogs() {
     const btn = el('btnSendLogs');
-    el('aboutSection').open = true;
+    showPage('about');
+    el('grpSupport').open = true;
     btn.disabled = true;
     lastReport = null;
     setStatus('sendLogsMsg', 'sendLogsBuilding');
@@ -2330,12 +2645,12 @@ const MARK = '\x1edht:';
 // Enter declines, and Escape and closing the dialog decline too (APP-BEHAVIOUR rule 1).
 async function askForTheRun(cfg, q, run) {
     const choice = await openDialog({
-        title: q.title, message: q.message, tag: run, run,
+        title: q.title, message: q.message, tag: run, run, surface: 'dlg-cost',
         // The cost question is the product's registered irreversible-acting confirmation: the
         // acting answer keeps the danger face (its verb is translate, glyph in the face's own
-        // ink), the safe answer holds the focus and its dismissing glyph stays untinted red.
-        buttons: [{id: 'yes', key: 'costYes', kind: 'danger', glyph: 'action.translate'},
-            {id: 'no', key: 'costNo', ans: 'ans-cancel bare', glyph: 'action.cancel', focus: true}],
+        // ink) and comes last; the safe answer comes first, is neutral and holds the focus.
+        buttons: [{id: 'no', key: 'costNo', glyph: 'action.cancel', focus: true},
+            {id: 'yes', key: 'costYes', kind: 'danger', glyph: 'action.translate'}],
         cancel: 'no',
     });
     if (!run.active) return;
@@ -2358,9 +2673,9 @@ async function askSecretForTheRun(cfg, q, run) {
     const post = (body) => api('/api/secret', {method: 'POST', body: JSON.stringify({input: cfg.input, output: cfg.output, ...body})}).catch(() => {});
     if (queueBusy && queueSecret !== null && !q.retry) { await post({value: queueSecret}); return; }
     const res = await openDialog({
-        title: q.title, message: q.message, tag: run, run, secret: true,
-        buttons: [{id: 'open', key: 'btnOpenSecret', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm'},
-            {id: 'cancel', key: 'btnCancel', ans: 'ans-cancel', glyph: 'action.cancel'}],
+        title: q.title, message: q.message, tag: run, run, secret: true, surface: 'dlg-secret',
+        buttons: [{id: 'cancel', key: 'btnCancel', glyph: 'action.cancel'},
+            {id: 'open', key: 'btnOpenSecret', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm'}],
         cancel: 'cancel',
     });
     if (!run.active) return;
@@ -2405,10 +2720,10 @@ function reportRunEnd(end, append, result) {
     setStatus('progressStage', 'runFailedTitle', null, 'fail');
     append(msg + '\n', 'end failed');
     openDialog({
-        title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'),
-        buttons: [{id: 'send', key: 'btnSendLogs', glyph: 'action.email'},
-            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'},
-            {id: 'close', key: 'dlgClose', ans: 'ans-cancel', glyph: 'action.cancel', focus: true}],
+        title: t('runFailedTitle'), message: msg + '\n\n' + t('runFailedHelp'), surface: 'dlg-run-failed',
+        buttons: [{id: 'close', key: 'dlgClose', glyph: 'nav.close', focus: true},
+            {id: 'send', key: 'btnSendLogs', glyph: 'action.email'},
+            {id: 'retry', key: 'btnRetry', kind: 'ok', ans: 'ans-ok', glyph: 'action.retry'}],
         cancel: 'close',
     }).then(choice => {
         if (choice === 'send') sendLogs();
@@ -2486,7 +2801,7 @@ function addFilesToQueue(paths) {
         queue.push(it);
         added.push(it);
     }
-    if (added.length) { renderQueue(); fitWindow(); }
+    if (added.length) renderQueue();
     return added;
 }
 
@@ -2494,7 +2809,6 @@ el('btnQueueClear').addEventListener('click', () => {
     if (queueBusy) return;
     queue = [];
     renderQueue();
-    fitWindow();
 });
 
 // renderQueue redraws the list. It is shown from two files on; one file keeps the window
@@ -2542,7 +2856,6 @@ function queueRow(it, sel) {
     if (it.state === 'done') {
         const open = document.createElement('button');
         open.type = 'button';
-        open.className = 'inline-btn';
         open.innerHTML = btnFace('nav.open-external', t('btnOpenPrev'));
         open.dataset.i18n = 'btnOpenPrev';
         open.addEventListener('click', () => openQueueResult(it));
@@ -2551,7 +2864,7 @@ function queueRow(it, sel) {
     if (it.state !== 'running') {
         const del = document.createElement('button');
         del.type = 'button';
-        del.className = 'inline-btn qdel';
+        del.className = 'qdel';
         del.innerHTML = btnFace('action.remove', t('queueRemoveItem'));
         del.dataset.i18n = 'queueRemoveItem';
         del.title = t('ttQueueRemove');
@@ -2562,7 +2875,6 @@ function queueRow(it, sel) {
             if (queueBusy) return;
             queue = queue.filter(x => x !== it);
             renderQueue();
-            fitWindow();
         });
         li.appendChild(del);
     }
@@ -2629,8 +2941,10 @@ function setQueueControls() {
     for (const b of document.querySelectorAll('.qdel')) b.disabled = queueBusy;
     const cancelBtn = el('btnCancel');
     const key = queueBusy ? 'btnCancelCurrent' : 'btnCancel';
-    cancelBtn.dataset.i18n = key;
-    cancelBtn.textContent = t(key);
+    const cap = cancelBtn.querySelector('span[data-i18n]');
+    cap.dataset.i18n = key;
+    cap.textContent = t(key);
+    reserveStacks();
     if (queueBusy) {
         cancelBtn.disabled = false;
         cancelBtn.style.display = '';
@@ -2725,7 +3039,6 @@ async function runQueue() {
     setQueueControls();
     renderQueue();
     log('\n' + t('queueSummary', summaryCounts()) + '\n', 'end');
-    fitWindow();
 }
 
 // queueWorker takes the next waiting item until none is left or the queue was cancelled.
@@ -2977,10 +3290,24 @@ function clampWindowToScreen() {
     } catch (e) { /* no screen facts - nothing to clamp against */ }
 }
 
+// windowFillsScreen is true for a maximized or full-screen window: its box is the work area
+// (or larger, the invisible resize borders count), and APP-BEHAVIOUR rule 10 says such a state
+// never overwrites the remembered normal rectangle - a window closed maximized must not reopen
+// as a full-screen box that "forgot" its size. A normal window snapped to the whole work area is
+// indistinguishable from it and is skipped too, which only keeps the previous rectangle.
+function windowFillsScreen() {
+    try {
+        if (document.fullscreenElement) return true;
+        if (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) return true;
+        return window.outerWidth >= screen.availWidth && window.outerHeight >= screen.availHeight;
+    } catch (e) { return false; }
+}
+
 function trackWindowGeometry() {
     const x = window.screenX, y = window.screenY, w = window.outerWidth, h = window.outerHeight;
     if (x < -30000 || y < -30000) return; // minimized: the park position is not a geometry
     if (w < 200 || h < 200 || w > 30000 || h > 30000) return;
+    if (windowFillsScreen()) return; // maximized / full screen: keep the last normal rectangle
     if (winGeom && x === winGeom.x && y === winGeom.y && w === winGeom.w && h === winGeom.h) return;
     winGeom = {x, y, w, h};
     clearTimeout(geomTimer);
@@ -2991,42 +3318,258 @@ function trackWindowGeometry() {
 setInterval(trackWindowGeometry, 2000);
 window.addEventListener('resize', trackWindowGeometry);
 
-// ── remembered pane viewport (WINDOWS-UI section 3.3) ───
-// The settings pane's scroll is remembered as a stable anchor - the last pane section whose
-// top stands above the viewport - plus the pixels below it, so language, DPI and layout changes
-// that move the pixel geometry still land the reader where they left off. Ids are internal and
-// stable; a missing anchor (renamed or retired section) restores nothing, and the pane simply
-// opens at the top, which is a valid position.
-let paneScroll = null;
-let scrollSaveTimer = null;
-function paneScrollAnchor() {
-    const pane = document.querySelector('.col-main');
-    if (!pane || pane.scrollTop < 4) return null;
+// ── interface size and controls profile (UI-SIZING 1.1) ─
+// One resolver for every covered component: the root carries data-size (interface scale),
+// data-text (text-only enlargement) and data-input (pointer or touch), and the stylesheet's tokens do
+// the rest. The profile is chosen ONCE when the window opens - "auto" reads the primary pointer a
+// single time and keeps the answer - and changes only on an explicit pick on the Interface page,
+// never from a pointer or touch event (rule 1). ?size= ?text= ?input= ?page= are read-only overrides
+// for the capture and check tooling, like ?lang=; they never touch the saved choice.
+const SIZE_KEYS = ['compact', 'ordinary', 'large', 'xlarge', 'huge'];
+const TEXT_KEYS = ['ordinary', 'large', 'xlarge', 'huge'];
+const INPUT_KEYS = ['auto', 'pointer', 'touch'];
+let uiSize = 'ordinary', textSize = 'ordinary', inputProfile = 'auto';
+function urlParam(k) { const m = location.search.match(new RegExp('[?&]' + k + '=([a-z]+)\\b')); return m ? m[1] : null; }
+// An unknown input surface (no pointer at all) is a touch surface; a coarse primary pointer is touch.
+const autoInput = (matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: none)').matches) ? 'touch' : 'pointer';
+function applyProfile() {
+    const root = document.documentElement;
+    const size = urlParam('size') || uiSize, text = urlParam('text') || textSize, input = urlParam('input') || inputProfile;
+    root.dataset.size = SIZE_KEYS.includes(size) ? size : 'ordinary';
+    root.dataset.text = TEXT_KEYS.includes(text) ? text : 'ordinary';
+    root.dataset.input = (input === 'touch' || input === 'pointer') ? input : autoInput;
+    reserveStacks(); // UI-SIZING 1.1 section 5: remeasure the stateful buttons at the final size
+}
+for (const [id, set] of [['uiSize', v => { uiSize = v; }], ['textSize', v => { textSize = v; }], ['inputProfile', v => { inputProfile = v; }]]) {
+    el(id).addEventListener('change', () => { set(el(id).value); applyProfile(); });
+}
+
+// ── stateful buttons keep the width of their widest state ─
+// BUTTONS 2.0 section 3 rule 3: Convert / Cancel and Download / Cancel change caption in place, so the
+// neighbours never move. The widest state is measured with every other state out of the way, in one task
+// (no paint between), at the current size, language and font; a hidden page is measured when it opens.
+function reserveStacks() {
+    const stack = el('runStack');
+    if (stack && !el('page-convert').hidden) {
+        const kids = [...stack.children];
+        const keep = kids.map(k => k.style.display);
+        let widest = 0;
+        kids.forEach((k, i) => {
+            kids.forEach((o, j) => { o.style.display = i === j ? '' : 'none'; });
+            k.style.minWidth = '';
+            widest = Math.max(widest, k.getBoundingClientRect().width);
+        });
+        kids.forEach((k, i) => { k.style.display = keep[i]; });
+        stack.style.minWidth = widest ? widest + 'px' : '';
+    }
+    const dl = el('btnOcrDownload');
+    if (dl && !el('page-ocr').hidden) {
+        const cap = dl.querySelector('span[data-i18n]'), keepText = cap.textContent, keepBusy = dl.classList.contains('busy');
+        dl.style.minWidth = '';
+        let widest = 0;
+        for (const [key, busy] of [['btnDownload', false], ['btnCancel', true]]) {
+            cap.textContent = t(key);
+            dl.classList.toggle('busy', busy);
+            widest = Math.max(widest, dl.getBoundingClientRect().width);
+        }
+        cap.textContent = keepText;
+        dl.classList.toggle('busy', keepBusy);
+        dl.style.minWidth = widest ? widest + 'px' : '';
+    }
+}
+
+// ── pages: the rail and the pane (SETTINGS-NAVIGATION 2.0) ─
+// One list of pages, each with a stable id; choosing one swaps what the pane shows and nothing else -
+// it never resizes the window, moves the rail, commits an edit or runs an operation, and it leaves the
+// focus on the rail. Every page is already in the document, so a switch is one task that toggles
+// `hidden`: the page is complete before it is painted, there is no partial layout to see, and a late
+// answer from the server only ever updates its own elements, never the destination.
+const PAGES = ['convert', 'ollama', 'ocr', 'windows', 'interface', 'advanced', 'about'];
+let currentPage = 'convert', savedPage = null;
+const pageSeen = new Set();
+const pageScrolls = {};
+function pageAvailable(id) { return PAGES.includes(id) && !(id === 'windows' && integrationHidden); }
+
+// Each page's viewport is remembered as a stable anchor - the last element with an id whose top stands
+// above the viewport - plus the pixels past it, so language, size and layout changes that move the pixel
+// geometry still land the reader where they left off. A missing anchor restores nothing: the top is valid.
+function pageAnchor(id) {
+    const pane = el('pane'), page = el('page-' + id);
+    if (!pane || !page || page.hidden || pane.scrollTop < 4) return null;
     const top = pane.getBoundingClientRect().top;
     let anchor = null;
-    for (const kid of pane.children) {
-        if (!kid.id || kid.offsetParent === null) continue;
+    for (const kid of page.querySelectorAll('[id]')) {
+        if (kid.offsetParent === null) continue;
         const r = kid.getBoundingClientRect();
-        if (r.top <= top + 8) anchor = {id: kid.id, off: Math.round(pane.scrollTop - (kid.offsetTop - pane.offsetTop))};
+        if (r.top <= top + 8) anchor = {id: kid.id, off: Math.round(top - r.top)};
         else break;
     }
     return anchor;
 }
-function restorePaneScroll() {
-    if (!paneScroll) return;
-    const pane = document.querySelector('.col-main');
-    const kid = paneScroll.id ? document.getElementById(paneScroll.id) : null;
-    if (!pane || !kid || kid.offsetParent === null) return;
-    pane.scrollTop = Math.max(0, (kid.offsetTop - pane.offsetTop) + paneScroll.off);
+function restorePageScroll(id) {
+    const pane = el('pane'), a = pageScrolls[id];
+    pane.scrollTop = 0;
+    const kid = a ? document.getElementById(a.id) : null;
+    if (!kid || kid.offsetParent === null) return;
+    pane.scrollTop = Math.max(0, pane.scrollTop + (kid.getBoundingClientRect().top - pane.getBoundingClientRect().top) + a.off);
 }
-document.querySelector('.col-main').addEventListener('scroll', () => {
+function showPage(id, opts) {
+    opts = opts || {};
+    if (!pageAvailable(id)) id = 'convert';
+    if (id === currentPage && !el('page-' + id).hidden && !opts.force) { if (opts.focus) el('tab-' + id).focus(); return; }
+    const leaving = currentPage;
+    if (!el('page-' + leaving).hidden) pageScrolls[leaving] = pageAnchor(leaving);
+    for (const p of PAGES) {
+        const on = p === id;
+        el('page-' + p).hidden = !on;
+        const tab = el('tab-' + p);
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.tabIndex = on ? 0 : -1;
+    }
+    currentPage = id;
+    pageSeen.add(id);
+    restorePageScroll(id);
+    reserveStacks();
+    if (id === 'about') loadResources();
+    closeDrawer(false);
+    if (opts.focus) el('tab-' + id).focus();
+    if (!restoring) saveSettings();
+}
+el('railList').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-page]');
+    if (b) showPage(b.dataset.page);
+});
+// Vertical tab list: Up/Down move and select, Home/End jump; Tab leaves the rail for the page (one tab stop).
+el('railList').addEventListener('keydown', ev => {
+    const tabs = PAGES.filter(pageAvailable).map(p => el('tab-' + p));
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = -1;
+    if (ev.key === 'ArrowDown') j = (i + 1) % tabs.length;
+    else if (ev.key === 'ArrowUp') j = (i - 1 + tabs.length) % tabs.length;
+    else if (ev.key === 'Home') j = 0;
+    else if (ev.key === 'End') j = tabs.length - 1;
+    if (j < 0) return;
+    ev.preventDefault();
+    showPage(tabs[j].dataset.page, {focus: true});
+});
+// A narrow window keeps the same menu as a start-side drawer (SETTINGS-NAVIGATION 2.6): the header's Pages
+// button opens it, choosing a page, the scrim or Escape closes it, and focus returns to the button.
+function drawerMode() { return getComputedStyle(el('btnPages')).display !== 'none'; }
+function openDrawer() {
+    if (!drawerMode()) return;
+    el('rail').classList.add('open');
+    el('btnPages').setAttribute('aria-expanded', 'true');
+    el('tab-' + currentPage).focus();
+}
+function closeDrawer(refocus) {
+    if (!el('rail').classList.contains('open')) return;
+    el('rail').classList.remove('open');
+    el('btnPages').setAttribute('aria-expanded', 'false');
+    if (refocus !== false) el('btnPages').focus();
+}
+el('btnPages').addEventListener('click', () => { if (el('rail').classList.contains('open')) closeDrawer(); else openDrawer(); });
+el('railScrim').addEventListener('click', () => closeDrawer());
+
+// ── scroll memory ───────────────────────────────────────
+let scrollSaveTimer = null;
+// The log column takes the pane's own height (the sticky column of the Convert page); a window resize or a size change
+// re-reads it. Plain CSS cannot name a container's block size here, so the observer keeps one variable current.
+new ResizeObserver(() => { const p = el('pane'); p.style.setProperty('--pane-h', Math.max(0, p.clientHeight - 8) + 'px'); }).observe(el('pane'));
+el('pane').addEventListener('scroll', () => {
     if (restoring) return;
     clearTimeout(scrollSaveTimer);
     scrollSaveTimer = setTimeout(() => {
-        paneScroll = paneScrollAnchor();
+        pageScrolls[currentPage] = pageAnchor(currentPage);
         saveSettings();
     }, 400);
 });
+
+// ── option-local help (BOOLEAN-OPTION 2.0 section 4) ────
+// The app.help button follows the option's name. Hover or keyboard focus shows a short non-modal summary
+// that stays open while the pointer moves into it; a click, tap or Enter opens the full explanation, which
+// closes by its Close button, Escape or a click outside. Both texts come from ONE dictionary string - the
+// summary, a blank line, then the rest - so they cannot drift apart, and neither ever toggles the option
+// (the button is outside the label and its events stop here).
+const optHelps = [];
+function optHelpText(key) {
+    const raw = t(key), i = raw.indexOf('\n\n');
+    return i < 0 ? {short: raw, full: raw} : {short: raw.slice(0, i), full: raw.slice(0, i) + '\n' + raw.slice(i + 2)};
+}
+document.querySelectorAll('.opt-help-wrap').forEach(wrap => {
+    const btn = wrap.querySelector('.opt-help'), pop = wrap.querySelector('.opt-pop');
+    const h = {wrap, btn, pop, mode: null};
+    pop.id = 'optpop-' + wrap.dataset.optHelp;
+    btn.setAttribute('aria-controls', pop.id);
+    h.show = mode => {
+        h.mode = mode;
+        const txt = optHelpText(wrap.dataset.optHelp);
+        pop.textContent = mode === 'full' ? txt.full : txt.short;
+        if (mode === 'full') {
+            const row = document.createElement('div');
+            row.className = 'btn-row';
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.innerHTML = btnFace('nav.close', t('dlgClose'));
+            close.addEventListener('click', () => { h.hide(); btn.focus(); });
+            row.appendChild(close);
+            pop.appendChild(row);
+        }
+        pop.hidden = false;
+        btn.setAttribute('aria-expanded', mode === 'full' ? 'true' : 'false');
+    };
+    h.hide = () => { h.mode = null; pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+    h.label = () => {
+        const name = t(wrap.dataset.optName);
+        btn.setAttribute('aria-label', t('helpOptLabel', {name}));
+        btn.title = t('helpOptLabel', {name});
+        if (h.mode) h.show(h.mode);
+    };
+    // Hover intent: leaving the button towards the bubble crosses a few pixels outside both, so closing waits a
+    // moment and entering the bubble (a descendant of the wrapper) cancels it - the summary stays open while it is read.
+    wrap.addEventListener('mouseenter', () => { clearTimeout(h.timer); if (!h.mode) h.show('short'); });
+    wrap.addEventListener('mouseleave', () => {
+        if (h.mode !== 'short') return;
+        clearTimeout(h.timer);
+        h.timer = setTimeout(() => { if (h.mode === 'short' && !wrap.matches(':hover') && document.activeElement !== btn) h.hide(); }, 300);
+    });
+    btn.addEventListener('focus', () => { if (!h.mode) h.show('short'); });
+    btn.addEventListener('blur', () => { if (h.mode === 'short' && !wrap.matches(':hover')) h.hide(); });
+    btn.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); if (h.mode === 'full') h.hide(); else h.show('full'); });
+    optHelps.push(h);
+});
+document.addEventListener('pointerdown', ev => {
+    for (const h of optHelps) if (h.mode === 'full' && !h.wrap.contains(ev.target)) h.hide();
+});
+function refreshOptHelp() { for (const h of optHelps) h.label(); }
+// Escape dismisses a help bubble or the page drawer first, without moving the pointer; the SHORTCUTS table
+// (the one keyboard owner) lists it before the run's own Escape (INPUT-PARITY section 3.1).
+function transientOpen() { return optHelps.some(h => h.mode) || el('rail').classList.contains('open'); }
+function closeTransient() {
+    const open = optHelps.find(h => h.mode);
+    if (open) { const was = open.mode; open.hide(); if (was === 'full') open.btn.focus(); return; }
+    closeDrawer();
+}
+
+// ── About: the resource index (SETTINGS-NAVIGATION 3.3) ─
+// What the program needs and whether it is found, from a local lookup - opening About contacts nothing
+// remote and uploads nothing. The links are plain anchors the reader may follow; nothing is installed here.
+let resData = null;
+function renderResources() {
+    for (const k of ['tesseract', 'calibre', 'sevenzip', 'filedo']) {
+        const cell = el('resSt-' + k);
+        if (!cell) continue;
+        const v = resData ? resData[k] : undefined;
+        cell.textContent = v === true ? t('resFound') : v === false ? t('resMissing') : '';
+        cell.className = 'res-state' + (v === true ? ' ok' : v === false ? ' miss' : '');
+    }
+}
+async function loadResources() {
+    try {
+        resData = await (await api('/api/resources')).json();
+    } catch (e) { resData = null; }
+    renderResources();
+}
 
 // ── keyboard shortcuts ──────────────────────────────────
 // One document-level keydown handler owns every shortcut (ticket 63, aligned with ticket
@@ -3038,6 +3581,8 @@ document.querySelector('.col-main').addEventListener('scroll', () => {
 const SHORTCUTS = [
     // Convert: the button's own dispatch decides single flow vs queue (runPressed).
     {key: 'Enter', ctrl: true, fire: () => runPressed()},
+    // Escape closes what is open first - an option's help bubble or the page drawer - without moving the pointer.
+    {key: 'Escape', when: () => transientOpen(), fire: () => closeTransient()},
     // Escape is the cancel action (INPUT-PARITY section 3.1): it stops the running conversion,
     // which keeps what was already written (rule 4). With nothing running it is not claimed.
     {key: 'Escape', when: () => !!(runAbort || queueBusy), fire: () => cancelPressed()},
@@ -3050,7 +3595,7 @@ document.addEventListener('keydown', ev => {
         if (ev.key !== s.key && ev.key !== (s.key || '').toLowerCase()) continue;
         if (!!s.ctrl !== (ev.ctrlKey || ev.metaKey)) continue;
         if (!!s.shift !== ev.shiftKey) continue;
-        if (s.when && !s.when()) return;
+        if (s.when && !s.when()) continue;
         ev.preventDefault();
         s.fire();
         return;

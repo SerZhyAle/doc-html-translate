@@ -160,3 +160,83 @@ test("pixels come from the picture as the page shows it, and a tainted canvas sa
   assert.deepEqual(p.ask({ t: "pixels", id: "nope" }), { ok: false, error: "unloaded" });
   p.ask({ t: "teardown" });
 });
+
+// BUTTONS 2.0 section 2 rule 1: the bar's glyph-bearing commands draw the catalog's pictures. The script is
+// injected into a page and cannot import glyphs.js, so it carries four drawings of its own; each must be the
+// extension's table entry, which tests/iconography_test.go holds to the vendored files.
+test("the bar's four drawings are the extension's vocabulary glyphs", async () => {
+  const { GLYPHS } = await import("../src/glyphs.js");
+  const body = agentSrc.slice(agentSrc.indexOf("const BAR_GLYPHS = {"), agentSrc.indexOf("const SVG_NS"));
+  const found = Object.fromEntries([...body.matchAll(/"([a-z-]+\.[a-z-]+)":\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]));
+  assert.deepEqual(Object.keys(found).sort(), ["action.cancel", "action.extract-text", "action.remove", "view.text-layer"]);
+  for (const [id, d] of Object.entries(found)) assert.equal(d, GLYPHS[id], `${id} differs from glyphs.js`);
+});
+
+test("the bar's commands carry a glyph before a caption span; Select text is a stable-name toggle", () => {
+  const p = page();
+  p.inject();
+  p.ask({ t: "status", running: false, done: 0, total: 0 });
+  const bar = p.document.querySelector("#dht-ocr-bar");
+  const buttons = [...bar.querySelectorAll("button")];
+  const by = (caption) => buttons.find((b) => b.querySelector(".dht-ocr-cap").textContent === caption);
+  for (const caption of ["Cancel", "Scan new pictures", "Hide text", "Remove"]) {
+    const b = by(caption);
+    assert.ok(b, `${caption} exists`);
+    assert.equal(b.firstElementChild.tagName.toLowerCase(), "svg", `${caption}: the glyph precedes the caption`);
+    assert.equal(b.querySelector("svg").getAttribute("aria-hidden"), "true");
+  }
+  const select = by("Select text");
+  assert.equal(select.querySelector("svg"), null, "no vocabulary meaning: text only");
+  assert.equal(select.getAttribute("aria-pressed"), "false");
+
+  const trusted = () => { const e = new p.document.defaultView.Event("click"); Object.defineProperty(e, "isTrusted", { value: true }); return e; };
+  select.dispatchEvent(trusted());
+  assert.equal(select.getAttribute("aria-pressed"), "true", "the state rides aria-pressed");
+  assert.equal(select.querySelector(".dht-ocr-cap").textContent, "Select text", "the caption does not change with the state");
+  select.dispatchEvent(trusted());
+  assert.equal(select.getAttribute("aria-pressed"), "false");
+});
+
+test("Hide text and Show text keep the other state's text as the width reserve", () => {
+  const p = page();
+  p.inject();
+  p.ask({ t: "status", running: false, done: 0, total: 0 });
+  const hide = [...p.document.querySelectorAll("#dht-ocr-bar button")].find((b) => b.textContent === "Hide text");
+  const cap = hide.querySelector(".dht-ocr-cap");
+  assert.equal(cap.getAttribute("data-reserve"), "Show text");
+  assert.equal(hide.getAttribute("aria-pressed"), null, "an action that changes says what it will do, not a pressed state");
+  const trusted = new p.document.defaultView.Event("click");
+  Object.defineProperty(trusted, "isTrusted", { value: true });
+  hide.dispatchEvent(trusted);
+  assert.equal(cap.textContent, "Show text");
+  assert.equal(cap.getAttribute("data-reserve"), "Hide text");
+  assert.equal(hide.firstElementChild.tagName.toLowerCase(), "svg", "the glyph survives the caption change");
+});
+
+test("the bar takes its language direction from the interface and its profile from the saved options", async () => {
+  const p = page();
+  p.chrome.i18n.getUILanguage = () => "ar-EG";
+  p.chrome.storage = { local: { get: async () => ({ options: { uiSize: "large", textSize: "huge", inputProfile: "touch" } }) } };
+  p.inject();
+  p.ask({ t: "status", running: false, done: 0, total: 0 });
+  const bar = p.document.querySelector("#dht-ocr-bar");
+  assert.equal(bar.getAttribute("dir"), "rtl");
+  assert.equal(bar.getAttribute("lang"), "ar");
+  assert.equal(bar.hasAttribute("data-dht-pending"), true, "hidden until the saved choices have been read");
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(bar.hasAttribute("data-dht-pending"), false);
+  assert.deepEqual(["data-dht-size", "data-dht-text", "data-dht-input"].map((a) => bar.getAttribute(a)), ["large", "huge", "touch"]);
+  p.ask({ t: "teardown" });
+});
+
+test("a bar with no storage still appears, at the ordinary size", async () => {
+  const p = page();
+  p.inject();
+  p.ask({ t: "status", running: false, done: 0, total: 0 });
+  const bar = p.document.querySelector("#dht-ocr-bar");
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(bar.hasAttribute("data-dht-pending"), false);
+  assert.equal(bar.getAttribute("dir"), "ltr");
+  assert.equal(bar.getAttribute("data-dht-input"), "pointer");
+  p.ask({ t: "teardown" });
+});

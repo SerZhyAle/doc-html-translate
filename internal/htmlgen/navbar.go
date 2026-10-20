@@ -33,7 +33,7 @@ type NavInfo struct {
 
 // navBarCSS is the inline style for the sticky navigation bar. Colours come from the
 // shared theme variables (readerCSS) so the bar follows the reading theme, matching the
-// browser extension's viewer chrome.
+// browser extension's viewer chrome. The sizes, the buttons and the groups are chromeUICSS.
 const navBarCSS = `
 <style id="dht-nav">
   .dht-navbar {
@@ -44,33 +44,17 @@ const navBarCSS = `
     color: var(--dht-bar-fg);
     border-bottom: 1px solid var(--dht-border);
     display: flex;
-    align-items: center;
+    /* Every control of one visual line takes the line's height (BUTTONS 2.0 section 3 rule 4); the
+       text spans centre themselves (chromeUICSS). */
+    align-items: stretch;
     /* wrap, like the extension viewer's toolbar: at 200% browser zoom or in a narrow
        window the controls reflow onto a second line instead of running off the edge
        (WCAG 1.4.4 / 1.4.10 - text zoom must not cost content or function). */
     flex-wrap: wrap;
-		gap: 6px;
-		padding: 6px 10px;
+    gap: var(--dht-gap);
+    padding: var(--dht-gap) var(--dht-pad);
     font-family: "Segoe UI", system-ui, Arial, sans-serif;
-    font-size: 14px;
-  }
-  .dht-navbar a {
-    color: var(--dht-bar-fg);
-    text-decoration: none;
-    padding: 4px 10px;
-    border-radius: 6px;
-    transition: background 0.2s;
-  }
-  /* APP-STYLE section 5: the hover tint here and on the version link stays outside the palette
-     on purpose - a neutral grey that darkens a light bar and lightens a dark one, so one value
-     reads on all four reading themes while the text keeps its themed colour. */
-  .dht-navbar a:hover {
-    background: rgba(127,127,127,0.14);
-  }
-  .dht-navbar a.disabled {
-    color: var(--dht-muted);
-    pointer-events: none;
-    cursor: default;
+    font-size: var(--dht-fs);
   }
   .dht-navbar .nav-file {
     font-weight: 600;
@@ -89,42 +73,13 @@ const navBarCSS = `
     max-width: 30%;
     padding-inline-end: 12px;
   }
-	.dht-navbar .nav-actions {
-    display: flex;
-    align-items: center;
-		gap: 4px;
-		margin-inline-start: auto;
-  }
-  .dht-navbar .nav-info {
-    font-size: 12px;
-    color: var(--dht-muted);
-		margin-inline-start: 4px;
-  }
-  .dht-navbar a.nav-version {
-    font-size: 11px;
-    color: var(--dht-muted);
-    padding: 2px 6px;
-    /* the version link is the bar's smallest target; the 24px floor is WCAG 2.2's
-       target-size minimum (2.5.8), which a bare 11px line misses */
-    display: inline-block;
-    box-sizing: border-box;
-    min-height: 24px;
-    margin-inline-start: 4px;
-    text-decoration: none;
-  }
-  .dht-navbar a.nav-version:hover {
-    color: var(--dht-bar-fg);
-    background: rgba(127,127,127,0.14);
-  }
-  /* prev/next turn group, pinned to the far corner for easy "next" clicks */
-  .dht-navbar .nav-turn { display: flex; align-items: center; gap: 4px; margin-inline-start: 8px; }
   .dht-navbar .nav-turn a.dht-next { font-weight: 600; }
   img {
     max-height: 100vh;
-		height: auto;
-		width: auto;
+    height: auto;
+    width: auto;
     max-width: 100%;
-		object-fit: contain;
+    object-fit: contain;
   }
 </style>
 `
@@ -420,6 +375,9 @@ const navBarScript = `
 			// for page turning, shared with the accessibility pass's rules (ticket 57).
 			var t = e.target;
 			if (t && t !== document.body && t !== document.documentElement) return;
+			// Shift extends a text selection with the arrows and PageUp/PageDown (INPUT-PARITY: a
+			// modified key is the browser's); only Shift+Space, the native "page up", is ours.
+			if (e.shiftKey && e.key !== " ") return;
 			var dir = 0;
 			if (e.key === "PageDown" || e.key === "ArrowDown" || e.key === "ArrowRight") dir = 1;
 			else if (e.key === "PageUp" || e.key === "ArrowUp" || e.key === "ArrowLeft") dir = -1;
@@ -445,10 +403,10 @@ const navBarScript = `
 var PaletteStyleNames = appearance.PaletteNames{Prefix: "dht-", Attr: "data-dht-theme"}
 
 // readerCSS styles the reading themes ([12]), the reader font variables (size + family), the
-// theme/font controls, the thin reading-progress bar and the index-page toolbar ([14]). It is
-// injected into <head> on both chapter pages and index.html. The four themes' colours come from
-// internal/appearance, the one source the extension's viewer.css palette is generated from too -
-// edit them there, not here (docs/PARITY.md "Reader theme palette").
+// command layer of the chrome (chromeUICSS), the thin reading-progress bar and the index-page
+// toolbar ([14]). It is injected into <head> on both chapter pages and index.html. The four themes'
+// colours come from internal/appearance, the one source the extension's viewer.css palette is
+// generated from too - edit them there, not here (docs/PARITY.md "Reader theme palette").
 var readerCSS = `
 <style id="dht-reader-css">
 ` + appearance.PaletteCSS(PaletteStyleNames) + `
@@ -468,19 +426,7 @@ var readerCSS = `
      and the image fills that, so the plates stay pinned to what they cover. */
   .pdf-page-scan { margin-left:50%; transform:translateX(-50%); }
   .pdf-page-scan img { display:block; width:100%; height:auto; max-height:none; margin:0; }
-  /* ICON-RENDER section 13 E: web targets are 28px for a fine pointer, 44px for touch.
-     The border-box keeps padding inside the target, independent of the book's CSS. */
-  .dht-btn, .dht-navbar select, .dht-toolbar select {
-    background:transparent; color:var(--dht-bar-fg); border:1px solid var(--dht-border);
-    border-radius:6px; padding:3px 8px; font:inherit; font-size:13px; cursor:pointer;
-    box-sizing:border-box; min-height:28px; min-width:28px;
-  }
-  @media (pointer: coarse) {
-    .dht-btn, .dht-navbar select, .dht-toolbar select {
-      min-height:44px; min-width:44px;
-    }
-  }
-  .dht-btn:hover, .dht-navbar select:hover, .dht-toolbar select:hover { border-color:var(--dht-accent); }
+
   @media (prefers-reduced-motion: reduce) {
     .dht-navbar *, .dht-toolbar * { animation:none !important; transition:none !important; }
     html { scroll-behavior:auto !important; }
@@ -491,8 +437,8 @@ var readerCSS = `
      anchors to the bar's inline start, so its place does not move with the width, and
      mirrors with the interface's direction. */
   .dht-progress-tip { display:none; position:absolute; bottom:8px; inset-inline-start:8px;
-    padding:2px 8px; border:1px solid var(--dht-border); border-radius:6px;
-    background:var(--dht-bar-bg); color:var(--dht-bar-fg); font-size:12px; line-height:1.4;
+    padding:2px 8px; border:1px solid var(--dht-border); border-radius:var(--dht-radius);
+    background:var(--dht-bar-bg); color:var(--dht-bar-fg); font-size:var(--dht-fs-note); line-height:1.4;
     white-space:nowrap; }
   #dht-progress:hover .dht-progress-tip, #dht-progress:focus-visible .dht-progress-tip { display:block; }
   /* Reading comfort (ticket 59): line spacing and column width apply only once the reader
@@ -506,17 +452,6 @@ var readerCSS = `
      zoom-compensated window width the zoom script keeps in sync. The overlay container
      fills whatever its section measures (width:100%), so plates stay pinned to the art. */
   html.dht-fitw .pdf-page-scan, html.dht-fitw section.dht-page { max-width:none; width:var(--dht-fitw, 100vw); }
-  .dht-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 1.2em; }
-  /* Button ink is the theme's own paper colour: white passes 4.5:1 on the light and sepia
-     accents but lands at 3.1:1 on the dark and night accents, while --dht-bg clears it on
-     all four (5.0 / 5.0 / 5.5 / 6.5) - measured for the accessibility pass, ticket 57. */
-  .dht-toolbar a.dht-continue { display:none; background:var(--dht-accent); color:var(--dht-bg); text-decoration:none; padding:4px 10px; border-radius:6px; }
-  .dht-toolbar a.dht-continue:hover { filter:brightness(1.08); }
-  .dht-glyph { width:1.15em; height:1.15em; vertical-align:-0.22em; flex:none; }
-  /* ICON-RENDER section 13 C: document paging mirrors; transport glyphs stay fixed. */
-  .dht-navbar[dir="rtl"] .nav-turn .dht-glyph { transform:scaleX(-1); }
-  .dht-btn[aria-pressed="true"] { background:var(--dht-border); border-color:var(--dht-accent); }
-  .dht-sel { display:inline-flex; align-items:center; gap:3px; font-size:13px; }
   /* The chrome's focus ring draws in the reading theme's accent: the browser default can
      disappear on the dark and night bars, and a keyboard reader must see where they are.
      Scoped to the chrome - the book's own links keep the author's styling. Lives in
@@ -525,6 +460,7 @@ var readerCSS = `
     outline: 2px solid var(--dht-accent);
     outline-offset: 2px;
   }
+` + chromeUICSS + `
 </style>
 ` + searchCSS
 
@@ -714,6 +650,18 @@ func readerScript(bookKey, self string, idx, total int) string {
 		}
 	}
 
+	// The search and contents panels hang under the sticky bar, and the bar's height is however the
+	// controls wrap: a narrow window or a long translation makes it two or three lines. The panels
+	// read this height instead of assuming one line, so the bar never covers them (BUTTONS 2.0
+	// section 4 rule 2: rows wrap, so nothing below them may sit at a fixed offset).
+	var bar = document.querySelector(".dht-navbar");
+	if (bar) {
+		var syncBarHeight = function(){ document.documentElement.style.setProperty("--dht-bar-h", bar.offsetHeight + "px"); };
+		syncBarHeight();
+		if (window.ResizeObserver) new ResizeObserver(syncBarHeight).observe(bar);
+		else window.addEventListener("resize", syncBarHeight);
+	}
+
 	var POS_KEY = "dht_pos:" + BOOK;
 	function readPos(){ try { return JSON.parse(localStorage.getItem(POS_KEY) || "null"); } catch(e){ return null; } }
 	function writePos(p){ try { localStorage.setItem(POS_KEY, JSON.stringify(p)); } catch(e){} }
@@ -764,7 +712,7 @@ func readerScript(bookKey, self string, idx, total int) string {
 		// file:// pages share one storage origin, so only a relative href is trusted here.
 		if (cont && p && typeof p.href === "string" && p.href && !/^[a-z][a-z0-9+.-]*:|^[\/\\]/i.test(p.href)) {
 			cont.setAttribute("href", p.href);
-			cont.style.display = "inline-block";
+			cont.style.display = "inline-flex";
 		}
 	}
 })();
@@ -788,14 +736,17 @@ func buildNavBarHTML(nav NavInfo) string {
 	labelPrev, labelNext, labelTOC := i18n.S("Previous page"), i18n.S("Next page"), i18n.S("Table of contents")
 	glyphPrev, glyphNext := glyphSVG("media.previous"), glyphSVG("media.next")
 
-	prevLink := fmt.Sprintf(`<a class="disabled">%s %s</a>`, glyphPrev, labelPrev)
+	// A paging end with no page is an <a> without href: it names its state to assistive technology
+	// (aria-disabled) and keeps its glyph. The glyph precedes the caption on both links
+	// (BUTTONS 2.0 section 2 rule 4: glyphs precede captions at the reading start).
+	prevLink := fmt.Sprintf(`<a class="disabled" aria-disabled="true">%s %s</a>`, glyphPrev, labelPrev)
 	if nav.PrevHref != "" {
 		prevLink = fmt.Sprintf(`<a class="dht-nav-link dht-prev" href="%s">%s %s</a>`, html.EscapeString(nav.PrevHref), glyphPrev, labelPrev)
 	}
 
-	nextLink := fmt.Sprintf(`<a class="disabled">%s %s</a>`, labelNext, glyphNext)
+	nextLink := fmt.Sprintf(`<a class="disabled" aria-disabled="true">%s %s</a>`, glyphNext, labelNext)
 	if nav.NextHref != "" {
-		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s %s</a>`, html.EscapeString(nav.NextHref), labelNext, glyphNext)
+		nextLink = fmt.Sprintf(`<a class="dht-nav-link dht-next" href="%s">%s %s</a>`, html.EscapeString(nav.NextHref), glyphNext, labelNext)
 	}
 
 	indexLink := fmt.Sprintf(`<a class="dht-nav-link" href="%s">%s %s</a>`, html.EscapeString(nav.IndexHref), glyphSVG("nav.contents"), labelTOC)
@@ -817,8 +768,8 @@ func buildNavBarHTML(nav NavInfo) string {
 		`<a class="nav-version" href="%s" target="_blank" rel="noopener" title="%s">%s</a>`,
 		projectURL, html.EscapeString(projectURL), html.EscapeString(versionLabel()))
 
-	// prev/next live in a turn group pinned to the far corner (next flush to the edge)
-	// so "next" is the easiest button to hit while reading.
+	// prev/next are one group that flows with the other controls from the reading start; it is not
+	// pinned to the far corner (BUTTONS 2.0 section 4 rule 2: spare space stays empty).
 	turn := fmt.Sprintf(`<span class="nav-turn">%s%s</span>`, prevLink, nextLink)
 	searchIndexHref := nav.IndexHref
 	if nav.Total == 1 {
@@ -845,14 +796,26 @@ func chromeDirAttr() string {
 	return ""
 }
 
-// readerControlsHTML returns the shared reader controls (text size, font family, theme
-// dropdown) used identically in the chapter navbar and the index toolbar, so both the
-// generated HTML and the browser extension expose the same operations.
+// chromeGroup wraps controls that belong together (one task) in a wrapping row. The group moves as
+// one unit when it fits a line and wraps its own buttons when it is wider than the line (BUTTONS 2.0
+// section 4 rule 3); it is plain layout, not a toolbar - the bar stays an ordinary Tab row.
+func chromeGroup(parts ...string) string {
+	return `<div class="dht-group">` + strings.Join(parts, "") + `</div>`
+}
+
+// iconButton is a glyph-only command button: the meaning's drawing, and the meaning's localized name
+// as its tooltip and its accessible name (ICON-RENDER rule 8). state is the attribute run a toggle
+// carries (aria-pressed, hidden) with its leading space, "" for an immediate command.
+func iconButton(id, glyph, name, state string) string {
+	return fmt.Sprintf(`<button id="%[1]s" class="dht-btn dht-ico" type="button"%[2]s title="%[3]s" aria-label="%[3]s">%[4]s</button>`,
+		id, state, name, glyphSVG(glyph))
+}
+
+// readerControlsHTML returns the shared reader controls (text size, toggles, font and measure
+// selects, search) used identically in the chapter navbar, the single-page header and the index
+// toolbar, so both the generated HTML and the browser extension expose the same operations. They
+// travel in task groups: text size, the toggles, the appearance selects and the search.
 func readerControlsHTML() string {
-	titleSmaller := i18n.S("Smaller text")
-	titleLarger := i18n.S("Larger text")
-	titleReset := i18n.S("Reset text size")
-	titleNight := i18n.S("Night mode")
 	titleFont, titleTheme := i18n.S("Font"), i18n.S("Theme")
 	tLight, tSepia := i18n.S("Light"), i18n.S("Sepia")
 	tDark, tNight := i18n.S("Dark"), i18n.S("Night")
@@ -863,38 +826,37 @@ func readerControlsHTML() string {
 	tNarrow, tNormal := i18n.S("Narrow"), i18n.S("Normal")
 	tWide, tFull := i18n.S("Wide"), i18n.S("Full width")
 	titleFitw := i18n.S("Fit width")
-	// The OCR toggle is rendered on every page but hides itself when the page carries no
-	// plates (see the reader script), so the chrome stays identical across editions and a
-	// text book never shows a control that would do nothing.
-	titleOCR := i18n.S("Text layer")
 	// Each glyph-only button draws its vocabulary meaning (action.text-smaller / -larger,
 	// view.text-layer, app.night-mode, action.reset) and carries that meaning's localized
 	// name as its accessible name (ICON-RENDER rule 8). The text layer has one drawing for
 	// both states until the catalog draws its off form, so aria-pressed and the pressed look
 	// carry the state - as on the night toggle, where pressed means a night-family theme is
-	// on. The theme select shows app.theme once; its choices are words, never the sun or the
-	// moon of other meanings. Fit width draws no glyph: the vocabulary names no such meaning,
-	// and a private picture is not an option (ICON-SET rule 5), so it is a word-only button.
-	// Spacing steps and width steps are shared constants on both editions (docs/PARITY.md).
-	controls := fmt.Sprintf(
-		`<button id="dht-font-dec" class="dht-btn" type="button" title="%[1]s" aria-label="%[1]s">%[14]s</button>`+
-			`<button id="dht-font-inc" class="dht-btn" type="button" title="%[2]s" aria-label="%[2]s">%[15]s</button>`+
-			`<button id="dht-size-reset" class="dht-btn" type="button" title="%[3]s" aria-label="%[3]s">%[16]s</button>`+
-			`<button id="dht-night-toggle" class="dht-btn" type="button" aria-pressed="false" title="%[4]s" aria-label="%[4]s">%[17]s</button>`+
-			`<button id="dht-ocr-toggle" class="dht-btn" type="button" hidden aria-pressed="true" title="%[5]s" aria-label="%[5]s">%[18]s</button>`+
-			`<select id="dht-family-sel" title="%[6]s" aria-label="%[6]s"><option value="serif">%[7]s</option><option value="sans">%[8]s</option><option value="mono">%[9]s</option></select>`+
-			`<select id="dht-leading-sel" title="%[10]s" aria-label="%[10]s"><option value="">%[11]s</option><option>1.4</option><option>1.6</option><option>1.9</option><option>2.2</option></select>`+
-			`<select id="dht-width-sel" title="%[12]s" aria-label="%[12]s"><option value="">%[11]s</option><option value="36em">%[19]s</option><option value="46em">%[20]s</option><option value="64em">%[21]s</option><option value="none">%[22]s</option></select>`+
-			`<span class="dht-sel">%[23]s<select id="dht-theme-sel" title="%[13]s" aria-label="%[13]s"><option value="light">%[24]s</option><option value="sepia">%[25]s</option><option value="dark">%[26]s</option><option value="night">%[27]s</option></select></span>`+
-			`<button id="dht-fitw-toggle" class="dht-btn" type="button" hidden aria-pressed="false" title="%[28]s" aria-label="%[28]s">%[28]s</button>`,
-		titleSmaller, titleLarger, titleReset, titleNight, titleOCR, titleFont, fSerif, fSans, fMono,
-		titleLeading, tDefault, titleWidth, titleTheme,
-		glyphSVG("action.text-smaller"), glyphSVG("action.text-larger"), glyphSVG("action.reset"),
-		glyphSVG("app.night-mode"), glyphSVG("view.text-layer"),
-		tNarrow, tNormal, tWide, tFull,
-		glyphSVG("app.theme"), tLight, tSepia, tDark, tNight,
-		titleFitw)
-	return controls + searchControlsHTML()
+	// on. The OCR toggle is rendered on every page but hides itself when the page carries no
+	// plates (see the reader script), so the chrome stays identical across editions and a
+	// text book never shows a control that would do nothing. The theme select shows app.theme
+	// once; its choices are words, never the sun or the moon of other meanings. Fit width draws
+	// no glyph: the vocabulary names no such meaning, and a private picture is not an option
+	// (ICON-SET rule 5), so it is a word-only button - text-only is permitted for a command
+	// without a recognisable meaning (BUTTONS 2.0 section 2 rule 1). Spacing steps and width steps
+	// are shared constants on both editions (docs/PARITY.md).
+	textSize := chromeGroup(
+		iconButton("dht-font-dec", "action.text-smaller", i18n.S("Smaller text"), ""),
+		iconButton("dht-font-inc", "action.text-larger", i18n.S("Larger text"), ""),
+		iconButton("dht-size-reset", "action.reset", i18n.S("Reset text size"), ""))
+	toggles := chromeGroup(
+		iconButton("dht-night-toggle", "app.night-mode", i18n.S("Night mode"), ` aria-pressed="false"`),
+		iconButton("dht-ocr-toggle", "view.text-layer", i18n.S("Text layer"), ` hidden aria-pressed="true"`),
+		fmt.Sprintf(`<button id="dht-fitw-toggle" class="dht-btn" type="button" hidden aria-pressed="false" title="%[1]s" aria-label="%[1]s">%[1]s</button>`, titleFitw))
+	selects := chromeGroup(
+		fmt.Sprintf(`<select id="dht-family-sel" title="%[1]s" aria-label="%[1]s"><option value="serif">%[2]s</option><option value="sans">%[3]s</option><option value="mono">%[4]s</option></select>`,
+			titleFont, fSerif, fSans, fMono),
+		fmt.Sprintf(`<select id="dht-leading-sel" title="%[1]s" aria-label="%[1]s"><option value="">%[2]s</option><option>1.4</option><option>1.6</option><option>1.9</option><option>2.2</option></select>`,
+			titleLeading, tDefault),
+		fmt.Sprintf(`<select id="dht-width-sel" title="%[1]s" aria-label="%[1]s"><option value="">%[2]s</option><option value="36em">%[3]s</option><option value="46em">%[4]s</option><option value="64em">%[5]s</option><option value="none">%[6]s</option></select>`,
+			titleWidth, tDefault, tNarrow, tNormal, tWide, tFull),
+		fmt.Sprintf(`<span class="dht-sel">%[1]s<select id="dht-theme-sel" title="%[2]s" aria-label="%[2]s"><option value="light">%[3]s</option><option value="sepia">%[4]s</option><option value="dark">%[5]s</option><option value="night">%[6]s</option></select></span>`,
+			glyphSVG("app.theme"), titleTheme, tLight, tSepia, tDark, tNight))
+	return textSize + toggles + selects + chromeGroup(searchControlsHTML())
 }
 
 // versionLabel formats the running app version for display in the navbar.

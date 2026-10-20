@@ -856,3 +856,74 @@ test("reading-comfort choices persist and a reopen applies them (ticket 59)", as
   width2.dispatchEvent(new w2.Event("change"));
   assert.ok(await waitFor(() => storedData.viewerPrefs.width === null), "Default clears the width choice");
 });
+
+// ---- Notices, offers and the export card against BUTTONS 2.0 (ticket 119, slice X1) ----
+// Section 4 rule 4: product-owned answers read in reading order - Cancel (or the dismissing answer) first, any helping
+// action, then the final affirmative. Section 2 rule 2: at most one primary per surface. Section 3 rule 5: faces are
+// neutral, only the recommended answer is accented. Geometry, focus and the neutral faces are measured in a real
+// browser by `node tools/uicheck/run.mjs --only reader`; these pins hold the structure that measurement relies on.
+const answerLabels = (root) => [...root.querySelectorAll("button")].map((b) => b.textContent.trim());
+const primaries = (root) => [...root.querySelectorAll("button.primary")].map((b) => b.textContent.trim());
+
+// A spy on focus(): linkedom lays nothing out and keeps no focus, so the call itself is the evidence.
+function spyFocus(document) {
+  const proto = Object.getPrototypeOf(document.createElement("button"));
+  const original = proto.focus;
+  const calls = [];
+  proto.focus = function focus() { calls.push(this.textContent.trim()); };
+  return { calls, restore: () => { proto.focus = original; } };
+}
+
+test("the export card reads Cancel, the partial export, then the complete export - one primary, Cancel focused", async () => {
+  const { document, window, content } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickComic(document, window, "book.cbz", cbzBytes([
+    { name: "page1.jpg", data: "ONE" },
+    { name: "page2.jpg", data: "TWO", broken: true },
+    { name: "page3.jpg", data: "THREE" },
+  ]));
+  assert.ok(await waitFor(() => comicImages(content) === 2));
+  await letOcrSettle(content);
+  const focus = spyFocus(document);
+  try {
+    document.getElementById("btn-save-html").dispatchEvent(new window.Event("click"));
+    const card = await waitFor(() => document.querySelector(".export-dialog"));
+    assert.deepEqual(answerLabels(card), ["Cancel", "Export partial (2 pages)", "Prepare all 3 pages"], "BUTTONS 4.4: Cancel first, the final affirmative last");
+    assert.deepEqual(primaries(card), ["Prepare all 3 pages"], "exactly one accent-filled answer, the complete export");
+    assert.ok([...card.querySelectorAll("button")].every((b) => b.querySelector("svg")), "each answer carries its glyph before the caption");
+    assert.equal(card.querySelector(".export-actions").children.length, 3, "the answers sit in one wrapping row");
+    assert.deepEqual(focus.calls, ["Cancel"], "the safe answer holds the focus when the card opens");
+  } finally { focus.restore(); }
+});
+
+test("the resume offer reads Start over, then Continue reading - the final affirmative is its one primary", async () => {
+  seedPosition("book.txt");
+  const { document, window } = await bootViewer("", async () => new Response("", { status: 404 }));
+  await pickLocalFile(document, window, "book.txt", BOOK_TEXT);
+  const bar = await waitFor(() => document.querySelector(".resume-notice"));
+  assert.deepEqual(answerLabels(bar), ["Start over", "Continue reading"], "BUTTONS 4.4: the dismissing answer first");
+  assert.deepEqual(primaries(bar), ["Continue reading"]);
+  assert.ok([...bar.querySelectorAll("button")].every((b) => b.querySelector("svg")));
+  assert.equal(bar.querySelector(".notice-actions").children.length, 2);
+  // The offer does not take the focus from the reader: it is an inline status, not a modal question.
+  assert.equal(bar.getAttribute("role"), "status");
+});
+
+test("an error notice has one primary, and its buttons share one row", async () => {
+  const { document, content } = await bootViewer("?file=" + encodeURIComponent("https://x.test/a.pdf"), async () => new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } }));
+  const notice = await waitFor(() => content.querySelector(".notice .notice-actions"));
+  assert.ok(notice, content.innerHTML.slice(0, 300));
+  const all = [...content.querySelectorAll(".notice button")];
+  assert.ok(all.length >= 1);
+  assert.equal(all.filter((b) => b.classList.contains("primary")).length, 1, "at most one accent face per surface");
+  assert.ok(all[0].classList.contains("primary"), "the first recovery is the one offered as primary");
+  assert.equal(content.querySelector(".notice").children.length, content.querySelectorAll(".notice > *").length);
+  assert.ok(document.querySelector(".notice-actions button"), "the buttons live in the answers row");
+});
+
+test("the status bar's Cancel carries its glyph and keeps its caption", async () => {
+  const { document } = await bootViewer("", async () => new Response("", { status: 404 }));
+  const stop = document.getElementById("status-stop");
+  assert.ok(stop.querySelector("svg"), "action.cancel is drawn before the caption");
+  assert.equal(stop.textContent, "Cancel");
+  assert.equal(stop.hidden, true, "it is shown only while a preparation runs");
+});

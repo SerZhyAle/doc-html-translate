@@ -51,8 +51,10 @@ file contains the extension's documented options, including both site lists and 
 choice. It excludes document content, addresses read, OCR output, diagnostics and reading positions.
 Reader text size, font, spacing, width and the last day/night choices stay in the browser profile.
 Import checks the file format, version and every field before replacing options, then reports the
-changed fields. Reset asks once and restores the documented extension-option defaults and browser
-language selection. Copy diagnostics remains a separate action.
+changed fields. Reset and an import that would overwrite settings ask in the extension's own dialog (Cancel first)
+and restore or apply the documented defaults and browser language selection; the file (format version 2) also carries
+the interface size, text size, controls and interface theme and the remembered page and groups. Copy diagnostics and
+Save diagnostics as a file remain separate actions on the About page.
 
 ## Layout
 
@@ -65,6 +67,8 @@ src/
   intercept.js         the URL shapes interception agrees on - the DNR patterns, shared with the popup
                        and the command handler
   viewer.html/.js/.css viewer (the redirect target); detectFormat routes to the right reader -> renderBook
+  viewer-answers.js    the answers of the viewer's notices, offers and export card: one button builder (glyph before the
+                       caption), one wrapping row, at most one primary per surface (BUTTONS 2.0, ticket 119)
   reflow.js            PDF paragraph/heading heuristics ported from internal/pdf/extract.go
   toc.js               PDF outline -> nested TOC, ported from internal/pdf/toc.go
   epub.js              EPUB: unzip + OPF/spine + nav/NCX TOC + chapter sanitize, ported from internal/epub
@@ -77,18 +81,26 @@ src/
   export-html.js       the "save as HTML" shell: script-free content policy, image encoding, and the completeness plan (partial vs prepare-all) behind the export
   lang.js              source-language detection -> <html lang>
   i18n.js              interface language: t()/uiLang()/applyI18n(); stored override first, browser second
-  popup.html/.js       toolbar: global + per-site toggle + "Use OCR for images" + language downloads;
+  popup.html/.js/.css  toolbar task panel: global + per-site checkboxes + "Use OCR for images" + language downloads;
                        reflects the active tab (a supported document gets a one-click open)
-  options.html/.js     defaults: on/off, theme, source-language hint, image OCR + language manager
+  options.html/.js/.css the options tab: a rail of six pages (general, ocr, sites, data, interface, about) and a pane;
+                       options-nav.js (rail, drawer, page and viewport memory), options-data.js (settings file, reset and
+                       import in the product's own dialog), options-about.js + product-inventory.js (About: links, resource
+                       index, related products, diagnostics - nothing is requested on open)
+  ui-sizing.css, ui-components.css, ui-boot.js, ui-profile.js, ui-settings.js, ui-help.js, ui-dialog.js, ui-groups.js,
+  options-store.js     the pages' shared interface layer (ticket 119, slice X1): one token resolver (size, text, controls
+                       profile, theme), the buttons / checkbox rows / groups / dialog, option-local help, and the stored options
+                       and remembered page + groups (the separate `uiState` key); docs/PARITY.md and docs/UI_PROFILE.md
+                       describe them
   ocr-lang.js          OCR languages: bundled English, on-demand download + IndexedDB cache
   ocr-lang-ui.js       the OCR-language picker the popup and the options page both render, with the
                        inline download-failure message and its retry
   ocr-overlay.js/.css  shared OCR unit: recognize -> opaque translatable plates over the image
   ocr-plates.js        the plate half of that unit: block geometry -> plate specs -> DOM + runtime fit
-  ocr.html/.js         standalone page for the right-click "OCR & translate this image" action
+  ocr.html/.js/.css    standalone page for the right-click "OCR & translate this image" action
   page-ocr.js          whole-page OCR broker (in the service worker): intent, queue, host lifecycle
   page-agent.js        whole-page OCR inside the reader's document: finds pictures, draws/keeps plates
-  page-overlay.css     anchoring for those plates + the reader's control bar
+  page-overlay.css     anchoring for those plates + the reader's control bar (the pages' tokens and sizes, isolated from the page)
   ocr-host.html/.js    where the engine runs for a whole-page run - offscreen document, or an
                        extension-origin frame on browsers older than that API
   pdf-images.js        pull raster images out of a PDF page (embedded XObjects + scanned-page raster)
@@ -180,7 +192,7 @@ real, translatable HTML, so one **Translate page** covers pictures too. Ways in:
   outside the page - some sites' security policies refuse to run it inside, and where that happens the
   bar says so instead of quietly producing nothing.
 - **A local image file:** click **Open file** in the viewer (or *Open a document..* in the popup) and pick
-  a PNG / JPEG / GIF / BMP / WebP. It is OCR'd on open regardless of the *Use OCR for images* toggle -
+  a PNG / JPEG / GIF / BMP / WebP / JPEG XL (.jxl). It is OCR'd on open regardless of the *Use OCR for images* toggle -
   opening a bare image is itself the request to read its text. There is deliberately **no** file-type
   association for images (unlike PDF/EPUB), so opening an image URL never hijacks it - only the explicit
   Open file / right-click paths OCR images.
@@ -325,3 +337,5 @@ Add-ons listing is still planned. Listing copy and review-form answers live in
 (served as `extension-privacy.html`), and the release/automation steps in [`PUBLISHING.md`](PUBLISHING.md).
 Selling point for the listing: everything runs locally; only the browser's own translate touches the
 network, and even that waits until you ask.
+
+JPEG XL pictures use the packaged @jsquash/jxl decoder locally, then PNG for display, OCR and HTML export. Standalone pictures, EPUB resources, comic pages and embedded data/blob pictures are supported. Transparency is retained; animated JPEG XL uses its first displayed frame. Run `node build.mjs vendor-jxl` after installing dependencies to prepare only this codec, or use the full `npm run vendor` workflow.

@@ -8,5 +8,6 @@
     "panel.background": "#0F0F0A",
     "titleBar.activeBackground": "#202313",
     "titleBar.inactiveBackground": "#191B0E"
-  }
+  },
+  "go.buildTags": "nodynamic"
 }

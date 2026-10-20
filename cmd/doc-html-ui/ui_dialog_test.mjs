@@ -23,6 +23,7 @@ function harness() {
     const listeners = new Map();
     const dlg = {
         returnValue: '',
+        dataset: {},
         addEventListener(event, fn) { listeners.set(event, fn); },
         showModal() { opened.push(title.textContent); },
         close() { listeners.get('close')(); },
@@ -30,7 +31,7 @@ function harness() {
     const title = {textContent: ''};
     const message = {textContent: ''};
     const actions = {innerHTML: '', lastChild: null, appendChild(btn) { this.lastChild = btn; }};
-    const elements = {dlg, dlgTitle: title, dlgMsg: message, dlgActions: actions};
+    const elements = {dlg, dlgTitle: title, dlgMsg: message, dlgActions: actions, dlgHelp: {hidden: true}};
     const context = vm.createContext({
         Promise, AbortController, TextDecoder, console,
         el: id => elements[id],
@@ -182,12 +183,12 @@ function secretHarness() {
             remove() { e.removed = true; }};
         return e;
     };
-    const dlg = {returnValue: '', addEventListener(ev, fn) { listeners.set(ev, fn); },
+    const dlg = {returnValue: '', dataset: {}, addEventListener(ev, fn) { listeners.set(ev, fn); },
         showModal() { opened.push(true); }, close() { listeners.get('close')(); }};
     const actions = {innerHTML: '', lastChild: null, buttons: [],
         appendChild(b) { this.lastChild = b; this.buttons.push(b); },
         before(box) { lastBox = box; lastInput = box.children[1]; }};
-    const elements = {dlg, dlgTitle: {textContent: ''}, dlgMsg: {textContent: ''}, dlgActions: actions};
+    const elements = {dlg, dlgTitle: {textContent: ''}, dlgMsg: {textContent: ''}, dlgActions: actions, dlgHelp: {hidden: true}};
     const context = vm.createContext({
         Promise, console,
         el: id => elements[id],
@@ -213,8 +214,14 @@ test('the password dialog sends the typed value to /api/secret and wipes its fie
     await tick();
     assert.equal(h.opened.length, 1);
     const input = h.input();
-    assert.equal(input.type, 'password', 'the field is masked');
+    // Ticket 117: not type=password (a formless password field that leaves the DOM before a request
+    // makes the browser offer to save it); the mask is drawn by the stylesheet rule asserted below.
+    assert.equal(input.type, 'text', 'the browser password manager must not see a password field');
+    assert.match(page, /\.dlg-secret input \{[^}]*-webkit-text-security: disc;/, 'the field is masked by CSS');
     assert.equal(input.autocomplete, 'off');
+    assert.equal(input.autocapitalize, 'off');
+    assert.equal(input.spellcheck, false);
+    assert.equal(input.attrs.dir, 'ltr');
     assert.equal(h.box().children[0].htmlFor, 'dlgSecretInput', 'the field has a label');
     input.value = 'typed "pw"';
     h.dlg.returnValue = 'open';
@@ -234,9 +241,12 @@ test('Enter in the password field presses the primary button', async () => {
     await tick();
     let prevented = false;
     h.input().handlers.keydown({key: 'a', preventDefault() { prevented = true; }});
-    assert.equal(h.actions.buttons[0].clicks, 0);
+    // BUTTONS 2.0 section 4 rule 4: the answers read Cancel first and the affirmative last, so the primary
+    // (Open) is the second button and Enter never presses Cancel.
+    assert.equal(h.actions.buttons[1].clicks, 0);
     h.input().handlers.keydown({key: 'Enter', preventDefault() { prevented = true; }});
-    assert.equal(h.actions.buttons[0].clicks, 1);
+    assert.equal(h.actions.buttons[1].clicks, 1);
+    assert.equal(h.actions.buttons[0].clicks, 0, 'Enter does not press Cancel');
     assert.equal(prevented, true);
     h.dlg.returnValue = 'cancel';
     h.dlg.close();

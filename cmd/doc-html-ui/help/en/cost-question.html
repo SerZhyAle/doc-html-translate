@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Help - Google Translate - cost</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Breadcrumb">
+    <a href="index.html">Help index</a><span class="sep" aria-hidden="true">/</span><span>Google Translate - cost</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Dialog help</p>
+    <h1>Google Translate - cost</h1>
+    <p class="lead">Before anything is sent to Google, the converter says how many characters it would send and what Google would charge, and waits for your answer.</p>
+  </header>
+
+  <figure class="shot" id="shot-dialog">
+    <div class="frame">
+      <img class="on-dark" src="cost-question-dialog-dark.png" width="600" height="250" alt="The paid-translation question: the title Google Translate - cost, the count of characters to send and the estimated cost, and the answers Translate and pay and Don't translate, with the Help button in the top-right corner.">
+      <img class="on-light" src="cost-question-dialog-light.png" width="600" height="250" alt="">
+      <a class="pin" style="--x:92.5%;--y:31.7%" href="#help" aria-label="1, Help (F1)">1</a>
+      <a class="pin" style="--x:3.83%;--y:46.4%" href="#message" aria-label="2, The estimate">2</a>
+      <a class="pin" style="--x:80.67%;--y:92.3%" href="#yes" aria-label="3, Translate and pay">3</a>
+      <a class="pin" style="--x:55.64%;--y:92.3%" href="#no" aria-label="4, Don't translate">4</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the dialog.</figcaption>
+  </figure>
+
+  <h2>In this order</h2>
+  <ol class="order">
+    <li>Read the estimate <a class="ref" href="#message">2</a>: how many characters would go to Google and what that costs.</li>
+    <li>If you do not want to pay, answer <b>Don't translate</b> <a class="ref" href="#no">4</a>. It is the answer with the focus, so <kbd>Enter</kbd> and <kbd>Esc</kbd> choose it, and the book is still converted - without a translation.</li>
+    <li>If you accept, answer <b>Translate and pay</b> <a class="ref" href="#yes">3</a>. The text is sent and Google charges your account.</li>
+  </ol>
+
+  <h2>The elements</h2>
+  <div class="elements">
+
+    <details class="el" id="help">
+      <summary><span class="mk">1</span><span><span class="name">Help (F1)</span><span class="one">Opens this page without closing the question.</span></span></summary>
+      <div class="full">
+        <p>The question stays open and waits while you read. <kbd>F1</kbd> does the same.</p>
+      </div>
+    </details>
+
+    <details class="el" id="message">
+      <summary><span class="mk">2</span><span><span class="name">The estimate</span><span class="one">How many characters would be sent and what Google would charge for them.</span></span></summary>
+      <div class="full">
+        <p>The converter counts the characters of the pages, the title and the table of contents - characters, not bytes - and multiplies by Google's list price. The question is asked before any request is made, and only for a text longer than 1,000 characters.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Google bills by the character, so you see the price before you commit.</dd>
+          <dt>Next</dt><dd>With a maximum cost set under Advanced, an estimate within it is accepted without asking; an estimate above it skips the translation and converts the book without one.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="yes">
+      <summary><span class="mk">3</span><span><span class="name">Translate and pay</span><span class="one">Sends the text to Google and pays for the translation.</span></span></summary>
+      <div class="full">
+        <p>The pages are translated by Google Cloud Translation with your own key while the book is built, and the book is saved already translated.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Choose it when you want the translation saved inside the book instead of using Chrome's free page translation.</dd>
+          <dt>Undo</dt><dd>What Google has charged cannot be taken back. <b>Cancel</b> stops the rest, and the pages already sent are paid for.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="no">
+      <summary><span class="mk">4</span><span><span class="name">Don't translate</span><span class="one">Converts the book without translating it. Nothing is sent.</span></span></summary>
+      <div class="full">
+        <p>The book is converted exactly as with the free engine; you can still translate it in Chrome afterwards. Closing the question or pressing <kbd>Esc</kbd> is the same answer.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>It is the safe answer, so it has the focus.</dd>
+          <dt>Undo</dt><dd>Nothing was spent. Convert again and answer differently if you change your mind.</dd>
+          <dt>Shortcut</dt><dd><kbd>Enter</kbd> or <kbd>Esc</kbd>.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Related</h2>
+  <ul class="related">
+    <li><a href="converter.html#translation"><b>Translation</b><span class="pill">Window</span><small>The engines to choose from, and the Google key row.</small></a></li>
+    <li><a href="settings.html#advanced"><b>Advanced</b><span class="pill">Window</span><small>Where the maximum cost is set.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#flags" target="_blank" rel="noopener"><b>Command-line flags</b><span class="pill gold">Site</span><small>-google and -max-cost in full.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Captured against DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Help index</a>
+    <a href="mailto:sza@ukr.net">Ask a question or report a problem</a>
+  </footer>
+
+</main>
+</body>
+</html>

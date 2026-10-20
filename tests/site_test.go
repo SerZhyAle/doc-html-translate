@@ -36,7 +36,7 @@ var localeLandings = []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "u
 // authorPages are written in the author languages (RU/EN/UA) and keep the house typography.
 var authorPages = []string{
 	"index.html", "extension.html", "docs.html", "docs.ru.html", "docs.uk.html",
-	"privacy.html", "install-trust.html", "release-notes.html", "extension-privacy.html",
+	"privacy.html", "install-trust.html", "release-notes.html", "extension-privacy.html", "support.html",
 }
 
 func sitePages() []string {
@@ -57,6 +57,18 @@ var familyURLs = []string{
 	"https://serzhyale.github.io/OneClickRunner/",
 	"https://serzhyale.github.io/universal-agent-kit/",
 	"https://sza.od.ua",
+}
+
+// familyLabels is the Tool cell of each SITE-FAMILY-MAP row (1.5), as the footer grid writes it. The hub
+// row is absent: the map names it "SZA (hub)" and the grid's own short label is not part of the map.
+var familyLabels = map[string]string{
+	"https://serzhyale.github.io/FastMediaSorter_mob_v2/": "Fast Media Sorter &amp; Organizer",
+	"https://serzhyale.github.io/FastMediaSorter_Lite/":   "Fast Media Sorter for Windows",
+	"https://serzhyale.github.io/CyrFlip/":                "CyrFlip",
+	"https://serzhyale.github.io/FileDO/":                 "FileDO",
+	"https://serzhyale.github.io/StreamsPlayer/":          "STREAMS Player",
+	"https://serzhyale.github.io/OneClickRunner/":         "OneClickRunner",
+	"https://serzhyale.github.io/universal-agent-kit/":    "Universal Agent Kit",
 }
 
 func TestSiteKitIsReferenceCopy(t *testing.T) {
@@ -119,7 +131,7 @@ func TestSiteUsesFullDeviceWidth(t *testing.T) {
 }
 
 // The pre-paint resolver is the PAGE-STYLE section 7 text, the same on every page; a page-local
-// addition (the ?l= query, a pinned language) is a separate script that never mentions sza-theme.
+// addition (the ?lang= / ?l= query, a pinned language) is a separate script that never mentions sza-theme.
 func TestSitePagesCarryTheCatalogResolver(t *testing.T) {
 	script := regexp.MustCompile(`(?s)<script>(.*?)</script>`)
 	for _, p := range sitePages() {
@@ -143,7 +155,7 @@ func TestSitePagesCarryTheCatalogResolver(t *testing.T) {
 
 func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 	footerRe := regexp.MustCompile(`(?s)<footer class="site-footer">.*?</footer>`)
-	for _, p := range sitePages() {
+	for _, p := range append(sitePages(), "404.html") {
 		footer := footerRe.FindString(readRepoFile(t, strings.Split(p, "/")...))
 		if footer == "" {
 			t.Errorf("%s has no site-footer", p)
@@ -157,14 +169,20 @@ func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 				t.Errorf("%s: footer does not link %s", p, u)
 			}
 		}
-		if strings.Contains(footer, "https://serzhyale.github.io/doc-html-translate/") {
+		// the grid only: the 404 page, served from any depth, links its own Support page by absolute address
+		if strings.Contains(regexp.MustCompile(`(?s)<div class="tools-grid">.*?</div>`).FindString(footer), "https://serzhyale.github.io/doc-html-translate/") {
 			t.Errorf("%s: footer grid lists this product itself", p)
 		}
 		if !strings.Contains(footer, "mailto:sza@ukr.net") {
 			t.Errorf("%s: footer lacks the contact sza@ukr.net", p)
 		}
-		if !strings.Contains(footer, "Fast Media Sorter &amp; Organizer") || strings.Contains(footer, "FastMediaSorter v2") {
+		if strings.Contains(footer, "FastMediaSorter v2") {
 			t.Errorf("%s: Android sibling name must match SITE-FAMILY-MAP 1.3", p)
+		}
+		for u, label := range familyLabels {
+			if !strings.Contains(footer, `href="`+u+`" target="_blank" rel="noopener"><b>`+label+`</b>`) {
+				t.Errorf("%s: footer card of %s must be labelled %q (SITE-FAMILY-MAP 1.5 Tool cell)", p, u, label)
+			}
 		}
 	}
 }
@@ -223,5 +241,42 @@ func TestSiteAuthorPagesTypography(t *testing.T) {
 				t.Errorf("%s: a script string carries a long dash", p)
 			}
 		}
+	}
+}
+
+// SITE-STRUCTURE 0.3 section 2: a product that publishes a support route beyond its footer contact ships a
+// Support page and links it from every page footer. The landings of the ten machine-translated locales sit in a
+// folder, and the 404 page is served from any depth, so each reaches the page by the address that works there.
+func TestSiteFooterLinksTheSupportPage(t *testing.T) {
+	footerRe := regexp.MustCompile(`(?s)<footer class="site-footer">.*?</footer>`)
+	for _, p := range append(sitePages(), "404.html") {
+		footer := footerRe.FindString(readRepoFile(t, strings.Split(p, "/")...))
+		want := `href="support.html"`
+		switch {
+		case p == "404.html":
+			want = `href="` + siteBase + `support.html"`
+		case strings.Contains(p, "/"):
+			want = `href="../support.html"`
+		}
+		if !strings.Contains(footer, want) {
+			t.Errorf("%s: the footer does not link the Support page (%s)", p, want)
+		}
+	}
+}
+
+// The Support page states its routes where the privacy page and the manual state them: the issue tracker, the
+// one author contact, the diagnostics archive of the app (-report) and the extension's Copy diagnostics button.
+func TestSiteSupportPageStatesItsRoutes(t *testing.T) {
+	raw := readRepoFile(t, "support.html")
+	for _, want := range []string{
+		`https://github.com/SerZhyAle/doc-html-translate/issues`, `mailto:sza@ukr.net`, `<code>-report</code>`,
+		`Send logs to the author`, `Copy diagnostics`, `docs.html#logs`, `docs.ru.html#logs`, `docs.uk.html#logs`,
+	} {
+		if !strings.Contains(raw, want) {
+			t.Errorf("support.html lost %q", want)
+		}
+	}
+	if strings.Contains(raw, `noindex`) {
+		t.Error("support.html is marked noindex; a Support page is announced and indexed")
 	}
 }

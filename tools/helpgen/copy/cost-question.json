@@ -1,0 +1,68 @@
+{
+  "id": "cost-question",
+  "surface": "dlg-cost",
+  "kind": "dialog",
+  "title": { "en": "Google Translate - cost", "ru": "Google Translate - стоимость", "uk": "Google Translate - вартість" },
+  "lead": {
+    "en": "Before anything is sent to Google, the converter says how many characters it would send and what Google would charge, and waits for your answer.",
+    "ru": "Прежде чем что-либо уйдёт в Google, конвертер сообщает, сколько символов он отправил бы и сколько возьмёт Google, и ждёт вашего ответа.",
+    "uk": "Перш ніж щось піде до Google, конвертер повідомляє, скільки символів він надіслав би і скільки візьме Google, і чекає на вашу відповідь."
+  },
+  "shots": [
+    {
+      "id": "dialog", "setup": "dialog-cost", "capture": "dialog",
+      "alt": {
+        "en": "The paid-translation question: the title Google Translate - cost, the count of characters to send and the estimated cost, and the answers Translate and pay and Don't translate, with the Help button in the top-right corner.",
+        "ru": "Вопрос о платном переводе: заголовок «Google Translate - стоимость», число символов к отправке и оценка стоимости, ответы «Перевести и оплатить» и «Не переводить», а в правом верхнем углу кнопка справки.",
+        "uk": "Питання про платний переклад: заголовок «Google Translate - вартість», кількість символів до надсилання й оцінка вартості, відповіді «Перекласти й оплатити» та «Не перекладати», а в правому верхньому куті кнопка довідки."
+      }
+    }
+  ],
+  "order": [
+    { "en": "Read the estimate {ref:message}: how many characters would go to Google and what that costs.", "ru": "Прочитайте оценку {ref:message}: сколько символов ушло бы в Google и сколько это стоит.", "uk": "Прочитайте оцінку {ref:message}: скільки символів пішло б до Google і скільки це коштує." },
+    { "en": "If you do not want to pay, answer {k:costNo} {ref:no}. It is the answer with the focus, so {kbd:Enter} and {kbd:Esc} choose it, and the book is still converted - without a translation.", "ru": "Если платить не хотите, ответьте {k:costNo} {ref:no}. Это ответ с фокусом, поэтому {kbd:Enter} и {kbd:Esc} выбирают его, а книга всё равно конвертируется - без перевода.", "uk": "Якщо платити не хочете, дайте відповідь {k:costNo} {ref:no}. Це відповідь із фокусом, тому {kbd:Enter} і {kbd:Esc} обирають її, а книга все одно конвертується - без перекладу." },
+    { "en": "If you accept, answer {k:costYes} {ref:yes}. The text is sent and Google charges your account.", "ru": "Если согласны, ответьте {k:costYes} {ref:yes}. Текст будет отправлен, а Google спишет оплату с вашего аккаунта.", "uk": "Якщо погоджуєтеся, дайте відповідь {k:costYes} {ref:yes}. Текст буде надіслано, а Google спише оплату з вашого облікового запису." }
+  ],
+  "elements": [
+    {
+      "id": "help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
+      "nameKey": "titleHelp",
+      "one": { "en": "Opens this page without closing the question.", "ru": "Открывает эту страницу, не закрывая вопрос.", "uk": "Відкриває цю сторінку, не закриваючи питання." },
+      "text": { "en": "The question stays open and waits while you read. {kbd:F1} does the same.", "ru": "Вопрос остаётся открытым и ждёт, пока вы читаете. {kbd:F1} делает то же самое.", "uk": "Питання лишається відкритим і чекає, поки ви читаєте. {kbd:F1} робить те саме." }
+    },
+    {
+      "id": "message", "shot": "dialog", "sel": "#dlgMsg", "pin": "l",
+      "name": { "en": "The estimate", "ru": "Оценка", "uk": "Оцінка" },
+      "one": { "en": "How many characters would be sent and what Google would charge for them.", "ru": "Сколько символов было бы отправлено и сколько за них возьмёт Google.", "uk": "Скільки символів було б надіслано і скільки за них візьме Google." },
+      "text": {
+        "en": "The converter counts the characters of the pages, the title and the table of contents - characters, not bytes - and multiplies by Google's list price. The question is asked before any request is made, and only for a text longer than 1,000 characters.",
+        "ru": "Конвертер считает символы страниц, названия и оглавления - именно символы, а не байты - и умножает на прейскурантную цену Google. Вопрос задаётся до любого запроса и только для текста длиннее 1000 символов.",
+        "uk": "Конвертер рахує символи сторінок, назви й змісту - саме символи, а не байти - і множить на прейскурантну ціну Google. Питання ставиться до будь-якого запиту і лише для тексту довшого за 1000 символів."
+      },
+      "why": { "en": "Google bills by the character, so you see the price before you commit.", "ru": "Google берёт плату за символ, поэтому цену вы видите до того, как согласились.", "uk": "Google бере плату за символ, тому ціну ви бачите до того, як погодилися." },
+      "next": { "en": "With a maximum cost set under Advanced, an estimate within it is accepted without asking; an estimate above it skips the translation and converts the book without one.", "ru": "Если в «Дополнительно» задана максимальная стоимость, оценка в её пределах принимается без вопроса; оценка выше предела пропускает перевод, и книга конвертируется без него.", "uk": "Якщо в «Додатково» задано максимальну вартість, оцінка в її межах приймається без питання; оцінка вище межі пропускає переклад, і книга конвертується без нього." }
+    },
+    {
+      "id": "yes", "shot": "dialog", "sel": "#dlgActions button[value=yes]", "pin": "b",
+      "nameKey": "costYes",
+      "one": { "en": "Sends the text to Google and pays for the translation.", "ru": "Отправляет текст в Google и оплачивает перевод.", "uk": "Надсилає текст до Google і оплачує переклад." },
+      "text": { "en": "The pages are translated by Google Cloud Translation with your own key while the book is built, and the book is saved already translated.", "ru": "Страницы переводит Google Cloud Translation по вашему ключу, пока строится книга, и книга сохраняется уже переведённой.", "uk": "Сторінки перекладає Google Cloud Translation за вашим ключем, поки будується книга, і книга зберігається вже перекладеною." },
+      "why": { "en": "Choose it when you want the translation saved inside the book instead of using Chrome's free page translation.", "ru": "Выбирайте, когда перевод должен быть сохранён внутри книги, а не делаться бесплатным переводом страниц в Chrome.", "uk": "Обирайте, коли переклад має бути збережений усередині книги, а не робитися безкоштовним перекладом сторінок у Chrome." },
+      "undo": { "en": "What Google has charged cannot be taken back. {k:btnCancel} stops the rest, and the pages already sent are paid for.", "ru": "Списанное Google не вернуть. {k:btnCancel} останавливает остаток, а уже отправленные страницы оплачены.", "uk": "Списане Google не повернути. {k:btnCancel} зупиняє решту, а вже надіслані сторінки оплачені." }
+    },
+    {
+      "id": "no", "shot": "dialog", "sel": "#dlgActions button[value=no]", "pin": "b",
+      "nameKey": "costNo",
+      "one": { "en": "Converts the book without translating it. Nothing is sent.", "ru": "Конвертирует книгу без перевода. Ничего не отправляется.", "uk": "Конвертує книгу без перекладу. Нічого не надсилається." },
+      "text": { "en": "The book is converted exactly as with the free engine; you can still translate it in Chrome afterwards. Closing the question or pressing {kbd:Esc} is the same answer.", "ru": "Книга конвертируется так же, как с бесплатным вариантом; потом её всё равно можно перевести в Chrome. Закрыть вопрос или нажать {kbd:Esc} - тот же ответ.", "uk": "Книга конвертується так само, як з безкоштовним варіантом; потім її все одно можна перекласти в Chrome. Закрити питання чи натиснути {kbd:Esc} - та сама відповідь." },
+      "why": { "en": "It is the safe answer, so it has the focus.", "ru": "Это безопасный ответ, поэтому фокус на нём.", "uk": "Це безпечна відповідь, тому фокус на ній." },
+      "undo": { "en": "Nothing was spent. Convert again and answer differently if you change your mind.", "ru": "Ничего не потрачено. Конвертируйте снова и ответьте иначе, если передумаете.", "uk": "Нічого не витрачено. Конвертуйте знову й дайте іншу відповідь, якщо передумаєте." },
+      "shortcut": { "en": "{kbd:Enter} or {kbd:Esc}.", "ru": "{kbd:Enter} или {kbd:Esc}.", "uk": "{kbd:Enter} або {kbd:Esc}." }
+    }
+  ],
+  "related": [
+    { "to": "converter#translation", "pill": "window", "name": { "en": "Translation", "ru": "Перевод", "uk": "Переклад" }, "one": { "en": "The engines to choose from, and the Google key row.", "ru": "Движки на выбор и строка ключа Google.", "uk": "Рушії на вибір і рядок ключа Google." } },
+    { "to": "settings#advanced", "pill": "window", "name": { "en": "Advanced", "ru": "Дополнительно", "uk": "Додатково" }, "one": { "en": "Where the maximum cost is set.", "ru": "Где задаётся максимальная стоимость.", "uk": "Де задається максимальна вартість." } },
+    { "site": "docs#flags", "pill": "site", "name": { "en": "Command-line flags", "ru": "Флаги командной строки", "uk": "Прапорці командного рядка" }, "one": { "en": "-google and -max-cost in full.", "ru": "-google и -max-cost подробно.", "uk": "-google і -max-cost докладно." } }
+  ]
+}

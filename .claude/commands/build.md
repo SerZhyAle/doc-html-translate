@@ -66,7 +66,9 @@ and commits (with `DEV/COMMIT_LOG.md` appended):
 **Step 6 - Read the verdict line, not the scrollback.** The gate ends in `check: PASS` (0),
 `check: PASS WITH ADVISORIES (n: ..)` (3, parity drift - say which in the report), `check: FAIL (n: ..)` (1)
 or `check: COULD NOT VERIFY (n: ..)` (2 - a tool or input was missing; **not a pass**, and build-local
-stops on it). On 1 or 2, read `temp/logs/check-<child>.log`, fix the root cause, rerun. Do not bypass the gate.
+stops on it). A clean run with children that did not apply reads `check: PASS (n skipped: ..)`, and a
+run where every child did not apply reads `check: NOT APPLICABLE (..)` (0, but it proves nothing and
+does not unlock a release). On 1 or 2, read `temp/logs/check-<child>.log`, fix the root cause, rerun. Do not bypass the gate.
 
 **Step 7 - Report.** One line each: what was built, the short commit hash, and "nothing was pushed -
 run `/release` for the published flow". List any follow-ups; do not act on them in this pass.

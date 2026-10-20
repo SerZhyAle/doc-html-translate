@@ -39,12 +39,13 @@ async function openPopup(tabUrl, options, { messages } = {}) {
   globalThis.window = window;
   const store = { options: { ...options } };
   const created = [];
+  const opened = [];
   if (!window.close) window.close = () => {};
   globalThis.chrome = {
     runtime: {
       getURL: (p) => `chrome-extension://test/${p}`,
       getManifest: () => ({ version: "1.0" }),
-      openOptionsPage: () => {},
+      openOptionsPage: () => { opened.push(true); },
     },
     storage: {
       local: {
@@ -62,7 +63,7 @@ async function openPopup(tabUrl, options, { messages } = {}) {
   globalThis.fetch = async () => new Response("", { status: 404 });
   await import(`../src/popup.js?case=${++caseSeq}`);
   for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
-  return { document, window, store, created };
+  return { document, window, store, created, opened };
 }
 
 // B58: the label's i18n replaced its whole content, detaching the host span, so the popup never
@@ -192,4 +193,62 @@ test("the popup's note and links speak the interface language", async () => {
     assert.equal(link.querySelector("[data-i18n]")?.getAttribute("data-i18n"), key, `${id} is tagged for translation`);
     assert.ok(link.querySelector('[data-glyph="nav.open-external"] svg'), `${id} keeps its glyph`);
   }
+});
+
+// BOOLEAN-OPTION 2.0 section 3 rule 5: a disabled option explains why it is disabled and how to enable it,
+// visibly and as the checkbox's description - not a dead control.
+test("a disabled site switch says why and how to enable it", async () => {
+  const off = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false, disabledHosts: [] });
+  assert.equal(off.document.getElementById("site").disabled, true);
+  const reason = off.document.getElementById("site-reason").textContent;
+  assert.match(reason, /Reflow PDFs & EPUBs/, "it names the switch that enables it");
+  assert.equal(off.document.getElementById("site").getAttribute("aria-describedby"), "site-expl");
+  assert.ok(off.document.getElementById("site-expl").contains(off.document.getElementById("site-reason")));
+
+  // Turning the global switch on removes the reason and enables the site switch.
+  const { document, window } = off;
+  const global = document.getElementById("global");
+  global.checked = true;
+  global.dispatchEvent(new window.Event("change"));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(document.getElementById("site").disabled, false);
+  assert.equal(document.getElementById("site-reason").textContent, "");
+
+  const none = await openPopup("chrome://newtab/", { enabledByDefault: true, disabledHosts: [] });
+  assert.match(none.document.getElementById("site-reason").textContent, /not a website/);
+  const on = await openPopup("https://www.books.test/shelf/", { enabledByDefault: true, disabledHosts: [] });
+  assert.equal(on.document.getElementById("site-reason").textContent, "");
+});
+
+// BUTTONS 2.0: a command is a button, never a dead link; the popup's Settings opens the options page.
+test("Settings is a button with its glyph and opens the options page", async () => {
+  const { document, window, opened } = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false });
+  const opts = document.getElementById("opts");
+  assert.equal(opts.tagName.toLowerCase(), "button");
+  assert.ok(opts.querySelector("svg"), "app.settings is drawn before the word");
+  opts.dispatchEvent(new window.Event("click"));
+  assert.equal(opened.length, 1);
+});
+
+test("the popup applies the saved interface size, controls and theme before it is shown", async () => {
+  const { document } = await openPopup("https://www.books.test/shelf/", {
+    enabledByDefault: false, uiSize: "large", textSize: "huge", inputProfile: "touch", chromeTheme: "dark",
+  });
+  const root = document.documentElement;
+  assert.deepEqual([root.getAttribute("data-size"), root.getAttribute("data-text"), root.getAttribute("data-input"), root.getAttribute("data-chrome-theme")],
+    ["large", "huge", "touch", "dark"]);
+  assert.equal(root.hasAttribute("data-boot"), false, "revealed once the settings are in place");
+});
+
+test("the recognition-language group opens when OCR is turned on, and the choice is remembered", async () => {
+  const { document, window, store } = await openPopup("https://www.books.test/shelf/", { enabledByDefault: false, ocrImages: false });
+  const group = document.getElementById("popupOcrLangs");
+  assert.ok(group.classList.contains("group"));
+  assert.equal(group.hasAttribute("open"), false);
+  const ocr = document.getElementById("ocr-images");
+  ocr.checked = true;
+  ocr.dispatchEvent(new window.Event("change"));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(group.open, true);
+  assert.equal(store.options.ocrImages, true);
 });

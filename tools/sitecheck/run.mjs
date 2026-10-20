@@ -33,7 +33,7 @@ const FILES = [...new Set(smLocs.map(toFile))];
 const url = (f) => BASE + (f === 'index.html' ? '' : f.replace(/index\.html$/, ''));
 const groupOf = (f) => f === 'index.html' || /^[a-z]{2}\/index\.html$/.test(f) ? 'landing' : f.startsWith('docs') ? 'manual' : f === 'extension.html' ? 'extension' : 'trust-privacy';
 const LOCALES = FILES.filter((f) => /^[a-z]{2}\/index\.html$/.test(f));
-const ROOT3 = ['index.html', 'extension.html', 'privacy.html', 'install-trust.html', 'extension-privacy.html'];
+const ROOT3 = ['index.html', 'extension.html', 'privacy.html', 'install-trust.html', 'extension-privacy.html', 'support.html'];
 const DOCS = ['docs.html', 'docs.ru.html', 'docs.uk.html'];
 console.log(`mode=${MODE} base=${BASE} pages=${FILES.length}`);
 
@@ -130,12 +130,32 @@ if (want('A')) {
       nameText: nm ? nm.textContent : null, nameFont: nm ? getComputedStyle(nm).fontSize : null,
       seg: q('.seg button').map((b) => b.textContent.trim()), otherLangs: q('.langs a').length,
       channels: { store: has(/apps\.microsoft\.com/), github: has(/github\.com\/SerZhyAle\/doc-html-translate\/releases/), chrome: has(/chromewebstore\.google\.com/), edge: has(/microsoftedge\.microsoft\.com\/addons/), winget: !!q('.copybox').find((e) => /winget/.test(e.textContent)), installer: !!q('a[href*="setup"], a[href*="installer"]').length || q('.channels a, .button-group a, .get a').some((a) => /setup/i.test(a.textContent + a.href)) },
-      docs: has(/docs\.html/), portal: has(/sza\.od\.ua/), footerTools: q('.site-footer a').length, footerH: (document.querySelector('.site-footer h2') || {}).textContent,
+      docs: q('.site-header a[href]').some((a) => /docs(\.ru|\.uk)?\.html$/.test(a.getAttribute('href'))), portal: has(/sza\.od\.ua/), footerTools: q('.site-footer a').length, footerH: (document.querySelector('.site-footer h2') || {}).textContent,
       author: q('.site-footer a, .hero a').some((a) => /SerZhyAle|sza\.od\.ua|mailto:sza@ukr\.net/.test(a.href)),
     };
   });
   const ok = d.icon && d.nameFont && parseFloat(d.nameFont) >= 28 && d.seg.join() === 'RU,EN,UA' && d.otherLangs >= 10 && Object.values(d.channels).every(Boolean) && d.docs && d.portal && d.footerTools >= 8 && d.author;
   add('A6', 'landing', ok ? 'pass' : 'fail', `the seven things: icon ${d.icon}, name "${d.nameText}" at ${d.nameFont}, switchers ${d.seg.join('/')} + ${d.otherLangs} locales, channels ${JSON.stringify(d.channels)}, docs ${d.docs}, portal ${d.portal}, footer links ${d.footerTools}, author ${d.author}`, d);
+  // A6b the documentation link of the header at the phone width (PAGE-CONTENT landing item 4): visible, a real target (44 fine, 48 coarse),
+  // inside the header, and nothing scrolls sideways - on the landing in its three languages and on the ten locale landings
+  const narrow = [];
+  for (const f of ['index.html', ...LOCALES]) {
+    for (const lang of f === 'index.html' ? ['en', 'ru', 'uk'] : ['en']) {
+      for (const coarse of [false, true]) {
+        const nc = await newCtx(coarse ? { viewport: { width: 360, height: 800 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : { viewport: { width: 360, height: 800 } });
+        const np = await open(nc, url(f) + '?lang=' + lang);
+        const m = await np.evaluate(() => {
+          const h = document.querySelector('.site-header');
+          const link = [...h.querySelectorAll('a[href]')].find((a) => /docs(\.ru|\.uk)?\.html$/.test(a.getAttribute('href')) && a.checkVisibility());
+          const hb = h.getBoundingClientRect(), lb = link && link.getBoundingClientRect();
+          return { link: !!link, w: lb && Math.round(lb.width), h: lb && Math.round(lb.height), inside: !!lb && lb.left >= hb.left - 0.5 && lb.right <= hb.right + 0.5, sideways: document.documentElement.scrollWidth - innerWidth };
+        });
+        narrow.push({ f, lang, coarse, ...m }); await nc.close();
+      }
+    }
+  }
+  const nbad = narrow.filter((r) => !r.link || r.h < (r.coarse ? 48 : 44) || r.w < (r.coarse ? 48 : 44) || !r.inside || r.sideways > 0);
+  add('A6b', 'landing', nbad.length ? 'fail' : 'pass', `header documentation link at 360 px (fine 44 / coarse 48 target, inside the header, no sideways scroll): ${narrow.length - nbad.length} of ${narrow.length} landing runs (index in 3 languages, ${LOCALES.length} locale landings) ok${nbad.length ? '; failing ' + nbad.map((r) => `${r.f}?lang=${r.lang}${r.coarse ? ' coarse' : ''}`).join(', ') : ''}`, { narrow });
   await ctx.close();
 }
 
@@ -252,6 +272,16 @@ if (want('B')) {
   await p2.evaluate(() => { localStorage.setItem('sza-theme', 'sepia'); }); await p2.reload({ waitUntil: 'load' });
   const th2 = await p2.evaluate(() => document.documentElement.getAttribute('data-theme'));
   add('B8g', 'manual', ['dark', 'light'].includes(th2) ? 'pass' : 'fail', `docs.html with sza-theme=sepia resolves to data-theme=${th2}`, { th2 });
+  // the locale query (PAGE-STYLE 3.1 amendment 1): lang is canonical, l the legacy reader, a valid lang wins, only a
+  // language the page ships is selected (the landing has no de), and reading the query stores nothing
+  const qrows = [];
+  for (const [q, want] of [['?lang=uk', 'ua'], ['?lang=ru', 'ru'], ['?l=uk', 'ua'], ['?l=ru', 'ru'], ['?l=ua', 'ua'], ['?lang=uk&l=ru', 'ua'], ['?l=ru&lang=uk', 'ua'], ['?lang=xx&l=ru', 'ru'], ['?lang=de', 'en'], ['?l=de', 'en']]) {
+    const qc = await newCtx({ locale: 'en-US' }); const qp = await open(qc, url('index.html') + q);
+    qrows.push({ q, want, ...(await qp.evaluate(() => ({ got: document.documentElement.getAttribute('data-lang'), stored: localStorage.getItem('sza-lang') }))) });
+    await qc.close();
+  }
+  const qBad = qrows.filter((r) => r.got !== r.want || r.stored !== null);
+  add('B8h', 'landing', qBad.length ? 'fail' : 'pass', `locale query on the landing: ${qrows.length - qBad.length} of ${qrows.length} rows resolve as the contract says (${qrows.map((r) => `${r.q} -> ${r.got}`).join('; ')})`, { qrows });
   await ctx.close();
 }
 
@@ -279,7 +309,7 @@ if (want('E')) {
   const trio = {};
   for (const f of ROOT3) { const r = rows.filter((x) => x.f === f); trio[f] = { langs: r.map((x) => x.lang).join(','), titles: new Set(r.map((x) => x.title)).size, cyrRu: r[0].cyr, cyrEn: r[1].cyr, cyrUk: r[2].cyr }; }
   const bad3 = Object.entries(trio).filter(([, v]) => v.langs !== 'ru,en,uk' || v.titles !== 3 || v.cyrRu < 100 || v.cyrUk < 100 || v.cyrEn > 40);
-  add('E10', 'trust-privacy,extension,landing', bad3.length ? 'fail' : 'pass', `ru/en/uk render in page on the 5 three-language pages: ${JSON.stringify(trio)}`, { rows });
+  add('E10', 'trust-privacy,extension,landing', bad3.length ? 'fail' : 'pass', `ru/en/uk render in page on the ${ROOT3.length} three-language pages: ${JSON.stringify(trio)}`, { rows });
   // docs: buttons navigate to a sibling that answers
   const dr = [];
   for (const f of DOCS) {
@@ -332,13 +362,14 @@ if (want('H')) {
     const page = await ctx.newPage();
     const resp = await page.goto(u, { waitUntil: 'load' });
     const frag = new URL(u).hash.slice(1);
-    const q = new URL(u).searchParams.get('l');
+    const sp = new URL(u).searchParams;
+    const q = sp.get('lang') || sp.get('l');
     const s = await page.evaluate(([frag, q]) => ({ lang: document.documentElement.lang, hasFrag: frag ? !!document.getElementById(frag) : null, title: document.title }), [frag, q]);
     out.push({ a, status: resp.status(), ...s, q, frag });
     await page.close();
   }
   const bad = out.filter((o) => o.status !== 200 || o.hasFrag === false || (o.q && o.lang !== (o.q === 'ua' ? 'uk' : o.q)));
-  add('H1', 'site', bad.length ? 'fail' : 'pass', `${out.length} held addresses (${recs.length} holders) requested in the browser: ${out.length - bad.length} answer with the page they mean (status 200, section id present, ?l= language applied)`, { bad, all: out.map((o) => [o.a.replace(LIVE_BASE, ''), o.status, o.hasFrag, o.lang]) });
+  add('H1', 'site', bad.length ? 'fail' : 'pass', `${out.length} held addresses (${recs.length} holders) requested in the browser: ${out.length - bad.length} answer with the page they mean (status 200, section id present, ?lang= / legacy ?l= language applied)`, { bad, all: out.map((o) => [o.a.replace(LIVE_BASE, ''), o.status, o.hasFrag, o.lang]) });
   const retired = fs.readFileSync(path.join(REPO, 'docs/SITE_ADDRESSES.md'), 'utf8').includes('No forwarder exists today');
   add('H2', 'site', retired ? 'na' : 'manual', retired ? 'no page has been retired or moved: docs/SITE_ADDRESSES.md records that no forwarder exists, so there is no old address to request' : 'a forwarder list exists; read it', {});
   // not found
@@ -720,7 +751,7 @@ if (want('G')) {
   // right-aligned, so their x moves with the width of the button text beside them
   const ref = pos2['index.html'];
   const offs = Object.entries(pos2).filter(([, v]) => !v.brand || !v.seg || !v.theme || Math.abs(v.brand[0] - ref.brand[0]) > 2 || ['brand', 'seg', 'theme'].some((k) => Math.abs(v[k][1] - ref[k][1]) > 2) || !(v.brand[0] < v.seg[0] && v.seg[0] < v.theme[0]));
-  add('B1', 'root pages', offs.length ? 'fail' : 'pass', `brand link, language control and theme control sit in the same place (brand at the same left edge, controls on the same line and order) on the 8 root pages at 1280 px: ${offs.length ? offs.map(([f, v]) => f + ' ' + JSON.stringify(v)).join('; ') : 'yes'} (portal chrome of ST 5 is not bound at the guide tier)`, { pos2 });
+  add('B1', 'root pages', offs.length ? 'fail' : 'pass', `brand link, language control and theme control sit in the same place (brand at the same left edge, controls on the same line and order) on the ${ROOT3.length + DOCS.length} root pages at 1280 px: ${offs.length ? offs.map(([f, v]) => f + ' ' + JSON.stringify(v)).join('; ') : 'yes'} (portal chrome of ST 5 is not bound at the guide tier)`, { pos2 });
   await ctx.close();
 }
 

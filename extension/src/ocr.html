@@ -1,25 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html data-boot>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image OCR</title>
+  <link rel="stylesheet" href="chrome-palette.css">
+  <link rel="stylesheet" href="ui-sizing.css">
+  <link rel="stylesheet" href="ui-components.css">
   <link rel="stylesheet" href="ocr-overlay.css">
-  <style>
-    body { margin: 0; background: #2b2b2b; color: #eee; font-family: "Segoe UI", system-ui, sans-serif; }
-    #status { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
-      padding: 8px 14px; background: #1e1e1e; border-bottom: 1px solid #000; font-size: 13px; }
-    #status.done { display: none; }
-    #progress-bar { height: 4px; width: 0; background: #2563eb; border-radius: 2px; flex: 0 0 140px;
-      transition: width 0.2s; align-self: center; }
-    #status-text { flex: 1 1 auto; }
-    main#ocr-mount { display: block; max-width: 1100px; margin: 16px auto; padding: 0 12px; }
-    .ocr-hint { padding: 24px; text-align: center; color: #aaa; }
-    .ocr-hint p { max-width: 62ch; margin: 0 auto 12px; line-height: 1.5; }
-    .ocr-action { font: inherit; padding: 6px 14px; border: 1px solid #555; border-radius: 4px;
-      background: #3a3a3a; color: #eee; cursor: pointer; }
-    .ocr-action:hover { background: #474747; }
-  </style>
+  <link rel="stylesheet" href="ocr.css">
+  <script src="ui-boot.js"></script>
 </head>
 <body>
   <div id="status"><div id="progress-bar"></div><span id="status-text">Recognizing..</span></div>

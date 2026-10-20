@@ -17,6 +17,11 @@
   a COULD NOT VERIFY, because a green line over an unrun check is the lie the contract forbids;
   advisories only colour an otherwise clean run. Only the bare PASS is a clean verdict.
 
+  A child that exits 4 ("not looked at yet": a shared lock is held) is answered as a 2. A child
+  that ends in NOT APPLICABLE (exit 0) is counted with the skipped: an otherwise clean run says
+  "check: PASS (n skipped: <child>, ..)", and a run in which every child answered so says
+  "check: NOT APPLICABLE (n skipped: <child>, ..)" with exit 0.
+
   Every run writes temp/logs/gate-evidence.json: the verdict, HEAD, the plan and every child's
   verdict, and the git tree hash of the working tree the gate read (untracked files included,
   exactly what `git add -A` would commit). The tree is hashed before the children run and again
@@ -52,6 +57,7 @@ $defaultPlan = @(
     'scripts/site-addresses.ps1'
     'scripts/release-notes.ps1'
     'scripts/security-posture.ps1'
+    'scripts/help-check.ps1'
 )
 if (-not $Plan) { $Plan = $defaultPlan }
 # `pwsh -File check.ps1 -Plan a,b` binds "a,b" as one string; split it the way a call from inside
@@ -102,10 +108,15 @@ foreach ($child in $Plan) {
     $code = $LASTEXITCODE
     # The child's own verdict line, when it printed one; a child that died without one is quoted
     # by its exit code, and an unknown code is read as a failure (CHECK-VERDICT section 6).
-    $verdict = @($lines | Where-Object { $_ -match "^${name}: (PASS|FAIL|COULD NOT VERIFY)" }) | Select-Object -Last 1
+    $verdict = @($lines | Where-Object { $_ -match "^${name}: (PASS|FAIL|COULD NOT VERIFY|NOT APPLICABLE)" }) | Select-Object -Last 1
     if (-not $verdict) { $verdict = "${name}: (no verdict line; exit $code)" }
-    if ($code -notin 0, 1, 2, 3) { $code = 1 }
-    $results += [pscustomobject]@{ Name = $name; Code = $code; Verdict = $verdict }
+    # NOT APPLICABLE travels with exit 0 (CHECK-VERDICT 10A): the caller switched the work off, so it
+    # is counted as skipped, never as passed. The exit code wins over the word.
+    $notApplicable = ($code -eq 0) -and ($verdict -match "^${name}: NOT APPLICABLE")
+    # Exit 4 is "not looked at yet" (a lock held by another run), not a verdict: an aggregator that
+    # does not queue answers it as could-not-verify (rule 2.1); any other unknown code is a failure.
+    if ($code -eq 4) { $code = 2 } elseif ($code -notin 0, 1, 2, 3) { $code = 1 }
+    $results += [pscustomobject]@{ Name = $name; Code = $code; Verdict = $verdict; NotApplicable = $notApplicable }
 }
 
 Write-Host ""
@@ -130,6 +141,16 @@ if ($treeMoved) {
     if ($code -ne 1) { $code = 2; $detail = 'the working tree changed during the run' }
 }
 
+# Not-applicable children are counted with the skipped, in the parenthesis of an otherwise clean
+# verdict. Only when every quoted child answered so does the aggregator answer NOT APPLICABLE
+# (exit 0, still not a pass); any other mix follows the precedence above.
+$skipped = @($results | Where-Object NotApplicable)
+$word = Get-VerdictWord $code
+if ($code -eq 0 -and $skipped) {
+    $detail = "$($skipped.Count) skipped: " + (($skipped | ForEach-Object Name) -join ', ')
+    if ($skipped.Count -eq $results.Count) { $word = 'NOT APPLICABLE' }
+}
+
 $prevEap = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 $head = (& git rev-parse HEAD 2>$null)
@@ -137,7 +158,7 @@ $dirty = [bool](& git status --porcelain 2>$null)
 $ErrorActionPreference = $prevEap
 
 $evidence = [ordered]@{
-    verdict    = "check: $(Get-VerdictWord $code)" + $(if ($detail) { " ($detail)" } else { '' })
+    verdict    = "check: $word" + $(if ($detail) { " ($detail)" } else { '' })
     code       = $code
     head       = if ($head) { $head.Trim() } else { $null }
     # The tree scripts/release.ps1 matches against HEAD: empty when the tree moved under the gate.
@@ -151,9 +172,14 @@ $evidence = [ordered]@{
     # than trusting fullPlan, which is here for a reader.
     plan       = @($Plan)
     fullPlan   = ($Plan.Count -eq $defaultPlan.Count) -and -not @($defaultPlan | Where-Object { $_ -notin $Plan })
-    children   = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict } })
+    children   = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict; notApplicable = $_.NotApplicable } })
 }
 $evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "temp/logs/gate-evidence.json" -Encoding utf8
 
 Write-Host ""
+if ($word -eq 'NOT APPLICABLE') {
+    # verdict.ps1 maps a code to a word, and this word shares exit 0 with PASS.
+    Write-Host "check: NOT APPLICABLE ($detail)" -ForegroundColor Yellow
+    exit 0
+}
 Exit-Verdict 'check' $code $detail

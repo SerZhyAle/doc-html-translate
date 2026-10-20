@@ -164,6 +164,11 @@ const scratchInventory = `{
     "dependencySets": [{"file": "go.sum", "kind": "go-sum"}, {"file": "extension/package-lock.json", "kind": "npm-lock"}],
     "denylist": ["(^|/)getsentry(/|$)", "^@sentry(/|$)"]
   },
+  "nativeCode": {
+    "claim": "The app loads no native codec or plugin library at all.",
+    "evidence": [{"file": "app/guard.go", "contains": "//go:build !nodynamic"}],
+    "libraryLoads": {"roots": ["app/*.go"], "call": "\\b(?:NewLazyDLL|LoadLibrary)\\(\\s*(\"([^\"]*)\")?", "systemLibraries": ["kernel32.dll"]}
+  },
   "renders": [
     {"target": "page.html", "block": "blk", "format": "html-lists", "rows": ["ext-storage", "net-doc"]},
     {"target": "msix.md", "block": "j", "format": "md-fence", "rows": ["app-rft"]},
@@ -188,6 +193,10 @@ func TestSecurityPostureOutcomes(t *testing.T) {
 	w("extension/package-lock.json", `{"packages": {"": {}, "node_modules/marked": {}}}`)
 	w("page.html", page)
 	w("msix.md", "### justification\n<!-- security-posture:begin j -->\n<!-- security-posture:end j -->\n")
+	guard := "//go:build !nodynamic\n\npackage app\n"
+	sys := "package app\n\nvar kernel32 = syscall.NewLazyDLL(\"kernel32.dll\")\n"
+	w("app/guard.go", guard)
+	w("app/sys.go", sys)
 	git("add", "-A")
 	git("commit", "-q", "-m", "init")
 	run := func(what string, code int, prefix, fragment string, args ...string) {
@@ -226,6 +235,18 @@ func TestSecurityPostureOutcomes(t *testing.T) {
 	w("extension/src/app.js", "const r = await fetch(url);\n")
 	run("a consumer the code no longer has", 1, "security-posture: FAIL", "no longer contains 'chrome.storage.local.set'")
 	w("extension/src/app.js", app)
+
+	w("app/sys.go", sys+"var codec = syscall.NewLazyDLL(\"libjxl.dll\")\n")
+	run("a native library outside the system list", 1, "security-posture: FAIL", "app/sys.go loads libjxl.dll, which is not a Windows system library")
+	w("app/sys.go", sys+"var h, _ = syscall.LoadLibrary(name)\n")
+	run("a library named by a computed value", 1, "security-posture: FAIL", "app/sys.go loads a library by a computed name")
+	w("app/sys.go", sys)
+	w("app/guard.go", "package app\n")
+	run("the build guard the claim cites is gone", 1, "security-posture: FAIL", "no longer contains '//go:build !nodynamic'")
+	w("app/guard.go", guard)
+	w("app/sys.go", "package app\n")
+	run("a listed system library nothing loads", 1, "security-posture: FAIL", "lists kernel32.dll, which no code under the roots loads any more")
+	w("app/sys.go", sys)
 
 	edited := strings.Replace(readScratch(t, dir, "page.html"), "your settings", "your settings and more", 1)
 	w("page.html", edited)

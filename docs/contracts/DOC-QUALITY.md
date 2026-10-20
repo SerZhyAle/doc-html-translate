@@ -1,9 +1,9 @@
 # Pointer: DOC-INTERNAL-QUALITY, DOC-EXTERNAL-QUALITY
 
 - **Id:** `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY`
-- **Version:** 0.9 / 0.10 (draft)
+- **Version:** 0.10 / 0.12 (draft)
 - **Home:** the shared contracts catalog, `documentation-quality/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
-- **Role:** consumer of both - internal engineering docs, and a published site, README trio and store listings
+- **Role:** consumer of both - internal engineering docs, and a published site, README trio and store listings; the internal rules are `partial` at 0.10 (read 2026-10-20, ticket 120)
 - **Wire carrier:** none - a documentation tree and the checks that hold it
 
 What this repo does to stay conformant:
@@ -26,6 +26,16 @@ What this repo does to stay conformant:
   (`tests/site_docs_test.go`, rules 1 and 6).
 - The portal-shaped rule questions are filed with the owner in the shared catalog as
   `documentation-quality/PROPOSAL-2026-09-26-doc-html-translate.md`.
+
+**Read at 0.10 / 0.12 on 2026-10-20 (ticket 120).**
+- External 0.12: the single-URL page language query is `lang`, `l` is read as legacy, and hreflang lists only translated
+  addressable URLs - done in the resolvers, the hreflang sets, the sitemap and the registry's `localized_urls`.
+  Item F (a page's embedded medium has its language disclosed) holds as a permanent variant: the demo video has
+  burned-in English captions on the RU and UK pages, disclosed in the figcaption (design record
+  [`../PARITY.md`](../PARITY.md) "Contract variants (ticket 120)"). Items H and I do not apply.
+- Internal 0.10 (a local, git-ignored corpus under its own registry): **open**, temporary debt, ticket 122 item 7 -
+  `DEV/plan/` and `DEV/private/` are git-ignored, yet the tracked registry record `spec-method` globs `DEV/plan/`, and
+  no local registry or local reverse-coverage check exists.
 
 **Adopted 2026-09-26; re-verified 2026-09-28.** Internal rules 3-6 were closed in
 [ticket 48](../../DEV/plan/done/48_2026-09-26_contract-doc-internal-quality-gaps.md). External rules

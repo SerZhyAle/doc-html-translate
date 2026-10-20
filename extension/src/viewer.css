@@ -75,29 +75,56 @@ body {
   line-height: var(--reader-leading, 1.6);
 }
 
+/* ---- Sizes (UI-SIZING 1.1) and buttons (BUTTONS 2.0): the same numbers as the desktop reader's chromeUICSS ---- */
+/* Ordinary targets are 32 CSS px for a fine pointer and 48 under a coarse one - chosen by the primary pointer,
+   never per event. --ui is the interface scale a later size selector would set; clamp() keeps an unknown value
+   from producing a zero-size target (supported range 0.875 .. 2, smallest target 28 / 42). Every length of the
+   chrome below is one of these tokens. docs/UI_PROFILE.md "Reader chrome" is the record both editions follow. The notices, the
+   offers, the export card and the status bar are chrome too: they take the same tokens, so their type and targets follow
+   the interface scale and never the reader's own text size (--reader-size). */
+:root { --ui: 1; }
+#toolbar, #toc, #search-panel, #status, .notice, .remote-notice, .resume-notice, .export-dialog {
+  --s: clamp(0.875, var(--ui), 2);
+  --tgt: calc(32px * var(--s));
+  --pad: calc(12px * var(--s));
+  --glyph: calc(16px * var(--s));
+  --gap: calc(8px * var(--s));
+  --radius: calc(4px * var(--s));
+  --fs: calc(14px * var(--s));
+  --fs-note: calc(12px * var(--s));
+}
+@media (pointer: coarse) {
+  #toolbar, #toc, #search-panel, #status, .notice, .remote-notice, .resume-notice, .export-dialog {
+    --tgt: calc(48px * var(--s));
+    --pad: calc(16px * var(--s));
+    --glyph: calc(20px * var(--s));
+  }
+}
+
 /* ---- Toolbar ---- */
 #toolbar {
   position: sticky;
   top: 0;
   z-index: 20;
   display: flex;
-  align-items: center;
-  gap: 0.4em;
+  /* Every control of one visual line takes the line's height (BUTTONS 2.0 section 3 rule 4); the text
+     members centre themselves below. */
+  align-items: stretch;
   flex-wrap: wrap;
-  padding: 0.4em 0.7em;
+  gap: var(--gap);
+  padding: var(--gap) var(--pad);
   background: var(--bar-bg);
   color: var(--bar-fg);
   border-bottom: 1px solid var(--border);
   font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 14px;
-  /* Pinned: body carries the reader's line-spacing choice, and the controls would otherwise
-     grow and shrink with it (29-40px). 1.6 is the shipped spacing, so the default bar and the
-     sticky offsets below it keep their geometry; buttons stay ~31px, over the 24px floor. */
-  line-height: 1.6;
+  font-size: var(--fs);
+  /* Pinned: body carries the reader's line-spacing choice, and the controls would otherwise grow and shrink
+     with it. */
+  line-height: 1.35;
 }
 
-#toolbar .spacer { flex: 1 1 auto; }
 #toolbar .title {
+  align-self: center;
   font-weight: 600;
   max-width: 38vw;
   overflow: hidden;
@@ -105,35 +132,74 @@ body {
   white-space: nowrap;
 }
 
-#toolbar button,
-#toolbar select,
-#toolbar input {
-  font: inherit;
-  color: var(--bar-fg);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.25em 0.6em;
-  min-height: 28px; min-width: 28px;
+/* Controls travel in task groups (BUTTONS 2.0 section 4 rule 3): a group moves as one unit when it fits a line
+   and wraps its own buttons when it is wider than the line. Rows flow from the reading start; nothing is
+   pinned to the far end and spare space stays empty. */
+#toolbar .group { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap); min-width: 0; max-width: 100%; }
+/* A rule that sets display beats the browser's own [hidden] style, so the group viewer.js reveals only for a
+   document with OCR plates (#grp-ocr) must say it again. */
+#toolbar .group[hidden] { display: none; }
+#toolbar .group > span { align-self: center; }
+#toolbar [data-glyph] { display: inline-flex; }
+
+/* One command button: a rectangle with the baseline corner, a transparent (secondary) face with the theme's
+   border, the glyph before the caption, content width plus padding - never stretched. A whole button wraps to
+   the next row before its caption does; only a button that cannot fit alone wraps its caption and grows. */
+#toolbar button, #search-close,
+.notice button, .remote-notice button, .resume-notice button, .export-dialog button, #status-stop {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--gap);
+  box-sizing: border-box; min-width: var(--tgt); min-height: var(--tgt); max-width: 100%;
+  padding: calc(4px * var(--s)) var(--pad);
+  font: inherit; font-size: var(--fs); line-height: 1.35; text-align: center; overflow-wrap: anywhere;
+  color: var(--bar-fg); background: transparent;
+  border: 1px solid var(--border); border-radius: var(--radius);
   cursor: pointer;
 }
-#toolbar button:hover { border-color: var(--accent); }
+/* A glyph-only button is the square target itself: no padding, the glyph centred. */
+#toolbar button.ico { padding: 0; }
+/* Native editors keep their platform arrow and popup but take the target height; they are not buttons
+   (BUTTONS section 6). */
+#toolbar select, #toolbar input, #search-panel select, #search-panel input {
+  box-sizing: border-box; min-width: var(--tgt); min-height: var(--tgt);
+  padding: 0 var(--gap);
+  font: inherit; font-size: var(--fs);
+  color: var(--bar-fg); background: transparent;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer;
+}
+/* The select's own face is transparent, so its popup list falls back to the system's face under the theme's
+   ink - light text on white in the dark themes. The options carry the bar's face and ink instead. */
+#toolbar select option, #search-panel select option { background: var(--bar-bg); color: var(--bar-fg); }
+#toolbar button:hover, #toolbar select:hover, #toolbar input:hover, #search-close:hover,
+.notice button:hover, .remote-notice button:hover, .resume-notice button:hover, .export-dialog button:hover, #status-stop:hover { border-color: var(--accent); }
+#toolbar button:hover, #search-close:hover,
+.notice button:hover, .remote-notice button:hover, .resume-notice button:hover, .export-dialog button:hover, #status-stop:hover { background: rgba(127, 127, 127, 0.14); }
 #toolbar input[type="number"] { width: 4.5em; cursor: text; }
-#toolbar .group { display: inline-flex; gap: 0.2em; align-items: center; }
+/* Selected (a toggle that is on, a disclosure that is open): a distinct face, the accent border and an inset
+   bar along the block end in the ink colour - a state a reader who cannot tell the hues apart still sees
+   (BUTTONS 3 rule 5). The bar is an inset shadow, so no state moves a neighbour. */
+#toolbar button[aria-pressed="true"], #toolbar button[aria-expanded="true"] {
+  background: var(--border); border-color: var(--accent);
+  box-shadow: inset 0 calc(-3px * var(--s)) 0 currentColor;
+}
+
+/* The two links open a destination outside the viewer (the project site, the mail client): they carry the
+   vendored nav.open-external marker (BUTTONS 2.0 section 2 rule 3; rtl: mirror). Text links with the target
+   height of the row, not buttons. */
 #toolbar .proj-link {
-  font-size: 11px;
-  color: var(--muted);
-  text-decoration: none;
-  padding: 0.2em 0.4em;
-  border: 0;
-  /* inline-flex + the 24px floor keep the two text links target-sized like the buttons
-     around them (WCAG 2.2, 2.5.8); an inline link would sit ~18px tall. */
   display: inline-flex;
   align-items: center;
+  gap: var(--gap);
   box-sizing: border-box;
-  min-height: 24px;
+  min-height: var(--tgt);
+  padding: 0 var(--gap);
+  border-radius: var(--radius);
+  font-size: var(--fs-note);
+  color: var(--muted);
+  text-decoration: none;
 }
 #toolbar .proj-link:hover { color: var(--link); text-decoration: underline; }
+[dir="rtl"] .glyph-mirror { transform: scaleX(-1); }
 
 /* The chrome's own focus ring, in the reading theme's accent: the browser default can vanish
    on the dark and night bars, and a keyboard reader must always see where they are. Scoped to
@@ -152,9 +218,9 @@ body {
 
 #toc {
   position: sticky;
-  top: 3.1em;
+  top: var(--bar-h, 3.1em);
   align-self: flex-start;
-  max-height: calc(100vh - 3.4em);
+  max-height: calc(100vh - var(--bar-h, 3.1em) - 0.3em);
   overflow: auto;
   width: 19em;
   flex: 0 0 19em;
@@ -175,43 +241,55 @@ body {
 #toc a { color: var(--link); text-decoration: none; display: block; padding: 0.3em 0.3em; border-radius: 4px; }
 #toc a:hover { background: rgba(127, 127, 127, 0.12); }
 #toc a[aria-current="location"] { background: rgba(127, 127, 127, 0.16); font-weight: 600; }
-/* ICON-RENDER section 13 E: the chevron has a 28px fine-pointer target;
-   the glyph keeps its own 1.15em size, centred. */
+/* The TOC chevron is a real button (a disclosure): the target is the token, the drawing keeps the glyph tier. */
 #toc .toc-toggle {
   cursor: pointer; user-select: none; color: var(--muted);
-  display: inline-flex; align-items: center; justify-content: center; width: 1.2em; height: 1.2em;
-  min-width: 28px; min-height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--tgt); height: var(--tgt); min-width: var(--tgt); min-height: var(--tgt);
   padding: 0; margin: 0; border: 0; background: none; font: inherit; vertical-align: middle;
 }
-/* Vocabulary glyphs (glyphs.js): colour from the text around them, 1.15em in the chrome's font. */
-#toolbar .glyph, #toc .glyph { width: 1.15em; height: 1.15em; vertical-align: -0.22em; flex: none; }
-#toolbar button .glyph { margin-inline-end: 0.15em; }
-#toolbar button > span:only-child > .glyph { margin: 0; }
-/* ICON-RENDER section 13 E: raise web glyph targets for a coarse pointer. */
-@media (pointer: coarse) {
-  #toolbar button, #toolbar select, #toolbar input, #toc .toc-toggle {
-    min-height: 44px; min-width: 44px;
-  }
-}
-/* The text layer has one drawing for both states (view.text-layer, off form owed): the state is
-   aria-pressed and this pressed look, as in the desktop reader. */
-#toolbar button[aria-pressed="true"] { background: var(--border); border-color: var(--accent); }
-#search-panel { position:fixed;z-index:30;inset-block-start:3.5em;inset-inline-end:1em;width:min(30em,calc(100vw - 2em));max-height:75vh;overflow:auto;padding:1em;background:var(--bar-bg);color:var(--bar-fg);border:1px solid var(--border);box-shadow:0 8px 24px #0005;font:14px/1.4 system-ui,sans-serif; }
+/* Vocabulary glyphs (glyphs.js): colour from the text around them, the glyph tier of the profile. */
+#toolbar .glyph, #toc .glyph, .notice .glyph, .remote-notice .glyph, .resume-notice .glyph, .export-dialog .glyph, #status-stop .glyph { width: var(--glyph); height: var(--glyph); flex: none; }
+.notice [data-glyph], .export-dialog [data-glyph], #status-stop [data-glyph] { display: inline-flex; }
+/* The search panel hangs under the toolbar at the toolbar's real height (--bar-h, set by viewer.js), so a toolbar
+   that wraps onto several lines never covers it. Its controls are the toolbar's: the Close word is a button, the
+   scope a native select with the target height; the panel is a wrapping row. */
+#search-panel { position:fixed;z-index:30;inset-block-start:calc(var(--bar-h, 3.5em) + var(--gap) / 2);inset-inline-end:1em;width:min(30em,calc(100vw - 2em));max-height:75vh;overflow:auto;box-sizing:border-box;padding:1em;background:var(--bar-bg);color:var(--bar-fg);border:1px solid var(--border);box-shadow:0 8px 24px #0005;font:var(--fs)/1.4 system-ui,sans-serif; }
 #search-panel[hidden] { display:none; }
-#search-panel input { display:block;width:100%;box-sizing:border-box;padding:.5em;background:var(--bg);color:var(--fg);border:1px solid var(--border); }
+#search-panel:not([hidden]) { display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--gap); }
+#search-panel label { align-self:center; }
+#search-panel input { flex:1 1 100%;min-width:0;background:var(--bg);color:var(--fg);cursor:text; }
+#search-panel #search-status, #search-panel ol { flex:1 1 100%;margin:0; }
 #search-panel ol { padding-inline-start:1.5em; }
-#search-panel li { margin:.4em 0; }
-#search-panel li button { background:none;border:0;color:var(--link);text-align:start;font:inherit;cursor:pointer; }
+#search-panel li { margin:0; }
+/* A result is a row of a list, not a command: it keeps its link look, fills its row and takes the target height. */
+#search-panel li button { display:block;width:100%;min-height:var(--tgt);padding:0 .25em;background:none;border:0;color:var(--link);text-align:start;font:inherit;cursor:pointer; }
 /* Deliberately out of theme (APP-STYLE section 5): a search hit is a highlighter mark, the same
    fill in every reading theme so a hit always looks like a hit, and it carries its own dark text
    colour because the theme's ink would be unreadable on it in dark and night. */
 #content mark.reader-search-hit { background:#ffdc62!important;color:#191919!important;outline:1px solid #7b4a00; }
 #content mark.reader-search-current { background:#ff8b46!important;color:#191919!important;outline:3px solid #3156c9; }
+
+/* Forced colours and more contrast: the reader's own palette is replaced by the system's, so what a colour
+   carried must survive in system colours - the selected face and the progress fill. */
+@media (forced-colors: active) {
+  #toolbar button[aria-pressed="true"], #toolbar button[aria-expanded="true"] { background: Highlight; color: HighlightText; border-color: Highlight; }
+  #progress-bar { background: Highlight; }
+  /* The accent face is replaced by the system's, so the one primary answer names its system pair itself. */
+  .notice button.primary, .remote-notice button.primary, .resume-notice button.primary, .export-dialog button.primary {
+    forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight;
+  }
+}
+@media (prefers-contrast: more) {
+  #toolbar button, #toolbar select, #toolbar input, #search-panel select, #search-panel input, #search-close,
+  .notice button, .remote-notice button, .resume-notice button, .export-dialog button, #status-stop { border-color: currentColor; }
+}
 #toc .collapsed > ul { display: none; }
 @media (max-width: 700px) {
-  #toc:not(.hidden) { position: fixed; z-index: 20; inset-block-start: 3.1em; inset-inline-start: 0; width: min(19em, calc(100vw - 1em)); max-height: calc(100dvh - 3.4em); box-sizing: border-box; background: var(--bg); box-shadow: 0 6px 20px #0003; }
+  #toc:not(.hidden) { position: fixed; z-index: 20; inset-block-start: var(--bar-h, 3.1em); inset-inline-start: 0; width: min(19em, calc(100vw - 1em)); max-height: calc(100dvh - var(--bar-h, 3.1em) - 0.3em); box-sizing: border-box; background: var(--bg); box-shadow: 0 6px 20px #0003; }
 }
 
+#content section, #content [id] { scroll-margin-top: calc(var(--bar-h, 3em) + 0.5em); }
 #content {
   flex: 1 1 auto;
   width: 95%;
@@ -281,14 +359,14 @@ body {
 /* ---- Progress / status ---- */
 #status {
   position: sticky;
-  top: 3.0em;
+  top: var(--bar-h, 3em);
   z-index: 10;
   font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 13px;
+  font-size: var(--fs);
   color: var(--muted);
   background: var(--bar-bg);
   border-bottom: 1px solid var(--border);
-  padding: 0.3em 0.8em;
+  padding: calc(4px * var(--s)) var(--pad);
 }
 #progress-bar {
   height: 3px;
@@ -298,7 +376,30 @@ body {
 }
 #status.done { display: none; }
 
-/* ---- Fallback / error panels ---- */
+/* ---- Notices, offers and the export card (BUTTONS 2.0) ---- */
+/* Every surface that asks the reader something is chrome: it sets its own type from the tokens, so the reader's A+ / A-
+   (which sets --reader-size on the body) never reaches it, and its answers are the toolbar's buttons - a neutral face,
+   content width, the target of the profile, the glyph before the caption. The answers sit in one row that flows from the
+   reading start and wraps whole buttons, every button of a line taking the line's height; the dismissing answer comes
+   first and at most one answer per surface is primary (viewer-answers.js decides the order and the rank). */
+.notice, .remote-notice, .resume-notice, .export-dialog {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: var(--fs);
+  line-height: 1.5;
+}
+.notice-actions, .export-actions, .notice .pw-row {
+  display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap); margin-top: var(--gap);
+}
+.notice-actions > *, .export-actions > * { flex: 0 0 auto; }
+/* The primary rank: the theme's accent face with the paper colour as its ink - white text passes 4.5:1 on the light and
+   sepia accents but lands at 3.1:1 on the dark and night accents, while --bg clears it on all four (5.0 / 5.0 / 5.5 /
+   6.5); hovering takes the theme's link colour, which is darker on the light themes and lighter on the dark ones. */
+.notice button.primary, .remote-notice button.primary, .resume-notice button.primary, .export-dialog button.primary {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700;
+}
+.notice button.primary:hover, .remote-notice button.primary:hover, .resume-notice button.primary:hover, .export-dialog button.primary:hover {
+  background: var(--link); border-color: var(--link);
+}
 .notice {
   max-width: 42em;
   margin: 3em auto;
@@ -306,38 +407,27 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bar-bg);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  line-height: 1.5;
 }
 .notice h1 { font-size: 1.2em; margin: 0 0 0.5em; }
-/* Accent buttons take the theme's own paper colour as their ink: white text passes 4.5:1 on
-   the light and sepia accents but lands at 3.1:1 on the dark and night accents, while --bg
-   clears it on all four (5.0 / 5.0 / 5.5 / 6.5). */
-.notice a.btn, .notice button {
-  display: inline-block; margin-top: 0.8em; margin-inline-end: 0.6em;
-  padding: 0.5em 1em; border-radius: 8px; border: 1px solid var(--accent);
-  background: var(--accent); color: var(--bg); text-decoration: none; cursor: pointer; font: inherit;
+.notice input[type="password"] {
+  box-sizing: border-box; flex: 1 1 12em; min-width: 0; min-height: var(--tgt); padding: 0 var(--gap);
+  font: inherit; font-size: var(--fs); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius);
 }
-.notice .pw-row { margin-top: 1em; display: flex; gap: 0.5em; }
-.notice input[type="password"] { font: inherit; padding: 0.5em; border: 1px solid var(--border); border-radius: 8px; flex: 1; }
 
 /* ---- Remote content notice (url-policy.js parks remote images until allowed) ---- */
-.remote-notice {
+/* In the flow above the document, so a reader who ignores it simply scrolls past; the message first, the answers
+   in their own row below it. */
+.remote-notice, .resume-notice {
   max-width: 42em;
   margin: 1em auto 0;
   padding: 0.7em 1em;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bar-bg);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  line-height: 1.5;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 0.8em;
 }
-.remote-notice span { flex: 1 1 20em; }
-.remote-notice button {
-  padding: 0.35em 0.9em; border-radius: 8px; border: 1px solid var(--accent);
-  background: var(--accent); color: var(--bg); cursor: pointer; font: inherit;
-}
+.remote-notice .notice-text, .resume-notice .notice-text { display: block; }
+.remote-notice .notice-actions, .resume-notice .notice-actions { margin-top: 0.5em; }
 /* A parked image keeps its place, so allowing it later does not reflow the page under the reader. */
 img[data-dht-remote] {
   display: inline-block; min-width: 3em; min-height: 2em;
@@ -345,27 +435,7 @@ img[data-dht-remote] {
 }
 
 /* ---- Resume-reading offer (reading-position.js, viewer.js maybeOfferResume) ---- */
-/* Same shape and placement as the remote-content notice: in the flow above the document,
-   so a reader who ignores the offer simply scrolls past it. */
-.resume-notice {
-  max-width: 42em;
-  margin: 1em auto 0;
-  padding: 0.7em 1em;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bar-bg);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  line-height: 1.5;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 0.8em;
-}
-.resume-notice span { flex: 1 1 20em; }
-.resume-notice .glyph { width: 1.15em; height: 1.15em; vertical-align: -0.22em; flex: none; }
-.resume-notice button {
-  padding: 0.35em 0.9em; border-radius: 8px; border: 1px solid var(--accent);
-  background: var(--accent); color: var(--bg); cursor: pointer; font: inherit;
-  display: inline-flex; align-items: center; gap: 0.4em;
-}
-.resume-notice button.secondary { background: var(--bar-bg); color: inherit; border-color: var(--border); }
+/* Same shape and placement as the remote-content notice (rules above): the offer is spent once acted on. */
 
 /* ---- HTML export dialog (completeness before saving) ---- */
 /* A fixed card under the toolbar, like the search panel: the reader can reach Export from deep
@@ -374,33 +444,23 @@ img[data-dht-remote] {
 .export-dialog {
   /* Centred by equal insets and auto margins, not a 50% offset plus a -50% shift: the card
      carries the interface direction, and a translateX does not mirror with it. */
-  position: fixed; z-index: 30; inset-block-start: 3.5em; inset-inline: 0; margin-inline: auto;
+  position: fixed; z-index: 30; inset-block-start: var(--bar-h, 3.5em); inset-inline: 0; margin-inline: auto;
   width: min(36em, calc(100vw - 2em));
   max-height: 75vh; overflow: auto;
   padding: 1em 1.2em;
   background: var(--bar-bg); color: var(--bar-fg);
   border: 1px solid var(--border); border-radius: 10px;
   box-shadow: 0 8px 24px #0005;
-  font: 14px/1.4 system-ui, sans-serif;
+  line-height: 1.4;
 }
 .export-dialog p { margin: 0 0 0.6em; text-indent: 0; }
-.export-dialog .export-hint { color: var(--muted); font-size: 0.95em; }
-.export-dialog .export-actions { display: flex; flex-wrap: wrap; gap: 0.5em 0.6em; margin-top: 0.8em; }
-.export-dialog button {
-  padding: 0.35em 0.9em; border-radius: 8px; border: 1px solid var(--accent);
-  background: var(--accent); color: var(--bg); cursor: pointer; font: inherit;
-}
-.export-dialog button.secondary { background: var(--bar-bg); color: inherit; border-color: var(--border); }
+.export-dialog .export-hint { color: var(--muted); font-size: var(--fs-note); }
 
 /* The Cancel button rides in the status bar while a preparation runs (a page render or a
    recognition pass between yields is never interrupted - only the gaps are). */
-#status-stop {
-  margin-inline-start: 0.8em; padding: 0.3em 0.8em;
-  font: inherit; color: inherit;
-  background: var(--bar-bg); border: 1px solid var(--border); border-radius: 6px;
-  cursor: pointer;
-}
-
+#status-stop { margin-inline-start: var(--gap); vertical-align: middle; }
+/* The shared button rule sets display, which would outrank the browser's own [hidden]: the control stays out until a preparation runs. */
+#status-stop[hidden] { display: none; }
 .hidden { display: none !important; }
 
 /* Lazy image OCR: the pending wrapper carries the per-image badge over the image

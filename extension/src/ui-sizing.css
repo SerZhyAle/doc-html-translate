@@ -1,0 +1,98 @@
+/* ui-sizing.css - the one token resolver of the extension's own pages (the options page, the toolbar
+   popup, the image-OCR page): UI-SIZING 1.1 sizes and the semantic colour roles the shared components
+   (ui-components.css) draw with. The numbers are the desktop launcher's (cmd/doc-html-ui/ui.html) and the
+   reader chrome's (viewer.css, internal/htmlgen/chromecss.go) - one baseline, three carriers - and the
+   names are the launcher's, so a component moves between them unchanged. tests/ pins this block to the
+   viewer's, token by token (extension/test/ui-sizing.test.mjs).
+
+   --ui is the interface scale (compact 0.875, ordinary 1, large 1.25, extra large 1.5, huge 2) and moves
+   text, glyphs, padding, gaps, corners and targets together; --tx is the text-only enlargement (1, 1.25,
+   1.5, 2): it grows text and layout first and the companion glyphs only at half its multiplier (--gm).
+   The input profile (data-input) is chosen once when a page opens (ui-profile.js) and never follows a
+   pointer or touch event. clamp() keeps an unknown value from producing a zero-size or unboundedly
+   shrinking target. Every length is a CSS pixel, so the browser zoom and the operating-system scale
+   compose underneath once. Declared smallest targets: 28 CSS px pointer, 42 CSS px touch (compact);
+   ordinary 32 and 48. */
+html {
+  --ui: 1;
+  --tx: 1;
+  --s: clamp(0.875, var(--ui), 2);
+  --t: clamp(1, var(--tx), 2);
+  --gm: calc(1 + (var(--t) - 1) * 0.5);
+  --tgt: calc(32px * var(--s));
+  --pad: calc(12px * var(--s));
+  --glyph: calc(16px * var(--s) * var(--gm));
+  --box: calc(20px * var(--s));
+  --gap: calc(8px * var(--s));
+  --gap-group: calc(16px * var(--s));
+  --radius: calc(4px * var(--s));
+  --fs: calc(14px * var(--s) * var(--t));
+  --fs-note: calc(12px * var(--s) * var(--t));
+  --fs-title: calc(18px * var(--s) * var(--t));
+}
+html[data-input="touch"] {
+  --tgt: calc(48px * var(--s));
+  --pad: calc(16px * var(--s));
+  --glyph: calc(20px * var(--s) * var(--gm));
+  --box: calc(24px * var(--s));
+}
+html[data-size="compact"] { --ui: 0.875; }
+html[data-size="large"] { --ui: 1.25; }
+html[data-size="xlarge"] { --ui: 1.5; }
+html[data-size="huge"] { --ui: 2; }
+html[data-text="large"] { --tx: 1.25; }
+html[data-text="xlarge"] { --tx: 1.5; }
+html[data-text="huge"] { --tx: 2; }
+
+/* Colour roles drawn from the shared chrome palette (chrome-palette.css, generated from
+   internal/appearance): the surface, the ink, the quiet border and the accent come from it; the roles it
+   has no value for - the control border strong enough for a 3:1 outline, the answers' state hues - are
+   written here, each with a light and a dark value. A role that needs a translucent veil (hover, the
+   selected row) is a veil over whatever face it sits on, so it works on every surface. */
+html {
+  --text-primary: var(--fg);
+  --text-muted: var(--muted);
+  --text-disabled: var(--muted);
+  --control: var(--bar-bg);
+  --control-hover: rgba(127, 127, 127, 0.2);
+  --control-pressed: rgba(127, 127, 127, 0.3);
+  /* The palette's own --border is a quiet divider (about 1.3:1); a control outline and a checkbox
+     outline must reach 3:1 (BUTTONS 3 rule 6, BOOLEAN-OPTION 3 rule 5), which the muted ink does. */
+  --border-strong: var(--muted);
+  --surface-header: var(--border);
+  --surface-header-hover: rgba(127, 127, 127, 0.28);
+  --surface-raised: var(--bar-bg);
+  --accent-ink: var(--bg);
+  --accent-hover: var(--link);
+  --danger: #c00d33;
+  --danger-ink: #ffffff;
+  --success: #236b12;
+  --warning: #8a4b00;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  html {
+    --danger: #f38ba8;
+    --danger-ink: #11111b;
+    --success: #a6e3a1;
+    --warning: #f9e2af;
+    --accent-soft: rgba(91, 141, 255, 0.16);
+  }
+}
+html[data-chrome-theme="light"] {
+  color-scheme: light;
+  --danger: #c00d33;
+  --danger-ink: #ffffff;
+  --success: #236b12;
+  --warning: #8a4b00;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+}
+html[data-chrome-theme="dark"] {
+  color-scheme: dark;
+  --danger: #f38ba8;
+  --danger-ink: #11111b;
+  --success: #a6e3a1;
+  --warning: #f9e2af;
+  --accent-soft: rgba(91, 141, 255, 0.16);
+}

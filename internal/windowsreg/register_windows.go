@@ -19,7 +19,8 @@ var SupportedExtensions = []string{".epub", ".pdf", ".txt", ".md", ".fb2", ".rtf
 // ShellOnlyExtensions are types the shell entries cover - "Open with" and the right-click
 // "Convert to HTML" verb - but that are never offered as a default handler. A FileDO secret file
 // stays FileDO's to open on a double-click (ticket 94, owner decision Q6).
-var ShellOnlyExtensions = []string{".fd-sec"}
+// JPEG XL is offered for conversion without replacing an existing image viewer.
+var ShellOnlyExtensions = []string{".fd-sec", ".jxl"}
 
 // shellExtensions is every type the shell entries are written for: the supported ones and the
 // shell-only ones. The default-handler offer and its release use SupportedExtensions alone.

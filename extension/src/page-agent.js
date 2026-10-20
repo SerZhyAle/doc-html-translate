@@ -361,16 +361,59 @@
   }
 
   // ---- The reader's controls ----------------------------------------------
+  // The vocabulary drawings the bar uses (BUTTONS 2.0 section 2 rule 1: the glyph precedes the caption).
+  // This script is injected into a page, so it cannot import glyphs.js - that file is not web accessible and
+  // adding it would expose it to every site - and carries the four drawings itself. extension/test/
+  // page-agent.test.mjs holds each to the table in glyphs.js, which tests/iconography_test.go holds to the
+  // vendored catalog files.
+  const BAR_GLYPHS = {
+    "action.cancel": "M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z",
+    "action.extract-text": "M4.5,9h3c0.6,0 1,0.5 1,1v4c0,0.5 -0.4,1 -1,1h-3c-0.6,0 -1,-0.5 -1,-1v-4c0,-0.5 0.4,-1 1,-1zM5,10.5v3h2v-3zM13.5,9h-3c-0.6,0 -1,0.5 -1,1v4c0,0.5 0.4,1 1,1h3c0.6,0 1,-0.5 1,-1v-0.5h-3.5v-3h3.5V10c0,-0.5 -0.4,-1 -1,-1zM15.5,9v6h1.5v-2h1.1l1.4,2h1.7l-1.5,-2.1c0.5,-0.2 0.8,-0.7 0.8,-1.2V10c0,-0.6 -0.5,-1 -1,-1zM17,10.5h2v1h-2z",
+    "view.text-layer": "M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z",
+    "action.remove": "M7,11v2h10v-2H7zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8z",
+  };
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  function barGlyph(id) {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "dht-ocr-glyph");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("fill", "currentColor");
+    // The catalog's recognized-text drawing is an even-odd shape; filled non-zero its letters close up.
+    if (id === "action.extract-text") path.setAttribute("fill-rule", "evenodd");
+    path.setAttribute("d", BAR_GLYPHS[id]);
+    svg.append(path);
+    return svg;
+  }
+
   // The bar lives in the page's DOM, so the page's scripts can find these buttons and click them.
   // Only the reader's own click counts: a scan started by the page would run on the page's say-so.
-  function button(label, onClick) {
+  // The caption sits in its own span so a state change rewrites the caption and keeps the glyph; `reserve`
+  // names the longest alternative caption, whose width the button keeps (BUTTONS 3 rule 3).
+  function button(label, onClick, glyphId, reserve) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "dht-ocr-btn";
-    b.textContent = label;
+    const cap = document.createElement("span");
+    cap.className = "dht-ocr-cap";
+    cap.textContent = label;
+    if (reserve) cap.setAttribute("data-reserve", reserve);
+    if (glyphId) b.append(barGlyph(glyphId));
+    b.append(cap);
     b.addEventListener("click", (e) => { if (e.isTrusted) onClick(e); });
     return b;
   }
+
+  // A two-state caption keeps the other state's text as its reserve, so the button is always as wide as the
+  // wider of the two and its neighbours do not move when it flips.
+  const setCaption = (btn, text, reserve) => {
+    const cap = btn.querySelector(".dht-ocr-cap");
+    cap.textContent = text;
+    if (reserve) cap.setAttribute("data-reserve", reserve);
+  };
 
   function toBroker(t, extra) {
     try {
@@ -379,36 +422,70 @@
     } catch { /* the broker is gone; the local controls still work */ }
   }
 
+  // The bar is the extension's own chrome inside someone else's page. Its language and direction are the
+  // interface's - the browser's language, as its messages are - not the page's, so it mirrors with its own
+  // text; its size, text size and controls profile are the reader's saved choices from the options page,
+  // resolved once when the bar is made and never from an event (UI-SIZING 1.1 section 2 rule 1). Until the
+  // choices arrive the bar stays hidden, so it never resizes under the reader. page-overlay.css turns the
+  // attributes into the same tokens the extension's pages use.
+  const RTL_UI_LANGS = ["ar", "ur"];
+  function applyBarProfile(bar) {
+    let ui = "en";
+    try { ui = (chrome.i18n.getUILanguage() || "en").split("-")[0]; } catch { /* English */ }
+    bar.setAttribute("lang", ui);
+    bar.setAttribute("dir", RTL_UI_LANGS.includes(ui) ? "rtl" : "ltr");
+    let touch = false;
+    try { touch = matchMedia("(pointer: coarse)").matches || matchMedia("(any-pointer: none)").matches; } catch { /* a pointer surface */ }
+    bar.setAttribute("data-dht-input", touch ? "touch" : "pointer");
+    bar.setAttribute("data-dht-pending", "");
+    let stored;
+    try { stored = chrome.storage.local.get("options"); } catch { /* storage unavailable: the defaults */ }
+    Promise.resolve(stored).then((got) => {
+      const o = (got && got.options) || {};
+      // An unknown value matches no rule in page-overlay.css and leaves the ordinary size.
+      if (typeof o.uiSize === "string") bar.setAttribute("data-dht-size", o.uiSize);
+      if (typeof o.textSize === "string") bar.setAttribute("data-dht-text", o.textSize);
+      if (o.inputProfile === "touch" || o.inputProfile === "pointer") bar.setAttribute("data-dht-input", o.inputProfile);
+    }).catch(() => { /* the defaults */ }).then(() => bar.removeAttribute("data-dht-pending"));
+  }
+
   function ensureBar() {
     if (state.bar && state.bar.isConnected) return state.bar;
     const bar = document.createElement("div");
     bar.id = BAR_ID;
     bar.setAttribute("role", "status");
+    applyBarProfile(bar);
 
     const status = document.createElement("span");
     status.className = "dht-ocr-status";
     bar.append(status);
 
-    const stop = button(msg("pageOcrStop", "Stop"), () => toBroker("stop"));
+    const stop = button(msg("pageOcrStop", "Cancel"), () => toBroker("stop"), "action.cancel");
     const rescan = button(msg("pageOcrRescan", "Scan new pictures"), () => {
       state.pendingNew = 0;
       state.offered = new WeakSet();
       toBroker("rescan");
       render();
-    });
+    }, "action.extract-text");
     rescan.hidden = true;
-    const hide = button(msg("pageOcrHide", "Hide text"), () => {
+    const hideText = msg("pageOcrHide", "Hide text");
+    const showText = msg("pageOcrShow", "Show text");
+    const hide = button(hideText, () => {
       const off = document.documentElement.classList.toggle(LAYER_OFF_CLASS);
-      hide.textContent = off ? msg("pageOcrShow", "Show text") : msg("pageOcrHide", "Hide text");
-    });
+      // The action that changes (Hide becomes Show) says what it will do next, so it carries no pressed state.
+      if (off) setCaption(hide, showText, hideText); else setCaption(hide, hideText, showText);
+    }, "view.text-layer", showText);
+    // A toggle with a stable name says whether it is on through aria-pressed and a pressed look, not through
+    // a second caption; the tooltip tells what the next press does. There is no vocabulary meaning for it, so
+    // it is text only (BUTTONS 2.0 section 2 rule 1).
     const select = button(msg("pageOcrSelect", "Select text"), () => {
       state.selectable = !state.selectable;
       document.documentElement.classList.toggle(SELECTABLE_CLASS, state.selectable);
-      select.textContent = state.selectable ? msg("pageOcrSelectOff", "Let clicks through") : msg("pageOcrSelect", "Select text");
+      select.title = state.selectable ? msg("pageOcrSelectOff", "Let clicks through") : "";
       select.setAttribute("aria-pressed", String(state.selectable));
     });
     select.setAttribute("aria-pressed", "false");
-    const remove = button(msg("pageOcrRemove", "Remove"), () => toBroker("remove"));
+    const remove = button(msg("pageOcrRemove", "Remove"), () => toBroker("remove"), "action.remove");
 
     bar.append(stop, rescan, hide, select, remove);
     document.documentElement.append(bar);

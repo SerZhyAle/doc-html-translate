@@ -21,17 +21,32 @@ html{scroll-padding-top:96px}
 
 /* ---------- KEYBOARD: skip link, landmarks, targets (SITE-EXPERIENCE 15-17, ticket 100) ---------- */
 .skip-link{position:absolute;inset-inline-start:12px;top:-120px;z-index:100;padding:.7rem 1.2rem;
-  border-radius:var(--radius-pill);background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:.92rem}
+  border-radius:var(--ui-radius);background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:.92rem}
 .skip-link:hover{color:var(--acc-ink)}
 .skip-link:focus,.skip-link:focus-visible{top:10px;outline:2px solid var(--text);outline-offset:2px}
 main:focus{outline:none}
-.site-nav{display:flex;align-items:center}
-@media(max-width:480px){.site-nav{display:none}} /* the kit hides .site-header .btn here, so the landmark would be empty */
-/* the kit lifts the language, theme and button targets to 44 px under pointer:coarse only; every pointer gets it here */
-.seg button{min-height:44px;min-width:44px}
-.theme-btn{width:44px;height:44px}
-.btn{min-height:44px}
-.langs a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 .35rem}
+.site-nav{display:flex;align-items:center;gap:var(--ui-gap)}
+@media(max-width:480px){.site-header:not(.has-docs) .site-nav{display:none}} /* the kit hides .site-header .btn here, so the landmark would be empty */
+
+/* ---------- HEADER DOCUMENTATION LINK (PAGE-CONTENT landing item 4) ----------
+   The landing's header carries the documentation link beside the install button. It is a text link, not a .btn, so the
+   kit's narrow rule that hides .site-header .btn leaves it standing: on a phone it is the one nav control that stays. The
+   44/48 px targets of the language switch and the theme control leave no room for a fourth control, so below 481 px
+   the brand mark yields (it only scrolls to the top of the page the visitor is already on), the install button
+   yields from 560 px down (it sits one scroll below in the hero), and a screen too narrow for the three that remain
+   wraps the link to a second row instead of shrinking a target or scrolling the page sideways. */
+.nav-link{display:inline-flex;align-items:center;justify-content:center;min-height:var(--ui-tgt);min-width:var(--ui-tgt);padding:0 .6rem;
+  border-radius:var(--ui-radius);color:var(--text-2);font-weight:600;font-size:.92rem;line-height:1.2;text-align:center}
+.nav-link:hover{color:var(--text)}
+.has-docs .seg,.has-docs .theme-btn,.has-docs .nav-link{flex:none}
+@media(max-width:560px){.has-docs .site-nav .btn{display:none}}
+@media(max-width:480px){.has-docs{flex-wrap:wrap;gap:0 var(--ui-gap)}.has-docs .brand{display:none}.has-docs .theme-btn{margin-inline-start:auto}.has-docs .nav-link{padding:0 .4rem}}
+/* the kit lifts the language, theme and button targets to 44 px under pointer:coarse only; every pointer gets the profile's
+   target here (--ui-tgt: 44 fine, 48 coarse; UI-SIZING 1.1 and the UI-CONTRACTS block at the end of this file) */
+.seg button,.seg a{min-height:var(--ui-tgt);min-width:var(--ui-tgt)}
+.theme-btn{width:var(--ui-tgt);height:var(--ui-tgt)}
+.btn{min-height:var(--ui-tgt)}
+.langs a{display:inline-flex;align-items:center;justify-content:center;min-height:var(--ui-tgt);min-width:var(--ui-tgt);padding:0 .35rem}
 
 /* light theme contrast: the kit's --acc (#2f8f3a) is 4.1 : 1 under white text and 3.6-4.0 : 1 as text on the light
    surfaces; a darker green clears 4.5 : 1 (ticket 100). Code stays dark in light mode, so its blocks take the
@@ -41,7 +56,7 @@ html[data-theme="light"] .copybox,html[data-theme="light"] .demo{--acc:#56d364;-
   --muted:#aab5a2;--text:#f1f5ee;--text-2:#c3ccbc;--border:rgba(255,255,255,.14)}
 
 /* ---------- BRAND (monochrome mark, shown once - PAGE-CONTENT layout) ---------- */
-.brand{display:flex;align-items:center;gap:.65rem;min-height:44px;min-width:44px}
+.brand{display:flex;align-items:center;gap:.65rem;min-height:var(--ui-tgt);min-width:var(--ui-tgt)}
 .brand-mark{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
   border:1.5px solid currentColor;color:var(--text);font-family:var(--font-heading);
   font-size:7px;font-weight:800;line-height:.88;letter-spacing:.03em;text-align:center}
@@ -60,7 +75,7 @@ html[data-theme="light"] .copybox,html[data-theme="light"] .demo{--acc:#56d364;-
 .hero .tagline{display:block;color:var(--acc);font-size:.95rem;font-weight:600;margin:0 0 .8rem}
 .hero .lead{color:var(--text-2);margin:0 0 .8rem;font-size:.96rem;line-height:1.58}
 .hero-formats{margin-bottom:.9rem}
-.button-group,.channels{display:flex;flex-wrap:wrap;gap:.6rem}
+.button-group,.channels,.get .channels{display:flex;flex-wrap:wrap;gap:var(--ui-gap);justify-content:flex-start}
 
 /* ---------- GET IT (full width, not the kit's 760px card) ---------- */
 .get{max-width:none;margin:1rem 0 1.5rem}
@@ -75,9 +90,9 @@ html[data-theme="light"] .copybox,html[data-theme="light"] .demo{--acc:#56d364;-
 /* the kit raises only .btn, .seg button and .theme-btn to 44 px, and only under pointer:coarse;
    the page layer covers the two it misses (.copybox .copy, .to-top) for every pointer (ticket 26,
    the kit defect universal-agent-kit and CyrFlip B4 ask the reference to fix) */
-.copybox .copy,.to-top{min-height:44px}
-.copybox .copy{min-width:44px}
-.to-top{min-width:44px}
+.copybox .copy,.to-top{min-height:var(--ui-tgt)}
+.copybox .copy{min-width:var(--ui-tgt)}
+.to-top{min-width:var(--ui-tgt)}
 @media(max-width:1024px){.install-grid{grid-template-columns:1fr}}
 /* the kit draws .demo text in --text on the always-dark --code-bg, which vanishes in the light theme (ticket 26, B14) */
 .demo,.demo code{color:var(--code-ink)}
@@ -92,7 +107,7 @@ html[data-theme="light"] .copybox,html[data-theme="light"] .demo{--acc:#56d364;-
 .info-card h3{font-size:1.05rem;margin:.8rem 0 .35rem}
 .info-card p{color:var(--muted);font-size:.86rem}
 @media(min-width:1360px){#use-cases .grid{grid-template-columns:repeat(4,1fr)}}
-.sec-tools{display:flex;gap:.5rem;justify-content:flex-end;margin:0 0 .8rem}
+.sec-tools{display:flex;flex-wrap:wrap;gap:var(--ui-gap);justify-content:flex-start;margin:0 0 .8rem}
 details.sec p+p,details.sec ul,details.sec ol,details.sec pre,details.sec table{margin-top:.6rem}
 details.sec ul,details.sec ol{padding-left:1.3rem}
 
@@ -151,7 +166,7 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
 .site-footer h2{font-size:1rem;margin-bottom:.8rem;color:var(--text-2)}
 /* the contact links get a 44 px line box for every pointer (ticket 106); the back-to-top button hides while the
    footer is on screen (assets/site.js), so it never covers them */
-.footer-bottom a{display:inline-flex;align-items:center;min-height:44px;min-width:44px;justify-content:center}
+.footer-bottom a{display:inline-flex;align-items:center;min-height:var(--ui-tgt);min-width:var(--ui-tgt);justify-content:center}
 
 /* ---------- RESPONSIVE ---------- */
 @media(max-width:760px){
@@ -160,6 +175,46 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
   .workflow{align-items:flex-start}
 }
 @media(max-width:480px){.seg button{padding:5px 7px}}
+
+/* ---------- UI CONTRACTS (ticket 119): BUTTONS 2.0, COLLAPSIBLE-GROUP 1.1, UI-SIZING 1.1 ----------
+   The kit is a byte copy of the catalog reference and is never edited, so what contradicts the mandatory rules is
+   corrected here, in the page layer (PAGE-STYLE 3.1 section 5). The profile is stable: a fine pointer gets 44 CSS px
+   targets (above the 32 baseline, SITE-EXPERIENCE 17) and a coarse pointer 48 (the touch baseline); nothing changes
+   on a pointer or touch event. Buttons are rectangles with the baseline radius 4, no glow and no lift; command rows
+   flow from the reading start with an 8 px gap; a disclosure header is a distinct face with a vector state triangle
+   at the reading start (right folded, down open), the whole header toggles, and the body opens in flow. The
+   external-link marker is the vendored nav.open-external drawing, drawn as a mask so it follows the text colour. */
+:root{--ui-tgt:44px;--ui-gap:8px;--ui-radius:4px}
+@media(pointer:coarse){:root{--ui-tgt:48px}}
+.btn,.btn-sm,.seg,.seg button,.seg a,.theme-btn,.copybox .copy,.to-top{border-radius:var(--ui-radius)}
+.btn:hover{transform:none}
+.btn-primary,.btn-primary:hover,.to-top{box-shadow:none}
+.copybox .copy{min-width:var(--ui-tgt)}
+@media(pointer:coarse){.copybox .copy{min-height:var(--ui-tgt)}}
+/* the language switch is an exclusive choice (equal parts are allowed); its selected part is bold and underlined as well as filled */
+.seg a{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:11px;font-weight:700;
+  letter-spacing:.04em;padding:5px 10px;text-decoration:none;color:var(--muted);background:transparent}
+.seg a:hover{color:var(--text)}
+.seg a[aria-current="true"],.seg button[aria-pressed="true"],.seg button.on{background:var(--acc);color:var(--acc-ink);text-decoration:underline;text-underline-offset:3px}
+.btn[target="_blank"]::after{content:"";flex:none;width:1em;height:1em;background-color:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M19%2C19H5V5h7V3H5c-1.11%2C0%20-2%2C0.9%20-2%2C2v14c0%2C1.1%200.89%2C2%202%2C2h14c1.1%2C0%202%2C-0.9%202%2C-2v-7h-2v7zM14%2C3v2h3.59l-9.83%2C9.83%201.41%2C1.41L19%2C6.41V10h2V3h-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M19%2C19H5V5h7V3H5c-1.11%2C0%20-2%2C0.9%20-2%2C2v14c0%2C1.1%200.89%2C2%202%2C2h14c1.1%2C0%202%2C-0.9%202%2C-2v-7h-2v7zM14%2C3v2h3.59l-9.83%2C9.83%201.41%2C1.41L19%2C6.41V10h2V3h-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat}
+:root[dir="rtl"] .btn[target="_blank"]::after{transform:scaleX(-1)}
+details.sec{padding:0}
+details.sec>summary{min-height:var(--ui-tgt);padding:.35rem 1.3rem;gap:.6rem;align-items:center;background:var(--bg-3);border-radius:var(--ui-radius)}
+details.sec[open]>summary{border-bottom:1px solid var(--border);border-end-start-radius:0;border-end-end-radius:0}
+details.sec>summary::after{content:none}
+details.sec>summary::before{content:"";flex:none;width:16px;height:16px;background-color:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27%2F%3E%3C%2Fsvg%3E") center / contain no-repeat}
+details.sec[open]>summary::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M5%208h14l-7%2011z%27%2F%3E%3C%2Fsvg%3E")}
+:root[dir="rtl"] details.sec>summary::before{transform:scaleX(-1)}
+:root[dir="rtl"] details.sec[open]>summary::before{transform:none}
+details.sec>*:not(summary){margin-inline:1.3rem;margin-top:.9rem}
+@media(forced-colors:active){
+  details.sec>summary::before,.btn[target="_blank"]::after{forced-color-adjust:none;background-color:CanvasText}
+  .seg a[aria-current="true"],.seg button[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}
+}
 
 /* ---------- MOTION (SITE-EXPERIENCE 19, ticket 105) ----------
    The kit's reduce rule is `*{..}`, which does not match pseudo-elements, so `summary::after` kept its 0.2 s turn.

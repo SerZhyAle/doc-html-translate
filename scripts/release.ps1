@@ -103,6 +103,10 @@ if (Test-Path -LiteralPath $evidencePath) {
             $gateLine = "BLOCKED - the last gate ran a partial plan ($(@($ev.children).Count) child check(s)$(if ($missing) { '; missing ' + ($missing -join ', ') })$(if ($extra) { '; not in the gate ' + ($extra -join ', ') })); run scripts/check.ps1 with no -Plan"
         } elseif ($badChildren) {
             $gateLine = "BLOCKED - a gate child did not pass: $(($badChildren | ForEach-Object verdict) -join '; ')"
+        } elseif (@($ev.children | Where-Object { $_.notApplicable }).Count -gt 0) {
+            # CHECK-VERDICT 10A: NOT APPLICABLE is exit 0 because the caller switched the work off. For a
+            # release that is a check that proved nothing, so it never unlocks the tag step.
+            $gateLine = "BLOCKED - a gate child was switched off (NOT APPLICABLE): $((@($ev.children | Where-Object { $_.notApplicable }) | ForEach-Object name) -join ', '); run it for real before the tag"
         } elseif (-not $ev.tree) {
             $gateLine = "BLOCKED - the last gate recorded no tree$(if ($ev.treeBefore -ne $ev.treeAfter) { ' (the working tree changed while it ran)' }); re-run scripts/build-local.ps1"
         } elseif ($ev.tree -ne $headTree -and (-not $treeDiff -or @($treeDiff | Where-Object { $_ -notin $postGatePaths }))) {

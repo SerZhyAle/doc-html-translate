@@ -1,0 +1,273 @@
+{
+  "accepted": [
+    {
+      "Text": "first line second line third line",
+      "X0": 100,
+      "Y0": 100,
+      "X1": 300,
+      "Y1": 200,
+      "LineH": 20,
+      "TypeH": 18,
+      "Lines": [
+        {
+          "X0": 100,
+          "Y0": 100,
+          "X1": 300,
+          "Y1": 120
+        },
+        {
+          "X0": 100,
+          "Y0": 140,
+          "X1": 300,
+          "Y1": 160
+        },
+        {
+          "X0": 100,
+          "Y0": 180,
+          "X1": 300,
+          "Y1": 200
+        }
+      ],
+      "LineContent": [
+        {
+          "Text": "first line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "second line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "third line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        }
+      ],
+      "Conf": 95
+    },
+    {
+      "Text": "fourth line fifth line",
+      "X0": 100,
+      "Y0": 220,
+      "X1": 300,
+      "Y1": 280,
+      "LineH": 20,
+      "TypeH": 18,
+      "Lines": [
+        {
+          "X0": 100,
+          "Y0": 220,
+          "X1": 300,
+          "Y1": 240
+        },
+        {
+          "X0": 100,
+          "Y0": 260,
+          "X1": 300,
+          "Y1": 280
+        }
+      ],
+      "LineContent": [
+        {
+          "Text": "fourth line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "fifth line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        }
+      ],
+      "Conf": 95
+    }
+  ],
+  "case": "missing-tail",
+  "found": [
+    {
+      "Text": "first line second line third line fourth line fifth line",
+      "X0": 100,
+      "Y0": 100,
+      "X1": 300,
+      "Y1": 280,
+      "LineH": 20,
+      "TypeH": 18,
+      "Lines": [
+        {
+          "X0": 100,
+          "Y0": 100,
+          "X1": 300,
+          "Y1": 120
+        },
+        {
+          "X0": 100,
+          "Y0": 140,
+          "X1": 300,
+          "Y1": 160
+        },
+        {
+          "X0": 100,
+          "Y0": 180,
+          "X1": 300,
+          "Y1": 200
+        },
+        {
+          "X0": 100,
+          "Y0": 220,
+          "X1": 300,
+          "Y1": 240
+        },
+        {
+          "X0": 100,
+          "Y0": 260,
+          "X1": 300,
+          "Y1": 280
+        }
+      ],
+      "LineContent": [
+        {
+          "Text": "first line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "second line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "third line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "fourth line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "fifth line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        }
+      ],
+      "Conf": 95
+    }
+  ],
+  "kept": [
+    {
+      "Text": "first line second line third line",
+      "X0": 100,
+      "Y0": 100,
+      "X1": 300,
+      "Y1": 200,
+      "LineH": 20,
+      "TypeH": 18,
+      "Lines": [
+        {
+          "X0": 100,
+          "Y0": 100,
+          "X1": 300,
+          "Y1": 120
+        },
+        {
+          "X0": 100,
+          "Y0": 140,
+          "X1": 300,
+          "Y1": 160
+        },
+        {
+          "X0": 100,
+          "Y0": 180,
+          "X1": 300,
+          "Y1": 200
+        }
+      ],
+      "LineContent": [
+        {
+          "Text": "first line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "second line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "third line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        }
+      ],
+      "Conf": 95
+    }
+  ],
+  "rejected": [
+    {
+      "Text": "first line second line third line",
+      "X0": 100,
+      "Y0": 100,
+      "X1": 300,
+      "Y1": 200,
+      "LineH": 20,
+      "TypeH": 18,
+      "Lines": [
+        {
+          "X0": 100,
+          "Y0": 100,
+          "X1": 300,
+          "Y1": 120
+        },
+        {
+          "X0": 100,
+          "Y0": 140,
+          "X1": 300,
+          "Y1": 160
+        },
+        {
+          "X0": 100,
+          "Y0": 180,
+          "X1": 300,
+          "Y1": 200
+        }
+      ],
+      "LineContent": [
+        {
+          "Text": "first line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "second line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        },
+        {
+          "Text": "third line",
+          "TypeH": 18,
+          "Conf": 95,
+          "Tokens": 2
+        }
+      ],
+      "Conf": 95
+    }
+  ]
+}

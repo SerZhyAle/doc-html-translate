@@ -29,7 +29,7 @@ test("naturalCompare orders pages numeric-aware", () => {
 });
 
 test("isPageEntry filters non-page entries", () => {
-  for (const y of ["page01.jpg", "deep/dir/page01.JPG", "art.PNG", "scan.webp"]) {
+  for (const y of ["page01.jpg", "deep/dir/page01.JPG", "art.PNG", "scan.webp", "page.JXL"]) {
     assert.ok(isPageEntry(y), `${y} should be a page`);
   }
   for (const n of [

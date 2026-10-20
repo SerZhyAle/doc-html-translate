@@ -1,4 +1,4 @@
-Vendored vocabulary glyphs - ICON-SET 0.15 / ICON-RENDER 0.13 / ICON-EXTERNAL 0.10 (drafts)
+Vendored vocabulary glyphs - ICON-SET 0.36 / ICON-RENDER 0.24 / ICON-EXTERNAL 0.12
 
 Source: the shared contracts catalog, iconography/glyphs/<id>.svg, copied byte for byte on
 2026-09-25. The catalog is authoritative; a file here is never edited. To refresh, copy the file
@@ -51,12 +51,11 @@ copies of iconography/glyphs/.
 Re-checked 2026-10-11 (WINDOWS-UI 0.4 section 11 adoption, ticket 112): the twelve files below
 were added as byte copies of iconography/glyphs/; the twenty-three earlier drawings are
 unchanged. All twelve records are in vocabulary.jsonl (ICON-SET 0.29 carrier; `action.email`
-is `proposed`, the rest `active`). The two glyphs the GUI draws without a catalog record -
-`action.retry` (Material Icons `replay`) and `app.update` (Material Icons `update`) - are NOT
-vendored here, because no catalog file exists to copy. They are drawn to the catalog's style
-under ICON-SET section 15, carried inline in cmd/doc-html-ui/ui.html, and proposed in
-iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md; until the owner folds
-them in they are provisional and marked so in docs/GLYPH-MAP.md.
+is `proposed`, the rest `active`). The two glyphs the GUI drew that day without a catalog file -
+`action.retry` (Material Icons `replay`) and `app.update` (Material Icons `update`) - were carried
+inline under ICON-SET section 15 and proposed in
+iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md; the catalog took both, and
+they are vendored since 2026-10-20 (the ICON-SET 0.36 block below). Nothing here is provisional.
 
 sha256                                                            file                          Material Icons origin
 0b2ee602dece67950e801b3df344297e311e8bc33c592c7ae8cc9f5d4195c873  action.cancel.svg             cancel (2026-10-11, ticket 112)
@@ -71,3 +70,36 @@ fd9096874574d18ff0cac8bcf92df67cf1f5f40ea19dbca3ceea7ea8d6910273  action.downloa
 f63a4d96328e52ee0aca695c302057ecba8f48b789d22131d90a6669f0ca8595  action.copy.svg               content_copy (2026-10-11, ticket 112)
 76aead8efca416cabd5ead45d7f9414584cd70cd2180799a73357b57ff9a1231  nav.scroll-bottom.svg         vertical_align_bottom (2026-10-11, ticket 112)
 df11c775889f6dbf6a1e2136695cc98502b3b75d2a8c7ac7f1fcf05a951997a1  action.translate.svg          translate (2026-10-11, ticket 112; the cost dialog's acting answer)
+fb1e2fa9efb662d3bd3dfe513b28f96b8aea2c1bc989e281f2093e8b2631174a  app.help.svg                  help_outline (2026-10-20, ticket 118; the help button of every help-bearing surface)
+
+Re-checked 2026-10-20 (UI contracts migration, ticket 119; ICON-SET 0.36): the seven files below were added as byte copies of iconography/glyphs/: five for the settings rail
+(action.extract-text, action.create-shortcut, action.text-settings, action.adjust, app.info; the rail also reuses action.convert, action.translate) and two for the meanings the GUI drew provisionally until now
+(action.retry, app.update), whose catalog files exist at 0.36. The earlier drawings are unchanged.
+
+6cd5ba2d1d43c043ab0ab8ccfc64a223428bc387d0dfe31d7e228b10d5171dfd  action.extract-text.svg       catalog drawing (ic_ocr export)
+fa71f7d2bb4b342901b8db53b1666667fb1d9f7f849183acade96e2808a3c025  action.create-shortcut.svg    insert_drive_file with the shortcut arrow cut out, drawn for the contract
+bf9377b40abde444846fb1d7f08ec37d5d0ad4556afd41cca878389682bb4039  action.text-settings.svg      format_size
+f2169a3d15afb48406b20712fb465ea76eb8a8d2162d3c158834a7e8a0b7b8b9  action.adjust.svg             tune
+bee8e268059d56aeda5b1c0c64f186c24809c9407301a81f5a76a5cccff14b14  app.info.svg                  info_outline
+48b760a505912f07e84c0b172964ad2ab9bb5bfee1daef92e483a27270a7a304  action.retry.svg              replay
+116286c694fb5e43a1bea2080b247735b898f84f7ffacf8ff0be86a541030627  app.update.svg                update
+
+Re-checked 2026-10-20 (UI contracts migration, ticket 119, slice R1: the reader chrome; ICON-SET 0.36): action.search was added as a byte copy of iconography/glyphs/action.search.svg for the reader's
+Search button (record active, 13 languages, Android ref ic_search); the earlier drawings are unchanged.
+
+e57b0f6083efdd7398cc80a690f953bc2d3f9d8fe388a9bbf5ed330f87223676  action.search.svg           search (2026-10-20, ticket 119; the reader's Search button)
+
+Re-checked 2026-10-20 (UI contracts migration, ticket 119, slice X1: the browser extension's options page and toolbar popup; ICON-SET 0.36): app.settings, system.internet and action.import were added as byte
+copies of iconography/glyphs/ (records active; the Settings command and the options page's General page, the Sites page, and the settings file's Import button); the earlier drawings are unchanged. The
+extension's own table (extension/src/glyphs.js) now also holds ten already vendored meanings (action.extract-text, action.text-settings, app.info, action.copy, action.remove, action.download, action.retry,
+action.cancel, app.help, content.document) that the launcher drew before it.
+
+0f527bd938c6c5cbfd2c7d544dcb9ee38ba5ea1287491ac7e2b1d4bf2c2df7de  app.settings.svg           settings (2026-10-20, ticket 119; the Settings command and the options page's General destination)
+90d09b374c14e9e60dcfcbe892275a0724e20bc3671358e09e8d70cb9e95877d  system.internet.svg        public (2026-10-20, ticket 119; the options page's Sites destination)
+4548519201563357313d92f0ac05e8c3a26e4ae96db2b622d79eb30c7ec79333  action.import.svg          file_download, the arrow falling into a tray (2026-10-20, ticket 119; Import settings)
+
+Re-checked 2026-10-20 (contract-sync ticket 120, ICON-SET 0.36, section 6 rung 3): nav.close was added as a byte copy of iconography/glyphs/nav.close.svg for the three Close answers
+(the launcher's failure dialog and option help, the extension's option help), which had drawn action.cancel under the word Close; the record is active, named in 13 languages, Android ref
+ic_clear. The earlier drawings are unchanged.
+
+7512d856fa655619c7c9637cf107db289b7e023ca5e1435c951d0468923d1ccc  nav.close.svg            close (2026-10-20, ticket 120; the Close answers)

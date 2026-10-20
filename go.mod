@@ -3,6 +3,7 @@ module doc-html-translate
 go 1.26.0
 
 require (
+	github.com/gen2brain/jpegxl v0.6.0
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/hhrutter/tiff v1.0.7
 	github.com/ledongthuc/pdf v0.0.0-20260907135840-6c8c28e0e8a0
@@ -16,8 +17,11 @@ require (
 )
 
 require (
+	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
+	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/mattn/go-runewidth v0.0.30 // indirect
+	github.com/tetratelabs/wazero v1.12.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 )

@@ -39,7 +39,7 @@ test("the lookup asks the Go lab for exactly this scene, edition and engine", ()
   assert.equal(cmd, "go");
   assert.equal(opts.cwd, "/repo");
   assert.deepEqual(argv, [
-    "run", "./tools/ocrlab", "reuse",
+    "run", "-tags", "nodynamic", "./tools/ocrlab", "reuse",
     "-run", "/repo/temp/ocrlab/ext-1", "-edition", "extension", "-scene", "synth-uniform-paper",
     "-tesseract", "tesseract.js 7.0.0", "-tessdata", "eng=sha256:aa",
     "-browser-name", "chrome", "-browser-version", "Chrome/151.0.1",

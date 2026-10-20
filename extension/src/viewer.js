@@ -8,12 +8,14 @@
 // PAGE_CHUNK pages are rendered forward in chunks as the reader approaches the edge
 // (see "Lazy page rendering"); shorter ones land in a single pass, as before.
 
+import { imageBlob, isJxl, normalizeJxlImages } from "./jxl.js";
 import * as pdfjsLib from "../vendor/pdf.mjs";
 import { reflowPage } from "./reflow.js";
 import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag, declarationContradicted } from "./lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { glyph, applyGlyphs } from "./glyphs.js";
+import { answerButton, answerRow, arrangeNotice } from "./viewer-answers.js";
 import { loadEpub } from "./epub.js";
 import { parseText } from "./txt.js";
 import { parseRtf } from "./rtf.js";
@@ -76,7 +78,7 @@ function fileTitle(url) {
   try {
     const u = new URL(url);
     const name = decodeURIComponent(u.pathname.split("/").pop() || "");
-    return name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, "") || "Document";
+    return name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp|jxl)$/i, "") || "Document";
   } catch {
     return "Document";
   }
@@ -97,7 +99,7 @@ function sourceFileName(src) {
 // FORMAT_EXT maps a filename extension to the internal format id. Each format
 // phase extends this map; magic-byte detection below takes priority when a
 // signature exists.
-const FORMAT_EXT = { pdf: "pdf", epub: "epub", txt: "txt", rtf: "rtf", htm: "html", html: "html", md: "md", markdown: "md", fb2: "fb2", mobi: "mobi", azw3: "mobi", png: "image", jpg: "image", jpeg: "image", gif: "image", bmp: "image", webp: "image", cbz: "comic", cbr: "comic", cb7: "comic", cbt: "comic" };
+const FORMAT_EXT = { pdf: "pdf", epub: "epub", txt: "txt", rtf: "rtf", htm: "html", html: "html", md: "md", markdown: "md", fb2: "fb2", mobi: "mobi", azw3: "mobi", png: "image", jpg: "image", jpeg: "image", gif: "image", bmp: "image", webp: "image", jxl: "image", cbz: "comic", cbr: "comic", cb7: "comic", cbt: "comic" };
 
 function fileExt(name) {
   const clean = String(name || "").split(/[?#]/)[0];
@@ -128,13 +130,14 @@ function detectFormat(data, name) {
 // and name are not a recognized image, which is also how detectFormat tells images apart.
 function imageMime(data, name) {
   const b = new Uint8Array(data, 0, Math.min(12, data.byteLength));
+  if (isJxl(b)) return "image/jxl";
   if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";  // .PNG
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";                  // JPEG SOI
   if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return "image/gif";  // GIF8
   if (b[0] === 0x42 && b[1] === 0x4d) return "image/bmp";                                    // BM
   if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
       b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return "image/webp"; // RIFF..WEBP
-  const byExt = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", webp: "image/webp" };
+  const byExt = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", webp: "image/webp", jxl: "image/jxl" };
   return byExt[fileExt(name)] || "";
 }
 
@@ -330,23 +333,23 @@ function maybeOfferResume() {
   const bar = el("div", "resume-notice");
   applyI18n(bar);
   bar.setAttribute("role", "status");
-  const line = el("span");
+  const line = el("span", "notice-text");
   line.textContent = t("vResumeAt", "Continue reading from page {1}?", pos.page);
-  const go = el("button", "primary");
-  go.type = "button";
-  go.append(glyph("feature.continue-reading"), document.createTextNode(` ${t("vResumeContinue", "Continue reading")}`));
+  const go = answerButton(t("vResumeContinue", "Continue reading"), { glyphId: "feature.continue-reading", rank: "primary" });
   go.addEventListener("click", () => { clearResumeBar(); resumeReading(pos); });
-  const reset = el("button", "secondary");
-  reset.type = "button";
-  reset.textContent = t("vResumeReset", "Start over");
+  const reset = answerButton(t("vResumeReset", "Start over"), { glyphId: "action.cancel" });
   reset.addEventListener("click", async () => {
     clearResumeBar();
     positions = removePosition(positions, docKey);
     try { await chrome.storage.local.set({ [POSITIONS_KEY]: positions }); } catch { /* ignore */ }
     window.scrollTo(0, 0);
   });
-  bar.append(line, go, reset);
-  $("content").before(bar);
+  // BUTTONS 2.0 section 4 rule 4: the answers read in reading order - the dismissing one (neutral), then the
+  // final affirmative, which is the surface's one primary.
+  bar.append(line, answerRow([reset, go]));
+  // Above the whole layout, not beside the document: #layout is a flex row (the contents panel and the text), so a notice
+  // placed inside it became a third column squeezed to its own width instead of a bar across the page.
+  $("layout").before(bar);
   resumeBar = bar;
 }
 
@@ -708,6 +711,7 @@ function showNotice(titleText, bodyNodes) {
   h.textContent = titleText;
   box.append(h);
   for (const n of bodyNodes) if (n) box.append(n);
+  arrangeNotice(box);
   content.append(box);
   hideStatus();
 }
@@ -723,8 +727,7 @@ function para(text) {
 // to open, and showNotice skips it.
 function originalButton(label = t("vBtnOpenOriginalPdf", "Open original PDF")) {
   if (!currentUrl) return null;
-  const b = el("button");
-  b.textContent = label;
+  const b = answerButton(label);
   b.addEventListener("click", openOriginal);
   return b;
 }
@@ -861,7 +864,6 @@ function showExportDialog(extent, plan) {
     : t("vExportPartialLine", "Partial export: the document has {1} pages, and the file would hold pages 1-{2}.", extent.total, extent.rendered);
   card.append(line);
 
-  const row = el("div", "export-actions");
   // Every way out of the card hands focus back to Export, the control that opens it, instead of
   // dropping it on <body> where a keyboard reader has to start over.
   const close = () => {
@@ -869,28 +871,33 @@ function showExportDialog(extent, plan) {
     const opener = $("btn-save-html");
     if (!opener.classList.contains("hidden")) opener.focus();
   };
-  const partial = el("button", "primary");
-  partial.type = "button";
-  partial.textContent = t("vExportPartialBtn", "Export partial ({1} pages)", extent.rendered);
+  // BUTTONS 2.0 section 4 rules 4 and 5: the answers read Cancel first (neutral, and the one that holds the
+  // focus when the card opens), then the narrower export, then the final affirmative. Exactly one answer is
+  // primary: the complete export when the card offers it (the outcome the reader is asking for), otherwise the
+  // partial one, which is then the only way forward.
+  const cancel = answerButton(t("vExportCancel", "Cancel"), { glyphId: "action.cancel" });
+  cancel.addEventListener("click", close);
+  const offerPrepare = plan.action === "offer-prepare";
+  const partial = answerButton(t("vExportPartialBtn", "Export partial ({1} pages)", extent.rendered),
+    { glyphId: "action.export", rank: offerPrepare ? "" : "primary" });
   partial.addEventListener("click", async () => {
     close();
     await saveExportHtml();
   });
-  row.append(partial);
+  const answers = [cancel, partial];
 
-  if (plan.action === "offer-prepare") {
+  if (offerPrepare) {
     const hint = el("p", "export-hint");
     hint.textContent = t("vExportPrepareHint",
       "Prepares the remaining pages here in the viewer first, then saves a complete file. You can stop it at any time.");
     card.append(hint);
-    const prepare = el("button", "primary");
-    prepare.type = "button";
-    prepare.textContent = t("vExportPrepareBtn", "Prepare all {1} pages", extent.total);
+    const prepare = answerButton(t("vExportPrepareBtn", "Prepare all {1} pages", extent.total),
+      { glyphId: "action.export", rank: "primary" });
     prepare.addEventListener("click", () => {
       close();
       runExportPreparation(extent);
     });
-    row.prepend(prepare);
+    answers.push(prepare);
   } else if (plan.reason) {
     const why = el("p", "export-hint");
     why.textContent = t("vExportImpossibleLine",
@@ -898,12 +905,7 @@ function showExportDialog(extent, plan) {
       t(plan.reason.key, plan.reason.fallback, ...plan.reason.args));
     card.append(why);
   }
-
-  const cancel = el("button", "secondary");
-  cancel.type = "button";
-  cancel.textContent = t("vExportCancel", "Cancel");
-  cancel.addEventListener("click", close);
-  row.append(cancel);
+  const row = answerRow(answers, "export-actions");
   // INPUT-PARITY cancel: Esc on the card is its Cancel button. It stops here so the reader-search
   // panel's own Esc handler does not close that panel too.
   card.addEventListener("keydown", (event) => {
@@ -916,7 +918,7 @@ function showExportDialog(extent, plan) {
   card.append(row);
   $("content").before(card);
   exportDialog = card;
-  partial.focus();
+  cancel.focus();
 }
 
 // ---- Preparation ------------------------------------------------------------
@@ -942,7 +944,7 @@ async function runExportPreparation(extent) {
   prepareBlocked = null;
   $("status").classList.remove("done");
   $("status-stop").hidden = false;
-  $("status-stop").textContent = t("vExportStop", "Cancel");
+  $("status-stop-caption").textContent = t("vExportStop", "Cancel");
   try {
     const outcome = extent.kind === "comic"
       ? await prepareComicPages(ctx)
@@ -1358,6 +1360,9 @@ function applyViewerChromeI18n() {
   applyI18n(document.getElementById("toc"));
   applyI18n(document.getElementById("search-panel"));
   applyGlyphs(document.getElementById("toolbar"));
+  applyGlyphs(document.getElementById("status"));
+  // BUTTONS 2.0 section 4 rule 7: the tooltip names the supported shortcut (the chord is reader-search.js's).
+  $("btn-search").title = `${t("vSearch", "Search")} (${/Mac|iP(hone|ad|od)/.test(globalThis.navigator?.platform || "") ? "Cmd" : "Ctrl"}+F)`;
   document.title = t("viewerTitle", document.title);
 }
 
@@ -1553,6 +1558,7 @@ async function loadBook(data, title, parseFn, statusLabel) {
   let book;
   try {
     book = await parseFn(data);
+    await normalizeJxlImages(book);
   } catch (err) {
     if (!isCurrent(gen)) return;
     showNotice(t("vOpenFileFailTitle", "Couldn't open this file"), [
@@ -1583,13 +1589,14 @@ async function loadImageData(data, title, mime) {
 
   const content = $("content");
   content.replaceChildren();
-  const url = URL.createObjectURL(new Blob([data], mime ? { type: mime } : undefined));
-  pdfImageUrls.push(url); // revoked on the next teardownCurrent()
-
   const lang = options.ocrLang || "eng";
   setStatus(t("ocrProgress", "Recognizing text.."));
   setProgress(0.1);
   try {
+    const image = await imageBlob(data, mime);
+    if (gen !== docGen) return;
+    const url = URL.createObjectURL(image);
+    pdfImageUrls.push(url);
     const container = await overlayImage(url, {
       lang,
       onProgress: (m) => { if (m && typeof m.progress === "number") setProgress(m.progress); },
@@ -1739,12 +1746,13 @@ async function insertComicPage(section) {
   let bytes;
   try {
     bytes = await pg.load();
+    bytes = await imageBlob(bytes, pg.mime);
   } catch (err) {
     console.warn("comic page load failed", err);
     return; // leave the reserved box; a page that will not inflate just stays blank
   }
   if (gen !== docGen) return;
-  const url = URL.createObjectURL(new Blob([bytes], { type: pg.mime }));
+  const url = URL.createObjectURL(bytes);
   pdfImageUrls.push(url); // revoked on the next teardownCurrent()
   const img = el("img");
   img.src = url;
@@ -1809,7 +1817,7 @@ function openFilePicker() {
       const data = await f.arrayBuffer();
       if (!isCurrent(gen)) return;
       setOriginalDownload(f, f.name); // the picked File is itself a downloadable Blob
-      await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp)$/i, ""), f.name, gen);
+      await loadFromData(data, f.name.replace(/\.(pdf|epub|txt|rtf|html?|md|fb2|mobi|azw3|png|jpe?g|gif|bmp|webp|jxl)$/i, ""), f.name, gen);
     } catch (err) {
       if (!isCurrent(gen)) return;
       showNotice(t("vReadFileFailTitle", "Couldn't read the file"), [para(err.message || String(err)), filePickerButton()]);
@@ -1819,8 +1827,8 @@ function openFilePicker() {
 }
 
 function filePickerButton(label = t("vOpenDocTitle", "Open a document")) {
-  const b = el("button");
-  b.textContent = label;
+  // content.document is the same meaning the popup's "Open a document" shows: one command, one picture.
+  const b = answerButton(label, { glyphId: "content.document" });
   b.addEventListener("click", openFilePicker);
   return b;
 }
@@ -1848,8 +1856,7 @@ function askPassword(updatePassword, reason) {
   const input = el("input");
   input.type = "password";
   input.placeholder = t("vPwdPlaceholder", "PDF password");
-  const submit = el("button");
-  submit.textContent = t("vBtnUnlock", "Unlock");
+  const submit = answerButton(t("vBtnUnlock", "Unlock"));
   const row = el("div", "pw-row");
   row.append(input, submit);
   const body = [
@@ -2122,18 +2129,16 @@ function offerRemoteContent(count) {
   const bar = el("div", "remote-notice");
   applyI18n(bar);
   bar.setAttribute("role", "status");
-  const text = el("span");
+  const text = el("span", "notice-text");
   text.textContent = t("vRemoteBlocked", "This document wants to load {1} item(s) from the internet. They are blocked, so its author cannot see that you opened it.", count);
-  const once = el("button");
-  once.type = "button";
-  once.textContent = t("vRemoteLoad", "Load them");
+  // Neither answer is the recommended one - the blocked state is the safe default and ignoring the notice keeps
+  // it - so the surface has no primary; the order runs from the narrower choice to the lasting one.
+  const once = answerButton(t("vRemoteLoad", "Load them"), { glyphId: "action.download" });
   once.addEventListener("click", loadRemoteContent);
-  const always = el("button");
-  always.type = "button";
-  always.textContent = t("vRemoteAlways", "Always load remote content");
+  const always = answerButton(t("vRemoteAlways", "Always load remote content"), { glyphId: "action.download" });
   always.addEventListener("click", allowRemoteAlways);
-  bar.append(text, once, always);
-  $("content").before(bar);
+  bar.append(text, answerRow([once, always]));
+  $("layout").before(bar);
   remoteNotice = bar;
 }
 
@@ -2221,6 +2226,7 @@ function renderBook(book, fallbackTitle) {
       para(t("vLittleTextEpub", "This EPUB has no extractable text (it may be image-only). Native page-translate needs actual text, not a pretty picture of it.")),
       filePickerButton(),
     );
+    arrangeNotice(banner);
     content.prepend(banner);
   }
   if (book.remote > 0 && !remoteAllowed) offerRemoteContent(book.remote);
@@ -2267,6 +2273,7 @@ function warnIfNoText() {
     }
     const orig = originalButton();
     if (orig) banner.append(orig);
+    arrangeNotice(banner);
     content.prepend(banner);
   }
 }
@@ -2332,6 +2339,15 @@ function applyLang(lang) {
 
 // ---- Toolbar ---------------------------------------------------------------
 function wireToolbar() {
+  // The panels and the sticky status bar hang under the toolbar, and the toolbar's height is however its
+  // controls wrap - a narrow window or a long translation makes it two or three lines. They read this
+  // height (--bar-h) instead of assuming one line, so the toolbar never covers them (BUTTONS 2.0 section 4
+  // rule 2: rows wrap, so nothing below them may sit at a fixed offset).
+  const toolbar = $("toolbar");
+  const syncBarHeight = () => document.documentElement.style.setProperty("--bar-h", `${toolbar.offsetHeight || 0}px`);
+  syncBarHeight();
+  if (typeof ResizeObserver === "function") new ResizeObserver(syncBarHeight).observe(toolbar);
+  else window.addEventListener("resize", syncBarHeight);
   $("btn-toc").addEventListener("click", () => {
     setTocOpen($("toc").classList.contains("hidden"));
   });

@@ -35,7 +35,10 @@ The desktop app and the extension are independent and complementary: the app con
 - Convert: EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3
 - Open FileDO secret files (`.fd-sec`): the app recognises a `.fd-sec`, asks for its password (in the console without echo, or in the app window - once per queue), decrypts it with the FileDO installed on your computer (`winget install SerZhyAle.FileDO`, or the Microsoft Store) and converts the document or picture inside exactly as it would convert the original, then removes the decrypted copy. The converted pages are **not encrypted**. A folder inside a secret file is opened with FileDO instead. For unattended runs name an environment variable that holds the password with `-fdsec-password-env NAME`.
 - Read comics: CBZ / CBR / CB7 / CBT comic archives open page by page, with the text in speech bubbles recognized (OCR) and laid over each page as translatable plates - so Chrome's "Translate page" works on the bubbles. OCR is automatic (a comic has no text layer to translate otherwise)
-- Translate a standalone image: pass a PNG/JPG/JPEG/WebP/GIF/BMP/TIFF and the app OCRs it and lays translatable text plates over the picture (Chrome's built-in page translation then works in place - the same behaviour as the browser extension). OCR needs a `tesseract` engine (see `-ocr-lang`)
+- Translate a standalone image: pass a PNG/JPG/JPEG/WebP/GIF/BMP/TIFF/JPEG XL (.jxl)/JPEG XL (.jxl) and the app OCRs it and lays translatable text plates over the picture (Chrome's built-in page translation then works in place - the same behaviour as the browser extension). OCR needs a `tesseract` engine (see `-ocr-lang`)
+
+JPEG XL (`.jxl`) pictures are decoded locally with the bundled codec into PNG before display and OCR, including pictures inside books and comics. Transparency is preserved; animated JPEG XL uses its first displayed frame. No additional image program or browser codec is needed.
+
 - Local HTML output with generated navigation and TOC
 - Real multi-level table of contents: imports the authored EPUB2 `toc.ncx`, EPUB3 `nav.xhtml`, or PDF bookmarks; falls back to scanning headings (`h1`-`h6`) and injecting anchors. Rendered as a collapsible tree with deep links; depth is configurable (`-toc-depth`)
 - Optional translation:
@@ -49,12 +52,14 @@ The desktop app and the extension are independent and complementary: the app con
   - Keyboard - the arrow keys and the space bar turn pages at the scroll edges, exactly where PageUp/PageDown do, and never take a key away from a focused control or an in-book link
   - Search - choose this page or the whole book; Ctrl+F opens it with the field focused (press Ctrl+F again inside the field for the browser's own find bar); multi-page output uses a local text index on `file://`. Results show context and highlight the selected match. OCR text plates are searchable when recognition found text; image-only pages without plates have no text to match
 - Interface in 13 languages: `en ru uk de it es fr pt ar hi bn ur zh` - the `-ui-lang <code>` flag in the CLI, a language selector in the GUI and in the extension. The default follows the system language (the browser's language in the extension). The interface language never changes the document's language: the generated page keeps the book's own `<html lang>`, because otherwise Chrome would stop offering to translate the page
-- Send logs to the author when something breaks: the app keeps its recent run logs on disk, and the GUI's **About the program** section (or `-report` on the command line) packs them with an environment summary and the last run's settings into one archive, opens the archive's folder with the file selected and puts its path on the clipboard, and opens a pre-addressed message in your own mail program. **Nothing is ever sent automatically** - you attach the archive and press Send yourself, and you can open the archive first to see exactly what it holds. The Google API key is never in it. The browser extension, which has no log store, offers the same intent as a **Copy diagnostics** button on its options page
+- In-app help: press **F1**, or the **?** button at the top right of the desktop window (and of the paid-translation, secret-file and failure questions), and a help page opens for the part of the window you are in - a picture of the real window with numbered markers, what each part is for and in what order to use it. The pages exist in English, Russian and Ukrainian (the other interface languages open the English pages), are built into the app and open without a network. They are generated from the window itself (`tools/helpgen`), so a renamed button is renamed in its help.
+- The desktop window keeps its settings on pages listed at its start - Convert, Ollama, Image OCR, Windows, Interface, Advanced and About; a narrow window opens the same list from a **Pages** button. The **Interface** page sets the interface size (compact to huge), the text size and the controls profile - mouse and keyboard, or touch (Automatic picks once when the window opens): every button, option, header and menu row scales together, and the window never resizes itself when you change page.
+- Send logs to the author when something breaks: the app keeps its recent run logs on disk, and the GUI's **About** page, in its **Support and diagnostics** group (or `-report` on the command line) packs them with an environment summary and the last run's settings into one archive, opens the archive's folder with the file selected and puts its path on the clipboard, and opens a pre-addressed message in your own mail program. **Nothing is ever sent automatically** - you attach the archive and press Send yourself, and you can open the archive first to see exactly what it holds. The Google API key is never in it. The browser extension, which has no log store, offers the same intent as a **Copy diagnostics** button on its options page
 - Re-open existing extracted book instantly (idempotent behavior - it remembers, so you don't have to)
 - The desktop GUI shows conversion stages beside Convert and Cancel: checking, extracting, building HTML, recognizing image text, translating and saving. It shows page or image counts when the total is known; no percentage or remaining time is guessed. The log stays available for details, and the final status distinguishes reuse, warnings, cancellation and failure.
 - After a file is selected, the desktop GUI checks conversion readiness. MOBI/AZW3 need Calibre; CBR/CB7 need 7-Zip; a `.fd-sec` secret file needs FileDO. A standalone image or comic needs Tesseract and language data for translatable image text; optional OCR on other formats needs the same. Missing optional OCR leaves the images without text plates. Google translation needs a saved API key, and Ollama translation needs a running local service with the selected model; if unavailable, the book still converts without that translation. The GUI checks again when Convert is pressed. For Google, the exact character count and cost estimate are calculated after extraction and before any paid request; the configured `-max-cost` limit remains a hard guard, and the readiness summary does not authorize payment.
 - Several documents convert in one desktop **queue**: choose or drop multiple files and the window lists them in order with each one's outcome, offers **Retry failed** after a run, and never lets one file's failure or cancellation touch another file's completed output. Details under the `doc-html-ui` notes below.
-- Windows integration is **asked for, never assumed**: nothing is written to Windows until you say yes. The one-time first-run question (in the GUI, and in the CLI started with no arguments) offers a **"Convert to HTML" right-click entry** plus "Open with" for all supported types, and - separately - becoming the default handler; "No, thanks" leaves a working app. Both can be changed later under "Windows integration" (`-register-openwith`, `-register`, `-unregister`)
+- Windows integration is **asked for, never assumed**: nothing is written to Windows until you say yes. The one-time first-run question (in the GUI, and in the CLI started with no arguments) offers a **"Convert to HTML" right-click entry** plus "Open with" for all supported types, and - separately - becoming the default handler; "No, thanks" leaves a working app. Both can be changed later on the GUI's **Windows** page (`-register-openwith`, `-register`, `-unregister`)
   - On Windows 10/11 the choice you once made yourself ("Always use this app", or Settings > Default apps) wins over any program's registration, and no program may overwrite it. If such a choice exists, `-register` and the GUI toggle say so, list the types it holds, and point you to **Settings > Apps > Default apps** (the GUI has an "Open Default apps" button) instead of claiming success. `-unregister` puts back the per-user handler that was there before registering; a registration made by an older version, which kept no record of it, can only be removed
 - MOBI/AZW3: requires [Calibre](https://calibre-ebook.com) installed (non-DRM files only)
 - CBR/CB7 comics: require [7-Zip](https://www.7-zip.org) installed (CBZ and CBT need nothing extra)
@@ -63,7 +68,7 @@ The desktop app and the extension are independent and complementary: the app con
 
 ### FAQ: How do I check for updates?
 
-Open **About the program** in the desktop GUI and select **Check for updates**. The app compares its
+Open the **About** page of the desktop GUI, then its **Updates** group, and select **Check for updates**. The app compares its
 version with the latest published GitHub release and links to that release when a newer one exists.
 You can enable **Check automatically (once a day)** there; it is off by default and can be turned off
 at any time. The check requests only public release information, sends no document or install ID,
@@ -72,8 +77,10 @@ and never downloads or starts an installer. Microsoft Store installs updates for
 Build from source:
 
 ```powershell
-go build -o build/doc-html-translate.exe ./cmd/doc-html-translate
+go build -tags nodynamic -o build/doc-html-translate.exe ./cmd/doc-html-translate
 ```
+
+`-tags nodynamic` is required: it keeps the JPEG XL decoder on its bundled WebAssembly build, and without it the build stops with a message naming the tag.
 
 Or use project scripts:
 
@@ -171,7 +178,7 @@ Why this workflow is popular (besides the obvious):
 |------|---------|-------------|
 | `-register` | `false` | Opt in to becoming the default handler in HKCU for all supported types (off by default - the first run asks, and only writes on a yes) |
 | `-unregister` | `false` | Release the default-handler association (leaves the "Convert to HTML" right-click entry and "Open with") |
-| `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI offers the same as a toggle under "Windows integration"; it never adds it on its own) |
+| `-register-openwith` | `false` | Add app to the Windows "Open with" list + the "Convert to HTML" right-click menu, without making it the default handler (the `doc-html-ui` GUI offers the same as an option on its Windows page; it never adds it on its own) |
 | `-notranslate` | `false` | Convert only, skip translation |
 | `-noopen` | `false` | Do not open browser after conversion (batch mode: warnings such as missing JPEG2000 support are logged instead of shown in a dialog) |
 | `-google` | `false` | Translate via Google Cloud Translation API |

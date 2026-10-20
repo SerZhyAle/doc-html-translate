@@ -1,7 +1,7 @@
 # Pointer: FDSEC-BEHAVIOUR, FDSEC-FORMAT
 
 - **Id:** `FDSEC-BEHAVIOUR`, `FDSEC-FORMAT`
-- **Version:** 1.5 / 1.3
+- **Version:** 1.6 / 1.4
 - **Home:** the shared contracts catalog, `secure-container/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, through the installed FileDO command line - never an implementation of the format (adopted 2026-10-06, ticket 94)
 - **Wire carrier:** FileDO's exit-code classes (`FDSEC-BEHAVIOUR` section 7.1); the container bytes are FileDO's alone
@@ -28,7 +28,17 @@ behaviour contract its reader-side sections and the format contract only the cre
 - Section 14.1 and the "nothing bulk" rule: nothing recovered from a container is launched, only supported
   document and picture types are converted, and at most one plain copy exists at a time.
 - `FDSEC-FORMAT` section 4.5 rule 5 and section 18.4 only: the credential-free length screen
-  (`fdsec.ScreenLength`). The container is never read here.
+  (`fdsec.ScreenLength`). The container is never read here, so the sealed-name validity rule of 1.4 (section 20)
+  has nothing to act on.
+- `FDSEC-BEHAVIOUR` section 18 (1.6, read 2026-10-20): a valid container whose sealed name cannot be written at the
+  destination is not called damaged - FileDO's exit 5 maps to the I/O class, 4 to damaged, an unknown code to
+  failed (`restore.go`); the original container is preserved, nothing is renamed or overwritten silently, and no
+  plain copy or output is left. **Permanent variant:** the duty to *explain* the destination limit cannot be met,
+  because FileDO's output is never read (invariant 8); the I/O text names a full disk, no access or a file in use,
+  never this cause and never the sealed name. Design record [`../PARITY.md`](../PARITY.md) "Contract variants
+  (ticket 120)"; a non-secret reason token is asked of FileDO in the `secure-container` proposal file of
+  2026-10-20. The installed `filedo.exe` predates 1.6 and the restore of an unrepresentable name was not driven
+  against it.
 - The plain copy lives in a per-run folder of `doc-html-translate-fdsec` inside the user's temp folder, restricted to
   the user and swept at the next start. This departs from the non-normative reveal precedent of section 14.1
   (a folder of the per-user application-data root) on purpose: a packaged process's new folder there is

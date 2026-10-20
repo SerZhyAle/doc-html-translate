@@ -250,7 +250,7 @@ func buildSinglePageHeader(sourceName, title string, pageCount int, hasContents 
 	var contentsButton string
 	if hasContents {
 		label := html.EscapeString(i18n.S("Table of contents"))
-		contentsButton = fmt.Sprintf(`<button id="dht-contents-button" class="dht-btn" type="button" aria-controls="dht-contents" aria-expanded="false" aria-label="%s" title="%s">%s</button>`, label, label, glyphSVG("nav.contents"))
+		contentsButton = fmt.Sprintf(`<button id="dht-contents-button" class="dht-btn dht-ico" type="button" aria-controls="dht-contents" aria-expanded="false" aria-label="%s" title="%s">%s</button>`, label, label, glyphSVG("nav.contents"))
 	}
 	if pageCount > 1 {
 		var opts strings.Builder
@@ -263,9 +263,15 @@ func buildSinglePageHeader(sourceName, title string, pageCount int, hasContents 
 			glyphSVG("nav.go-to-page"), html.EscapeString(i18n.S("Go to page")), opts.String())
 	}
 
+	// The contents button and the page jump are one group: they move through the document.
+	var navGroup string
+	if contentsButton != "" || pageSel != "" {
+		navGroup = chromeGroup(contentsButton, pageSel)
+	}
+
 	// lang/dir on the bar itself, never on <html> - see buildNavBarHTML for why.
-	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s%s</div>%s</div>`,
-		i18n.Language(), chromeDirAttr(), fileEl, titleEl, contentsButton, pageSel, readerControlsHTML(), versionLink, progressBarHTML())
+	return fmt.Sprintf(`<div class="dht-navbar" lang="%s"%s>%s%s<div class="nav-actions">%s%s%s</div>%s</div>`,
+		i18n.Language(), chromeDirAttr(), fileEl, titleEl, navGroup, readerControlsHTML(), versionLink, progressBarHTML())
 }
 
 // isPagedBook reports whether the merged bodies are image pages rather than text

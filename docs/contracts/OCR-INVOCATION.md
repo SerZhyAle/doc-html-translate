@@ -27,6 +27,10 @@ codes, how the Tesseract engine is located, how to detect the app and how to ins
 - The default for an omitted `-ocr-lang` (derive from `-src`, else `eng`) is part of the contract, not a
   local decision: change it there first.
 
+Re-read 2026-10-20 (ticket 120): the document is unchanged since 2026-09-25; every flag it names (and
+`-ocr-langs`) is declared, the exit codes are the published ones, the engine lookup order is as written, and
+the language counts as chosen only with `-ocr-lang`. Read, not run.
+
 **Conformance.** No vectors in the catalog. The observable surfaces above are covered by this repo's own
 tests ([`../../internal/img/`](../../internal/img/), [`../../tests/`](../../tests/)); an end-to-end call
 from a consumer is not exercised here.

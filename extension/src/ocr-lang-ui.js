@@ -5,19 +5,28 @@
 // on demand, and a failed download is reported inline, next to the button that started it,
 // naming the language and offering a retry - it used to vanish into the console while the
 // button silently snapped back to "Download".
+//
+// The Download button reserves the width of its longest state, "Downloading 100%" (BUTTONS 2.0 section 3
+// rule 3), so the row does not move as the progress text changes.
 
 import { LANGS, getInstalledLangs, downloadLang } from "./ocr-lang.js";
-import { DEFAULT_OPTIONS } from "./defaults.js";
+import { getOptions, setOptions } from "./options-store.js";
+import { glyph } from "./glyphs.js";
 import { t } from "./i18n.js";
 
 const msg = (key, fallback, ...args) => t(key, fallback, ...args);
 
-async function getOptions() {
-  const got = await chrome.storage.local.get("options");
-  return { ...DEFAULT_OPTIONS, ...(got.options || {}) };
-}
-async function setOptions(opts) {
-  await chrome.storage.local.set({ options: opts });
+// commandButton builds a command with its vocabulary glyph before a caption span; the caption is what
+// later states rewrite, so the glyph survives them.
+function commandButton(glyphId, caption, reserve) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  const cap = document.createElement("span");
+  cap.className = "cap";
+  cap.textContent = caption;
+  if (reserve) cap.dataset.reserve = reserve;
+  btn.append(glyph(glyphId), cap);
+  return btn;
 }
 
 // showDownloadError puts the failure between the failed row and the next one. role="alert"
@@ -28,9 +37,7 @@ function showDownloadError(el, row, lang, retry) {
   err.setAttribute("role", "alert");
   const text = document.createElement("span");
   text.textContent = msg("ocrDownloadFailed", "Couldn't download {1}", lang.name);
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.textContent = msg("ocrRetry", "Retry");
+  const btn = commandButton("action.retry", msg("ocrRetry", "Retry"));
   btn.addEventListener("click", retry);
   err.append(text, btn);
   row.after(err);
@@ -40,19 +47,20 @@ function showDownloadError(el, row, lang, retry) {
 // the button back the way it was and reports the failure inline, where the retry reruns this.
 async function runDownload(el, row, lang, rerender) {
   const btn = row.querySelector("button");
+  const cap = btn.querySelector(".cap");
   const prev = el.querySelector(".ocr-error");
   if (prev) prev.remove();
   btn.disabled = true;
   try {
     await downloadLang(lang.code, (m) => {
       if (m && typeof m.progress === "number") {
-        btn.textContent = `${msg("ocrDownloading", "Downloading")} ${Math.round(m.progress * 100)}%`;
+        cap.textContent = `${msg("ocrDownloading", "Downloading")} ${Math.round(m.progress * 100)}%`;
       }
     });
     await rerender();
   } catch (e) {
     console.error("language download failed", e);
-    btn.textContent = msg("ocrDownload", "Download");
+    cap.textContent = msg("ocrDownload", "Download");
     btn.disabled = false;
     showDownloadError(el, row, lang, () => runDownload(el, row, lang, rerender));
   }
@@ -83,31 +91,33 @@ export async function renderOcrLangs(el, { hint = "" } = {}) {
   }
 
   const installed = await getInstalledLangs();
+  const widest = `${msg("ocrDownloading", "Downloading")} 100%`;
   for (const lang of LANGS) {
     const row = document.createElement("div");
     row.className = "ocr-lang";
     if (installed.includes(lang.code)) {
-      const id = `ocrlang-${lang.code}`;
+      // An exclusive choice, not a command: a native radio inside the label that is its target.
+      const label = document.createElement("label");
+      label.className = "choice";
       const radio = document.createElement("input");
       radio.type = "radio";
       radio.name = "ocrLang";
-      radio.id = id;
+      radio.id = `ocrlang-${lang.code}`;
       radio.checked = o.ocrLang === lang.code;
       radio.addEventListener("change", async () => {
         const oo = await getOptions();
         oo.ocrLang = lang.code;
         await setOptions(oo);
       });
-      const label = document.createElement("label");
-      label.htmlFor = id;
-      label.textContent = `${lang.name} (${msg("ocrInstalled", "installed")})`;
-      row.append(radio, label);
+      const name = document.createElement("span");
+      name.textContent = `${lang.name} (${msg("ocrInstalled", "installed")})`;
+      label.append(radio, name);
+      row.append(label);
     } else {
       const name = document.createElement("span");
+      name.className = "name";
       name.textContent = lang.name;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = msg("ocrDownload", "Download");
+      const btn = commandButton("action.download", msg("ocrDownload", "Download"), widest);
       const rerender = () => renderOcrLangs(el, { hint });
       btn.addEventListener("click", () => runDownload(el, row, lang, rerender));
       row.append(name, btn);

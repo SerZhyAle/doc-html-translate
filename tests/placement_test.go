@@ -4,7 +4,7 @@ package tests
 // A declaration nothing compares with the wiring is a comment, so this test holds it in both
 // directions (rule 2): a check recorded for the gate must be in scripts/check.ps1's plan, a check in
 // the plan must be recorded, a build-time check must be called by the build scripts it names, and
-// every script that speaks the verdict vocabulary must be placed somewhere.
+// every script or tool that speaks the verdict vocabulary must be placed somewhere.
 
 import (
 	"encoding/json"
@@ -131,6 +131,88 @@ func TestCheckPlacement(t *testing.T) {
 			if _, ok := records[rel]; !ok {
 				t.Errorf("%s reports a CHECK-VERDICT verdict but has no record in configs/check-placement.jsonl", rel)
 			}
+		}
+	}
+}
+
+// toolSourceExts are the files of a tool that can print a verdict line.
+var toolSourceExts = map[string]bool{".go": true, ".mjs": true, ".js": true, ".ps1": true, ".sh": true}
+
+// verdictEmitterTools returns the directories under tools/ whose own source speaks the CHECK-VERDICT
+// vocabulary. The word COULD NOT VERIFY is the marker: every emitter owes it on the path where its
+// input is absent, and it is the one word no ordinary program prints by accident.
+func verdictEmitterTools(t *testing.T) []string {
+	t.Helper()
+	root := filepath.Join("..", "tools")
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		found := false
+		walkErr := filepath.WalkDir(filepath.Join(root, e.Name()), func(p string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				if n := d.Name(); n == "node_modules" || n == "vendor" || n == "testdata" {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if !toolSourceExts[filepath.Ext(p)] || strings.HasSuffix(p, "_test.go") || found {
+				return nil
+			}
+			b, readErr := os.ReadFile(p)
+			if readErr != nil {
+				return readErr
+			}
+			found = strings.Contains(string(b), "COULD NOT VERIFY")
+			return nil
+		})
+		if walkErr != nil {
+			t.Fatal(walkErr)
+		}
+		if found {
+			out = append(out, e.Name())
+		}
+	}
+	return out
+}
+
+// A tool under tools/ that ends in a CHECK-VERDICT line is a check like a script is, and the scan of
+// scripts/*.ps1 above cannot see it (rule 4: an undeclared check is a check nobody placed). It is
+// placed when a record is keyed by the tool ("tools/<dir>" or "tools/<dir> <verb>") or when a
+// recorded script is the wrapper that runs it.
+func TestCheckPlacementCoversToolEmitters(t *testing.T) {
+	records := loadPlacement(t)
+	emitters := verdictEmitterTools(t)
+	if len(emitters) == 0 {
+		t.Fatal("no tool under tools/ speaks the verdict vocabulary: the scan found nothing to hold")
+	}
+	for _, dir := range emitters {
+		tool := "tools/" + dir
+		placed := false
+		for _, r := range records {
+			if r.Check == tool || strings.HasPrefix(r.Check, tool+" ") {
+				placed = true
+				break
+			}
+			if !strings.HasPrefix(r.Check, "scripts/") {
+				continue
+			}
+			// A recorded script that does not exist is reported by TestCheckPlacement.
+			if b, err := os.ReadFile(filepath.Join("..", filepath.FromSlash(r.Check))); err == nil && strings.Contains(string(b), tool) {
+				placed = true
+				break
+			}
+		}
+		if !placed {
+			t.Errorf("%s reports a CHECK-VERDICT verdict but has no record in configs/check-placement.jsonl (keyed %q or run by a recorded script)", tool, tool)
 		}
 	}
 }

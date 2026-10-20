@@ -25,7 +25,7 @@ import { COMIC_MAX_PAGE_BYTES, checkArchive, entryTooLarge, inflateRawCapped, zi
 // PAGE_EXTS are the image extensions that count as a comic page. TIFF is excluded
 // (browsers cannot display it and it is vanishingly rare in comics). This set must
 // match internal/comic pageExts on the Go side - see docs/PARITY.md.
-export const PAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
+export const PAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "jxl"];
 
 const MIME_BY_EXT = {
   png: "image/png",
@@ -34,6 +34,7 @@ const MIME_BY_EXT = {
   gif: "image/gif",
   webp: "image/webp",
   bmp: "image/bmp",
+  jxl: "image/jxl",
 };
 
 // isPageEntry reports whether an archive entry name is a comic page: a regular

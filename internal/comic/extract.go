@@ -53,6 +53,7 @@ var pageExts = map[string]bool{
 	".gif":  true,
 	".webp": true,
 	".bmp":  true,
+	".jxl":  true,
 }
 
 // maxPageBytes caps one page image. Stricter than the general archive budget

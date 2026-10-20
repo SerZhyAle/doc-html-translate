@@ -206,7 +206,11 @@ foreach ($id in ($pointers.Keys | Sort-Object)) {
 
 foreach ($e in ($exceptions | Where-Object { -not $_.Closed })) {
     $until = [datetime]::MinValue
-    if ([datetime]::TryParseExact($e.Until, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture, 'None', [ref]$until)) {
+    if ($e.Until -match '^permanent\b') {
+        # RULES section 15: a permanent supported variant carries a review condition, not a fictitious
+        # deadline. It never expires, and a release verdict names it, so it is a warning and not silence.
+        $warns.Add("$($e.Id): a permanent variant of $Product stays open - $($e.Until)")
+    } elseif ([datetime]::TryParseExact($e.Until, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture, 'None', [ref]$until)) {
         if ($until -lt $todayDate) { $fails.Add("$($e.Id): an open exception for $Product expired on $($e.Until) - an expired row is a violation") }
     } else {
         $fails.Add("$($e.Id): an open exception for $Product has no until date ('$($e.Until)')")

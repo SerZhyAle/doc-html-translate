@@ -51,6 +51,7 @@ func TestIsPageEntry(t *testing.T) {
 		{"deep/dir/page01.JPG", true},
 		{"art.PNG", true},
 		{"scan.webp", true},
+		{"page.JXL", true},
 		{"ComicInfo.xml", false},
 		{"Thumbs.db", false},
 		{"folder/", false},

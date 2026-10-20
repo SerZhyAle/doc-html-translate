@@ -1,10 +1,10 @@
-// Captures of the doc-html-ui window for the manual's task sections (ticket 107): the "About the program" block
-// (#logs) and the masked-password dialog of a FileDO secret file (#secret-files), one PNG per page language.
+// Captures of the doc-html-ui window for the manual's task sections (ticket 107): the Support and diagnostics group of the
+// About page (#logs; the window keeps its settings on pages since ticket 119) and the masked-password dialog of a FileDO secret file (#secret-files), one PNG per page language.
 // The window is a local HTTP app, so a capture is the real page of the real build, as tools/store/make-gui-screenshot.ps1
 // takes it. The password dialog is opened through the page's own openDialog() with the converter's own strings
 // (internal/fdsec/credential.go, internal/i18n/i18n_fdsec.go); nothing is typed and no run is started.
 //
-//   go build -ldflags "-X main.Version=<release>" -o temp/docs-shots/doc-html-ui.exe ./cmd/doc-html-ui
+//   go build -tags nodynamic -ldflags "-X main.Version=<release>" -o temp/docs-shots/doc-html-ui.exe ./cmd/doc-html-ui
 //   node shots.mjs --ui ../../temp/docs-shots/doc-html-ui.exe     writes tools/store/docs-<kind>-<lang>.png, lang = en-us / ru / uk
 import { chromium } from 'playwright-core';
 import { spawn, execFileSync } from 'node:child_process';
@@ -41,23 +41,29 @@ try {
   }
   if (!port) throw new Error('doc-html-ui did not start listening on 127.0.0.1');
   browser = await launch();
-  const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 }, deviceScaleFactor: 1, reducedMotion: 'reduce', colorScheme: 'dark' });
+  const ctx = await browser.newContext({ viewport: { width: 700, height: 768 }, deviceScaleFactor: 1, reducedMotion: 'reduce', colorScheme: 'dark' });
   for (const [lang, locale] of LANGS) {
     const page = await ctx.newPage();
     await page.goto(`http://127.0.0.1:${port}/?lang=${lang}`, { waitUntil: 'load' });
     await page.waitForFunction(() => document.getElementById('aboutVer') && document.getElementById('aboutVer').textContent.trim() !== '', null, { timeout: 15000 });
     // Dark, as the store captures are; set on the page only, the saved theme is not touched
     await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
-    // About block, opened
-    await page.evaluate(() => { document.getElementById('aboutSection').open = true; });
-    await page.locator('#aboutSection').scrollIntoViewIfNeeded();
-    const about = page.locator('#aboutSection');
+    // The About page, its Support and diagnostics group open. The number of stored logs is a demo answer, so the
+    // published image shows no fact of the machine it was taken on.
+    await page.evaluate(() => {
+      showPage('about', { force: true });
+      document.getElementById('grpSupport').open = true;
+      aboutFacts.logs = { count: 3, bytes: 148000 };
+      renderAbout();
+    });
+    await page.locator('#grpSupport').scrollIntoViewIfNeeded();
+    const about = page.locator('#grpSupport');
     const file = path.join(OUT, `docs-about-${locale}.png`);
     await about.screenshot({ path: file });
     console.log(file, JSON.stringify(await about.boundingBox()));
     // Password dialog of a secret file
     await page.evaluate((s) => { openDialog({ title: s.title, message: s.message, secret: true,
-      buttons: [{ id: 'open', key: 'btnOpenSecret', kind: 'primary' }, { id: 'cancel', key: 'btnCancel' }], cancel: 'cancel' }); }, SECRET[lang]);
+      buttons: [{ id: 'cancel', key: 'btnCancel', glyph: 'action.cancel' }, { id: 'open', key: 'btnOpenSecret', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm' }], cancel: 'cancel' }); }, SECRET[lang]);
     await page.waitForSelector('#dlg[open]');
     const dlg = page.locator('#dlg');
     const dfile = path.join(OUT, `docs-password-${locale}.png`);

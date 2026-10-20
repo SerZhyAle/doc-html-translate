@@ -107,3 +107,5 @@ Run `./a.ps1 help` for the full list.
 - `internal/pdf/extract.go`
 - `internal/translator/translator.go`
 
+
+JPEG XL input is decoded by the bundled codec into PNG before reader generation and OCR, including extracted book resources and comic pages. The codec needs no external helper. See [cross-edition parity](../docs/PARITY.md#jpeg-xl-pictures-ticket-114-2026-10-15) for limits and the first-frame animation policy.

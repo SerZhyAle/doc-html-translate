@@ -1,0 +1,75 @@
+{
+  "id": "run-failed",
+  "surface": "dlg-run-failed",
+  "kind": "dialog",
+  "titleKey": "runFailedTitle",
+  "lead": {
+    "en": "When a conversion stops before the end, the window names the cause in plain words and offers three ways on: send the logs, try again, or close.",
+    "ru": "Когда конвертация останавливается, не дойдя до конца, окно называет причину простыми словами и предлагает три пути: отправить журналы, попробовать снова или закрыть.",
+    "uk": "Коли конвертація зупиняється, не дійшовши до кінця, вікно називає причину простими словами й пропонує три шляхи: надіслати журнали, спробувати знову або закрити."
+  },
+  "shots": [
+    {
+      "id": "dialog", "setup": "dialog-run-failed", "capture": "dialog",
+      "alt": {
+        "en": "The failure question: the title The conversion did not finish, the cause in plain words, the advice to try again or send the logs, the buttons Send logs to the author, Try again and Close, and the Help button in the top-right corner.",
+        "ru": "Вопрос о неудаче: заголовок «Конвертация не завершилась», причина простыми словами, совет попробовать снова или отправить журналы, кнопки «Отправить журналы автору», «Попробовать снова» и «Закрыть», а в правом верхнем углу кнопка справки.",
+        "uk": "Питання про невдачу: заголовок «Конвертація не завершилася», причина простими словами, порада спробувати знову або надіслати журнали, кнопки «Надіслати журнали авторові», «Спробувати знову» та «Закрити», а в правому верхньому куті кнопка довідки."
+      }
+    }
+  ],
+  "order": [
+    { "en": "Read the cause {ref:message}. It tells you whether to look at the file, the disk, the translation settings or nothing at all.", "ru": "Прочитайте причину {ref:message}. Она подскажет, смотреть ли на файл, диск, настройки перевода или ни на что.", "uk": "Прочитайте причину {ref:message}. Вона підкаже, чи дивитися на файл, диск, налаштування перекладу чи ні на що." },
+    { "en": "If the cause is something you can fix, fix it and press {k:btnRetry} {ref:retry}.", "ru": "Если причину можно устранить, устраните её и нажмите {k:btnRetry} {ref:retry}.", "uk": "Якщо причину можна усунути, усуньте її й натисніть {k:btnRetry} {ref:retry}." },
+    { "en": "If it is not clear, press {k:btnSendLogs} {ref:send} so the author can find it.", "ru": "Если непонятно, нажмите {k:btnSendLogs} {ref:send}, чтобы автор мог найти причину.", "uk": "Якщо незрозуміло, натисніть {k:btnSendLogs} {ref:send}, щоб автор міг знайти причину." },
+    { "en": "Otherwise press {k:dlgClose} {ref:close}.", "ru": "Иначе нажмите {k:dlgClose} {ref:close}.", "uk": "Інакше натисніть {k:dlgClose} {ref:close}." }
+  ],
+  "elements": [
+    {
+      "id": "help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
+      "nameKey": "titleHelp",
+      "one": { "en": "Opens this page without closing the question.", "ru": "Открывает эту страницу, не закрывая вопрос.", "uk": "Відкриває цю сторінку, не закриваючи питання." },
+      "text": { "en": "The question stays open and waits while you read. {kbd:F1} does the same.", "ru": "Вопрос остаётся открытым и ждёт, пока вы читаете. {kbd:F1} делает то же самое.", "uk": "Питання лишається відкритим і чекає, поки ви читаєте. {kbd:F1} робить те саме." }
+    },
+    {
+      "id": "message", "shot": "dialog", "sel": "#dlgMsg", "pin": "l",
+      "name": { "en": "The cause", "ru": "Причина", "uk": "Причина" },
+      "one": { "en": "Why the conversion stopped, in plain words.", "ru": "Почему конвертация остановилась, простыми словами.", "uk": "Чому конвертація зупинилася, простими словами." },
+      "items": [
+        { "name": { "en": "The input was refused", "ru": "Вход отклонён", "uk": "Вхід відхилено" }, "oneKey": "runCauseArgs" },
+        { "name": { "en": "Reading or writing failed", "ru": "Не удалось прочитать или записать", "uk": "Не вдалося прочитати чи записати" }, "oneKey": "runCauseIO" },
+        { "name": { "en": "The document could not be read", "ru": "Документ не удалось прочитать", "uk": "Документ не вдалося прочитати" }, "oneKey": "runCauseParse" },
+        { "name": { "en": "Translation failed", "ru": "Перевод не удался", "uk": "Переклад не вдався" }, "oneKey": "runCauseTranslate" },
+        { "name": { "en": "Interrupted", "ru": "Прервано", "uk": "Перервано" }, "oneKey": "runCauseInterrupted" },
+        { "name": { "en": "Any other stop", "ru": "Любая другая остановка", "uk": "Будь-яка інша зупинка" }, "one": { "en": "The window shows the converter's exit code. Send the logs so the cause can be found.", "ru": "Окно показывает код завершения конвертера. Отправьте журналы, чтобы причину можно было найти.", "uk": "Вікно показує код завершення конвертера. Надішліть журнали, щоб причину можна було знайти." } }
+      ],
+      "why": { "en": "A cause you can name is a cause you can act on; the raw error stays in the log.", "ru": "Причину, которую можно назвать, можно и устранить; сырая ошибка остаётся в журнале.", "uk": "Причину, яку можна назвати, можна й усунути; сира помилка лишається в журналі." },
+      "next": { "en": "The same line is added to the log of the window.", "ru": "Та же строка добавляется в журнал окна.", "uk": "Той самий рядок додається до журналу вікна." }
+    },
+    {
+      "id": "send", "shot": "dialog", "sel": "#dlgActions button[value=send]", "pin": "b",
+      "nameKey": "btnSendLogs",
+      "oneKey": "sendLogsAttachHint",
+      "text": { "en": "Packs the stored logs into one archive, puts its path on the clipboard and starts a message to the author. The archive is attached by you; nothing is sent by itself.", "ru": "Упаковывает сохранённые журналы в один архив, кладёт его путь в буфер обмена и начинает письмо автору. Архив прикладываете вы; само ничего не отправляется.", "uk": "Пакує збережені журнали в один архів, кладе його шлях у буфер обміну й починає лист авторові. Архів додаєте ви; саме нічого не надсилається." },
+      "undo": { "en": "Close the mail window without sending, and nothing leaves your computer.", "ru": "Закройте окно письма, не отправляя, и ничего не покинет ваш компьютер.", "uk": "Закрийте вікно листа, не надсилаючи, і нічого не залишить ваш комп'ютер." }
+    },
+    {
+      "id": "retry", "shot": "dialog", "sel": "#dlgActions button[value=retry]", "pin": "b",
+      "nameKey": "btnRetry",
+      "one": { "en": "Runs the same conversion again with the same settings.", "ru": "Запускает ту же конвертацию снова с теми же настройками.", "uk": "Запускає ту саму конвертацію знову з тими самими налаштуваннями." },
+      "text": { "en": "What the failed run wrote is rebuilt, because a run that did not finish leaves no completion record.", "ru": "То, что записал неудавшийся запуск, собирается заново: у незавершённого запуска нет отметки о завершении.", "uk": "Те, що записав невдалий запуск, збирається заново: у незавершеного запуску немає позначки про завершення." }
+    },
+    {
+      "id": "close", "shot": "dialog", "sel": "#dlgActions button[value=close]", "pin": "b",
+      "nameKey": "dlgClose",
+      "one": { "en": "Closes the question; nothing else changes.", "ru": "Закрывает вопрос; больше ничего не меняется.", "uk": "Закриває питання; більше нічого не змінюється." },
+      "text": { "en": "The log keeps the cause, and what was written stays in the output folder; the next {k:btnConvert} rebuilds it. Pressing {kbd:Esc} is the same answer.", "ru": "Журнал сохраняет причину, а записанное остаётся в папке вывода; следующая {k:btnConvert} соберёт всё заново. Нажатие {kbd:Esc} - тот же ответ.", "uk": "Журнал зберігає причину, а записане лишається в теці виводу; наступне {k:btnConvert} збере все заново. Натискання {kbd:Esc} - та сама відповідь." },
+      "why": { "en": "It is the safe answer, so it has the focus.", "ru": "Это безопасный ответ, поэтому фокус на нём.", "uk": "Це безпечна відповідь, тому фокус на ній." }
+    }
+  ],
+  "related": [
+    { "to": "converter#log", "pill": "window", "name": { "en": "Log", "ru": "Лог", "uk": "Лог" }, "one": { "en": "Where the last step the converter reached is written.", "ru": "Где записан последний шаг, до которого дошёл конвертер.", "uk": "Де записано останній крок, до якого дійшов конвертер." } },
+    { "to": "settings#about", "pill": "window", "name": { "en": "About the program", "ru": "О программе", "uk": "Про програму" }, "one": { "en": "Send the logs, open the archive, clear the stored logs.", "ru": "Отправить журналы, открыть архив, очистить сохранённые журналы.", "uk": "Надіслати журнали, відкрити архів, очистити збережені журнали." } },
+    { "site": "docs#logs", "pill": "site", "name": { "en": "Logs and sending them", "ru": "Журналы и их отправка", "uk": "Журнали та їх надсилання" }, "one": { "en": "What the archive holds and how to send it.", "ru": "Что в архиве и как его отправить.", "uk": "Що в архіві й як його надіслати." } }
+  ]
+}

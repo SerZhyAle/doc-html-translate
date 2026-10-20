@@ -7,6 +7,7 @@ package tests
 // of every glyph is docs/GLYPH-MAP.md; the parity row is docs/PARITY.md "Vocabulary glyphs".
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -15,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -66,6 +68,9 @@ func TestVendoredGlyphsMatchTheirProvenance(t *testing.T) {
 		listed[m[2]] = m[1]
 	}
 	catalog := os.Getenv("SZA_CONTRACTS_ROOT")
+	if catalog != "" {
+		catalogVersion(t, catalog)
+	}
 	for id := range vendoredGlyphs(t) {
 		name := id + ".svg"
 		raw, err := os.ReadFile(filepath.Join("..", "assets", "glyphs", name))
@@ -115,8 +120,16 @@ func TestEditionGlyphTablesAreTheVendoredDrawings(t *testing.T) {
 func TestExtensionDrawsOnlyTabledGlyphs(t *testing.T) {
 	table := extensionGlyphs(t)
 	used := map[string]bool{}
-	for _, f := range []string{"viewer.html", "popup.html", "options.html"} {
+	for _, f := range []string{"viewer.html", "popup.html", "options.html", "ocr.html"} {
 		for _, m := range regexp.MustCompile(`data-glyph="([^"]+)"`).FindAllStringSubmatch(readRepoFile(t, "extension", "src", f), -1) {
+			used[m[1]] = true
+		}
+	}
+	// The pages built in script (ticket 119, slice X1) name a meaning as a string literal - a glyph() argument, a
+	// commandButton() or confirmDialog() option, the viewer's answerButton() glyphId - so every quoted vocabulary id in these modules is a use.
+	quoted := regexp.MustCompile(`"((?:action|app|nav|view|content|feature|system|media|status)\.[a-z-]+)"`)
+	for _, f := range []string{"options.js", "options-about.js", "options-data.js", "ocr-lang-ui.js", "ui-help.js", "ui-dialog.js", "popup.js", "viewer.js"} {
+		for _, m := range quoted.FindAllStringSubmatch(readRepoFile(t, "extension", "src", f), -1) {
 			used[m[1]] = true
 		}
 	}
@@ -142,12 +155,20 @@ func TestExtensionDrawsOnlyTabledGlyphs(t *testing.T) {
 func TestInlineGlyphCopiesAreVerbatim(t *testing.T) {
 	vendored := vendoredGlyphs(t)
 	pages := map[string][]string{
-		"cmd/doc-html-ui/ui.html": {"nav.expand", "nav.collapse", "action.swap", "content.document",
-			"action.cancel", "action.confirm", "action.delete", "action.clear-all", "action.remove",
+		// The launcher's group markers are state triangles drawn by its own component (COLLAPSIBLE-GROUP 3.2), not
+		// the nav.expand / nav.collapse action chevrons, so those two are no longer carried; the rail and the new
+		// meanings are (ticket 119).
+		"cmd/doc-html-ui/ui.html": {"action.swap", "content.document",
+			"nav.close", "action.cancel", "action.confirm", "action.delete", "action.clear-all", "action.remove",
 			"action.add", "action.choose-folder", "action.download", "action.email", "action.copy",
-			"action.translate", "nav.scroll-bottom", "nav.open-external", "action.convert", "action.save"},
-		"extension.html": {"nav.go-to", "nav.expand", "nav.collapse", "action.install"},
-		"index.html":     {"nav.scroll-top"},
+			"action.translate", "nav.scroll-bottom", "nav.open-external", "action.convert", "action.save", "app.help",
+			"action.extract-text", "action.create-shortcut", "action.text-settings", "action.adjust", "app.info",
+			"nav.contents", "view.text-layer", "action.retry", "app.update", "nav.go-to"},
+		// the disclosure markers of the site are state triangles drawn by the page layer (COLLAPSIBLE-GROUP 3.2), no
+		// longer the nav.expand / nav.collapse action chevrons; site.css carries the external-link marker (BUTTONS 2.3)
+		"extension.html":  {"nav.go-to", "action.install"},
+		"assets/site.css": {"nav.open-external"},
+		"index.html":      {"nav.scroll-top"},
 	}
 	for _, code := range []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ur", "zh"} {
 		pages[code+"/index.html"] = []string{"nav.scroll-top"}
@@ -167,19 +188,8 @@ func TestInlineGlyphCopiesAreVerbatim(t *testing.T) {
 			}
 		}
 	}
-	// The two provisional meanings the GUI draws under ICON-SET section 15 have no catalog file
-	// to copy yet (iconography/PROPOSAL-2026-10-11-doc-html-translate-button-meanings.md), so
-	// the drawn paths are pinned here until the owner folds them in and they are vendored.
-	provisional := map[string]string{
-		"action.retry": "M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z",
-		"app.update":   "M21,10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-0.1c-2.73,2.71-2.73,7.08,0,9.79s7.15,2.71,9.88,0 C18.32,15.65,19,14.08,19,12.1h2c0,1.98-0.88,4.55-2.64,6.29c-3.51,3.48-9.21,3.48-12.72,0c-3.5-3.47-3.53-9.11-0.02-12.58 s9.14-3.47,12.65,0L21,3V10.12z M12.5,8v4.25l3.5,2.08l-0.72,1.21L11,13V8H12.5z",
-	}
-	uiDecoded := readRepoFile(t, "cmd", "doc-html-ui", "ui.html")
-	for id, d := range provisional {
-		if !strings.Contains(uiDecoded, `d="`+d+`"`) {
-			t.Errorf("ui.html does not carry the provisional %s drawing pinned here (ICON-SET section 15)", id)
-		}
-	}
+	// action.retry and app.update were the two provisional meanings the launcher drew under ICON-SET section 15; the
+	// catalog holds their files since ICON-SET 0.36, so they are vendored and checked with the rest above.
 }
 
 // Pre-contract glyphs that stood for another meaning's picture must not come back on the
@@ -238,6 +248,7 @@ func TestEditionsNameSharedControlsAlike(t *testing.T) {
 		"Theme":             "ariaTheme",
 		"Text layer":        "ttOcrLayer",
 		"Go to page":        "ttGoToPage",
+		"Search":            "vSearch", // action.search's word, ticket 119 slice R1
 		"Continue reading":  "vResumeContinue",
 		// Ticket 59's reading-comfort controls, shared by both editions.
 		"Night mode":      "ariaNightMode",
@@ -318,4 +329,168 @@ func TestGlyphNoticesShipWithTheGlyphs(t *testing.T) {
 			t.Errorf("%s does not stage THIRD-PARTY-NOTICES.txt", filepath.Join(f...))
 		}
 	}
+}
+
+// catalogRecord is the part of a vocabulary.jsonl line the name checks read.
+type catalogRecord struct {
+	ID   string            `json:"id"`
+	Name map[string]string `json:"name"`
+}
+
+var catalogVersionLine = regexp.MustCompile(`^ICON-SET (\d+)\.(\d+)$`)
+
+// catalogVersion reads the mounted catalog's vocabulary.version and logs it. A MAJOR above 0 is a
+// breaking change this product has not been adapted to (VERSIONING section 4.3), so it fails here
+// rather than compare against a shape the checks do not know.
+func catalogVersion(t *testing.T, root string) {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(root, "iconography", "vocabulary.version"))
+	if err != nil {
+		t.Fatalf("vocabulary.version: %v", err)
+	}
+	line := strings.TrimSpace(string(raw))
+	m := catalogVersionLine.FindStringSubmatch(line)
+	if m == nil {
+		t.Fatalf("vocabulary.version is %q, want \"ICON-SET <major>.<minor>\"", line)
+	}
+	t.Logf("catalog vocabulary: %s", line)
+	if major, _ := strconv.Atoi(m[1]); major > 0 {
+		t.Fatalf("the catalog vocabulary is at MAJOR %d (%s): adapt the product before consuming it (VERSIONING section 4.3)", major, line)
+	}
+}
+
+func catalogVocabulary(t *testing.T, root string) []catalogRecord {
+	t.Helper()
+	f, err := os.Open(filepath.Join(root, "iconography", "vocabulary.jsonl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	var records []catalogRecord
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 1<<20), 1<<20)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" {
+			continue
+		}
+		var r catalogRecord
+		if err := json.Unmarshal([]byte(line), &r); err != nil {
+			t.Fatalf("vocabulary.jsonl: %v", err)
+		}
+		records = append(records, r)
+	}
+	if err := sc.Err(); err != nil || len(records) == 0 {
+		t.Fatalf("vocabulary.jsonl: %d records, error %v", len(records), err)
+	}
+	return records
+}
+
+// guiLanguageBlocks splits the launcher dictionary into language -> the text of its object.
+func guiLanguageBlocks(t *testing.T) map[string]string {
+	t.Helper()
+	js := readRepoFile(t, "cmd", "doc-html-ui", "i18n.js")
+	start := strings.Index(js, "const I18N = {")
+	if start < 0 {
+		t.Fatal("i18n.js does not declare const I18N")
+	}
+	body := js[start:]
+	locs := regexp.MustCompile(`(?m)^ {4}([a-z]{2}): \{`).FindAllStringSubmatchIndex(body, -1)
+	out := map[string]string{}
+	for i, loc := range locs {
+		end := len(body)
+		if i+1 < len(locs) {
+			end = locs[i+1][0]
+		}
+		out[body[loc[2]:loc[3]]] = body[loc[1]:end]
+	}
+	return out
+}
+
+func guiString(t *testing.T, block, key string) string {
+	t.Helper()
+	m := regexp.MustCompile(`(?m)^ {8}` + regexp.QuoteMeta(key) + `: "((?:[^"\\]|\\.)*)",`).FindStringSubmatch(block)
+	if m == nil {
+		return ""
+	}
+	var s string
+	if err := json.Unmarshal([]byte(`"`+m[1]+`"`), &s); err != nil {
+		t.Fatalf("i18n.js %s: %v", key, err)
+	}
+	return s
+}
+
+func extensionMessage(t *testing.T, lang, key string) string {
+	t.Helper()
+	dir := lang
+	if lang == "zh" {
+		dir = "zh_CN"
+	}
+	var msgs map[string]struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "extension", "_locales", dir, "messages.json")), &msgs); err != nil {
+		t.Fatalf("%s messages.json: %v", dir, err)
+	}
+	return msgs[key].Message
+}
+
+// ICON-SET rule 3: a control is named with its meaning's word, never with another meaning's. With
+// the catalog mounted, the words of the controls that were once wrong ("Отменить" is Undo, "Clear"
+// is the text field's clear, "Повторить" is Redo, Stop is the media stop) are read from the product
+// files in all thirteen languages and none may be the name of a different record. A string equal to
+// the drawn meaning's own name passes even when the catalog gives that word to a second record too
+// (uk "Скасувати" names both Cancel and Undo): that collision is the catalog's to resolve.
+// "OK" (dlgOK) is deliberately not listed: it is a permanent variant, ticket 119 decision D6.
+func TestIconographyNamesAreNotAnotherMeaningsName(t *testing.T) {
+	root := os.Getenv("SZA_CONTRACTS_ROOT")
+	if root == "" {
+		t.Skip("SZA_CONTRACTS_ROOT does not name the catalog")
+	}
+	catalogVersion(t, root)
+	records := catalogVocabulary(t, root)
+	byID := map[string]catalogRecord{}
+	for _, r := range records {
+		byID[r.ID] = r
+	}
+	gui := guiLanguageBlocks(t)
+	controls := []struct{ surface, key, drawn string }{
+		{"GUI", "btnCancel", "action.cancel"},
+		{"GUI", "queueClear", "action.clear-all"},
+		{"GUI", "dlgClose", "nav.close"},
+		{"extension", "dlgCancel", "action.cancel"},
+		{"extension", "dlgClose", "nav.close"},
+		{"extension", "ocrRetry", "action.retry"},
+		{"extension", "pageOcrStop", "action.cancel"},
+	}
+	checked := 0
+	for _, c := range controls {
+		own, ok := byID[c.drawn]
+		if !ok {
+			t.Errorf("%s %s draws %s, which the catalog does not hold", c.surface, c.key, c.drawn)
+			continue
+		}
+		for _, lang := range i18n.Codes {
+			var got string
+			if c.surface == "GUI" {
+				got = guiString(t, gui[lang], c.key)
+			} else {
+				got = extensionMessage(t, lang, c.key)
+			}
+			if got == "" {
+				t.Errorf("%s %s: no %s string", c.surface, lang, c.key)
+				continue
+			}
+			checked++
+			if strings.EqualFold(own.Name[lang], got) {
+				continue
+			}
+			for _, r := range records {
+				if r.ID != c.drawn && strings.EqualFold(r.Name[lang], got) {
+					t.Errorf("%s %s %q (%s, draws %s) is the name of %s: another meaning's word (ICON-SET rule 3)", c.surface, lang, got, c.key, c.drawn, r.ID)
+				}
+			}
+		}
+	}
+	t.Logf("checked %d (surface, language) strings of %d controls against %d catalog records", checked, len(controls), len(records))
 }

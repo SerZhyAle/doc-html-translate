@@ -113,6 +113,7 @@
               <uap:FileType>.cb7</uap:FileType>
               <uap:FileType>.cbt</uap:FileType>
               <uap:FileType>.fd-sec</uap:FileType>
+              <uap:FileType>.jxl</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>

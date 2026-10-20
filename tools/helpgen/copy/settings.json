@@ -1,0 +1,153 @@
+{
+  "id": "settings",
+  "surface": "settings",
+  "kind": "window",
+  "title": { "en": "Settings", "ru": "Настройки", "uk": "Налаштування" },
+  "lead": {
+    "en": "The window keeps its settings on pages, listed at its start. Choose a page and its settings appear in place; the window remembers the page you were on. In a narrow window the same list opens from the Pages button.",
+    "ru": "Настройки окна лежат на страницах, список которых стоит в начале окна. Выберите страницу, и её настройки появятся на месте; окно помнит, на какой странице вы были. В узком окне тот же список открывается кнопкой «Страницы».",
+    "uk": "Налаштування вікна лежать на сторінках, список яких стоїть на початку вікна. Виберіть сторінку, і її налаштування з'являться на місці; вікно пам'ятає, на якій сторінці ви були. У вузькому вікні той самий список відкривається кнопкою «Сторінки»."
+  },
+  "noOrder": true,
+  "shots": [
+    {
+      "id": "advanced", "setup": "page-advanced", "capture": "region", "region": ["#page-advanced"],
+      "alt": {
+        "en": "The Advanced page: split size, contents depth and maximum cost.",
+        "ru": "Страница «Дополнительно»: размер блока, глубина оглавления и максимальная стоимость.",
+        "uk": "Сторінка «Додатково»: розмір блоку, глибина змісту й максимальна вартість."
+      }
+    },
+    {
+      "id": "ollama", "setup": "page-ollama", "capture": "region", "region": ["#page-ollama"],
+      "alt": {
+        "en": "The Ollama page: the model, how many batches run in parallel and the context size.",
+        "ru": "Страница Ollama: модель, сколько пакетов идёт параллельно и размер контекста.",
+        "uk": "Сторінка Ollama: модель, скільки пакетів іде паралельно та розмір контексту."
+      }
+    },
+    {
+      "id": "ocr", "setup": "page-ocr", "capture": "region", "region": ["#page-ocr"],
+      "alt": {
+        "en": "The Image OCR page: the overlay option with its help button, the OCR language and the language download.",
+        "ru": "Страница «OCR изображений»: параметр наложения с кнопкой справки, язык OCR и загрузка языков.",
+        "uk": "Сторінка «OCR зображень»: параметр накладання з кнопкою довідки, мова OCR і завантаження мов."
+      }
+    },
+    {
+      "id": "windows", "setup": "page-windows", "capture": "region", "region": ["#page-windows"],
+      "alt": {
+        "en": "The Windows page: the right-click entries option and the default-app option with its help button.",
+        "ru": "Страница Windows: параметр пунктов правого клика и параметр программы по умолчанию с кнопкой справки.",
+        "uk": "Сторінка Windows: параметр пунктів правого кліку й параметр програми за замовчуванням з кнопкою довідки."
+      }
+    },
+    {
+      "id": "interface", "setup": "page-interface", "capture": "region", "region": ["#page-interface"],
+      "alt": {
+        "en": "The Interface page: the interface size, the text size and the controls profile.",
+        "ru": "Страница «Интерфейс»: размер интерфейса, размер текста и режим управления.",
+        "uk": "Сторінка «Інтерфейс»: розмір інтерфейсу, розмір тексту й режим керування."
+      }
+    },
+    {
+      "id": "about", "setup": "page-about", "capture": "region", "region": ["#page-about"],
+      "alt": {
+        "en": "The About page: the version, the links, and the groups Updates, Support and diagnostics, Resources and Related products.",
+        "ru": "Страница «О программе»: версия, ссылки и группы «Обновления», «Поддержка и диагностика», «Ресурсы» и «Связанные продукты».",
+        "uk": "Сторінка «Про програму»: версія, посилання та групи «Оновлення», «Підтримка та діагностика», «Ресурси» і «Пов'язані продукти»."
+      }
+    }
+  ],
+  "elements": [
+    {
+      "id": "advanced", "shot": "advanced", "sel": "#page-advanced", "pin": "gt",
+      "nameKey": "pageAdvanced",
+      "one": { "en": "Splitting the book into chunks, the depth of the contents and a cost limit.", "ru": "Разбивка книги на блоки, глубина оглавления и предел стоимости.", "uk": "Розбивка книги на блоки, глибина змісту й межа вартості." },
+      "items": [
+        { "nameKey": "lblSplitSize", "oneKey": "hintSplit" },
+        { "nameKeys": ["lblTocDepth", "lblMaxCost"], "oneKey": "hintTocCost" }
+      ],
+      "why": { "en": "The defaults suit almost every book; change them only when a book is huge, its contents are too deep, or you want a ceiling on a paid translation.", "ru": "Значения по умолчанию подходят почти любой книге; меняйте их, только если книга огромна, оглавление слишком глубокое или нужен потолок для платного перевода.", "uk": "Значення за замовчуванням підходять майже будь-якій книзі; змінюйте їх, лише якщо книга величезна, зміст надто глибокий або потрібна стеля для платного перекладу." },
+      "next": { "en": "A value is used by the next conversion and shows in the command line.", "ru": "Значение используется со следующей конвертации и видно в командной строке.", "uk": "Значення використовується з наступної конвертації й видно в командному рядку." },
+      "undo": { "en": "Set the field back to 0.", "ru": "Верните в поле 0.", "uk": "Поверніть у полі 0." }
+    },
+    {
+      "id": "ollama", "shot": "ollama", "sel": "#page-ollama", "pin": "gt",
+      "nameKey": "pageOllama",
+      "one": { "en": "The local model that translates when the engine is Ollama.", "ru": "Локальная модель, которая переводит, когда выбран движок Ollama.", "uk": "Локальна модель, яка перекладає, коли вибрано рушій Ollama." },
+      "items": [
+        { "nameKey": "lblModel", "oneKey": "hintOllamaModel" },
+        { "nameKey": "lblParallel", "oneKey": "hintOllamaParallel" },
+        { "nameKey": "lblContext", "oneKey": "hintOllamaCtx" }
+      ],
+      "why": { "en": "These only matter with the Ollama engine; with any other engine they are ignored.", "ru": "Это важно только с движком Ollama; с любым другим они игнорируются.", "uk": "Це важливо лише з рушієм Ollama; з будь-яким іншим вони ігноруються." },
+      "next": { "en": "The values go into the command line only when Ollama is chosen and differ from the defaults.", "ru": "Значения попадают в командную строку, только если выбран Ollama и они отличаются от значений по умолчанию.", "uk": "Значення потрапляють до командного рядка, лише якщо вибрано Ollama і вони відрізняються від значень за замовчуванням." },
+      "undo": { "en": "Type the default back: gemma3:12b, 1 and 8192.", "ru": "Верните значения по умолчанию: gemma3:12b, 1 и 8192.", "uk": "Поверніть значення за замовчуванням: gemma3:12b, 1 і 8192." }
+    },
+    {
+      "id": "ocr", "shot": "ocr", "sel": "#page-ocr", "pin": "gt",
+      "nameKey": "pageOcr",
+      "one": { "en": "Makes the text inside pictures translatable.", "ru": "Делает текст внутри картинок доступным для перевода.", "uk": "Робить текст усередині картинок доступним для перекладу." },
+      "items": [
+        { "nameKey": "chkOCRLabel", "oneKey": "hintOCR" },
+        { "nameKey": "lblOcrLang", "one": { "en": "Which language the recognizer reads. Automatic follows the source language.", "ru": "На каком языке распознаватель читает текст. «Автоматически» следует исходному языку.", "uk": "Якою мовою розпізнавач читає текст. «Автоматично» слідує мові джерела." } },
+        { "nameKeys": ["lblAddLang", "btnDownload"], "oneKey": "ocrStatusDefault" }
+      ],
+      "why": { "en": "Scanned pages, comics and pictures have no text to translate until it is recognized.", "ru": "У отсканированных страниц, комиксов и картинок нет текста для перевода, пока его не распознали.", "uk": "У відсканованих сторінок, коміксів і картинок немає тексту для перекладу, доки його не розпізнали." },
+      "next": { "en": "The recognized text is laid over each picture as real text. The question-mark button beside the option explains both states in full. Downloading a language data file is the one thing on this page that needs the internet; the file is checked against its published checksum before it is kept.", "ru": "Распознанный текст накладывается на каждую картинку как настоящий текст. Кнопка со знаком вопроса рядом с параметром полностью объясняет оба состояния. Загрузка языковых данных - единственное на этой странице, что требует интернета; перед сохранением файл сверяется с опубликованной контрольной суммой.", "uk": "Розпізнаний текст накладається на кожну картинку як справжній текст. Кнопка зі знаком питання біля параметра повністю пояснює обидва стани. Завантаження мовних даних - єдине на цій сторінці, що потребує інтернету; перед збереженням файл звіряється з опублікованою контрольною сумою." },
+      "undo": { "en": "Untick the overlay for the next conversion. Existing results keep their text layer until rebuilt.", "ru": "Снимите отметку наложения для следующей конвертации. Готовые результаты сохраняют текстовый слой, пока их не пересоберут.", "uk": "Зніміть позначку накладання для наступної конвертації. Готові результати зберігають текстовий шар, доки їх не перезберуть." },
+      "note": { "kind": "care", "text": { "en": "The overlay needs Tesseract installed. The status line under the file box tells you when it is missing.", "ru": "Для наложения нужен установленный Tesseract. Когда его нет, об этом говорит строка состояния под полем файла.", "uk": "Для накладання потрібен установлений Tesseract. Коли його немає, про це каже рядок стану під полем файла." } }
+    },
+    {
+      "id": "integration", "shot": "windows", "sel": "#page-windows", "pin": "gt",
+      "nameKey": "pageWindows",
+      "one": { "en": "Optional links between the app and Windows; both are off until you switch them on.", "ru": "Необязательные связи программы с Windows; обе выключены, пока вы их не включите.", "uk": "Необов'язкові зв'язки програми з Windows; обидва вимкнені, доки ви їх не ввімкнете." },
+      "items": [
+        { "nameKey": "chkShellEntries", "oneKey": "shellHint" },
+        { "nameKey": "chkDefaultHandler", "oneKey": "registerHint" },
+        { "nameKey": "btnOpenDefaultApps", "one": { "en": "Opens the Windows page where the final say on default apps belongs to you.", "ru": "Открывает страницу Windows, где последнее слово о приложениях по умолчанию - за вами.", "uk": "Відкриває сторінку Windows, де останнє слово про програми за замовчуванням - за вами." } }
+      ],
+      "why": { "en": "They save a step: right-click a book and convert it, or double-click it to open it here.", "ru": "Они экономят шаг: щёлкните книгу правой кнопкой и конвертируйте её или дважды щёлкните, чтобы открыть здесь.", "uk": "Вони заощаджують крок: клацніть книгу правою кнопкою й конвертуйте її або двічі клацніть, щоб відкрити тут." },
+      "next": { "en": "Windows may keep opening a file type with an app you chose earlier; this page then says so, and only you can change it. This page is not shown in the Microsoft Store edition, which registers nothing in Windows itself.", "ru": "Windows может и дальше открывать тип файла программой, выбранной ранее; тогда эта страница сообщает об этом, и изменить это можете только вы. В издании из Microsoft Store этой страницы нет: оно само ничего не регистрирует в Windows.", "uk": "Windows може й далі відкривати тип файла програмою, обраною раніше; тоді ця сторінка повідомляє про це, і змінити це можете лише ви. У виданні зі Store цієї сторінки немає: воно саме нічого не реєструє у Windows." },
+      "undo": { "en": "Switch the same entry off again; the app removes what it added.", "ru": "Выключите тот же пункт снова; программа убирает то, что добавила.", "uk": "Вимкніть той самий пункт знову; програма прибирає те, що додала." }
+    },
+    {
+      "id": "interface", "shot": "interface", "sel": "#page-interface", "pin": "gt",
+      "nameKey": "pageInterface",
+      "one": { "en": "How large the controls and the text are, and whether the window is made for a mouse or for touch.", "ru": "Насколько крупны элементы и текст и для мыши или для касания сделано окно.", "uk": "Наскільки великі елементи й текст і для миші чи для дотику зроблено вікно." },
+      "items": [
+        { "nameKey": "lblUiSize", "oneKey": "hintUiSize" },
+        { "nameKey": "lblTextSize", "oneKey": "hintTextSize" },
+        { "nameKey": "lblInputProfile", "oneKey": "hintInputProfile" }
+      ],
+      "why": { "en": "A larger interface makes every button, option, header and menu row bigger together; a larger text size grows the writing first. Pick what you can read and hit comfortably on your screen.", "ru": "Крупный интерфейс увеличивает вместе все кнопки, параметры, заголовки и строки меню; крупный текст сначала увеличивает надписи. Выберите то, что удобно читать и нажимать на вашем экране.", "uk": "Великий інтерфейс збільшує разом усі кнопки, параметри, заголовки та рядки меню; великий текст спершу збільшує написи. Виберіть те, що зручно читати й натискати на вашому екрані." },
+      "next": { "en": "A change applies at once and is remembered. Nothing is converted or restarted, and the window does not change its own size.", "ru": "Изменение применяется сразу и запоминается. Ничего не конвертируется и не перезапускается, а окно не меняет собственный размер.", "uk": "Зміна застосовується одразу і запам'ятовується. Нічого не конвертується й не перезапускається, а вікно не змінює власний розмір." },
+      "undo": { "en": "Pick Ordinary and Automatic again.", "ru": "Снова выберите «Обычный» и «Автоматически».", "uk": "Знову виберіть «Звичайний» і «Автоматично»." }
+    },
+    {
+      "id": "about", "shot": "about", "sel": "#page-about", "pin": "gt",
+      "nameKey": "pageAbout",
+      "one": { "en": "What is installed, updates, the helper programs, related products and the way to ask for help with a problem.", "ru": "Что установлено, обновления, вспомогательные программы, связанные продукты и способ попросить помощи с проблемой.", "uk": "Що встановлено, оновлення, допоміжні програми, пов'язані продукти та спосіб попросити допомоги з проблемою." },
+      "items": [
+        { "nameKeys": ["aboutVersion", "aboutEdition", "aboutLicence"], "one": { "en": "The version, whether this is the portable or the Store edition, and the licence (MIT).", "ru": "Версия, портативное это издание или из Microsoft Store, и лицензия (MIT).", "uk": "Версія, портативне це видання чи зі Store, і ліцензія (MIT)." } },
+        { "nameKeys": ["aboutHelp", "aboutSite", "aboutPrivacy", "aboutLicenceLink", "aboutRepo"], "one": { "en": "The help index, the product site, the privacy page, the licence text and the source code.", "ru": "Содержание справки, сайт программы, страница о конфиденциальности, текст лицензии и исходный код.", "uk": "Зміст довідки, сайт програми, сторінка про конфіденційність, текст ліцензії та вихідний код." } },
+        { "nameKeys": ["grpUpdates", "btnUpdateCheck", "autoUpdateCheck"], "oneKey": "hintAutoUpdate" },
+        { "nameKeys": ["grpSupport", "btnSendLogs"], "oneKey": "sendLogsAttachHint" },
+        { "nameKey": "btnClearLogs", "one": { "en": "Deletes the stored run logs, after asking. The count of stored logs is shown above the buttons.", "ru": "Удаляет сохранённые журналы запусков, предварительно спросив. Число сохранённых журналов показано над кнопками.", "uk": "Видаляє збережені журнали запусків, попередньо спитавши. Кількість збережених журналів показано над кнопками." } },
+        { "nameKeys": ["grpResources", "aboutEngine"], "oneKey": "resIntro" },
+        { "nameKey": "grpRelated", "oneKey": "relPortal" }
+      ],
+      "why": { "en": "When a conversion fails, the logs are what let the author find the cause. Nothing is sent by itself: you attach the archive to a message. Opening this page contacts nothing on the internet.", "ru": "Когда конвертация не удалась, журналы помогают автору найти причину. Само ничего не отправляется: вы прикладываете архив к письму. Открытие этой страницы ни к чему в интернете не обращается.", "uk": "Коли конвертація не вдалася, журнали допомагають авторові знайти причину. Саме нічого не надсилається: ви додаєте архів до листа. Відкриття цієї сторінки ні до чого в інтернеті не звертається." },
+      "next": { "en": "The update check only reports a newer version; nothing is downloaded or installed without you. In the Microsoft Store edition the Store handles updates, and the check is not shown. The Resources group says which helper programs were found on this computer; its Get links open the helpers' own sites.", "ru": "Проверка обновлений только сообщает о новой версии; без вас ничего не скачивается и не устанавливается. В издании из Microsoft Store обновляет Store, и проверка не показывается. Группа «Ресурсы» говорит, какие вспомогательные программы найдены на этом компьютере; её ссылки «Скачать» открывают сайты самих программ.", "uk": "Перевірка оновлень лише повідомляє про нову версію; без вас нічого не завантажується й не встановлюється. У виданні зі Store оновлює Store, і перевірка не показується. Група «Ресурси» каже, які допоміжні програми знайдено на цьому комп'ютері; її посилання «Завантажити» відкривають сайти самих програм." },
+      "undo": { "en": "Clearing the stored logs asks first and cannot be undone; the logs can no longer be sent after that.", "ru": "Очистка сохранённых журналов сначала спрашивает и необратима; после неё журналы уже нельзя отправить.", "uk": "Очищення збережених журналів спершу питає і незворотне; після нього журнали вже не можна надіслати." }
+    }
+  ],
+  "related": [
+    { "to": "converter", "pill": "window", "name": { "en": "DOC-HTML-UI", "ru": "DOC-HTML-UI", "uk": "DOC-HTML-UI" }, "one": { "en": "The converter window these pages belong to.", "ru": "Окно конвертера, к которому относятся эти страницы.", "uk": "Вікно конвертера, до якого належать ці сторінки." } },
+    { "to": "cost-question", "pill": "dialog", "name": { "en": "Paid translation", "ru": "Платный перевод", "uk": "Платний переклад" }, "one": { "en": "What the maximum cost changes in the question.", "ru": "Что меняет максимальная стоимость в вопросе.", "uk": "Що змінює максимальна вартість у питанні." } },
+    { "to": "run-failed", "pill": "dialog", "name": { "en": "The conversion did not finish", "ru": "Конвертация не завершилась", "uk": "Конвертація не завершилася" }, "one": { "en": "Where the logs are used.", "ru": "Где используются журналы.", "uk": "Де використовуються журнали." } },
+    { "site": "docs#external-tools", "pill": "site", "name": { "en": "Helper programs", "ru": "Вспомогательные программы", "uk": "Допоміжні програми" }, "one": { "en": "Tesseract, Calibre, 7-Zip and how the app finds them.", "ru": "Tesseract, Calibre, 7-Zip и как программа их находит.", "uk": "Tesseract, Calibre, 7-Zip і як програма їх знаходить." } },
+    { "site": "docs#logs", "pill": "site", "name": { "en": "Logs and sending them", "ru": "Журналы и их отправка", "uk": "Журнали та їх надсилання" }, "one": { "en": "What the archive holds and how to send it.", "ru": "Что в архиве и как его отправить.", "uk": "Що в архіві й як його надіслати." } }
+  ]
+}

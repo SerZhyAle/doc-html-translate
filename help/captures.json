@@ -1,0 +1,787 @@
+{
+  "about": "Written by tools/helpgen/generate.mjs. Per locale and page: the captures, their size and the pin place of every element in percent of the image, taken from the real window (CONTEXT-HELP rule 14).",
+  "version": "26.1020.2324",
+  "date": "2026-10-20",
+  "captures": {
+    "en/converter": {
+      "ready": {
+        "w": 1200,
+        "h": 1115,
+        "pins": {
+          "help": {
+            "x": 94.5,
+            "y": 2.51
+          },
+          "header": {
+            "x": 81.94,
+            "y": 9.15
+          },
+          "drop": {
+            "x": 16.33,
+            "y": 11.19
+          },
+          "run": {
+            "x": 19.67,
+            "y": 19.98
+          },
+          "status": {
+            "x": 16.33,
+            "y": 23.03
+          },
+          "previous": {
+            "x": 16.33,
+            "y": 30.13
+          },
+          "recent": {
+            "x": 16.33,
+            "y": 40.25
+          },
+          "output": {
+            "x": 16.33,
+            "y": 56.21
+          },
+          "translation": {
+            "x": 16.33,
+            "y": 66.22
+          },
+          "languages": {
+            "x": 16.33,
+            "y": 73.18
+          },
+          "options": {
+            "x": 16.33,
+            "y": 83.19
+          },
+          "command": {
+            "x": 84.17,
+            "y": 10.48
+          },
+          "log": {
+            "x": 84.17,
+            "y": 20.48
+          }
+        },
+        "image": {
+          "dark": "converter-ready-dark.png",
+          "light": "converter-ready-light.png"
+        }
+      },
+      "states": {
+        "w": 1200,
+        "h": 1493,
+        "pins": {
+          "first-run": {
+            "x": 16.33,
+            "y": 8.36
+          },
+          "queue": {
+            "x": 16.33,
+            "y": 45.24
+          },
+          "google-key": {
+            "x": 16.33,
+            "y": 77.54
+          }
+        },
+        "image": {
+          "dark": "converter-states-dark.png",
+          "light": "converter-states-light.png"
+        }
+      }
+    },
+    "en/settings": {
+      "advanced": {
+        "w": 1024,
+        "h": 234,
+        "pins": {
+          "advanced": {
+            "x": 2.54,
+            "y": 10.26
+          }
+        },
+        "image": {
+          "dark": "settings-advanced-dark.png",
+          "light": "settings-advanced-light.png"
+        }
+      },
+      "ollama": {
+        "w": 1024,
+        "h": 291,
+        "pins": {
+          "ollama": {
+            "x": 2.54,
+            "y": 8.25
+          }
+        },
+        "image": {
+          "dark": "settings-ollama-dark.png",
+          "light": "settings-ollama-light.png"
+        }
+      },
+      "ocr": {
+        "w": 1024,
+        "h": 250,
+        "pins": {
+          "ocr": {
+            "x": 2.54,
+            "y": 9.6
+          }
+        },
+        "image": {
+          "dark": "settings-ocr-dark.png",
+          "light": "settings-ocr-light.png"
+        }
+      },
+      "windows": {
+        "w": 1024,
+        "h": 185,
+        "pins": {
+          "integration": {
+            "x": 2.54,
+            "y": 12.97
+          }
+        },
+        "image": {
+          "dark": "settings-windows-dark.png",
+          "light": "settings-windows-light.png"
+        }
+      },
+      "interface": {
+        "w": 1024,
+        "h": 256,
+        "pins": {
+          "interface": {
+            "x": 2.54,
+            "y": 9.38
+          }
+        },
+        "image": {
+          "dark": "settings-interface-dark.png",
+          "light": "settings-interface-light.png"
+        }
+      },
+      "about": {
+        "w": 1024,
+        "h": 866,
+        "pins": {
+          "about": {
+            "x": 2.54,
+            "y": 2.77
+          }
+        },
+        "image": {
+          "dark": "settings-about-dark.png",
+          "light": "settings-about-light.png"
+        }
+      }
+    },
+    "en/cost-question": {
+      "dialog": {
+        "w": 600,
+        "h": 250,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 31.7
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.4
+          },
+          "yes": {
+            "x": 80.67,
+            "y": 92.3
+          },
+          "no": {
+            "x": 55.64,
+            "y": 92.3
+          }
+        },
+        "image": {
+          "dark": "cost-question-dialog-dark.png",
+          "light": "cost-question-dialog-light.png"
+        }
+      }
+    },
+    "en/secret-file-password": {
+      "dialog": {
+        "w": 551,
+        "h": 263,
+        "pins": {
+          "help": {
+            "x": 91.9,
+            "y": 30.23
+          },
+          "password": {
+            "x": 4.28,
+            "y": 52.09
+          },
+          "open": {
+            "x": 85.22,
+            "y": 92.97
+          },
+          "cancel": {
+            "x": 68.38,
+            "y": 92.97
+          }
+        },
+        "image": {
+          "dark": "secret-file-password-dialog-dark.png",
+          "light": "secret-file-password-dialog-light.png"
+        }
+      }
+    },
+    "en/run-failed": {
+      "dialog": {
+        "w": 600,
+        "h": 250,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 31.7
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.4
+          },
+          "send": {
+            "x": 59.48,
+            "y": 92.3
+          },
+          "retry": {
+            "x": 84.71,
+            "y": 92.3
+          },
+          "close": {
+            "x": 35.94,
+            "y": 92.3
+          }
+        },
+        "image": {
+          "dark": "run-failed-dialog-dark.png",
+          "light": "run-failed-dialog-light.png"
+        }
+      }
+    },
+    "ru/converter": {
+      "ready": {
+        "w": 1200,
+        "h": 1188,
+        "pins": {
+          "help": {
+            "x": 94.5,
+            "y": 2.36
+          },
+          "header": {
+            "x": 34.61,
+            "y": 12.86
+          },
+          "drop": {
+            "x": 16.33,
+            "y": 13.87
+          },
+          "run": {
+            "x": 19.67,
+            "y": 22.12
+          },
+          "status": {
+            "x": 16.33,
+            "y": 24.98
+          },
+          "previous": {
+            "x": 16.33,
+            "y": 31.65
+          },
+          "recent": {
+            "x": 16.33,
+            "y": 41.14
+          },
+          "output": {
+            "x": 16.33,
+            "y": 56.13
+          },
+          "translation": {
+            "x": 16.33,
+            "y": 66.93
+          },
+          "languages": {
+            "x": 16.33,
+            "y": 73.47
+          },
+          "options": {
+            "x": 16.33,
+            "y": 84.27
+          },
+          "command": {
+            "x": 84.17,
+            "y": 13.2
+          },
+          "log": {
+            "x": 84.17,
+            "y": 22.59
+          }
+        },
+        "image": {
+          "dark": "converter-ready-dark.png",
+          "light": "converter-ready-light.png"
+        }
+      },
+      "states": {
+        "w": 1200,
+        "h": 1600,
+        "pins": {
+          "first-run": {
+            "x": 16.33,
+            "y": 10.3
+          },
+          "queue": {
+            "x": 16.33,
+            "y": 45.8
+          },
+          "google-key": {
+            "x": 16.33,
+            "y": 79.09
+          }
+        },
+        "image": {
+          "dark": "converter-states-dark.png",
+          "light": "converter-states-light.png"
+        }
+      }
+    },
+    "ru/settings": {
+      "advanced": {
+        "w": 1023,
+        "h": 251,
+        "pins": {
+          "advanced": {
+            "x": 2.6,
+            "y": 9.56
+          }
+        },
+        "image": {
+          "dark": "settings-advanced-dark.png",
+          "light": "settings-advanced-light.png"
+        }
+      },
+      "ollama": {
+        "w": 1024,
+        "h": 291,
+        "pins": {
+          "ollama": {
+            "x": 2.54,
+            "y": 8.25
+          }
+        },
+        "image": {
+          "dark": "settings-ollama-dark.png",
+          "light": "settings-ollama-light.png"
+        }
+      },
+      "ocr": {
+        "w": 1024,
+        "h": 250,
+        "pins": {
+          "ocr": {
+            "x": 2.54,
+            "y": 9.6
+          }
+        },
+        "image": {
+          "dark": "settings-ocr-dark.png",
+          "light": "settings-ocr-light.png"
+        }
+      },
+      "windows": {
+        "w": 1024,
+        "h": 202,
+        "pins": {
+          "integration": {
+            "x": 2.54,
+            "y": 11.88
+          }
+        },
+        "image": {
+          "dark": "settings-windows-dark.png",
+          "light": "settings-windows-light.png"
+        }
+      },
+      "interface": {
+        "w": 1024,
+        "h": 272,
+        "pins": {
+          "interface": {
+            "x": 2.54,
+            "y": 8.82
+          }
+        },
+        "image": {
+          "dark": "settings-interface-dark.png",
+          "light": "settings-interface-light.png"
+        }
+      },
+      "about": {
+        "w": 1024,
+        "h": 866,
+        "pins": {
+          "about": {
+            "x": 2.54,
+            "y": 2.77
+          }
+        },
+        "image": {
+          "dark": "settings-about-dark.png",
+          "light": "settings-about-light.png"
+        }
+      }
+    },
+    "ru/cost-question": {
+      "dialog": {
+        "w": 600,
+        "h": 250,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 31.7
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.4
+          },
+          "yes": {
+            "x": 78.07,
+            "y": 92.3
+          },
+          "no": {
+            "x": 50.03,
+            "y": 92.3
+          }
+        },
+        "image": {
+          "dark": "cost-question-dialog-dark.png",
+          "light": "cost-question-dialog-light.png"
+        }
+      }
+    },
+    "ru/secret-file-password": {
+      "dialog": {
+        "w": 600,
+        "h": 283,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 28.18
+          },
+          "password": {
+            "x": 3.83,
+            "y": 48.5
+          },
+          "open": {
+            "x": 84.8,
+            "y": 93.37
+          },
+          "cancel": {
+            "x": 67.18,
+            "y": 93.37
+          }
+        },
+        "image": {
+          "dark": "secret-file-password-dialog-dark.png",
+          "light": "secret-file-password-dialog-light.png"
+        }
+      }
+    },
+    "ru/run-failed": {
+      "dialog": {
+        "w": 600,
+        "h": 250,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 31.7
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.4
+          },
+          "send": {
+            "x": 45.89,
+            "y": 92.3
+          },
+          "retry": {
+            "x": 79.14,
+            "y": 92.3
+          },
+          "close": {
+            "x": 18.44,
+            "y": 92.3
+          }
+        },
+        "image": {
+          "dark": "run-failed-dialog-dark.png",
+          "light": "run-failed-dialog-light.png"
+        }
+      }
+    },
+    "uk/converter": {
+      "ready": {
+        "w": 1200,
+        "h": 1205,
+        "pins": {
+          "help": {
+            "x": 94.5,
+            "y": 2.32
+          },
+          "header": {
+            "x": 34.11,
+            "y": 12.68
+          },
+          "drop": {
+            "x": 16.33,
+            "y": 13.68
+          },
+          "run": {
+            "x": 19.67,
+            "y": 21.81
+          },
+          "status": {
+            "x": 16.33,
+            "y": 24.63
+          },
+          "previous": {
+            "x": 16.33,
+            "y": 32.6
+          },
+          "recent": {
+            "x": 16.33,
+            "y": 41.96
+          },
+          "output": {
+            "x": 16.33,
+            "y": 56.73
+          },
+          "translation": {
+            "x": 16.33,
+            "y": 67.38
+          },
+          "languages": {
+            "x": 16.33,
+            "y": 73.82
+          },
+          "options": {
+            "x": 16.33,
+            "y": 84.48
+          },
+          "command": {
+            "x": 84.17,
+            "y": 13.01
+          },
+          "log": {
+            "x": 84.17,
+            "y": 22.27
+          }
+        },
+        "image": {
+          "dark": "converter-ready-dark.png",
+          "light": "converter-ready-light.png"
+        }
+      },
+      "states": {
+        "w": 1200,
+        "h": 1634,
+        "pins": {
+          "first-run": {
+            "x": 16.33,
+            "y": 10.09
+          },
+          "queue": {
+            "x": 16.33,
+            "y": 45.87
+          },
+          "google-key": {
+            "x": 16.33,
+            "y": 78.48
+          }
+        },
+        "image": {
+          "dark": "converter-states-dark.png",
+          "light": "converter-states-light.png"
+        }
+      }
+    },
+    "uk/settings": {
+      "advanced": {
+        "w": 1024,
+        "h": 251,
+        "pins": {
+          "advanced": {
+            "x": 2.54,
+            "y": 9.56
+          }
+        },
+        "image": {
+          "dark": "settings-advanced-dark.png",
+          "light": "settings-advanced-light.png"
+        }
+      },
+      "ollama": {
+        "w": 1024,
+        "h": 291,
+        "pins": {
+          "ollama": {
+            "x": 2.54,
+            "y": 8.25
+          }
+        },
+        "image": {
+          "dark": "settings-ollama-dark.png",
+          "light": "settings-ollama-light.png"
+        }
+      },
+      "ocr": {
+        "w": 1024,
+        "h": 250,
+        "pins": {
+          "ocr": {
+            "x": 2.55,
+            "y": 9.6
+          }
+        },
+        "image": {
+          "dark": "settings-ocr-dark.png",
+          "light": "settings-ocr-light.png"
+        }
+      },
+      "windows": {
+        "w": 1024,
+        "h": 202,
+        "pins": {
+          "integration": {
+            "x": 2.54,
+            "y": 11.88
+          }
+        },
+        "image": {
+          "dark": "settings-windows-dark.png",
+          "light": "settings-windows-light.png"
+        }
+      },
+      "interface": {
+        "w": 1024,
+        "h": 272,
+        "pins": {
+          "interface": {
+            "x": 2.54,
+            "y": 8.82
+          }
+        },
+        "image": {
+          "dark": "settings-interface-dark.png",
+          "light": "settings-interface-light.png"
+        }
+      },
+      "about": {
+        "w": 1024,
+        "h": 866,
+        "pins": {
+          "about": {
+            "x": 2.54,
+            "y": 2.77
+          }
+        },
+        "image": {
+          "dark": "settings-about-dark.png",
+          "light": "settings-about-light.png"
+        }
+      }
+    },
+    "uk/cost-question": {
+      "dialog": {
+        "w": 600,
+        "h": 250,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 31.7
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.4
+          },
+          "yes": {
+            "x": 77.47,
+            "y": 92.3
+          },
+          "no": {
+            "x": 48.37,
+            "y": 92.3
+          }
+        },
+        "image": {
+          "dark": "cost-question-dialog-dark.png",
+          "light": "cost-question-dialog-light.png"
+        }
+      }
+    },
+    "uk/secret-file-password": {
+      "dialog": {
+        "w": 600,
+        "h": 283,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 28.18
+          },
+          "password": {
+            "x": 3.83,
+            "y": 48.5
+          },
+          "open": {
+            "x": 84.64,
+            "y": 93.37
+          },
+          "cancel": {
+            "x": 65.64,
+            "y": 93.37
+          }
+        },
+        "image": {
+          "dark": "secret-file-password-dialog-dark.png",
+          "light": "secret-file-password-dialog-light.png"
+        }
+      }
+    },
+    "uk/run-failed": {
+      "dialog": {
+        "w": 600,
+        "h": 269,
+        "pins": {
+          "help": {
+            "x": 92.5,
+            "y": 29.55
+          },
+          "message": {
+            "x": 3.83,
+            "y": 46.84
+          },
+          "send": {
+            "x": 47.1,
+            "y": 93.12
+          },
+          "retry": {
+            "x": 79.94,
+            "y": 93.12
+          },
+          "close": {
+            "x": 19.29,
+            "y": 93.12
+          }
+        },
+        "image": {
+          "dark": "run-failed-dialog-dark.png",
+          "light": "run-failed-dialog-light.png"
+        }
+      }
+    }
+  }
+}

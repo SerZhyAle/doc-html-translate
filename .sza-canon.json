@@ -1,8 +1,9 @@
 {
   "canon": {
-    "version": "2026.09.24.1",
-    "coreDigest": "sha256:79ee333369303df6fc85335bd67c08029f28356497c63b91e257d7e7b3f14d68",
+    "version": "2026.10.17.1",
+    "coreDigest": "sha256:b467aefe4ce6917cc75c2cca56a0dcc4b3a74e793ef056112f37dee6d12456fa",
     "adoptedOn": "2026-08-18",
+    "reconciledOn": "2026-10-17",
     "model": "reference",
     "contribRecord": "contrib/epub_2_html.md"
   },
@@ -29,7 +30,7 @@
   "site": {
     "kind": "product",
     "root": ".",
-    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "install-trust.html", "release-notes.html", "extension.html", "extension-privacy.html",
+    "pages": ["index.html", "docs.html", "docs.ru.html", "docs.uk.html", "privacy.html", "install-trust.html", "release-notes.html", "extension.html", "extension-privacy.html", "support.html",
               "ar/index.html", "bn/index.html", "de/index.html", "es/index.html", "fr/index.html",
               "hi/index.html", "it/index.html", "pt/index.html", "ur/index.html", "zh/index.html"]
   },

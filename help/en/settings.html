@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Help - Settings</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Breadcrumb">
+    <a href="index.html">Help index</a><span class="sep" aria-hidden="true">/</span><span>Settings</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Window help</p>
+    <h1>Settings</h1>
+    <p class="lead">The window keeps its settings on pages, listed at its start. Choose a page and its settings appear in place; the window remembers the page you were on. In a narrow window the same list opens from the Pages button.</p>
+  </header>
+
+  <figure class="shot" id="shot-advanced">
+    <div class="frame">
+      <img class="on-dark" src="settings-advanced-dark.png" width="1024" height="234" alt="The Advanced page: split size, contents depth and maximum cost.">
+      <img class="on-light" src="settings-advanced-light.png" width="1024" height="234" alt="">
+      <a class="pin" style="--x:2.54%;--y:10.26%" href="#advanced" aria-label="1, Advanced">1</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-ollama">
+    <div class="frame">
+      <img class="on-dark" src="settings-ollama-dark.png" width="1024" height="291" alt="The Ollama page: the model, how many batches run in parallel and the context size.">
+      <img class="on-light" src="settings-ollama-light.png" width="1024" height="291" alt="">
+      <a class="pin" style="--x:2.54%;--y:8.25%" href="#ollama" aria-label="2, Ollama">2</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-ocr">
+    <div class="frame">
+      <img class="on-dark" src="settings-ocr-dark.png" width="1024" height="250" alt="The Image OCR page: the overlay option with its help button, the OCR language and the language download.">
+      <img class="on-light" src="settings-ocr-light.png" width="1024" height="250" alt="">
+      <a class="pin" style="--x:2.54%;--y:9.6%" href="#ocr" aria-label="3, Image OCR">3</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-windows">
+    <div class="frame">
+      <img class="on-dark" src="settings-windows-dark.png" width="1024" height="185" alt="The Windows page: the right-click entries option and the default-app option with its help button.">
+      <img class="on-light" src="settings-windows-light.png" width="1024" height="185" alt="">
+      <a class="pin" style="--x:2.54%;--y:12.97%" href="#integration" aria-label="4, Windows">4</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-interface">
+    <div class="frame">
+      <img class="on-dark" src="settings-interface-dark.png" width="1024" height="256" alt="The Interface page: the interface size, the text size and the controls profile.">
+      <img class="on-light" src="settings-interface-light.png" width="1024" height="256" alt="">
+      <a class="pin" style="--x:2.54%;--y:9.38%" href="#interface" aria-label="5, Interface">5</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-about">
+    <div class="frame">
+      <img class="on-dark" src="settings-about-dark.png" width="1024" height="866" alt="The About page: the version, the links, and the groups Updates, Support and diagnostics, Resources and Related products.">
+      <img class="on-light" src="settings-about-light.png" width="1024" height="866" alt="">
+      <a class="pin" style="--x:2.54%;--y:2.77%" href="#about" aria-label="6, About">6</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <h2>In this order</h2>
+  <p>This part has no fixed order; its elements are grouped by topic below.</p>
+
+  <h2>The elements</h2>
+  <div class="elements">
+
+    <details class="el" id="advanced">
+      <summary><span class="mk">1</span><span><span class="name">Advanced</span><span class="one">Splitting the book into chunks, the depth of the contents and a cost limit.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Split size</b> - Characters per chunk; <code>0</code> disables splitting. When in doubt, <code>0</code>.</li>
+          <li><b>TOC depth / Max cost</b> - TOC depth: <code>0</code> = unlimited nesting, <code>1</code> = chapters only. Max cost (paid engines only): <code>0</code> = no limit; e.g. <code>2</code> skips Google if the estimate tops $2 (book still converts, untranslated).</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>The defaults suit almost every book; change them only when a book is huge, its contents are too deep, or you want a ceiling on a paid translation.</dd>
+          <dt>Next</dt><dd>A value is used by the next conversion and shows in the command line.</dd>
+          <dt>Undo</dt><dd>Set the field back to 0.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="ollama">
+      <summary><span class="mk">2</span><span><span class="name">Ollama</span><span class="one">The local model that translates when the engine is Ollama.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Model</b> - A model already pulled into your local Ollama; <code>gemma3:12b</code> is the default. A larger model translates better but needs more memory and runs slower.</li>
+          <li><b>Parallel</b> - How many batches go to Ollama at once; <code>1</code> (the minimum) sends them one by one. More helps only when Ollama itself runs with <code>OLLAMA_NUM_PARALLEL</code> set to the same number, and costs memory.</li>
+          <li><b>Context</b> - The model's working window per request, in tokens: minimum <code>512</code>, default <code>8192</code>. Smaller is faster and uses less memory, but below about <code>4000</code> a batch of text may not fit; larger only costs memory.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>These only matter with the Ollama engine; with any other engine they are ignored.</dd>
+          <dt>Next</dt><dd>The values go into the command line only when Ollama is chosen and differ from the defaults.</dd>
+          <dt>Undo</dt><dd>Type the default back: gemma3:12b, 1 and 8192.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="ocr">
+      <summary><span class="mk">3</span><span><span class="name">Image OCR</span><span class="one">Makes the text inside pictures translatable.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Overlay translatable text on images</b> - Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</li>
+          <li><b>OCR language</b> - Which language the recognizer reads. Automatic follows the source language.</li>
+          <li><b>Add language / Download</b> - English is built-in; download other languages as needed.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>Scanned pages, comics and pictures have no text to translate until it is recognized.</dd>
+          <dt>Next</dt><dd>The recognized text is laid over each picture as real text. The question-mark button beside the option explains both states in full. Downloading a language data file is the one thing on this page that needs the internet; the file is checked against its published checksum before it is kept.</dd>
+          <dt>Undo</dt><dd>Untick the overlay for the next conversion. Existing results keep their text layer until rebuilt.</dd>
+        </dl>
+        <div class="note"><span class="tag">Careful</span><p>The overlay needs Tesseract installed. The status line under the file box tells you when it is missing.</p></div>
+      </div>
+    </details>
+
+    <details class="el" id="integration">
+      <summary><span class="mk">4</span><span><span class="name">Windows</span><span class="one">Optional links between the app and Windows; both are off until you switch them on.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Right-click &quot;Convert to HTML&quot; and &quot;Open with&quot;</b> - Optional. Adds a "Convert to HTML" command to the right-click menu of supported files and lists this app under "Open with". Your default apps stay as they are.</li>
+          <li><b>Make this app the default handler for EPUB, PDF, ..</b> - Optional and off by default. Makes double-clicking a document open it with this app (per-user file associations).</li>
+          <li><b>Open Default apps</b> - Opens the Windows page where the final say on default apps belongs to you.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>They save a step: right-click a book and convert it, or double-click it to open it here.</dd>
+          <dt>Next</dt><dd>Windows may keep opening a file type with an app you chose earlier; this page then says so, and only you can change it. This page is not shown in the Microsoft Store edition, which registers nothing in Windows itself.</dd>
+          <dt>Undo</dt><dd>Switch the same entry off again; the app removes what it added.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="interface">
+      <summary><span class="mk">5</span><span><span class="name">Interface</span><span class="one">How large the controls and the text are, and whether the window is made for a mouse or for touch.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Interface size</b> - Scales the buttons, options, headers and menu together - text, icons, spacing and click targets.</li>
+          <li><b>Text size</b> - Enlarges the text first and the layout with it; the icons grow only moderately. It stacks with the interface size.</li>
+          <li><b>Controls</b> - Touch makes every target larger. Automatic picks once when the window opens; it never changes while you work. Choose here on a device that has both.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>A larger interface makes every button, option, header and menu row bigger together; a larger text size grows the writing first. Pick what you can read and hit comfortably on your screen.</dd>
+          <dt>Next</dt><dd>A change applies at once and is remembered. Nothing is converted or restarted, and the window does not change its own size.</dd>
+          <dt>Undo</dt><dd>Pick Ordinary and Automatic again.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="about">
+      <summary><span class="mk">6</span><span><span class="name">About</span><span class="one">What is installed, updates, the helper programs, related products and the way to ask for help with a problem.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Version / Edition / Licence</b> - The version, whether this is the portable or the Store edition, and the licence (MIT).</li>
+          <li><b>Help / Product site / Privacy / Licence text / Source code</b> - The help index, the product site, the privacy page, the licence text and the source code.</li>
+          <li><b>Updates / Check for updates / Check automatically (once a day)</b> - Checks the release feed once a day and only reports - nothing is downloaded or installed without you.</li>
+          <li><b>Support and diagnostics / Send logs to the author</b> - The archive is selected in the folder and its path is on the clipboard - attach it to the message before sending.</li>
+          <li><b>Clear stored logs</b> - Deletes the stored run logs, after asking. The count of stored logs is shown above the buttons.</li>
+          <li><b>Resources / Converter engine</b> - What the program needs in order to run, and where to get it. Nothing is installed for you.</li>
+          <li><b>Related products</b> - All projects of the same author</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>When a conversion fails, the logs are what let the author find the cause. Nothing is sent by itself: you attach the archive to a message. Opening this page contacts nothing on the internet.</dd>
+          <dt>Next</dt><dd>The update check only reports a newer version; nothing is downloaded or installed without you. In the Microsoft Store edition the Store handles updates, and the check is not shown. The Resources group says which helper programs were found on this computer; its Get links open the helpers' own sites.</dd>
+          <dt>Undo</dt><dd>Clearing the stored logs asks first and cannot be undone; the logs can no longer be sent after that.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Related</h2>
+  <ul class="related">
+    <li><a href="converter.html"><b>DOC-HTML-UI</b><span class="pill">Window</span><small>The converter window these pages belong to.</small></a></li>
+    <li><a href="cost-question.html"><b>Paid translation</b><span class="pill">Dialog</span><small>What the maximum cost changes in the question.</small></a></li>
+    <li><a href="run-failed.html"><b>The conversion did not finish</b><span class="pill">Dialog</span><small>Where the logs are used.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#external-tools" target="_blank" rel="noopener"><b>Helper programs</b><span class="pill gold">Site</span><small>Tesseract, Calibre, 7-Zip and how the app finds them.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#logs" target="_blank" rel="noopener"><b>Logs and sending them</b><span class="pill gold">Site</span><small>What the archive holds and how to send it.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Captured against DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Help index</a>
+    <a href="mailto:sza@ukr.net">Ask a question or report a problem</a>
+  </footer>
+
+</main>
+</body>
+</html>

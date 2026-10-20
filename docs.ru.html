@@ -2,7 +2,7 @@
 <html lang="ru" data-lang="ru" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <!-- l10n-source: docs.html sha256:52dc3b9918d6dce7 -->
+  <!-- l10n-source: docs.html sha256:4f563416fa63bff8 -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0f0a">
   <link rel="canonical" href="https://serzhyale.github.io/doc-html-translate/docs.ru.html">
@@ -74,7 +74,7 @@
   <header class="site-header">
     <a class="brand" href="./" aria-label="doc-html-translate"><span class="brand-mark" aria-hidden="true"><span>DOC<br>HTML</span></span><span>doc-html-translate<span class="dot">.</span></span></a>
     <div class="seg" role="group" aria-label="Язык">
-      <button type="button" data-set-lang="ru" data-href="docs.ru.html">RU</button><button type="button" data-set-lang="en" data-href="docs.html">EN</button><button type="button" data-set-lang="ua" data-href="docs.uk.html">UA</button>
+      <a href="docs.ru.html" hreflang="ru" data-set-lang="ru" aria-current="true">RU</a><a href="docs.html" hreflang="en" data-set-lang="en">EN</a><a href="docs.uk.html" hreflang="uk" data-set-lang="ua">UA</a>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Светлая тема">◐</button>
     <nav class="site-nav" aria-label="Основная навигация"><a class="btn btn-primary btn-sm" href="index.html#get">Установка</a></nav>
@@ -133,7 +133,7 @@
         <ol class="steps">
           <li>Соберите программу. Пропустите этот шаг, если скачали готовый релиз.
             <div class="commands">
-              <div class="copybox" data-copy="go build -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Копировать</button></div>
+              <div class="copybox" data-copy="go build -tags nodynamic -o build/doc-html-translate.exe ./cmd/doc-html-translate"><span class="tok">go</span> build -tags nodynamic -o build/doc-html-translate.exe ./cmd/doc-html-translate<button class="copy" type="button">Копировать</button></div>
             </div>
           </li>
           <li>Запустите её в нужном режиме. Обычная конвертация - это команда из <a href="#workflow">рекомендуемого сценария</a>; эти добавляют флаг:
@@ -158,7 +158,8 @@
         <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 и комиксы CBZ/CBR/CB7/CBT. Набор, прямо скажем, приличный.</p>
         <div class="pills"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">TXT</span><span class="pill">Markdown</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">HTML</span><span class="pill">MOBI / AZW3</span><span class="pill">CBZ / CBR / CB7 / CBT</span></div>
         <p>А ещё <strong>комиксы</strong> (CBZ / CBR / CB7 / CBT): это контейнер со страницами-картинками без текстового слоя, он открывается страница за страницей с принудительно включённым OCR, поэтому текст в «пузырях» распознаётся и ложится переводимыми плашками поверх каждой страницы. CBZ и CBT не требуют ничего дополнительно; CBR и CB7 требуют установленного <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> (тот же приём с внешним инструментом, что и MOBI с Calibre).</p>
-        <p>А ещё <strong>одиночная картинка</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF): приложение распознаёт на ней текст и накладывает его переводимыми плашками поверх изображения, чтобы встроенный перевод страницы в Chrome/Edge работал прямо на картинке - тот же слой текста, что делает расширение для браузера. Нужен OCR-движок <strong>Tesseract</strong> (см. <code>-ocr-lang</code>).</p>
+        <p>А ещё <strong>одиночная картинка</strong> (PNG, JPG, JPEG, WebP, GIF, BMP, TIFF, JPEG XL (.jxl)): приложение распознаёт на ней текст и накладывает его переводимыми плашками поверх изображения, чтобы встроенный перевод страницы в Chrome/Edge работал прямо на картинке - тот же слой текста, что делает расширение для браузера. Нужен OCR-движок <strong>Tesseract</strong> (см. <code>-ocr-lang</code>).</p>
+        <p>Картинки JPEG XL (.jxl) локально преобразуются встроенным декодером в PNG перед показом и OCR, в том числе внутри книг и комиксов. Прозрачность сохраняется; у анимированного JPEG XL используется первый отображаемый кадр. Дополнительная программа для изображений или кодек браузера не нужны.</p>
         <p class="small">MOBI и AZW3: требуется установленный <a href="https://calibre-ebook.com" target="_blank" rel="noopener">Calibre</a>. Комиксы CBR и CB7: требуется установленный <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> (CBZ и CBT не требуют ничего дополнительно). Файлы с DRM не поддерживаются - конвертер уважает замки, которые не умеет вскрывать.</p>
         <p class="small">Обычный текст (.txt) декодируется по ведущим байтам - метка порядка байтов UTF-8/UTF-16, затем корректный UTF-8, затем устаревшая кириллическая кодовая страница (Windows-1251, KOI8-R, CP866) по детекции - так что .txt из времён DOS или сохранённый в Notepad как «Unicode» читается текстом, а не «кракозябрами». Нечитаемый бинарник (.docx, .djvu или архив комикса без 7-Zip) отклоняется с указанием формата, а не превращается в мусорный документ.</p>
       </details>
@@ -256,14 +257,14 @@
           <dt>Понадобится</dt><dd>Почтовая программа - для готового письма. У расширения для браузера нет хранилища журналов, и оно копирует короткую сводку (см. ниже).</dd>
         </dl>
         <ol class="steps">
-          <li>Откройте раздел <strong>О программе</strong> внизу настроек приложения <strong>doc-html-ui</strong> и нажмите <strong>Отправить журналы автору</strong>. Одно нажатие собирает единый архив, открывает его папку с выделенным файлом, копирует путь в буфер обмена и открывает готовое письмо в вашей почтовой программе.
-            <figure class="shot"><img src="tools/store/docs-about-ru.png" width="600" height="285" loading="lazy" alt="Блок «О программе» в doc-html-ui, развёрнутый: версия, издание, проверка обновлений, движок конвертера, число сохранённых журналов и кнопки «Отправить журналы автору» и «Очистить журналы»"><figcaption>Блок «О программе» внизу настроек. Кнопка «Открыть архив» появляется рядом с «Отправить журналы автору», когда архив уже есть.</figcaption></figure>
+          <li>Откройте страницу <strong>О программе</strong> приложения <strong>doc-html-ui</strong>, её группу <strong>Поддержка и диагностика</strong>, и нажмите <strong>Отправить журналы автору</strong>. Одно нажатие собирает единый архив, открывает его папку с выделенным файлом, копирует путь в буфер обмена и открывает готовое письмо в вашей почтовой программе.
+            <figure class="shot"><img src="tools/store/docs-about-ru.png" width="668" height="155" loading="lazy" alt="Группа «Поддержка и диагностика» на странице «О программе» в doc-html-ui: ссылка для обратной связи, число сохранённых журналов и кнопки «Отправить журналы автору» и «Очистить журналы»"><figcaption>Группа «Поддержка и диагностика» на странице «О программе». Кнопка «Открыть архив» появляется рядом с «Отправить журналы автору», когда архив уже есть.</figcaption></figure>
           </li>
           <li>Прикрепите архив к этому письму и нажмите «Отправить». Само приложение ничего не отправляет.</li>
         </ol>
         <p>Архив пишется в <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> и содержит ровно три вещи:</p>
         <ul>
-          <li><strong>environment.txt</strong> - версия, издание, платформа, язык интерфейса, найден ли Tesseract и какие языки OCR установлены, модель Ollama по умолчанию. Всегда на английском, чтобы автор читал один формат.</li>
+          <li><strong>environment.txt</strong> - версия, издание, платформа, язык интерфейса, найден ли Tesseract и какие языки OCR установлены, модель Ollama по умолчанию, а также строка «logs left out» с их числом, если лимит размера оставил часть журналов запусков вне архива. Всегда на английском, чтобы автор читал один формат.</li>
           <li><strong>settings.json</strong> - настройки, с которыми шёл последний запуск.</li>
           <li><strong>logs/</strong> - недавние журналы запусков, свежие первыми.</li>
         </ul>
@@ -285,7 +286,7 @@
         <ol class="steps">
           <li>Откройте его, как любой другой документ: из командной строки, выбором или перетаскиванием в окно, из очереди или списка недавних либо пунктом <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><em>Convert to HTML</em> контекстного меню. По байтам не видно, что внутри, поэтому приложение лишь предполагает секретный файл. Сначала, ничего не спрашивая, оно выясняет, не готов ли уже результат (неизменённый файл открывается повторно вовсе без пароля), установлен ли FileDO и подходит ли размер файла под формат.</li>
           <li>Введите пароль в маскированном поле и нажмите <strong>Открыть</strong> - один раз на всю очередь; консоль спрашивает без отображения. Пустой пароль открывает только файл, сделанный без пароля: это маскировка, а не секретность.
-            <figure class="shot"><img src="tools/store/docs-password-ru.png" width="560" height="246" loading="lazy" alt="Окно пароля doc-html-ui для секретного файла FileDO: маскированное поле «Пароль» и кнопки «Открыть» и «Отмена»"><figcaption>Вопрос о пароле секретного файла, ввод маскируется.</figcaption></figure>
+            <figure class="shot"><img src="tools/store/docs-password-ru.png" width="560" height="244" loading="lazy" alt="Окно пароля doc-html-ui для секретного файла FileDO: маскированное поле «Пароль» и кнопки «Открыть» и «Отмена»"><figcaption>Вопрос о пароле секретного файла, ввод маскируется.</figcaption></figure>
           </li>
         </ol>
         <p>Затем приложение расшифровывает файл <strong class="claim">установленным на компьютере FileDO</strong> в одну личную папку внутри временной папки, конвертирует документ или картинку внутри точно так же, как оригинал, и удаляет расшифрованную копию, как только она прочитана. Копия, оставшаяся после сбоя, удаляется при следующем запуске.</p>
@@ -370,7 +371,7 @@
       <ul>
         <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Расширение для браузера (Chrome Web Store)</a> · <a href="extension.html">страница расширения</a></li>
         <li><a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Приложение из Microsoft Store (MSIX)</a></li>
-        <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Скачать последний релиз</a> · <a href="install-trust.html?l=ru">«Система Windows защитила ваш компьютер»? Что нажать</a></li>
+        <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Скачать последний релиз</a> · <a href="install-trust.html?lang=ru">«Система Windows защитила ваш компьютер»? Что нажать</a></li>
       </ul>
     </section>
 
@@ -379,7 +380,7 @@
     <div class="note"><div class="tag">Связанный инструмент</div><p>Для отдельных изображений, сканов и медиа, которые нужно просмотреть или отсортировать, подходит <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener">Fast Media Sorter for Windows</a>. Он дополняет этот инструмент, а не заменяет его.</p></div>
   </main>
 
-  <footer class="site-footer"><div class="container"><h2>Другие инструменты SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>StreamsPlayer</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a></span></div></div></footer>
+  <footer class="site-footer"><div class="container"><h2>Другие инструменты SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="support.html">Поддержка</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{
     ru:{title:'Doc-HTML-Translate Документация',desc:'Быстрая документация Doc-HTML-Translate: установка, запуск, флаги и бесплатный сценарий перевода через Chrome.',copied:'Скопировано',toLight:'Светлая тема',toDark:'Тёмная тема',toTop:'В начало страницы',expand:'Развернуть все',collapse:'Свернуть все'}}};</script>

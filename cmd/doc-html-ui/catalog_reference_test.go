@@ -12,6 +12,10 @@ import (
 // WINDOWS-UI section 5: the catalog reference records source-derived baseline metrics,
 // not a runtime verdict. Compare its common target floor with the launcher, without
 // importing another toolkit's row widths or claiming the new section 9 frame budgets.
+//
+// The launcher no longer has a fixed floor: UI-SIZING (ticket 119) replaced it with one token
+// resolver, where the pointer-profile target is --tgt = base * --s and the smallest declared
+// scale is the lower bound of the --s clamp. The compact pointer target is their product.
 func TestWindowsUIReferenceTargetIfAvailable(t *testing.T) {
 	catalog := os.Getenv("SZA_CONTRACTS_ROOT")
 	if catalog == "" {
@@ -42,15 +46,24 @@ func TestWindowsUIReferenceTargetIfAvailable(t *testing.T) {
 		if err != nil || floor <= 0 {
 			t.Fatalf("invalid reference MinTarget %q", source.Constants["MinTarget"])
 		}
-		match := regexp.MustCompile(`\.inline-btn \{ min-height: (\d+)px;`).FindStringSubmatch(uiHTML)
-		if match == nil {
-			t.Fatal("launcher inline button target rule is missing")
+		base := regexp.MustCompile(`--tgt: calc\((\d+)px \* var\(--s\)\);`).FindStringSubmatch(uiHTML)
+		scale := regexp.MustCompile(`--s: clamp\(([0-9.]+),`).FindStringSubmatch(uiHTML)
+		if base == nil || scale == nil {
+			t.Fatal("launcher target token (--tgt / --s) is missing")
 		}
-		got, err := strconv.Atoi(match[1])
-		if err != nil || got < floor {
-			t.Fatalf("launcher button target %s px is below the reference %d px", match[1], floor)
+		px, err := strconv.Atoi(base[1])
+		if err != nil {
+			t.Fatalf("invalid --tgt base %q", base[1])
 		}
-		t.Logf("WINDOWS-UI reference: MinTarget=%d, launcher=%d; runtime acceptance remains separate", floor, got)
+		lowest, err := strconv.ParseFloat(scale[1], 64)
+		if err != nil || lowest <= 0 {
+			t.Fatalf("invalid --s lower bound %q", scale[1])
+		}
+		got := int(float64(px)*lowest + 0.5)
+		if got < floor {
+			t.Fatalf("launcher compact pointer target %d px is below the reference %d px", got, floor)
+		}
+		t.Logf("WINDOWS-UI reference: MinTarget=%d, launcher compact pointer target=%d; runtime acceptance remains separate", floor, got)
 		return
 	}
 	t.Fatal("reference lacks ChromeMetrics MinTarget")

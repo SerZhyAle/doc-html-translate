@@ -108,8 +108,11 @@ func TestSiteStylesheetKeepsKeyboardAndTargetRules(t *testing.T) {
 	css := readRepoFile(t, "assets", "site.css")
 	for _, want := range []string{
 		".skip-link{", ".skip-link:focus", "main:focus{outline:none}",
-		".seg button{min-height:44px;min-width:44px}", ".theme-btn{width:44px;height:44px}", ".btn{min-height:44px}",
-		".brand{display:flex;align-items:center;gap:.65rem;min-height:44px;min-width:44px}", ".copybox .cmt-end{display:block}",
+		// UI-SIZING 1.1 (ticket 119): the targets come from one profile token - 44 CSS px for a fine pointer, 48 for a
+		// coarse one - instead of fixed 44 px literals, so the profile is stable and the floors stay at least 44.
+		".seg button,.seg a{min-height:var(--ui-tgt);min-width:var(--ui-tgt)}", ".theme-btn{width:var(--ui-tgt);height:var(--ui-tgt)}", ".btn{min-height:var(--ui-tgt)}",
+		".brand{display:flex;align-items:center;gap:.65rem;min-height:var(--ui-tgt);min-width:var(--ui-tgt)}", ".copybox .cmt-end{display:block}",
+		":root{--ui-tgt:44px;--ui-gap:8px;--ui-radius:4px}", "@media(pointer:coarse){:root{--ui-tgt:48px}}",
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("assets/site.css lost %q (SITE-EXPERIENCE 15, 17)", want)

@@ -107,3 +107,37 @@ test("a retry removes a stale failure message before starting over", async () =>
   await new Promise((r) => setTimeout(r, 5));
   assert.equal(el.querySelectorAll(".ocr-error").length, 1);
 });
+
+// BUTTONS 2.0 section 3 rule 3: the Download button reserves the width of its widest state, so the row does not
+// move as "Downloading N%" replaces "Download"; the glyph survives every caption change.
+test("Download keeps a glyph and reserves the width of Downloading 100%", async () => {
+  const { el, window } = await render();
+  let progress;
+  globalThis.__stubDownload = (code, onProgress) => new Promise((resolve) => { progress = (f) => onProgress({ progress: f }); globalThis.__resolveDownload = resolve; });
+  const btn = rowFor(el, "German").querySelector("button");
+  assert.ok(btn.querySelector("svg"), "action.download is drawn before the caption");
+  const cap = btn.querySelector(".cap");
+  assert.equal(cap.getAttribute("data-reserve"), "Downloading 100%");
+  btn.dispatchEvent(new window.Event("click"));
+  await new Promise((r) => setTimeout(r, 5));
+  progress(0.42);
+  assert.equal(cap.textContent, "Downloading 42%");
+  assert.ok(btn.querySelector("svg"), "the glyph survives the caption change");
+  assert.equal(btn.disabled, true, "a second click cannot start a second download");
+  globalThis.__stubInstalled = ["eng", "deu"];
+  globalThis.__resolveDownload();
+  await new Promise((r) => setTimeout(r, 5));
+  assert.ok(rowFor(el, "German").querySelector("input[type=radio]"));
+});
+
+test("an installed language is a radio whose label is the target; the retry carries its glyph", async () => {
+  const { el, window } = await render();
+  const row = rowFor(el, "English");
+  assert.equal(row.querySelector("label.choice").contains(row.querySelector("input")), true);
+  globalThis.__stubDownload = async () => { throw new Error("offline"); };
+  rowFor(el, "German").querySelector("button").dispatchEvent(new window.Event("click"));
+  await new Promise((r) => setTimeout(r, 5));
+  const retry = el.querySelector(".ocr-error button");
+  assert.ok(retry.querySelector("svg"), "action.retry is drawn before the caption");
+  assert.equal(retry.textContent, "Retry");
+});

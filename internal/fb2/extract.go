@@ -228,6 +228,8 @@ func extForContentType(ct string) string {
 		return ".gif"
 	case "image/svg+xml":
 		return ".svg"
+	case "image/jxl":
+		return ".jxl"
 	case "image/webp":
 		return ".webp"
 	default:

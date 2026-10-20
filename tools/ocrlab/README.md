@@ -10,7 +10,7 @@ nor `doc-html-ui` links it.
 
 ## Commands
 
-Run from the repository root.
+Run from the repository root. The lab links the app's pipeline, so every command needs the `nodynamic` build tag: `go run -tags nodynamic ./tools/ocrlab ..`, or `GOFLAGS=-tags=nodynamic` set once (ticket 115); without it the compile stops on `internal/jxl/nodynamic_guard.go`.
 
 | Command | What it does |
 |---|---|

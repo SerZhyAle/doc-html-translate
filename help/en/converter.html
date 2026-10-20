@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Help - DOC-HTML-UI</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Breadcrumb">
+    <a href="index.html">Help index</a><span class="sep" aria-hidden="true">/</span><span>DOC-HTML-UI</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Window help</p>
+    <h1>DOC-HTML-UI</h1>
+    <p class="lead">Turn an e-book or a document into a local HTML book that opens in your browser, with the translation of your choice. Pick a file, press <b>Convert</b>, read the result.</p>
+  </header>
+
+  <figure class="shot" id="shot-ready">
+    <div class="frame">
+      <img class="on-dark" src="converter-ready-dark.png" width="1200" height="1115" alt="The DOC-HTML-UI window with a book chosen: the file box and the Convert button, the status lines, the previous result, the recent list, the output folder, the translation engine and languages, the four options, the command line and the log, and the Help button in the top-right corner.">
+      <img class="on-light" src="converter-ready-light.png" width="1200" height="1115" alt="">
+      <a class="pin" style="--x:94.5%;--y:2.51%" href="#help" aria-label="1, Help (F1)">1</a>
+      <a class="pin" style="--x:81.94%;--y:9.15%" href="#header" aria-label="2, Theme / Interface language">2</a>
+      <a class="pin" style="--x:16.33%;--y:11.19%" href="#drop" aria-label="3, Choose a file">3</a>
+      <a class="pin" style="--x:19.67%;--y:19.98%" href="#run" aria-label="4, Convert">4</a>
+      <a class="pin" style="--x:16.33%;--y:23.03%" href="#status" aria-label="5, Status lines">5</a>
+      <a class="pin" style="--x:16.33%;--y:30.13%" href="#previous" aria-label="6, Previous result">6</a>
+      <a class="pin" style="--x:16.33%;--y:40.25%" href="#recent" aria-label="7, Recent">7</a>
+      <a class="pin" style="--x:16.33%;--y:56.21%" href="#output" aria-label="8, Output">8</a>
+      <a class="pin" style="--x:16.33%;--y:66.22%" href="#translation" aria-label="9, Translation">9</a>
+      <a class="pin" style="--x:16.33%;--y:73.18%" href="#languages" aria-label="10, Languages">10</a>
+      <a class="pin" style="--x:16.33%;--y:83.19%" href="#options" aria-label="11, Options">11</a>
+      <a class="pin" style="--x:84.17%;--y:10.48%" href="#command" aria-label="12, Command line">12</a>
+      <a class="pin" style="--x:84.17%;--y:20.48%" href="#log" aria-label="13, Log">13</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window.</figcaption>
+  </figure>
+
+  <figure class="shot" id="shot-states">
+    <div class="frame">
+      <img class="on-dark" src="converter-states-dark.png" width="1200" height="1493" alt="The same window in a busier state: the first-run question about Windows at the top, a queue of three files with their states, and the Google key row that appears with the Google Cloud engine.">
+      <img class="on-light" src="converter-states-light.png" width="1200" height="1493" alt="">
+      <a class="pin" style="--x:16.33%;--y:8.36%" href="#first-run" aria-label="14, Windows question">14</a>
+      <a class="pin" style="--x:16.33%;--y:45.24%" href="#queue" aria-label="15, Queue">15</a>
+      <a class="pin" style="--x:16.33%;--y:77.54%" href="#google-key" aria-label="16, Google key">16</a>
+    </div>
+    <figcaption>Demo content. Select a number to read about that part of the window. This part appears only in some states of the window.</figcaption>
+  </figure>
+
+  <h2>In this order</h2>
+  <ol class="order">
+    <li>Choose the document <a class="ref" href="#drop">3</a>: click the box or drop a file on the window. Several files at once go to the queue <a class="ref" href="#queue">15</a>.</li>
+    <li>Read the line under it <a class="ref" href="#status">5</a>: it says whether everything the conversion needs is in place.</li>
+    <li>Say where the result goes <a class="ref" href="#output">8</a>. Leave it empty to get the book next to the document.</li>
+    <li>Choose how to translate <a class="ref" href="#translation">9</a> and between which languages <a class="ref" href="#languages">10</a>. <b>Chrome (free)</b> converts only; you translate afterwards in the browser.</li>
+    <li>Look at the options <a class="ref" href="#options">11</a> if you want one long page, no browser window afterwards, or a rebuild.</li>
+    <li>Press <b>Convert</b> <a class="ref" href="#run">4</a>. The <b>Command line</b> <a class="ref" href="#command">12</a> shows exactly what runs; the <b>Log</b> <a class="ref" href="#log">13</a> shows how it goes.</li>
+    <li>Open the finished book from <a class="ref" href="#previous">6</a>, or let the browser open it for you.</li>
+  </ol>
+
+  <h2>The elements</h2>
+  <div class="elements">
+
+    <details class="el" id="help">
+      <summary><span class="mk">1</span><span><span class="name">Help (F1)</span><span class="one">Opens the help for the part of the window you are in.</span></span></summary>
+      <div class="full">
+        <p>Opens this page, or the page of the question that is open. With the focus inside a part of the window it opens the entry of that part.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>It explains the window with a picture, without a network and without leaving the app.</dd>
+          <dt>Next</dt><dd>The help opens in its own window; this window stays as it is, and so does an open question.</dd>
+          <dt>Undo</dt><dd>Close the help window.</dd>
+          <dt>Shortcut</dt><dd><kbd>F1</kbd> does the same from anywhere in the window.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="header">
+      <summary><span class="mk">2</span><span><span class="name">Theme / Interface language</span><span class="one">How the window looks and which language it speaks.</span></span></summary>
+      <div class="full">
+        <p>At the start of the window is the list of pages; at its top, beside the page title, are two lists: the theme (<b>System theme</b>, <b>Light theme</b>, <b>Dark theme</b>) and the interface language (13 languages). The line under the title says what the page is for, and the links in the header lead to the product site, the SZA hub and a message to the author. In a narrow window the list of pages opens from the Pages button. The interface language is also the language of the reader's own buttons in the converted book; the text of the book keeps its own language.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Until you choose, the window follows the system theme and the Windows language.</dd>
+          <dt>Next</dt><dd>A change applies at once and is remembered for next time. Nothing is converted or reloaded.</dd>
+          <dt>Undo</dt><dd>Pick the previous value in the same list.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="drop">
+      <summary><span class="mk">3</span><span><span class="name">Choose a file</span><span class="one">The document to convert: click to choose it, or drop it on the window.</span></span></summary>
+      <div class="full">
+        <p>Click the box to open the file picker, or drag one or more files onto the window. Supported: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, comic archives (CBZ, CBR, CB7, CBT) and pictures (PNG, JPG, WebP and others). A FileDO secret file (.fd-sec) is opened with its password. A dropped file is copied into the app's own folder first, so its result lands there unless you set an output folder.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Everything else in the window is about this file. Choosing several files at once builds a queue.</dd>
+          <dt>Next</dt><dd>The line under the box reports whether the file can be converted. Nothing is read or written until you press <b>Convert</b>.</dd>
+          <dt>Undo</dt><dd>Choose another file; choosing changes nothing on disk.</dd>
+          <dt>Shortcut</dt><dd><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> puts the keyboard on this box.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="run">
+      <summary><span class="mk">4</span><span><span class="name">Convert</span><span class="one">Starts the conversion; while it runs the same button is Cancel.</span></span></summary>
+      <div class="full">
+        <p>Converts the chosen file into a folder of local HTML pages with a table of contents, then opens it in the browser unless <b>Don't open browser</b> is ticked. While a conversion runs the button becomes <b>Cancel</b> and a progress line names the stage and counts pages or images. If a finished result for the same file and the same options already exists, it is opened instead of rebuilt; <b>Force re-process</b> rebuilds.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>It is the only button that writes files; everything above it is a choice.</dd>
+          <dt>Next</dt><dd>The log fills, the progress line moves, and at the end the window says it is done, done with warnings, or what went wrong and what to do about it.</dd>
+          <dt>Undo</dt><dd><b>Cancel</b> stops the conversion at once. What was already written stays in the output folder and the next <b>Convert</b> rebuilds it. A finished result can be deleted under the previous result.</dd>
+          <dt>Shortcut</dt><dd><kbd>Ctrl</kbd> + <kbd>Enter</kbd> converts; <kbd>Esc</kbd> cancels a running conversion.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="status">
+      <summary><span class="mk">5</span><span><span class="name">Status lines</span><span class="one">Tells you whether the file and the helper tools are ready, then how far the conversion is.</span></span></summary>
+      <div class="full">
+        <p>Up to three lines sit under the file box. The first says what the conversion still needs: a missing helper, a missing key, an unreadable file, with a button that jumps to the setting. The second names the stage of a running conversion and counts pages or images. The last lists the supported formats and the helpers some of them need: Calibre for MOBI and AZW3, 7-Zip for CBR and CB7, Tesseract for text in pictures, FileDO for secret files.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>A missing helper is found before the conversion starts, not after a long wait.</dd>
+          <dt>Next</dt><dd>Each message says what is missing and what will happen without it, for example that the book is converted without translation.</dd>
+          <dt>Undo</dt><dd>These lines only report; they change nothing.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="previous">
+      <summary><span class="mk">6</span><span><span class="name">Previous result</span><span class="one">Shown when this file has already been converted.</span></span></summary>
+      <div class="full">
+        <p><b>Open result</b> opens the finished book. The path after <b>Saved in</b> is the folder it sits in; click it to open the folder. <b>Delete previous result</b> removes the result.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Opening an existing result is instant and free; deleting it is for a clean rebuild.</dd>
+          <dt>Next</dt><dd>Deleting asks first and removes only the result folder; the original file is not touched.</dd>
+          <dt>Undo</dt><dd>A deleted result cannot be brought back; the next <b>Convert</b> builds it again from the original.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="recent">
+      <summary><span class="mk">7</span><span><span class="name">Recent</span><span class="one">The last eight documents you chose or dropped.</span></span></summary>
+      <div class="full">
+        <p>Click a name to put that file back in the file box. A file that is no longer on disk is greyed out and marked unavailable, so a stale path is never converted by mistake. The arrow keys move through the list.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Converting the same book again with other options is a common task.</dd>
+          <dt>Next</dt><dd><b>Clear all</b> asks first and forgets the list only; the documents stay where they are.</dd>
+          <dt>Undo</dt><dd>A forgotten list cannot be brought back; choose the files again.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="output">
+      <summary><span class="mk">8</span><span><span class="name">Output</span><span class="one">The folder that receives the results; each document gets its own subfolder named after it. Empty = next to the document itself (a dropped file is copied into the app's own folder first, so its result lands there).</span></span></summary>
+      <div class="full">
+        <p>The folder that receives the results. Each document gets its own subfolder named after it. <b>Browse..</b> opens the folder picker; you can also type or paste a path.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Leave it empty for the simplest case: the book lands next to the document. Set it to keep all your converted books in one place.</dd>
+          <dt>Next</dt><dd>The path is remembered, and the command line shows it after -folder.</dd>
+          <dt>Undo</dt><dd>Empty the field to go back to "next to the document". Results already written stay where they are.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="translation">
+      <summary><span class="mk">9</span><span><span class="name">Translation</span><span class="one">Chrome (free): convert only, then translate in the browser - no API key. Google/Ollama translate during conversion.</span></span></summary>
+      <div class="full">
+        <p>Four ways to treat the language of the book:<ul><li><b>Chrome (free)</b> - convert only, then open the book in Chrome and use its built-in page translation. No key, no account, nothing is sent from this app.</li><li><b>Google Cloud</b> - translates while converting, with your own Cloud Translation key. Google charges for it; the cost is estimated and asked about first.</li><li><b>Ollama (local)</b> - translates while converting with a model running on your own computer. Free, slower, needs Ollama running.</li><li><b>Don't translate</b> - convert only, the explicit form of the default.</li></ul></p>
+        <dl class="facts">
+          <dt>Why</dt><dd>Start with the free flow; choose a paid or local engine only when you want the translation saved inside the book.</dd>
+          <dt>Next</dt><dd>Google Cloud shows the key row, Ollama's own settings are on the Ollama page, and the command line shows the engine flag.</dd>
+          <dt>Undo</dt><dd>Switch back at any time. An existing translated result stays as it was until you rebuild it.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="languages">
+      <summary><span class="mk">10</span><span><span class="name">Languages</span><span class="one">Source - the language the document is written in; target - the language Google or Ollama translate into. "Chrome (free)" and "Don't translate" use only the source: it picks the OCR language while that is "Automatic".</span></span></summary>
+      <div class="full">
+        <p>The first list is the source: the language the document is written in. The second is the target: the language Google or Ollama translate into. The button between them swaps the two (<b>Swap source and target</b>).</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>The source language also picks the text-recognition language for pictures while the OCR language is on Automatic.</dd>
+          <dt>Next</dt><dd>Both are remembered and shown in the command line as -src and -dst.</dd>
+          <dt>Undo</dt><dd>Pick the previous language, or press the swap button again.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="options">
+      <summary><span class="mk">11</span><span><span class="name">Options</span><span class="one">Four switches for the shape of the result and how the run behaves.</span></span></summary>
+      <div class="full">
+        <ul>
+          <li><b>Single page (contents available)</b> - One long page with a linked table of contents at the top, instead of a page per chapter.</li>
+          <li><b>Don't open browser</b> - Convert without opening the result; find it afterwards through the output path shown under the picker.</li>
+          <li><b>Force re-process</b> - Rebuild even when a finished result for this file already exists; otherwise the existing result is reused.</li>
+          <li><b>Verbose log</b> - Copy the converter's full log into the log panel; it is what "Send logs to the author" packs.</li>
+        </ul>
+        <dl class="facts">
+          <dt>Why</dt><dd>The defaults give one long page with a table of contents and open it in the browser, which suits most books.</dd>
+          <dt>Next</dt><dd>A change is used by the next <b>Convert</b> and shows in the command line.</dd>
+          <dt>Undo</dt><dd>Tick or untick again. Results already built are not changed.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="command">
+      <summary><span class="mk">12</span><span><span class="name">Command line</span><span class="one">The exact command this window will run.</span></span></summary>
+      <div class="full">
+        <p>The line shows the converter's command with every setting you chose. It is built by the same code that starts the conversion, so it always matches. <b>Copy</b> puts it on the clipboard, for a script or a scheduled task.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>It shows what each setting does, and lets you repeat a conversion without the window.</dd>
+          <dt>Next</dt><dd>Nothing runs until you press <b>Convert</b>.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="log">
+      <summary><span class="mk">13</span><span><span class="name">Log</span><span class="one">What the converter reports while it works.</span></span></summary>
+      <div class="full">
+        <p>The converter's messages, line by line. <b>Copy selection</b> copies the selected lines, or the whole log when nothing is selected; <b>Jump to latest</b> scrolls to the newest line. Tick <b>Verbose log</b> to include the converter's full output.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>When something does not work, the last lines say how far the conversion got. The Support and diagnostics group of the About page packs them for the author.</dd>
+          <dt>Next</dt><dd>Each run writes its own log to a folder on this computer; see the About page.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="first-run">
+      <summary><span class="mk">14</span><span><span class="name">Windows question</span><span class="one">Asked once, on the first start: should the app add itself to Windows?</span></span></summary>
+      <div class="full">
+        <p>Offers a "Convert to HTML" entry in the right-click menu of supported files and a place under "Open with", or the same plus making this app the default for those files. <b>No, thanks</b> is a real answer: nothing is written to Windows, and the app works the same.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>The app writes nothing to Windows on its own; it asks first.</dd>
+          <dt>Next</dt><dd>The question does not come back. The same choices are on the Windows page.</dd>
+          <dt>Undo</dt><dd>Switch the entries off again on the Windows page.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="queue">
+      <summary><span class="mk">15</span><span><span class="name">Queue</span><span class="one">Several files converted one after another.</span></span></summary>
+      <div class="full">
+        <p>Choosing or dropping two or more files fills the queue. Each row shows the file and its state (<b>Waiting</b>, <b>Converting..</b>, <b>Done</b>, <b>Failed</b>, <b>Cancelled</b>, <b>Action needed</b>); click a name to see that file's command and readiness above. <b>Retry failed</b> converts only the files that did not finish, <b>Cancel queue</b> stops the running ones and starts nothing further, and <b>Parallel</b> sets how many run at once.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>One at a time is the default because OCR and translation helpers compete for the same machine.</dd>
+          <dt>Next</dt><dd>The settings are shared by the whole queue and read when each file starts.</dd>
+          <dt>Undo</dt><dd><b>Remove</b> takes one file out of the queue and <b>Clear all</b> empties it; the files themselves stay on disk.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="google-key">
+      <summary><span class="mk">16</span><span><span class="name">Google key</span><span class="one">Shown only with the Google Cloud engine: your Cloud Translation key.</span></span></summary>
+      <div class="full">
+        <p>Paste the key and press <b>Save</b>; <b>Show</b> reveals what you typed. The key stays in your user folder on this computer and is sent to Google only, in a request header, when you translate. A saved key is never shown again; save a new one to replace it.</p>
+        <dl class="facts">
+          <dt>Why</dt><dd>A paid engine needs your own key; the app has none of its own.</dd>
+          <dt>Next</dt><dd>Before any request the converter estimates the cost and asks you; see the page about the paid-translation question.</dd>
+          <dt>Undo</dt><dd>Choose another engine and no request is ever made. The saved key stays until you replace it.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Related</h2>
+  <ul class="related">
+    <li><a href="settings.html"><b>Settings</b><span class="pill">Window</span><small>The pages of the window: Ollama, Image OCR, Windows, Interface, Advanced and About.</small></a></li>
+    <li><a href="cost-question.html"><b>Paid translation</b><span class="pill">Dialog</span><small>The question asked before Google is paid.</small></a></li>
+    <li><a href="secret-file-password.html"><b>FileDO secret file</b><span class="pill">Dialog</span><small>The password question for a .fd-sec file.</small></a></li>
+    <li><a href="run-failed.html"><b>The conversion did not finish</b><span class="pill">Dialog</span><small>What the window offers when a run fails.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#quick-start" target="_blank" rel="noopener"><b>Guide: quick start</b><span class="pill gold">Site</span><small>The whole task, start to finish, with pictures.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.html#flags" target="_blank" rel="noopener"><b>Command-line flags</b><span class="pill gold">Site</span><small>Every option of the command shown in the window.</small></a></li>
+    <li><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA tools</b><span class="pill gold">Portal</span><small>The author's other free tools.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Captured against DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Help index</a>
+    <a href="mailto:sza@ukr.net">Ask a question or report a problem</a>
+  </footer>
+
+</main>
+</body>
+</html>

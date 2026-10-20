@@ -149,3 +149,31 @@ func TestGlyphSVGIsDecorativeAndThemed(t *testing.T) {
 		}
 	}
 }
+
+// The Search button is a disclosure that keeps its action glyph before its word (BUTTONS 2.0 section 2
+// rules 1 and 4; ticket 119, slice R1): action.search, drawn from the vendored file, named by the
+// meaning's word in every language, with the chord in its tooltip.
+func TestSearchButtonDrawsSearchInEveryLanguage(t *testing.T) {
+	defer i18n.SetLanguage(i18n.Language())
+	for _, lang := range i18n.Codes {
+		i18n.SetLanguage(lang)
+		btn := regexp.MustCompile(`(?s)<button id="dht-search-button"[^>]*>.*?</button>`).FindString(searchControlsHTML())
+		name := htmlEscape(i18n.T(lang, "Search"))
+		for _, want := range []string{`d="` + Glyphs["action.search"] + `"`, name + `</button>`, `title="` + name + ` (Ctrl+F)"`, `aria-expanded="false"`} {
+			if !strings.Contains(btn, want) {
+				t.Errorf("%s: the Search button lacks %q: %s", lang, want, btn)
+			}
+		}
+	}
+}
+
+// The version link opens the project site: its external-navigation marker is the vendored
+// nav.open-external drawing as a CSS mask, mirrored in a right-to-left bar (ICON-SET rtl: mirror).
+func TestVersionLinkCarriesTheExternalMarker(t *testing.T) {
+	if !strings.Contains(chromeUICSS, "mask: "+glyphMaskURL("nav.open-external")) {
+		t.Error("the version link's marker is not the vendored nav.open-external drawing")
+	}
+	if !strings.Contains(chromeUICSS, `.dht-navbar[dir="rtl"] a.nav-version::after { transform: scaleX(-1); }`) {
+		t.Error("the external-navigation marker is not mirrored for a right-to-left bar")
+	}
+}

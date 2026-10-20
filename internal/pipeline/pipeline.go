@@ -20,6 +20,7 @@ import (
 	"doc-html-translate/internal/htmlsplit"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/img"
+	"doc-html-translate/internal/jxl"
 	"doc-html-translate/internal/logging"
 	"doc-html-translate/internal/md"
 	"doc-html-translate/internal/mobi"
@@ -266,6 +267,10 @@ func (r Runner) build(ctx context.Context, inputPath string, target outputpath.T
 				return ExitParse, fmt.Errorf("extract as txt: %w", err)
 			}
 		}
+	}
+	if err := jxl.NormalizeBook(ctx, book, outputDir); err != nil {
+		cleanup()
+		return extractFailed(ctx, fmt.Errorf("convert JPEG XL pictures: %w", err))
 	}
 	plain.Remove() // nil-safe: only a FileDO secret file has a plain copy
 	if ctx.Err() != nil {

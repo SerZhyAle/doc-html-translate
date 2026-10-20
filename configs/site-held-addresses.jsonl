@@ -22,7 +22,7 @@
 {"kind":"held","holder":"extension/_locales/ur/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/_locales/zh_CN/messages.json","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/PUBLISHING.md","surface":"developer-doc","addresses":["https://serzhyale.github.io/doc-html-translate/extension-privacy.html"]}
-{"kind":"held","holder":"extension/src/options.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"extension/src/product-inventory.js","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/extension-privacy.html"]}
 {"kind":"held","holder":"extension/src/popup.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/src/viewer.html","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"extension/src/viewer.js","surface":"extension","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
@@ -47,6 +47,7 @@
 {"kind":"held","holder":"README_UK.md","surface":"readme","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/install-trust.html?l=uk"]}
 {"kind":"held","holder":"README.md","surface":"readme","addresses":["https://serzhyale.github.io/doc-html-translate/","https://serzhyale.github.io/doc-html-translate/extension.html","https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
 {"kind":"held","holder":"scripts/release.ps1","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/sitemap.xml"]}
+{"kind":"held","holder":"extension/test/product-inventory.test.mjs","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"tests/site_html_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"tests/site_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"tools/sitecheck/lib.mjs","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
@@ -63,3 +64,8 @@
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.uk-UA.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.ur-PK.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
 {"kind":"held","holder":"winget/SerZhyAle.DocHtmlTranslate.locale.zh-CN.yaml","surface":"manifest","addresses":["https://serzhyale.github.io/doc-html-translate/install-trust.html"]}
+{"kind":"ignore","path":"help/*/*.html","reason":"The in-app help pages the host serves from help/ (site copy of the embedded set); the site links inside them are resolved against the tree by internal/helpcheck on every gate run, so they are the site, not an outside surface."}
+{"kind":"ignore","path":"cmd/doc-html-ui/help/*/*.html","reason":"The same generated help pages embedded in doc-html-ui.exe; tools/helpgen/render.mjs is their one holder and internal/helpcheck resolves their site links against the tree on every gate run."}
+{"kind":"held","holder":"tools/helpgen/render.mjs","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"cmd/doc-html-ui/help_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"internal/helpcheck/helpcheck.go","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}

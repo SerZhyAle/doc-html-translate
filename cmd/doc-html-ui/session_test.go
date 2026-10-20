@@ -122,6 +122,8 @@ func TestUIWindowGeometryRestores(t *testing.T) {
 		"win:            winGeom,", "if (s.win) { const g = saneGeometry(s.win); if (g) winGeom = g; }",
 		// A minimized window parks at -32000 on Windows; that is not a geometry to remember.
 		"x < -30000 || y < -30000",
+		// APP-BEHAVIOUR rule 10: a maximized or full-screen box never overwrites the normal rectangle.
+		"function windowFillsScreen()", "if (windowFillsScreen()) return;",
 	} {
 		if !strings.Contains(uiHTML, snippet) {
 			t.Errorf("ui.html is missing %q - the window would not reopen where it was", snippet)
@@ -155,10 +157,11 @@ func TestUIShortcutsHaveOneOwner(t *testing.T) {
 	for _, snippet := range []string{
 		"const SHORTCUTS = [",
 		"{key: 'Enter', ctrl: true, fire: () => runPressed()}",
+		"{key: 'Escape', when: () => transientOpen(), fire: () => closeTransient()}", // an open help bubble or the page drawer first
 		"{key: 'Escape', when: () => !!(runAbort || queueBusy), fire: () => cancelPressed()}",
 		"el('dropZone').focus()",
 		"if (dlgOpen || document.querySelector('dialog[open]')) return;",
-		"if (s.when && !s.when()) return;\n        ev.preventDefault();",
+		"if (s.when && !s.when()) continue;\n        ev.preventDefault();",
 	} {
 		if !strings.Contains(uiHTML, snippet) {
 			t.Errorf("ui.html is missing %q - the shortcut table is incomplete", snippet)

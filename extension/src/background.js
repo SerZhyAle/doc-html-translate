@@ -31,7 +31,7 @@ export { HTTPS_INTERCEPT_REGEX, FILE_INTERCEPT_REGEX };
 // give a clear "desktop app only" notice on explicit request (they cannot be decoded in
 // the browser, so they are not auto-intercepted). Match patterns ignore query strings, so
 // `*.pdf` still matches `file.pdf?download=1`.
-const CONVERT_EXTS = ["pdf", "epub", "rtf", "fb2", "mobi", "azw3", "txt", "md", "html", "htm", "cbz", "cbt", "cbr", "cb7"];
+const CONVERT_EXTS = ["pdf", "epub", "rtf", "fb2", "mobi", "azw3", "txt", "md", "html", "htm", "cbz", "cbt", "cbr", "cb7", "jxl"];
 const CONVERT_URL_PATTERNS = CONVERT_EXTS.flatMap((e) => [`*://*/*.${e}`, `file:///*.${e}`]);
 
 async function getOptions() {

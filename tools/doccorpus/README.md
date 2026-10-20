@@ -22,7 +22,7 @@ Run from the repository root, in PowerShell (Node and Go are on PATH there).
 
 `run.mjs` flags: `--case <id>` / `--class <class>` (repeatable), `--split dev|holdout|all`,
 `--ocr default|on`, `--cli <exe>` (default `temp/doccorpus/bin/doc-html-translate.exe`, build it with
-`go build -o temp/doccorpus/bin/doc-html-translate.exe ./cmd/doc-html-translate`), `--run <dir>`,
+`go build -tags nodynamic -o temp/doccorpus/bin/doc-html-translate.exe ./cmd/doc-html-translate`), `--run <dir>`,
 `--budget <seconds>` per case, `--fresh`, `--reuse-from <dir>`. Each pass lands in
 `<run>/<edition>-<ocr mode>/<case>/`.
 

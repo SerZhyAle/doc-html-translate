@@ -45,54 +45,152 @@ html.dht-ocr-selectable #dht-ocr-root .ocr-plate {
 }
 
 /* The reader's control bar. It sits in the page, so it is spelled out defensively: a page's own
-   rules for div/span/button would otherwise reach it. */
+   rules for div/span/button would otherwise reach it, and nothing here reaches the page - every
+   token is declared on the bar itself under the --dht- prefix, never on the page's root.
+
+   BUTTONS 2.0 and UI-SIZING 1.1 apply to it as to the extension's own pages: the same tokens
+   (32 / 48 targets, padding 12 / 16, glyph tier 16 / 20, radius 4, gap 8) multiplied by the saved
+   interface scale and text size, which page-agent.js reads once and records as data-dht-size,
+   data-dht-text and data-dht-input. The bar keeps its own dark surface over any page; its colours
+   are written here for that reason, not taken from the extension's palette. Logical properties
+   throughout, so the bar mirrors for a right-to-left interface language (page-agent.js sets dir). */
+#dht-ocr-bar {
+  --dht-ui: 1;
+  --dht-tx: 1;
+  --dht-s: clamp(0.875, var(--dht-ui), 2);
+  --dht-t: clamp(1, var(--dht-tx), 2);
+  --dht-gm: calc(1 + (var(--dht-t) - 1) * 0.5);
+  --dht-tgt: calc(32px * var(--dht-s));
+  --dht-pad: calc(12px * var(--dht-s));
+  --dht-glyph: calc(16px * var(--dht-s) * var(--dht-gm));
+  --dht-gap: calc(8px * var(--dht-s));
+  --dht-radius: calc(4px * var(--dht-s));
+  --dht-fs: calc(14px * var(--dht-s) * var(--dht-t));
+}
+#dht-ocr-bar[data-dht-input="touch"] {
+  --dht-tgt: calc(48px * var(--dht-s));
+  --dht-pad: calc(16px * var(--dht-s));
+  --dht-glyph: calc(20px * var(--dht-s) * var(--dht-gm));
+}
+#dht-ocr-bar[data-dht-size="compact"] { --dht-ui: 0.875; }
+#dht-ocr-bar[data-dht-size="large"] { --dht-ui: 1.25; }
+#dht-ocr-bar[data-dht-size="xlarge"] { --dht-ui: 1.5; }
+#dht-ocr-bar[data-dht-size="huge"] { --dht-ui: 2; }
+#dht-ocr-bar[data-dht-text="large"] { --dht-tx: 1.25; }
+#dht-ocr-bar[data-dht-text="xlarge"] { --dht-tx: 1.5; }
+#dht-ocr-bar[data-dht-text="huge"] { --dht-tx: 2; }
+
 #dht-ocr-bar {
   position: fixed !important;
-  right: 16px !important;
-  bottom: 16px !important;
+  inset-inline-end: 16px !important;
+  inset-block-end: 16px !important;
   z-index: 2147483001 !important;
   display: flex !important;
   flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 8px !important;
-  max-width: min(92vw, 640px) !important;
+  /* Every button of one visual line takes the line's height; the status text centres itself. */
+  align-items: stretch !important;
+  gap: var(--dht-gap) !important;
+  max-width: min(92vw, calc(640px * var(--dht-s) * var(--dht-t))) !important;
   margin: 0 !important;
-  padding: 8px 12px !important;
+  padding: var(--dht-gap) var(--dht-pad) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-radius: 10px !important;
+  border-radius: calc(8px * var(--dht-s)) !important;
   background: rgba(24, 24, 24, 0.94) !important;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
   color: #f1f1f1 !important;
-  font: 400 13px/1.35 "Segoe UI", system-ui, sans-serif !important;
-  text-align: left !important;
+  font: 400 var(--dht-fs)/1.35 "Segoe UI", system-ui, sans-serif !important;
+  text-align: start !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
   pointer-events: auto !important;
 }
+/* Hidden until the reader's saved size has been read, so the bar never resizes under them. */
+#dht-ocr-bar[data-dht-pending] { visibility: hidden !important; }
 
-#dht-ocr-bar .dht-ocr-status {
-  flex: 1 1 200px !important;
-  min-width: 140px !important;
-  color: #f1f1f1 !important;
+/* The bar's own spans are named here, so a page's `span { padding: .. }` or `div { border: .. }` cannot reach
+   them: the page's generic rules must not change the bar's geometry (tools/uicheck measures this with a hostile
+   page). */
+#dht-ocr-bar .dht-ocr-status,
+#dht-ocr-bar .dht-ocr-cap {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
   font: inherit !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+}
+#dht-ocr-bar .dht-ocr-status {
+  flex: 1 1 calc(200px * var(--dht-s)) !important;
+  min-width: calc(140px * var(--dht-s)) !important;
+  align-self: center !important;
+  color: #f1f1f1 !important;
 }
 
+/* One command button: a rectangle with the baseline corner, a neutral face, content width plus padding -
+   never stretched - the glyph before the caption, and a caption that wraps only when the button cannot fit
+   alone. The border is the muted ink, 5:1 on the bar. */
 #dht-ocr-bar .dht-ocr-btn {
   flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--dht-gap) !important;
+  box-sizing: border-box !important;
+  min-width: var(--dht-tgt) !important;
+  min-height: var(--dht-tgt) !important;
+  max-width: 100% !important;
   margin: 0 !important;
-  padding: 4px 10px !important;
-  border: 1px solid #5a5a5a !important;
-  border-radius: 6px !important;
+  padding: calc(5px * var(--dht-s)) var(--dht-pad) !important;
+  border: 1px solid #8a8a8a !important;
+  border-radius: var(--dht-radius) !important;
   background: #3a3a3a !important;
   color: #f1f1f1 !important;
   font: inherit !important;
-  line-height: 1.35 !important;
+  line-height: 1.3 !important;
+  text-align: center !important;
   text-transform: none !important;
+  letter-spacing: normal !important;
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
   cursor: pointer !important;
 }
-
 #dht-ocr-bar .dht-ocr-btn:hover { background: #4a4a4a !important; }
 #dht-ocr-bar .dht-ocr-btn:focus-visible { outline: 2px solid #7fb0ff !important; outline-offset: 2px !important; }
 #dht-ocr-bar .dht-ocr-btn[hidden] { display: none !important; }
-
+/* A selected toggle is a distinct face, the accent border and an inset bar along the block end - a state
+   that does not depend on telling the hues apart (BUTTONS 3 rule 5). */
+#dht-ocr-bar .dht-ocr-btn[aria-pressed="true"] {
+  background: #5a5a5a !important;
+  border-color: #7fb0ff !important;
+  box-shadow: inset 0 calc(-3px * var(--dht-s)) 0 #f1f1f1 !important;
+}
+#dht-ocr-bar .dht-ocr-glyph {
+  display: block !important;
+  flex: none !important;
+  width: var(--dht-glyph) !important;
+  height: var(--dht-glyph) !important;
+  margin: 0 !important;
+}
+/* A two-state caption (Hide text, Show text) keeps the width of the wider state: the caption cell also holds
+   an invisible copy of the other state's text, out of the accessibility tree and adding no height. */
+#dht-ocr-bar .dht-ocr-cap { display: inline-grid !important; }
+#dht-ocr-bar .dht-ocr-cap[data-reserve]::after {
+  content: attr(data-reserve) !important;
+  grid-area: 1 / 1 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+@media (forced-colors: active) {
+  #dht-ocr-bar .dht-ocr-btn[aria-pressed="true"] { background: Highlight !important; color: HighlightText !important; border-color: Highlight !important; forced-color-adjust: none !important; }
+}
+@media (prefers-contrast: more) {
+  #dht-ocr-bar, #dht-ocr-bar .dht-ocr-btn { border-color: #f1f1f1 !important; }
+}
 /* The recognizer host, when it has to live in this page. Parked off-screen rather than hidden:
    display:none or visibility:hidden would let the browser skip running it, and an extension frame
    that never runs is a run that never starts. */

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="uk" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Довідка - Google Translate - вартість</title>
+<script src="../page.js"></script>
+<link rel="stylesheet" href="../sza-kit.css">
+<link rel="stylesheet" href="../help.css">
+</head>
+<body class="help">
+<main class="container">
+
+  <nav class="help-crumbs" aria-label="Навігація">
+    <a href="index.html">Зміст довідки</a><span class="sep" aria-hidden="true">/</span><span>Google Translate - вартість</span>
+  </nav>
+  <header class="hero">
+    <p class="kicker">Довідка про діалог</p>
+    <h1>Google Translate - вартість</h1>
+    <p class="lead">Перш ніж щось піде до Google, конвертер повідомляє, скільки символів він надіслав би і скільки візьме Google, і чекає на вашу відповідь.</p>
+  </header>
+
+  <figure class="shot" id="shot-dialog">
+    <div class="frame">
+      <img class="on-dark" src="cost-question-dialog-dark.png" width="600" height="250" alt="Питання про платний переклад: заголовок «Google Translate - вартість», кількість символів до надсилання й оцінка вартості, відповіді «Перекласти й оплатити» та «Не перекладати», а в правому верхньому куті кнопка довідки.">
+      <img class="on-light" src="cost-question-dialog-light.png" width="600" height="250" alt="">
+      <a class="pin" style="--x:92.5%;--y:31.7%" href="#help" aria-label="1, Довідка (F1)">1</a>
+      <a class="pin" style="--x:3.83%;--y:46.4%" href="#message" aria-label="2, Оцінка">2</a>
+      <a class="pin" style="--x:77.47%;--y:92.3%" href="#yes" aria-label="3, Перекласти й оплатити">3</a>
+      <a class="pin" style="--x:48.37%;--y:92.3%" href="#no" aria-label="4, Не перекладати">4</a>
+    </div>
+    <figcaption>Демонстраційні дані. Виберіть номер, щоб прочитати про цю частину діалогу.</figcaption>
+  </figure>
+
+  <h2>По порядку</h2>
+  <ol class="order">
+    <li>Прочитайте оцінку <a class="ref" href="#message">2</a>: скільки символів пішло б до Google і скільки це коштує.</li>
+    <li>Якщо платити не хочете, дайте відповідь <b>Не перекладати</b> <a class="ref" href="#no">4</a>. Це відповідь із фокусом, тому <kbd>Enter</kbd> і <kbd>Esc</kbd> обирають її, а книга все одно конвертується - без перекладу.</li>
+    <li>Якщо погоджуєтеся, дайте відповідь <b>Перекласти й оплатити</b> <a class="ref" href="#yes">3</a>. Текст буде надіслано, а Google спише оплату з вашого облікового запису.</li>
+  </ol>
+
+  <h2>Елементи</h2>
+  <div class="elements">
+
+    <details class="el" id="help">
+      <summary><span class="mk">1</span><span><span class="name">Довідка (F1)</span><span class="one">Відкриває цю сторінку, не закриваючи питання.</span></span></summary>
+      <div class="full">
+        <p>Питання лишається відкритим і чекає, поки ви читаєте. <kbd>F1</kbd> робить те саме.</p>
+      </div>
+    </details>
+
+    <details class="el" id="message">
+      <summary><span class="mk">2</span><span><span class="name">Оцінка</span><span class="one">Скільки символів було б надіслано і скільки за них візьме Google.</span></span></summary>
+      <div class="full">
+        <p>Конвертер рахує символи сторінок, назви й змісту - саме символи, а не байти - і множить на прейскурантну ціну Google. Питання ставиться до будь-якого запиту і лише для тексту довшого за 1000 символів.</p>
+        <dl class="facts">
+          <dt>Навіщо</dt><dd>Google бере плату за символ, тому ціну ви бачите до того, як погодилися.</dd>
+          <dt>Що далі</dt><dd>Якщо в «Додатково» задано максимальну вартість, оцінка в її межах приймається без питання; оцінка вище межі пропускає переклад, і книга конвертується без нього.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="yes">
+      <summary><span class="mk">3</span><span><span class="name">Перекласти й оплатити</span><span class="one">Надсилає текст до Google і оплачує переклад.</span></span></summary>
+      <div class="full">
+        <p>Сторінки перекладає Google Cloud Translation за вашим ключем, поки будується книга, і книга зберігається вже перекладеною.</p>
+        <dl class="facts">
+          <dt>Навіщо</dt><dd>Обирайте, коли переклад має бути збережений усередині книги, а не робитися безкоштовним перекладом сторінок у Chrome.</dd>
+          <dt>Скасування</dt><dd>Списане Google не повернути. <b>Скасувати</b> зупиняє решту, а вже надіслані сторінки оплачені.</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="el" id="no">
+      <summary><span class="mk">4</span><span><span class="name">Не перекладати</span><span class="one">Конвертує книгу без перекладу. Нічого не надсилається.</span></span></summary>
+      <div class="full">
+        <p>Книга конвертується так само, як з безкоштовним варіантом; потім її все одно можна перекласти в Chrome. Закрити питання чи натиснути <kbd>Esc</kbd> - та сама відповідь.</p>
+        <dl class="facts">
+          <dt>Навіщо</dt><dd>Це безпечна відповідь, тому фокус на ній.</dd>
+          <dt>Скасування</dt><dd>Нічого не витрачено. Конвертуйте знову й дайте іншу відповідь, якщо передумаєте.</dd>
+          <dt>Клавіші</dt><dd><kbd>Enter</kbd> або <kbd>Esc</kbd>.</dd>
+        </dl>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Пов'язане</h2>
+  <ul class="related">
+    <li><a href="converter.html#translation"><b>Переклад</b><span class="pill">Вікно</span><small>Рушії на вибір і рядок ключа Google.</small></a></li>
+    <li><a href="settings.html#advanced"><b>Додатково</b><span class="pill">Вікно</span><small>Де задається максимальна вартість.</small></a></li>
+    <li><a href="https://serzhyale.github.io/doc-html-translate/docs.uk.html#flags" target="_blank" rel="noopener"><b>Прапорці командного рядка</b><span class="pill gold">Сайт</span><small>-google і -max-cost докладно.</small></a></li>
+  </ul>
+
+  <footer class="help-foot">
+    <span>Знято з DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <a href="index.html">Зміст довідки</a>
+    <a href="mailto:sza@ukr.net">Поставити запитання або повідомити про проблему</a>
+  </footer>
+
+</main>
+</body>
+</html>
