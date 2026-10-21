@@ -33,9 +33,13 @@ What this repo does to stay conformant:
   Item F (a page's embedded medium has its language disclosed) holds as a permanent variant: the demo video has
   burned-in English captions on the RU and UK pages, disclosed in the figcaption (design record
   [`../PARITY.md`](../PARITY.md) "Contract variants (ticket 120)"). Items H and I do not apply.
-- Internal 0.10 (a local, git-ignored corpus under its own registry): **open**, temporary debt, ticket 122 item 7 -
-  `DEV/plan/` and `DEV/private/` are git-ignored, yet the tracked registry record `spec-method` globs `DEV/plan/`, and
-  no local registry or local reverse-coverage check exists.
+- Internal 0.10 (a local, git-ignored corpus under its own registry): **closed 2026-10-21, ticket 122 item 7.** The
+  tracked registry names nothing in `DEV/plan/` or `DEV/private/` (`scripts/doc-registry.ps1` fails on a path there; the
+  old `spec-method` record is now `spec-lifecycle` and holds `docs/SPEC_LIFECYCLE.md` only). The two trees have a
+  git-ignored registry beside them, `DEV/DOCUMENT_REGISTRY.jsonl`, and `scripts/doc-registry-local.ps1` holds it in
+  both directions (every record resolves, every `.md` / `.html` of the trees is claimed) and runs the same link scanner
+  over the local documents (`tests/doc_links_local_test.go`, opt-in). It is a hand-run check: the corpus exists only on
+  the owner's machine, so on a clone it ends in COULD NOT VERIFY.
 
 **Adopted 2026-09-26; re-verified 2026-09-28.** Internal rules 3-6 were closed in
 [ticket 48](../../DEV/plan/done/48_2026-09-26_contract-doc-internal-quality-gaps.md). External rules

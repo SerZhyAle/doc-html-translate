@@ -103,3 +103,9 @@ Re-checked 2026-10-20 (contract-sync ticket 120, ICON-SET 0.36, section 6 rung 3
 ic_clear. The earlier drawings are unchanged.
 
 7512d856fa655619c7c9637cf107db289b7e023ca5e1435c951d0468923d1ccc  nav.close.svg            close (2026-10-20, ticket 120; the Close answers)
+
+Re-checked 2026-10-21 (contract-sync residual debt, ticket 122, ICON-EXTERNAL 0.12 section 4 rule 3 / ICON-SET section 13 F): content.image was added as a byte copy of iconography/glyphs/content.image.svg
+for a document's own picture that cannot be shown - the reader chapter pages and the extension viewer draw it with the picture's alt text in place of the browser's broken-image icon. The record is
+active, named in three languages, Android ref ic_image; the earlier drawings are unchanged.
+
+87a27f32ca8874fa174228432b3b6dea9f17bd23a877a054631fdbef6b26552e  content.image.svg      image (2026-10-21, ticket 122; the stand-in for a document picture that cannot be shown)

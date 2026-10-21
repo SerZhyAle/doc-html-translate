@@ -248,6 +248,9 @@ const PROBE = `(() => {
   if (!root) return JSON.stringify({ state: "pending" });
   const plates = root.querySelectorAll(".ocr-plate, .ocr-box");
   const imgs = [...root.querySelectorAll("img")].filter((i) => i.getAttribute("src"));
+  // A picture that fails to load is swapped for its stand-in (ICON-EXTERNAL 13 F; the desktop's
+  // .dht-missing-img, the viewer's .missing-img), so it is no longer an <img> to count as broken.
+  const standIns = root.querySelectorAll(".dht-missing-img, .missing-img").length;
   const toc = ext ? document.querySelectorAll("#toc a") : document.querySelectorAll(".dht-contents a");
   const status = ext ? (document.getElementById("status-text") || {}).textContent || "" : "";
   const ocrProgress = new RegExp(${JSON.stringify(OCR_COUNTER.source)}).exec(status);
@@ -260,9 +263,9 @@ const PROBE = `(() => {
     dir: document.documentElement.dir || "",
     scrollHeight: document.documentElement.scrollHeight,
     textLen: root.textContent.length,
-    images: imgs.length,
+    images: imgs.length + standIns,
     imagesLoaded: imgs.filter((i) => i.complete && i.naturalWidth > 0).length,
-    imagesBroken: imgs.filter((i) => i.complete && i.naturalWidth === 0).length,
+    imagesBroken: imgs.filter((i) => i.complete && i.naturalWidth === 0).length + standIns,
     imagesPending: imgs.filter((i) => !i.complete).length,
     canvases: root.querySelectorAll("canvas").length,
     tocEntries: toc.length,

@@ -40,7 +40,7 @@ const out = (...p) => path.join(WORK, 'out', ...p);
 
 function crc32(buf) { let crc = 0xffffffff; for (const b of buf) { let c = (crc ^ b) & 0xff; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xffffffff) >>> 0; }
 function pngChunk(type, data) { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td)); return Buffer.concat([len, td, crc]); }
-function png(w, h, shade) {
+export function png(w, h, shade) {
   const raw = Buffer.alloc((w * 3 + 1) * h);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = y * (w * 3 + 1) + 1 + x * 3; raw[o] = (shade + x) % 256; raw[o + 1] = (shade + y) % 256; raw[o + 2] = 128; }
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
@@ -378,9 +378,10 @@ export async function readerChecks(report, { build = true, onlyGo = false, shots
       await runCase(browser, report, GO, urls, c);
     }
     await negatives(report, browser, GO, urls);
+    await (await import('./reader-missing.mjs')).missingImageGo(report, browser, shotsDir);
   } finally { await browser.close(); }
   if (!onlyGo) {
     const ext = await import('./reader-ext.mjs');
-    await ext.extensionChecks(report);
+    await ext.extensionChecks(report, { shotsDir });
   }
 }

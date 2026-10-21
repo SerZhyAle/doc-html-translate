@@ -16,6 +16,11 @@ $script:DocRegistryShape = 1
 $script:DocRegistryPath = 'docs/DOCUMENT_REGISTRY.jsonl'
 $script:DocRegistryExclusionsPath = 'configs/doc-registry-exclusions.jsonl'
 
+# The local half (DOC-INTERNAL-QUALITY 0.10, ticket 122): the git-ignored trees of the engineering folder have a
+# registry of their own beside them, in the folder's spelling, and the tracked registry names nothing in them.
+$script:DocRegistryLocalPath = 'DEV/DOCUMENT_REGISTRY.jsonl'
+$script:DocRegistryLocalTrees = @('DEV/plan', 'DEV/private')
+
 function ConvertTo-GlobRegex([string]$Glob) {
     $sb = [System.Text.StringBuilder]::new('^')
     $i = 0
@@ -129,7 +134,7 @@ function Get-PageAddresses([string]$FullPath) {
 function Get-AddressFile([string]$Href) { return ($Href -split '[?#]', 2)[0] }
 
 # The addresses one page file serves: its canonical first, then every hreflang alternate that is the
-# same file with a query (index.html?l=ru), in the page's own order, without repeats.
+# same file with a query (index.html?lang=ru), in the page's own order, without repeats.
 function Get-PageOwnAddresses($Page) {
     $own = [System.Collections.Generic.List[string]]::new()
     if (-not $Page.Canonical) { return , $own.ToArray() }

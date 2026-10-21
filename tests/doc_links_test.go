@@ -65,6 +65,12 @@ func docLinks(src string) []docLink {
 
 // linkProblem judges one destination found in file; files and dirs are the repository's content.
 func linkProblem(file string, l docLink, files, dirs map[string]bool, anchorsOf func(string) map[string]bool) string {
+	return linkProblemIn(file, l, files, dirs, anchorsOf, inUnpublishedTree)
+}
+
+// linkProblemIn is linkProblem with the set of targets it does not judge named by the caller: a committed document
+// does not judge a link into the unpublished trees, while the local corpus (doc_links_local_test.go) judges them.
+func linkProblemIn(file string, l docLink, files, dirs map[string]bool, anchorsOf func(string) map[string]bool, notJudged func(string) bool) string {
 	dest := strings.TrimSpace(l.dest)
 	lower := strings.ToLower(dest)
 	switch {
@@ -93,7 +99,7 @@ func linkProblem(file string, l docLink, files, dirs map[string]bool, anchorsOf 
 		if resolved == "" {
 			resolved = "."
 		}
-		if inUnpublishedTree(resolved) {
+		if notJudged(resolved) {
 			return ""
 		}
 		if !files[resolved] && !dirs[resolved] {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // The gate is only worth having if it fails when it should. Each case copies the files the gate reads into a scratch
@@ -231,6 +232,139 @@ func TestTheBaselineMayFallAndNeverRise(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("no advisory about locale:uk: %q", r.Advisories)
+	}
+}
+
+// committedBaseline is the committed state the scratch tree is compared with: the repository's own file, as it is.
+func committedBaseline(t *testing.T) Options {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(BaselinePath)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Options{Committed: func(rel string) ([]byte, bool, error) { return raw, rel == BaselinePath, nil }}
+}
+
+func runWith(t *testing.T, root string, opt Options) *Report {
+	t.Helper()
+	r, err := RunWith(root, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
+}
+
+func TestAHandAddedBaselineLineIsAnAbsorption(t *testing.T) {
+	opt := committedBaseline(t)
+
+	// the line a hand adds so that a new GUI locale without pages passes: it names the amount and the identifier
+	root := scratch(t)
+	edit(t, root, BaselinePath, func(s string) string { return s + "locale:xx\n" })
+	r := runWith(t, root, opt)
+	mustFail(t, r, "gains 1 line(s) over the committed file with no recorded reason: locale:xx")
+
+	// a journal line with no reason is no record
+	root = scratch(t)
+	edit(t, root, BaselinePath, func(s string) string { return "# accepted locale:xx on 2026-10-21:\n" + s + "locale:xx\n" })
+	mustFail(t, runWith(t, root, opt), "no recorded reason: locale:xx")
+
+	// pruning is always welcome, and the run without a committed state judges the file by its own rules only
+	root = scratch(t)
+	edit(t, root, BaselinePath, func(s string) string { return strings.Replace(s, "locale:zh\n", "", 1) })
+	r = runWith(t, root, opt)
+	for _, f := range r.Failures {
+		if strings.Contains(f, "gains") {
+			t.Errorf("a pruned line is not an absorption: %s", f)
+		}
+	}
+	root = scratch(t)
+	edit(t, root, BaselinePath, func(s string) string { return s + "locale:xx\n" })
+	for _, f := range run(t, root).Failures {
+		if strings.Contains(f, "gains") {
+			t.Errorf("a run with no committed state compares nothing: %s", f)
+		}
+	}
+}
+
+func TestAcceptRecordsTheReasonAndTheGateReadsIt(t *testing.T) {
+	opt := committedBaseline(t)
+	root := scratch(t)
+	// a GUI locale the help has no pages in and the baseline does not hold: the help map drops "uk"
+	edit(t, root, MapPath, func(s string) string { return strings.Replace(s, `"uk"`, `"ukx"`, 1) })
+
+	if _, err := Accept(root, "  ", time.Now()); err == nil {
+		t.Error("an empty reason must be refused")
+	}
+	if _, err := Accept(root, "one\ntwo", time.Now()); err == nil {
+		t.Error("a reason of two lines must be refused")
+	}
+
+	ids, err := Accept(root, "owner tier decision, test", time.Date(2026, 10, 21, 9, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != 1 || ids[0] != "locale:uk" {
+		t.Fatalf("Accept returned %q, want [locale:uk]", ids)
+	}
+	raw, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(BaselinePath)))
+	if !strings.Contains(string(raw), "# accepted locale:uk on 2026-10-21: owner tier decision, test\n") {
+		t.Errorf("the journal line is not in the file:\n%s", raw)
+	}
+	b := parseBaseline(raw)
+	if len(b.ids) != 11 || !sortedStrings(b.ids) {
+		t.Errorf("the identifiers must stay sorted and complete: %q", b.ids)
+	}
+
+	// the gate takes the recorded line as an advisory to review, not as a failure
+	r := runWith(t, root, opt)
+	for _, f := range r.Failures {
+		if strings.Contains(f, "gains") {
+			t.Errorf("an accepted line is no absorption: %s", f)
+		}
+	}
+	named := false
+	for _, a := range r.Advisories {
+		named = named || strings.Contains(a, "gains 1 accepted line(s)") && strings.Contains(a, "locale:uk")
+	}
+	if !named {
+		t.Errorf("no advisory about the accepted line: %q", r.Advisories)
+	}
+
+	// a second call has nothing left to accept
+	if ids, err := Accept(root, "again", time.Now()); err != nil || len(ids) != 0 {
+		t.Errorf("a second Accept must be a no-op, got %q, %v", ids, err)
+	}
+}
+
+func sortedStrings(s []string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i-1] > s[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestABaselineNotInHeadYetIsAnAdvisory(t *testing.T) {
+	root := scratch(t)
+	opt := Options{Committed: func(string) ([]byte, bool, error) { return nil, false, nil }}
+	r := runWith(t, root, opt)
+	if len(r.Failures) != 0 {
+		t.Fatalf("a baseline with no committed state to compare with must not fail: %q", r.Failures)
+	}
+	found := false
+	for _, a := range r.Advisories {
+		found = found || strings.Contains(a, "not in HEAD yet")
+	}
+	if !found {
+		t.Errorf("no advisory about the missing committed state: %q", r.Advisories)
+	}
+}
+
+func TestAnUnreadableCommittedStateIsNotAPass(t *testing.T) {
+	opt := Options{Committed: func(string) ([]byte, bool, error) { return nil, false, os.ErrPermission }}
+	if _, err := RunWith(scratch(t), opt); err == nil {
+		t.Fatal("a committed state that cannot be read must end the run as COULD NOT VERIFY, not as a pass")
 	}
 }
 

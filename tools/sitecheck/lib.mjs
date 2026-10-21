@@ -9,7 +9,16 @@ import { execFileSync } from 'node:child_process';
 
 export const REPO = path.resolve(import.meta.dirname, '..', '..');
 export const LIVE_BASE = 'https://serzhyale.github.io/doc-html-translate/';
-export const CATALOG = 'P:/Contracts';
+// The shared contracts catalog: SZA_CONTRACTS_ROOT, else the path AGENTS.md states (the one file that names it),
+// the way scripts/test.ps1 resolves it. Null when neither gives one; the callers then cannot read the catalog.
+export const CATALOG = (() => {
+  const env = process.env.SZA_CONTRACTS_ROOT || process.env.SZA_CONTRACTS_CATALOG;
+  if (env) return env;
+  try {
+    const m = /The shared contracts catalog is at `([^`]+)`/.exec(fs.readFileSync(path.join(REPO, 'AGENTS.md'), 'utf8'));
+    return m ? m[1] : null;
+  } catch { return null; }
+})();
 
 export const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 

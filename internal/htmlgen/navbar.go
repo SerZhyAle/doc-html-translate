@@ -406,7 +406,9 @@ var PaletteStyleNames = appearance.PaletteNames{Prefix: "dht-", Attr: "data-dht-
 // command layer of the chrome (chromeUICSS), the thin reading-progress bar and the index-page
 // toolbar ([14]). It is injected into <head> on both chapter pages and index.html. The four themes'
 // colours come from internal/appearance, the one source the extension's viewer.css palette is
-// generated from too - edit them there, not here (docs/PARITY.md "Reader theme palette").
+// generated from too - edit them there, not here (docs/PARITY.md "Reader theme palette"). The
+// missing-picture handler travels with it, its script after the styles, so every page that carries
+// the styles catches a failed picture from the first one on (missingimage.go).
 var readerCSS = `
 <style id="dht-reader-css">
 ` + appearance.PaletteCSS(PaletteStyleNames) + `
@@ -460,9 +462,9 @@ var readerCSS = `
     outline: 2px solid var(--dht-accent);
     outline-offset: 2px;
   }
-` + chromeUICSS + `
+` + chromeUICSS + missingImageCSS + `
 </style>
-` + searchCSS
+` + searchCSS + missingImageScript
 
 // readerMarker opens the reader script; its presence marks a page as already injected.
 const readerMarker = `<script id="dht-reader">`

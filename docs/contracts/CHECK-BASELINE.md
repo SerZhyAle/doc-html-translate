@@ -17,10 +17,13 @@ line (`.. 10 locales in the baseline`); an unlisted locale without pages fails, 
 advisory (`TestTheBaselineMayFallAndNeverRise`). It is not a suppression (rule 8). Lint and typos still run at
 zero findings and the Go suite has no allow-list.
 
-**Open, in the catalog registry (temporary, ticket 122, until 2026-12-31).** Rules 3.2, 3.4 and 3.6: there is no
-comparison with the committed snapshot (a hand-added locale line passes and the message names no amount) and
-no update path that records a reason. Asked of the owner: whether a baseline whose identifiers are recomputed
-from the tree each run satisfies the absorption test (the `automated-checks` proposal file of 2026-10-20, item 2).
+**Rules 3.2, 3.4 and 3.6: closed 2026-10-21 (ticket 122, item 5).** `internal/helpcheck` compares the file with
+`git show HEAD:configs/help-baseline.txt` (supplied by `tools/helpcheck`): a line the committed file did not hold
+fails with its amount and identifiers unless a dated journal line `# accepted <id> on <date>: <reason>` records why.
+The update path is `go run ./tools/helpcheck -accept-baseline "<reason>"`: it prints every identifier it accepts
+and writes the reason beside it. A committed state that cannot be read ends as COULD NOT VERIFY. Still asked of
+the owner: whether a baseline whose identifiers are recomputed from the tree each run satisfies the absorption test
+(the `automated-checks` proposal file of 2026-10-20, item 2), which could make the comparison unnecessary.
 
 `DEV/ocrlab/thresholds.json` is **not** a baseline in this contract's sense: it holds metric acceptance
 bounds, each with its measured value, which 0.11 puts out of scope.

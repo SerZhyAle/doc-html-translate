@@ -42,6 +42,7 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Page jump select | - (text) | `nav.go-to-page` | Go to page / Перейти к странице / Перейти до сторінки | conforms |
 | Index TOC disclosure | browser's `<details>` marker | `nav.expand` / `nav.collapse` | branch title | conforms (CSS mask, `rtl: fixed`, symmetric) |
 | Index TOC link colour | `#1a0dab` (1.4:1 on dark, 1.59:1 on night) | - | - | conforms: `--dht-link`, at least 6.3:1 on all four themes (`ICON-RENDER` rule 3) |
+| A document picture that cannot be shown (chapter page, single page) | the browser's broken-image icon | `content.image` | the picture's own alt text, no string of this product | conforms since ticket 122 (`ICON-EXTERNAL` section 13 F): a capture-phase `error` handler in the page head swaps the failed `<img>` for the glyph and its alt text, with no new request; a picture inside an OCR plate container is left alone, its plates being pinned to the picture's box |
 
 ## Extension (viewer, popup, options)
 
@@ -81,6 +82,7 @@ and `ICON-RENDER` 0.13 on 2026-09-25, except the co-signed and open ones named b
 | Group header (popup language list, options About groups) | state triangle, drawn by the component (not a vocabulary glyph) | - | the group topic | conforms to `COLLAPSIBLE-GROUP` 3.2 (ticket 119, slice X1): a vector marker - right folded, down open, mirrored in a right-to-left interface - never the `nav.expand` / `nav.collapse` action chevrons |
 | Viewer remote-images notice: Load them / Always load remote content | - | `action.download` | Load them (`vRemoteLoad`) / Always load remote content (`vRemoteAlways`) | conforms since slice X1 - the record's meaning is fetching from the internet to this device |
 | Viewer empty-state and failure notices: Open a document | - | `content.document` | Open a document (`vOpenDocTitle`) | conforms since slice X1, the same picture the popup's button draws; Open original PDF and Unlock are words (no meaning vendored) |
+| A document picture that cannot be shown (viewer) | the browser's broken-image icon | `content.image` | the picture's own alt text, no string of this product | conforms since ticket 122 (`ICON-EXTERNAL` section 13 F), as in the book: `missing-image.js` swaps a failed `<img>` for the glyph and its alt text on a capture-phase `error` listener; a picture the EPUB renderer cannot find inside the archive raises no `error`, so `rewriteImg` and `convertSvgImage` put the same stand-in in its place at render time |
 
 ## GUI launcher (`cmd/doc-html-ui/ui.html`)
 
@@ -147,7 +149,7 @@ retired; `TestDialogAnswerFacesMeetContrast` bans them.
 | `.ico` (16-256 px), extension action icons (16/32/48/128), MSIX tiles and `Square44x44Logo` `targetsize-*` / `altform-unplated` / `altform-lightunplated` through `resources.pri` | the product mark: a white sheet with a folded corner and `</>` cut into it, on the navy plate `#1E3A8A` (16-20 px drawing with `<>` without slash for 1px stroke clarity; 24-64 px with full `</>`; 96-256 px with "DOC" header and "HTML" footer branding typography framing `</>`) | artwork (`ICON-SET` rule 7) in the platform forms of `ICON-RENDER` rule 9 - the extension icon is the mark on its own plate (plate at least 9.3 : 1 on a light toolbar, sheet at least 11.2 : 1 on a dark one) |
 | "Convert to HTML" shell verb | `action.convert`, mono, `#808080`, 16 px with 20, 24, 32 (`assets/convert-verb.ico`, exe icon resource 1) | conforms (rule 9: 3.9 : 1 on the light menu, 3.6 : 1 on `#2B2B2B`) |
 | Registered document type (`-register`, and the MSIX file type association) | `content.document`, mono, `#808080`, 16-256 px (`assets/document-type.ico`, exe icon resource 2; `DocumentType` in the package) | conforms (rule 9) |
-| A converted book's own images | the book's content | user content (`ICON-EXTERNAL` section 13 F); missing-image replacement is a dated exception |
+| A converted book's own images | the book's content | user content (`ICON-EXTERNAL` section 13 F); one that cannot be shown draws `content.image` with its alt text (rows above, ticket 122) |
 
 No third-party mark is drawn anywhere (`ICON-EXTERNAL` rule 1 holds by absence): the store channels
 are text links.

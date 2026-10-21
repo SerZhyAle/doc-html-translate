@@ -66,6 +66,14 @@ type diagImage struct {
 	Height  int           `json:"height"`
 	Blocks  []diagBlock   `json:"blocks"`
 	Dropped []diagDropped `json:"dropped"`
+	// How the language this image was read with was decided (OCR-OVERLAY 1.3 A, rule 10): the same
+	// four values on every image of a book, absent when the book's script check never ran at all.
+	// ScriptConf is a pointer so a verdict of 0 stays distinguishable from no verdict.
+	Lang        string   `json:"lang,omitempty"`
+	LangSource  string   `json:"langSource,omitempty"`
+	ScriptCheck string   `json:"scriptCheck,omitempty"`
+	Script      string   `json:"script,omitempty"`
+	ScriptConf  *float64 `json:"scriptConf,omitempty"`
 }
 
 // diagMu serializes appends. Phase 3 of OverlayBook is sequential today, but a diagnostics
@@ -80,12 +88,18 @@ var diagMu sync.Mutex
 // The style and colours are recomputed here with the same pure functions wrapImage used, rather
 // than threaded back out of it. That keeps the rendering path byte-identical whether or not
 // diagnostics are on - which is the property the lab depends on and the test asserts.
-func recordDiagnostics(file string, res Result, srcImg image.Image) {
+func recordDiagnostics(file string, res Result, srcImg image.Image, lang LanguageRecord) {
 	path := DiagnosticsPath()
 	if path == "" {
 		return
 	}
 	rec := diagImage{File: file, Width: res.Width, Height: res.Height, Blocks: []diagBlock{}, Dropped: []diagDropped{}}
+	if lang.Check != "" {
+		rec.Lang, rec.LangSource, rec.ScriptCheck, rec.Script = lang.Lang, lang.Source, lang.Check, lang.Script
+		if lang.Script != "" {
+			rec.ScriptConf = &lang.Conf
+		}
+	}
 	for _, b := range res.Blocks {
 		db := diagBlock{
 			Text: b.Text, X0: b.X0, Y0: b.Y0, X1: b.X1, Y1: b.Y1, LineH: b.LineH, Conf: b.Conf,

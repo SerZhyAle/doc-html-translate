@@ -378,7 +378,8 @@ func findElement(n *gohtml.Node, a atom.Atom) *gohtml.Node {
 // Only an outermost <svg> whose sole drawing content is exactly one <image> is
 // replaced, and the replacement is that one element, so text or other markup
 // around or between drawings can never be lost. SVGs with text, several
-// images or any other shape are genuine illustrations and stay.
+// images or any other shape are genuine illustrations and stay. The wrapper's <title>, when it has one,
+// is the <img>'s alt (svgTitleText).
 func rewriteCoverSVGs(doc *gohtml.Node) bool {
 	var svgs []*gohtml.Node
 	var collect func(*gohtml.Node)
@@ -403,13 +404,26 @@ func rewriteCoverSVGs(doc *gohtml.Node) bool {
 			Type:     gohtml.ElementNode,
 			Data:     "img",
 			DataAtom: atom.Img,
-			Attr:     []gohtml.Attribute{{Key: "src", Val: href}, {Key: "alt", Val: ""}},
+			Attr:     []gohtml.Attribute{{Key: "src", Val: href}, {Key: "alt", Val: svgTitleText(svg)}},
 		}
 		svg.Parent.InsertBefore(img, svg)
 		svg.Parent.RemoveChild(svg)
 		changed = true
 	}
 	return changed
+}
+
+// svgTitleText returns the text of the wrapper's own <title>, the name its author gave the picture
+// ("Cover" in Calibre's idiom), or "" when the source gave none. It becomes the alt of the <img> that
+// replaces the wrapper, so a cover that cannot be shown still names itself (ICON-EXTERNAL section 13 F).
+// No word is invented here: a fixed one would be a string of this product in one language only.
+func svgTitleText(svg *gohtml.Node) string {
+	for c := svg.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == gohtml.ElementNode && c.Data == "title" {
+			return textContent(c)
+		}
+	}
+	return ""
 }
 
 // singleImageHref returns the href of the one child <image> of svg when that

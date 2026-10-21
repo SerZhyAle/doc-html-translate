@@ -30,6 +30,7 @@ extension/*.traineddata
 DEV/private/
 # Local planning tickets and release queue.
 DEV/plan/
+DEV/DOCUMENT_REGISTRY.jsonl
 # Secrets and signing material - pre-empt the leak, never catch it afterwards.
 *.pfx
 *.snk

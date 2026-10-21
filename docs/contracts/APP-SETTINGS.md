@@ -39,8 +39,15 @@ toggles, not operations. What the rules find here:
   [`../UI_PROFILE.md`](../UI_PROFILE.md) section 4.
 - **Section 8 - search.** No settings search: seven pages, about thirty editors, each page one rail click
   away. Permanent variant, same record.
-- **Rule 11** - no settings inventory aligned with the documentation (the GUI mirrors the CLI flags
-  `README.md` documents); temporary, ticket 122 item 4, until 2026-12-31.
+
+**Rule 11 (closed 2026-10-21, ticket 122 item 4).** The inventory is [`../settings-inventory.json`](../settings-inventory.json),
+generated from `cmd/doc-html-ui/ui.html` (`go run ./tools/settingsinv -render`, never by hand): every key
+`collectSettings()` persists is a setting (control, page, caption key and English text, default, help region, the
+command-line flags the window passes for it) or a recorded piece of session context. `scripts/settings-inventory.ps1`
+is the gate child of `scripts/check.ps1`: the render equals the window, every help region is a row of the help map,
+every caption is a name in the help copy deck of the surface that owns the region (so the generated manual carries it),
+and every flag is defined in `internal/config/flags.go`, passed by `cmd/doc-html-ui/main.go` and a row of the three
+README flag tables. This is also the inventory `SETTINGS-NAVIGATION` section 6 asks for.
 
 **Conformance.** The gates of [WINDOWS-UI](WINDOWS-UI.md) plus `cmd/doc-html-ui/conformance_test.go`, the
 dictionary and markup gates, and `tools/uicheck` (ticket 119). The stored UI context follows the compatibility

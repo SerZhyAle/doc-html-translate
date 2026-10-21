@@ -15,7 +15,8 @@ import { imageBlob, isJxl } from "./jxl.js";
 
 import { normalizeLangTag } from "./lang.js";
 import { decodeChapter } from "./charset.js";
-import { coverSvgImage, outermostSvg, xhtmlToHtmlSyntax } from "./epub-normalize.js";
+import { coverSvgImage, coverSvgTitle, outermostSvg, xhtmlToHtmlSyntax } from "./epub-normalize.js";
+import { missingImagePlaceholder, showMissingImage } from "./missing-image.js";
 import { DROP_TAGS, scrubTree } from "./url-policy.js";
 import { EPUB_MAX_ENTRY_BYTES, InputLimitError, checkArchive, entryTooLarge, inflateRawCapped, zipEntryIsRegular } from "./limits.js";
 
@@ -405,7 +406,8 @@ function buildEpubToc(pkg, files, opfDir, pathToIndex) {
 
 
 // rewriteImg points a relative <img src> at a blob: URL of the in-archive image,
-// or removes the image when the target is missing. http(s)/data sources are left
+// or, when the target is missing from the archive, puts the picture's stand-in
+// (missing-image.js) in its place. http(s)/data sources are left
 // for scrubTree, which parks a remote one until the reader allows it. srcset (which
 // would carry now-broken relative refs) is dropped.
 export function rewriteImg(img, docDir, blobFor) {
@@ -416,7 +418,7 @@ export function rewriteImg(img, docDir, blobFor) {
   const target = resolveBookPath(docDir, src);
   const url = target && blobFor(target);
   if (url) img.setAttribute("src", url);
-  else img.remove();
+  else showMissingImage(img);
 }
 
 // convertSvgImage points an SVG <image> at its in-archive picture. When the <svg> is a
@@ -438,9 +440,9 @@ export function convertSvgImage(im, docDir, blobFor) {
   const svg = outermostSvg(im);
   if (svg && coverSvgImage(svg) === im) {
     const img = document.createElement("img");
-    img.alt = im.getAttribute("alt") || "";
+    img.alt = im.getAttribute("alt") || coverSvgTitle(svg);
     if (src) img.setAttribute("src", src);
-    svg.replaceWith(img);
+    svg.replaceWith(src ? img : missingImagePlaceholder(img.alt));
     return;
   }
   if (!src) {
@@ -498,7 +500,9 @@ export function renderChapter(xhtml, index, docDir, pathToIndex, blobFor, isXhtm
     if (rid) rootIds.push(rid);
   }
 
-  host.querySelectorAll(DROP_TAGS).forEach((e) => e.remove());
+  // An SVG's own <title> is its accessible name, not the document's: it stays, so a single-image cover
+  // wrapper can hand it on as the cover's alt (convertSvgImage), as the desktop's rewriteCoverSVGs does.
+  host.querySelectorAll(DROP_TAGS).forEach((e) => { if (!(e.localName === "title" && e.closest("svg"))) e.remove(); });
   host.querySelectorAll("img").forEach((img) => rewriteImg(img, docDir, blobFor));
   host.querySelectorAll("image").forEach((im) => convertSvgImage(im, docDir, blobFor));
   host.querySelectorAll("a").forEach((a) => rewriteAnchor(a, index, docDir, pathToIndex));

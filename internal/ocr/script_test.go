@@ -88,3 +88,68 @@ func TestScriptOfReadsTheLeadingLanguage(t *testing.T) {
 		}
 	}
 }
+
+// TestLanguageRecordNamesEveryOutcome is OCR-OVERLAY 1.3 A in one table: the record is stamped from
+// resolveScript's own answer, so it cannot disagree with the decision, and the two outcomes that
+// used to leave no trace - a silent detector and a verdict under the floor - each have a name.
+func TestLanguageRecordNamesEveryOutcome(t *testing.T) {
+	cases := []struct {
+		name      string
+		lang      string
+		fixed     bool
+		script    string
+		conf      float64
+		detected  bool
+		installed []string
+		wantCheck string
+		wantSrc   string
+		wantLang  string
+	}{
+		{"chosen", "eng", true, "", 0, false, nil, ScriptCheckChosen, LangSourceChosen, "eng"},
+		{"silent", "eng", false, "", 0, false, []string{"rus"}, ScriptCheckNoVerdict, LangSourceAssumed, "eng"},
+		{"under the floor", "eng", false, "Cyrillic", 3.81, true, []string{"rus"}, ScriptCheckUnderFloor, LangSourceAssumed, "eng"},
+		{"agrees, Latin", "eng", false, "Latin", 7.0, true, nil, ScriptCheckAgrees, LangSourceAssumed, "eng"},
+		{"agrees, Cyrillic", "rus", false, "Cyrillic", 9.0, true, []string{"rus"}, ScriptCheckAgrees, LangSourceAssumed, "rus"},
+		{"Latin over a Cyrillic assumption", "rus", false, "Latin", 9.0, true, nil, ScriptCheckLatinIgnored, LangSourceAssumed, "rus"},
+		{"corrected", "eng", false, "Cyrillic", 8.24, true, []string{"rus"}, ScriptCheckCorrected, LangSourceAssumed, "rus+eng"},
+		{"stopped", "eng", false, "Cyrillic", 8.24, true, nil, ScriptCheckStopped, LangSourceAssumed, "eng"},
+	}
+	for _, c := range cases {
+		use, _, stop := resolveScript(c.lang, c.fixed, c.script, c.conf, c.detected, c.installed)
+		got := newLanguageRecord(c.lang, c.fixed, c.script, c.conf, c.detected, use, stop)
+		if got.Check != c.wantCheck || got.Source != c.wantSrc || got.Lang != c.wantLang {
+			t.Errorf("%s: record = %+v, want check %q source %q lang %q", c.name, got, c.wantCheck, c.wantSrc, c.wantLang)
+		}
+		// A verdict is recorded exactly when the detector gave one (OverlayBook never runs it for a
+		// chosen language).
+		if (got.Script != "") != c.detected {
+			t.Errorf("%s: script %q recorded, detected=%v", c.name, got.Script, c.detected)
+		}
+	}
+}
+
+// TestLanguageRecordLineSaysWhatHappened: the run log line is the one place a person reads the
+// record. Each outcome must be named in words, and the assumption must be called an assumption.
+func TestLanguageRecordLineSaysWhatHappened(t *testing.T) {
+	for check, want := range map[string]string{
+		ScriptCheckChosen:       "chosen with -ocr-lang",
+		ScriptCheckNoVerdict:    "no verdict",
+		ScriptCheckUnderFloor:   "under the 6.4 floor",
+		ScriptCheckAgrees:       "the language reads it",
+		ScriptCheckLatinIgnored: "not acted on",
+		ScriptCheckCorrected:    "was corrected",
+		ScriptCheckStopped:      "no plates were drawn",
+	} {
+		source := LangSourceAssumed
+		if check == ScriptCheckChosen {
+			source = LangSourceChosen
+		}
+		line := LanguageRecord{Lang: "eng", Source: source, Check: check, Script: "Cyrillic", Conf: 3.81}.Line()
+		if !strings.Contains(line, want) {
+			t.Errorf("%s: %q does not say %q", check, line, want)
+		}
+		if source == LangSourceAssumed && !strings.Contains(line, "assumed") {
+			t.Errorf("%s: %q does not call the language assumed", check, line)
+		}
+	}
+}

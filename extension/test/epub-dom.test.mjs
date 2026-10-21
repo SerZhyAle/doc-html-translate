@@ -144,10 +144,16 @@ test("rewriteImg: http(s)/data sources are left untouched", () => {
   }
 });
 
-test("rewriteImg: missing target (or no src) removes the image", () => {
-  const missing = el(`<div><img src="gone.png"></div>`, "img");
+test("rewriteImg: a missing target shows the stand-in with the alt; no src removes the image", () => {
+  const holder = el(`<div><img src="gone.png" alt="A figure"></div>`, "div");
+  const missing = holder.querySelector("img");
   rewriteImg(missing, "OEBPS", () => null);
-  assert.equal(missing.parentNode, null);
+  assert.equal(missing.parentNode, null, "the picture that cannot be shown is replaced, not kept broken");
+  assert.equal(holder.querySelector("img"), null);
+  const box = holder.querySelector(".missing-img");
+  assert.ok(box, "content.image takes its place (ICON-EXTERNAL section 13 F)");
+  assert.equal(box.textContent, "A figure");
+  assert.ok(box.querySelector("svg path"), "the glyph is drawn");
 
   const noSrc = el(`<div><img alt="x"></div>`, "img");
   rewriteImg(noSrc, "OEBPS", () => "blob:x");
@@ -165,6 +171,38 @@ test("convertSvgImage: single-image svg is replaced by an <img> with the blob sr
   assert.equal(container.querySelector("svg"), null, "the wrapping svg is gone");
   assert.equal(img.getAttribute("src"), "blob:cover");
   assert.equal(img.getAttribute("alt"), "Cover");
+});
+
+test("convertSvgImage: the wrapper title is the alt unless the image carries its own", () => {
+  const titled = el(`<div><svg><title> Front   cover </title><image xlink:href="cover.jpg"/></svg></div>`, "image");
+  const container = titled.closest("div");
+  convertSvgImage(titled, "OEBPS", () => "blob:cover");
+  assert.equal(container.querySelector("img").getAttribute("alt"), "Front cover");
+
+  const own = el(`<div><svg><title>Cover</title><image xlink:href="cover.jpg" alt="Mine"/></svg></div>`, "image");
+  const c2 = own.closest("div");
+  convertSvgImage(own, "OEBPS", () => "blob:cover");
+  assert.equal(c2.querySelector("img").getAttribute("alt"), "Mine");
+
+  const untitled = el(`<div><svg><image xlink:href="cover.jpg"/></svg></div>`, "image");
+  const c3 = untitled.closest("div");
+  convertSvgImage(untitled, "OEBPS", () => "blob:cover");
+  assert.equal(c3.querySelector("img").getAttribute("alt"), "", "the source gave no name, so none is invented");
+});
+
+test("convertSvgImage: a cover whose picture is not in the archive shows the stand-in with its alt", () => {
+  const im = el(`<div><svg><title>Cover</title><image xlink:href="gone.jpg"/></svg></div>`, "image");
+  const container = im.closest("div");
+  convertSvgImage(im, "OEBPS", () => null);
+  assert.equal(container.querySelector("img"), null);
+  assert.ok(container.querySelector("svg.glyph"), "the content.image glyph");
+  assert.equal(container.querySelector(".missing-img").textContent, "Cover");
+});
+
+test("renderChapter: an SVG's own <title> stays, a stray HTML <title> is still dropped", () => {
+  const html = fragHtml(renderChapter(`<html><body><title>Doc</title><svg><title>Chart</title><circle r="1"/></svg></body></html>`, 0, "OEBPS", new Map(), () => null, false).frag);
+  assert.ok(html.includes("<title>Chart</title>"), html);
+  assert.ok(!html.includes("Doc"), html);
 });
 
 test("convertSvgImage: multi-image svg keeps its <image> nodes, pointed at the blob", () => {

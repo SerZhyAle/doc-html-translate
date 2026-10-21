@@ -122,6 +122,9 @@ foreach ($entry in $read.Entries) {
     foreach ($p in @($r.paths)) {
         $p = [string]$p
         if ($p -match '(^|/)\.\.(/|$)' -or $p.StartsWith('/') -or $p -match '^[A-Za-z]:') { Add-Finding "${at}: path escapes the repository: $p"; continue }
+        foreach ($tree in $DocRegistryLocalTrees) {
+            if ($p -eq $tree -or $p.StartsWith($tree + '/')) { Add-Finding "${at}: path $p is in the local corpus $tree - those documents belong to $DocRegistryLocalPath (scripts/doc-registry-local.ps1); this registry indexes only what a clone can open" }
+        }
         $hits = Resolve-RegistryPath $p $files
         # An explicit path names a document, so it must exist. A glob declares a group's naming and
         # may match nothing yet (the RESEARCH_ scheme before its first note); the record as a whole

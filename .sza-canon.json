@@ -1,9 +1,9 @@
 {
   "canon": {
-    "version": "2026.10.17.1",
-    "coreDigest": "sha256:b467aefe4ce6917cc75c2cca56a0dcc4b3a74e793ef056112f37dee6d12456fa",
+    "version": "2026.10.20.1",
+    "coreDigest": "sha256:07837a366a517e7c9603b063cc295d36068f2b45f3a798fc7d2b2784c2c50d7b",
     "adoptedOn": "2026-08-18",
-    "reconciledOn": "2026-10-17",
+    "reconciledOn": "2026-10-21",
     "model": "reference",
     "contribRecord": "contrib/epub_2_html.md"
   },

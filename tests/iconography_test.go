@@ -128,7 +128,7 @@ func TestExtensionDrawsOnlyTabledGlyphs(t *testing.T) {
 	// The pages built in script (ticket 119, slice X1) name a meaning as a string literal - a glyph() argument, a
 	// commandButton() or confirmDialog() option, the viewer's answerButton() glyphId - so every quoted vocabulary id in these modules is a use.
 	quoted := regexp.MustCompile(`"((?:action|app|nav|view|content|feature|system|media|status)\.[a-z-]+)"`)
-	for _, f := range []string{"options.js", "options-about.js", "options-data.js", "ocr-lang-ui.js", "ui-help.js", "ui-dialog.js", "popup.js", "viewer.js"} {
+	for _, f := range []string{"options.js", "options-about.js", "options-data.js", "ocr-lang-ui.js", "ui-help.js", "ui-dialog.js", "popup.js", "viewer.js", "missing-image.js"} {
 		for _, m := range quoted.FindAllStringSubmatch(readRepoFile(t, "extension", "src", f), -1) {
 			used[m[1]] = true
 		}

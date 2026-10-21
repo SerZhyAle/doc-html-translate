@@ -34,7 +34,7 @@ registry row of each contract says `partial` where something is still owed.
 | [ICON-SET.md](ICON-SET.md) | `ICON-SET` | 0.36 draft | consumer, `partial` - one glyph and one name per meaning, inventory in [`../GLYPH-MAP.md`](../GLYPH-MAP.md) |
 | [ICON-RENDER.md](ICON-RENDER.md) | `ICON-RENDER` | 0.24 draft | consumer - grid, theme colour, RTL, accessible names; buttons and sizes are [BUTTONS.md](BUTTONS.md) and [UI-SIZING.md](UI-SIZING.md) |
 | [WINDOWS-UI.md](WINDOWS-UI.md) | `WINDOWS-UI` | 0.10 draft | consumer, `partial` - the shared Windows UI profile for the GUI launcher, adopted 2026-10-05 (ticket 93) |
-| [ICON-EXTERNAL.md](ICON-EXTERNAL.md) | `ICON-EXTERNAL` | 0.12 draft | consumer - no third-party marks; glyph sources on record; the missing-image replacement is owed (ticket 122) |
+| [ICON-EXTERNAL.md](ICON-EXTERNAL.md) | `ICON-EXTERNAL` | 0.12 draft | consumer - no third-party marks; glyph sources on record; the missing-image replacement is drawn in both editions (ticket 122) |
 | [CHECK-VERDICT.md](CHECK-VERDICT.md) | `CHECK-VERDICT` | 0.13 draft | consumer, `partial` - the gate scripts' and tools' exit codes and verdict line |
 | [CHECK-BASELINE.md](CHECK-BASELINE.md) | `CHECK-BASELINE` | 0.11 draft | consumer, `partial` - one set baseline in use, `configs/help-baseline.txt` |
 | [CHECK-PLACEMENT.md](CHECK-PLACEMENT.md) | `CHECK-PLACEMENT` | 0.11 draft | consumer - `configs/check-placement.jsonl` |

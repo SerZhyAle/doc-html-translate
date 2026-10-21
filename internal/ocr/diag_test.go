@@ -244,3 +244,38 @@ func TestDiagnosticsRecordEmptyDiscardsForBlankImage(t *testing.T) {
 		t.Errorf("blank image recorded blocks=%d dropped=%d, want 0 and 0", len(recs[0].Blocks), len(recs[0].Dropped))
 	}
 }
+
+// OCR-OVERLAY 1.3 A (rule 10): how the language was decided rides on the image's line, so a run on an
+// assumed language whose script check was silent or under the floor is not read as a confirmed one.
+// A line with no record at all stays the line both editions pin (goDiagLine above).
+func TestDiagnosticsRecordHowTheLanguageWasDecided(t *testing.T) {
+	dir, imgPath, _ := diagFixture(t)
+
+	silent := map[string]recognition{imgPath: {
+		res:      Result{Width: 200, Height: 100},
+		language: LanguageRecord{Lang: "eng", Source: LangSourceAssumed, Check: ScriptCheckNoVerdict},
+	}}
+	rec := readDiagLines(t, dir, silent)[0]
+	if rec.Lang != "eng" || rec.LangSource != LangSourceAssumed || rec.ScriptCheck != ScriptCheckNoVerdict {
+		t.Errorf("silent check recorded as lang=%q source=%q check=%q", rec.Lang, rec.LangSource, rec.ScriptCheck)
+	}
+	if rec.Script != "" || rec.ScriptConf != nil {
+		t.Errorf("a check with no verdict recorded a script: %q %v", rec.Script, rec.ScriptConf)
+	}
+	line, err := json.Marshal(rec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(line), `"script"`) || strings.Contains(string(line), `"scriptConf"`) {
+		t.Errorf("no verdict, yet the line carries one: %s", line)
+	}
+
+	under := map[string]recognition{imgPath: {
+		res:      Result{Width: 200, Height: 100},
+		language: LanguageRecord{Lang: "eng", Source: LangSourceAssumed, Check: ScriptCheckUnderFloor, Script: "Cyrillic", Conf: 3.81},
+	}}
+	rec = readDiagLines(t, dir, under)[0]
+	if rec.ScriptCheck != ScriptCheckUnderFloor || rec.Script != "Cyrillic" || rec.ScriptConf == nil || *rec.ScriptConf != 3.81 {
+		t.Errorf("under-floor verdict recorded as check=%q script=%q conf=%v", rec.ScriptCheck, rec.Script, rec.ScriptConf)
+	}
+}

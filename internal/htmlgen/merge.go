@@ -41,7 +41,7 @@ type mergeChapter struct {
 var chromeIDs = []string{
 	"dht-single-css", "dht-nav", "dht-reader-css", "dht-scoped-css", "dht-reader", "dht-progress", "dht-page-sel",
 	"dht-font-dec", "dht-font-inc", "dht-ocr-toggle", "dht-family-sel", "dht-theme-sel",
-	"dht-continue", "dht-zoom-sync",
+	"dht-continue", "dht-zoom-sync", "dht-missing-image",
 	"dht-search-button", "dht-search-panel", "dht-search-input", "dht-search-scope", "dht-search-close",
 	"dht-search-status", "dht-search-results", "dht-search-css", "dht-search-script",
 	"dht-contents", "dht-contents-button", "dht-contents-close", "dht-contents-css", "dht-contents-script",

@@ -15,6 +15,7 @@ import { buildToc } from "./toc.js";
 import { detectLang, normalizeLangTag, declarationContradicted } from "./lang.js";
 import { t, initI18n, applyI18n, loadMessages, uiLang } from "./i18n.js";
 import { glyph, applyGlyphs } from "./glyphs.js";
+import { installMissingImageFallback, missingImageFor } from "./missing-image.js";
 import { answerButton, answerRow, arrangeNotice } from "./viewer-answers.js";
 import { loadEpub } from "./epub.js";
 import { parseText } from "./txt.js";
@@ -521,7 +522,7 @@ async function ocrProcessImage(img) {
   } catch (err) {
     if (!isCurrent(gen)) return;
     console.warn("OCR failed for image", err);
-    wrapper.replaceWith(img); // restore the plain image
+    wrapper.replaceWith(missingImageFor(img) || img); // restore the plain image, or the stand-in a load error put in its place
   } finally {
     const at = ocrPending.indexOf(img);
     if (at >= 0) ocrPending.splice(at, 1);
@@ -1367,6 +1368,8 @@ function applyViewerChromeI18n() {
 }
 
 async function main() {
+  // A picture of the document that fails to load shows content.image and its alt text (ICON-EXTERNAL 13 F).
+  installMissingImageFallback(document);
   // The chrome speaks the interface language; the document keeps its own <html lang>, which is
   // what makes the browser offer to translate it. applyI18n only touches the toolbar and the
   // panels, never the rendered document.

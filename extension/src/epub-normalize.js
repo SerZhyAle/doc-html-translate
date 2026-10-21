@@ -131,6 +131,18 @@ export function coverSvgImage(svg) {
   return image;
 }
 
+// coverSvgTitle is the text of the wrapper's own <title> - the name its author gave the picture - or ""
+// when the source gave none. It is the alt of the <img> that replaces the wrapper, so a cover that cannot
+// be shown still names itself (ICON-EXTERNAL section 13 F). Mirrors svgTitleText in normalize.go.
+export function coverSvgTitle(svg) {
+  for (const c of Array.from(svg.childNodes)) {
+    if (c.nodeType === 1 && c.localName.toLowerCase() === "title") {
+      return c.textContent.replace(/\s+/g, " ").trim();
+    }
+  }
+  return "";
+}
+
 // outermostSvg is the <svg> the desktop app would judge: its walk stops at the first <svg> it
 // meets, so an SVG nested in another is never a cover wrapper of its own.
 export function outermostSvg(el) {

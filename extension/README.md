@@ -69,6 +69,8 @@ src/
   viewer.html/.js/.css viewer (the redirect target); detectFormat routes to the right reader -> renderBook
   viewer-answers.js    the answers of the viewer's notices, offers and export card: one button builder (glyph before the
                        caption), one wrapping row, at most one primary per surface (BUTTONS 2.0, ticket 119)
+  missing-image.js     a document picture that fails to load: content.image and its alt text in its place, from one
+                       capture-phase error listener (ICON-EXTERNAL section 13 F, ticket 122)
   reflow.js            PDF paragraph/heading heuristics ported from internal/pdf/extract.go
   toc.js               PDF outline -> nested TOC, ported from internal/pdf/toc.go
   epub.js              EPUB: unzip + OPF/spine + nav/NCX TOC + chapter sanitize, ported from internal/epub

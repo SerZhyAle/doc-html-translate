@@ -103,13 +103,22 @@
       "name": "one image",
       "body": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 10 10\"><image xlink:href=\"cover.jpg\"/></svg>",
       "cover": true,
-      "text": ""
+      "text": "",
+      "alt": ""
     },
     {
       "name": "one image with a title",
       "body": "<svg><title>Cover</title><image href=\"cover.jpg\"/></svg>",
       "cover": true,
-      "text": ""
+      "text": "",
+      "alt": "Cover"
+    },
+    {
+      "name": "title with surrounding whitespace",
+      "body": "<svg><title>\n  Front   cover \n</title><image href=\"cover.jpg\"/></svg>",
+      "cover": true,
+      "text": "",
+      "alt": "Front cover"
     },
     {
       "name": "image and text",

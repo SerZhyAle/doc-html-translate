@@ -64,6 +64,97 @@ var osdScriptAliases = map[string]string{
 	"Korean": "Hangul",
 }
 
+// What a book's script check came to. OCR-OVERLAY 1.3 A lets a product draw plates on a language
+// the reader did not choose only when it records evidence that the page was read in a script that
+// language can read, and a verdict that was silent or under the floor leaves no trace: the run reads
+// exactly like one the check confirmed. The record names the outcome so the two can be told apart in
+// the run log and in the diagnostics sidecar. It observes the decision resolveScript already made
+// and changes none of it (ticket 121, phase B).
+const (
+	ScriptCheckChosen       = "chosen"        // -ocr-lang was given: the language is the reader's, the check does not run
+	ScriptCheckNoVerdict    = "no-verdict"    // the check ran and said nothing: no osd data, too few characters, a failed pass
+	ScriptCheckUnderFloor   = "under-floor"   // a verdict under ocrScriptConfidenceFloor, not acted on
+	ScriptCheckAgrees       = "agrees"        // a verdict at or over the floor naming a script the language reads
+	ScriptCheckLatinIgnored = "latin-ignored" // a verdict of Latin over the floor while the language reads another script: not acted on
+	ScriptCheckCorrected    = "corrected"     // a confident mismatch with data installed: the language became <script>+<default>
+	ScriptCheckStopped      = "stopped"       // a confident mismatch with no data: no plates, and the log says why
+)
+
+// Where the language came from.
+const (
+	LangSourceChosen  = "chosen"  // -ocr-lang
+	LangSourceAssumed = "assumed" // derived from -src, which defaults to English
+)
+
+// LanguageRecord is how the language a book was recognized with was decided. Script and Conf are
+// set only when the check gave a verdict.
+type LanguageRecord struct {
+	Lang   string  // what recognition used
+	Source string  // LangSourceChosen / LangSourceAssumed
+	Check  string  // ScriptCheck*
+	Script string  // the verdict's script, "" when none
+	Conf   float64 // the verdict's confidence, meaningful only when Script is set
+}
+
+// newLanguageRecord stamps the outcome of a check that already ran: lang is what the book started
+// with, use and stop are resolveScript's answer.
+func newLanguageRecord(lang string, langFixed bool, script string, conf float64, detected bool, use string, stop bool) LanguageRecord {
+	r := LanguageRecord{Lang: use, Source: LangSourceAssumed}
+	if langFixed {
+		r.Source = LangSourceChosen
+	}
+	if detected {
+		r.Script, r.Conf = script, conf
+	}
+	switch {
+	case langFixed:
+		r.Check = ScriptCheckChosen
+	case stop:
+		r.Check = ScriptCheckStopped
+	case use != lang:
+		r.Check = ScriptCheckCorrected
+	case !detected:
+		r.Check = ScriptCheckNoVerdict
+	case conf < ocrScriptConfidenceFloor:
+		r.Check = ScriptCheckUnderFloor
+	case script == "Latin" && scriptOf(lang) != "Latin":
+		r.Check = ScriptCheckLatinIgnored
+	default:
+		r.Check = ScriptCheckAgrees
+	}
+	return r
+}
+
+// Line is the one sentence the run log carries for the record: where the language came from and what
+// the check made of it.
+func (r LanguageRecord) Line() string {
+	source := "assumed (not chosen with -ocr-lang)"
+	if r.Source == LangSourceChosen {
+		source = "chosen with -ocr-lang"
+	}
+	verdict := fmt.Sprintf("%s at %.2f", r.Script, r.Conf)
+	var check string
+	switch r.Check {
+	case ScriptCheckChosen:
+		check = "not run, a chosen language is never second-guessed"
+	case ScriptCheckNoVerdict:
+		check = "no verdict (no osd data, or too little text on the first image)"
+	case ScriptCheckUnderFloor:
+		check = fmt.Sprintf("%s, under the %.1f floor - not acted on", verdict, ocrScriptConfidenceFloor)
+	case ScriptCheckAgrees:
+		check = fmt.Sprintf("%s - the language reads it", verdict)
+	case ScriptCheckLatinIgnored:
+		check = fmt.Sprintf("%s - not acted on, Latin is the detector's catch-all", verdict)
+	case ScriptCheckCorrected:
+		check = fmt.Sprintf("%s - the language was corrected", verdict)
+	case ScriptCheckStopped:
+		check = fmt.Sprintf("%s - no plates were drawn", verdict)
+	default:
+		check = r.Check
+	}
+	return fmt.Sprintf("language %s %s; script check: %s", LangLabel(r.Lang), source, check)
+}
+
 // scriptOf returns the script a "+"-joined language string reads: the first code's, since that is
 // the one Tesseract leads with.
 func scriptOf(lang string) string {

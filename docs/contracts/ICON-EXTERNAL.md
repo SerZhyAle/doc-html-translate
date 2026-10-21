@@ -9,9 +9,14 @@
 What this repo owes it:
 - Rule 1 holds by absence: no third-party mark is drawn anywhere - the store and GitHub channels are text links.
 - Rules 2-4: the product shows no other app's icon and downloads no picture of its own. Section 13 F declares
-  embedded document images user content; a missing or broken one should show `content.image` with the original
-  alt text. That replacement does not exist yet (no error handler in `internal/htmlgen` or `extension/src`, and
-  the cover wrapper writes an empty alt) - a dated registry exception until 2026-12-31, remediation ticket 122.
+  embedded document images user content; a missing or broken one shows `content.image` with the original alt
+  text, since ticket 122 (2026-10-21): one capture-phase `error` listener on the document, in the head of the
+  generated reader pages (`internal/htmlgen/missingimage.go`) and installed by the extension viewer
+  (`extension/src/missing-image.js`), swaps the failed `<img>` for the glyph and its alt text without a request;
+  a single-image cover wrapper hands its own `<title>` on as the `<img>` alt (`internal/epub/normalize.go`,
+  `extension/src/epub-normalize.js`). Held by `internal/htmlgen/missingimage_test.go`,
+  `extension/test/missing-image.test.mjs` and the reader scenario of `tools/uicheck` (a failing picture in
+  Chromium, both editions); the port is described in `docs/PARITY.md` "Missing document pictures".
 - Rule 5: every copied glyph's source is on record - in the catalog (`ref.source` or `glyph.source`),
   in `assets/glyphs/PROVENANCE.txt` (SHA-256 per file) and the Material Icons (Apache-2.0) licence in
   `THIRD-PARTY-NOTICES.txt`, shipped beside the desktop app and inside the extension package

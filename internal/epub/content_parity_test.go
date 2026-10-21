@@ -27,6 +27,7 @@ type contentFidelityCases struct {
 		Body  string `json:"body"`
 		Cover bool   `json:"cover"`
 		Text  string `json:"text"`
+		Alt   string `json:"alt"`
 	} `json:"cover"`
 }
 
@@ -73,6 +74,9 @@ func TestContentFidelitySharedCases(t *testing.T) {
 		}
 		if c.Text != "" && !strings.Contains(html, c.Text) {
 			t.Errorf("cover %s: lost %q:\n%s", c.Name, c.Text, html)
+		}
+		if c.Cover && !strings.Contains(html, `alt="`+c.Alt+`"`) {
+			t.Errorf("cover %s: the <img> lacks the wrapper title as alt %q:\n%s", c.Name, c.Alt, html)
 		}
 	}
 }

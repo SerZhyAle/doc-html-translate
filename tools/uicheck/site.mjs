@@ -10,7 +10,7 @@ import { REPO } from './lib.mjs';
 
 const sitecheck = await import(pathToFileURL(path.join(REPO, 'tools', 'sitecheck', 'lib.mjs')).href);
 
-const PAGES = ['index.html', 'docs.html', 'docs.ru.html', 'docs.uk.html', 'extension.html', 'privacy.html', '404.html'];
+const PAGES = ['index.html', 'docs.html', 'docs.ru.html', 'docs.uk.html', 'extension.html', 'privacy.html', 'support.html', '404.html'];
 const BUTTONISH = '.btn, .seg a, .seg button, .theme-btn, .copybox .copy, .to-top';
 
 export async function siteChecks(report) {

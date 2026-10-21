@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "source": "cmd/doc-html-ui/ui.html collectSettings()",
+  "settings": [
+    {
+      "key": "lang",
+      "control": "langSwitch",
+      "kind": "select",
+      "page": "convert",
+      "caption": "titleUiLang",
+      "captionEN": "Interface language",
+      "help": "main.header",
+      "flags": [
+        "-ui-lang"
+      ]
+    },
+    {
+      "key": "engine",
+      "control": "engine",
+      "kind": "radio",
+      "page": "convert",
+      "caption": "secTranslation",
+      "captionEN": "Translation",
+      "default": "chrome",
+      "help": "main.translation",
+      "flags": [
+        "-notranslate",
+        "-google",
+        "-ollama"
+      ],
+      "note": "Chrome passes no flag; Google Cloud, Ollama and Don't translate pass -google, -ollama and -notranslate"
+    },
+    {
+      "key": "output",
+      "control": "outputFolder",
+      "kind": "text",
+      "page": "convert",
+      "caption": "lblOutput",
+      "captionEN": "Output",
+      "help": "main.output",
+      "flags": [
+        "-folder"
+      ]
+    },
+    {
+      "key": "srcLang",
+      "control": "srcLang",
+      "kind": "select",
+      "page": "convert",
+      "caption": "lblLanguages",
+      "captionEN": "Languages",
+      "help": "main.languages",
+      "flags": [
+        "-src"
+      ]
+    },
+    {
+      "key": "dstLang",
+      "control": "dstLang",
+      "kind": "select",
+      "page": "convert",
+      "caption": "lblLanguages",
+      "captionEN": "Languages",
+      "help": "main.languages",
+      "flags": [
+        "-dst"
+      ]
+    },
+    {
+      "key": "splitSize",
+      "control": "splitSize",
+      "kind": "number",
+      "page": "advanced",
+      "caption": "lblSplitSize",
+      "captionEN": "Split size",
+      "default": "0",
+      "help": "settings.advanced",
+      "flags": [
+        "-split"
+      ]
+    },
+    {
+      "key": "tocDepth",
+      "control": "tocDepth",
+      "kind": "number",
+      "page": "advanced",
+      "caption": "lblTocDepth",
+      "captionEN": "TOC depth",
+      "default": "0",
+      "help": "settings.advanced",
+      "flags": [
+        "-toc-depth"
+      ]
+    },
+    {
+      "key": "maxCost",
+      "control": "maxCost",
+      "kind": "number",
+      "page": "advanced",
+      "caption": "lblMaxCost",
+      "captionEN": "Max cost",
+      "default": "0",
+      "help": "settings.advanced",
+      "flags": [
+        "-max-cost"
+      ]
+    },
+    {
+      "key": "ollamaModel",
+      "control": "ollamaModel",
+      "kind": "text",
+      "page": "ollama",
+      "caption": "lblModel",
+      "captionEN": "Model",
+      "default": "gemma3:12b",
+      "help": "settings.ollama",
+      "flags": [
+        "-ollama-model"
+      ]
+    },
+    {
+      "key": "ollamaParallel",
+      "control": "ollamaParallel",
+      "kind": "number",
+      "page": "ollama",
+      "caption": "lblParallel",
+      "captionEN": "Parallel",
+      "default": "1",
+      "help": "settings.ollama",
+      "flags": [
+        "-ollama-parallel"
+      ]
+    },
+    {
+      "key": "ollamaCtx",
+      "control": "ollamaCtx",
+      "kind": "number",
+      "page": "ollama",
+      "caption": "lblContext",
+      "captionEN": "Context",
+      "default": "8192",
+      "help": "settings.ollama",
+      "flags": [
+        "-ollama-ctx"
+      ]
+    },
+    {
+      "key": "singlePage",
+      "control": "chkSingle",
+      "kind": "checkbox",
+      "page": "convert",
+      "caption": "chkSingle",
+      "captionEN": "Single page (contents available)",
+      "default": "true",
+      "help": "main.options",
+      "flags": [
+        "-multipage"
+      ],
+      "note": "ticked is the default; unticked passes -multipage"
+    },
+    {
+      "key": "noOpen",
+      "control": "chkNoOpen",
+      "kind": "checkbox",
+      "page": "convert",
+      "caption": "chkNoOpen",
+      "captionEN": "Don't open browser",
+      "default": "false",
+      "help": "main.options",
+      "flags": [
+        "-noopen"
+      ]
+    },
+    {
+      "key": "force",
+      "control": "chkForce",
+      "kind": "checkbox",
+      "page": "convert",
+      "caption": "chkForce",
+      "captionEN": "Force re-process",
+      "default": "false",
+      "help": "main.options",
+      "flags": [
+        "-force"
+      ]
+    },
+    {
+      "key": "verbose",
+      "control": "chkVerbose",
+      "kind": "checkbox",
+      "page": "convert",
+      "caption": "chkVerbose",
+      "captionEN": "Verbose log",
+      "default": "false",
+      "help": "main.options",
+      "flags": [
+        "-v"
+      ]
+    },
+    {
+      "key": "ocr",
+      "control": "chkOCR",
+      "kind": "checkbox",
+      "page": "ocr",
+      "caption": "chkOCRLabel",
+      "captionEN": "Overlay translatable text on images",
+      "default": "false",
+      "help": "settings.ocr",
+      "flags": [
+        "-ocr"
+      ]
+    },
+    {
+      "key": "ocrLangChoice",
+      "control": "ocrLang",
+      "kind": "select",
+      "page": "ocr",
+      "caption": "lblOcrLang",
+      "captionEN": "OCR language",
+      "help": "settings.ocr",
+      "flags": [
+        "-ocr-lang"
+      ]
+    },
+    {
+      "key": "queueParallel",
+      "control": "queueConcurrency",
+      "kind": "select",
+      "page": "convert",
+      "caption": "queueParallel",
+      "captionEN": "Parallel",
+      "default": "1",
+      "help": "main.queue"
+    },
+    {
+      "key": "autoUpdates",
+      "control": "chkAutoUpdates",
+      "kind": "checkbox",
+      "page": "about",
+      "caption": "autoUpdateCheck",
+      "captionEN": "Check automatically (once a day)",
+      "default": "false",
+      "help": "settings.about"
+    },
+    {
+      "key": "theme",
+      "control": "themeSwitch",
+      "kind": "select",
+      "page": "convert",
+      "caption": "titleTheme",
+      "captionEN": "Theme",
+      "default": "system",
+      "help": "main.header"
+    },
+    {
+      "key": "uiSize",
+      "control": "uiSize",
+      "kind": "select",
+      "page": "interface",
+      "caption": "lblUiSize",
+      "captionEN": "Interface size",
+      "default": "ordinary",
+      "help": "settings.interface"
+    },
+    {
+      "key": "textSize",
+      "control": "textSize",
+      "kind": "select",
+      "page": "interface",
+      "caption": "lblTextSize",
+      "captionEN": "Text size",
+      "default": "ordinary",
+      "help": "settings.interface"
+    },
+    {
+      "key": "inputProfile",
+      "control": "inputProfile",
+      "kind": "select",
+      "page": "interface",
+      "caption": "lblInputProfile",
+      "captionEN": "Controls",
+      "default": "auto",
+      "help": "settings.interface"
+    }
+  ],
+  "context": [
+    {
+      "key": "assocPrompted",
+      "reason": "whether the first-run Windows question was answered; the answer itself lives in Windows"
+    },
+    {
+      "key": "recent",
+      "reason": "the recent-documents list, a convenience the user clears with a button"
+    },
+    {
+      "key": "win",
+      "reason": "the last window geometry, restored once at the next start"
+    },
+    {
+      "key": "page",
+      "reason": "the page the user left, restored at the next start"
+    },
+    {
+      "key": "groups",
+      "reason": "the open or closed state of each group by its stable id"
+    },
+    {
+      "key": "pageScrolls",
+      "reason": "each page's viewport as a stable anchor and an offset"
+    }
+  ]
+}

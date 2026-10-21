@@ -10,6 +10,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { REPO, readerSource, loadPlaywright, launchBrowser } from './lib.mjs';
 import { WORK, MODES, caseTag, geometry, capture, contrast, selectedState, keyboard, panel } from './reader.mjs';
+import { writePicturesHtml, missingImageExt } from './reader-missing.mjs';
 
 export const EXT = {
   name: 'ext', root: '#toolbar', bar: '#toolbar', controls: 'button, a, select, input', items: '#toolbar .title, #toolbar .group > span', panels: '#search-panel',
@@ -37,10 +38,12 @@ function writeBookFb2() {
 function serve() {
   const extDir = path.join(REPO, 'extension');
   const book = writeBookFb2();
+  const pictures = writePicturesHtml();
+  const fixtures = { '/__fixtures__/book.fb2': book, '/__fixtures__/pictures.html': pictures };
   const server = http.createServer((req, res) => {
     const u = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    const file = u === '/__fixtures__/book.fb2' ? book : path.join(extDir, u);
-    if (!(file === book || file.startsWith(extDir)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.writeHead(404); res.end(); return; }
+    const file = fixtures[u] || path.join(extDir, u);
+    if (!(file === book || file === pictures || file.startsWith(extDir)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.writeHead(404); res.end(); return; }
     res.writeHead(200, { 'content-type': MIME[path.extname(file)] || 'application/octet-stream', 'access-control-allow-origin': '*' });
     fs.createReadStream(file).pipe(res);
   });
@@ -67,7 +70,7 @@ const STUB = ([lang, prefs]) => {
   };
 };
 
-export async function extensionChecks(report) {
+export async function extensionChecks(report, { shotsDir = null } = {}) {
   const { server, base } = await serve();
   const { chromium } = await loadPlaywright();
   const browser = await launchBrowser(chromium);
@@ -115,5 +118,6 @@ export async function extensionChecks(report) {
         }
       } finally { await ctx.close(); }
     }
+    await missingImageExt(report, browser, base, STUB, shotsDir);
   } finally { await browser.close(); server.close(); }
 }

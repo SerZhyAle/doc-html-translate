@@ -634,7 +634,7 @@ func TestParityOCRDiscardRecord(t *testing.T) {
 	if goM[1] != jsM[1] {
 		t.Errorf("the editions write different discard records:\n go %s\n js %s", goM[1], jsM[1])
 	}
-	if !regexp.MustCompile(`recordDiagnostics\(job\.file, r\.res, nil\)`).MatchString(readRepoFile(t, "internal", "ocr", "overlay.go")) {
+	if !regexp.MustCompile(`recordDiagnostics\(job\.file, r\.res, nil, r\.language\)`).MatchString(readRepoFile(t, "internal", "ocr", "overlay.go")) {
 		t.Error("overlay.go: the no-plate arm no longer writes the discard record (OCR-OVERLAY rule 12)")
 	}
 	if !regexp.MustCompile(`container\.ocrRecord = \{ width, height, blocks, dropped \}`).MatchString(readRepoFile(t, "extension", "src", "ocr-overlay.js")) {

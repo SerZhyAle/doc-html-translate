@@ -22,9 +22,10 @@ two editions (Go and the browser extension) held to one constant table by the gu
 - Cite rules in source as `OCR-OVERLAY rule N`, never as a path.
 - Open dated exceptions: JPEG-only EXIF (rule 1), and the assumed language without qualifying script evidence
   (rule 10) in two scopes - the extension, which recognizes with a persisted assumed `eng` and has no script
-  pass, and the desktop edition, where a silent or under-floor script verdict leaves the language assumed and
-  a confirming verdict is not recorded. Amendment 1.3 permits recorded evidence; it does not excuse their
-  absence. Both rule 10 scopes are re-verified under ticket 121 (until 2026-12-31). See
+  pass, and the desktop edition, where a silent or under-floor script verdict leaves the language assumed
+  (since 2026-10-21 the run log and the `DOCHT_OCR_DIAG` line record the language source and the verdict,
+  silent or not; the record changes no decision). Amendment 1.3 permits recorded evidence; it does not
+  excuse their absence. Both rule 10 scopes are re-verified under ticket 121 (until 2026-12-31). See
   [`../PARITY.md`](../PARITY.md).
 - Rule 13 holds: every constant of the section 5 status table carries its status marker in both editions
   (`TestOCRConstantsCarryTheirRule13Status`, run 2026-10-20).

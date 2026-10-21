@@ -169,6 +169,8 @@ func OverlayBook(ctx context.Context, bin string, htmlPaths []string, lang, data
 	}
 	use, note, stop := resolveScript(lang, langFixed, script, conf, detected, installedForScript(dataDir, script))
 	stats.Lang, stats.ScriptNote = use, note
+	// Recorded whatever the verdict was, including the silent one: OCR-OVERLAY 1.3 A (ticket 121).
+	stats.Language = newLanguageRecord(lang, langFixed, script, conf, detected, use, stop)
 	if stop {
 		return stats
 	}
@@ -176,6 +178,10 @@ func OverlayBook(ctx context.Context, bin string, htmlPaths []string, lang, data
 
 	// Phase 2: recognize every image once, across one pool spanning the whole book.
 	results := recognizePaths(ctx, bin, lang, dataDir, order, onProgress)
+	for path, r := range results {
+		r.language = stats.Language
+		results[path] = r
+	}
 
 	// Phase 3: re-parse each file (one at a time) and wrap its images from the results.
 	for _, htmlPath := range htmlPaths {
@@ -247,7 +253,7 @@ func applyOverlays(doc *gohtml.Node, baseDir string, results map[string]recognit
 			// OCR-OVERLAY rule 12: the image that produced nothing is the case the discard record
 			// exists for - without this line "the engine found nothing" and "every line failed the
 			// floor" read the same. No blocks, so no colours to sample and no decode needed.
-			recordDiagnostics(job.file, r.res, nil)
+			recordDiagnostics(job.file, r.res, nil, r.language)
 		default:
 			// The boxes already arrived in display space (stageForOCR turned the picture before
 			// recognition), so the colours have to be sampled from the same view - otherwise a
@@ -255,7 +261,7 @@ func applyOverlays(doc *gohtml.Node, baseDir string, results map[string]recognit
 			srcImg := orientImage(decodeImage(job.file), exifOrientation(job.file))
 			wrapImage(job.node, r.res, srcImg)
 			// Off unless DOCHT_OCR_DIAG is set; see diag.go. Never touches the DOM.
-			recordDiagnostics(job.file, r.res, srcImg)
+			recordDiagnostics(job.file, r.res, srcImg, r.language)
 			stats.Overlaid++
 		}
 	}
@@ -276,6 +282,9 @@ type recognition struct {
 	res Result
 	ok  bool
 	err error
+	// language is how the language this image was read with was decided; the diagnostics sidecar
+	// carries it so a run on an assumed language is not read as one the script check confirmed.
+	language LanguageRecord
 }
 
 // OverlayResult reports what became of each image, so a caller can tell the ordinary case
@@ -291,6 +300,9 @@ type OverlayResult struct {
 	// (script.go). ScriptNote is the sentence explaining that, empty when nothing happened.
 	Lang       string
 	ScriptNote string
+	// Language says how the language was decided - chosen or assumed, and what the script check made
+	// of it, including when it said nothing. Empty (Check == "") for a book with no images to read.
+	Language LanguageRecord
 	// Cancelled is set when the run was interrupted before every page was rewritten.
 	Cancelled bool
 }

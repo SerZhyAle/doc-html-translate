@@ -16,6 +16,7 @@
     { "name": "Reader chrome (themes/fonts/UI)", "go": ["internal/htmlgen/navbar.go", "internal/htmlgen/chromecss.go"], "js": ["extension/src/viewer.css", "extension/src/viewer.js", "extension/src/viewer.html"] },
     { "name": "Declared-language tag", "go": ["internal/textutil/lang.go"], "js": ["extension/src/lang.js"] },
     { "name": "Vocabulary glyphs (ICON-SET)", "go": ["internal/htmlgen/glyphs.go"], "js": ["extension/src/glyphs.js"] },
+    { "name": "Missing document picture (ICON-EXTERNAL 13 F)", "go": ["internal/htmlgen/missingimage.go"], "js": ["extension/src/missing-image.js"] },
     { "name": "Settings / options surface", "go": ["internal/config/flags.go", "cmd/doc-html-ui/ui.html"], "js": ["extension/src/popup.js", "extension/src/options.js", "extension/src/background.js"] }
   ],
   "notWatched": [

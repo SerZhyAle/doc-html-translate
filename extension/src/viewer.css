@@ -316,6 +316,16 @@ body {
    id selector here would outrank that class rule and grow the container around the picture, which
    drifts the percent-positioned plates off the words they cover. */
 #content img:not(.ocr-overlay-img) { max-width: 100%; height: auto; display: block; margin: 1em auto; }
+/* A document picture that cannot be shown (ICON-EXTERNAL section 13 F): the content.image glyph and the
+   picture's alt text where the browser would draw its broken-image icon. missing-image.js builds it; the
+   desktop book's .dht-missing-img is its twin (docs/PARITY.md "Missing document pictures"). Every picture is
+   a block in this view, so the stand-in is one too. */
+#content .missing-img {
+  display: flex; align-items: center; gap: 0.5em; box-sizing: border-box; width: fit-content; max-width: 100%;
+  margin: 1em auto; padding: 0.35em 0.7em; border: 1px dashed var(--border); border-radius: 0.25em;
+  color: var(--fg); font-size: 0.8em; line-height: 1.35; text-indent: 0; overflow-wrap: anywhere;
+}
+#content .missing-img .glyph { width: 1.5em; height: 1.5em; flex: none; }
 /* Holds a scanned page's height while its raster is still being decoded (extraction is
    deferred until the reader nears the page). Mirrors the "#content img" box a full-page
    raster ends up in - full column width, own aspect ratio - so the document has its real

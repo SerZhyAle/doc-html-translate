@@ -77,6 +77,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | OCR language manager | [`internal/ocr/tessdata.go`](../internal/ocr/tessdata.go) | [`extension/src/ocr-lang.js`](../extension/src/ocr-lang.js) |
 | Reader chrome (themes, fonts, controls) | [`internal/htmlgen/navbar.go`](../internal/htmlgen/navbar.go) (`readerCSS`, `readerScript`), [`chromecss.go`](../internal/htmlgen/chromecss.go) (`chromeUICSS`: sizes, buttons, groups) | [`extension/src/viewer.css`](../extension/src/viewer.css), [`viewer.js`](../extension/src/viewer.js), [`viewer.html`](../extension/src/viewer.html) |
 | Vocabulary glyphs (`ICON-SET`) | [`internal/htmlgen/glyphs.go`](../internal/htmlgen/glyphs.go) (`Glyphs`, `glyphSVG`) | [`extension/src/glyphs.js`](../extension/src/glyphs.js) (`GLYPHS`, `glyph`, `applyGlyphs`) |
+| Missing document picture (stand-in, ICON-EXTERNAL 13 F) | [`internal/htmlgen/missingimage.go`](../internal/htmlgen/missingimage.go) | [`extension/src/missing-image.js`](../extension/src/missing-image.js) (`installMissingImageFallback`) |
 | Source-language detection | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`DominantScript`, `DeclarationContradicted` - the guard half only; Go declares only a stated language, see "Declared source language") | [`extension/src/lang.js`](../extension/src/lang.js) |
 | Declared-language tag | [`internal/textutil/lang.go`](../internal/textutil/lang.go) (`NormalizeLangTag`) | [`extension/src/lang.js`](../extension/src/lang.js) (`normalizeLangTag`) |
 | Settings / options surface | [`internal/config/flags.go`](../internal/config/flags.go), [`ui.html`](../cmd/doc-html-ui/ui.html) | [`popup.js`](../extension/src/popup.js), [`options.js`](../extension/src/options.js), [`background.js`](../extension/src/background.js) |
@@ -653,7 +654,7 @@ page, which also draws `app.settings`, `system.internet`, `action.import`, `acti
 `app.info`, `action.copy`, `action.remove`, `action.download`, `action.retry`, `action.cancel`, `app.help` and `content.document`,
 the launcher's meanings; the first three were vendored with that slice);
 `nav.open-external` marks the outside links of the extension's viewer and popup and, since ticket 119 (slice R1), the
-desktop reader's version link (a CSS mask); `action.search` is the Search button of both readers. `nav.expand` / `nav.collapse` are
+desktop reader's version link (a CSS mask); `action.search` is the Search button of both readers, and `content.image` is the stand-in of a document picture that cannot be shown (see "Missing document pictures"). `nav.expand` / `nav.collapse` are
 in both, drawn differently by surface: a button in the extension's table of contents, a CSS mask over the
 `<details>` marker in the desktop index. The GUI launcher and the site carry their own inline copies, held to the same vendored files.
 
@@ -666,6 +667,38 @@ browser surfaces: their chrome stays mono, and nothing here asks a future editor
 launcher's window buttons' glyphs. The launcher's inline glyph table is `BTN_GLYPHS` in
 `cmd/doc-html-ui/ui.html`, held to the vendored files by the same guard; `action.retry` and
 `action.update` are catalogued meanings since `ICON-SET` 0.31/0.33 and no longer pinned as provisional.
+
+### Missing document pictures (ticket 122, 2026-10-21)
+
+**Guard:** `internal/htmlgen/missingimage_test.go` (the handler is in the head, listens in the capture phase, draws the
+vendored `content.image`, makes no request and carries no palette value), `extension/test/missing-image.test.mjs` and
+`extension/test/epub-dom.test.mjs` (the stand-in, the listener's wiring, the cover alt), the shared `cover` cases of
+`tests/testdata/content_fidelity_cases.json` (`TestContentFidelitySharedCases`, `epub-parity.test.mjs`), and
+`tools/uicheck --only reader` (a real failing picture in Chromium, both editions).
+
+A picture of the document that cannot be shown - missing, refused or broken - draws `content.image` with the picture's alt
+text in place of the browser's broken-image icon (`ICON-EXTERNAL` section 13 F; `ICON-SET` note on `content.image`).
+
+| Invariant | Go app | Extension |
+|---|---|---|
+| Trigger | one capture-phase `error` listener on `document` - an error event does not bubble - in the page head, ahead of the first `<img>` ([`missingimage.go`](../internal/htmlgen/missingimage.go)) | the same, installed first in `main()` ([`missing-image.js`](../extension/src/missing-image.js) `installMissingImageFallback`) |
+| Result | the failed `<img>` is replaced in place by `span.dht-missing-img`: the `dht-glyph` svg (the vendored `content.image` path) and, when the alt is not blank, the alt as a text span | `span.missing-img`: the `glyph` svg and the alt text span |
+| Alt | the picture's own `alt`, trimmed; blank is the glyph alone; no string of this product, so nothing to translate into thirteen languages | the same |
+| Request | none: the failed picture is swapped out, never retargeted | the same |
+| Valid pictures | untouched: the handler runs only for a picture whose load failed | the same |
+| Cover wrapper | the `<title>` of a single-image SVG wrapper, whitespace collapsed, is the `<img>` alt; "" when the wrapper has none ([`normalize.go`](../internal/epub/normalize.go) `svgTitleText`) | `coverSvgTitle` ([`epub-normalize.js`](../extension/src/epub-normalize.js)); an `alt` on the `<image>` still wins |
+| Shared cases | the `alt` of each `cover` case in `tests/testdata/content_fidelity_cases.json` | the same file |
+
+Intentional differences (do NOT "fix"):
+
+- The book leaves a picture inside an OCR plate container (`.ocr-fig`) to the browser, because its plates are pinned to the
+  picture's box and a smaller stand-in would shift them; the viewer overlays only pictures that already decoded, so it has no such guard.
+- Layout follows the surface: the book's stand-in is `inline-flex` (the book's own CSS decides how a picture displays), the
+  viewer's is a centred block, as every picture of the viewer is.
+- A picture that is not in the EPUB archive: the viewer's renderer shows the stand-in for it (`rewriteImg`, `convertSvgImage`), where
+  it used to drop the `<img>` (a cover wrapper left an `<img>` with no src); the desktop copy keeps the `<img>` pointing at the missing file and the handler catches it.
+- The viewer's OCR queue puts a picture back when recognition fails; it puts back the stand-in when a load error replaced the
+  picture first (`missingImageFor`).
 
 ### PDF reflow heuristics
 
@@ -841,7 +874,7 @@ halves it had left open:
 
 | Behaviour | Go app | Extension |
 |---|---|---|
-| Single-image SVG cover -> `<img>` | DOM, only the outermost `<svg>` whose sole drawing is one `<image>` (title, desc, defs, metadata and whitespace aside) ([`normalize.go`](../internal/epub/normalize.go) `rewriteCoverSVGs`) | the same rule ([`epub-normalize.js`](../extension/src/epub-normalize.js) `coverSvgImage`, used by `epub.js` `convertSvgImage`); any other SVG stays whole, text and all, its `<image>` pointed at the in-memory picture |
+| Single-image SVG cover -> `<img>` | DOM, only the outermost `<svg>` whose sole drawing is one `<image>` (title, desc, defs, metadata and whitespace aside) ([`normalize.go`](../internal/epub/normalize.go) `rewriteCoverSVGs`; its `<title>` is the `<img>` alt, see "Missing document pictures") | the same rule ([`epub-normalize.js`](../extension/src/epub-normalize.js) `coverSvgImage`, used by `epub.js` `convertSvgImage`); any other SVG stays whole, text and all, its `<image>` pointed at the in-memory picture |
 | Link rewrites | real link attributes only, resolved per file ([`links.go`](../internal/epub/links.go) `rewriteLinks`) | `<a>` on the DOM, resolved per chapter (`rewriteAnchor`) - same model |
 | XHTML self-closing tags (`<a id/>`, `<script/>`, `<title/>`) | expanded before parsing, for an item of the XHTML media type or an `.xhtml`/`.xhtm` name, the nav document included; an empty SVG `<title/>` no longer swallows what follows | the same token rewrite (`epub-normalize.js` `xhtmlToHtmlSyntax`) before `renderChapter` parses the chapter as `text/html` |
 | Unterminated tag (a `<` with no `>` anywhere after it) | the tokenizer drops the incomplete token and the bytes after it | the rewrite emits the rest of the chapter verbatim and stops - the viewer keeps what the desktop drops; both linear (ticket 86) |
@@ -1452,7 +1485,14 @@ their own test where one exists.
   choice in the popup rather than a value inferred from a translation flag, and the pass needs
   `osd.traineddata`, ~10 MB the extension neither vendors nor downloads today. The consequence is real
   and is not pretended away - a reader who never opens the popup gets the same transliterated debris on
-  a Cyrillic page that the desktop no longer produces. Tracked in the parity ticket.
+  a Cyrillic page that the desktop no longer produces. Tracked in ticket 121 (phase B).
+  The desktop also **records** the check (OCR-OVERLAY 1.3 A, ticket 121 phase B): on every OCR run the
+  run log says where the language came from (chosen with `-ocr-lang` or assumed) and what the check made
+  of it, and the `DOCHT_OCR_DIAG` sidecar carries the same on each
+  image's line (`lang`, `langSource`, `scriptCheck` - `chosen`, `no-verdict`, `under-floor`, `agrees`,
+  `latin-ignored`, `corrected` or `stopped` - and `script` / `scriptConf` when the check gave a verdict).
+  The record observes `resolveScript`'s decision and changes none of it. The extension writes no such
+  record: it has no check and so no verdict to record (its sidecar line is the one the lab harness pins).
 
 ### Settings defaults
 

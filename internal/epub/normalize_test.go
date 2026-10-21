@@ -63,7 +63,12 @@ func TestRewriteCoverSVGs(t *testing.T) {
 		{
 			name: "calibre cover with attrs after href, title and whitespace",
 			in:   "<svg class=\"calibre\">\n  <title>Cover</title>\n  <image xlink:href=\"image_rsrcSB.jpg\" height=\"1920\" width=\"1200\"/>\n</svg>",
-			want: `<img src="image_rsrcSB.jpg" alt=""/>`,
+			want: `<img src="image_rsrcSB.jpg" alt="Cover"/>`,
+		},
+		{
+			name: "the wrapper's title is the alt, whitespace collapsed",
+			in:   "<svg><title>\n  Front   cover \n</title><image href=\"c.jpg\"/></svg>",
+			want: `<img src="c.jpg" alt="Front cover"/>`,
 		},
 		{
 			name: "plain href without xlink prefix",

@@ -13,7 +13,9 @@
     - every page row exists in every shipped locale, with the parts of rule 8 in order, an alt text, lang and dir, no
       request to another origin, no inline script, and every link resolved;
     - the locales the GUI ships and the help does not yet have are the set baseline configs/help-baseline.txt, which
-      may fall and never rise (CHECK-BASELINE);
+      may fall and never rise (CHECK-BASELINE); it is compared with `git show HEAD:configs/help-baseline.txt`, a line
+      HEAD did not hold fails unless the update path recorded a reason for it
+      (`go run ./tools/helpcheck -accept-baseline "<reason>"`);
     - help/ at the repository root is the same bytes as the embedded set;
     - freshness (an advisory, exit 3): the set records the digests of its inputs, and an input that changed after the
       last `node tools/helpgen/generate.mjs` is named.

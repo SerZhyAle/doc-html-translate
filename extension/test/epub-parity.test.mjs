@@ -98,6 +98,7 @@ test("content fidelity: shared Go/JS cover SVG cases", () => {
     const isCover = !html.includes("<svg") && html.includes("<img");
     assert.equal(isCover, c.cover, `${c.name}: ${html}`);
     if (c.text) assert.ok(html.includes(c.text), `${c.name} keeps ${c.text}: ${html}`);
+    if (c.cover) assert.equal(el(html, "img").getAttribute("alt"), c.alt, `${c.name}: the cover keeps its wrapper title as alt: ${html}`);
   }
 });
 

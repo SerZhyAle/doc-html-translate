@@ -94,6 +94,12 @@ func reportOverlay(stats ocr.OverlayResult, lang string) {
 			lang = stats.Lang
 		}
 	}
+	// OCR-OVERLAY 1.3 A: where the language came from and what the script check made of it, said on
+	// every run. A verdict that was silent or under the floor leaves no other trace, and the run then
+	// reads like one the check confirmed.
+	if stats.Language.Check != "" {
+		logging.Printf("  OCR overlay: %s\n", stats.Language.Line())
+	}
 	summary := fmt.Sprintf("%d image(s) overlaid", stats.Overlaid)
 	if stats.NoText > 0 {
 		summary += fmt.Sprintf(", %d with no text found", stats.NoText)

@@ -110,8 +110,12 @@ type PageRow struct {
 
 var forms = map[string]bool{"page": true, "layer": true, "both": true, "inherit": true, "none": true}
 
-// Run judges the tree under root. The error is for a tree it cannot read at all (COULD NOT VERIFY).
-func Run(root string) (*Report, error) {
+// Run judges the tree under root, with no committed state to compare the baseline with (see Options). The error is for
+// a tree it cannot read at all (COULD NOT VERIFY).
+func Run(root string) (*Report, error) { return RunWith(root, Options{}) }
+
+// RunWith is Run with the options the caller can supply.
+func RunWith(root string, opt Options) (*Report, error) {
 	rd := func(rel string) ([]byte, error) { return os.ReadFile(filepath.Join(root, filepath.FromSlash(rel))) }
 	mapRaw, err := rd(MapPath)
 	if err != nil {
@@ -134,7 +138,9 @@ func Run(root string) (*Report, error) {
 	checkMap(r, &m)
 	checkSurfaces(r, &m, string(ui), string(server))
 	checkPages(r, root, &m)
-	checkBaseline(r, root, &m)
+	if err := checkBaseline(r, root, &m, opt); err != nil {
+		return nil, err
+	}
 	checkMirror(r, root)
 	checkFreshness(r, root)
 	return r, nil
@@ -642,49 +648,6 @@ func checkCaptures(r *Report, root string, m *Map, helpIDs []string) {
 					}
 				}
 			}
-		}
-	}
-}
-
-// ── the baseline: locales the GUI ships and the help does not yet have ──
-
-// A set baseline (CHECK-BASELINE rule 3): one identifier per line, sorted, "locale:<code>". The set may fall and
-// never rise: a GUI locale with no pages that the file does not list is new debt and fails; a listed locale that now
-// has pages is named so the line can be pruned.
-func checkBaseline(r *Report, root string, m *Map) {
-	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(BaselinePath)))
-	if err != nil {
-		r.fail("%s is missing: the locales without pages are accepted there, one per line (CHECK-BASELINE)", BaselinePath)
-		return
-	}
-	var lines []string
-	for _, l := range strings.Split(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\n") {
-		if l = strings.TrimSpace(l); l != "" && !strings.HasPrefix(l, "#") {
-			lines = append(lines, l)
-		}
-	}
-	if !sort.StringsAreSorted(lines) {
-		r.fail("%s is not sorted; keep it sorted so a change reads in a diff (CHECK-BASELINE rule 3)", BaselinePath)
-	}
-	accepted := map[string]bool{}
-	for _, l := range lines {
-		accepted[l] = true
-	}
-	missing := map[string]bool{}
-	for _, code := range i18n.Codes {
-		if !contains(m.Locales, code) {
-			id := "locale:" + code
-			missing[id] = true
-			if !accepted[id] {
-				r.fail("the GUI ships %s but the help has no pages in it and %s does not accept that: new debt may not be added (CHECK-BASELINE rule 2)", code, BaselinePath)
-			}
-		}
-	}
-	for _, l := range lines {
-		if !missing[l] {
-			r.advise("%s lists %s, which is no longer a finding: prune the line", BaselinePath, l)
-		} else {
-			r.Debt++
 		}
 	}
 }

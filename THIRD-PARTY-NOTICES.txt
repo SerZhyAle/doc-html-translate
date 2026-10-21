@@ -17,14 +17,14 @@ action.install, action.convert, app.night-mode, action.reset, action.cancel, act
 action.delete, action.clear-all, action.remove, action.add, action.choose-folder,
 action.download, action.email, action.copy, action.translate, nav.scroll-bottom, app.help,
 action.retry, app.update, action.extract-text, action.create-shortcut, action.text-settings,
-action.adjust, app.info, action.search, app.settings, system.internet, action.import and nav.close (the seven before action.search were added for the launcher's page rail and button meanings, ICON-SET
+action.adjust, app.info, action.search, app.settings, system.internet, action.import, nav.close and content.image (the seven before action.search were added for the launcher's page rail and button meanings, ICON-SET
 0.36; the catalog now holds files for action.retry and app.update, which the launcher drew provisionally
-until 2026-10-20; action.search was added for the reader's Search button, ticket 119; app.settings, system.internet and action.import were added for the browser extension's options page and toolbar popup, ticket 119; nav.close was added for the Close answers of the launcher and the extension, ticket 120). Each is the path data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
+until 2026-10-20; action.search was added for the reader's Search button, ticket 119; app.settings, system.internet and action.import were added for the browser extension's options page and toolbar popup, ticket 119; nav.close was added for the Close answers of the launcher and the extension, ticket 120; content.image was added for a document's own picture that cannot be shown, ticket 122). Each is the path data of the Material Icons (filled) drawing of the same picture (skip_previous, skip_next, toc,
 menu_book, expand_more, expand_less, save, upload, open_in_new, swap_horiz, description,
 vertical_align_top, chevron_right, text_decrease, text_increase, subtitles, contrast, 123,
 install_desktop, transform, dark_mode, settings_backup_restore, cancel, check, delete,
 delete_sweep, remove_circle_outline, add, folder, cloud_download, mail, content_copy,
-translate, vertical_align_bottom, help_outline, replay, update, format_size, tune, info_outline, search, settings, public, file_download, close);
+translate, vertical_align_bottom, help_outline, replay, update, format_size, tune, info_outline, search, settings, public, file_download, close, image);
 action.extract-text is the catalog's own drawing of the recognized-text letters and action.create-shortcut is
 insert_drive_file with the shortcut arrow cut out, drawn for the contract; nav.contents moves the toc bullets
 to the left edge and action.choose-folder cuts three dots out of the folder. They reach
