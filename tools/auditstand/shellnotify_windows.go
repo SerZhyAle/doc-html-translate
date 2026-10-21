@@ -133,7 +133,7 @@ func runShellNotifyProbe(ctx context.Context, d time.Duration, sink func(ms floa
 	if reg == 0 {
 		return fmt.Errorf("shell probe: SHChangeNotifyRegister: %v", regErr)
 	}
-	defer procSHChangeNotifyDeregister.Call(reg)
+	defer func() { _, _, _ = procSHChangeNotifyDeregister.Call(reg) }()
 
 	type msg struct {
 		hwnd, message, wParam, lParam uintptr
@@ -146,8 +146,8 @@ func runShellNotifyProbe(ctx context.Context, d time.Duration, sink func(ms floa
 			if r, _, _ := procPeekMessageW.Call(uintptr(unsafe.Pointer(&m)), 0, 0, 0, 1 /*PM_REMOVE*/); r == 0 {
 				return
 			}
-			procTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
-			procDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
+			_, _, _ = procTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
+			_, _, _ = procDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
 		}
 	}
 
@@ -165,7 +165,7 @@ func runShellNotifyProbe(ctx context.Context, d time.Duration, sink func(ms floa
 			return err
 		}
 		start := time.Now()
-		procSHChangeNotifyEvent.Call(shcneUpdateItem, shcnfPathW|shcnfFlushNoWait, uintptr(unsafe.Pointer(pathPtr)), 0)
+		_, _, _ = procSHChangeNotifyEvent.Call(shcneUpdateItem, shcnfPathW|shcnfFlushNoWait, uintptr(unsafe.Pointer(pathPtr)), 0)
 		shellMu.Lock()
 		shellMarkersSent++
 		shellMu.Unlock()
@@ -218,11 +218,11 @@ func newHiddenWindow(className string, proc uintptr) (uintptr, func(), error) {
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr("auditstand hidden listener"))),
 		0x0F0000 /*WS_OVERLAPPEDWINDOW, never shown*/, 0, 0, 0, 0, 0, 0, 0, 0)
 	if hwnd == 0 {
-		user32.NewProc("UnregisterClassW").Call(uintptr(unsafe.Pointer(namePtr)), 0)
+		_, _, _ = user32.NewProc("UnregisterClassW").Call(uintptr(unsafe.Pointer(namePtr)), 0)
 		return 0, nil, fmt.Errorf("CreateWindowEx: %v", err)
 	}
 	return hwnd, func() {
-		procDestroyWindow.Call(hwnd)
-		user32.NewProc("UnregisterClassW").Call(uintptr(unsafe.Pointer(namePtr)), 0)
+		_, _, _ = procDestroyWindow.Call(hwnd)
+		_, _, _ = user32.NewProc("UnregisterClassW").Call(uintptr(unsafe.Pointer(namePtr)), 0)
 	}, nil
 }

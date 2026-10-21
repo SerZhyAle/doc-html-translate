@@ -14,7 +14,7 @@ func processCPUTimes() (map[int]cpuCounter, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer windows.CloseHandle(snap)
+	defer func() { _ = windows.CloseHandle(snap) }()
 	var pe windows.ProcessEntry32
 	pe.Size = uint32(unsafe.Sizeof(pe))
 	if err := windows.Process32First(snap, &pe); err != nil {
@@ -32,7 +32,7 @@ func processCPUTimes() (map[int]cpuCounter, error) {
 					Image:  windows.UTF16ToString(pe.ExeFile[:]),
 				}
 			}
-			windows.CloseHandle(h)
+			_ = windows.CloseHandle(h)
 		}
 		if err := windows.Process32Next(snap, &pe); err != nil {
 			if err != windows.ERROR_NO_MORE_FILES {
@@ -49,7 +49,7 @@ func desktopUnlocked() error {
 	if h == 0 {
 		return fmt.Errorf("OpenInputDesktop: %v", err)
 	}
-	defer user32.NewProc("CloseDesktop").Call(h)
+	defer func() { _, _, _ = user32.NewProc("CloseDesktop").Call(h) }()
 	buf := make([]uint16, 256)
 	var needed uint32
 	r, _, err := user32.NewProc("GetUserObjectInformationW").Call(h, 2 /*UOI_NAME*/, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)*2), uintptr(unsafe.Pointer(&needed)))

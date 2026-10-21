@@ -25,7 +25,7 @@ Description: |-
   The package ships both the CLI (doc-html-translate) and a small GUI launcher (doc-html-ui).
   pdftotext is bundled inside the binary; MOBI and AZW3 conversion additionally requires
   Calibre to be installed (non-DRM files only).
-  It also opens CBZ/CBR/CB7/CBT comic archives and standalone images (PNG, JPG, WebP, GIF, BMP, TIFF) and lays the recognized text over each page so it can be translated in place; CBR and CB7 need 7-Zip.
+  It also opens CBZ/CBR/CB7/CBT comic archives and standalone images (PNG, JPG, WebP, GIF, BMP, TIFF, JPEG XL) and lays the recognized text over each page so it can be translated in place; CBR and CB7 need 7-Zip.
 Moniker: doc-html-translate
 Tags:
 - azw3

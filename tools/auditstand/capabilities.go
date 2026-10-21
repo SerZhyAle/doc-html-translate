@@ -89,7 +89,10 @@ var capabilityInventory = []capabilityRow{
 		text:   "GUI binary: queue, dialogs, readiness, stages, final status",
 		scenes: []string{"S01", "S09", "S10"},
 		pins:   []pin{{claudemd, "doc-html-ui"}, {agentsmd, "doc-html-ui (GUI wrapper for CLI)"}},
-		covers: []string{"cmd/doc-html-ui", "App wiring", "internal/app", "internal/config"},
+		covers: []string{"cmd/doc-html-ui", "App wiring", "internal/app", "internal/config",
+			// Claimed under the GUI row when tickets 118 and 119 added them to AGENTS.md. No scene
+			// drives the page rail or F1 help yet: the claim records ownership, not measured coverage.
+			"GUI window structure", "In-app help"},
 	},
 	{
 		id:     "cap-registration",
@@ -171,6 +174,7 @@ var outOfScopeBullets = map[string]string{
 	"OCR visual-fidelity lab":                "the ocrlab precedent is developer tooling (same exclusion)",
 	"Don't change public CLI flag semantics": "an editing constraint, not a runtime capability - strategic section 2 excludes a static re-read",
 	"tools/ocrlab":                           "the ocrlab precedent is developer tooling (same exclusion)",
+	"internal/helpcheck":                     "the help gate (scripts/help-check.ps1) is developer tooling, not behaviour of the shipped program",
 }
 
 // deriveBullets extracts the capability list exactly where the spec names it: AGENTS.md's

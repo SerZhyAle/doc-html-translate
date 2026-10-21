@@ -30,6 +30,8 @@ Big PDFs stay fast, scanned pages are handled, and a wide range of text encoding
 ships both a command-line tool (doc-html-translate) and a small GUI launcher (doc-html-ui). pdftotext is
 bundled inside the binary; MOBI and AZW3 need Calibre installed (non-DRM files only).
 
+JPEG XL (.jxl) pictures are decoded locally, including pictures inside books and comics.
+
 No account, no ads, no telemetry. Open source: https://github.com/SerZhyAle/doc-html-translate
 
 @@Feature1
@@ -93,6 +95,8 @@ translate comic pages
 ocr translate image
 
 @@ReleaseNotes
-- Text recognition no longer pushes translated lettering below the picture on short images (phone-sized figures, small captions), in the app and in the extension.
-- Pictures under very long folder paths (260 characters or more) are now recognized instead of failing to open.
-- Right-to-left languages: the page-turn arrows of a converted book mirror, and reader controls are at least 28 px for a mouse and 44 px for touch.
+- JPEG XL pictures (.jxl) are now supported: standalone images, pictures inside books and comic pages are decoded locally, then recognized and translated like any other image (animated files show their first frame).
+- New window layout: a side menu with seven pages, plus interface size, text size and mouse or touch controls.
+- F1 or the ? button opens a help page for the part of the window you are in.
+- Larger controls for touch in converted books; in the reader, Shift+Space turns pages and Shift+arrow keys extend a text selection.
+- Security: the app no longer loads a libjxl.dll found in the working folder or on PATH.

@@ -112,7 +112,7 @@ func runHTTPFetchProbe(ctx context.Context, d time.Duration, sink func(ms float6
 		_, _ = w.Write([]byte("ok"))
 	})
 	srv := &http.Server{Handler: mux}
-	go srv.Serve(ln)
+	go func() { _ = srv.Serve(ln) }()
 	defer srv.Close()
 	url := "http://" + ln.Addr().String() + "/probe"
 	client := &http.Client{Timeout: 2 * time.Second}

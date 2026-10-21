@@ -28,7 +28,7 @@ var (
 	user32   = windows.NewLazySystemDLL("user32.dll")
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
 	psapi    = windows.NewLazySystemDLL("psapi.dll")
-	iphlpapi = windows.NewLazySystemDLL("iphlpapi.dll")
+	iphlpapi = windows.NewLazySystemDLL("iphlpapi.dll") //nolint:unused // kept for listeningPortsFor (ticket 113, P2 host ping)
 
 	procSendMessageTimeoutW = user32.NewProc("SendMessageTimeoutW")
 	procEnumWindows         = user32.NewProc("EnumWindows")
@@ -50,7 +50,7 @@ var (
 	procGetProcessHandleCount = kernel32.NewProc("GetProcessHandleCount")
 
 	procGetProcessMemoryInfo = psapi.NewProc("GetProcessMemoryInfo")
-	procGetExtendedTcpTable  = iphlpapi.NewProc("GetExtendedTcpTable")
+	procGetExtendedTcpTable  = iphlpapi.NewProc("GetExtendedTcpTable") //nolint:unused // kept for listeningPortsFor (ticket 113, P2 host ping)
 )
 
 const (
@@ -192,7 +192,7 @@ func runClipboardProbe(ctx context.Context, d time.Duration, sink func(float64))
 		if err := openClipboard(); err != nil {
 			return err
 		}
-		procIsClipboardFormat.Call(cfUnicode)
+		_, _, _ = procIsClipboardFormat.Call(cfUnicode)
 		if ok, _, err := procCloseClipboard.Call(); ok == 0 {
 			return fmt.Errorf("CloseClipboard: %v", err)
 		}
@@ -255,7 +255,7 @@ func runMessageLatencyProbe(ctx context.Context, d time.Duration, sink func(ms f
 	if r, _, err := procRegisterClassW.Call(uintptr(unsafe.Pointer(&wc))); r == 0 {
 		return fmt.Errorf("message probe: RegisterClass: %v", err)
 	}
-	defer user32.NewProc("UnregisterClassW").Call(wc.className, 0)
+	defer func() { _, _, _ = user32.NewProc("UnregisterClassW").Call(wc.className, 0) }()
 	hwnd, _, err := procCreateWindowExW.Call(0,
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(className))),
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr("auditstand listener"))),
@@ -263,7 +263,7 @@ func runMessageLatencyProbe(ctx context.Context, d time.Duration, sink func(ms f
 	if hwnd == 0 {
 		return fmt.Errorf("message probe: CreateWindowEx: %v", err)
 	}
-	defer procDestroyWindow.Call(hwnd)
+	defer func() { _, _, _ = procDestroyWindow.Call(hwnd) }()
 
 	type msg struct {
 		hwnd, message, wParam, lParam uintptr
@@ -286,8 +286,8 @@ func runMessageLatencyProbe(ctx context.Context, d time.Duration, sink func(ms f
 		}
 		for !delivered {
 			if r, _, _ := procPeekMessageW.Call(uintptr(unsafe.Pointer(&m)), 0, 0, 0, pmRemove); r != 0 {
-				procTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
-				procDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
+				_, _, _ = procTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
+				_, _, _ = procDispatchMessageW.Call(uintptr(unsafe.Pointer(&m)))
 				continue
 			}
 			if time.Since(start) > 2*time.Second {
@@ -315,7 +315,7 @@ var (
 )
 
 // takeFocusTransitions returns and clears the collected transitions.
-func takeFocusTransitions() []focusEvent {
+func takeFocusTransitions() []focusEvent { //nolint:unused // kept for the focus-transition probe (ticket 113)
 	focusMu.Lock()
 	defer focusMu.Unlock()
 	out := focusTransitions
@@ -362,7 +362,7 @@ func sampleProcess(pid int) (procSample, bool) {
 	if h == 0 {
 		return procSample{PID: pid}, false
 	}
-	defer windows.CloseHandle(windows.Handle(h))
+	defer func() { _ = windows.CloseHandle(windows.Handle(h)) }()
 	var s procSample
 	s.PID = pid
 	var count int32
@@ -404,7 +404,7 @@ func countThreads(pid int) int {
 	if err != nil {
 		return 0
 	}
-	defer windows.CloseHandle(snap)
+	defer func() { _ = windows.CloseHandle(snap) }()
 	var te windows.ThreadEntry32
 	te.Size = uint32(unsafe.Sizeof(te))
 	n := 0
@@ -428,7 +428,7 @@ func findProcessesByName(name string) []int {
 	if err != nil {
 		return nil
 	}
-	defer windows.CloseHandle(snap)
+	defer func() { _ = windows.CloseHandle(snap) }()
 	var pe windows.ProcessEntry32
 	pe.Size = uint32(unsafe.Sizeof(pe))
 	var out []int
@@ -448,7 +448,7 @@ func findProcessesByName(name string) []int {
 
 // listeningPortsFor returns the ports a pid listens on (the P2 host ping's discovery half, since
 // the GUI host binds a random loopback port each launch).
-func listeningPortsFor(wantPID int) ([]int, error) {
+func listeningPortsFor(wantPID int) ([]int, error) { //nolint:unused // kept for the P2 host ping discovery half (ticket 113)
 	var size uint32
 	ret, _, _ := procGetExtendedTcpTable.Call(0, uintptr(unsafe.Pointer(&size)), 0, 2 /*AF_INET*/, tcpTableOwnerPid, 0)
 	if ret != 122 /*ERROR_INSUFFICIENT_BUFFER*/ || size == 0 {

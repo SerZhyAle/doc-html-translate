@@ -292,7 +292,7 @@ func appendNote(rec *record, format string, args ...interface{}) {
 }
 
 // sortedFixtureNames is a deterministic artifact listing helper for consistency checks.
-func sortedFixtureNames(dir string) []string {
+func sortedFixtureNames(dir string) []string { //nolint:unused // deterministic artifact listing helper, kept for consistency checks (ticket 113)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil

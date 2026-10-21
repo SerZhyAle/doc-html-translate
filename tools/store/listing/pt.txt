@@ -35,6 +35,8 @@ texto simplesmente funciona. O pacote traz uma ferramenta de linha de comandos (
 pequena interface (doc-html-ui). O pdftotext está dentro do binário; MOBI e AZW3 precisam do Calibre
 instalado (apenas ficheiros sem DRM).
 
+As imagens JPEG XL (.jxl) são decodificadas localmente, inclusive dentro de livros e quadrinhos.
+
 Sem conta, sem anúncios, sem telemetria. Código aberto: https://github.com/SerZhyAle/doc-html-translate
 
 @@Feature1
@@ -98,7 +100,9 @@ traduzir quadrinhos
 traduzir texto de imagem
 
 @@ReleaseNotes
-- O reconhecimento de texto não empurra mais as inscrições traduzidas para baixo da imagem em imagens baixas (figuras do tamanho de um celular, legendas pequenas), na aplicação e na extensão.
-- Imagens em caminhos de pasta muito longos (a partir de 260 caracteres) agora são reconhecidas, em vez de não abrirem.
-- Idiomas da direita para a esquerda: as setas de virar página de um livro convertido são espelhadas, e os controles do leitor têm pelo menos 28 px para mouse e 44 px para toque.
+- Agora há suporte a imagens JPEG XL (.jxl): imagens avulsas, imagens dentro de livros e páginas de quadrinhos são decodificadas localmente e depois reconhecidas e traduzidas como qualquer outra imagem (em animações, o primeiro quadro é exibido).
+- Novo layout da janela: menu lateral com sete páginas, além do tamanho da interface, do tamanho do texto e dos controles para mouse ou toque.
+- F1 ou o botão ? abre uma página de ajuda sobre a parte da janela em que você está.
+- Controles maiores para toque nos livros convertidos; no leitor, Shift+Espaço muda de página e Shift+setas ampliam a seleção de texto.
+- Segurança: o aplicativo não carrega mais uma libjxl.dll encontrada na pasta de trabalho ou no PATH.
 - Esta tradução é automática e não revista - correções para sza@ukr.net.

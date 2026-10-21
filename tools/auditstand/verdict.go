@@ -41,7 +41,7 @@ func emitVerdict(check string, v verdict, detail string) {
 
 // worstVerdict folds child verdicts: any fail wins, then could-not-verify, then advisories -
 // the same precedence check.ps1 uses.
-func worstVerdict(vs ...verdict) verdict {
+func worstVerdict(vs ...verdict) verdict { //nolint:unused // verdict fold for the run summary, kept for ticket 113
 	w := verdictPass
 	for _, v := range vs {
 		switch {

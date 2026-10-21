@@ -36,6 +36,8 @@ texte fonctionne sans réglage. Le paquet contient un outil en ligne de commande
 une petite interface (doc-html-ui). pdftotext est inclus dans le binaire ; MOBI et AZW3 nécessitent
 Calibre installé (fichiers sans DRM uniquement).
 
+Les images JPEG XL (.jxl) sont décodées en local, y compris à l'intérieur des livres et des bandes dessinées.
+
 Pas de compte, pas de publicité, pas de télémétrie. Open source : https://github.com/SerZhyAle/doc-html-translate
 
 @@Feature1
@@ -99,7 +101,9 @@ traduire bande dessinée
 traduire texte image
 
 @@ReleaseNotes
-- La reconnaissance de texte ne repousse plus les inscriptions traduites sous l'image sur les images basses (figures de la taille d'un téléphone, petites légendes), dans l'application et dans l'extension.
-- Les images situées sous des chemins de dossier très longs (260 caractères et plus) sont désormais reconnues au lieu de ne pas s'ouvrir.
-- Langues de droite à gauche : les flèches de changement de page d'un livre converti sont inversées, et les commandes du lecteur font au moins 28 px à la souris et 44 px au toucher.
+- Les images JPEG XL (.jxl) sont désormais prises en charge : images seules, images dans les livres et pages de bandes dessinées sont décodées en local, puis reconnues et traduites comme n'importe quelle autre image (une animation affiche sa première image).
+- Nouvelle disposition de la fenêtre : menu latéral de sept pages, avec taille de l'interface, taille du texte et commandes souris ou tactile.
+- F1 ou le bouton ? ouvre une page d'aide sur la partie de la fenêtre où vous vous trouvez.
+- Commandes plus grandes pour le tactile dans les livres convertis ; dans le lecteur, Maj+Espace tourne les pages et Maj+flèches étendent la sélection de texte.
+- Sécurité : l'application ne charge plus une libjxl.dll trouvée dans le dossier de travail ou dans PATH.
 - Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.

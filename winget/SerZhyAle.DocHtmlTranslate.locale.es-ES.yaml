@@ -23,7 +23,7 @@ Description: |-
   El paquete incluye tanto la CLI (doc-html-translate) como una pequeña interfaz (doc-html-ui).
   pdftotext va dentro del binario; MOBI y AZW3 necesitan además Calibre instalado (solo archivos sin
   DRM).
-  También abre archivos de cómic (CBZ/CBR/CB7/CBT) e imágenes sueltas (PNG, JPG, WebP, GIF, BMP, TIFF) y coloca el texto reconocido sobre cada página para traducirlo en su sitio; CBR y CB7 necesitan 7-Zip.
+  También abre archivos de cómic (CBZ/CBR/CB7/CBT) e imágenes sueltas (PNG, JPG, WebP, GIF, BMP, TIFF, JPEG XL) y coloca el texto reconocido sobre cada página para traducirlo en su sitio; CBR y CB7 necesitan 7-Zip.
 Tags:
 - azw3
 - cbz

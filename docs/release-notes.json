@@ -4,6 +4,36 @@
   "link": {"en": "Downloads and checksums on GitHub", "ru": "Файлы и контрольные суммы на GitHub", "uk": "Файли та контрольні суми на GitHub"},
   "releases": [
     {
+      "version": "26.1021.0300",
+      "date": "2026-10-21",
+      "notes": {
+        "en": [
+          "JPEG XL pictures (.jxl) are now supported: standalone images, pictures inside books and comic pages are decoded locally by a bundled decoder, then recognized, translated and exported like any other image, in the desktop app and in the browser extension (animated files show their first frame).",
+          "The desktop window has a new layout: a side menu with seven pages, and an Interface page with interface size, text size and mouse or touch controls.",
+          "F1 or the ? button opens a help page for the part of the window you are in (English, Russian, Ukrainian).",
+          "The browser extension's settings are rebuilt as pages with a side menu, controls in the extension and in converted books are larger for touch, and older settings files still import.",
+          "In the reader, Shift+Space turns pages and Shift+arrow keys extend a text selection instead of turning the page.",
+          "Security: the app no longer loads a libjxl.dll found in the working folder or on PATH; JPEG XL is decoded only by the bundled decoder."
+        ],
+        "ru": [
+          "Поддержаны картинки JPEG XL (.jxl): отдельные изображения, картинки внутри книг и страницы комиксов декодируются локально встроенным декодером, затем распознаются, переводятся и экспортируются как любые другие - в приложении и в расширении для браузера (у анимации показывается первый кадр).",
+          "Новая раскладка окна приложения: сбоку меню из семи страниц, а на странице «Интерфейс» - размер интерфейса, размер текста и режим мыши или касания.",
+          "F1 или кнопка «?» открывает справку по той части окна, где вы находитесь (на английском, русском и украинском).",
+          "Настройки расширения собраны в страницы с меню сбоку, элементы управления в расширении и в готовых книгах крупнее для касания, а старые файлы настроек по-прежнему импортируются.",
+          "В читалке Shift+Пробел листает страницы, а Shift+стрелки расширяют выделение текста, а не листают страницу.",
+          "Безопасность: приложение больше не подхватывает libjxl.dll из рабочей папки или из PATH; JPEG XL декодируется только встроенным декодером."
+        ],
+        "uk": [
+          "Підтримано зображення JPEG XL (.jxl): окремі зображення, картинки всередині книжок і сторінки коміксів декодуються локально вбудованим декодером, потім розпізнаються, перекладаються та експортуються, як і будь-які інші, - у застосунку й у розширенні для браузера (в анімації показується перший кадр).",
+          "Нова розкладка вікна застосунку: збоку меню із семи сторінок, а на сторінці «Інтерфейс» - розмір інтерфейсу, розмір тексту та режим миші або дотику.",
+          "F1 або кнопка «?» відкриває довідку про ту частину вікна, де ви перебуваєте (англійською, російською та українською).",
+          "Налаштування розширення зібрано в сторінки з меню збоку, елементи керування в розширенні та в готових книжках більші для дотику, а старі файли налаштувань, як і раніше, імпортуються.",
+          "У читалці Shift+Пробіл гортає сторінки, а Shift+стрілки розширюють виділення тексту, а не гортають сторінку.",
+          "Безпека: застосунок більше не підхоплює libjxl.dll з робочої теки чи з PATH; JPEG XL декодується лише вбудованим декодером."
+        ]
+      }
+    },
+    {
       "version": "26.1010.0142",
       "date": "2026-10-10",
       "notes": {

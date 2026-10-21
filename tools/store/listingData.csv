@@ -14,31 +14,41 @@ Optional on-image OCR recognizes text inside pictures and scanned pages (English
 on demand) and can translate everything - either through the Google Cloud Translation API or a fully
 local Ollama model, so nothing has to leave your machine.
 
+The interface speaks 13 languages: English, Russian, Ukrainian, German, Italian, Spanish, French,
+Portuguese, Arabic, Hindi, Bengali, Urdu and Chinese.
+
 Big PDFs stay fast, scanned pages are handled, and a wide range of text encodings just work. The package
 ships both a command-line tool (doc-html-translate) and a small GUI launcher (doc-html-ui). pdftotext is
 bundled inside the binary; MOBI and AZW3 need Calibre installed (non-DRM files only).
 
-No account, no ads, no telemetry. Open source: https://github.com/SerZhyAle/doc-html-translate","Превратите электронные книги и документы в чистые, удобные для чтения веб-страницы - прямо на своём ПК,
-без аккаунта.
+JPEG XL (.jxl) pictures are decoded locally, including pictures inside books and comics.
 
-doc-html-translate конвертирует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архивы комиксов
-(CBZ, CBR, CB7, CBT) и изображения в чистый локальный HTML со сгенерированной навигацией и настоящим
-многоуровневым оглавлением. Откройте результат в любом браузере и читайте - или передайте его встроенному
-переводу страниц браузера для бесплатного перевода на любой язык без ключей.
+No account, no ads, no telemetry. Open source: https://github.com/SerZhyAle/doc-html-translate","Превратите свои книги и документы в чистые, читаемые веб-страницы - прямо на своём компьютере, без аккаунта.
 
-Встроенная читалка добавляет темы «светлая / сепия / тёмная / ночная», настройку размера шрифта и
-самого шрифта и запоминает, где вы остановились. Конвертируйте в одну длинную страницу или сохраните
-главы с оглавлением; повторное открытие уже сконвертированной книги - мгновенное.
+doc-html-translate преобразует EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архивы комиксов
+(CBZ, CBR, CB7, CBT) и изображения в чистый локальный HTML с созданной навигацией и настоящим
+многоуровневым оглавлением. Откройте результат в любом браузере и читайте - или сразу отдайте его
+встроенному переводу страницы для бесплатного перевода на любой язык, без ключа API.
 
-Необязательное распознавание текста на картинках и отсканированных страницах (английский в комплекте,
-другие языки по запросу) умеет всё переводить - через Google Cloud Translation API или полностью
-локальную модель Ollama, так что ничего не обязано покидать ваш компьютер.
+Встроенная читалка добавляет темы light / sepia / dark / night, управление размером и гарнитурой шрифта
+и запоминает, где вы остановились. Можно получить одну длинную страницу или главы с оглавлением;
+повторное открытие уже сконвертированной книги мгновенно.
 
-Большие PDF остаются быстрыми, сканы обрабатываются, а широкий набор кодировок текста просто работает.
-В комплекте и консольная программа (doc-html-translate), и небольшой графический запуск (doc-html-ui).
-pdftotext встроен в бинарник; для MOBI и AZW3 нужен установленный Calibre (только файлы без DRM).
+Необязательное распознавание текста на изображениях работает с картинками и отсканированными страницами
+(английский в комплекте, остальные языки по запросу) и может перевести всё - через Google Cloud
+Translation API или полностью локальную модель Ollama, чтобы ничего не покидало ваш компьютер.
 
-Без аккаунта, без рекламы, без телеметрии. Открытый исходный код: https://github.com/SerZhyAle/doc-html-translate","Перетворіть свої книжки й документи на чисті, читабельні вебсторінки - просто на своєму комп'ютері, без облікового запису.
+Интерфейс говорит на 13 языках: английский, русский, украинский, немецкий, итальянский, испанский,
+французский, португальский, арабский, хинди, бенгальский, урду и китайский.
+
+Большие PDF остаются быстрыми, отсканированные страницы обрабатываются, а множество текстовых кодировок
+просто работает. В пакете есть и консольная программа (doc-html-translate), и небольшой GUI
+(doc-html-ui). pdftotext встроен в бинарник; для MOBI и AZW3 нужен установленный Calibre (только файлы
+без DRM).
+
+Картинки JPEG XL (.jxl) декодируются локально, в том числе внутри книг и комиксов.
+
+Без аккаунта, без рекламы, без телеметрии. Открытый код: https://github.com/SerZhyAle/doc-html-translate","Перетворіть свої книжки й документи на чисті, читабельні вебсторінки - просто на своєму комп'ютері, без облікового запису.
 
 doc-html-translate перетворює EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, архіви коміксів
 (CBZ, CBR, CB7, CBT) і зображення на чистий локальний HTML зі створеною навігацією та справжнім
@@ -59,6 +69,8 @@ doc-html-translate перетворює EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Ma
 Великі PDF лишаються швидкими, відскановані сторінки обробляються, а безліч текстових кодувань просто
 працює. У пакеті є і консольна програма (doc-html-translate), і невеликий GUI (doc-html-ui). pdftotext
 вбудований у бінарник; для MOBI та AZW3 потрібен встановлений Calibre (лише файли без DRM).
+
+Зображення JPEG XL (.jxl) декодуються локально, зокрема всередині книжок і коміксів.
 
 Без облікового запису, без реклами, без телеметрії. Відкритий код: https://github.com/SerZhyAle/doc-html-translate","Machen Sie aus Ihren E-Books und Dokumenten saubere, lesbare Webseiten - direkt auf Ihrem PC, ohne Konto.
 
@@ -84,6 +96,8 @@ funktionieren einfach. Das Paket enthält ein Kommandozeilenwerkzeug (doc-html-t
 Oberfläche (doc-html-ui). pdftotext steckt in der Binärdatei; MOBI und AZW3 brauchen ein installiertes
 Calibre (nur Dateien ohne DRM).
 
+JPEG-XL-Bilder (.jxl) werden lokal dekodiert, auch innerhalb von Büchern und Comics.
+
 Kein Konto, keine Werbung, keine Telemetrie. Open Source: https://github.com/SerZhyAle/doc-html-translate","Trasforma i tuoi e-book e documenti in pagine web pulite e leggibili - direttamente sul tuo PC, senza account.
 
 doc-html-translate converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivi di fumetti
@@ -107,6 +121,8 @@ funzionano senza pensarci. Il pacchetto contiene uno strumento a riga di comando
 una piccola interfaccia (doc-html-ui). pdftotext è incluso nel binario; MOBI e AZW3 richiedono Calibre
 installato (solo file senza DRM).
 
+Le immagini JPEG XL (.jxl) vengono decodificate in locale, anche all'interno di libri e fumetti.
+
 Nessun account, nessuna pubblicità, nessuna telemetria. Open source: https://github.com/SerZhyAle/doc-html-translate","Convierte tus libros electrónicos y documentos en páginas web limpias y legibles - en tu propio PC, sin cuenta.
 
 doc-html-translate convierte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, archivos de cómic
@@ -129,6 +145,8 @@ Los PDF grandes siguen siendo rápidos, las páginas escaneadas se manejan y un 
 texto simplemente funcionan. El paquete incluye una herramienta de línea de comandos (doc-html-translate)
 y una pequeña interfaz (doc-html-ui). pdftotext va dentro del binario; MOBI y AZW3 necesitan Calibre
 instalado (solo archivos sin DRM).
+
+Las imágenes JPEG XL (.jxl) se decodifican en local, también dentro de libros y cómics.
 
 Sin cuenta, sin anuncios, sin telemetría. Código abierto: https://github.com/SerZhyAle/doc-html-translate","Transformez vos livres numériques et vos documents en pages web propres et lisibles - sur votre PC, sans compte.
 
@@ -154,6 +172,8 @@ texte fonctionne sans réglage. Le paquet contient un outil en ligne de commande
 une petite interface (doc-html-ui). pdftotext est inclus dans le binaire ; MOBI et AZW3 nécessitent
 Calibre installé (fichiers sans DRM uniquement).
 
+Les images JPEG XL (.jxl) sont décodées en local, y compris à l'intérieur des livres et des bandes dessinées.
+
 Pas de compte, pas de publicité, pas de télémétrie. Open source : https://github.com/SerZhyAle/doc-html-translate","Transforme os seus livros digitais e documentos em páginas web limpas e legíveis - no seu próprio PC, sem conta.
 
 O doc-html-translate converte EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, arquivos de banda
@@ -177,6 +197,8 @@ texto simplesmente funciona. O pacote traz uma ferramenta de linha de comandos (
 pequena interface (doc-html-ui). O pdftotext está dentro do binário; MOBI e AZW3 precisam do Calibre
 instalado (apenas ficheiros sem DRM).
 
+As imagens JPEG XL (.jxl) são decodificadas localmente, inclusive dentro de livros e quadrinhos.
+
 Sem conta, sem anúncios, sem telemetria. Código aberto: https://github.com/SerZhyAle/doc-html-translate","حوّل كتبك ومستنداتك إلى صفحات ويب نظيفة وسهلة القراءة - على جهازك نفسه، دون حساب.
 
 يحوّل doc-html-translate ملفات EPUB وPDF وMOBI وAZW3 وFB2 وRTF وTXT وMarkdown وHTML وأرشيفات القصص
@@ -198,6 +220,8 @@ Sem conta, sem anúncios, sem telemetria. Código aberto: https://github.com/Ser
 تلقاء نفسها. تضم الحزمة أداة سطر أوامر (doc-html-translate) وواجهة رسومية صغيرة (doc-html-ui). أداة
 pdftotext مضمّنة داخل الملف التنفيذي؛ أما MOBI وAZW3 فتحتاج إلى تثبيت Calibre (الملفات الخالية من
 الحماية الرقمية فقط).
+
+تُفكّ ترميز صور JPEG XL (.jxl) محليًا، بما في ذلك الصور داخل الكتب والقصص المصورة.
 
 لا حساب ولا إعلانات ولا تتبّع. مفتوح المصدر: https://github.com/SerZhyAle/doc-html-translate","अपनी ई-पुस्तकों और दस्तावेज़ों को साफ़, पढ़ने योग्य वेब पृष्ठों में बदलें - अपने ही कंप्यूटर पर, बिना किसी खाते के।
 
@@ -221,6 +245,8 @@ CBT) और छवियों को साफ़ स्थानीय HTML �
 हैं। पैकेज में एक कमांड-लाइन उपकरण (doc-html-translate) और एक छोटा GUI (doc-html-ui), दोनों हैं।
 pdftotext बाइनरी के भीतर ही है; MOBI और AZW3 के लिए Calibre स्थापित होना चाहिए (केवल DRM-रहित फ़ाइलें)।
 
+JPEG XL (.jxl) चित्र स्थानीय रूप से डीकोड किए जाते हैं, किताबों और कॉमिक के भीतर के चित्र भी।
+
 कोई खाता नहीं, कोई विज्ञापन नहीं, कोई टेलीमेट्री नहीं। मुक्त स्रोत: https://github.com/SerZhyAle/doc-html-translate","আপনার ই-বই আর নথিগুলিকে পরিচ্ছন্ন, পড়ার উপযোগী ওয়েব পৃষ্ঠায় বদলে নিন - নিজের কম্পিউটারেই, কোনও অ্যাকাউন্ট ছাড়াই।
 
 doc-html-translate EPUB, PDF, MOBI, AZW3, FB2, RTF, TXT, Markdown, HTML, কমিক সংরক্ষণাগার (CBZ, CBR,
@@ -242,6 +268,8 @@ CB7, CBT) ও ছবিকে পরিচ্ছন্ন স্থানীয�
 বড় PDF দ্রুতই থাকে, স্ক্যান করা পৃষ্ঠা সামলানো হয়, আর নানা রকম টেক্সট এনকোডিং এমনিতেই কাজ করে।
 প্যাকেজে একটি কমান্ড-লাইন সরঞ্জাম (doc-html-translate) ও একটি ছোট GUI (doc-html-ui) দুটোই আছে।
 pdftotext বাইনারির ভিতরেই আছে; MOBI ও AZW3-এর জন্য Calibre ইনস্টল থাকা দরকার (কেবল DRM-মুক্ত ফাইল)।
+
+JPEG XL (.jxl) ছবি স্থানীয়ভাবে ডিকোড হয়, বই ও কমিকের ভেতরের ছবিসহ।
 
 অ্যাকাউন্ট নেই, বিজ্ঞাপন নেই, টেলিমেট্রি নেই। মুক্ত সোর্স: https://github.com/SerZhyAle/doc-html-translate","اپنی ای بکس اور دستاویزات کو صاف ستھرے، پڑھنے کے قابل ویب صفحات میں بدلیں - اپنے ہی کمپیوٹر پر، بغیر کسی اکاؤنٹ کے۔
 
@@ -265,6 +293,8 @@ CB7، CBT) اور تصاویر کو صاف مقامی HTML میں بدلتا ہ�
 ہیں۔ پیکیج میں کمانڈ لائن پروگرام (doc-html-translate) اور ایک چھوٹا GUI (doc-html-ui) دونوں شامل ہیں۔
 ‏pdftotext بائنری کے اندر ہی ہے؛ MOBI اور AZW3 کے لیے Calibre نصب ہونا چاہیے (صرف DRM سے پاک فائلیں)۔
 
+JPEG XL (.jxl) تصاویر مقامی طور پر ڈی کوڈ کی جاتی ہیں، کتابوں اور کامکس کے اندر کی تصاویر سمیت۔
+
 نہ اکاؤنٹ، نہ اشتہار، نہ ٹیلی میٹری۔ اوپن سورس: https://github.com/SerZhyAle/doc-html-translate","把你的电子书和文档变成干净、易读的网页 - 就在自己的电脑上，无需账号。
 
 doc-html-translate 可把 EPUB、PDF、MOBI、AZW3、FB2、RTF、TXT、Markdown、HTML、漫画压缩包
@@ -284,43 +314,71 @@ Google Cloud Translation API，或者完全本地的 Ollama 模型，这样任�
 （doc-html-translate）和一个小巧的图形界面（doc-html-ui）。pdftotext 已内置于可执行文件中；MOBI 和
 AZW3 需要安装 Calibre（仅限无 DRM 的文件）。
 
+JPEG XL（.jxl）图片在本地解码，包括书籍和漫画内部的图片。
+
 没有账号，没有广告，没有遥测。开源地址：https://github.com/SerZhyAle/doc-html-translate"
-ReleaseNotes,3,Text,,"- Text recognition no longer pushes translated lettering below the picture on short images (phone-sized figures, small captions), in the app and in the extension.
-- Pictures under very long folder paths (260 characters or more) are now recognized instead of failing to open.
-- Right-to-left languages: the page-turn arrows of a converted book mirror, and reader controls are at least 28 px for a mouse and 44 px for touch.","- Распознавание текста больше не сдвигает переведённые надписи под картинку на низких изображениях (размером с экран телефона, мелкие подписи) - в приложении и в расширении.
-- Картинки в папках с очень длинным путём (от 260 символов) теперь распознаются, а не отказываются открываться.
-- Языки с письмом справа налево: стрелки перелистывания готовой книги зеркалятся, а элементы управления читалки не меньше 28 px для мыши и 44 px для касания.","- Розпізнавання тексту більше не зсуває перекладені написи під картинку на низьких зображеннях (розміром з екран телефона, дрібні підписи) - у застосунку та в розширенні.
-- Картинки в теках із дуже довгим шляхом (від 260 символів) тепер розпізнаються, а не відмовляються відкриватися.
-- Мови з письмом справа наліво: стрілки гортання готової книжки дзеркаляться, а елементи керування читалки не менші за 28 px для миші та 44 px для дотику.","- Die Texterkennung schiebt übersetzte Beschriftungen auf kurzen Bildern (Figuren in Handygröße, kleine Bildunterschriften) nicht mehr unter das Bild - in der App und in der Erweiterung.
-- Bilder in sehr langen Ordnerpfaden (ab 260 Zeichen) werden jetzt erkannt, statt sich nicht öffnen zu lassen.
-- Rechts-nach-links-Sprachen: Die Blätterpfeile eines konvertierten Buches werden gespiegelt, und die Bedienelemente des Lesers sind mindestens 28 px (Maus) bzw. 44 px (Touch) groß.
-- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.","- Il riconoscimento del testo non sposta più le scritte tradotte sotto l'immagine nelle immagini basse (figure delle dimensioni di un telefono, piccole didascalie), nell'app e nell'estensione.
-- Le immagini sotto percorsi di cartelle molto lunghi (da 260 caratteri) ora vengono riconosciute invece di non aprirsi.
-- Lingue da destra a sinistra: le frecce di cambio pagina di un libro convertito si specchiano e i controlli del lettore sono di almeno 28 px con il mouse e 44 px al tocco.
-- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.","- El reconocimiento de texto ya no desplaza las rotulaciones traducidas por debajo de la imagen en imágenes bajas (figuras del tamaño de un teléfono, pies de foto pequeños), en la aplicación y en la extensión.
-- Las imágenes en rutas de carpeta muy largas (de 260 caracteres) ahora se reconocen en lugar de no poder abrirse.
-- Idiomas de derecha a izquierda: las flechas de paso de página de un libro convertido se reflejan, y los controles del lector miden al menos 28 px con ratón y 44 px con pantalla táctil.
-- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.","- La reconnaissance de texte ne repousse plus les inscriptions traduites sous l'image sur les images basses (figures de la taille d'un téléphone, petites légendes), dans l'application et dans l'extension.
-- Les images situées sous des chemins de dossier très longs (260 caractères et plus) sont désormais reconnues au lieu de ne pas s'ouvrir.
-- Langues de droite à gauche : les flèches de changement de page d'un livre converti sont inversées, et les commandes du lecteur font au moins 28 px à la souris et 44 px au toucher.
-- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.","- O reconhecimento de texto não empurra mais as inscrições traduzidas para baixo da imagem em imagens baixas (figuras do tamanho de um celular, legendas pequenas), na aplicação e na extensão.
-- Imagens em caminhos de pasta muito longos (a partir de 260 caracteres) agora são reconhecidas, em vez de não abrirem.
-- Idiomas da direita para a esquerda: as setas de virar página de um livro convertido são espelhadas, e os controles do leitor têm pelo menos 28 px para mouse e 44 px para toque.
-- Esta tradução é automática e não revista - correções para sza@ukr.net.","- لم يعد التعرّف على النص يدفع النصوص المترجمة إلى ما تحت الصورة في الصور القصيرة (بحجم الهاتف، التعليقات الصغيرة)، في التطبيق وفي الإضافة.
-- أصبحت الصور الواقعة تحت مسارات مجلدات طويلة جدًا (260 حرفًا فأكثر) تُعرَّف بدلًا من أن يتعذّر فتحها.
-- اللغات من اليمين إلى اليسار: تنعكس أسهم تقليب صفحات الكتاب المحوَّل، وتكون عناصر تحكم القارئ بحجم 28 بكسل على الأقل للفأرة و44 بكسل للمس.
-- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.","- टेक्स्ट पहचान अब छोटी छवियों (फ़ोन-आकार के चित्र, छोटे कैप्शन) में अनुवादित लेखन को चित्र के नीचे नहीं धकेलती - ऐप और एक्सटेंशन दोनों में।
-- बहुत लंबे फ़ोल्डर पथ (260+ अक्षर) के नीचे रखे चित्र अब पहचाने जाते हैं, न खुलने की जगह।
-- दाएँ-से-बाएँ भाषाएँ: कन्वर्ट की गई किताब के पन्ना-पलटने वाले तीर उलटे दिखते हैं, और रीडर के नियंत्रण माउस के लिए कम से कम 28 px और स्पर्श के लिए 44 px के हैं।
-- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।","- লেখা শনাক্তকরণ আর ছোট ছবিতে (ফোন-আকারের ছবি, ছোট ক্যাপশন) অনুবাদিত লেখাকে ছবির নিচে ঠেলে দেয় না - অ্যাপে এবং এক্সটেনশনে।
-- খুব লম্বা ফোল্ডার পথের (260+ অক্ষর) নিচের ছবি এখন শনাক্ত হয়, খুলতে না পারার বদলে।
-- ডান-থেকে-বামের ভাষা: রূপান্তরিত বইয়ের পাতা ওল্টানোর তীর উল্টে যায়, আর রিডারের নিয়ন্ত্রণ মাউসের জন্য কমপক্ষে 28 px এবং স্পর্শের জন্য 44 px।
-- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।","- متن کی شناخت اب چھوٹی تصاویر (فون کے سائز کی تصاویر، چھوٹے کیپشن) میں ترجمہ شدہ تحریر کو تصویر کے نیچے نہیں دھکیلتی - ایپ اور ایکسٹینشن دونوں میں۔
-- بہت لمبے فولڈر راستوں (260 یا زیادہ حروف) کے نیچے رکھی تصاویر اب پہچانی جاتی ہیں، کھلنے میں ناکام ہونے کے بجائے۔
-- دائیں سے بائیں زبانیں: تبدیل شدہ کتاب کے صفحہ پلٹنے کے تیر الٹے ہو جاتے ہیں، اور ریڈر کے کنٹرول ماؤس کے لیے کم از کم 28 px اور ٹچ کے لیے 44 px کے ہیں۔
-- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔","- 文字识别不再把译文推到矮图（手机尺寸的图片、小说明文字）下方——应用和扩展均已修复。
-- 位于超长文件夹路径（260 个字符以上）下的图片现在可以被识别，而不再无法打开。
-- 从右到左的语言：转换后书籍的翻页箭头会镜像，阅读器控件对鼠标至少 28 px、对触控至少 44 px。
+ReleaseNotes,3,Text,,"- JPEG XL pictures (.jxl) are now supported: standalone images, pictures inside books and comic pages are decoded locally, then recognized and translated like any other image (animated files show their first frame).
+- New window layout: a side menu with seven pages, plus interface size, text size and mouse or touch controls.
+- F1 or the ? button opens a help page for the part of the window you are in.
+- Larger controls for touch in converted books; in the reader, Shift+Space turns pages and Shift+arrow keys extend a text selection.
+- Security: the app no longer loads a libjxl.dll found in the working folder or on PATH.","- Поддержаны картинки JPEG XL (.jxl): отдельные изображения, картинки внутри книг и страницы комиксов декодируются локально, затем распознаются и переводятся как любые другие (у анимации показывается первый кадр).
+- Новая раскладка окна: сбоку меню из семи страниц, размер интерфейса, размер текста и режим мыши или касания.
+- F1 или кнопка «?» открывает справку по той части окна, где вы находитесь.
+- Элементы управления в готовых книгах крупнее для касания; в читалке Shift+Пробел листает страницы, а Shift+стрелки расширяют выделение текста.
+- Безопасность: приложение больше не подхватывает libjxl.dll из рабочей папки или из PATH.","- Підтримано зображення JPEG XL (.jxl): окремі зображення, картинки всередині книжок і сторінки коміксів декодуються локально, потім розпізнаються й перекладаються, як і будь-які інші (в анімації показується перший кадр).
+- Нова розкладка вікна: збоку меню із семи сторінок, розмір інтерфейсу, розмір тексту та режим миші або дотику.
+- F1 або кнопка «?» відкриває довідку про ту частину вікна, де ви перебуваєте.
+- Елементи керування в готових книжках більші для дотику; у читалці Shift+Пробіл гортає сторінки, а Shift+стрілки розширюють виділення тексту.
+- Безпека: застосунок більше не підхоплює libjxl.dll із робочої теки чи з PATH.","- JPEG-XL-Bilder (.jxl) werden jetzt unterstützt: Einzelbilder, Bilder in Büchern und Comic-Seiten werden lokal dekodiert, dann wie jedes andere Bild erkannt und übersetzt (bei Animationen wird das erste Bild gezeigt).
+- Neues Fensterlayout: Seitenmenü mit sieben Seiten sowie Oberflächengröße, Textgröße und Maus- oder Touch-Bedienung.
+- F1 oder die Schaltfläche ? öffnet eine Hilfeseite zum Bereich des Fensters, in dem Sie sich befinden.
+- Größere Bedienelemente für Touch in konvertierten Büchern; im Leser blättert Umschalt+Leertaste, und Umschalt+Pfeiltasten erweitern die Textauswahl.
+- Sicherheit: Die App lädt keine libjxl.dll mehr aus dem Arbeitsordner oder aus PATH.
+- Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.","- Ora sono supportate le immagini JPEG XL (.jxl): immagini singole, immagini nei libri e pagine di fumetti vengono decodificate in locale, poi riconosciute e tradotte come qualsiasi altra immagine (nelle animazioni si mostra il primo fotogramma).
+- Nuova disposizione della finestra: menu laterale con sette pagine, più dimensione dell'interfaccia, dimensione del testo e controlli per mouse o touch.
+- F1 o il pulsante ? apre una pagina di aiuto sulla parte della finestra in cui ti trovi.
+- Controlli più grandi per il touch nei libri convertiti; nel lettore Maiusc+Spazio cambia pagina e Maiusc+frecce estendono la selezione del testo.
+- Sicurezza: l'app non carica più una libjxl.dll trovata nella cartella di lavoro o in PATH.
+- Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.","- Ahora se admiten imágenes JPEG XL (.jxl): las imágenes sueltas, las de los libros y las páginas de cómics se decodifican en local y luego se reconocen y traducen como cualquier otra imagen (en las animaciones se muestra el primer fotograma).
+- Nueva disposición de la ventana: menú lateral con siete páginas, además del tamaño de la interfaz, el tamaño del texto y los controles para ratón o táctil.
+- F1 o el botón ? abre una página de ayuda sobre la parte de la ventana en la que estás.
+- Controles más grandes para el táctil en los libros convertidos; en el lector, Mayús+Espacio cambia de página y Mayús+flechas amplían la selección de texto.
+- Seguridad: la aplicación ya no carga una libjxl.dll encontrada en la carpeta de trabajo o en PATH.
+- Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.","- Les images JPEG XL (.jxl) sont désormais prises en charge : images seules, images dans les livres et pages de bandes dessinées sont décodées en local, puis reconnues et traduites comme n'importe quelle autre image (une animation affiche sa première image).
+- Nouvelle disposition de la fenêtre : menu latéral de sept pages, avec taille de l'interface, taille du texte et commandes souris ou tactile.
+- F1 ou le bouton ? ouvre une page d'aide sur la partie de la fenêtre où vous vous trouvez.
+- Commandes plus grandes pour le tactile dans les livres convertis ; dans le lecteur, Maj+Espace tourne les pages et Maj+flèches étendent la sélection de texte.
+- Sécurité : l'application ne charge plus une libjxl.dll trouvée dans le dossier de travail ou dans PATH.
+- Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.","- Agora há suporte a imagens JPEG XL (.jxl): imagens avulsas, imagens dentro de livros e páginas de quadrinhos são decodificadas localmente e depois reconhecidas e traduzidas como qualquer outra imagem (em animações, o primeiro quadro é exibido).
+- Novo layout da janela: menu lateral com sete páginas, além do tamanho da interface, do tamanho do texto e dos controles para mouse ou toque.
+- F1 ou o botão ? abre uma página de ajuda sobre a parte da janela em que você está.
+- Controles maiores para toque nos livros convertidos; no leitor, Shift+Espaço muda de página e Shift+setas ampliam a seleção de texto.
+- Segurança: o aplicativo não carrega mais uma libjxl.dll encontrada na pasta de trabalho ou no PATH.
+- Esta tradução é automática e não revista - correções para sza@ukr.net.","- أصبحت صور JPEG XL (.jxl) مدعومة: تُفكّ ترميز الصور المفردة والصور داخل الكتب وصفحات القصص المصورة محليًا، ثم يُتعرَّف على نصوصها وتُترجم كأي صورة أخرى (في الملفات المتحركة يُعرض الإطار الأول).
+- تخطيط جديد للنافذة: قائمة جانبية من سبع صفحات، مع حجم الواجهة وحجم النص وأوضاع التحكم بالماوس أو باللمس.
+- يفتح المفتاح F1 أو الزر ؟ صفحة مساعدة عن الجزء الذي أنت فيه من النافذة.
+- عناصر تحكم أكبر للمس في الكتب المحوَّلة؛ وفي القارئ يقلّب Shift+Space الصفحات، ويوسّع Shift+الأسهم تحديد النص.
+- الأمان: لم يعد التطبيق يحمّل ملف libjxl.dll الموجود في مجلد العمل أو في PATH.
+- هذه الترجمة آلية وغير مراجَعة - التصويبات على sza@ukr.net.","- अब JPEG XL (.jxl) चित्र समर्थित हैं: अकेली छवियाँ, किताबों के भीतर के चित्र और कॉमिक के पन्ने स्थानीय रूप से डीकोड होते हैं, फिर किसी भी अन्य छवि की तरह पहचाने और अनुवादित होते हैं (एनिमेटेड फ़ाइलों में पहला फ़्रेम दिखता है)।
+- विंडो का नया लेआउट: सात पन्नों वाला साइड मेनू, साथ में इंटरफ़ेस का आकार, टेक्स्ट का आकार और माउस या टच नियंत्रण।
+- F1 या ? बटन उस हिस्से का सहायता पृष्ठ खोलता है जिसमें आप हैं।
+- रूपांतरित पुस्तकों में टच के लिए बड़े नियंत्रण; रीडर में Shift+Space पन्ने पलटता है और Shift+तीर कुंजियाँ पाठ चयन बढ़ाती हैं।
+- सुरक्षा: ऐप अब कार्य फ़ोल्डर या PATH में मिली libjxl.dll को लोड नहीं करता।
+- यह अनुवाद मशीनी है और प्रूफ़रीड नहीं - सुधार sza@ukr.net पर भेजें।","- এখন JPEG XL (.jxl) ছবি সমর্থিত: একক ছবি, বইয়ের ভেতরের ছবি এবং কমিকের পৃষ্ঠা স্থানীয়ভাবে ডিকোড হয়, তারপর অন্য যেকোনো ছবির মতো শনাক্ত ও অনূদিত হয় (অ্যানিমেটেড ফাইলে প্রথম ফ্রেম দেখানো হয়)।
+- উইন্ডোর নতুন বিন্যাস: সাতটি পৃষ্ঠার পাশের মেনু, সঙ্গে ইন্টারফেসের আকার, লেখার আকার এবং মাউস বা টাচ নিয়ন্ত্রণ।
+- F1 বা ? বোতাম আপনি উইন্ডোর যে অংশে আছেন তার সহায়তা পৃষ্ঠা খোলে।
+- রূপান্তরিত বইয়ে টাচের জন্য বড় নিয়ন্ত্রণ; রিডারে Shift+Space পৃষ্ঠা ওল্টায় এবং Shift+তীরচিহ্ন টেক্সট নির্বাচন বাড়ায়।
+- নিরাপত্তা: অ্যাপ আর কাজের ফোল্ডার বা PATH-এ পাওয়া libjxl.dll লোড করে না।
+- এই অনুবাদ যন্ত্রকৃত ও অসংশোধিত - সংশোধন পাঠান sza@ukr.net ঠিকানায়।","- اب JPEG XL (.jxl) تصاویر معاون ہیں: اکیلی تصاویر، کتابوں کے اندر کی تصاویر اور کامکس کے صفحات مقامی طور پر ڈی کوڈ ہوتے ہیں، پھر کسی بھی دوسری تصویر کی طرح پہچانے اور ترجمہ کیے جاتے ہیں (متحرک فائلوں میں پہلا فریم دکھایا جاتا ہے)۔
+- ونڈو کا نیا انداز: سات صفحات والا سائیڈ مینو، ساتھ انٹرفیس کا سائز، متن کا سائز اور ماؤس یا ٹچ کنٹرول۔
+- F1 یا ? بٹن ونڈو کے اس حصے کا مدد کا صفحہ کھولتا ہے جس میں آپ ہیں۔
+- تبدیل شدہ کتابوں میں ٹچ کے لیے بڑے کنٹرول؛ ریڈر میں Shift+Space صفحہ پلٹتا ہے اور Shift+تیر متن کا انتخاب بڑھاتے ہیں۔
+- سلامتی: ایپ اب ورکنگ فولڈر یا PATH میں ملنے والی libjxl.dll لوڈ نہیں کرتی۔
+- یہ ترجمہ مشینی اور غیر نظرثانی شدہ ہے - تصحیح sza@ukr.net پر بھیجیں۔","- 现已支持 JPEG XL（.jxl）图片：单独的图片、书籍内的图片和漫画页面会在本地解码，然后像其他图片一样被识别并翻译（动画文件显示第一帧）。
+- 窗口布局全新：侧边菜单含七个页面，并可设置界面大小、文字大小以及鼠标或触控操作。
+- 按 F1 或 ? 按钮，可打开你当前所在窗口部分的帮助页面。
+- 转换后的书籍中，触控控件更大；在阅读器中，Shift+空格翻页，Shift+方向键扩展文本选区。
+- 安全：应用不再加载工作文件夹或 PATH 中的 libjxl.dll。
 - 本翻译为机器翻译且未经校对 - 更正请发送至 sza@ukr.net。"
 Title,4,Text,,doc-html-translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate,Doc-HTML-Translate
 ShortTitle,5,Text,,,,,,,,,,,,,,

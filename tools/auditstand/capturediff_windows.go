@@ -62,24 +62,24 @@ func captureWindowGrid(hwnd uintptr) ([]byte, error) {
 	if srcDC == 0 {
 		return nil, fmt.Errorf("GetDC failed")
 	}
-	defer procReleaseDC.Call(hwnd, srcDC)
+	defer func() { _, _, _ = procReleaseDC.Call(hwnd, srcDC) }()
 
 	memDC, _, _ := gdiCreateCompatibleDC.Call(srcDC)
 	if memDC == 0 {
 		return nil, fmt.Errorf("CreateCompatibleDC failed")
 	}
-	defer gdiDeleteDC.Call(memDC)
+	defer func() { _, _, _ = gdiDeleteDC.Call(memDC) }()
 
 	bmp, _, _ := gdiCreateCompatibleBitmap.Call(srcDC, captureDiffWidth, captureDiffHeight)
 	if bmp == 0 {
 		return nil, fmt.Errorf("CreateCompatibleBitmap failed")
 	}
-	defer gdiDeleteObject.Call(bmp)
+	defer func() { _, _, _ = gdiDeleteObject.Call(bmp) }()
 
 	old, _, _ := gdiSelectObject.Call(memDC, bmp)
-	defer gdiSelectObject.Call(memDC, old)
+	defer func() { _, _, _ = gdiSelectObject.Call(memDC, old) }()
 
-	gdiSetStretchBltMode.Call(memDC, stretchColorOnColor)
+	_, _, _ = gdiSetStretchBltMode.Call(memDC, stretchColorOnColor)
 	if r, _, _ := gdiStretchBlt.Call(memDC, 0, 0, captureDiffWidth, captureDiffHeight,
 		srcDC, uintptr(rect.Left), uintptr(rect.Top),
 		uintptr(rect.Right-rect.Left), uintptr(rect.Bottom-rect.Top), srccopy); r == 0 {

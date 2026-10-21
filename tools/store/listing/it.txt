@@ -35,6 +35,8 @@ funzionano senza pensarci. Il pacchetto contiene uno strumento a riga di comando
 una piccola interfaccia (doc-html-ui). pdftotext è incluso nel binario; MOBI e AZW3 richiedono Calibre
 installato (solo file senza DRM).
 
+Le immagini JPEG XL (.jxl) vengono decodificate in locale, anche all'interno di libri e fumetti.
+
 Nessun account, nessuna pubblicità, nessuna telemetria. Open source: https://github.com/SerZhyAle/doc-html-translate
 
 @@Feature1
@@ -98,7 +100,9 @@ tradurre fumetto
 tradurre testo da immagine
 
 @@ReleaseNotes
-- Il riconoscimento del testo non sposta più le scritte tradotte sotto l'immagine nelle immagini basse (figure delle dimensioni di un telefono, piccole didascalie), nell'app e nell'estensione.
-- Le immagini sotto percorsi di cartelle molto lunghi (da 260 caratteri) ora vengono riconosciute invece di non aprirsi.
-- Lingue da destra a sinistra: le frecce di cambio pagina di un libro convertito si specchiano e i controlli del lettore sono di almeno 28 px con il mouse e 44 px al tocco.
+- Ora sono supportate le immagini JPEG XL (.jxl): immagini singole, immagini nei libri e pagine di fumetti vengono decodificate in locale, poi riconosciute e tradotte come qualsiasi altra immagine (nelle animazioni si mostra il primo fotogramma).
+- Nuova disposizione della finestra: menu laterale con sette pagine, più dimensione dell'interfaccia, dimensione del testo e controlli per mouse o touch.
+- F1 o il pulsante ? apre una pagina di aiuto sulla parte della finestra in cui ti trovi.
+- Controlli più grandi per il touch nei libri convertiti; nel lettore Maiusc+Spazio cambia pagina e Maiusc+frecce estendono la selezione del testo.
+- Sicurezza: l'app non carica più una libjxl.dll trovata nella cartella di lavoro o in PATH.
 - Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.

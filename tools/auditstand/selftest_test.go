@@ -72,7 +72,9 @@ func TestCapabilitiesDetectsUncoveredCapability(t *testing.T) {
 func TestCapabilitiesAgainstRealRepoDocs(t *testing.T) {
 	// The real files must pass right now: the pins were verified against them. When this test
 	// fails, either the docs dropped a pinned phrase (a stale pin) or a new capability bullet
-	// needs an inventory row.
+	// needs an inventory row. The sources are read relative to the repository root, where the stand
+	// is started; go test starts in the package directory, so stand in the root for this read.
+	t.Chdir(filepath.Join("..", ".."))
 	claude, agents, roster, err := loadCapabilitySources()
 	if err != nil {
 		t.Skip("input absent:", err)

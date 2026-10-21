@@ -27,8 +27,6 @@ type runEnv struct {
 	uiPath  string // -ui override
 
 	isolation     string // "B-env" (redirected environment) or "none"
-	allowKeyInj   bool
-	windowMarker  string
 	probeDuration time.Duration
 	sceneRunID    string
 	recovery      *profileRecovery

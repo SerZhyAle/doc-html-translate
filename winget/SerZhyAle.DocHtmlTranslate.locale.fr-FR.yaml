@@ -24,7 +24,7 @@ Description: |-
   matières. Rouvrir un livre déjà converti est instantané. Le paquet contient à la fois la CLI
   (doc-html-translate) et une petite interface (doc-html-ui). pdftotext est inclus dans le binaire ;
   MOBI et AZW3 nécessitent en plus Calibre installé (fichiers sans DRM uniquement).
-  Elle ouvre aussi les archives de bandes dessinées (CBZ/CBR/CB7/CBT) et les images isolées (PNG, JPG, WebP, GIF, BMP, TIFF) et pose le texte reconnu sur chaque page pour le traduire sur place ; CBR et CB7 nécessitent 7-Zip.
+  Elle ouvre aussi les archives de bandes dessinées (CBZ/CBR/CB7/CBT) et les images isolées (PNG, JPG, WebP, GIF, BMP, TIFF, JPEG XL) et pose le texte reconnu sur chaque page pour le traduire sur place ; CBR et CB7 nécessitent 7-Zip.
 Tags:
 - azw3
 - cbz

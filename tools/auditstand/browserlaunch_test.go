@@ -22,7 +22,7 @@ func stubBrowser(args []string) int {
 	for i := 0; i < len(args); i++ {
 		switch {
 		case strings.HasPrefix(args[i], "--remote-debugging-port="):
-			fmt.Sscanf(strings.TrimPrefix(args[i], "--remote-debugging-port="), "%d", &port)
+			_, _ = fmt.Sscanf(strings.TrimPrefix(args[i], "--remote-debugging-port="), "%d", &port)
 		case strings.HasPrefix(args[i], "--"):
 		default:
 			markerURL = args[i]
