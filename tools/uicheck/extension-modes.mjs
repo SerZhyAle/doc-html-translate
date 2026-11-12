@@ -78,15 +78,21 @@ export async function fileChecks(browser, base, report, { openPage }) {
     const before = page.requests.length;
     const [saved] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#save-diag')]);
     const text = await (async () => { const chunks = []; for await (const c of await saved.createReadStream()) chunks.push(c); return Buffer.concat(chunks).toString('utf8'); })();
-    report.check('about.save-diagnostics-is-a-local-text-file', saved.suggestedFilename() === 'doc-html-translate-diagnostics.txt' && /^edition: browser extension$/m.test(text) && /^version: /m.test(text), `${saved.suggestedFilename()}, ${text.split('\n').length} lines`);
-    report.check('about.diagnostics-carry-no-document-text-or-host', !/secret-intranet|https?:/i.test(text) && /^disabled hosts: 1$/m.test(text), 'a count of disabled hosts, no host name, no address');
+    // DIAGNOSTIC-REPORT 8 A: the saved file and the clipboard carry one JSON envelope with the readable lines in `report`.
+    const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
+    const env = parse(text);
+    report.check('about.save-diagnostics-is-a-local-text-file', saved.suggestedFilename() === 'doc-html-translate-diagnostics.json' && !!env && env.schemaVersion === 1 && env.app && env.app.edition === 'browser extension' && Array.isArray(env.report) && env.report.includes('edition: browser extension') && env.report.some((l) => /^version: /.test(l)), `${saved.suggestedFilename()}, schemaVersion ${env && env.schemaVersion}, ${env && env.report ? env.report.length : 0} report lines`);
+    report.check('about.diagnostics-carry-no-document-text-or-host', !/secret-intranet|https?:/i.test(text) && !!env && env.options.disabledHosts === 1 && env.report.includes('disabled hosts: 1'), 'a count of disabled hosts, no host name, no address');
     report.check('about.saving-requests-nothing', page.remote.length === 0 && page.requests.slice(before).every((u) => u.startsWith(base) || /^blob:|^data:/.test(u)), 'no request left the extension origin');
     await page.click('#copy-diag');
     await page.waitForTimeout(250);
     const copied = await page.evaluate(async () => ({ status: document.getElementById('diag-status').textContent, clip: await navigator.clipboard.readText().catch(() => null) }));
     // The Windows clipboard turns line feeds into CR LF on its own; the text is the same.
     const clip = (copied.clip || '').replace(/\r\n/g, '\n');
-    report.check('about.copy-diagnostics-puts-the-same-summary-on-the-clipboard', clip === text && copied.status.length > 0, `status "${copied.status}", the clipboard holds the same summary as the saved file: ${clip === text}`);
+    // Save and Copy each build their envelope when clicked, so the two differ by `timestamp` alone; the summary is the rest.
+    const strip = (e) => (e ? JSON.stringify({ ...e, timestamp: undefined }) : null);
+    const same = strip(parse(clip)) !== null && strip(parse(clip)) === strip(env);
+    report.check('about.copy-diagnostics-puts-the-same-summary-on-the-clipboard', same && copied.status.length > 0, `status "${copied.status}", the clipboard holds the same summary as the saved file (timestamp aside): ${same}`);
     await page.click('#tab-data');
     const [exported] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.click('#export-settings')]);
     const json = await (async () => { const chunks = []; for await (const c of await exported.createReadStream()) chunks.push(c); return JSON.parse(Buffer.concat(chunks).toString('utf8')); })();

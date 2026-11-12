@@ -1,7 +1,7 @@
 # Pointer: OCR-INVOCATION
 
 - **Id:** `OCR-INVOCATION`
-- **Version:** 1.1
+- **Version:** 1.2
 - **Home:** the shared contracts catalog, `ocr-overlay/integration-image-translate.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - this repo ships the executable the contract describes
 - **Declared consumer:** FastMediaSorter_Lite ("Translate image" button)
@@ -23,9 +23,20 @@ codes, how the Tesseract engine is located, how to detect the app and how to ins
   - engine lookup order `DOCHT_TESSERACT` -> `tesseract/` next to the exe -> `PATH` -
     [`../../internal/ocr/tesseract.go`](../../internal/ocr/tesseract.go) (`Locate`);
   - the accepted image extensions - [`../../internal/img/extract.go`](../../internal/img/extract.go);
+  - the result record `.doc-html-translate.json` of 1.2 item C (`schemaVersion` 1, `complete` and its
+    `options`) - [`../../internal/outputpath/ownership.go`](../../internal/outputpath/ownership.go)
+    (`Marker`, `MarkerSchema`) and [`../../internal/outputpath/completion.go`](../../internal/outputpath/completion.go)
+    (`Completion`, `Options`, `CheckReuse`);
   - the winget package id and the Store product id, which are frozen anchors of the release flow.
 - The default for an omitted `-ocr-lang` (derive from `-src`, else `eng`) is part of the contract, not a
   local decision: change it there first.
+
+Re-read 2026-11-12 (release pre-flight), at 1.2 (the document conversion profile, additive): every flag of
+item B is declared in `flags.go`, the members of `complete` and `options` match item C, and the record now
+carries `schemaVersion` 1 - the one new commitment on the producer. A record without the member reads as
+schema 1, and one above the schema this build knows is not completed to it and is rebuilt
+(`TestRecordCarriesSchemaVersion`, `TestRecordWithoutSchemaVersionReadsAsSchema1`,
+`TestRecordOfNewerSchemaIsNotCompleted`). Not run: an end-to-end call from a consumer.
 
 Re-read 2026-10-20 (ticket 120): the document is unchanged since 2026-09-25; every flag it names (and
 `-ocr-langs`) is declared, the exit codes are the published ones, the engine lookup order is as written, and

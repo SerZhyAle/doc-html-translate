@@ -180,6 +180,9 @@ export function findReusable({ searchRoot, passName, caseId, source, key, digest
 export function copyCase({ hit, to, repo, now = () => new Date() }) {
   if (existsSync(to) && readdirSync(to).length) throw new Error("the target case folder is not empty");
   try {
+    // The target is absent or an empty folder (checked above). Node 26 refuses to copy into an existing
+    // directory under errorOnExist, so an empty one is removed first and the copy creates it.
+    if (existsSync(to)) rmSync(to, { recursive: true });
     cpSync(hit.dir, to, { recursive: true, force: false, errorOnExist: true });
     const why = sameSizes(hit.result.reuse.files, sizesOf(to));
     if (why) throw new Error(`the copy differs from the original: ${why}`);

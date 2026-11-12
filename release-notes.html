@@ -81,6 +81,34 @@
     <p class="lead" data-l="ua">Що змінилося в кожному випуску застосунку. Нотатки написані для користувача; технічний журнал змін ведеться окремо в репозиторії. Розширення для браузера виходить за власними мітками та версіями і тут не перелічене.</p>
 
     <!-- release-notes:begin releases (rendered from docs/release-notes.json by scripts/release-notes.ps1 -Render; edit the records there) -->
+    <section class="release" id="v26-1112-2325">
+      <h2>26.1112.2325 <time datetime="2026-11-12">2026-11-12</time></h2>
+      <ul data-l="en">
+        <li>A new option beside the convert button, &quot;And close this window&quot;, closes the window after a successful run or a finished queue (warnings count as success); after an error or a cancel the window stays open, and the choice is remembered.</li>
+        <li>Text recognition, in the desktop app and in the browser extension: a line with one oversized word - a drop cap, a display-type word, a tall letter - is no longer cut apart, so the word stays in its own line.</li>
+        <li>The diagnostic archive has a report.txt with the labelled facts, and environment.txt is KEY=value lines; the names of your documents are hidden in the run logs, and the settings copy leaves out the output folder and the recent documents. A run log over 5 MB keeps its first 1 MB and its last 4 MB or so. The extension copies and saves the diagnostics as one JSON file.</li>
+        <li>A FileDO secret file whose inner file name this computer cannot create now gets an exact message in every interface language: the file was opened, nothing was converted, the original is unchanged, open it with FileDO itself.</li>
+        <li>Windows: helper programs the app starts in the background, such as text recognition, run without a console window.</li>
+        <li>Closing the app window no longer leaves the app process running for another ten minutes because of the help map the window requests at start.</li>
+      </ul>
+      <ul data-l="ru">
+        <li>Рядом с кнопкой запуска конвертации появилась опция «И закрыть это окно»: окно закрывается после успешного запуска или завершённой очереди (предупреждения считаются успехом), а после ошибки или отмены остаётся открытым; выбор запоминается.</li>
+        <li>Распознавание текста в приложении и в расширении: строка с одним крупным словом - буквицей, заголовочным шрифтом, высокой буквой - больше не разрезается, слово остаётся в своей строке.</li>
+        <li>В диагностическом архиве появился файл report.txt с подписанными фактами, а environment.txt записан строками КЛЮЧ=значение; названия ваших документов в журналах скрыты, а копия настроек не содержит папку вывода и недавние документы. Журнал больше 5 МБ хранит первый мегабайт и последние около 4 МБ. Расширение копирует и сохраняет диагностику одним JSON-файлом.</li>
+        <li>Секретный файл FileDO, внутреннее имя которого этот компьютер не может создать, теперь получает точное сообщение на каждом языке интерфейса: файл открыт, ничего не сконвертировано, исходный файл не изменён, откройте его самим FileDO.</li>
+        <li>Windows: вспомогательные программы, которые приложение запускает в фоне (например, распознавание текста), работают без окна консоли.</li>
+        <li>Закрытое окно приложения больше не оставляет процесс работать ещё десять минут из-за карты справки, которую окно запрашивает при запуске.</li>
+      </ul>
+      <ul data-l="ua">
+        <li>Поруч із кнопкою запуску конвертації з'явилася опція «І закрити це вікно»: вікно закривається після успішного запуску або завершеної черги (попередження вважаються успіхом), а після помилки чи скасування залишається відкритим; вибір запам'ятовується.</li>
+        <li>Розпізнавання тексту в застосунку й у розширенні: рядок з одним великим словом - буквицею, заголовковим шрифтом, високою літерою - більше не розрізається, слово залишається у своєму рядку.</li>
+        <li>У діагностичному архіві з'явився файл report.txt із підписаними фактами, а environment.txt записано рядками КЛЮЧ=значення; назви ваших документів у журналах приховано, а копія налаштувань не містить теку виводу та нещодавні документи. Журнал понад 5 МБ зберігає перший мегабайт і останні близько 4 МБ. Розширення копіює й зберігає діагностику одним JSON-файлом.</li>
+        <li>Секретний файл FileDO, внутрішню назву якого цей комп'ютер не може створити, тепер отримує точне повідомлення кожною мовою інтерфейсу: файл відкрито, нічого не сконвертовано, початковий файл не змінено, відкрийте його самим FileDO.</li>
+        <li>Windows: допоміжні програми, які застосунок запускає у фоні (наприклад, розпізнавання тексту), працюють без вікна консолі.</li>
+        <li>Закрите вікно застосунку більше не залишає процес працювати ще десять хвилин через мапу довідки, яку вікно запитує під час запуску.</li>
+      </ul>
+      <p class="meta"><a href="https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1112.2325"><span data-l="en">Downloads and checksums for 26.1112.2325</span><span data-l="ru">Файлы и контрольные суммы для 26.1112.2325</span><span data-l="ua">Файли та контрольні суми для 26.1112.2325</span></a></p>
+    </section>
     <section class="release" id="v26-1021-0300">
       <h2>26.1021.0300 <time datetime="2026-10-21">2026-10-21</time></h2>
       <ul data-l="en">

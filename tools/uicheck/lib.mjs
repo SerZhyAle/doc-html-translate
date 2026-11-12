@@ -32,13 +32,19 @@ export class Report {
 
 // ---- an app session ------------------------------------------------------------------------------------
 export async function openSession({ exe, seed = {}, root }) {
-  const profile = demoProfile(root, { theme: 'light', lang: 'en', ...seed });
+  const seeded = { theme: 'light', lang: 'en', ...seed };
+  const profile = demoProfile(root, seeded);
+  const settingsFile = path.join(profile, 'doc-html-translate', 'ui-settings.json');
   const server = await startApp(exe, profile);
   const { chromium } = await loadPlaywright();
   const browser = await launchBrowser(chromium);
   return {
     server, browser,
-    async page({ q = {}, w = 1366, h = 768, dsf = 1, scheme = 'light', forced = 'none', init } = {}) {
+    async page({ q = {}, w = 1366, h = 768, dsf = 1, scheme = 'light', forced = 'none', init, keepState = false } = {}) {
+      // The window remembers its page and its open groups and flushes them when a page closes (APP-BEHAVIOUR
+      // rule 10), so a page opened after another would start from that page's state. Every check here assumes
+      // the seed, so each page starts from it unless it asks to keep the state; the server reads the file per request.
+      if (!keepState) fs.writeFileSync(settingsFile, JSON.stringify(seeded));
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: dsf, colorScheme: scheme, forcedColors: forced });
       if (init) await ctx.addInitScript(init);
       const page = await ctx.newPage();
@@ -49,7 +55,8 @@ export async function openSession({ exe, seed = {}, root }) {
       page.on('request', (r) => { const u = new URL(r.url()); if (u.pathname.startsWith('/api/')) page.requests.push(u.pathname + ' ' + r.method()); });
       await page.goto(server.base + '/?' + new URLSearchParams(q).toString());
       await page.waitForFunction(() => !document.documentElement.hasAttribute('data-boot'), null, { timeout: 8000 });
-      return { page, ctx, async close() { await ctx.close(); } };
+      // A short wait after closing lets the pagehide flush of this page reach the server before the next page resets the file.
+      return { page, ctx, async close() { await ctx.close(); await new Promise((r) => setTimeout(r, 250)); } };
     },
     async close() { await browser.close(); server.stop(); },
   };

@@ -319,7 +319,9 @@ export async function navigation(session, report) {
     // navigation never resizes the window, moves the rail, discards edits or invokes an operation
     await page.click('#tab-convert');
     await page.fill('#outputFolder', 'D:\\typed-by-the-test');
-    // the edit itself refreshes the command-line preview after a short debounce; let that settle before navigation is recorded
+    // the edit itself refreshes the command-line preview after a short debounce, on input and again when the field
+    // loses focus (its change event); commit the edit and let both settle before navigation is recorded
+    await page.evaluate(() => document.getElementById('outputFolder').blur());
     await page.waitForTimeout(900);
     const win0 = await page.evaluate(() => [window.outerWidth, window.outerHeight, window.__uic.rect(document.getElementById('rail')).x]);
     page.requests.length = 0;

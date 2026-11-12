@@ -245,8 +245,12 @@ func TestBuildSkipsAnOversizedLogWithoutReadingIt(t *testing.T) {
 			t.Errorf("the small log %q was dropped along with the oversized one", n)
 		}
 	}
-	if env := got["environment.txt"]; !strings.Contains(env, "logs left out: 1\n") {
+	// environment.txt is KEY=value lines since E0122 (DIAGNOSTIC-REPORT 8 B); the labelled form of the same fact is report.txt's.
+	if env := got["environment.txt"]; !strings.Contains(env, "logs_left_out=1\n") {
 		t.Errorf("environment.txt does not record the omission:\n%s", env)
+	}
+	if rep := got["report.txt"]; !strings.Contains(rep, "logs left out: 1\n") {
+		t.Errorf("report.txt does not record the omission:\n%s", rep)
 	}
 }
 

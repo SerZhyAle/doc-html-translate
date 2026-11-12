@@ -89,7 +89,21 @@ func newHelpHandler(files fs.FS) http.Handler {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		lastHelpServed.Store(time.Now().Unix())
+		// The main window loads help-map.json at startup. Only an actual help page needs
+		// the extended lifetime; loading the map or a missing page must not keep every
+		// closed GUI process alive for ten minutes.
+		name := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/help/"), "/")
+		if r.Method == http.MethodGet && fs.ValidPath(name) {
+			if info, err := fs.Stat(sub, name); err == nil {
+				if info.IsDir() {
+					name = path.Join(name, "index.html")
+					info, err = fs.Stat(sub, name)
+				}
+				if err == nil && !info.IsDir() && strings.EqualFold(path.Ext(name), ".html") {
+					lastHelpServed.Store(time.Now().Unix())
+				}
+			}
+		}
 		h := w.Header()
 		if ct, ok := helpTypes[strings.ToLower(path.Ext(r.URL.Path))]; ok {
 			h.Set("Content-Type", ct)

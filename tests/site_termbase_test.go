@@ -104,7 +104,8 @@ func containsTerm(text, term string) bool {
 
 func TestTermbaseShape(t *testing.T) {
 	tb := loadTermbase(t)
-	want := append([]string{"en", "ru", "uk"}, localeLandings...)
+	// ru and uk are physical landings of their own since E0130, so localeLandings already names them.
+	want := append([]string{"en"}, localeLandings...)
 	got := append([]string{}, tb.Locales...)
 	sort.Strings(want)
 	sort.Strings(got)

@@ -143,6 +143,11 @@ func CheckReuse(dir, source string, want Options) (Reason, []string) {
 	if err != nil || m.Complete == nil || m.Tool != markerTool || !samePath(m.Source, source) {
 		return ReuseNoRecord, nil
 	}
+	// OCR-INVOCATION 1.2 item C3: a record of a schema this build does not know is not completed
+	// to it. The folder stays ours (Inspect), so the run rebuilds it and writes schema MarkerSchema.
+	if m.SchemaVersion > MarkerSchema {
+		return ReuseNoRecord, nil
+	}
 	fi, err := os.Stat(source)
 	if err != nil || fi.Size() != m.SourceSize || !fi.ModTime().UTC().Equal(m.SourceModTime) {
 		return ReuseSourceChanged, nil
@@ -203,6 +208,8 @@ func MarkComplete(dir, source string, c Completion) error {
 	if c.Completed.IsZero() {
 		c.Completed = time.Now().UTC()
 	}
+	// The whole record is rewritten here, so a record made before the member existed is stamped.
+	m.SchemaVersion = MarkerSchema
 	m.Complete = &c
 	return writeMarker(dir, m)
 }

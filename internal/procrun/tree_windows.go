@@ -5,6 +5,7 @@ package procrun
 import (
 	"os/exec"
 	"strconv"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -16,7 +17,11 @@ type processTree struct {
 	job windows.Handle
 }
 
-func prepareTree(*exec.Cmd) {}
+// Helpers communicate through pipes and must not create a Windows Terminal window, even
+// when the caller is the windowed GUI and has no console to inherit.
+func prepareTree(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: windows.CREATE_NO_WINDOW}
+}
 
 // attachTree puts the started helper into a new job. It returns nil when that fails (an old
 // Windows without nested jobs, or a parent job that forbids it); killTree then falls back to
@@ -56,7 +61,9 @@ func killTree(cmd *exec.Cmd, t *processTree) error {
 		}
 	}
 	// taskkill walks the parent-pid links, which is what the job would have given us.
-	_ = exec.Command("taskkill", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid)).Run()
+	taskkill := exec.Command("taskkill", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid))
+	prepareTree(taskkill)
+	_ = taskkill.Run()
 	return cmd.Process.Kill()
 }
 

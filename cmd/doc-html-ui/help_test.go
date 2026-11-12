@@ -116,6 +116,32 @@ func TestHelpKeepsTheServerAliveForAGrace(t *testing.T) {
 	lastHelpServed.Store(0)
 }
 
+func TestHelpGraceStartsOnlyForARealPage(t *testing.T) {
+	lastHelpServed.Store(0)
+	t.Cleanup(func() { lastHelpServed.Store(0) })
+	files := fstest.MapFS{
+		"help/help-map.json": {Data: []byte(`{}`)},
+		"help/help.css":      {Data: []byte(`body {}`)},
+		"help/en/index.html": {Data: []byte(`<p>help</p>`)},
+	}
+	h := newHelpHandler(files)
+	for _, p := range []string{"/help/help-map.json", "/help/help.css", "/help/en/missing.html"} {
+		h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, p, nil))
+		if lastHelpServed.Load() != 0 {
+			t.Fatalf("%s incorrectly started the help grace", p)
+		}
+	}
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/help/en/index.html", nil))
+	if !helpRecentlyServed(time.Now()) {
+		t.Fatal("opening a help page must keep its links available")
+	}
+	lastHelpServed.Store(0)
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/help/en/", nil))
+	if !helpRecentlyServed(time.Now()) {
+		t.Fatal("opening a help directory index must keep its links available")
+	}
+}
+
 // CONTEXT-HELP rule 2: the help button sits at the trailing corner of the header and nothing else is added to
 // that corner. Ticket 119 moved the theme and interface-language selects off the header and added the Pages
 // button that appears only when the window is too narrow for the rail; the header is the Pages button, the

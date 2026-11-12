@@ -22,9 +22,17 @@ const MarkerName = ".doc-html-translate.json"
 
 const markerTool = "doc-html-translate"
 
+// MarkerSchema is the schema of the record this build writes (OCR-INVOCATION 1.2, item C). A
+// record written before the member existed carries none and is read as schema 1; a member is
+// only ever added to a schema, and a changed meaning is a new number.
+const MarkerSchema = 1
+
 // Marker is the content of MarkerName. Source is the absolute input path; size and mtime
 // are recorded so a later change can tell a rebuilt source from the one converted.
 type Marker struct {
+	// SchemaVersion leads the record. It parses as 0 when the member is absent, which reads as
+	// schema 1 (see CheckReuse for the one place a number above MarkerSchema matters).
+	SchemaVersion int       `json:"schemaVersion"`
 	Tool          string    `json:"tool"`
 	Source        string    `json:"source"`
 	SourceSize    int64     `json:"sourceSize"`
@@ -211,7 +219,7 @@ func WriteMarker(dir, source string) error {
 }
 
 func newMarker(source string) Marker {
-	m := Marker{Tool: markerTool, Source: source, Created: time.Now().UTC()}
+	m := Marker{SchemaVersion: MarkerSchema, Tool: markerTool, Source: source, Created: time.Now().UTC()}
 	if fi, err := os.Stat(source); err == nil {
 		m.SourceSize = fi.Size()
 		m.SourceModTime = fi.ModTime().UTC()

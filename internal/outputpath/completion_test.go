@@ -1,6 +1,7 @@
 package outputpath
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"doc-html-translate/internal/config"
+	"doc-html-translate/internal/fsutil"
 )
 
 func completedOutput(t *testing.T, c Completion) (dir, src string) {
@@ -118,6 +120,85 @@ func TestCheckReuseTranslationState(t *testing.T) {
 		if r, _ := CheckReuse(dir, src, google); r != tc.want {
 			t.Errorf("%s: reason = %v, want %v", tc.state, r, tc.want)
 		}
+	}
+}
+
+// editRecord rewrites dir's record as the generic JSON object it is on disk, the way another
+// build of the converter, or an older one, would have left it. It goes through fsutil.WriteFile
+// because the record is hidden on Windows and a plain truncating write to it is refused.
+func editRecord(t *testing.T, dir string, edit func(map[string]any)) {
+	t.Helper()
+	p := filepath.Join(dir, MarkerName)
+	data, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec map[string]any
+	if err := json.Unmarshal(data, &rec); err != nil {
+		t.Fatal(err)
+	}
+	edit(rec)
+	out, err := json.MarshalIndent(rec, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := fsutil.WriteFile(p, out, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func recordSchema(t *testing.T, dir string) (float64, bool) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(dir, MarkerName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec map[string]any
+	if err := json.Unmarshal(data, &rec); err != nil {
+		t.Fatal(err)
+	}
+	v, ok := rec["schemaVersion"].(float64)
+	return v, ok
+}
+
+// OCR-INVOCATION 1.2 item C: the record names its schema, both while the run is claimed and
+// once it is complete.
+func TestRecordCarriesSchemaVersion(t *testing.T) {
+	dir, _ := completedOutput(t, Completion{Options: plain(), Translation: TranslationNone})
+	if v, ok := recordSchema(t, dir); !ok || v != MarkerSchema || MarkerSchema != 1 {
+		t.Fatalf("schemaVersion = %v (present %v), want %d, and the contract's schema 1", v, ok, MarkerSchema)
+	}
+}
+
+// A record made before the member existed has none: it reads as schema 1, so a finished output
+// of an older build is still reused, and the next completion stamps it.
+func TestRecordWithoutSchemaVersionReadsAsSchema1(t *testing.T) {
+	dir, src := completedOutput(t, Completion{Options: plain(), Translation: TranslationNone})
+	editRecord(t, dir, func(rec map[string]any) { delete(rec, "schemaVersion") })
+	if _, ok := recordSchema(t, dir); ok {
+		t.Fatal("the test record still carries schemaVersion")
+	}
+	if r, _ := CheckReuse(dir, src, plain()); r != ReuseOK {
+		t.Fatalf("an older record without schemaVersion: reason = %v, want reuse", r)
+	}
+	if err := MarkComplete(dir, src, Completion{Options: plain(), Translation: TranslationNone}); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := recordSchema(t, dir); !ok || v != MarkerSchema {
+		t.Fatalf("after MarkComplete schemaVersion = %v (present %v), want %d", v, ok, MarkerSchema)
+	}
+}
+
+// Item C3: a record of a schema above the one this build knows is not completed to it, but the
+// folder is still the converter's own, so the run rebuilds it instead of dodging to a sibling.
+func TestRecordOfNewerSchemaIsNotCompleted(t *testing.T) {
+	dir, src := completedOutput(t, Completion{Options: plain(), Translation: TranslationNone})
+	editRecord(t, dir, func(rec map[string]any) { rec["schemaVersion"] = MarkerSchema + 1 })
+	if r, _ := CheckReuse(dir, src, plain()); r != ReuseNoRecord {
+		t.Fatalf("a newer schema: reason = %v, want not completed", r)
+	}
+	if st := Inspect(dir, src); st != StateOwned {
+		t.Fatalf("a newer schema: state = %v, want owned", st)
 	}
 }
 

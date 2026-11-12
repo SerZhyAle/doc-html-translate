@@ -1,7 +1,7 @@
 {
   "about": "Written by tools/helpgen/generate.mjs. Per locale and page: the captures, their size and the pin place of every element in percent of the image, taken from the real window (CONTEXT-HELP rule 14).",
-  "version": "26.1028.0224",
-  "date": "2026-10-28",
+  "version": "26.1112.2242",
+  "date": "2026-11-12",
   "captures": {
     "en/converter": {
       "ready": {

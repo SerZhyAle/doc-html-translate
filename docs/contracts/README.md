@@ -18,7 +18,7 @@ registry row of each contract says `partial` where something is still owed.
 | --- | --- | --- | --- |
 | [OCR-OVERLAY.md](OCR-OVERLAY.md) | `OCR-OVERLAY` | 1.4 | reference implementation (producer + consumer); rule 10 and rule 1 are dated exceptions |
 | [OCR-PIPELINE.md](OCR-PIPELINE.md) | `OCR-PIPELINE` | 1.10 | producer & owner - the document describes this product's mechanism |
-| [OCR-INVOCATION.md](OCR-INVOCATION.md) | `OCR-INVOCATION` | 1.1 | producer & owner - the CLI another product calls |
+| [OCR-INVOCATION.md](OCR-INVOCATION.md) | `OCR-INVOCATION` | 1.2 | producer & owner - the CLI another product calls |
 | [DIAGNOSTIC-REPORT.md](DIAGNOSTIC-REPORT.md) | `DIAGNOSTIC-REPORT` | 0.15 draft | producer, `partial` - `internal/report` generates diagnostic zip archives and environment summaries |
 | [INSTALL-TRUST.md](INSTALL-TRUST.md) | `INSTALL-TRUST` | 1.2 | producer - bound, adopted (2026-09-28, ticket 27) |
 | [MEDIA-CLASSIFICATION.md](MEDIA-CLASSIFICATION.md) | `MEDIA-CLASSIFICATION` | 0.13 draft | consumer, scoped - a reader of the categories, no classifier; input format dispatch across books, documents, comics and images |
