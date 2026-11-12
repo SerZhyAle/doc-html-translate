@@ -1,6 +1,6 @@
 # Rule 10 on the desktop: what the script check says over the corpus, and what an assumed `eng` does to Cyrillic
 
-2026-10-21. Phase B (R10) of [`DEV/plan/121_2026-10-20_ocr-owed-evidence-and-rule-10-reverification.md`](../plan/121_2026-10-20_ocr-owed-evidence-and-rule-10-reverification.md).
+2026-10-21. Phase B (R10) of [`DEV/plan/done/E0121_ocr-owed-evidence-and-rule-10-reverification.md`](../plan/done/E0121_ocr-owed-evidence-and-rule-10-reverification.md).
 Reads `OCR-OVERLAY` rule 10 and amendment 1.3 A against the desktop edition. Follows
 [`ocr_plate_coverage_2026-08-13.md`](ocr_plate_coverage_2026-08-13.md) section 4 (the 6.4 floor). No threshold and
 no decision of the script check was changed; one behaviour-neutral record was added.

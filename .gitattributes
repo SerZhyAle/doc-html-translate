@@ -22,3 +22,10 @@ internal/bundledtools/pdftotext/* -text
 cmd/doc-html-ui/help/** -text
 help/** -text
 tools/helpgen/vendor/* -text
+
+# The Partner Center listing export and its emptied-copy fixture are in the export's own dialect (UTF-8 BOM, CRLF
+# between records, LF inside cells, no trailing newline). The builder writes that dialect and refuses any other, and
+# proves itself with a byte-identical -FillNothing round trip (WINDOWS-STORE rules 8 and 13) - never let a checkout
+# rewrite their line endings.
+tools/store/listingData.csv -text
+tools/store/listingData.sample.csv -text

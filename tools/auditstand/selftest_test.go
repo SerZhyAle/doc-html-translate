@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -95,6 +96,9 @@ func TestSelftestFixtureStates(t *testing.T) {
 	res := runSelfTest(&runEnv{fixturesDir: filepath.Join(dir, "absent"), artifactsDir: filepath.Join(dir, "artifacts")})
 	if res.verdict != verdictCouldNotVerify {
 		t.Fatalf("absent fixture root must be COULD NOT VERIFY, got %v (%s)", res.verdict, res.detail)
+	}
+	if !regexp.MustCompile(`^run=\d skipped=\d, `).MatchString(res.detail) {
+		t.Errorf("the self-test line must count its checks (CHECK-VERDICT 0.14 A1), got %q", res.detail)
 	}
 
 	// Generated fixtures: a clean pass needs the repo docs, which the package dir two levels up

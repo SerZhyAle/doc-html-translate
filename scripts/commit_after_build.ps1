@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   Kept for backward compatibility. The canonical local build+commit flow now
-  lives in scripts/build-local.ps1, which also runs the test/lint/typo gate and
+  lives in scripts/build-local.ps1, which also runs the fast gate tier and
   builds the UI binary, and commits on the CURRENT branch (the old version here
   hard-required 'master' and only built the CLI). See DEV/RELEASE.md.
 #>

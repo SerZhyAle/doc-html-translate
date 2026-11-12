@@ -1,7 +1,7 @@
 # Pointer: MEDIA-CLASSIFICATION
 
 - **Id:** `MEDIA-CLASSIFICATION`
-- **Version:** 0.12 draft
+- **Version:** 0.13 draft
 - **Home:** the shared contracts catalog, `media-classification/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, scoped - a reader of the category names, not a classifier (read at 0.12 on 2026-10-20, ticket 120)
 
@@ -30,3 +30,5 @@ never browses is a scoped reader.
 **Conformance.** Package extract tests across `internal/epub`, `internal/pdf`, `internal/mobi`, `internal/fb2`,
 `internal/comic`, `internal/img`, `internal/rtf`, `internal/txt`, `internal/md`, `internal/htmlconv`, plus `TestIsImage`
 and `TestConvertible`. No test compares the contract's table with the dispatcher.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.13.** Item C adds `.tif`, `.cb7`, `.cbt`, `.azw3`, `.html` and `.htm` to rule 1, matching the dispatcher; item D makes this pointer's scoped record the required form for a converter that never browses. The registry variant narrows to `.svg` and text STREAM files converted as prose.

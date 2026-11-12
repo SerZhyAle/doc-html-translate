@@ -23,7 +23,15 @@ type placement struct {
 	Ticket  string `json:"ticket"`
 	Basis   string `json:"basis"`
 	Reason  string `json:"reason"`
+	// Project-own fields of a gate record (E0124, canon TESTING_AND_QA section 2): "fast" children run
+	// between releases through `scripts/check.ps1 -Fast`, "release" children only in the full gate.
+	Tier    string   `json:"tier"`
+	Seconds *float64 `json:"seconds"`
+	Timed   string   `json:"timed"`
 }
+
+// fastTierCeiling is the canon's line: between releases nothing above 5 seconds runs.
+const fastTierCeiling = 5.0
 
 // "release" is a check the release checklist (scripts/release.ps1) runs before the tag step: its
 // input exists only on the machine a release is cut on, so the gate cannot hold it.
@@ -51,6 +59,12 @@ func loadPlacement(t *testing.T) map[string]placement {
 			t.Errorf("line %d (%q): basis must be judged or seeded, got %q", i+1, p.Check, p.Basis)
 		case p.Basis == "seeded" && p.Ticket == "":
 			t.Errorf("line %d (%q): a seeded record names the open ticket that owns judging it (rule 7)", i+1, p.Check)
+		case p.Class == "gate" && p.Tier != "fast" && p.Tier != "release":
+			t.Errorf("line %d (%q): a gate record carries tier fast or release, got %q", i+1, p.Check, p.Tier)
+		case p.Class != "gate" && p.Tier != "":
+			t.Errorf("line %d (%q): only a gate record carries a tier, got %q on class %q", i+1, p.Check, p.Tier, p.Class)
+		case p.Tier == "fast" && (p.Seconds == nil || *p.Seconds > fastTierCeiling || p.Timed == ""):
+			t.Errorf("line %d (%q): a fast-tier record carries its measured seconds (at most %v) and where they were timed", i+1, p.Check, fastTierCeiling)
 		}
 		if _, dup := out[p.Check]; dup {
 			t.Errorf("line %d: %q is recorded twice", i+1, p.Check)

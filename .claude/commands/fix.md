@@ -43,7 +43,8 @@ grows past a handful of files or starts needing new types, stop and escalate to 
 
 **Step 4 - Validate locally.** Run the narrowest meaningful check that proves the fix:
 a targeted test if one exists (add/adjust one if cheap and the project tests), else compile
-+ a manual run of the path. Record `expected | actual`.
++ a manual run of the path - each 5 s or less; a slower check (the full suite, a build) is a `RELEASE` item
+(AGENTS.md "Build, Test, Lint"). Record `expected | actual`.
 
 **Step 5 - Report.** Root cause (1 line), fix (1 line), validation (1 line). If you found
 adjacent bugs, list them as follow-ups - do **not** fix them in this pass.

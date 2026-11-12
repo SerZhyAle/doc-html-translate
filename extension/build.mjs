@@ -2,6 +2,8 @@
 //
 //   node build.mjs vendor   copy the pieces of pdfjs-dist we ship into vendor/
 //   node build.mjs zip      produce a store-ready dist/doc-html-translate-extension.zip
+//   node build.mjs stamp    write the version into manifest.json + package.json: the clock, or on a store tag the tag's
+//   node build.mjs record-version   record a new store version in ../docs/release-notes.json, before the store tags
 //
 // We vendor the *non-minified* pdfjs build on purpose: Chrome Web Store review is
 // friendlier to readable third-party code than to minified blobs, and the size cost
@@ -14,6 +16,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { versionFromInstant, versionFromTag, withRecordedVersion } from "./scripts/release-version.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const pdfjs = join(root, "node_modules", "pdfjs-dist");
@@ -261,18 +264,23 @@ async function zip() {
   console.log(`Wrote ${out} (${(size / 1024 / 1024).toFixed(1)} MB)`);
 }
 
-// Stamp the extension version from the local date-time, like the desktop app's build.ps1
-// but WITHOUT leading zeros: Chrome and Edge require every dot-separated part to be an
-// integer 0-65535 with no leading zero on a non-zero part, so Edge rejects "26.0702.1342"
-// (the "0702" part). Encode month/day and hour/minute as plain integers instead - identical
-// to the desktop MSIX mapping (26.0702.1342 -> 26.702.1342). Still monotonic (mmdd 101..1231,
-// hhmm 0..2359) and human-readable. Writes manifest.json + package.json in lockstep.
-function dateVersion() {
-  const d = new Date();
-  const yy = d.getFullYear() % 100;
-  const mmdd = (d.getMonth() + 1) * 100 + d.getDate();
-  const hhmm = d.getHours() * 100 + d.getMinutes();
-  return `${yy}.${mmdd}.${hhmm}`;
+const notesPath = join(root, "..", "docs", "release-notes.json");
+
+// The version of this build. publish-cws.yml and publish-edge.yml set EXTENSION_RELEASE_TAG to the tag they run on, and
+// the store build stamps the version that tag names (scripts/release-version.mjs); a local build stamps the clock, so
+// chrome://extensions tells which build is loaded. Writes manifest.json + package.json in lockstep.
+async function buildVersion() {
+  const tag = process.env.EXTENSION_RELEASE_TAG;
+  if (!tag) return versionFromInstant(new Date());
+  const notes = JSON.parse(await readFile(notesPath, "utf8"));
+  return versionFromTag(tag, notes.extension?.version);
+}
+
+async function recordVersion() {
+  const version = versionFromInstant(new Date());
+  await writeFile(notesPath, withRecordedVersion(await readFile(notesPath, "utf8"), version));
+  console.log(`Recorded extension version ${version} in docs/release-notes.json.`);
+  console.log(`Next: scripts/release-notes.ps1 -Render, commit, then tag ext-cws-v${version} and ext-edge-v${version}.`);
 }
 
 // Ship only the decoder and its local WASM, with the upstream licence.
@@ -288,7 +296,7 @@ async function vendorJxl() {
 }
 
 async function stamp() {
-  const version = dateVersion();
+  const version = await buildVersion();
   for (const file of ["manifest.json", "package.json"]) {
     const path = join(root, file);
     const json = JSON.parse(await readFile(path, "utf8"));
@@ -301,10 +309,11 @@ async function stamp() {
 
 const cmd = process.argv[2];
 if (cmd === "stamp") { await stamp(); }
+else if (cmd === "record-version") { await recordVersion(); }
 else if (cmd === "vendor") { await vendorPdfjs(); await vendorTesseract(); await vendorMarked(); await vendorFoliate(); await vendorJxl(); }
 else if (cmd === "vendor-jxl") await vendorJxl();
 else if (cmd === "zip") await zip();
 else {
-  console.error("usage: node build.mjs <stamp|vendor|vendor-jxl|zip>");
+  console.error("usage: node build.mjs <stamp|record-version|vendor|vendor-jxl|zip>");
   process.exit(1);
 }

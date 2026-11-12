@@ -101,7 +101,7 @@ When you open a supported document, this extension converts its text into a clea
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
 - 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. The plates cover the lettering they replace, and a plate that would span most of a picture is split back into its own lines, so a screenshot or a form keeps its layout. English works offline; more languages download on demand.
-- 🔒 **100% Local & Private**: Everything runs entirely on your device. Your documents are never uploaded to any server.
+- 🔒 **Local conversion**: Documents are converted on your device and never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 - 🌐 **Choose sites for automatic reflow**: Automatic interception starts off. If enabled, it covers all sites except those you disable by default, or only the sites you list. Switch modes without losing either list.
 
@@ -110,7 +110,7 @@ When you open a supported document, this extension converts its text into a clea
 2. Open any supported document in your browser, or click the extension icon to select a local file.
 3. Right-click anywhere on the page and select **"Translate"** to translate the entire document into your language for free!
 
-Privacy: Everything runs on your device. The extension never uploads your documents anywhere - it has no server to send them to and no interest in your reading list. The only network access is your browser's own translation feature, which you trigger yourself.
+Privacy: conversion runs on your device, and the extension never uploads your documents - it has no server to send them to. It goes online only for the document you open, the pictures you ask it to read, the images a document links to once you allow them, and an OCR language you choose to download; the translation is your browser's own feature, which you trigger yourself.
 
 Limitations: Scanned/image-only PDFs have no text to translate (the extension detects this and offers the original); files served without a ".pdf"/".epub" address aren't auto-detected; EPUBs are shown with the viewer's own clean reading style rather than the book's original design; DRM-protected EPUBs can't be read; ligatures in some PDF fonts may render imperfectly (a PDF.js limitation).
 

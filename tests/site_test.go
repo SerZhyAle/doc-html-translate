@@ -17,6 +17,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // kitSHA256 is the SHA-256 of the PAGE-STYLE reference kit (contracts catalog,
@@ -31,12 +34,13 @@ const kitSHA256 = "aea958f805249d300b7417373e4cad18b44d7eed9765954df19ed710276c4
 // sza-lang value falls back to prefers-color-scheme / navigator.language.
 const pageResolverText = `(function(){try{vart=localStorage.getItem('sza-theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t);varl=localStorage.getItem('sza-lang');if(l==='uk')l='ua';if(l!=='ru'&&l!=='en'&&l!=='ua'){varn=(navigator.language||'en').toLowerCase();l=n.indexOf('ru')==0?'ru':n.indexOf('uk')==0?'ua':'en';}document.documentElement.setAttribute('data-lang',l);}catch(e){}})();`
 
-var localeLandings = []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ur", "zh"}
+var localeLandings = []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ru", "uk", "ur", "zh"}
 
 // authorPages are written in the author languages (RU/EN/UA) and keep the house typography.
 var authorPages = []string{
 	"index.html", "extension.html", "docs.html", "docs.ru.html", "docs.uk.html",
 	"privacy.html", "install-trust.html", "release-notes.html", "extension-privacy.html", "support.html",
+	"capability-matrix.html", "capability-matrix.ru.html", "capability-matrix.uk.html",
 }
 
 func sitePages() []string {
@@ -59,11 +63,11 @@ var familyURLs = []string{
 	"https://sza.od.ua",
 }
 
-// familyLabels is the Tool cell of each SITE-FAMILY-MAP row (1.5), as the footer grid writes it. The hub
+// familyLabels is the Tool cell of each SITE-FAMILY-MAP row (1.10), as the footer grid writes it. The hub
 // row is absent: the map names it "SZA (hub)" and the grid's own short label is not part of the map.
 var familyLabels = map[string]string{
 	"https://serzhyale.github.io/FastMediaSorter_mob_v2/": "Fast Media Sorter &amp; Organizer",
-	"https://serzhyale.github.io/FastMediaSorter_Lite/":   "Fast Media Sorter for Windows",
+	"https://serzhyale.github.io/FastMediaSorter_Lite/":   "Fast Media Sorter &amp; Sharing for Windows",
 	"https://serzhyale.github.io/CyrFlip/":                "CyrFlip",
 	"https://serzhyale.github.io/FileDO/":                 "FileDO",
 	"https://serzhyale.github.io/StreamsPlayer/":          "STREAMS Player",
@@ -181,8 +185,114 @@ func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 		}
 		for u, label := range familyLabels {
 			if !strings.Contains(footer, `href="`+u+`" target="_blank" rel="noopener"><b>`+label+`</b>`) {
-				t.Errorf("%s: footer card of %s must be labelled %q (SITE-FAMILY-MAP 1.5 Tool cell)", p, u, label)
+				t.Errorf("%s: footer card of %s must be labelled %q (SITE-FAMILY-MAP 1.10 Tool cell)", p, u, label)
 			}
+		}
+		windowsType := "Windows media and file manager"
+		if local, ok := landingWindowsType[strings.TrimSuffix(p, "/index.html")]; ok {
+			windowsType = local
+		}
+		if !strings.Contains(footer, "<b>Fast Media Sorter &amp; Sharing for Windows</b><span>"+windowsType+"</span>") {
+			t.Errorf("%s: the Windows card must read the SITE-FAMILY-MAP 1.10 Type cell %q", p, windowsType)
+		}
+		if strings.Contains(footer, `<a href="https://github.com/SerZhyAle">GitHub</a>`) {
+			t.Errorf("%s: the footer's link to the author's profile is labelled bare GitHub, the word the page uses for the repository (site audit F29)", p)
+		}
+	}
+}
+
+// A language landing renders the Type cell of the family map in its own language (ticket E0111, site audit F25, the
+// catalog's PROPOSAL-2026-11-08-family-map-type-in-the-page-language): an English grid put /zh/ under half of its own
+// script. "Portfolio" is the same word in several of them, so it is not listed.
+var landingWindowsType = map[string]string{
+	"ar": "مدير وسائط وملفات لنظام Windows",
+	"bn": "Windows মিডিয়া ও ফাইল ম্যানেজার",
+	"de": "Medien- und Dateimanager für Windows",
+	"es": "Gestor de medios y archivos para Windows",
+	"fr": "Gestionnaire de médias et de fichiers pour Windows",
+	"hi": "Windows मीडिया और फ़ाइल प्रबंधक",
+	"it": "Gestore di media e file per Windows",
+	"pt": "Gestor de multimédia e ficheiros para Windows",
+	"ru": "Медиа- и файловый менеджер для Windows",
+	"uk": "Медіа- та файловий менеджер для Windows",
+	"ur": "Windows میڈیا اور فائل مینیجر",
+	"zh": "Windows 媒体与文件管理器",
+}
+
+func TestSiteLandingFooterTypesAreInThePageLanguage(t *testing.T) {
+	english := []string{"Android media sorter", "Windows media and file manager", "Windows layout fixer", "Windows storage CLI", "Windows stream player", "Windows tray launcher", "AI-dev methodology"}
+	for _, c := range localeLandings {
+		grid := regexp.MustCompile(`(?s)<div class="tools-grid">.*?</div>`).FindString(readRepoFile(t, c, "index.html"))
+		for _, cell := range english {
+			if strings.Contains(grid, "<span>"+cell+"</span>") {
+				t.Errorf("%s/index.html: the footer grid still reads %q in English", c, cell)
+			}
+		}
+	}
+}
+
+// The first acquisition control sits right under the tagline on every landing, before the text and the demo (ticket
+// E0111, site audit F6: on a 664 px phone screen it was 3 screens down), and it is the page's one primary button for
+// the Store. The "New:" paragraphs live below #get (F67).
+func TestSiteLandingsLeadWithTheInstallControl(t *testing.T) {
+	const store = "https://apps.microsoft.com/detail/9PMHSWQPR6V1"
+	first := regexp.MustCompile(`(?s)<span class="tagline">.*?</span>\s*<div class="button-group hero-cta"><a class="btn btn-primary btn-sm" href="` + regexp.QuoteMeta(store) + `"[^>]*>Microsoft Store</a><a class="btn btn-ghost btn-sm" href="#get">`)
+	hero := regexp.MustCompile(`(?s)<section class="hero">.*?</section>`)
+	pages := []string{"index.html"}
+	for _, c := range localeLandings {
+		pages = append(pages, c+"/index.html")
+	}
+	for _, p := range pages {
+		raw := readRepoFile(t, strings.Split(p, "/")...)
+		if !first.MatchString(raw) {
+			t.Errorf("%s: the tagline is not followed by the Microsoft Store button and the link to #get", p)
+		}
+		if n := strings.Count(raw, `class="btn btn-primary btn-sm" href="`+store+`"`); n != 1 {
+			t.Errorf("%s: %d primary Microsoft Store buttons, want the hero's one", p, n)
+		}
+		if strings.Contains(hero.FindString(raw), `<p class="lead"><b>`) {
+			t.Errorf("%s: a \"New:\" paragraph is back in the hero; it belongs below #get", p)
+		}
+		if !strings.Contains(raw, `id="whats-new"`) {
+			t.Errorf("%s: no #whats-new section", p)
+		}
+	}
+}
+
+// One visible link text leads to one target on a page, in each language (ticket E0111, site audit F29). A query
+// string is not a target: ?lang= is the same page.
+func TestSiteOneLinkTextOneTarget(t *testing.T) {
+	for _, p := range append(sitePages(), "404.html") {
+		doc := parseSitePage(t, p)
+		langs := []string{""}
+		if strings.Contains(readRepoFile(t, strings.Split(p, "/")...), `data-l="ua"`) {
+			langs = []string{"en", "ru", "ua"}
+		}
+		for _, lang := range langs {
+			targets := map[string]string{}
+			walkHTML(doc, func(n *html.Node) bool {
+				if l, ok := attrOf(n, "data-l"); ok && lang != "" && l != lang {
+					return false
+				}
+				if n.DataAtom != atom.A {
+					return true
+				}
+				href, ok := attrOf(n, "href")
+				text := visibleText(n, lang, true)
+				if !ok || text == "" {
+					return true
+				}
+				href, _, _ = strings.Cut(href, "?")
+				href = strings.TrimSuffix(href, "index.html")
+				if href == "" || href == "./" {
+					href = "."
+				}
+				if was, seen := targets[text]; seen && was != href {
+					t.Errorf("%s [%s]: %q leads to both %s and %s", p, lang, text, was, href)
+				}
+				targets[text] = href
+				return true
+			})
 		}
 	}
 }

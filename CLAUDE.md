@@ -48,6 +48,9 @@ match and the intentional differences live in [docs/PARITY.md](docs/PARITY.md), 
   it reaches `internal/jxl`; without it the compile stops on the guard (ticket 115, AGENTS.md "Pitfalls").
 - Prefer the `scripts/` flow over ad-hoc commands: `scripts/build.ps1`, `scripts/test.ps1`, `scripts/lint.ps1`,
   `scripts/check.ps1`.
+- **Between releases nothing above 5 s runs:** `scripts/check.ps1 -Fast` (narrowed with `-Plan`) and a direct
+  call of what changed; the full build and `check.ps1` without `-Fast` are the release's
+  (`scripts/build-local.ps1 -Release`). The rule and the measured list: AGENTS.md "Build, Test, Lint".
 - **Line endings are settled, don't re-litigate them:** `.gitattributes` pins `*.go text eol=lf`, so `gofmt`
   and the gofmt linter agree with the committed source. `gofmt -l .` comes back clean apart from throwaway
   files under the gitignored `temp/`. The old "normalize to LF first" dance is obsolete.
@@ -76,7 +79,7 @@ Imported from the Universal Agent Kit; the live set is whatever `.claude/command
 cheapest path that fits:
 
 - `/quick` - trivial edit (typo, one constant, one string). No spec, no build gate.
-- `/fix` - narrow bug/behaviour fix. Local validation only (`scripts/test.ps1` on the touched package).
+- `/fix` - narrow bug/behaviour fix. Local validation only (a targeted `go test` of the touched package, 5 s or less; `scripts/test.ps1` is the release tier).
 - `/research` - investigate before any non-trivial change; persist findings under `DEV/research/`.
 - `/spec` - write the strategic *what/why* for a feature (no file paths, no symbols).
 - `/spec-tech` - break an approved spec into a phased, verifiable plan.
@@ -103,16 +106,13 @@ Where these conflict with [AGENTS.md](AGENTS.md), **AGENTS.md wins**.
   a sibling directory of the same name whose `INDEX.md` is the authority on phase state. `NN` is the ticket's
   permanent id: the next unused number (the queue records it as `next-ticket-number`), never reused and never
   changed - a reorder moves lines in the queue and renames nothing, and a move to `done/` keeps the prefix.
-  Every open ticket lives in `DEV/plan/`, nowhere else. The status is the
-  first `**Status:**` line in the file; keep it honest by hand.
+  Every open ticket lives in `DEV/plan/`, nowhere else. The status lives in the ledger
+  (`DEV/plan/spec-catalog.jsonl`) and changes only through the ticket tool (`update.ps1 -Id <id> -Status <s>`),
+  which mirrors it into the spec header; never edit the Status line by hand.
 - **[DEV/plan/RELEASE_QUEUE.md](DEV/plan/RELEASE_QUEUE.md) is the queue** - what is left to do before the
   next release, in execution order, grouped into release packages (`rel` is a package ordinal, never a
-  version). Precedence is stated in that file and it is not symmetric: **the queue wins on order, the
-  ticket file wins on status.** A ticket that reaches `Implemented` or `Verified` moves to
-  `DEV/plan/done/` and its line leaves the table (fix relative links when you move one).
-- The queue is maintained by hand - there is no reconcile command and no single write path into it, so a
-  status change means editing the ticket and the queue line together. Expect the queue to go stale and
-  re-derive from the ticket files when they disagree.
+  version). A ticket that reaches `Implemented` or `Verified` moves to `DEV/plan/done/` and its line leaves the
+  table (fix relative links when you move one).
 - Lifecycle: `Draft -> Approved -> Tactical -> In Progress -> Implemented -> Verified` (plus
   `Partial` / `Broken` from an audit, and explicit `Block*` states). Status comes from the code +
   checks, never inferred from the filename. No time/effort estimates in spec files.

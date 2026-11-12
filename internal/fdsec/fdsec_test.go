@@ -175,6 +175,9 @@ func TestOutcomeClasses(t *testing.T) {
 		{"wrong", Credential},
 		{"damaged", Damaged},
 		{"io", IO},
+		{"destination-name", DestinationName},
+		{"destination-name-near", IO},
+		{"destination-name-code", Damaged},
 		{"unsupported", Unsupported},
 		{"usage", RefusedCall},
 		{"crash", Failed},
@@ -206,6 +209,81 @@ func TestOutcomeClasses(t *testing.T) {
 	}
 }
 
+// The destination-name token (FDSEC-BEHAVIOUR 1.7 section 19) is matched as a whole line and only
+// beside exit 5; nothing else of FileDO's stderr is read or forwarded.
+func TestHasReasonLine(t *testing.T) {
+	const want = reasonDestinationName
+	cases := []struct {
+		name   string
+		stderr string
+		ok     bool
+	}{
+		{"empty", "", false},
+		{"alone, no terminator", want, true},
+		{"alone, LF", want + "\n", true},
+		{"alone, CRLF", want + "\r\n", true},
+		{"after the human line", "fake filedo: failed\n" + want + "\n", true},
+		{"before another line", want + "\nmore\n", true},
+		{"between two lines, CRLF", "a\r\n" + want + "\r\nb\r\n", true},
+		{"capture cut inside the token", "a\nreason=destination-na", false},
+		{"upper case", "Reason=destination-name\n", false},
+		{"trailing space", want + " \n", false},
+		{"leading space", " " + want + "\n", false},
+		{"longer token", want + "2\n", false},
+		{"shorter token", "reason=destination\n", false},
+		{"prefix on the line", "error: " + want + "\n", false},
+		{"two CRs", want + "\r\r\n", false},
+		{"other reason", "reason=other\n", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := hasReasonLine([]byte(c.stderr), want); got != c.ok {
+				t.Errorf("hasReasonLine(%q) = %v, want %v", c.stderr, got, c.ok)
+			}
+		})
+	}
+}
+
+// The new class has its own wording, says what to do next, and leaks neither the sealed name nor
+// the password nor a path, whatever FileDO printed beside the token; the generic I/O text is not
+// reused for it and keeps its own cause list.
+func TestDestinationNameMessage(t *testing.T) {
+	container, root := fixture(t, "destination-name", "")
+	_, err := Unwrap(context.Background(), container, &seqAsker{secrets: []string{"not-the-right-one"}}, convertible)
+	if got := classOf(t, err); got != DestinationName {
+		t.Fatalf("class = %v, want DestinationName (%v)", got, err)
+	}
+	assertRootEmpty(t, root)
+	msg := err.Error()
+	for _, want := range []string{"report.fd-sec", "file name sealed inside it", "was not changed", "open it with FileDO itself"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("message lacks %q: %q", want, msg)
+		}
+	}
+	for _, bad := range []string{fdsectest.TrueName, "not-the-right-one", "reason=", root, os.TempDir(), "disk full"} {
+		if strings.Contains(msg, bad) {
+			t.Errorf("message contains %q: %q", bad, msg)
+		}
+	}
+	if _, statErr := os.Stat(container); statErr != nil {
+		t.Errorf("the original container must be untouched: %v", statErr)
+	}
+}
+
+// An older FileDO prints no token: exit 5 stays the plain I/O class with its generic wording, and
+// the lines that only look like the token do not change that.
+func TestIOWithoutTheTokenStaysGeneric(t *testing.T) {
+	for _, mode := range []string{"io", "destination-name-near"} {
+		container, _ := fixture(t, mode, "")
+		_, err := Unwrap(context.Background(), container, &seqAsker{secrets: []string{"pw"}}, convertible)
+		if got := classOf(t, err); got != IO {
+			t.Errorf("%s: class = %v, want IO", mode, got)
+		}
+		if !strings.Contains(err.Error(), "disk full") {
+			t.Errorf("%s: the generic I/O wording is expected, got %q", mode, err.Error())
+		}
+	}
+}
 func TestInnerTypeNamesExtensionOnly(t *testing.T) {
 	container, _ := fixture(t, "ok-docx", "")
 	_, err := Unwrap(context.Background(), container, &seqAsker{secrets: []string{"pw"}}, convertible)

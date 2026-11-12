@@ -15,7 +15,8 @@
   ("релиз") use scripts/release.ps1.
 
 .PARAMETER Gate
-  Run the quality gate (test + lint + typo) before building.
+  Run the fast tier of the quality gate (scripts/check.ps1 -Fast: lint, typos, the file checks; every
+  child 5 s or less) before building. The full gate is the release's: scripts/build-local.ps1 -Release.
 
 .PARAMETER NoExtension
   Skip stamping / building the browser extension (build only the desktop binaries).
@@ -44,8 +45,8 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 if ($Gate) {
-    Write-Host "== gate (test + lint + typo) ==" -ForegroundColor Cyan
-    ./scripts/check.ps1
+    Write-Host "== gate, fast tier (lint + typo + file checks) ==" -ForegroundColor Cyan
+    ./scripts/check.ps1 -Fast
 }
 
 Write-Host "== build CLI (doc-html-translate.exe) ==" -ForegroundColor Cyan

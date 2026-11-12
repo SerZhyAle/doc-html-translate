@@ -280,8 +280,11 @@ export function splitWideGaps(words, scale = 1, ink = null) {
       // to touch have their touching outlines read as a token of the stitched line, so no gap
       // between words holds the boundary stroke - it runs INSIDE that token's box (ticket 67, a
       // public-service Superman page). The token is the boundary itself: the cut goes before it,
-      // and it leads the next region's run. Mirrors tesseract.go splitWideGaps.
-      const tall = w.bbox.y1 - w.bbox.y0 > rawMed * OCR_TYPE_SIZE_RATIO;
+      // and it leads the next region's run. Only a token with no letter or digit counts
+      // (OCR-PIPELINE amendment 1.10 A, trimOutlierWords' own predicate): a tall word that carries
+      // one is lettering, and height alone split 23 of 23 honest lines it acted on in the labelled
+      // sample. Mirrors tesseract.go splitWideGaps.
+      const tall = !/[\p{L}\p{N}]/u.test(w.text || "") && w.bbox.y1 - w.bbox.y0 > rawMed * OCR_TYPE_SIZE_RATIO;
       if (wide || tall || strokeBetween(ink, prev, w.bbox, reach)) { parts.push(cur); byStroke.push(!wide); cur = []; }
     }
     cur.push(w);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "ticket": "DEV/plan/68_2026-09-29_multilingual_comic_book_verification.md",
+  "ticket": "DEV/plan/E0068_multilingual-comic-book-verification.md",
   "root": "test_doc",
   "splitRule": "primary cases: for class index i in [comic-image, epub, text-pdf, scanned-pdf, illustrated-pdf, comic-archive], the languages at positions 2i and 2i+1 (mod 6) of [en, fr, ru, ja, zh, ko] are holdout; supplementary and windows-only cases are dev",
   "cases": [

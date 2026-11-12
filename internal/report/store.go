@@ -28,6 +28,14 @@ const (
 	// thousand-page scan) could outgrow MaxLogBytes on its own and make Trim evict the whole
 	// history it was meant to sit beside.
 	MaxRunLogBytes = MaxLogBytes / 4
+	// RunLogHeadBytes is how much of a run's start a compacted log keeps: the arguments, the
+	// settings and the first pages, which say what the run was asked to do.
+	RunLogHeadBytes = 1 << 20
+	// compactedMarkerRoom is reserved for the marker line (three decimal int64 fields stay under
+	// 160 bytes), so head + marker + tail never exceed MaxRunLogBytes.
+	compactedMarkerRoom = 256
+	// runLogTailBytes is how much of a run's end a compacted log keeps: the failure sequence.
+	runLogTailBytes = MaxRunLogBytes - RunLogHeadBytes - compactedMarkerRoom
 )
 
 // Dir is the per-user, writable root of the report state. It mirrors the choice of
@@ -60,33 +68,77 @@ func GUILogPath(at time.Time, pid int) string {
 	return filepath.Join(LogsDir(), fmt.Sprintf("run-%s-gui%d.log", at.Format("20060102-150405"), pid))
 }
 
-// CapRunLog wraps a run log so it stops growing at MaxRunLogBytes. The line that would cross
-// the cap is replaced by one marker line, so a reader of the report sees the log was cut rather
-// than guessing the run stopped there. Every write reports success: the run log is a side
+// CapRunLog wraps a run log so it never holds more than MaxRunLogBytes. The first
+// RunLogHeadBytes go to w as they come; everything after is held in memory, whole lines only,
+// and Finish writes the last runLogTailBytes of it behind one DIAGNOSTIC-REPORT marker naming
+// what was dropped from the middle. A run that fits the head is written through untouched, and
+// a run that fits head + tail loses nothing. Every write reports success: the run log is a side
 // channel whose failure must never reach the conversion. Not safe for concurrent use on its
 // own; logging serializes its writes.
-func CapRunLog(w io.Writer) io.Writer {
-	return &cappedLog{w: w, left: MaxRunLogBytes}
+//
+// The caller must call Finish before the process exits: os.Exit skips deferred calls, and a
+// process killed from outside (the GUI's Cancel) loses the held tail, so such a log ends at its head.
+func CapRunLog(w io.Writer) *CappedLog {
+	return &CappedLog{w: w, headLeft: RunLogHeadBytes}
 }
 
-type cappedLog struct {
-	w    io.Writer
-	left int
-	cut  bool
+// CappedLog is the run log CapRunLog returns.
+type CappedLog struct {
+	w         io.Writer
+	headLeft  int // bytes the head may still take
+	headKept  int
+	tailing   bool // the head is over: every later line goes to tail
+	tail      [][]byte
+	tailBytes int
+	dropped   int64
+	finished  bool
 }
 
-func (c *cappedLog) Write(p []byte) (int, error) {
-	if c.cut {
+func (c *CappedLog) Write(p []byte) (int, error) {
+	if c.finished {
+		_, _ = c.w.Write(p)
 		return len(p), nil
 	}
-	if len(p) > c.left {
-		c.cut = true
-		_, _ = fmt.Fprintf(c.w, "[run log cut at %d MiB: the rest of this run was not recorded]\n", MaxRunLogBytes>>20)
+	if !c.tailing {
+		if len(p) <= c.headLeft {
+			c.headLeft -= len(p)
+			c.headKept += len(p)
+			_, _ = c.w.Write(p)
+			return len(p), nil
+		}
+		// The head ends at the first line that does not fit whole, so no line is ever cut.
+		c.tailing = true
+	}
+	if len(p) > runLogTailBytes {
+		c.dropped += int64(len(p))
 		return len(p), nil
 	}
-	c.left -= len(p)
-	_, _ = c.w.Write(p)
+	c.tail = append(c.tail, append([]byte(nil), p...))
+	c.tailBytes += len(p)
+	for c.tailBytes > runLogTailBytes {
+		c.tailBytes -= len(c.tail[0])
+		c.dropped += int64(len(c.tail[0]))
+		c.tail[0] = nil
+		c.tail = c.tail[1:]
+	}
 	return len(p), nil
+}
+
+// Finish writes the held tail, behind the marker when anything was dropped, and ends the
+// compaction; a later write goes straight through. Calling it again does nothing.
+func (c *CappedLog) Finish() {
+	if c.finished {
+		return
+	}
+	c.finished = true
+	if c.dropped > 0 {
+		_, _ = fmt.Fprintf(c.w, "[Diag] LOG COMPACTED | dropped_middle_bytes=%d | kept_head_bytes=%d | kept_tail_bytes=%d\n",
+			c.dropped, c.headKept, c.tailBytes)
+	}
+	for _, line := range c.tail {
+		_, _ = c.w.Write(line)
+	}
+	c.tail = nil
 }
 
 // Trim deletes the oldest run logs until both bounds hold, and reports how many it removed.

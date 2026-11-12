@@ -1,0 +1,27 @@
+{
+  "$comment": "Project profile for the canon-shipped harness (tools/harness in the sza plugin), written 2026-10-29 when the project joined the task-flow ledger (owner order: every project in the ledger, worked by the portfolio runner). Only what differs from the canon defaults is here. Ticket files are DEV/plan/<id>_<slug>.md; a file written there without a ledger row is registered by the portfolio queue sync (TASK-FLOW rule 65). The probe gates run on every BlockNeedUserTest entry and exit whatever probes.enabled says (measured 2026-10-29, E0117), so probes.scanRoots names this repo's code trees instead of the canon default src/, and a ticket with no probe is excused in paths.probeBaseline with its reason.",
+  "version": "1",
+  "projectName": "EPUB_2_HTML",
+  "envPrefix": "SZA",
+  "paths": {
+    "specsDir": "DEV/plan",
+    "specArchiveDir": "DEV/plan/done",
+    "journal": "DEV/plan/spec-catalog.jsonl",
+    "journalArchive": "DEV/plan/spec-catalog-archive.jsonl",
+    "burnedIds": "DEV/plan/spec-catalog-burned-ids.jsonl",
+    "releaseQueue": "DEV/plan/PQ_QUEUE.md",
+    "releaseReady": "DEV/plan/PQ_READY.md",
+    "releaseQueueDone": "DEV/plan/PQ_DONE.md",
+    "probeBaseline": "DEV/plan/probe-baseline.txt"
+  },
+  "grammar": {
+    "ticketIdPattern": "^E\\d{4}$",
+    "specFilePattern": "^DEV/plan/(done/)?E\\d{4}_(?!spec_)",
+    "specFileTemplate": "DEV/plan/{0}_{1}.md"
+  },
+  "probes": {
+    "enabled": false,
+    "scanRoots": ["cmd", "internal", "extension/src"],
+    "sourceRoots": ["cmd", "internal", "extension/src"]
+  }
+}

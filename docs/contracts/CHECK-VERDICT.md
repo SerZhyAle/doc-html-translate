@@ -1,7 +1,7 @@
 # Pointer: CHECK-VERDICT
 
 - **Id:** `CHECK-VERDICT`
-- **Version:** 0.13 draft
+- **Version:** 0.14 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 2 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - this repo's checks produce verdicts in the contract's vocabulary, and its own
   aggregator and release checklist read them; read at 0.13 on 2026-10-20 (ticket 120)
@@ -43,3 +43,5 @@ exit `4`, a `NOT APPLICABLE` child.
 **Conformance.** No vectors in the catalog yet. This repo drives its own scripts to every documented outcome:
 [`../../tests/verdict_scripts_test.go`](../../tests/verdict_scripts_test.go) (`check.ps1`, `parity-check.ps1`,
 `test.ps1`) and [`../../tools/ocrlab/report/gate_test.go`](../../tools/ocrlab/report/gate_test.go) (`ocrlab gate`).
+
+**Re-read 2026-10-29 (ticket E0126) at 0.14.** Item A: `tools/auditstand -SelfTest` now prints `run=N skipped=M` (A1, each of its three checks one test); the test runners already printed A2-A4's forms; `scripts/test.ps1`'s input-absent line keeps the bare count A4 allows (no group is left unrun). Rules 8 and 2 stay dated exceptions.

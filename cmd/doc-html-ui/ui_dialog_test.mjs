@@ -291,3 +291,26 @@ test('a queue types the password once and asks again only after a wrong one', as
     assert.equal(h.queueSecret(), 'other-pw');
     assert.equal(h.secrets[2].body.value, 'other-pw');
 });
+test('close-after-conversion waits for a successful result and saves the current choice', async () => {
+    let checked = true, closed = 0, saved = null, ok = true;
+    const context = vm.createContext({
+        el: () => ({checked}), saveTimer: 0, clearTimeout() {},
+        collectSettings: () => ({closeAfter: checked}),
+        api: async (url, options) => { assert.equal(url, '/api/settings'); saved = JSON.parse(options.body); return {ok}; },
+        window: {close() { closed++; }},
+    });
+    vm.runInContext(section('function singleSucceeded(', 'const MARK'), context);
+    const single = vm.runInContext('singleSucceeded', context);
+    const queue = vm.runInContext('queueSucceeded', context);
+    const close = vm.runInContext('closeAfterSuccess', context);
+    assert.equal(single({end: {state: 'done'}}, true), true);
+    assert.equal(single({end: {state: 'failed', code: 4}}, true), true);
+    assert.equal(single({end: {state: 'failed', code: 4}}, false), false);
+    for (const res of [null, {refused: true, end: {state: 'done'}}, {end: {state: 'cancelled'}}, {end: {state: 'failed', code: 2}}]) assert.equal(single(res, true), false);
+    assert.equal(queue([{state: 'done'}, {state: 'skipped'}]), true);
+    for (const state of ['pending', 'failed', 'cancelled', 'blocked']) assert.equal(queue([{state: 'done'}, {state}]), false);
+    assert.equal(queue([{state: 'skipped'}]), false);
+    checked = false; await close(); assert.equal(closed, 0); assert.equal(saved, null);
+    checked = true; ok = false; await close(); assert.equal(closed, 0);
+    ok = true; await close(); assert.deepEqual(saved, {closeAfter: true}); assert.equal(closed, 1);
+});

@@ -211,11 +211,11 @@ document.getElementById('dht-search-close').addEventListener('click',function(){
 input.addEventListener('input',function(){clearTimeout(input._timer);input._timer=setTimeout(run,180)});scope.addEventListener('change',run);
 input.addEventListener('keydown',function(e){if(e.key!=='Enter')return;e.preventDefault();if(!hits.length){run();if(hits.length)open(0);return}open(cur+(e.shiftKey?-1:1))});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!panel.hidden){panel.hidden=true;button.setAttribute('aria-expanded','false');clearMarks();button.focus()}});
-// INPUT-PARITY section 4: search is Ctrl+F (Cmd+F on macOS) and puts the focus in the search field.
+// INPUT-PARITY section 4: search is Ctrl+F (Cmd+F on macOS, shown as ⌘+F by INPUT-CHORD rule 5) and puts the focus in the search field.
 // Pressed again inside the field it passes through, so the browser's own find bar stays one press
 // away. A non-Latin layout types another letter on that key, so there its position stands in.
 var mac=/Mac|iP(hone|ad|od)/.test(navigator.platform||'');
-if(mac)button.title=button.title.replace('Ctrl+F','Cmd+F');
+if(mac)button.title=button.title.replace('Ctrl+F','⌘+F');
 document.addEventListener('keydown',function(e){
  if(e.altKey||e.shiftKey||(mac?!e.metaKey||e.ctrlKey:!e.ctrlKey||e.metaKey))return;
  if(!(e.key==='f'||e.key==='F'||(e.code==='KeyF'&&!/^[a-z]$/i.test(e.key))))return;

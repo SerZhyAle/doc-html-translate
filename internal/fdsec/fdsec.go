@@ -4,9 +4,10 @@
 // temp folder, hands the password to FileDO through the child's environment only and maps
 // FileDO's exit classes onto typed errors.
 //
-// Hygiene (FDSEC-BEHAVIOUR section 8.2): nothing in this package forwards FileDO's output,
-// and neither the password nor the name sealed inside the container reaches an error, a log
-// line or a path another program can see.
+// Hygiene (FDSEC-BEHAVIOUR section 8.2): nothing in this package forwards FileDO's output
+// (it reads the banner build and the one closed destination-name line of section 19, and
+// nothing else), and neither the password nor the name sealed inside the container reaches an
+// error, a log line or a path another program can see.
 package fdsec
 
 import (
@@ -47,20 +48,21 @@ func ScreenLength(size int64) bool {
 type Class int
 
 const (
-	NotFound    Class = iota // FileDO is not installed
-	Screened                 // the length screen rules the file out
-	Credential               // wrong password, or not a secret file, or altered (one class)
-	Damaged                  // FileDO reports damage
-	Unsupported              // a kind of container the installed FileDO does not support
-	IO                       // FileDO could not read or write
-	RefusedCall              // FileDO did not accept the call
-	Failed                   // FileDO stopped unexpectedly, or the result was not one file
-	Folder                   // the container holds a folder (suite 3)
-	Nested                   // the container holds another container
-	InnerType                // the document inside is of a type this app does not convert
-	NoSource                 // no password source and nobody to ask
-	EmptyEnv                 // the named environment variable is unset or empty
-	Cancelled                // the user cancelled the password question
+	NotFound        Class = iota // FileDO is not installed
+	Screened                     // the length screen rules the file out
+	Credential                   // wrong password, or not a secret file, or altered (one class)
+	Damaged                      // FileDO reports damage
+	Unsupported                  // a kind of container the installed FileDO does not support
+	IO                           // FileDO could not read or write
+	RefusedCall                  // FileDO did not accept the call
+	Failed                       // FileDO stopped unexpectedly, or the result was not one file
+	Folder                       // the container holds a folder (suite 3)
+	Nested                       // the container holds another container
+	InnerType                    // the document inside is of a type this app does not convert
+	NoSource                     // no password source and nobody to ask
+	EmptyEnv                     // the named environment variable is unset or empty
+	Cancelled                    // the user cancelled the password question
+	DestinationName              // FileDO opened it but this computer cannot create the sealed name (the closed token beside exit 5)
 )
 
 // Error is a typed failure. Name is the container's visible base name - never a path and
@@ -102,6 +104,8 @@ func (e *Error) Error() string {
 		msg = i18n.S("The environment variable %s named by -fdsec-password-env is not set or is empty - nothing was opened.", e.Name)
 	case Cancelled:
 		msg = i18n.S("Opening %s was cancelled - nothing was converted.", e.Name)
+	case DestinationName:
+		msg = i18n.S("FileDO opened %s, but this computer's file system cannot create the file name sealed inside it (a reserved, too long or otherwise not allowed name). Nothing was converted and the original was not changed. To restore it under another name, open it with FileDO itself.", e.Name)
 	default:
 		msg = i18n.S("FileDO stopped unexpectedly while opening %s.", e.Name)
 	}

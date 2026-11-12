@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "$comment": "The capability matrix facts (SITE-REPRESENTATION rules 3 and 9, ticket E0130): what each operating mode runs on and which input format needs which helper. scripts/capability-matrix.ps1 renders capability-matrix.html / .ru.html / .uk.html from this file and holds the pages against it byte for byte; the same check holds the dependency facts against README.md and docs/security-posture.json. A capability question is answered from the rendered matrix, never from memory or another page. Corrected against the app (ticket E0130 section 4): MOBI/AZW3 need Calibre at runtime, CBR/CB7 need 7-Zip, JPEG XL decodes in-process (no external decoder binary), OCR always runs the external Tesseract binary.",
+  "derivesFrom": [
+    "README.md (the formats and dependencies sections)",
+    "docs/security-posture.json (the network rows of the translation engines)",
+    "AGENTS.md (Calibre for MOBI/AZW3, 7-Zip for CBR/CB7, Tesseract for OCR, the nodynamic JPEG XL posture)"
+  ],
+  "modes": [
+    {
+      "id": "gui",
+      "name": { "en": "Desktop GUI", "ru": "Окно приложения", "uk": "Вікно застосунку" },
+      "audience": { "en": "Everyday conversion on Windows", "ru": "Обычное конвертирование в окне", "uk": "Звичайне конвертування у вікні" },
+      "capabilities": { "en": "Seven-page side menu, F1 help for the part of the window you are in, text and interface size, themes, drag-and-drop, a conversion queue.", "ru": "Меню из семи страниц сбоку, справка F1 по той части окна, где вы находитесь, размер текста и интерфейса, темы, перетаскивание файлов, очередь конвертации.", "uk": "Меню із семи сторінок збоку, довідка F1 про ту частину вікна, де ви перебуваєте, розмір текста й інтерфейсу, теми, перетягування файлів, черга конвертації." },
+      "dependencies": { "en": "Windows 10/11 (64-bit). Nothing to install beyond the app itself: pdftotext ships with it; the optional helpers below are used only when a file needs them.", "ru": "Windows 10/11 (64-бит). Ничего сверх самого приложения ставить не нужно: pdftotext входит в его состав; необязательные программы из списка ниже используются, только когда файлу они нужны.", "uk": "Windows 10/11 (64-розрядна). Нічого понад сам застосунок встановлювати не потрібно: pdftotext входить до його складу; необов'язкові програми зі списку нижче використовуються, лише коли файл їх потребує." }
+    },
+    {
+      "id": "cli",
+      "name": { "en": "Command line", "ru": "Командная строка", "uk": "Командний рядок" },
+      "audience": { "en": "Repeated tasks, scripts, unattended runs", "ru": "Повторяемые задачи, скрипты, запуск без участия человека", "uk": "Повторювані задачі, скрипти, запуск без участі людини" },
+      "capabilities": { "en": "All conversion options as flags, custom output folders, engine selection, exit codes for scripts.", "ru": "Все параметры конвертации в виде флагов, свои папки вывода, выбор движка, коды возврата для скриптов.", "uk": "Усі параметри конвертації у вигляді прапорців, свої теки виводу, вибір рушія, коди повернення для скриптів." },
+      "dependencies": { "en": "The doc-html-translate executable; no runtime install for the standard text and e-book formats; the same optional helpers on demand.", "ru": "Исполняемый файл doc-html-translate; для стандартных текстовых и книжных форматов ничего ставить не нужно; те же необязательные программы по потребности.", "uk": "Виконуваний файл doc-html-translate; для стандартних текстових і книжкових форматів нічого ставити не потрібно; ті самі необов'язкові програми за потреби." }
+    },
+    {
+      "id": "extension",
+      "name": { "en": "Browser extension", "ru": "Расширение для браузера", "uk": "Розширення для браузера" },
+      "audience": { "en": "Reading in Chrome or Edge", "ru": "Чтение в Chrome или Edge", "uk": "Читання в Chrome чи Edge" },
+      "capabilities": { "en": "Converts a document right in a tab and translates the page with the browser's own translation; recognises text on page images (OCR).", "ru": "Преобразует документ прямо во вкладке и переводит страницу штатным переводом браузера; распознаёт текст на картинках страницы (OCR).", "uk": "Перетворює документ просто у вкладці та перекладає сторінку штатним перекладом браузера; розпізнає текст на зображеннях сторінки (OCR)." },
+      "dependencies": { "en": "A Chromium browser (Chrome or Edge); the read access to local files for documents opened from disk. Nothing is installed.", "ru": "Браузер на Chromium (Chrome или Edge); доступ к локальным файлам для документов, открытых с диска. Ничего не устанавливается.", "uk": "Браузер на Chromium (Chrome чи Edge); доступ до локальних файлів для документів, відкритих з диска. Нічого не встановлюється." }
+    },
+    {
+      "id": "translation",
+      "name": { "en": "Translation engines (optional)", "ru": "Движки перевода (необязательные)", "uk": "Рушії перекладу (необов'язкові)" },
+      "audience": { "en": "Translating the converted text", "ru": "Перевод готового текста", "uk": "Переклад готового тексту" },
+      "capabilities": { "en": "The browser's own full-page translation (free, no key); a local Ollama model; Google Cloud Translation with a spending guard.", "ru": "Штатный перевод страницы в браузере (бесплатно, без ключа); локальная модель Ollama; Google Cloud Translation с ограничителем расходов.", "uk": "Штатний переклад сторінки в браузері (безкоштовно, без ключа); локальна модель Ollama; Google Cloud Translation з обмежувачем витрат." },
+      "dependencies": { "en": "Page translation needs nothing extra; Ollama needs a local server on localhost:11434; Google Cloud needs your own API key, and -max-cost stops a request before it is sent when its estimate exceeds the limit.", "ru": "Переводу страницы ничего дополнительного не нужно; Ollama нужен локальный сервер на localhost:11434; Google Cloud нужен ваш ключ API, а -max-cost отменяет запрос до отправки, если оценка превышает лимит.", "uk": "Перекладу сторінки нічого додаткового не потрібно; Ollama потрібен локальний сервер на localhost:11434; Google Cloud потребує ваш ключ API, а -max-cost скасовує запит до відправлення, якщо оцінка перевищує ліміт." }
+    }
+  ],
+  "formats": [
+    {
+      "id": "epub",
+      "name": { "en": "EPUB e-books", "ru": "Книги EPUB", "uk": "Книжки EPUB" },
+      "extensions": [".epub"],
+      "dependency": { "en": "Nothing - native parser.", "ru": "Ничего - встроенный разбор.", "uk": "Нічого - вбудований розбір." }
+    },
+    {
+      "id": "pdf",
+      "name": { "en": "PDF documents", "ru": "Документы PDF", "uk": "Документи PDF" },
+      "extensions": [".pdf"],
+      "dependency": { "en": "Nothing on Windows - pdftotext ships with the app; elsewhere an installed Poppler; a built-in reader as the fallback.", "ru": "В Windows - ничего: pdftotext входит в приложение; на других системах - установленный Poppler; при отсутствии - встроенный запасной разбор.", "uk": "У Windows - нічого: pdftotext входить до застосунку; на інших системах - установлений Poppler; за відсутності - вбудований запасний розбір." }
+    },
+    {
+      "id": "mobi-azw3",
+      "name": { "en": "Kindle books", "ru": "Книги Kindle", "uk": "Книжки Kindle" },
+      "extensions": [".mobi", ".azw3"],
+      "dependency": { "en": "Calibre, installed (non-DRM files only).", "ru": "Установленный Calibre (файлы без DRM).", "uk": "Установлений Calibre (файли без DRM)." }
+    },
+    {
+      "id": "fb2",
+      "name": { "en": "FictionBook", "ru": "FictionBook", "uk": "FictionBook" },
+      "extensions": [".fb2"],
+      "dependency": { "en": "Nothing - native parser.", "ru": "Ничего - встроенный разбор.", "uk": "Нічого - вбудований розбір." }
+    },
+    {
+      "id": "rtf-txt-md-html",
+      "name": { "en": "Rich and plain text", "ru": "Форматированный и простой текст", "uk": "Форматований і простий текст" },
+      "extensions": [".rtf", ".txt", ".md", ".html"],
+      "dependency": { "en": "Nothing - native parsers.", "ru": "Ничего - встроенный разбор.", "uk": "Нічого - вбудований розбір." }
+    },
+    {
+      "id": "cbz-cbt",
+      "name": { "en": "Comics (zip and tar archives)", "ru": "Комиксы (архивы zip и tar)", "uk": "Комікси (архіви zip і tar)" },
+      "extensions": [".cbz", ".cbt"],
+      "dependency": { "en": "Nothing - unpacked by the app.", "ru": "Ничего - распаковываются самим приложением.", "uk": "Нічого - розпаковуються самим застосунком." }
+    },
+    {
+      "id": "cbr-cb7",
+      "name": { "en": "Comics (rar and 7z archives)", "ru": "Комиксы (архивы rar и 7z)", "uk": "Комікси (архіви rar і 7z)" },
+      "extensions": [".cbr", ".cb7"],
+      "dependency": { "en": "7-Zip, installed.", "ru": "Установленный 7-Zip.", "uk": "Установлений 7-Zip." }
+    },
+    {
+      "id": "images",
+      "name": { "en": "Pictures and scans", "ru": "Картинки и сканы", "uk": "Зображення й скани" },
+      "extensions": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff"],
+      "dependency": { "en": "Optional: the external Tesseract engine for OCR; English data ships with the app, other languages download on demand. Without it the pictures are kept without text plates.", "ru": "Необязательно: внешний движок Tesseract для OCR; английские данные входят в приложение, другие языки скачиваются по запросу. Без него картинки сохраняются без текстовых плашек.", "uk": "Необов'язково: зовнішній рушій Tesseract для OCR; англійські дані входять до застосунку, інші мови завантажуються на запит. Без нього зображення зберігаються без текстових плашок." }
+    },
+    {
+      "id": "jxl",
+      "name": { "en": "JPEG XL pictures", "ru": "Картинки JPEG XL", "uk": "Зображення JPEG XL" },
+      "extensions": [".jxl"],
+      "dependency": { "en": "Nothing - decoded in-process by the decoder bundled with the app.", "ru": "Ничего - декодируются в самом приложении встроенным декодером.", "uk": "Нічого - декодуються в самому застосунку вбудованим декодером." }
+    },
+    {
+      "id": "fdsec",
+      "name": { "en": "FileDO secret files", "ru": "Секретные файлы FileDO", "uk": "Секретні файли FileDO" },
+      "extensions": [".fd-sec"],
+      "dependency": { "en": "The FileDO utility, installed, and the container's password; the decrypted copy is deleted as soon as it has been read.", "ru": "Установленная программа FileDO и пароль контейнера; расшифрованная копия удаляется сразу после чтения.", "uk": "Установлена програма FileDO і пароль контейнера; розшифрована копія видаляється одразу після читання." }
+    }
+  ],
+  "notes": {
+    "en": "OCR and the optional helpers are best-effort: a missing Tesseract or helper never stops a conversion - the step that needed it falls back and says so. DRM-protected files are not supported.",
+    "ru": "OCR и необязательные программы - вспомогательные: отсутствие Tesseract или помощника никогда не прерывает конвертацию - шаг, которому они были нужны, переходит на запасной путь и сообщает об этом. Файлы с защитой DRM не поддерживаются.",
+    "uk": "OCR і необов'язкові програми - допоміжні: відсутність Tesseract чи помічника ніколи не перериває конвертацію - крок, якому вони були потрібні, переходить на запасний шлях і повідомляє про це. Файли із захистом DRM не підтримуються."
+  }
+}

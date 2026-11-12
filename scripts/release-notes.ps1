@@ -23,12 +23,23 @@
   The page against the source
     - release-notes.html carries exactly one marked block and it equals the render, byte for byte, so a
       hand-edited block, or a record added without rendering, fails here.
+    - a site page that carries the marked 'whatsnew' block (the landing) holds the newest record's items, the same way.
+
+  The release facts of the site pages (DOCUMENTATION_CONCEPT section 4: build-time facts)
+    - on every page of .sza-canon.json site.pages, the version beside the download link
+      (<span id="releaseTag">), the app's JSON-LD "softwareVersion" and the asset names
+      (<code data-rf="setup|cli|gui|zip">) equal the newest record, so a release that renders its notes
+      renders them too, and a version typed by hand fails here;
+    - the version beside the extension's store buttons (<span data-rf="extension">) equals the source's
+      extension.version, which has the stores' integer shape YY.MDD.Hmm and is written by
+      `node extension/build.mjs record-version` before the ext-cws-v / ext-edge-v tags that name it.
 
   Exit codes follow CHECK-VERDICT (scripts/lib/verdict.ps1): 0 PASS, 1 FAIL, 2 COULD NOT VERIFY
   (no git checkout, no source, no page, a clone with no release tags at all).
 
 .PARAMETER Render
-  Rewrite the marked block of release-notes.html from docs/release-notes.json first, then run the check.
+  Rewrite the marked block of release-notes.html and the release facts of the site pages from
+  docs/release-notes.json first, then run the check.
 
 .EXAMPLE
   ./scripts/release-notes.ps1            # the check, as scripts/check.ps1 runs it
@@ -47,7 +58,8 @@ $PagePath = 'release-notes.html'
 $Block = 'releases'
 $ReleasesUrl = 'https://github.com/SerZhyAle/doc-html-translate/releases/tag/'
 # The page keys Ukrainian as `ua` (the site's language value space); the source and the sitemap say `uk`.
-$Langs = @(@{ source = 'ru'; page = 'ru' }, @{ source = 'en'; page = 'en' }, @{ source = 'uk'; page = 'ua' })
+# English first in source order, so the page read without JavaScript opens in English (ticket E0111, F9).
+$Langs = @(@{ source = 'en'; page = 'en' }, @{ source = 'ru'; page = 'ru' }, @{ source = 'uk'; page = 'ua' })
 
 $root = (& git rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $root) {
@@ -149,10 +161,28 @@ function Get-Render {
             $null = $sb.Append("      </ul>`n")
         }
         $link = "$ReleasesUrl" + "v$v"
-        $null = $sb.Append("      <p class=`"meta`"><a href=`"$link`">" + (($Langs | ForEach-Object { "<span data-l=`"$($_.page)`">$(ConvertTo-HtmlText ([string]$data.link.($_.source)))</span>" }) -join '') + "</a></p>`n")
+        $null = $sb.Append("      <p class=`"meta`"><a href=`"$link`">" + (($Langs | ForEach-Object { "<span data-l=`"$($_.page)`">$(ConvertTo-HtmlText (([string]$data.link.($_.source)).Replace('{version}', $v)))</span>" }) -join '') + "</a></p>`n")
         $null = $sb.Append("    </section>`n")
     }
     $null = $sb.Append("    <!-- release-notes:end $Block -->`n")
+    return $sb.ToString()
+}
+
+# The items of the newest record, as the landing shows them below #get (ticket E0111, F6 and F67).
+function Get-WhatsNewRender {
+    $r = $records[0]
+    $v = [string]$r.version
+    $sb = [System.Text.StringBuilder]::new()
+    $null = $sb.Append("    <!-- release-notes:begin whatsnew (rendered from $SourcePath by scripts/release-notes.ps1 -Render; edit the records there) -->`n")
+    $null = $sb.Append("    <section class=`"section`" id=`"whats-new`">`n")
+    $null = $sb.Append("      <h2 class=`"section-title`"><span class=`"h`">#</span> " + (($Langs | ForEach-Object { "<span data-l=`"$($_.page)`">$(ConvertTo-HtmlText (([string]$data.whatsNew.($_.source)).Replace('{version}', $v)))</span>" }) -join '') + "</h2>`n")
+    foreach ($l in $Langs) {
+        $null = $sb.Append("      <ul data-l=`"$($l.page)`">`n")
+        foreach ($b in @($r.notes.($l.source))) { $null = $sb.Append("        <li>$(ConvertTo-HtmlText ([string]$b))</li>`n") }
+        $null = $sb.Append("      </ul>`n")
+    }
+    $null = $sb.Append("    </section>`n")
+    $null = $sb.Append("    <!-- release-notes:end whatsnew -->`n")
     return $sb.ToString()
 }
 
@@ -179,8 +209,56 @@ if ($begins.Count -ne 1 -or $ends.Count -ne 1 -or $ends[0].Index -lt $begins[0].
     }
 }
 
+# ── the release facts of the other pages ──────────────────────
+# DOCUMENTATION_CONCEPT section 4: the version a page shows, the JSON-LD softwareVersion of the app and the asset
+# names are build-time facts, rendered here from the newest record by the release flow - never typed by hand and
+# never fetched by the visitor's browser. A page carries a fact by its marker: <span id="releaseTag">, a
+# "softwareVersion" member (the app's landings only; the extension page carries none), <code data-rf="setup|cli|gui|zip">,
+# <span data-rf="extension"> beside a store button of the extension.
+function Get-ReleaseFacts([string]$Text, [string]$V, [string]$Ext) {
+    $names = @{ setup = "doc-html-translate-setup-$V.exe"; cli = "doc-html-translate-$V-windows-x64.exe"; gui = "doc-html-ui-$V-windows-x64.exe"; zip = "doc-html-translate-$V-windows-x64.zip" }
+    $t = [regex]::Replace($Text, '<span id="releaseTag">[^<]*</span>', "<span id=`"releaseTag`"> v$V</span>")
+    $t = [regex]::Replace($t, '"softwareVersion": "[^"]*"', "`"softwareVersion`": `"$V`"")
+    if ($Ext) { $t = [regex]::Replace($t, '<span data-rf="extension">[^<]*</span>', "<span data-rf=`"extension`"> v$Ext</span>") }
+    return [regex]::Replace($t, '<code data-rf="(setup|cli|gui|zip)">[^<]*</code>', { param($m) "<code data-rf=`"$($m.Groups[1].Value)`">$($names[$m.Groups[1].Value])</code>" })
+}
+$sitePages = @()
+try { $sitePages = @(([IO.File]::ReadAllText((Join-Path $root '.sza-canon.json')) | ConvertFrom-Json).site.pages) } catch { }
+if (-not $sitePages.Count) { Add-Finding ".sza-canon.json: no site.pages, so the release facts of the pages cannot be held" }
+$factPages = 0
+$extensionVersion = [string]$data.extension.version
+if ($extensionVersion -and $extensionVersion -notmatch '^\d{2}\.[1-9]\d{2,3}\.(0|[1-9]\d{0,3})$') {
+    Add-Finding "${SourcePath}: extension.version '$extensionVersion' is not the stores' integer shape YY.MDD.Hmm"
+}
+if ($records.Count -and [string]$records[0].version -match $versionRx) {
+    $v = [string]$records[0].version
+    foreach ($f in $sitePages) {
+        if (-not (Test-Path -LiteralPath $f)) { continue }
+        $text = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $f), [Text.Encoding]::UTF8)
+        if (-not $extensionVersion -and $text.Contains('data-rf="extension"')) { Add-Finding "${f}: it shows the extension's version, and $SourcePath records none" }
+        $expected = Get-ReleaseFacts $text $v $extensionVersion
+        if ($text -match 'release-notes:begin whatsnew\b') {
+            foreach ($l in $Langs) { if ([string]::IsNullOrWhiteSpace([string]$data.whatsNew.($l.source))) { Add-Finding "${SourcePath}: whatsNew.$($l.source) (the heading of the landing's block) is missing" } }
+            $block = '(?ms)^[ \t]*<!-- release-notes:begin whatsnew\b.*?<!-- release-notes:end whatsnew -->\r?\n'
+            if ([regex]::Matches($expected, $block).Count -ne 1) { Add-Finding "${f}: must carry exactly one marked 'whatsnew' block" }
+            else { $whatsNewBlock = Get-WhatsNewRender; $expected = [regex]::Replace($expected, $block, { param($m) $whatsNewBlock }) }
+        }
+        if ($expected -eq $text) {
+            if ($text -match 'id="releaseTag"|"softwareVersion"|data-rf="') { $factPages++ }
+            continue
+        }
+        if ($Render) {
+            [IO.File]::WriteAllText((Resolve-Path -LiteralPath $f), $expected, [Text.UTF8Encoding]::new($false))
+            Write-Host "release-notes: rendered the release facts of $f (v$v)." -ForegroundColor Cyan
+            $factPages++
+        } else {
+            Add-Finding "${f}: its release facts are not the render of the newest record v$v (run scripts/release-notes.ps1 -Render; never type a version by hand)"
+        }
+    }
+}
+
 Write-Host ""
-Write-Host "release-notes: $($records.Count) record(s), $($tags.Count) app release tag(s)."
+Write-Host "release-notes: $($records.Count) record(s), $($tags.Count) app release tag(s), release facts on $factPages page(s)."
 if ($errors.Count) {
     foreach ($m in $errors) { Write-Host "  $m" -ForegroundColor Red }
     Exit-Verdict 'release-notes' 1 "$($errors.Count) finding(s)"

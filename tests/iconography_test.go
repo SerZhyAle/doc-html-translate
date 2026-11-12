@@ -441,7 +441,8 @@ func extensionMessage(t *testing.T, lang, key string) string {
 // files in all thirteen languages and none may be the name of a different record. A string equal to
 // the drawn meaning's own name passes even when the catalog gives that word to a second record too
 // (uk "Скасувати" names both Cancel and Undo): that collision is the catalog's to resolve.
-// "OK" (dlgOK) is deliberately not listed: it is a permanent variant, ticket 119 decision D6.
+// "OK" (dlgOK) is not listed: the notice dialog draws no glyph beside it (ticket E0122, Q4), so
+// it is a text-only answer, outside this check.
 func TestIconographyNamesAreNotAnotherMeaningsName(t *testing.T) {
 	root := os.Getenv("SZA_CONTRACTS_ROOT")
 	if root == "" {

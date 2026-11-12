@@ -199,9 +199,14 @@ func TestParityOCRClustering(t *testing.T) {
 		// the whole difference between a balloon outline and a letter left out of its box; ink is the
 		// plate colours' own contrast from a paper read outside the word boxes; and every pass reads
 		// the plane of the picture itself. A side that dropped any one of these would pass the value
-		// check above and cut real lines, or none.
-		{"a stroke cuts a gap the ratio keeps", "tesseract.go", goSrc, `tall := float64\(w\.y1-w\.y0\) > float64\(med\)\*ocrTypeSizeRatio\s*if wide \|\| tall \|\| strokeBetween\(ink, prev, w, reach\)`},
-		{"a stroke cuts a gap the ratio keeps", "ocr-cluster.js", clusterSrc, `const tall = w\.bbox\.y1 - w\.bbox\.y0 > rawMed \* OCR_TYPE_SIZE_RATIO;\s*if \(wide \|\| tall \|\| strokeBetween\(ink, prev, w\.bbox, reach\)\)`},
+		// check above and cut real lines, or none. The third evidence, a tall word, reads what the
+		// token is and not only how tall it stands (amendment 1.10 A, ticket E0128): height alone cut
+		// every honest labelled line it acted on, 33 of 33 on the desktop engine and 23 of 23 on the
+		// extension's, and no ratio separated them from the stitches. It is the outlier trim's own
+		// predicate - a word that carries a letter or digit is never split off by its height - and a
+		// side that dropped it would pass the value check and cut display words off their lines.
+		{"a stroke cuts a gap the ratio keeps", "tesseract.go", goSrc, `tall := !hasLetterOrDigit\(w\.text\) && float64\(w\.y1-w\.y0\) > float64\(med\)\*ocrTypeSizeRatio\s*if wide \|\| tall \|\| strokeBetween\(ink, prev, w, reach\)`},
+		{"a stroke cuts a gap the ratio keeps", "ocr-cluster.js", clusterSrc, `const tall = !/\[\\p\{L\}\\p\{N\}\]/u\.test\(w\.text \|\| ""\) && w\.bbox\.y1 - w\.bbox\.y0 > rawMed \* OCR_TYPE_SIZE_RATIO;\s*if \(wide \|\| tall \|\| strokeBetween\(ink, prev, w\.bbox, reach\)\)`},
 		// And what a stroke cuts off is not always text: a run it separates that could not be a plate
 		// on its own is the outline or the artwork beside it, and both sides park it rather than let it
 		// sit in a column between two lines of one balloon (atomicwar0401, 2026-09-25).
@@ -998,9 +1003,10 @@ func TestParityComicPageFilter(t *testing.T) {
 	}
 }
 
-// TestParityReportFields: the labels the desktop archive's environment.txt and the extension's
-// clipboard summary have in common must be spelled identically, or the author ends up reading
-// two report formats. See docs/PARITY.md "Report field labels".
+// TestParityReportFields: the labels the desktop archive's report.txt and the extension's
+// diagnostic envelope have in common must be spelled identically, and the two carriers must
+// state the same schema version, or the author ends up reading two report formats. See
+// docs/PARITY.md "Report field labels".
 func TestParityReportFields(t *testing.T) {
 	goSrc := readRepoFile(t, "internal", "report", "environment.go")
 	jsSrc := readRepoFile(t, "extension", "src", "diagnostics.js")
@@ -1013,6 +1019,14 @@ func TestParityReportFields(t *testing.T) {
 		if !strings.Contains(jsSrc, `["`+label+`",`) {
 			t.Errorf("diagnostics.js: shared report label %q is gone (see docs/PARITY.md)", label)
 		}
+	}
+	goVersion := regexp.MustCompile(`SchemaVersion = (\d+)`).FindStringSubmatch(goSrc)
+	jsVersion := regexp.MustCompile(`export const SCHEMA_VERSION = (\d+);`).FindStringSubmatch(jsSrc)
+	if goVersion == nil || jsVersion == nil {
+		t.Fatalf("report schema version not found (environment.go=%v diagnostics.js=%v)", goVersion != nil, jsVersion != nil)
+	}
+	if goVersion[1] != jsVersion[1] {
+		t.Errorf("report schema version drift: environment.go=%s diagnostics.js=%s - bump both or neither", goVersion[1], jsVersion[1])
 	}
 }
 

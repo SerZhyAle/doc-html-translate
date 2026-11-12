@@ -18,12 +18,19 @@ type selftestResult struct {
 	notes   []string
 }
 
+// selfTestChecks is the fixed list the self-test runs; each is one test of its verdict line.
+const selfTestChecks = 3
+
 // runSelfTest performs the three checks and prints what it found. It never stops at the first
-// failure - the verdict line at the end carries the whole count.
+// failure - the verdict line at the end carries the whole count. CHECK-VERDICT 0.14 (amendment
+// 2026-10-29 item A1): a self-test prints a test line, run=N skipped=M, each check one test.
 func runSelfTest(env *runEnv) selftestResult {
 	res := selftestResult{verdict: verdictPass}
+	ran := 0
+	counts := func() string { return fmt.Sprintf("run=%d skipped=%d", ran, selfTestChecks-ran) }
 
 	// 1. Matrix integrity.
+	ran++
 	if errs := validateMatrix(); len(errs) > 0 {
 		res.defects = append(res.defects, errs...)
 	}
@@ -32,9 +39,10 @@ func runSelfTest(env *runEnv) selftestResult {
 	claude, agents, roster, err := loadCapabilitySources()
 	if err != nil {
 		res.verdict = verdictCouldNotVerify
-		res.detail = err.Error()
+		res.detail = counts() + ", " + err.Error()
 		return res
 	}
+	ran++
 	capDefects, capNotes := checkCapabilities(claude, agents, roster)
 	res.defects = append(res.defects, capDefects...)
 	res.notes = append(res.notes, capNotes...)
@@ -44,14 +52,15 @@ func runSelfTest(env *runEnv) selftestResult {
 	missing, corrupt, err := checkFixtures(env.fixturesDir)
 	if err != nil {
 		res.verdict = verdictCouldNotVerify
-		res.detail = err.Error()
+		res.detail = counts() + ", " + err.Error()
 		return res
 	}
 	if _, statErr := os.Stat(env.fixturesDir); statErr != nil && len(missing) == len(smallFixtures()) {
 		res.verdict = verdictCouldNotVerify
-		res.detail = fmt.Sprintf("fixture root %s absent; run -Fixtures first", env.fixturesDir)
+		res.detail = counts() + fmt.Sprintf(", fixture root %s absent; run -Fixtures first", env.fixturesDir)
 		return res
 	}
+	ran++
 	for _, id := range missing {
 		res.defects = append(res.defects, fmt.Errorf("fixture %s missing (run -Fixtures)", id))
 	}
@@ -60,14 +69,15 @@ func runSelfTest(env *runEnv) selftestResult {
 	}
 
 	// The verdict, from everything found. Every defect is named above the line; the detail
-	// carries only the count.
+	// carries only the counts.
+	res.detail = counts()
 	switch {
 	case len(res.defects) > 0:
 		res.verdict = verdictFail
-		res.detail = fmt.Sprintf("%d defect(s)", len(res.defects))
+		res.detail += fmt.Sprintf(" defects=%d", len(res.defects))
 	case len(res.notes) > 0:
 		res.verdict = verdictAdvisory
-		res.detail = fmt.Sprintf("%d advisory note(s)", len(res.notes))
+		res.detail += fmt.Sprintf(" advisories=%d", len(res.notes))
 	}
 	return res
 }

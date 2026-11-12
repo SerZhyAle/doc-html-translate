@@ -23,6 +23,10 @@ type Options struct {
 	// VERIFY. Nil means the run has no committed state to compare with (a scratch copy of the tree), and the
 	// baseline is judged by its own rules only.
 	Committed func(rel string) (raw []byte, found bool, err error)
+
+	// StrictFreshness makes a set older than its inputs a failure instead of an advisory: the full gate and the
+	// release pre-flight set it (ticket E0125).
+	StrictFreshness bool
 }
 
 // baseline is configs/help-baseline.txt read apart: the comment lines, in order, and the identifiers, in file order.

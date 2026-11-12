@@ -1,7 +1,7 @@
 # Pointer: CONTEXT-HELP
 
 - **Id:** `CONTEXT-HELP`
-- **Version:** 0.1 draft
+- **Version:** 0.2 draft
 - **Home:** the shared contracts catalog, `in-app-help/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the GUI launcher (`cmd/doc-html-ui`), adopted 2026-10-20 (ticket 118); `partial` until the owner's walk
 - **Wire carrier:** none - a key, a button, a help map file and a page anatomy
@@ -16,7 +16,7 @@ user is in. The GUI is an HTML page in an Edge or Chrome `--app` window, so the 
   own help does not open there either.
 - **Rule 2 - the button.** The `app.help` glyph (vendored in `assets/glyphs/`), named and titled `Help (F1)` from the
   vocabulary's name in all 13 languages (`titleHelp` in `i18n.js`), is the trailing control of the header row (ticket 119
-  moved the theme and language selects off the header, onto the first page, and added the Pages button that appears
+  moved the theme and language selects off the header, onto the Interface page, and added the Pages button that appears
   only in a narrow window); the same button sits in the corner of the dialogs that have help.
   `cmd/doc-html-ui/help_test.go` holds the header's control set.
 - **Rule 4 - the map.** `cmd/doc-html-ui/help/help-map.json`: the converter window and the settings pages (pages), the
@@ -38,10 +38,23 @@ user is in. The GUI is an HTML page in an Edge or Chrome `--app` window, so the 
   `index`) are permanent once a build ships; the site copy lives at `help/<locale>/<id>.html`.
 - **Rules 17-19 - resolver, ship together, gate.** `help.js` is the one resolver; `scripts/help-check.ps1`
   (`internal/helpcheck`, also `tests/help_test.go`) counts the surfaces of `ui.html` against the map, the pages against
-  the locale set, the links, rule 12, the house text style, the two copies of the set and, as an advisory, the
-  freshness of the set against the digests of its inputs.
+  the locale set, the links, rule 12, the house text style, the two copies of the set and the freshness of the set
+  against the digests of its inputs - an advisory in the fast tier, a failure in the full gate and the release
+  pre-flight (`-strict-freshness`, ticket E0125).
+
+**Dated exception on rule 18, the screenshot half (ticket E0125, 2026-10-30, until 2026-12-31).** A change of what
+the GUI window shows may leave the screenshots and their pin places to the release: the capture builds the GUI and takes
+106 s, and nothing above 5 s runs between releases. The text half is not excepted - a wording change reaches both copies
+of the set in the same edit through `node tools/helpgen/repage.mjs` (0.07 s, no build, no browser), which refuses and
+writes nothing (exit 2) when a window input moved after the last capture. Between the window change and the release the
+committed and the site screenshots show the previous window; the shipped app never does, because the full gate and the
+release pre-flight fail a stale set and the release runs `node tools/helpgen/generate.mjs --check`. The record is in
+the catalog registry row of this product; it ends when a capture fits 5 s or the contract names contract-required
+renders.
 
 **Conformance.** Rung 1 (static) holds in the gate. Rung 2 (freshness): `node tools/helpgen/generate.mjs --check` by
-hand, and the digest advisory in the gate. Rung 3 (walk): the automated matrix `tools/helpgen/walk.mjs`, recorded in
+hand at the release, and the digest check in the gate (advisory in the fast tier, failing in the full gate). Rung 3 (walk): the automated matrix `tools/helpgen/walk.mjs`, recorded in
 `DEV/plan/118_2026-10-16_in-app-help-f1-and-help-button/WALK.md`; the physical pass (the operating system's F1, 150 and
 200 percent scaling, high contrast, a screen reader) rides ticket 93's pending pass.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.2.** Section 7 A-J: no `inherit` or `ask: "off"` surface; the index answers at `help/<locale>/` and every published page carries `noindex` and stays out of the sitemap (F, G); `help.css` is the reference byte for byte (the item I chevron is the catalog's). Two forms are stated rather than changed: rung 2 is held by input digests as a gate advisory, not a failure (D), and the generator aborts on an element with empty bounds instead of recording it absent (C).

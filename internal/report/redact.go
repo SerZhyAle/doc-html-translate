@@ -125,10 +125,12 @@ func userHome() string {
 	return home
 }
 
-// Redact removes from s everything that must not reach the author: credentials outright, and
-// the user's own folder layout reduced to the variables that stand for it. Document file
-// names survive - a log whose document cannot be identified cannot be acted on.
+// Redact removes from s everything that must not reach the author: credentials outright, the
+// user's own folder layout reduced to the variables that stand for it, and the names and titles
+// of their documents (DIAGNOSTIC-REPORT 8 B). Document names go first, while the paths they sit
+// in still start at a drive.
 func Redact(s string) string {
+	s = hideDocumentNames(s)
 	for _, r := range pathRedactions() {
 		s = r.re.ReplaceAllString(s, r.with)
 	}

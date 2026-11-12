@@ -1,7 +1,8 @@
 # Publish the browser extension to the Chrome Web Store on an `ext-cws-v*` tag
-# (or a manual dispatch). Independent of Edge: Chrome and Edge have separate tags,
-# separate runs, and therefore separate build-time versions - pushing an ext-cws-v*
-# tag publishes ONLY to Chrome. This automates every release AFTER the first manual
+# (or a manual dispatch). Independent of Edge: Chrome and Edge have separate tags and
+# separate runs - pushing an ext-cws-v* tag publishes ONLY to Chrome. The tag names the
+# version recorded in docs/release-notes.json, and the build stamps exactly that (it stops
+# on any other). This automates every release AFTER the first manual
 # one (the stores have no create-item / listing-metadata API, so the very first
 # publish is done by hand once). See extension/PUBLISHING.md for the one-time setup.
 #
@@ -42,6 +43,8 @@ jobs:
           cache-dependency-path: extension/package-lock.json
 
       - name: Install dev deps + build the store ZIP
+        env:
+          EXTENSION_RELEASE_TAG: ${{ github.ref_name }}
         run: |
           npm ci --no-audit --no-fund
           npm run build

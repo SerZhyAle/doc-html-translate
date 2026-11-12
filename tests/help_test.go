@@ -3,7 +3,7 @@ package tests
 // The in-app help gate inside the Go suite (CONTEXT-HELP rule 19, ticket 118). The judging is internal/helpcheck, the
 // same code scripts/help-check.ps1 runs, so a structural break fails `go test` as well as the gate: a surface with no
 // row, a row with no surface, a page missing in a shipped locale, an unresolved link, a request to another origin, a
-// `none` or `inherit` row without a reason, a baseline that grew. Freshness against the inputs is an advisory.
+// `none` or `inherit` row without a reason, a baseline that grew. Freshness against the inputs is an advisory here (the full gate and the release pre-flight run `help-check -Release`, where it fails).
 
 import (
 	"strings"

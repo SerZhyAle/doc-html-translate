@@ -84,11 +84,33 @@ func InputDigests(root string) (parts map[string]string, digest string, err erro
 	return parts, sha([]byte(all.String())), nil
 }
 
+// captureInputs are the digested inputs that decide a screenshot or a pin place (what the window looks like and the
+// capture code); every other input shapes page text only. The wording inputs are re-rendered by tools/helpgen/repage.mjs
+// in well under 5 s, the capture inputs only by the full generator (ticket E0125).
+var captureInputs = map[string]bool{
+	"ui.html (markup and style)": true,
+	"i18n.js":                    true,
+	"generator/generate.mjs":     true,
+	"generator/shots.mjs":        true,
+}
+
+// freshnessFix names the command that clears a stale set: the full generator when a capture input moved, the fast
+// wording form otherwise.
+func freshnessFix(changed []string) string {
+	for _, n := range changed {
+		if captureInputs[strings.TrimSuffix(n, " (gone)")] {
+			return "run `node tools/helpgen/generate.mjs` (builds the GUI; CONTEXT-HELP rules 14 and 18)"
+		}
+	}
+	return "run `node tools/helpgen/repage.mjs` (CONTEXT-HELP rule 18)"
+}
+
 // checkFreshness is rung 2 of the contract in the form a gate can afford (it opens no browser): the set records the
-// digests of its inputs, and a difference means an input changed after the last generation. It is an advisory,
-// not a failure: the fix is to run the generator, which needs a browser and the real build, so it cannot be demanded
-// of every edit of the page; the release walk and the generator's own check close it (CONTEXT-HELP section 4).
-func checkFreshness(r *Report, root string) {
+// digests of its inputs, and a difference means an input changed after the last generation. Between releases it is an
+// advisory: the screenshot half of the fix needs a browser and the real build, which the 5 s line does not allow, so
+// CONTEXT-HELP rule 18 carries a dated exception for it (ticket E0125). With strict set - the full gate and the
+// release pre-flight - the same difference is a failure, so a shipped set is never older than its inputs.
+func checkFreshness(r *Report, root string, strict bool) {
 	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(HelpDir), "freshness.json"))
 	if err != nil {
 		return // reported as a missing shared file
@@ -121,5 +143,9 @@ func checkFreshness(r *Report, root string) {
 		}
 	}
 	sort.Strings(changed)
-	r.advise("the help set is older than its inputs (%s): run `node tools/helpgen/generate.mjs` (CONTEXT-HELP rules 14 and 18)", strings.Join(changed, ", "))
+	if strict {
+		r.fail("the help set is older than its inputs (%s): %s", strings.Join(changed, ", "), freshnessFix(changed))
+		return
+	}
+	r.advise("the help set is older than its inputs (%s): %s", strings.Join(changed, ", "), freshnessFix(changed))
 }

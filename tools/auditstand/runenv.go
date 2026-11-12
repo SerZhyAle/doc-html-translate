@@ -26,7 +26,8 @@ type runEnv struct {
 	appPath string // -app override; otherwise a HEAD build under binDir
 	uiPath  string // -ui override
 
-	isolation     string // "B-env" (redirected environment) or "none"
+	isolation     string   // "B-env" (redirected environment) or "none"
+	declaredLoad  []string // -declared-load on -Control: images the validity rule tolerates
 	probeDuration time.Duration
 	sceneRunID    string
 	recovery      *profileRecovery

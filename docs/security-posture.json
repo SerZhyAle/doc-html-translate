@@ -179,8 +179,11 @@
       ],
       "shownAtRequest": false,
       "shownWhere": "the Store shows Windows' own line for it on the listing; the justification goes to Partner Center certification",
-      "public": null,
-      "publicNote": "A packaging capability, not something the app does to the user's data: the user-facing facts it enables are the capability rows below, which the privacy page renders.",
+      "public": {
+        "en": "**Full trust, in the Microsoft Store package** - the package declares `runFullTrust`: the app runs as an ordinary Windows desktop program with your user's rights, as the other editions do; what it does with them is the list below.",
+        "ru": "**Полное доверие, в пакете Microsoft Store** - пакет объявляет `runFullTrust`: приложение работает как обычная настольная программа Windows с правами вашего пользователя, как и другие версии; что оно с ними делает - список ниже.",
+        "uk": "**Повна довіра, у пакеті Microsoft Store** - пакет оголошує `runFullTrust`: застосунок працює як звичайна настільна програма Windows із правами вашого користувача, як і інші версії; що він із ними робить - список нижче."
+      },
       "storeLabel": "runFullTrust",
       "storeJustification": "doc-html-translate is a full-trust Win32 desktop app (Go), not a UWP app, so runFullTrust is required to run as a normal desktop process and to use the Win32 capabilities its features depend on:\n- Reading the documents the user opens and writing the converted HTML next to them or to a folder the user chooses.\n- Launching the bundled command-line converter and the user's web browser to display the result.\n- Calling Tesseract (for OCR), Calibre (for MOBI/AZW3), 7-Zip (for CBR/CB7 comics), FileDO (for .fd-sec secret files), and a local Ollama server when those optional features are used.\nThese capabilities are available only to full-trust desktop apps. The app runs locally, makes no network connections except optional user-initiated ones (Google Cloud Translation API, a local Ollama model, or downloading an extra OCR language from GitHub), and collects no user data. Open source: https://github.com/SerZhyAle/doc-html-translate"
     },
@@ -577,25 +580,6 @@
         "ru": "**Google Fonts, для шрифтов страниц** - при открытии любой страницы этого сайта браузер запрашивает шрифты у `fonts.googleapis.com` и `fonts.gstatic.com`, оба принадлежат Google. Google получает ваш IP-адрес, user agent браузера и адрес страницы, на которой вы находитесь, - как при любом веб-запросе. Сам сайт не устанавливает cookie и ничего больше не отправляет. Настольное приложение и расширение для браузера их не загружают.",
         "uk": "**Google Fonts, для шрифтів сторінок** - під час відкриття будь-якої сторінки цього сайту браузер запитує шрифти в `fonts.googleapis.com` і `fonts.gstatic.com`, обидва належать Google. Google отримує вашу IP-адресу, user agent браузера й адресу сторінки, на якій ви перебуваєте, - як за будь-якого вебзапиту. Сам сайт не встановлює cookie і нічого більше не надсилає. Настільний застосунок і розширення для браузера їх не завантажують."
       }
-    },
-    {
-      "id": "net-site-release-tag",
-      "edition": "site",
-      "kind": "outbound",
-      "surface": "HTTPS GET to api.github.com for the latest published release, made by assets/site.js on the home page and its translations",
-      "defaultOn": true,
-      "turnedOnBy": "opening the home page or one of its translations; no other page makes the request",
-      "lifetime": "one request per page view",
-      "leaves": "what any web request carries - the visitor's IP address and the browser's user agent; nothing else",
-      "origins": ["api.github.com"],
-      "evidence": [
-        { "file": "assets/site.js", "contains": "fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest'" }
-      ],
-      "public": {
-        "en": "**GitHub, for the latest version number** - on the home page and its translations, a small script asks `api.github.com` for the latest published release and shows its tag beside the download link. GitHub receives your IP address and your browser's user agent, as any web request carries them; nothing else is sent. If the request is blocked, the page works the same without the tag.",
-        "ru": "**GitHub, для номера последней версии** - на главной странице и её переводах небольшой скрипт запрашивает у `api.github.com` последний опубликованный релиз и показывает его тег рядом со ссылкой на загрузку. GitHub получает ваш IP-адрес и user agent браузера - как при любом веб-запросе; ничего больше не отправляется. Если запрос заблокирован, страница работает так же, только без тега.",
-        "uk": "**GitHub, для номера останньої версії** - на головній сторінці та її перекладах невеликий скрипт запитує в `api.github.com` останній опублікований реліз і показує його тег поруч із посиланням на завантаження. GitHub отримує вашу IP-адресу та user agent браузера - як за будь-якого вебзапиту; нічого більше не надсилається. Якщо запит заблоковано, сторінка працює так само, лише без тега."
-      }
     }
   ],
 
@@ -662,7 +646,7 @@
       "target": "privacy.html",
       "block": "app-access",
       "format": "html-lists",
-      "rows": ["app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "app-filedo-secret-files", "net-app-report-mail"],
+      "rows": ["app-msix-runfulltrust", "app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "app-filedo-secret-files", "net-app-report-mail"],
       "after": {
         "en": "With the default free browser translation, the app sends nothing at all.",
         "ru": "При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.",
@@ -684,19 +668,19 @@
       "target": "privacy.html",
       "block": "site-origins",
       "format": "html-lists",
-      "rows": ["net-site-fonts", "net-site-release-tag"]
+      "rows": ["net-site-fonts"]
     },
     {
       "target": "extension-privacy.html",
       "block": "site-origins",
       "format": "html-lists",
-      "rows": ["net-site-fonts", "net-site-release-tag"]
+      "rows": ["net-site-fonts"]
     },
     {
       "target": "install-trust.html",
       "block": "site-origins",
       "format": "html-lists",
-      "rows": ["net-site-fonts", "net-site-release-tag"]
+      "rows": ["net-site-fonts"]
     },
     {
       "target": "extension-privacy.html",

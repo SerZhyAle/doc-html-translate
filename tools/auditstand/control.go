@@ -1,7 +1,9 @@
 // control.go implements -Control (strategic section 6): the whole probe set on the idle desktop
 // with no app started, same profile, same durations. It writes control.json - the probes' own
 // jitter and the machine's own noise - and refuses (exit 2) when a probe's jitter alone exceeds
-// the validity threshold, because a scene run on such a machine would measure the noise.
+// the validity threshold, because a scene run on such a machine would measure the noise. A
+// background load the operator declares by image name (-declared-load) is tolerated by the
+// foreign-CPU rule and recorded as an advisory instead: a weaker, but named, baseline.
 
 package main
 
@@ -12,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -55,14 +58,15 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 	}
 	res := controlResult{}
 	rec := &record{
-		RunID:     newRunID("control"),
-		Kind:      "control",
-		CreatedAt: time.Now(),
-		Isolation: "n/a",
-		Valid:     true,
+		RunID:        newRunID("control"),
+		Kind:         "control",
+		CreatedAt:    time.Now(),
+		Isolation:    "n/a",
+		Valid:        true,
+		DeclaredLoad: env.declaredLoad,
 	}
 	res.runID = rec.RunID
-	watch := startValidityWatch()
+	watch := startValidityWatch(env.declaredLoad)
 	for _, p := range probeRegistry() {
 		if ok, reason := p.available(); !ok {
 			res.unavailable = append(res.unavailable, fmt.Sprintf("%s: %s", p.name, reason))
@@ -101,6 +105,10 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 			appendNote(rec, "%s", summary)
 		}
 	}
+	declared := watch.declaredLoadSummary()
+	if declared != "" {
+		appendNote(rec, "advisory: %s", declared)
+	}
 	if len(rec.Measurements) == 0 {
 		rec.Valid = false
 		rec.InvalidReasons = append(rec.InvalidReasons, "no probe supplied any samples")
@@ -132,6 +140,9 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 	if summary := watch.offenderSummary(); summary != "" {
 		fmt.Printf("  %s\n", summary)
 	}
+	if declared != "" {
+		fmt.Printf("  advisory: %s\n", declared)
+	}
 	fmt.Printf("control.json: %s\n", dir)
 
 	if !rec.Valid {
@@ -139,14 +150,25 @@ func runControl(env *runEnv, perProbe time.Duration) (controlResult, error) {
 		res.detail = fmt.Sprintf("%d validity violation(s); no scene may run until the machine is quiet", len(rec.InvalidReasons))
 		return res, nil
 	}
-	if len(res.unavailable) > 0 {
-		res.verdict = verdictAdvisory
-		res.detail = fmt.Sprintf("%d unavailable probe(s)", len(res.unavailable))
-	} else {
-		res.verdict = verdictPass
-	}
+	res.verdict, res.detail = controlAdvisories(len(res.unavailable), rec.DeclaredLoad)
 	res.runID = rec.RunID
 	return res, nil
+}
+
+// controlAdvisories folds a valid control's advisories into its verdict: unavailable probes and
+// a declared background load each keep it at PASS WITH ADVISORIES; neither invalidates it.
+func controlAdvisories(unavailable int, declared []string) (verdict, string) {
+	var parts []string
+	if unavailable > 0 {
+		parts = append(parts, fmt.Sprintf("%d unavailable probe(s)", unavailable))
+	}
+	if len(declared) > 0 {
+		parts = append(parts, declaredLoadAdvisory(declared))
+	}
+	if len(parts) == 0 {
+		return verdictPass, ""
+	}
+	return verdictAdvisory, strings.Join(parts, "; ")
 }
 
 // jitterLimit returns the smallest absolute jitter ceiling among the probe's budgets.

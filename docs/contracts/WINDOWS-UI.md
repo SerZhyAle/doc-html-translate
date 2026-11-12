@@ -1,7 +1,7 @@
 # Pointer: WINDOWS-UI
 
 - **Id:** `WINDOWS-UI`
-- **Version:** 0.10 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/WINDOWS-UI.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - the GUI launcher (`cmd/doc-html-ui`), a browser-hosted Windows application (adopted 2026-10-05, ticket 93; read at 0.10 on 2026-10-20, ticket 120)
 - **Wire carrier:** none - observable Windows UI and UX
@@ -47,3 +47,5 @@ catalog's source-derived reference snapshot is read by `TestWindowsUIReferenceTa
 `SZA_CONTRACTS_ROOT`: it compares the declared compact pointer floor of the token resolver with the snapshot's
 `MinTarget` (fixed 2026-10-20 - it had grepped a rule ticket 119 removed - and it skips without the catalog).
 The snapshot is not a pixel vector or a runtime verdict; no machine runtime vectors exist.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.11.** Section 16: A - the reference snapshot's `MinTarget` is not a floor, so `catalog_reference_test.go` reports it beside the launcher's target instead of failing on it; B - "readily discoverable" is met by seven named pages with each setting on one, so settings search stays omitted without a variant; C - the layout reflows by construction (the script-set log-pane height is a scroll region, not a text block). Sections 5 and 9 stay open (frame budgets, ticket 93).

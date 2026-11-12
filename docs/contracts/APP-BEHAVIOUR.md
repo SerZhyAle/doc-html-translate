@@ -1,7 +1,7 @@
 # Pointer: APP-BEHAVIOUR
 
 - **Id:** `APP-BEHAVIOUR`
-- **Version:** 0.12 draft
+- **Version:** 0.14 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - GUI launcher behaviour (`cmd/doc-html-ui`), plus the CLI's native dialogs a GUI user meets
 - **Wire carrier:** none - desktop application user interaction
@@ -63,3 +63,5 @@ automatic repair path: the no-argument CLI asks again, and explicit registration
 **Conformance.** `cmd/doc-html-ui/contract_test.go`, `cmd/doc-html-ui/conformance_test.go`, `cmd/doc-html-ui/hardening_test.go`
 (`TestQuestionIsAskedInTheWindow`, the cancel tests), `cmd/doc-html-ui/session_test.go` (the geometry guard),
 `internal/dialog` tests, and a headless-Edge run of the real page (ticket 23, "Verification").
+
+**Re-read 2026-10-29 (ticket E0126) at 0.14.** 0.13 adds rule 4's standing consent: the daily update check is its own setting, off by default, captioned with its action, off in one click, and each automatic check now writes `automatic update check (GitHub Releases), under the setting "autoUpdates"` to the GUI log (`failure.go` `logConsentAction`). 0.14 makes rule 10's settled write the rule for a browser-hosted window and adds one flush on `pagehide`, which `ui.html` now sends (`fetch` with `keepalive`, since the token header rules out `sendBeacon`); the rule 10 variant is closed in the registry.

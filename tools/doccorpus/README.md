@@ -1,6 +1,6 @@
 # doccorpus - the cross-edition document corpus
 
-The instrument of [ticket 68](../../DEV/plan/68_2026-09-29_multilingual_comic_book_verification.md):
+The instrument of [ticket 68](../../DEV/plan/E0068_multilingual-comic-book-verification.md):
 six languages (en, fr, ru, ja, zh, ko) times six input classes (comic image, EPUB, text PDF, scanned
 PDF, illustrated PDF, comic archive), each document run through **both** editions from the same
 hashed bytes and graded against an expectation that neither edition wrote.

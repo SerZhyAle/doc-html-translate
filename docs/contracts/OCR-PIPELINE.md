@@ -1,7 +1,7 @@
 # Pointer: OCR-PIPELINE
 
 - **Id:** `OCR-PIPELINE`
-- **Version:** 1.9
+- **Version:** 1.10
 - **Home:** the shared contracts catalog, `ocr-overlay/ocr-pipeline.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer and owner - the document describes this product's own mechanism, end to end
 - **Read by:** FastMediaSorter Android and FastMediaSorter_Lite, which port parts of it

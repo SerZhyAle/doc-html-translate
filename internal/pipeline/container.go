@@ -37,7 +37,7 @@ func (r Runner) unwrapContainer(ctx context.Context, inputPath string) (*fdsec.P
 		return nil, ExitInterrupted, err
 	case fdsec.NoSource, fdsec.EmptyEnv:
 		return nil, ExitArgsError, err
-	case fdsec.IO:
+	case fdsec.IO, fdsec.DestinationName:
 		return nil, ExitIOError, err
 	}
 	return nil, ExitParse, err

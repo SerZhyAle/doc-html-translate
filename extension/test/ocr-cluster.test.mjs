@@ -832,8 +832,10 @@ test("an unordered late row outside the band, in another column or at another ty
 
 // internal/ocr TestSplitWideGapsCutsWhereTheOutlineIsTheToken runs the same cases: two touching
 // balloons whose stitched rows carry the outlines as tokens - no gap between words holds the
-// boundary stroke, it runs inside the boundary token's box - and a real line of one size, never cut
-// (ticket 67; tests/testdata/ocr_balloon_stitch_cases.json).
+// boundary stroke, it runs inside the boundary token's box - cut before a tall token with no letter
+// or digit, and never before a tall word that carries one (OCR-PIPELINE amendment 1.10 A: the
+// Superman rows as the engine returned them stay uncut, the known limit), and a real line of one
+// size, never cut (tickets 67 and E0128; tests/testdata/ocr_balloon_stitch_cases.json).
 test("splitWideGaps: shared Go/JS fixture, the outline taken for a token", () => {
   const fx = JSON.parse(readFileSync(new URL("../../tests/testdata/ocr_balloon_stitch_cases.json", import.meta.url), "utf8"));
   for (const tc of fx.cases) {

@@ -75,6 +75,9 @@ html[data-theme="light"] .copybox,html[data-theme="light"] .demo{--acc:#56d364;-
 .hero .tagline{display:block;color:var(--acc);font-size:.95rem;font-weight:600;margin:0 0 .8rem}
 .hero .lead{color:var(--text-2);margin:0 0 .8rem;font-size:.96rem;line-height:1.58}
 .hero-formats{margin-bottom:.9rem}
+.hero-cta{margin:0 0 .9rem}
+#whats-new ul{padding-inline-start:1.3rem;margin:.5rem 0}
+#whats-new li{margin:.3rem 0}
 .button-group,.channels,.get .channels{display:flex;flex-wrap:wrap;gap:var(--ui-gap);justify-content:flex-start}
 
 /* ---------- GET IT (full width, not the kit's 760px card) ---------- */
@@ -163,6 +166,8 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
 /* ---------- OTHER LANGUAGES / FOOTER ---------- */
 .langs{display:flex;flex-wrap:wrap;gap:0 .4rem;font-size:.8rem;margin:0 0 .4rem}
 .langs .cur{font-weight:700;opacity:1}
+/* on the phone the language row takes 32 px lines (still above the 24 px target floor), so the h1 starts in the top half */
+@media(max-width:480px){.langs{gap:0 .15rem}.langs a{min-height:32px;min-width:32px;padding:0 .25rem}}
 .site-footer h2{font-size:1rem;margin-bottom:.8rem;color:var(--text-2)}
 /* the contact links get a 44 px line box for every pointer (ticket 106); the back-to-top button hides while the
    footer is on screen (assets/site.js), so it never covers them */
@@ -202,6 +207,8 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
 :root[dir="rtl"] .btn[target="_blank"]::after{transform:scaleX(-1)}
 details.sec{padding:0}
 details.sec>summary{min-height:var(--ui-tgt);padding:.35rem 1.3rem;gap:.6rem;align-items:center;background:var(--bg-3);border-radius:var(--ui-radius)}
+/* the section title is a real heading for the outline, drawn as the summary text it replaced */
+details.sec>summary>h3{margin:0;font:inherit;color:inherit;letter-spacing:inherit}
 details.sec[open]>summary{border-bottom:1px solid var(--border);border-end-start-radius:0;border-end-end-radius:0}
 details.sec>summary::after{content:none}
 details.sec>summary::before{content:"";flex:none;width:16px;height:16px;background-color:currentColor;

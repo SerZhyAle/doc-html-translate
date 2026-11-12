@@ -103,6 +103,7 @@ type record struct {
 	Isolation        string              `json:"isolation"`
 	Valid            bool                `json:"valid"`
 	InvalidReasons   []string            `json:"invalid_reasons"`
+	DeclaredLoad     []string            `json:"declared_load,omitempty"` // tolerated named background load; a scene carries its control's
 	ControlRef       string              `json:"control_ref,omitempty"`
 	Binaries         map[string]binaryID `json:"binaries,omitempty"`
 	Profile          map[string]string   `json:"profile,omitempty"`

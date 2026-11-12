@@ -26,6 +26,7 @@ import (
 	"doc-html-translate/internal/mobi"
 	"doc-html-translate/internal/outputpath"
 	"doc-html-translate/internal/pdf"
+	"doc-html-translate/internal/report"
 	"doc-html-translate/internal/rtf"
 	"doc-html-translate/internal/txt"
 )
@@ -64,6 +65,8 @@ func (r Runner) run(ctx context.Context) (int, error) {
 	if err != nil {
 		return ExitIOError, fmt.Errorf("resolve input path: %w", err)
 	}
+	// The run log is read by the author: the book's name stays out of it (DIAGNOSTIC-REPORT 8 B).
+	report.HideDocument(inputPath)
 
 	info, err := os.Stat(inputPath)
 	switch {
@@ -94,6 +97,8 @@ func (r Runner) run(ctx context.Context) (int, error) {
 		return ExitIOError, err
 	}
 	outputDir := target.Dir
+	report.HideFolder(outputDir)
+	report.HideFolder(target.Preferred)
 	if outputDir != target.Preferred {
 		logging.Printf("  %s is taken by other content - using %s\n", target.Preferred, outputDir)
 	}

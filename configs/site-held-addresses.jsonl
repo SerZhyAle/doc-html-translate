@@ -69,3 +69,4 @@
 {"kind":"held","holder":"tools/helpgen/render.mjs","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"cmd/doc-html-ui/help_test.go","surface":"test","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
 {"kind":"held","holder":"internal/helpcheck/helpcheck.go","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate/"]}
+{"kind":"held","holder":"scripts/capability-matrix.ps1","surface":"script","addresses":["https://serzhyale.github.io/doc-html-translate"]}

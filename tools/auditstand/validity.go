@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -36,6 +37,11 @@ type validityWatch struct {
 	// offenders groups the processes that crossed the window by image name, so the record can
 	// say what to quiet instead of leaving the owner a list of PIDs that no longer exist.
 	offenders map[string]map[int]bool
+	// declared is the named background load the operator declared on -Control (lower-case image
+	// file names). A declared image that crosses the window is tolerated - grouped in tolerated
+	// and reported as an advisory - instead of invalidating the run (owner decision 2026-10-30).
+	declared  map[string]bool
+	tolerated map[string]map[int]bool
 
 	// Sampling state; owned by observe and its single caller.
 	previous map[int]cpuCounter
@@ -43,20 +49,26 @@ type validityWatch struct {
 	last     time.Time
 }
 
-func newValidityWatch(now time.Time) *validityWatch {
-	return &validityWatch{
+func newValidityWatch(now time.Time, declared []string) *validityWatch {
+	v := &validityWatch{
 		stop:      make(chan struct{}),
 		done:      make(chan struct{}),
 		excluded:  map[int]bool{os.Getpid(): true},
 		offenders: map[string]map[int]bool{},
+		declared:  map[string]bool{},
+		tolerated: map[string]map[int]bool{},
 		previous:  map[int]cpuCounter{},
 		streak:    map[int]int{},
 		last:      now,
 	}
+	for _, image := range declared {
+		v.declared[strings.ToLower(image)] = true
+	}
+	return v
 }
 
-func startValidityWatch() *validityWatch {
-	v := newValidityWatch(time.Now())
+func startValidityWatch(declared []string) *validityWatch {
+	v := newValidityWatch(time.Now(), declared)
 	go func() {
 		defer close(v.done)
 		tick := time.NewTicker(time.Second)
@@ -117,7 +129,11 @@ func (v *validityWatch) observe(now time.Time, current map[int]cpuCounter) {
 			if image == "" {
 				image = "unknown image"
 			}
-			v.recordOffender(pid, image)
+			if v.declared[strings.ToLower(image)] {
+				v.recordTolerated(pid, image)
+			} else {
+				v.recordOffender(pid, image)
+			}
 		}
 	}
 	// A process that left the snapshot starts from zero if its PID is ever reused.
@@ -139,6 +155,15 @@ func (v *validityWatch) recordOffender(pid int, image string) {
 		v.offenders[image] = map[int]bool{}
 	}
 	v.offenders[image][pid] = true
+}
+
+func (v *validityWatch) recordTolerated(pid int, image string) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.tolerated[image] == nil {
+		v.tolerated[image] = map[int]bool{}
+	}
+	v.tolerated[image][pid] = true
 }
 
 func (v *validityWatch) add(reason string) {
@@ -169,12 +194,43 @@ func (v *validityWatch) offenderSummary() string {
 	if len(v.offenders) == 0 {
 		return ""
 	}
+	return "foreign CPU load above the validity threshold, by image: " + byImage(v.offenders)
+}
+
+// declaredLoadSummary is the advisory line of a run under a declaration: what was declared and
+// which declared images actually crossed the window. Empty when nothing was declared.
+func (v *validityWatch) declaredLoadSummary() string {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if len(v.declared) == 0 {
+		return ""
+	}
+	declared := make([]string, 0, len(v.declared))
+	for image := range v.declared {
+		declared = append(declared, image)
+	}
+	sort.Strings(declared)
+	crossed := "none crossed the window"
+	if len(v.tolerated) > 0 {
+		crossed = "tolerated above the threshold: " + byImage(v.tolerated)
+	}
+	return fmt.Sprintf("%s; %s", declaredLoadAdvisory(declared), crossed)
+}
+
+// declaredLoadAdvisory is the one wording every record under a declaration carries.
+func declaredLoadAdvisory(declared []string) string {
+	return "declared background load " + strings.Join(declared, ", ") +
+		" is not counted as foreign CPU load (weaker baseline)"
+}
+
+// byImage renders image -> PIDs groups most numerous first, then by name.
+func byImage(groups map[string]map[int]bool) string {
 	type row struct {
 		image string
 		n     int
 	}
-	rows := make([]row, 0, len(v.offenders))
-	for image, pids := range v.offenders {
+	rows := make([]row, 0, len(groups))
+	for image, pids := range groups {
 		rows = append(rows, row{image, len(pids)})
 	}
 	sort.Slice(rows, func(i, j int) bool {
@@ -187,5 +243,44 @@ func (v *validityWatch) offenderSummary() string {
 	for _, r := range rows {
 		parts = append(parts, fmt.Sprintf("%s x%d", r.image, r.n))
 	}
-	return "foreign CPU load above the validity threshold, by image: " + strings.Join(parts, ", ")
+	return strings.Join(parts, ", ")
+}
+
+// parseDeclaredLoad reads -declared-load: comma-separated executable file names, lower-cased,
+// ".exe" added when no extension is given, deduplicated and sorted. A path, a wildcard or an
+// image of the app under test is refused: a declaration names one foreign program, and the
+// app's own tree is the subject of the audit, never tolerated noise.
+func parseDeclaredLoad(s string, appImages ...string) ([]string, error) {
+	if strings.TrimSpace(s) == "" {
+		return nil, nil
+	}
+	app := map[string]bool{}
+	for _, image := range appImages {
+		if image != "" && image != "." {
+			app[strings.ToLower(image)] = true
+		}
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, part := range strings.Split(s, ",") {
+		name := strings.ToLower(strings.TrimSpace(part))
+		if name == "" {
+			return nil, fmt.Errorf("-declared-load has an empty entry in %q", s)
+		}
+		if strings.ContainsAny(name, `\/:*?"<>|`) {
+			return nil, fmt.Errorf("-declared-load entry %q is not a bare executable file name", strings.TrimSpace(part))
+		}
+		if filepath.Ext(name) == "" {
+			name += ".exe"
+		}
+		if app[name] {
+			return nil, fmt.Errorf("-declared-load entry %q is the app under test; its load is the subject, not noise", name)
+		}
+		if !seen[name] {
+			seen[name] = true
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out, nil
 }

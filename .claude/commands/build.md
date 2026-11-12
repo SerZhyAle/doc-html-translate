@@ -53,14 +53,18 @@ This is the build-granularity record; at release time it feeds the version's "Wh
 line in the next version's "What's new". Use a conventional, user-readable subject:
 `feat: ...` · `fix: ...` · `perf: ...` · `docs: ...` · `refactor: ...` · `chore: ...`.
 
-**Step 5 - Run the build.** This builds the CLI and UI binaries, runs the full gate over that tree,
-and commits (with `DEV/COMMIT_LOG.md` appended):
+**Step 5 - Run the build.** The owner named this run by asking for "сборка", so both binaries are built. It
+builds the CLI and UI binaries, runs the **fast gate tier** over that tree (`check.ps1 -Fast`, every child
+5 s or less - between releases nothing slower runs, AGENTS.md "Build, Test, Lint"), and commits (with
+`DEV/COMMIT_LOG.md` appended):
 
 ```powershell
 ./scripts/build-local.ps1 -Message "<conventional subject>"
 ```
 
 - Build-only smoke test (no commit): `./scripts/build-local.ps1 -NoCommit`.
+- The full gate (the Go and extension suites, minutes) is the release's: `./scripts/build-local.ps1 -Release ..`
+  runs only from `/release` or when the owner names that run. The report says the release tier was not run.
 - Optional real-install test of the Store artifact (still local/free): `./msix/build-msix.ps1 -SelfSign`.
 
 **Step 6 - Read the verdict line, not the scrollback.** The gate ends in `check: PASS` (0),
@@ -70,5 +74,6 @@ stops on it). A clean run with children that did not apply reads `check: PASS (n
 run where every child did not apply reads `check: NOT APPLICABLE (..)` (0, but it proves nothing and
 does not unlock a release). On 1 or 2, read `temp/logs/check-<child>.log`, fix the root cause, rerun. Do not bypass the gate.
 
-**Step 7 - Report.** One line each: what was built, the short commit hash, and "nothing was pushed -
-run `/release` for the published flow". List any follow-ups; do not act on them in this pass.
+**Step 7 - Report.** One line each: what was built, the short commit hash, "the release tier (Go and
+extension suites) was not run - it runs at the release", and "nothing was pushed - run `/release` for the
+published flow". List any follow-ups; do not act on them in this pass.

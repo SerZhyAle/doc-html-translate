@@ -10,8 +10,10 @@ import (
 )
 
 // WINDOWS-UI section 5: the catalog reference records source-derived baseline metrics,
-// not a runtime verdict. Compare its common target floor with the launcher, without
-// importing another toolkit's row widths or claiming the new section 9 frame budgets.
+// not a runtime verdict. Since 0.11 (section 16 A) its MinTarget is one toolkit's snapshot and
+// not a floor for any product's targets - UI-SIZING decides those - so the probe only reports
+// the two numbers side by side, without importing another toolkit's row widths or claiming
+// the section 9 frame budgets.
 //
 // The launcher no longer has a fixed floor: UI-SIZING (ticket 119) replaced it with one token
 // resolver, where the pointer-profile target is --tgt = base * --s and the smallest declared
@@ -60,9 +62,6 @@ func TestWindowsUIReferenceTargetIfAvailable(t *testing.T) {
 			t.Fatalf("invalid --s lower bound %q", scale[1])
 		}
 		got := int(float64(px)*lowest + 0.5)
-		if got < floor {
-			t.Fatalf("launcher compact pointer target %d px is below the reference %d px", got, floor)
-		}
 		t.Logf("WINDOWS-UI reference: MinTarget=%d, launcher compact pointer target=%d; runtime acceptance remains separate", floor, got)
 		return
 	}

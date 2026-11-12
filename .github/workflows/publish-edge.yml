@@ -1,6 +1,7 @@
 # Publish the browser extension to Microsoft Edge Add-ons on an `ext-edge-v*` tag
-# (or a manual dispatch). Independent of Chrome: separate tag, separate run, separate
-# build-time version - pushing an ext-edge-v* tag publishes ONLY to Edge. The first
+# (or a manual dispatch). Independent of Chrome: separate tag, separate run - pushing an
+# ext-edge-v* tag publishes ONLY to Edge. The tag names the version recorded in
+# docs/release-notes.json, and the build stamps exactly that (it stops on any other). The first
 # submission (product creation + listing/screenshots/privacy) is manual in Partner
 # Center to obtain EDGE_PRODUCT_ID; only version updates are automated here. See
 # extension/PUBLISHING.md for the one-time setup and secrets/variables.
@@ -42,6 +43,8 @@ jobs:
           cache-dependency-path: extension/package-lock.json
 
       - name: Install dev deps + build the store ZIP
+        env:
+          EXTENSION_RELEASE_TAG: ${{ github.ref_name }}
         run: |
           npm ci --no-audit --no-fund
           npm run build

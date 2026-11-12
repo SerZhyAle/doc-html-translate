@@ -5,15 +5,20 @@
 .DESCRIPTION
   This is intentionally a checklist-only helper (see DEV/RELEASE.md for the
   canonical definition). It performs ONLY read-only git/file inspection to fill
-  in the current state, then prints every release step with the exact command to
-  run by hand. It NEVER pushes a tag, submits to winget, uploads to the Store, or
-  publishes the extension - so running it can never trigger a paid GitHub CI run
-  or an external publish. You execute each step yourself.
+  in the current state - plus one read-only Store call, the preflight below - then
+  prints every release step with the exact command to run by hand. It NEVER pushes
+  a tag, submits to winget, uploads to the Store, or publishes the extension - so
+  running it can never trigger a paid GitHub CI run or an external publish. You
+  execute each step yourself.
 
-  Its header carries the two verdicts the tag step takes as input: the gate evidence of the last
-  scripts/check.ps1 run (the full default plan, every child passing, on HEAD's tree) and the contract gate (scripts/contract-gate.ps1,
-  read-only; FAIL or UNVERIFIED blocks). Exit code: 0 when both allow the tag, 1 while either
-  blocks it.
+  Its header carries the three verdicts the tag step takes as input: the gate evidence of the last
+  scripts/check.ps1 run (the full default plan - the release tier included, never -Fast - every child passing, on HEAD's tree), the contract gate (scripts/contract-gate.ps1,
+  read-only; FAIL or UNVERIFIED blocks) and the Store preflight (WINDOWS-STORE 0.4 section D, ticket
+  E0132 Part 2: the sza plugin's shared tools/Store-Preflight.ps1, which can only issue
+  `msstore submission get`). The preflight blocks on a pending submission, a package version not
+  greater than the live one, a price that is not Free, or a state it cannot read; an unconfigured
+  channel, a missing or expired credential or a refused token only make the Store step manual and
+  never block. Exit code: 0 when all three allow the tag, 1 while any blocks it.
 
   Steps that cost money / are public are marked [PAID] / [PUBLIC].
 
@@ -22,11 +27,17 @@
   Default: the suggested stamp computed from the current time. Anything that is not a real
   YY.MMDD.HHmm stamp stops the script with exit code 2 before the checklist prints.
 
+.PARAMETER StoreCredentialExpiry
+  Optional expiry date (yyyy-MM-dd) of the Store channel credential, from the owner's expiry list.
+  The preflight treats an expired credential as an unavailable channel (the Store step is manual).
+  Without it the expiry is not checked here; the preflight then relies on the token being refused.
+
 .EXAMPLE
   ./scripts/release.ps1
 #>
 param(
-    [string]$Version
+    [string]$Version,
+    [string]$StoreCredentialExpiry
 )
 
 $ErrorActionPreference = "Stop"
@@ -100,7 +111,7 @@ if (Test-Path -LiteralPath $evidencePath) {
         } elseif ($fullPlan.Count -eq 0) {
             $gateLine = "BLOCKED - configs/check-placement.jsonl records no gate check for scripts/check.ps1, so the full plan is unknown"
         } elseif ($missing -or $extra -or @($ev.children).Count -ne $fullPlan.Count) {
-            $gateLine = "BLOCKED - the last gate ran a partial plan ($(@($ev.children).Count) child check(s)$(if ($missing) { '; missing ' + ($missing -join ', ') })$(if ($extra) { '; not in the gate ' + ($extra -join ', ') })); run scripts/check.ps1 with no -Plan"
+            $gateLine = "BLOCKED - the last gate ran a partial plan ($(@($ev.children).Count) child check(s)$(if ($missing) { '; missing ' + ($missing -join ', ') })$(if ($extra) { '; not in the gate ' + ($extra -join ', ') })); run scripts/build-local.ps1 -Release (the full gate: no -Plan, no -Fast)"
         } elseif ($badChildren) {
             $gateLine = "BLOCKED - a gate child did not pass: $(($badChildren | ForEach-Object verdict) -join '; ')"
         } elseif (@($ev.children | Where-Object { $_.notApplicable }).Count -gt 0) {
@@ -108,9 +119,9 @@ if (Test-Path -LiteralPath $evidencePath) {
             # release that is a check that proved nothing, so it never unlocks the tag step.
             $gateLine = "BLOCKED - a gate child was switched off (NOT APPLICABLE): $((@($ev.children | Where-Object { $_.notApplicable }) | ForEach-Object name) -join ', '); run it for real before the tag"
         } elseif (-not $ev.tree) {
-            $gateLine = "BLOCKED - the last gate recorded no tree$(if ($ev.treeBefore -ne $ev.treeAfter) { ' (the working tree changed while it ran)' }); re-run scripts/build-local.ps1"
+            $gateLine = "BLOCKED - the last gate recorded no tree$(if ($ev.treeBefore -ne $ev.treeAfter) { ' (the working tree changed while it ran)' }); re-run scripts/build-local.ps1 -Release"
         } elseif ($ev.tree -ne $headTree -and (-not $treeDiff -or @($treeDiff | Where-Object { $_ -notin $postGatePaths }))) {
-            $gateLine = "BLOCKED - the last passing gate ran on tree $($ev.tree), HEAD is tree $headTree$(if ($treeDiff) { " (differs in $(@($treeDiff).Count) path(s))" }); re-run scripts/build-local.ps1"
+            $gateLine = "BLOCKED - the last passing gate ran on tree $($ev.tree), HEAD is tree $headTree$(if ($treeDiff) { " (differs in $(@($treeDiff).Count) path(s))" }); re-run scripts/build-local.ps1 -Release"
         } elseif ($dirty) {
             $gateLine = "BLOCKED - the gate matches HEAD, but the working tree has changes the tag would not contain"
         } else {
@@ -122,7 +133,7 @@ if (Test-Path -LiteralPath $evidencePath) {
         $gateLine = "BLOCKED - $evidencePath is unreadable: $($_.Exception.Message)"
     }
 } else {
-    $gateLine = "BLOCKED - no gate evidence ($evidencePath); run scripts/build-local.ps1 first"
+    $gateLine = "BLOCKED - no gate evidence ($evidencePath); run scripts/build-local.ps1 -Release first (a -Fast run writes none)"
 }
 
 # ── contract gate (CONTRACTS section 6) ──────────────────────
@@ -143,6 +154,86 @@ if ($gateCode -in 0, 3) {
     $contractLine = "BLOCKED ($contractWord) - $(if ($gateLast) { $gateLast } else { "contract-gate exited $gateCode" })"
 }
 
+# ── Store preflight (WINDOWS-STORE 0.4 section D, ticket E0132 Part 2) ───────
+# The sza plugin's shared read-only preflight. The only Store call it can make is `msstore submission
+# get <Store ID>`; this script makes no msstore call of its own and writes nothing to the Store. It
+# reads the Store ID from msix/identity.json. Exit 0: the checks passed. Exit 1 blocks the tag step: a
+# pending submission, a package version not greater than the live one, a price that is not Free, or a
+# state it cannot read. Exit 2 does not: the channel is unconfigured, the credential is missing or
+# expired or the token is refused - the Store step stays manual and the release goes on (rule 21). The
+# candidate is the MSIX version of the stamp, mapped as msix/build-msix.ps1 maps it
+# (YY . MMDD . HHmm . 0); change both together.
+function Find-StorePreflight {
+    $roots = @($env:CLAUDE_PLUGIN_ROOT)
+    $record = Join-Path $HOME '.claude/plugins/installed_plugins.json'
+    if (Test-Path -LiteralPath $record) {
+        try {
+            $roots += @((Get-Content -LiteralPath $record -Raw | ConvertFrom-Json).plugins.'sza@sza-unified-rules' | ForEach-Object { $_.installPath })
+        } catch {
+            Write-Verbose "plugin record unreadable, so no preflight tool: $($_.Exception.Message)"
+        }
+    }
+    foreach ($root in $roots) {
+        if (-not $root) { continue }
+        $tool = Join-Path $root 'tools/Store-Preflight.ps1'
+        if (Test-Path -LiteralPath $tool) { return $tool }
+    }
+    return $null
+}
+
+$storeOk = $true
+$storeColor = 'Yellow'
+$storeWhy = ''
+$sv = $Version.Split('.')
+$msixVersion = '{0}.{1}.{2}.0' -f [int]$sv[0], [int]$sv[1], [int]$sv[2]
+$storeTool = Find-StorePreflight
+$storeCode = $null
+$storeEvidence = $null
+if ($storeTool) {
+    $storeArgs = @('-NoProfile', '-File', $storeTool, '-ProductName', 'Doc-HTML-Translate',
+        '-IdentityFile', (Join-Path (Split-Path -Parent $PSScriptRoot) 'msix/identity.json'),
+        '-PackageVersion', $msixVersion, '-Json')
+    if ($StoreCredentialExpiry) { $storeArgs += @('-CredentialExpiry', $StoreCredentialExpiry) }
+    $storeOut = @(& $pwsh @storeArgs *>&1 | ForEach-Object { "$_" })
+    $storeCode = $LASTEXITCODE
+    $storeJsonLine = @($storeOut | Where-Object { $_ -match '^\{.*\}$' }) | Select-Object -Last 1
+    if ($storeJsonLine) {
+        try { $storeEvidence = $storeJsonLine | ConvertFrom-Json } catch { $storeEvidence = $null }
+    }
+}
+# The evidence line carries only the preflight's fixed vocabulary - no identifier, no credential, no address (rule 26).
+$storeAt = if ($storeEvidence -and $storeEvidence.checkedAt) { ([datetime]$storeEvidence.checkedAt).ToString('yyyy-MM-dd HH:mm') } else { Get-Date -Format 'yyyy-MM-dd HH:mm' }
+$storeMode = if ($storeEvidence -and $storeEvidence.mode) { ([string]$storeEvidence.mode) -replace '[^A-Za-z-]', '' } elseif ($storeTool) { 'no-verdict' } else { 'not-run' }
+$storeSlug = if ($storeEvidence -and $storeEvidence.refusal) { ([string]$storeEvidence.refusal) -replace '[^A-Za-z-]', '' } else { '' }
+$storeDetail = ''
+if ($storeEvidence -and $storeEvidence.submission) { $storeDetail += "; submission $(([string]$storeEvidence.submission) -replace '[^A-Za-z-]', '')" }
+if ($storeEvidence -and $storeEvidence.pricing) { $storeDetail += "; price $(([string]$storeEvidence.pricing) -replace '[^A-Za-z-]', '')" }
+$storeNote = "Store preflight ${storeAt}: $storeMode$(if ($storeSlug) { " ($storeSlug)" })$storeDetail; package $msixVersion"
+$storeRefusals = @{
+    'pending-submission'  = 'a submission is already pending or not published'
+    'version-not-greater' = "package version $msixVersion is not greater than the live one"
+    'pricing'             = 'the price is not confirmed Free'
+    'mandatory-update'    = 'a live package carries a mandatory update'
+    'no-live-submission'  = 'the product has no live submission'
+    'state-unreadable'    = 'the submission state could not be read'
+    'identity-file'       = 'msix/identity.json is missing or unusable'
+    'mixed-edit'          = 'a channel-created submission is still open'
+}
+if (-not $storeTool) {
+    $storeLine = 'MANUAL - the shared Store preflight (sza plugin, tools/Store-Preflight.ps1) was not found here; the Store step is manual and the release goes on'
+} elseif ($storeCode -eq 0) {
+    $storeColor = 'Green'
+    $storeLine = "PASS - last published submission, no pending one, price Free, package $msixVersion above every live version ($storeAt)"
+} elseif ($storeCode -eq 2) {
+    $storeLine = "MANUAL - the Store channel is unavailable (CLI missing or unconfigured, credential missing or expired, or token refused); the Store step is manual and the release goes on ($storeAt)"
+} else {
+    $storeOk = $false
+    $storeColor = 'Red'
+    $reason = if ($storeSlug -and $storeRefusals.ContainsKey($storeSlug)) { $storeRefusals[$storeSlug] } elseif ($storeSlug) { "refused ($storeSlug)" } else { "the preflight gave no readable verdict (exit $storeCode)" }
+    $storeLine = "BLOCKED - $reason ($storeAt)"
+    $storeWhy = 'fix what the line names and re-run (an extension-only release pushes no v* tag and is not held by it).'
+}
+
 $extVer = ""
 $extPkg = "extension/package.json"
 if (Test-Path $extPkg) {
@@ -154,7 +245,7 @@ Write-Host ""
 Write-Host "================ RELEASE CHECKLIST (nothing is executed) ================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  branch          : $branch"
-Write-Host ("  working tree    : {0}" -f $(if ($dirty) { "DIRTY - commit/clean first (run scripts/build-local.ps1)" } else { "clean" }))
+Write-Host ("  working tree    : {0}" -f $(if ($dirty) { "DIRTY - commit/clean first (run scripts/build-local.ps1 -Release)" } else { "clean" }))
 Write-Host "  last app tag    : $(if ($lastVer) { $lastVer } else { '(none)' })"
 Write-Host "  last ext tag    : $(if ($lastExt) { $lastExt } else { '(none)' })"
 Write-Host "  app version now : $Version   ->  tag $tag"
@@ -169,6 +260,10 @@ if (-not $contractOk) {
     $why = if ($contractWord -eq 'UNVERIFIED') { 'run the release where the contracts catalog is reachable (AGENTS.md names it)' } else { 'fix what scripts/contract-gate.ps1 names, in the catalog first' }
     Write-Host "                    Do NOT push the tag in step 2: $why." -ForegroundColor Red
 }
+Write-Host ("  store preflight : " + $storeLine) -ForegroundColor $storeColor
+if (-not $storeOk) {
+    Write-Host "                    Do NOT push the v* tag in step 2: $storeWhy" -ForegroundColor Red
+}
 Write-Host ""
 Write-Host "  Legend: [PAID] uses paid GitHub Actions minutes   [PUBLIC] publishes to a store/index" -ForegroundColor DarkGray
 Write-Host ""
@@ -178,8 +273,8 @@ function Cmd([string]$c)                  { Write-Host "      $c" -ForegroundCol
 function Note([string]$c)                 { Write-Host "      - $c" -ForegroundColor DarkGray }
 
 Step "0" "Preflight (local, free)"
-Note "Working tree must be clean and all checks green."
-Cmd  "./scripts/build-local.ps1 -Message ""..."""
+Note "Working tree must be clean and the FULL gate green: the release tier (the Go and extension suites) runs here, not between releases."
+Cmd  "./scripts/build-local.ps1 -Release -Message ""..."""
 Note "Optional real-install smoke test of the Store package:"
 Cmd  "./msix/build-msix.ps1 -SelfSign"
 Write-Host ""
@@ -188,7 +283,7 @@ Step "1" "Docs & site (local commit, free)"
 Note "Update versioned/dated content, then commit:"
 Note "README.md, docs.html / docs.ru.html / docs.uk.html, index.html, extension.html, and the release's record in docs/release-notes.json (then ./scripts/release-notes.ps1 -Render),"
 Note "extension/store/LISTING.md, extension/README.md, DEV/CHANGELOG.md"
-Cmd  "./scripts/build-local.ps1 -Message ""docs: release $Version"""
+Cmd  "./scripts/build-local.ps1 -Release -Message ""docs: release $Version"""
 Write-Host ""
 
 Step "2" "GitHub Release - app binaries  [PAID]"
@@ -227,17 +322,24 @@ Write-Host ""
 
 Step "4" "Windows Store - MSIX  [PUBLIC]"
 Note "Build the UNSIGNED package from the tag (Microsoft re-signs at certification), then upload by hand."
-Note "The identity defaults to the reserved SZA.Doc-HTML-Translate; -Tag refuses unless HEAD is $tag and the tree is clean."
+Note "The identity comes from msix/identity.json (reserved SZA.Doc-HTML-Translate); -Tag refuses unless HEAD is $tag and the tree is clean."
 Note "Not while the installer build of step 2 is running - both rewrite cmd/*/resource.syso."
 Cmd  "./msix/build-msix.ps1 -Tag $tag"
-Note "Upload msix/out/*.msix in Partner Center (no API for create/listing). Details: msix/README.md"
+Note "Upload msix/out/*.msix in Partner Center by hand: the Store has a submission API and the msstore CLI, but this flow makes no write call through either."
+Note "The header's 'store preflight' line is the read-only check before the tag (WINDOWS-STORE 0.4 section D): a pending submission, the version against the live one, the price. An unavailable channel only makes this step manual."
+Note "It does not test a write (none is made), the credential's expiry unless -StoreCredentialExpiry yyyy-MM-dd is passed from the owner's expiry list, the listing, the age rating, or what Partner Center accepts at upload."
+Note "After the tag is pushed, keep the preflight's evidence line in the publish-state (one line per run, no account data):"
+Cmd  "./scripts/release-state.ps1 -Channel Store -Status pending -Note ""$storeNote"""
+Note "Details: msix/README.md"
 Write-Host ""
 
 Step "5" "Chrome / Edge extension  [PAID] [PUBLIC]"
-Note "Chrome and Edge publish INDEPENDENTLY: separate tags, separate build-time versions."
-Note "Chrome -> ext-cws-v* (publish-cws.yml); Edge -> ext-edge-v* (publish-edge.yml). Each CI run does its own npm run build (fresh stamp)."
-Cmd  "git tag ext-cws-v<label>; git push origin ext-cws-v<label>    # Chrome only"
-Cmd  "git tag ext-edge-v<label>; git push origin ext-edge-v<label>  # Edge only"
+Note "Chrome and Edge publish INDEPENDENTLY: separate tags, separate runs. The build stamps the version its tag names and stops on any other."
+Note "Record the version first, so the site shows it: then commit, then tag."
+Cmd  "node extension/build.mjs record-version; ./scripts/release-notes.ps1 -Render"
+Note "Chrome -> ext-cws-v<version> (publish-cws.yml); Edge -> ext-edge-v<version> (publish-edge.yml)."
+Cmd  "git tag ext-cws-v<version>; git push origin ext-cws-v<version>    # Chrome only"
+Cmd  "git tag ext-edge-v<version>; git push origin ext-edge-v<version>  # Edge only"
 Note "Details: extension/PUBLISHING.md"
 Write-Host ""
 
@@ -251,8 +353,9 @@ Write-Host ""
 Write-Host "========================================================================" -ForegroundColor Cyan
 Write-Host "Nothing above was executed. Copy a command to run it. Full doc: DEV/RELEASE.md" -ForegroundColor Green
 
-# Exit 1 while the tag step is blocked (gate evidence not green, or the contract gate at FAIL or
-# UNVERIFIED), so a caller reading the exit code cannot mistake a blocked checklist for a ready one;
-# 0 when both lines allow the tag. The read-only git probes above leave their own codes behind.
-if ($gateOk -and $contractOk) { exit 0 }
+# Exit 1 while the tag step is blocked (gate evidence not green, the contract gate at FAIL or
+# UNVERIFIED, or the Store preflight refusing), so a caller reading the exit code cannot mistake a
+# blocked checklist for a ready one; 0 when all three lines allow the tag. The read-only git probes
+# above leave their own codes behind.
+if ($gateOk -and $contractOk -and $storeOk) { exit 0 }
 exit 1

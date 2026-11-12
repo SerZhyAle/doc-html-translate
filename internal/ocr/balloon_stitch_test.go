@@ -1,11 +1,13 @@
 package ocr
 
-// Regression tests for ticket 67: two speech balloons drawn close enough to touch are stitched into
-// one recognizer line, and the touching outlines are read as tokens of that line, so the stroke test
-// finds nothing between the words - the boundary runs INSIDE the boundary token's box. The split
-// therefore also cuts before a word whose own box stands more than ocrTypeSizeRatio above the line's
-// median word height: a box that tall reaches into a neighbouring row, and no lettering of one line
-// does.
+// Regression tests for ticket 67 and ticket E0128: two speech balloons drawn close enough to touch
+// are stitched into one recognizer line, and the touching outlines are read as tokens of that line,
+// so the stroke test finds nothing between the words - the boundary runs INSIDE the boundary token's
+// box. The split therefore also cuts before a word whose own box stands more than ocrTypeSizeRatio
+// above the line's median word height and which carries no letter or digit: an outline glyph that
+// tall reaches into a neighbouring row, and no lettering of one line does. A tall word that carries
+// a letter is lettering and is never cut by its height (OCR-PIPELINE amendment 1.10 A); the Superman
+// page's own boundary tokens carry letters, which makes that page a known limit of the rule (1.10 C).
 
 import (
 	"context"
@@ -18,9 +20,11 @@ import (
 )
 
 // TestSplitWideGapsCutsWhereTheOutlineIsTheToken reads the shared fixture
-// tests/testdata/ocr_balloon_stitch_cases.json, the word boxes the desktop engine returned for the
-// touching balloons of a public-service Superman page; the extension's ocr-cluster.test.mjs reads
-// the same file.
+// tests/testdata/ocr_balloon_stitch_cases.json: the word boxes the desktop engine returned for the
+// touching balloons of a public-service Superman page (uncut, the known limit), the same row with
+// the outline read as a bare pipe (cut), two honest lines with a tall word that carries a letter or
+// only digits (uncut) and a real line of one size; the extension's ocr-cluster.test.mjs reads the
+// same file.
 func TestSplitWideGapsCutsWhereTheOutlineIsTheToken(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "..", "tests", "testdata", "ocr_balloon_stitch_cases.json"))
 	if err != nil {
@@ -66,45 +70,40 @@ func TestSplitWideGapsCutsWhereTheOutlineIsTheToken(t *testing.T) {
 	}
 }
 
-// TestParseTSVSplitsBalloonsWhoseOutlinesTouch replays the desktop engine's own TSV for the whole
-// Superman page (internal/ocr/testdata/superman_stitch.tsv) through the real parse. Before the
-// tall-token cut the page's middle panel came back as one plate carrying both balloons' words
-// interleaved ("GEE, TH-THANKS, “J OON'T DEPEND SUPERMAN: (T'S A J] ON LUCK! ..."); the page's
-// title banner, the WHEW balloon and the caption's missing lines are the grey sweep's business -
-// its floor and merge were measured on this page (DEV/research/ocr_comic_coverage_2026-09-29.md).
-func TestParseTSVSplitsBalloonsWhoseOutlinesTouch(t *testing.T) {
+// TestParseTSVKeepsBalloonWordsWhereTheOutlinesAreLetters replays the desktop engine's own TSV for
+// the whole Superman page (internal/ocr/testdata/superman_stitch.tsv) through the real parse. Before
+// the tall-token cut the page's middle panel came back as one plate carrying both balloons' words
+// interleaved ("GEE, TH-THANKS, “J OON'T DEPEND SUPERMAN: (T'S A J] ON LUCK! ..."); the cut
+// separated it while it fired on every tall word. Since amendment 1.10 A it fires only on a token
+// with no letter or digit, and this page's two boundary tokens (“J, A) carry letters, so the middle
+// panel is the known limit of the rule (1.10 C) and its first row stays one stitched run. What holds
+// either way - and is what this test pins - is that no word of either balloon is lost on the way to
+// the plates; the page's title banner, the WHEW balloon and the caption's missing lines are the grey
+// sweep's business - its floor and merge were measured on this page
+// (DEV/research/ocr_comic_coverage_2026-09-29.md).
+func TestParseTSVKeepsBalloonWordsWhereTheOutlinesAreLetters(t *testing.T) {
 	tsv, err := os.ReadFile(filepath.Join("testdata", "superman_stitch.tsv"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Paper at the balloons' luma with the two outlines' touching point drawn through: the only
-	// stroke evidence the split asks for, at the x the balloons nearly meet.
+	// Paper at the balloons' luma and no stroke drawn: on the real picture no stroke test finds
+	// anything between the words of either row (ticket E0128 measured the strips), so the cut
+	// points are the ratio rule and the tall-token rule alone.
 	page := paperPage(1010, 1440, 220)
-	fill(page, 250, 560, 253, 740, 0)
 
 	res, err := parseTSV(tsv, ocrMinLineConf, page, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	left := []string{"GEE,", "SUPERMAN:", "LUCKY", "THING"}
-	right := []string{"OON'T", "DEPEND", "LUCK!", "AROUND", "NEXT", "CAREFUL"}
-	hasLeft, hasRight := false, false
+	var plates []string
 	for _, b := range res.Blocks {
-		text := strings.ToUpper(b.Text)
-		l, r := false, false
-		for _, w := range left {
-			l = l || strings.Contains(text, w)
-		}
-		for _, w := range right {
-			r = r || strings.Contains(text, w)
-		}
-		if l && r {
-			t.Errorf("plate %q carries both balloons' words", b.Text)
-		}
-		hasLeft, hasRight = hasLeft || l, hasRight || r
+		plates = append(plates, strings.ToUpper(b.Text))
 	}
-	if !hasLeft || !hasRight {
-		t.Errorf("a balloon did not reach a plate (left %v right %v)", hasLeft, hasRight)
+	all := strings.Join(plates, "\n")
+	for _, w := range []string{"GEE,", "SUPERMAN:", "LUCKY", "THING", "OON'T", "DEPEND", "LUCK!", "AROUND", "NEXT", "CAREFUL"} {
+		if !strings.Contains(all, w) {
+			t.Errorf("the balloons' word %q reached no plate: %q", w, plates)
+		}
 	}
 }
 

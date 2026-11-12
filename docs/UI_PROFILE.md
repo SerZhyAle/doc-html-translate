@@ -27,7 +27,7 @@ after measured proof.
 | Browser extension: image-OCR page, in-page OCR bar | yes | yes | no | no | no | implemented, measured (X1); the bar is isolated from the page it is injected into |
 | Browser extension: reader toolbar | yes (32 / 48; the toolbar, its search panel and the contents tree's chevron buttons) | yes | no - mode toggles are not options | no | no | implemented, measured on an FB2 document (R1, 2026-10-20) |
 | Browser extension: viewer notices, offers, export card, status Cancel | yes (the same 32 / 48 tokens; type from the tokens, never the reader's size) | yes (answers in reading order, one primary at most, neutral faces) | no | no | no | implemented, measured on a CBZ, a Markdown book and a broken PDF (X1, 2026-10-20) |
-| Generated reader chrome (converted book) | yes (32 / 48) | yes | no - mode toggles are not options | no - the table of contents is navigation | no | implemented, measured (R1, 2026-10-20); no size selector is exposed; the Ctrl+wheel page zoom is an open owner decision (section 3, Reader chrome) |
+| Generated reader chrome (converted book) | yes (32 / 48) | yes | no - mode toggles are not options | no - the table of contents is navigation | no | implemented, measured (R1, 2026-10-20); no size selector is exposed (owner decision, section 4); custom Ctrl+wheel zoom removed in slice Z (owner decision Q8, browser zoom takes chord) |
 | Official site | yes (44 fine / 48 coarse) | yes (with `PAGE-STYLE`) | no checkbox exists | yes (`details.sec`) | no - ordinary site navigation is out of scope | implemented in the page layer and measured (W1, 2026-10-20); the theme control's visible label and the kit's own gaps are open (section 6) |
 | CLI | no graphical controls; `--help` is its own help | | | | | not applicable |
 
@@ -94,9 +94,9 @@ the stable group id. Single-topic pages show their controls directly. Collapsed 
 page has four groups, and the design record chooses the plain stacked layout.
 
 **Settings navigation.** The window is a start-side rail and a content pane. Seven pages, one level, in this
-order and by these stable ids: `convert` (the work, the run parameters and - as the first page - the theme and
-the interface language), `ollama`, `ocr`, `windows` (absent in the packaged build), `interface`, `advanced`,
-`about` (last). The rail glyph treatment is **monochrome**, one glyph and one short name per destination. A
+order and by these stable ids: `convert` (the work and the run parameters), `ollama`, `ocr`, `windows` (absent in
+the packaged build), `interface` (the theme, the interface language, the interface and text size, the controls),
+`advanced`, `about` (last). The rail glyph treatment is **monochrome**, one glyph and one short name per destination. A
 window narrower than 60 text-em (about 780 CSS px at the ordinary scale, wider as the interface grows) keeps the
 same menu as a start-side drawer opened from the header's Pages button; choosing a page, the scrim or Escape
 closes it and focus returns to the button. Selecting a page never resizes the window, moves the rail, discards
@@ -158,8 +158,9 @@ dark surface; nothing a page's rules say changes it and nothing it says changes 
 ## 4. Permanent variants (design choices, not exceptions)
 
 - The drop zone is a drop target (section 3).
-- Theme and interface language are the two labelled editors of the first page's header row, not a separate
-  settings page: they are on the first page, once each.
+- Theme and interface language are two labelled editors of the Interface page, once each (owner decision of
+  2026-10-28; `APP-SETTINGS` rule 2 and `SETTINGS-NAVIGATION` 3.1 name the first page, so this is a deviation to
+  record in the catalog registry).
 - Compact mode keeps captions (section 2).
 - The rail is monochrome; no identity-colour table exists.
 - The packaged (Microsoft Store) build has no Windows page: it registers nothing in Windows itself.
@@ -177,22 +178,50 @@ dark surface; nothing a page's rules say changes it and nothing it says changes 
   height; the buttons are all secondary (transparent face, the theme's border) and only the index toolbar's Continue
   reading is primary; the bar is an ordinary Tab row.
 
-Recorded by ticket 120 (2026-10-20, contract sync of 2026-10-17). Each is a supported variant with a review condition, not a
-deadline:
+Owner decisions of 2026-10-30 (ticket 119, questions Q4 to Q6):
+
+- **No size selector in the reader** (`BUTTONS` 8 rule 1: exposing a selector is a product decision). The reader chrome
+  ships the ordinary scale only; the clamp of section 3 is what a later selector would inherit. Review: if a reader
+  settings surface appears.
+- **The quiet button border of the shared reading palette stays** (1.2 to 1.3:1 against the bar). The reader's buttons
+  are secondary with a transparent face; `BUTTONS` 3 rule 6 names the text (4.5:1) and meaningful-glyph (3:1) pairs,
+  and every measured pair passes (section 5). Review: if a reader button takes a filled face or the contract names a
+  border pair.
+- **The extension's help route is its existing "Guide & help" link** - in the popup and as Help on the options page's
+  About - to the product site's extension guide (`extension.html`). The extension has no help pages of its own, no
+  surface `?` button and no F1 (`CONTEXT-HELP` names the desktop launcher; ticket 118 decision 5). Review: if the owner
+  orders help pages for the extension.
+
+Owner decisions of 2026-11-10 (ticket 119, questions Q8 to Q10, slice Z):
+
+- **Custom Ctrl+wheel zoom removed in the Go reader** (Q8; `BUTTONS` 4 rule 7: key and gesture bindings must not override
+  the browser's; Go and extension editions converge, chrome targets keep their CSS size, `dht_zoom` sessionStorage and `?z=`
+  parameters are retired; `Fit width` stays per-session via sessionStorage `dht_fitw` and `?w=`).
+- **Touch naming route for glyph-only buttons** (Q9; `BUTTONS` 8 rule 3): recorded as a dated exception to 2026-12-31 with
+  remediation ticket 119 and catalog proposal `buttons/PROPOSAL-2026-11-10-web-reading-page-touch-naming.md` asking whether
+  an accessible name (`aria-label`) and tooltip (`title`) suffice on a dedicated web reading page; if declined, a long-press
+  discovery route will be built in both editions.
+- **Reader help entry** (Q10; ticket 118 decision 5): confirmed none; the reader keeps no help entry, and the version
+  link opens documentation on the product site.
+
+Recorded by ticket 120 (2026-10-20, contract sync of 2026-10-17), re-read by ticket E0126 against the catalog decisions of 2026-10-29:
 
 - **Escape never closes the launcher** (`APP-SETTINGS` rule 9). The settings surface is the product's main window, so Escape steps
   back one layer (the help bubble or the page drawer, then cancels a run, then does nothing); the close box and Alt+F4 close it. Review:
-  if a separate settings window or a tray surface appears.
+  if a separate settings window or a tray surface appears. Since `APP-SETTINGS` 0.8 this is rule 9 as written, not a variant.
 - **No settings search** (`WINDOWS-UI` 3.5, `APP-SETTINGS` 8). The launcher has seven pages and about thirty editors, each page named by its
   purpose and one rail click away, so every setting is reachable in one page change from a named destination. Review: if the owner reads
-  that as "large", or a page grows past one screen of editors at the ordinary scale.
-- **The window rectangle is written after the window settles, not on close** (`APP-BEHAVIOUR` rule 10). A browser-hosted window has no
-  reliable close event; the page writes the rectangle 800 ms after the last move or resize (one write per burst, never per move event), a
+  that as "large", or a page grows past one screen of editors at the ordinary scale. Since `WINDOWS-UI` 0.11 section 16 B this is the
+  definition of "readily discoverable", not a variant.
+- **The window rectangle is written after the window settles, and flushed once on `pagehide`** (`APP-BEHAVIOUR` rule 10, 0.14). A
+  browser-hosted window has no reliable close event; the page writes the rectangle 800 ms after the last move or resize (one write per burst, never per move event), a
   maximized or full-screen box never overwrites the remembered normal rectangle (`windowFillsScreen`), and a rectangle that no longer lands
-  on a display is clamped to the nearest one. Review: if the shell gains a close hook.
-- **The dialog affirmative is the word "OK" with the `action.confirm` glyph** (`ICON-SET` rung 3; decision D6 of ticket 119). "OK" is the
-  universal dialog answer and the contract's `status.ok` name; the glyph states what the answer does. Review: with the owner's reading of
-  the proposal on text-only answers.
+  on a display is clamped to the nearest one; on `pagehide` it sends the settings once more with `keepalive`. Since 0.14 this is the rule
+  for a browser-hosted window, not a variant.
+- **The notice dialog's single answer is the text-only word "OK"** (`ICON-SET` 0.37 section 22 E; `BUTTONS` section 21 permits a
+  text-only answer). "OK" is the universal dialog answer and the contract's `status.ok` name, and beside the check of `action.confirm`
+  (named "Apply") it is a finding, so the answer draws no glyph (ticket E0122, Q4, 2026-10-30; this replaced the permanent variant of
+  decision D6 of ticket 119). The secret-file dialog's "Open" keeps its `action.confirm` glyph.
 - **Settings destinations show the glyph of the nearest meaning under the destination's own topic name** (`ICON-SET` 2.1 and 2.3;
   `SETTINGS-NAVIGATION` 2.2; decision D4 of ticket 119): the rail and the extension options rail. The catalog has no per-destination
   meanings and no menu or drawer meaning, so the "Pages" drawer button borrows `nav.contents`. Monochrome throughout. Review: when the
@@ -230,20 +259,19 @@ owner's pending pass (ticket 93).
 
 ## 6. Still owed
 
-From the browser extension (slice X1): a help route for the extension's own pages (ticket 118 decision 5), the viewer's password prompt
+From the browser extension (slice X1): the viewer's password prompt
 (the Unlock rank follows the notice rule but no encrypted PDF was measured) and the little-text banners of the EPUB and PDF paths (same
 rule, not opened in the harness), the OCR language and download rows measured with a real
 download (the harness stubs the engine), the extensionless licence files linked from About (a real Chrome may offer them as a download
 instead of showing them), a real installed extension in Chrome or Edge, and the ten machine-translated locales' review of the new strings;
-from the reader chrome (R1) the owner's decision on the Ctrl+wheel page zoom (`BUTTONS` 4 rule 7;
-it also scales the chrome's own targets), the touch naming route for glyph-only buttons (`BUTTONS` 8 rule 3: the tooltip
-is the only route today), an exposed size selector for the reader (the tokens are in place), the viewer's toolbar measured
+from the reader chrome (R1) the owner's decision on the Ctrl+wheel page zoom (Q8, resolved: custom zoom removed in slice Z), the touch naming route for glyph-only buttons (Q9, dated exception to 2026-12-31 and proposal filed), the reader's help route (Q10, confirmed none; version link opens documentation on site), and the viewer's toolbar measured
 on PDF, EPUB and comic loads (only an FB2 document and a stubbed `chrome.*` were measured; the notices were opened on a CBZ,
-a Markdown book and a broken PDF), and the quiet button border of the
-shared palette (1.2 to 1.3:1 against the bar, below the 3:1 of WCAG 1.4.11; the caption and glyph pairs the contract names
-all pass); the site's
-remaining items (the theme control's visible label and its vocabulary glyph, the kit re-vendor to the catalog's
-current reference, the header button below 480 px; the kit-owned ones are the dated proposal
-`product-web-pages/PROPOSAL-2026-10-20-doc-html-translate-kit-ui-contract-gaps.md`), the owner's physical pass, the ten machine-translated locales' review of the new strings, and the
-catalog registry rows (drafted in the ticket's folder; the catalog is edited by the owner). The final date of
-the plan is 2026-12-31.
+a Markdown book and a broken PDF); the site's
+remaining items (the re-vendor of the catalog's current kit `4aba1dee`, which answered the kit-owned gaps of
+`product-web-pages/PROPOSAL-2026-10-20-doc-html-translate-kit-ui-contract-gaps.md` on 2026-10-29 as `PAGE-STYLE` 3.3, with
+the overrides it makes unnecessary dropped from `assets/site.css`, and the theme control's visible label and its
+vocabulary glyph; the header button below 480 px follows the kit's recorded header policy - by the owner's decision of
+2026-10-30 the re-vendor rides the next release's pre-flight together with `node tools/helpgen/generate.mjs` and
+`node tools/uicheck/run.mjs --only site`), the owner's physical pass, the
+ten machine-translated locales' review of the new strings, and the closing proof of the catalog's adoption rows, which
+already describe all four surfaces as `partial`. The final date of the plan is 2026-12-31.

@@ -33,36 +33,51 @@ func main() {
 		os.Exit(1)
 	}
 
+	// os.Exit skips deferred calls, so the run's log is closed inside run, not around it.
+	os.Exit(run(cfg))
+}
+
+// run converts and returns the exit code. The run log's tail is written by its deferred Finish
+// (DIAGNOSTIC-REPORT 4: the middle of an oversized log is dropped, the end is kept), so every way
+// out of this function - a return, a panic of this goroutine - leaves the log complete.
+func run(cfg config.Config) int {
 	logging.AppVersion = Version
 
 	// Keep this run's log on disk so a failure can still be reported an hour later. Every
 	// error here is swallowed on purpose: a store that cannot be written must leave the run
 	// exactly as it was, with nothing said about it.
 	_, _ = report.Trim()
+	finishLog := func() {}
 	if err := os.MkdirAll(report.LogsDir(), 0o755); err == nil {
 		if f, err := os.OpenFile(report.RunLogPath(time.Now(), os.Getpid()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
+			capped := report.CapRunLog(f)
 			logging.SetRunLogFilter(report.Redact)
-			logging.StartRunLog(report.CapRunLog(f))
+			logging.StartRunLog(capped)
+			finishLog = capped.Finish
 			defer func() {
 				logging.StopRunLog()
+				capped.Finish()
 				_ = f.Close()
 			}()
 		}
 	}
 
+	if cfg.InputFile != "" {
+		report.HideDocument(cfg.InputFile)
+	}
 	logging.Printf("doc-html-translate %s\n", Version)
 	application := app.New(cfg)
 	exitCode, err := application.Run()
 	if err != nil {
 		reportFailure(os.Stderr, exitCode, err)
-		// Whoever pressed Ctrl+C is at the console and wants it back, not a pause.
+		// Whoever pressed Ctrl+C is at the console and wants it back, not a pause. The log is
+		// finished first: a console window closed at the prompt ends the process on the spot.
 		if exitCode != app.ExitInterrupted {
+			finishLog()
 			waitOnError()
 		}
-		os.Exit(exitCode)
 	}
-
-	os.Exit(exitCode)
+	return exitCode
 }
 
 // reportFailure prints the error that ended the run and records it in the run log, which the

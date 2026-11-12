@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -133,20 +134,119 @@ func TestRunLogPathSeparatesSameSecondRuns(t *testing.T) {
 	}
 }
 
-func TestCapRunLogStopsAtCapWithMarker(t *testing.T) {
+// numberedLines writes n lines of lineLen bytes each, the first digits of a line being its
+// number, and returns what was written.
+func numberedLines(t *testing.T, w io.Writer, n, lineLen int) string {
+	t.Helper()
+	var all strings.Builder
+	for i := 0; i < n; i++ {
+		line := fmt.Sprintf("%06d ", i) + strings.Repeat("x", lineLen-8) + "\n"
+		if got, err := io.WriteString(w, line); err != nil || got != len(line) {
+			t.Fatalf("write %d: n=%d err=%v, want a silent success", i, got, err)
+		}
+		all.WriteString(line)
+	}
+	return all.String()
+}
+
+// A run that fits the head is on disk as it is written: a process killed mid-run leaves it all.
+func TestCapRunLogWritesTheHeadThrough(t *testing.T) {
 	var buf strings.Builder
 	w := CapRunLog(&buf)
-	line := strings.Repeat("x", 1023) + "\n"
-	for i := 0; i < MaxRunLogBytes/len(line)+10; i++ {
-		if n, err := io.WriteString(w, line); err != nil || n != len(line) {
-			t.Fatalf("write %d: n=%d err=%v, want a silent success", i, n, err)
+	want := numberedLines(t, w, 100, 1024)
+	if buf.String() != want {
+		t.Fatalf("head not written through: %d bytes, want %d", buf.Len(), len(want))
+	}
+	w.Finish()
+	if buf.String() != want {
+		t.Errorf("Finish changed a log that fits: %d bytes, want %d", buf.Len(), len(want))
+	}
+}
+
+// Past the head the lines are held, and a run that still fits head + tail loses nothing.
+func TestCapRunLogKeepsWhatFitsHeadAndTail(t *testing.T) {
+	var buf strings.Builder
+	w := CapRunLog(&buf)
+	want := numberedLines(t, w, 4*1024, 1024) // 4 MiB
+	if buf.Len() >= len(want) {
+		t.Errorf("%d bytes on disk before Finish, want only the head of %d", buf.Len(), len(want))
+	}
+	w.Finish()
+	if buf.String() != want {
+		t.Errorf("a log within head + tail changed: %d bytes, want %d", buf.Len(), len(want))
+	}
+}
+
+func TestCapRunLogCompactsTheMiddleWithMarker(t *testing.T) {
+	var buf strings.Builder
+	w := CapRunLog(&buf)
+	const lineLen = 1024
+	total := 6 * 1024 // 6 MiB, over the cap
+	written := numberedLines(t, w, total, lineLen)
+	w.Finish()
+	out := buf.String()
+
+	if len(out) > MaxRunLogBytes {
+		t.Fatalf("log is %d bytes, cap is %d", len(out), MaxRunLogBytes)
+	}
+	if !strings.HasPrefix(out, written[:RunLogHeadBytes]) {
+		t.Error("the head is not the start of the run")
+	}
+	var dropped, head, tail int
+	i := strings.Index(out, "[Diag] LOG COMPACTED")
+	if i < 0 {
+		t.Fatal("no compaction marker")
+	}
+	marker := out[i : i+strings.Index(out[i:], "\n")+1]
+	if _, err := fmt.Sscanf(marker, "[Diag] LOG COMPACTED | dropped_middle_bytes=%d | kept_head_bytes=%d | kept_tail_bytes=%d\n", &dropped, &head, &tail); err != nil {
+		t.Fatalf("marker %q: %v", marker, err)
+	}
+	if strings.Count(out, "LOG COMPACTED") != 1 {
+		t.Errorf("want exactly one marker, got %d", strings.Count(out, "LOG COMPACTED"))
+	}
+	if head != i || head+dropped+tail != len(written) {
+		t.Errorf("marker numbers do not add up: head=%d (marker at %d) dropped=%d tail=%d, run was %d bytes", head, i, dropped, tail, len(written))
+	}
+	if !strings.HasSuffix(out, written[len(written)-tail:]) || tail > runLogTailBytes {
+		t.Errorf("the tail is not the end of the run (kept_tail_bytes=%d)", tail)
+	}
+	if !strings.HasSuffix(out, fmt.Sprintf("%06d ", total-1)+strings.Repeat("x", lineLen-8)+"\n") {
+		t.Error("the last line of the run is missing")
+	}
+	for _, part := range []string{out[:i], out[i+len(marker):]} {
+		if len(part)%lineLen != 0 {
+			t.Errorf("a line was cut: a part is %d bytes, lines are %d", len(part), lineLen)
 		}
 	}
-	out := buf.String()
-	if len(out) > MaxRunLogBytes+200 {
-		t.Errorf("log grew to %d bytes, cap is %d", len(out), MaxRunLogBytes)
+}
+
+// A line longer than the whole tail cannot be kept, but it is counted, so the marker stays true.
+func TestCapRunLogCountsALineTooLongForTheTail(t *testing.T) {
+	var buf strings.Builder
+	w := CapRunLog(&buf)
+	numberedLines(t, w, 2, 8)
+	huge := strings.Repeat("y", runLogTailBytes+1)
+	_, _ = io.WriteString(w, huge)
+	_, _ = io.WriteString(w, "end\n")
+	w.Finish()
+	want := fmt.Sprintf("[Diag] LOG COMPACTED | dropped_middle_bytes=%d | kept_head_bytes=%d | kept_tail_bytes=4\n", len(huge), 2*8)
+	if !strings.Contains(buf.String(), want) || !strings.HasSuffix(buf.String(), want+"end\n") {
+		t.Errorf("got %q", buf.String()[:min(buf.Len(), 200)])
 	}
-	if strings.Count(out, "[run log cut at") != 1 || !strings.HasSuffix(out, "not recorded]\n") {
-		t.Errorf("want exactly one closing marker, got tail %q", out[len(out)-80:])
+}
+
+func TestCapRunLogFinishIsFinal(t *testing.T) {
+	var buf strings.Builder
+	w := CapRunLog(&buf)
+	numberedLines(t, w, 2*1024, 1024)
+	w.Finish()
+	before := buf.Len()
+	w.Finish()
+	if buf.Len() != before {
+		t.Errorf("a second Finish wrote %d bytes", buf.Len()-before)
+	}
+	_, _ = io.WriteString(w, "after\n")
+	if !strings.HasSuffix(buf.String(), "after\n") {
+		t.Error("a line written after Finish was lost")
 	}
 }

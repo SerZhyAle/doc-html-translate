@@ -1,0 +1,1279 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "screen-gui-page-ocr-ru-light",
+  "origin": "human",
+  "imageWidth": 1160,
+  "imageHeight": 760,
+  "groups": [
+    {
+      "id": "g001",
+      "type": "title",
+      "transcript": "DOC-HTML-UI",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "g001-l1",
+          "kind": "box",
+          "points": [
+            [
+              16,
+              17
+            ],
+            [
+              132,
+              39
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g001-bounds",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g001-replace",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g002",
+      "type": "label",
+      "transcript": "v26.1028.0224",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "g002-l1",
+          "kind": "box",
+          "points": [
+            [
+              141,
+              20
+            ],
+            [
+              218,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g002-bounds",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g002-replace",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g003",
+      "type": "label",
+      "transcript": "SZA.od.ua",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 3,
+      "lines": [
+        {
+          "id": "g003-l1",
+          "kind": "box",
+          "points": [
+            [
+              227,
+              20
+            ],
+            [
+              281,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g003-bounds",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g003-replace",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g004",
+      "type": "label",
+      "transcript": "·",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 4,
+      "lines": [
+        {
+          "id": "g004-l1",
+          "kind": "box",
+          "points": [
+            [
+              286,
+              20
+            ],
+            [
+              290,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g004-bounds",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g004-replace",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g005",
+      "type": "label",
+      "transcript": "Сайт программы",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 5,
+      "lines": [
+        {
+          "id": "g005-l1",
+          "kind": "box",
+          "points": [
+            [
+              295,
+              20
+            ],
+            [
+              389,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g005-bounds",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            389,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g005-replace",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            389,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g006",
+      "type": "label",
+      "transcript": "·",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 6,
+      "lines": [
+        {
+          "id": "g006-l1",
+          "kind": "box",
+          "points": [
+            [
+              394,
+              20
+            ],
+            [
+              397,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g006-bounds",
+        "kind": "box",
+        "points": [
+          [
+            394,
+            20
+          ],
+          [
+            397,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g006-replace",
+        "kind": "box",
+        "points": [
+          [
+            394,
+            20
+          ],
+          [
+            397,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g007",
+      "type": "label",
+      "transcript": "Написать автору",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 7,
+      "lines": [
+        {
+          "id": "g007-l1",
+          "kind": "box",
+          "points": [
+            [
+              402,
+              20
+            ],
+            [
+              495,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g007-bounds",
+        "kind": "box",
+        "points": [
+          [
+            402,
+            20
+          ],
+          [
+            495,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g007-replace",
+        "kind": "box",
+        "points": [
+          [
+            402,
+            20
+          ],
+          [
+            495,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g008",
+      "type": "title",
+      "transcript": "OCR картинок",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 8,
+      "lines": [
+        {
+          "id": "g008-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              52
+            ],
+            [
+              296,
+              74
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g008-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            296,
+            74
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g008-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            296,
+            74
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g009",
+      "type": "label",
+      "transcript": "Конвертация",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 9,
+      "lines": [
+        {
+          "id": "g009-l1",
+          "kind": "box",
+          "points": [
+            [
+              63,
+              58
+            ],
+            [
+              141,
+              76
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g009-bounds",
+        "kind": "box",
+        "points": [
+          [
+            63,
+            58
+          ],
+          [
+            141,
+            76
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g009-replace",
+        "kind": "box",
+        "points": [
+          [
+            63,
+            58
+          ],
+          [
+            141,
+            76
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g010",
+      "type": "label",
+      "transcript": "Распознавание текста на картинках, чтобы перевод дотянулся и до него.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 10,
+      "lines": [
+        {
+          "id": "g010-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              78
+            ],
+            [
+              582,
+              94
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g010-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            582,
+            94
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g010-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            582,
+            94
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g011",
+      "type": "label",
+      "transcript": "Ollama",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 11,
+      "lines": [
+        {
+          "id": "g011-l1",
+          "kind": "box",
+          "points": [
+            [
+              81,
+              92
+            ],
+            [
+              123,
+              110
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g011-bounds",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g011-replace",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g012",
+      "type": "label",
+      "transcript": "Наложить переводимый текст поверх изображений",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 12,
+      "lines": [
+        {
+          "id": "g012-l1",
+          "kind": "box",
+          "points": [
+            [
+              232,
+              118
+            ],
+            [
+              544,
+              136
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g012-bounds",
+        "kind": "box",
+        "points": [
+          [
+            232,
+            118
+          ],
+          [
+            544,
+            136
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g012-replace",
+        "kind": "box",
+        "points": [
+          [
+            232,
+            118
+          ],
+          [
+            544,
+            136
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g013",
+      "type": "label",
+      "transcript": "OCR картинок",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 13,
+      "lines": [
+        {
+          "id": "g013-l1",
+          "kind": "box",
+          "points": [
+            [
+              57,
+              126
+            ],
+            [
+              147,
+              144
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g013-bounds",
+        "kind": "box",
+        "points": [
+          [
+            57,
+            126
+          ],
+          [
+            147,
+            144
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g013-replace",
+        "kind": "box",
+        "points": [
+          [
+            57,
+            126
+          ],
+          [
+            147,
+            144
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g014",
+      "type": "paragraph",
+      "transcript": "Распознаёт текст, впечатанный в изображения (в EPUB/PDF или в отдельном файле-картинке, открытом напрямую), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Отдельная картинка распознаётся автоматически. Нужен установленный Tesseract.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 14,
+      "lines": [
+        {
+          "id": "g014-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              138
+            ],
+            [
+              1118,
+              155
+            ]
+          ]
+        },
+        {
+          "id": "g014-l2",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              155
+            ],
+            [
+              882,
+              172
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g014-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            138
+          ],
+          [
+            1118,
+            172
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g014-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            138
+          ],
+          [
+            1118,
+            172
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g015",
+      "type": "label",
+      "transcript": "Windows",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 15,
+      "lines": [
+        {
+          "id": "g015-l1",
+          "kind": "box",
+          "points": [
+            [
+              75,
+              160
+            ],
+            [
+              129,
+              178
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g015-bounds",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g015-replace",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g016",
+      "type": "label",
+      "transcript": "Интерфейс",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 16,
+      "lines": [
+        {
+          "id": "g016-l1",
+          "kind": "box",
+          "points": [
+            [
+              68,
+              194
+            ],
+            [
+              136,
+              212
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g016-bounds",
+        "kind": "box",
+        "points": [
+          [
+            68,
+            194
+          ],
+          [
+            136,
+            212
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g016-replace",
+        "kind": "box",
+        "points": [
+          [
+            68,
+            194
+          ],
+          [
+            136,
+            212
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g017",
+      "type": "label",
+      "transcript": "Автоматически (по исходному языку)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 17,
+      "lines": [
+        {
+          "id": "g017-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              195
+            ],
+            [
+              507,
+              213
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g017-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            195
+          ],
+          [
+            507,
+            213
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g017-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            195
+          ],
+          [
+            507,
+            213
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g018",
+      "type": "label",
+      "transcript": "Язык OCR:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 18,
+      "lines": [
+        {
+          "id": "g018-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              196
+            ],
+            [
+              237,
+              213
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g018-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            196
+          ],
+          [
+            237,
+            213
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g018-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            196
+          ],
+          [
+            237,
+            213
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g019",
+      "type": "label",
+      "transcript": "Дополнительно",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 19,
+      "lines": [
+        {
+          "id": "g019-l1",
+          "kind": "box",
+          "points": [
+            [
+              54,
+              228
+            ],
+            [
+              150,
+              246
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g019-bounds",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            228
+          ],
+          [
+            150,
+            246
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g019-replace",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            228
+          ],
+          [
+            150,
+            246
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g020",
+      "type": "label",
+      "transcript": "Скачать",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 20,
+      "lines": [
+        {
+          "id": "g020-l1",
+          "kind": "box",
+          "points": [
+            [
+              629,
+              232
+            ],
+            [
+              677,
+              250
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g020-bounds",
+        "kind": "box",
+        "points": [
+          [
+            629,
+            232
+          ],
+          [
+            677,
+            250
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g020-replace",
+        "kind": "box",
+        "points": [
+          [
+            629,
+            232
+          ],
+          [
+            677,
+            250
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g021",
+      "type": "label",
+      "transcript": "Русский",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 21,
+      "lines": [
+        {
+          "id": "g021-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              233
+            ],
+            [
+              331,
+              251
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g021-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            233
+          ],
+          [
+            331,
+            251
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g021-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            233
+          ],
+          [
+            331,
+            251
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g022",
+      "type": "label",
+      "transcript": "Добавить язык:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 22,
+      "lines": [
+        {
+          "id": "g022-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              234
+            ],
+            [
+              265,
+              251
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g022-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            234
+          ],
+          [
+            265,
+            251
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g022-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            234
+          ],
+          [
+            265,
+            251
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g023",
+      "type": "label",
+      "transcript": "О программе",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 23,
+      "lines": [
+        {
+          "id": "g023-l1",
+          "kind": "box",
+          "points": [
+            [
+              61,
+              262
+            ],
+            [
+              143,
+              280
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g023-bounds",
+        "kind": "box",
+        "points": [
+          [
+            61,
+            262
+          ],
+          [
+            143,
+            280
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g023-replace",
+        "kind": "box",
+        "points": [
+          [
+            61,
+            262
+          ],
+          [
+            143,
+            280
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g024",
+      "type": "label",
+      "transcript": "Английский встроен; другие языки скачивайте по необходимости.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 24,
+      "lines": [
+        {
+          "id": "g024-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              264
+            ],
+            [
+              547,
+              281
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g024-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            264
+          ],
+          [
+            547,
+            281
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g024-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            264
+          ],
+          [
+            547,
+            281
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/screens (rendered DOM boxes)",
+    "annotatedOn": "2026-10-30",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

@@ -1,7 +1,7 @@
 # Pointer: APP-SETTINGS
 
 - **Id:** `APP-SETTINGS`
-- **Version:** 0.7 draft
+- **Version:** 0.8 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/APP-SETTINGS.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - the GUI launcher's settings surface (`cmd/doc-html-ui`), adopted 2026-10-05 (ticket 93), read at 0.7 on 2026-10-20 (ticket 120)
 - **Wire carrier:** none - a shipped user-facing surface (the GUI's saved blob is this product's own store, wire: none)
@@ -18,7 +18,8 @@ confirmation with the safe answer focused (section 9). The two Windows registrat
 toggles, not operations. What the rules find here:
 
 - **Rules 1-3:** one surface with a rail of seven pages, About last, opening on the page the user left; the
-  first page carries the interface language and the theme as labelled fields; every setting has its caption,
+  interface language and the theme are labelled fields of the Interface page, not the first page (deviation, see
+  [`../UI_PROFILE.md`](../UI_PROFILE.md) section 4); every setting has its caption,
   control and muted hint, and each page opens with its title and one-line purpose.
 - **Rule 4:** the declared autosave shape above. **Rules 5-6:** the language selector offers all 13 endonyms
   and applies live, including layout direction; the theme offers system, light and dark (default system),
@@ -53,3 +54,5 @@ README flag tables. This is also the inventory `SETTINGS-NAVIGATION` section 6 a
 dictionary and markup gates, and `tools/uicheck` (ticket 119). The stored UI context follows the compatibility
 law: keys by name, an unknown key ignored, an unknown enum to its default, a corrupt file set aside and not
 overwritten, bounded geometry. No catalog vectors exist.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.8.** Rule 9 is amended to what the launcher does - a main-window settings surface steps back one layer on Escape and never closes - so its variant is closed; the no-search variant closes under `WINDOWS-UI` 0.11 section 16 B (each persisted setting sits on one named rail page, `docs/settings-inventory.json`). Rule 1 (second instance) stays a dated exception.

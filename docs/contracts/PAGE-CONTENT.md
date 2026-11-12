@@ -15,7 +15,7 @@ What this repo owes it (the landing `index.html` and the ten locale landings):
   landing item 4).
 - The application icon belongs in the hero identity block; the header carries text only (1.3).
 - The free, key-less path first; paid and metered modes are named after it, never as the first action.
-- Related tools only as contextual body copy (Fast Media Sorter for Windows as a companion); the full family is
+- Related tools only as contextual body copy (Fast Media Sorter & Sharing for Windows as a companion); the full family is
   the footer.
 - Never an invented channel, command or claim; the release link resolves the latest release at run time and
   falls back to `/releases/latest`.
@@ -29,3 +29,5 @@ distribution block.
 
 **Conformance.** No vectors. The rendered page checklist (`tools/sitecheck`), `tools/uicheck --only site` and the
 product-site tests are the evidence.
+
+**Re-read 2026-10-29 (ticket E0126) at 1.5.** The clarification row of 2026-10-29 changes no rule; the related-tool note follows the `SITE-FAMILY-MAP` 1.9 name.

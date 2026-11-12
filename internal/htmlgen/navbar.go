@@ -87,53 +87,10 @@ const navBarCSS = `
 const navBarScript = `
 <script id="dht-zoom-sync">//<![CDATA[
 (function () {
-	var key = "dht_zoom";
-	var min = 50;
-	var max = 300;
-	var step = 10;
-
-	function clamp(value) {
-		if (value < min) return min;
-		if (value > max) return max;
-		return value;
-	}
-
-	function readZoom() {
-		var params = new URLSearchParams(window.location.search);
-		var fromQuery = parseInt(params.get("z"), 10);
-		if (!Number.isNaN(fromQuery)) {
-			return clamp(fromQuery);
-		}
-
-		try {
-			var fromSession = parseInt(sessionStorage.getItem(key), 10);
-			if (!Number.isNaN(fromSession)) {
-				return clamp(fromSession);
-			}
-		} catch (e) {
-			// ignore storage errors
-		}
-
-		return 100;
-	}
-
-	function applyZoom(value) {
-		var zoom = clamp(value);
-		document.documentElement.style.zoom = (zoom / 100).toString();
-		try {
-			sessionStorage.setItem(key, String(zoom));
-		} catch (e) {
-			// ignore storage errors
-		}
-		syncFitwWidth(zoom);
-		return zoom;
-	}
-
-	function hrefWithZoom(rawHref, zoom) {
+	function hrefWithFitw(rawHref) {
 		try {
 			var url = new URL(rawHref, window.location.href);
-			url.searchParams.set("z", String(zoom));
-			// The fit-width choice rides the same link rewriting as the zoom percent, so a
+			// The fit-width choice rides link rewriting so a
 			// multi-file image book keeps its mode from page to page.
 			url.searchParams.set("w", document.documentElement.classList.contains("dht-fitw") ? "1" : "0");
 			return url.href;
@@ -143,16 +100,13 @@ const navBarScript = `
 	}
 
 	// --- Fit width (image-page books, ticket 59) ---
-	// A zoom mode beside the percentage zoom: a comic or a scanned page fills the window's
-	// width without hand-tuning a percent. The choice is per-session like the zoom itself
+	// Comic or scanned pages fill the window's width. The choice is per-session
 	// (sessionStorage, plus the w parameter above) - never a persisted appearance setting.
 	// The toggle button is revealed only where image pages exist (.pdf-page-scan,
 	// section.dht-page); a text book never sees a control that would do nothing.
-	function syncFitwWidth(zoomValue) {
+	function syncFitwWidth() {
 		if (!document.documentElement.classList.contains("dht-fitw")) return;
-		var z = (zoomValue || 100) / 100;
-		if (!z || z <= 0) z = 1;
-		document.documentElement.style.setProperty("--dht-fitw", Math.round(window.innerWidth / z) + "px");
+		document.documentElement.style.setProperty("--dht-fitw", Math.round(window.innerWidth) + "px");
 	}
 
 	function readFitw() {
@@ -170,7 +124,7 @@ const navBarScript = `
 	function applyFitw(on) {
 		document.documentElement.classList.toggle("dht-fitw", on);
 		if (on) {
-			syncFitwWidth(zoom);
+			syncFitwWidth();
 		} else {
 			document.documentElement.style.removeProperty("--dht-fitw");
 		}
@@ -262,7 +216,6 @@ const navBarScript = `
 		return /\.xhtml?(?:[?#]|$)/i.test(href || "");
 	}
 
-	var zoom = applyZoom(readZoom());
 	installImageAspectGuards();
 
 	var fitw = applyFitw(readFitw());
@@ -275,30 +228,17 @@ const navBarScript = `
 	}
 	// A fit-width page tracks the window, not one measured moment.
 	window.addEventListener("resize", function () {
-		syncFitwWidth(zoom);
+		syncFitwWidth();
 	});
 
 	// Legacy guard: if a chapter .xhtml is opened directly, redirect to index.html.
 	if (isLegacyXHTMLHref(window.location.pathname)) {
 		var indexHref = getIndexHref();
 		if (indexHref) {
-			window.location.replace(hrefWithZoom(indexHref, zoom));
+			window.location.replace(hrefWithFitw(indexHref));
 			return;
 		}
 	}
-
-	document.addEventListener("wheel", function (event) {
-		if (!event.ctrlKey) {
-			return;
-		}
-		event.preventDefault();
-
-		if (event.deltaY < 0) {
-			zoom = applyZoom(zoom + step);
-		} else {
-			zoom = applyZoom(zoom - step);
-		}
-	}, { passive: false });
 
 	var links = document.querySelectorAll(".dht-navbar a[href]");
 	links.forEach(function (link) {
@@ -313,12 +253,12 @@ const navBarScript = `
 				event.preventDefault();
 				var idx = getIndexHref();
 				if (idx) {
-					window.location.href = hrefWithZoom(idx, zoom);
+					window.location.href = hrefWithFitw(idx);
 				}
 				return;
 			}
 
-			link.setAttribute("href", hrefWithZoom(rawHref, zoom));
+			link.setAttribute("href", hrefWithFitw(rawHref));
 		});
 	});
 
@@ -451,7 +391,7 @@ var readerCSS = `
   html[data-dht-width] body, html[data-dht-width] main.dht-single { max-width:var(--dht-width); }
   html[data-dht-width] section.dht-page { max-width:var(--dht-width); }
   /* Fit width (ticket 59): an image-page book's pages span the window; --dht-fitw is the
-     zoom-compensated window width the zoom script keeps in sync. The overlay container
+     window width the resize listener keeps in sync. The overlay container
      fills whatever its section measures (width:100%), so plates stay pinned to the art. */
   html.dht-fitw .pdf-page-scan, html.dht-fitw section.dht-page { max-width:none; width:var(--dht-fitw, 100vw); }
   /* The chrome's focus ring draws in the reading theme's accent: the browser default can
@@ -473,7 +413,7 @@ const readerMarker = `<script id="dht-reader">`
 // every page. On chapter pages (self != "") it restores and tracks scroll
 // position and drives the progress bar; on index.html (self == "") it wires up
 // the "Continue reading" link. The theme choice is global and lives in
-// localStorage so it survives across sessions (unlike the zoom sessionStorage).
+// localStorage so it survives across sessions (unlike the fit-width sessionStorage).
 func readerScript(bookKey, self string, idx, total int) string {
 	return fmt.Sprintf(`
 `+readerMarker+`//<![CDATA[
@@ -941,7 +881,7 @@ func injectNavIntoFile(filePath string, nav NavInfo) error {
 
 	content := string(data)
 	// A spine may list one file twice. A second pass would stack a second bar and run the
-	// zoom and reader scripts twice, so a page that already carries the reader is done.
+	// navbar and reader scripts twice, so a page that already carries the reader is done.
 	if strings.Contains(content, readerMarker) {
 		return nil
 	}

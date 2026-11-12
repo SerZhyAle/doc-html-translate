@@ -29,6 +29,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -38,10 +39,13 @@ import (
 
 var updateL10n = flag.Bool("update-l10n", false, "re-stamp every localized site page with the hash of its current English source")
 
-// generatedPage is rendered from one source (docs/release-notes.json) into all three languages at
-// once, so its translations cannot be older than its English and a stamp would only go stale at every
-// release; scripts/release-notes.ps1 holds it against the source instead.
-const generatedPage = "release-notes.html"
+// generatedPages are rendered from one source into all three languages at once, so their
+// translations cannot be older than their English and a stamp would only go stale at every
+// release; the script that renders each holds it against the source instead.
+// release-notes.html: the marked block is rendered by scripts/release-notes.ps1 from
+// docs/release-notes.json. capability-matrix*.html: the whole page is rendered by
+// scripts/capability-matrix.ps1 from docs/capabilities.json (ticket E0130).
+var generatedPages = []string{"release-notes.html", "capability-matrix.html", "capability-matrix.ru.html", "capability-matrix.uk.html"}
 
 var l10nStampRe = regexp.MustCompile(`<!-- l10n-source: (\S+) sha256:([0-9a-f]{16}) -->`)
 
@@ -50,7 +54,7 @@ var l10nStampRe = regexp.MustCompile(`<!-- l10n-source: (\S+) sha256:([0-9a-f]{1
 func l10nSources() map[string]string {
 	m := map[string]string{"docs.ru.html": "docs.html", "docs.uk.html": "docs.html"}
 	for _, p := range inPageTrioPages {
-		if p == generatedPage {
+		if slices.Contains(generatedPages, p) {
 			continue
 		}
 		m[p] = p
@@ -79,7 +83,7 @@ func englishFingerprint(source string) (string, error) {
 func TestSiteTranslationFreshness(t *testing.T) {
 	sources := l10nSources()
 	for _, p := range sitePages() {
-		if _, ok := sources[p]; !ok && p != "docs.html" && p != generatedPage {
+		if _, ok := sources[p]; !ok && p != "docs.html" && !slices.Contains(generatedPages, p) {
 			t.Errorf("%s is served but has no translation source on record; add it to l10nSources", p)
 		}
 	}

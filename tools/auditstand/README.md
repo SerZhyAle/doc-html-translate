@@ -1,6 +1,6 @@
 # auditstand - the deep dynamic audit's measuring stand
 
-The instrument of ticket [113](../../DEV/plan/113_2026-10-11_dynamic-behaviour-audit.md): it
+The instrument of ticket [113](../../DEV/plan/E0113_dynamic-behaviour-audit.md): it
 measures what the built desktop program *does* to the user, the UI thread and the rest of Windows
 while a person uses it - responsiveness, wrapped errors, no system blocking, leaks,
 understandability. The strategic spec owns the why and the budgets; the tactical folder
@@ -17,7 +17,7 @@ From the repository root (PowerShell or a shell with `go` on PATH):
 
     go run ./tools/auditstand -SelfTest
     go run ./tools/auditstand -Fixtures
-    go run ./tools/auditstand -Control
+    go run ./tools/auditstand -Control [-declared-load qemu-system-x86_64.exe]
     go run ./tools/auditstand -BrowserCheck [-allow-key-inject]
     go run ./tools/auditstand -Scene S03 -isolation B-full
     go run ./tools/auditstand -Summary
@@ -37,7 +37,12 @@ From the repository root (PowerShell or a shell with `go` on PATH):
   locks/the validity sampler stalls: the machine is too noisy for scenes that day. Invalid
   attempts persist; a newer invalid control supersedes the earlier valid one that day. Probes that are unavailable are named
   advisories (the window ping needs the app's window; the keyboard-hook probe is behind
-  `-allow-key-inject` and lands with phase 02).
+  `-allow-key-inject` and lands with phase 02). `-declared-load <image[,image..]>` names a
+  background load by executable file name (the owner's qemu VM is the case it exists for): a
+  declared image above the 10% window does not invalidate the control, the record carries
+  `declared_load` and an advisory note, and the verdict is PASS WITH ADVISORIES. Every scene run
+  against that control inherits the declaration and the advisory. A path, a wildcard or the app
+  under test's own image is refused; the flag is refused on any other action.
 - **-BrowserCheck** - step 00.08's verification: pre-launch the instrumented browser (it touches
   the real browser profile - the owner's approval names this step), observe the marker page
   through the debugging port, time an injected key when `-allow-key-inject` is passed,
@@ -96,7 +101,7 @@ are deleted at campaign end - the ticket folder gets verdicts and aggregates onl
     shellnotify_windows.go  P6 shell-notification listener (H11)
     stateprobe.go   P8 state-diff primitives and the H14 toggle verdict
     outputs.go      shared readers of what a CLI run left on disk
-    validity.go     the foreign-load validity rule (names the offending images)
+    validity.go     the foreign-load validity rule (names the offending images, tolerates a declared load)
     slope.go        P5: OLS slope with its 95% confidence band
     record.go       the run-record format
     summary.go      -Summary

@@ -158,18 +158,20 @@ func TestRedactShortensUserProfilePaths(t *testing.T) {
 	if strings.Contains(got, home) {
 		t.Errorf("the home directory survived: %q", got)
 	}
-	if !strings.Contains(got, "War and Peace.epub") {
-		t.Errorf("the document's own name was lost: %q", got)
+	if strings.Contains(got, "War and Peace") || !strings.HasSuffix(got, `\<document>.epub`) {
+		t.Errorf("the document's own name reached the report, or its format was lost: %q", got)
 	}
 }
 
-func TestRedactKeepsDocumentFileNames(t *testing.T) {
+// DIAGNOSTIC-REPORT 8 B: a document file name is user-authored, so the report keeps the format
+// (the extension) and the folder's variable, and not the name.
+func TestRedactHidesDocumentFileNames(t *testing.T) {
 	home := setHome(t)
 
 	in := filepath.Join(home, "Загрузки", "Война и мир.fb2")
 	got := Redact(in)
-	if !strings.Contains(got, "Война и мир.fb2") {
-		t.Errorf("a Cyrillic document name did not survive: %q", got)
+	if strings.Contains(got, "Война") || !strings.HasSuffix(got, `\<document>.fb2`) {
+		t.Errorf("a Cyrillic document name survived, or its format was lost: %q", got)
 	}
 }
 
@@ -202,7 +204,7 @@ func TestRedactProfilePathEncodings(t *testing.T) {
 	for name, path := range paths {
 		t.Run(name, func(t *testing.T) {
 			got := Redact(path)
-			if !strings.Contains(got, "%USERPROFILE%") || !strings.Contains(got, "novel.epub") {
+			if !strings.Contains(got, "%USERPROFILE%") || !strings.Contains(got, "<document>.epub") || strings.Contains(got, "novel") {
 				t.Errorf("Redact(%q) = %q", path, got)
 			}
 			if strings.Contains(got, "Audit User") || strings.Contains(got, "Audit%20User") {

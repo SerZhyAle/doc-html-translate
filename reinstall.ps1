@@ -26,7 +26,7 @@
 
 .PARAMETER IdentityName
   Package/Identity/Name of the self-signed test package. Deliberately not the Store identity
-  (build-msix.ps1's default, SZA.Doc-HTML-Translate), so the test install never collides with
+  (msix/identity.json's IdentityName, SZA.Doc-HTML-Translate), so the test install never collides with
   an installed Store copy.
 
 .EXAMPLE

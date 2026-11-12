@@ -89,14 +89,18 @@ Development key location used in this repo:
 ## Dev Commands
 
 ```powershell
+./scripts/check.ps1 -Fast           # between releases: the gate children of 5 s or less, at once
 ./scripts/build.ps1
-./scripts/test.ps1
+./scripts/test.ps1                   # release tier (about 3.5 minutes)
 ./scripts/lint.ps1
-./scripts/check.ps1
+./scripts/check.ps1                  # the full gate - release tier; build-local.ps1 -Release runs it
 ./scripts/build-installer.ps1        # universal setup.exe (x86 + x64, per-user; needs Inno Setup / ISCC)
 ```
 
-Short aliases are available via `./a.ps1 <cmd>` (e.g. `a ch` = check gate, `a bl` = gated local build,
+Between releases nothing above 5 seconds runs; the rule, the fast and release commands and the measured
+list are in [AGENTS.md](../AGENTS.md) ("Build, Test, Lint").
+
+Short aliases are available via `./a.ps1 <cmd>` (e.g. `a fc` = fast check, `a ch` = full gate, `a bl` = gated local build,
 `a inst` = build the installer, `a c` / `a cc` = quick commit +/- push, `a id` = local MSIX reinstall).
 Run `./a.ps1 help` for the full list.
 

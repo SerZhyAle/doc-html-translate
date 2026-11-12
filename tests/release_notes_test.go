@@ -5,10 +5,10 @@ package tests
 // repository to the same check. A rule no test turns red is a rule nobody knows still works.
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 )
@@ -40,6 +40,7 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 
 	w("docs/release-notes.json", scratchNotesSource(newer, older))
 	w("release-notes.html", scratchNotesPage)
+	w(".sza-canon.json", `{"site":{"pages":["release-notes.html"]}}`)
 	git("add", "-A")
 	git("commit", "-q", "-m", "x")
 	run("a clone with no release tags", 2, "release-notes: COULD NOT VERIFY", "no app release tags")
@@ -103,6 +104,51 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 	w("docs/release-notes.json", `{`)
 	run("a source that is not JSON", 1, "release-notes: FAIL", "")
 
+	// The label's {version}, the landing's block and the extension's version (ticket E0111, F29, F67, F15).
+	w("docs/release-notes.json", strings.Replace(scratchNotesSource(newer, older), `"en":"Downloads"`, `"en":"Downloads for {version}"`, 1))
+	run("-Render names the version in each link", 0, "release-notes: PASS", "", "-Render")
+	if page := readScratch(t, dir, "release-notes.html"); !strings.Contains(page, "Downloads for 26.0201.1000") || !strings.Contains(page, "Downloads for 26.0101.0900") {
+		t.Errorf("the link label does not name its record's version:\n%s", page)
+	}
+	notesWith := func(extra string) string {
+		return strings.Replace(scratchNotesSource(newer, older), `"releases":`, extra+`"releases":`, 1)
+	}
+	w("docs/release-notes.json", scratchNotesSource(newer, older))
+	run("-Render restores the page", 0, "release-notes: PASS", "", "-Render")
+	w(".sza-canon.json", `{"site":{"pages":["release-notes.html","landing.html"]}}`)
+	landing := "<main>\n    <!-- release-notes:begin whatsnew -->\n    <!-- release-notes:end whatsnew -->\n<a>Chrome Web Store<span data-rf=\"extension\"></span></a>\n</main>\n"
+	w("landing.html", landing)
+	w("docs/release-notes.json", notesWith(`"whatsNew":{"en":"New in {version}","ru":"Новое в {version}","uk":"Нове в {version}"},`))
+	run("a page shows the extension's version and the source records none", 1, "release-notes: FAIL", "records none")
+	full := notesWith(`"whatsNew":{"en":"New in {version}","ru":"Новое в {version}","uk":"Нове в {version}"},"extension":{"version":"26.1021.41"},`)
+	w("docs/release-notes.json", full)
+	run("the landing is not rendered yet", 1, "release-notes: FAIL", "its release facts are not the render")
+	run("-Render fills the landing", 0, "release-notes: PASS", "", "-Render")
+	rendered := readScratch(t, dir, "landing.html")
+	for _, want := range []string{`<span data-rf="extension"> v26.1021.41</span>`, `New in 26.0201.1000`, `<ul data-l="ua">`, `<li>Новіше.</li>`} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("the landing's render lacks %q:\n%s", want, rendered)
+		}
+	}
+	if strings.Contains(rendered, "Older.") {
+		t.Errorf("the landing's block holds an older record:\n%s", rendered)
+	}
+	run("a clean second run of the landing", 0, "release-notes: PASS", "")
+	w("landing.html", strings.Replace(rendered, "v26.1021.41", "v9.9.9", 1))
+	run("a version typed by hand beside a store button", 1, "release-notes: FAIL", "its release facts are not the render")
+	w("landing.html", strings.Replace(rendered, "<li>Newer.</li>", "<li>Newer, by hand.</li>", 1))
+	run("the landing's block edited by hand", 1, "release-notes: FAIL", "its release facts are not the render")
+	w("landing.html", rendered)
+	w("docs/release-notes.json", strings.Replace(full, "26.1021.41", "26.0702.1342", 1))
+	run("an extension version the stores refuse", 1, "release-notes: FAIL", "integer shape")
+	w("docs/release-notes.json", notesWith(`"extension":{"version":"26.1021.41"},`))
+	w("landing.html", landing)
+	run("a landing block with no heading in the source", 1, "release-notes: FAIL", "whatsNew.en")
+	w(".sza-canon.json", `{"site":{"pages":["release-notes.html"]}}`)
+	if err := os.Remove(filepath.Join(dir, "landing.html")); err != nil {
+		t.Fatal(err)
+	}
+
 	w("docs/release-notes.json", scratchNotesSource(newer, older))
 	w("release-notes.html", "<main></main>\n")
 	run("a page with no markers", 1, "release-notes: FAIL", "must carry exactly one")
@@ -121,19 +167,25 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 // shape the page and the release flow rely on. The tag half of the check needs the clone's tags, so
 // that half runs in scripts/check.ps1, not here.
 func TestReleaseNotesPageMatchesSource(t *testing.T) {
-	src := readRepoFile(t, "docs", "release-notes.json")
-	versions := regexp.MustCompile(`"version":\s*"([^"]+)"`).FindAllStringSubmatch(src, -1)
-	if len(versions) == 0 {
+	var src struct {
+		Releases []struct {
+			Version string `json:"version"`
+		} `json:"releases"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "docs", "release-notes.json")), &src); err != nil {
+		t.Fatal(err)
+	}
+	if len(src.Releases) == 0 {
 		t.Fatal("docs/release-notes.json holds no release record")
 	}
 	page := readRepoFile(t, "release-notes.html")
-	for _, m := range versions {
-		id := `id="v` + strings.ReplaceAll(m[1], ".", "-") + `"`
+	for _, r := range src.Releases {
+		id := `id="v` + strings.ReplaceAll(r.Version, ".", "-") + `"`
 		if !strings.Contains(page, id) {
 			t.Errorf("release-notes.html lacks the section %s of docs/release-notes.json; run scripts/release-notes.ps1 -Render", id)
 		}
 	}
-	if got := strings.Count(page, `<section class="release"`); got != len(versions) {
-		t.Errorf("release-notes.html has %d release sections, the source has %d records; run scripts/release-notes.ps1 -Render", got, len(versions))
+	if got := strings.Count(page, `<section class="release"`); got != len(src.Releases) {
+		t.Errorf("release-notes.html has %d release sections, the source has %d records; run scripts/release-notes.ps1 -Render", got, len(src.Releases))
 	}
 }

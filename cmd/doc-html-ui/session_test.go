@@ -124,6 +124,8 @@ func TestUIWindowGeometryRestores(t *testing.T) {
 		"x < -30000 || y < -30000",
 		// APP-BEHAVIOUR rule 10: a maximized or full-screen box never overwrites the normal rectangle.
 		"function windowFillsScreen()", "if (windowFillsScreen()) return;",
+		// APP-BEHAVIOUR rule 10 (0.14): one flush on pagehide, carrying the token, outliving the page.
+		"window.addEventListener('pagehide', () => {", "keepalive: true",
 	} {
 		if !strings.Contains(uiHTML, snippet) {
 			t.Errorf("ui.html is missing %q - the window would not reopen where it was", snippet)

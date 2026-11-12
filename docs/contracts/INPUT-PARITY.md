@@ -1,7 +1,7 @@
 # Pointer: INPUT-PARITY
 
 - **Id:** `INPUT-PARITY`
-- **Version:** 0.4 draft
+- **Version:** 0.5 draft
 - **Home:** the shared contracts catalog, `input-controls/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, keyboard and mouse (adopted 2026-09-29, ticket 69; read at 0.4 on 2026-10-20, ticket 120)
 - **Owner:** shared (the keyboard and mouse columns are CyrFlip's; amendments through the catalog page)
@@ -37,10 +37,11 @@ page, next and previous, search, cancel and help.
 
 **`INPUT-CHORD` is a scoped decline (re-checked at 0.4 on 2026-10-20).** The product stores, captures and binds
 no chord - no remapping setting, no global hook, no chord token parsed or written. It does *show* chords in
-tooltips (`Ctrl+Enter`, `Esc`, `Ctrl+Shift+F`, `Ctrl+F`) in the canonical Latin names, with one miss: the French
-cancel tooltip says `Échap`. Whether a displayed chord binds rule 5 is asked of the owner (`input-controls`
-proposal file of 2026-10-20, item 2). The catalog registry carries a not-applicable row for it.
+tooltips (`Ctrl+Enter`, `Esc`, `Ctrl+Shift+F`, `Ctrl+F`) in the canonical Latin names. Since 0.5 (item D) a displayed
+chord binds rule 5 and nothing else; the registry row reads 0.5 for that rule (see the re-read below).
 
 **Conformance.** No vectors are consumed (the chord vectors are not read: no chord token exists here). The
 shortcut table and the arrow-key walkers are pinned by the GUI's own tests; focus visibility by
 `TestFocusRingIsNeverSuppressed`.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.5, with `INPUT-CHORD` 0.5.** `INPUT-PARITY` items F-H: nothing owed - the readers keep page, next/previous, search and cancel, `help` = F1 is the GUI's and the readers have no help surface. `INPUT-CHORD` item D answers the question above: a chord that is only shown follows rule 5 and owes nothing else, so the decline narrows to everything but display. The French cancel tooltip now reads `Esc`, and on macOS the reader and extension search tooltips show `⌘+F`.

@@ -92,6 +92,28 @@ func run(mode string, args []string) int {
 		return leak(4)
 	case "io":
 		return leak(5)
+	case "destination-name":
+		// FDSEC-BEHAVIOUR 1.7 section 19: the human-readable (leaking) line first, then the closed
+		// token on a line of its own, with the CRLF a Windows FileDO writes, beside exit 5.
+		leak(5)
+		fmt.Fprint(os.Stderr, "reason=destination-name\r\n")
+		return 5
+	case "destination-name-near":
+		// Lines that only look like the token: none of them may be read as it.
+		leak(5)
+		for _, l := range []string{
+			"Reason=destination-name", "reason=destination-name ", " reason=destination-name",
+			"reason=destination-name2", "reason=destination", "x reason=destination-name",
+			"error: reason=destination-name",
+		} {
+			fmt.Fprintln(os.Stderr, l)
+		}
+		return 5
+	case "destination-name-code":
+		// The token beside another exit code is not the destination cause.
+		leak(4)
+		fmt.Fprintln(os.Stderr, "reason=destination-name")
+		return 4
 	case "unsupported":
 		return leak(6)
 	case "crash":

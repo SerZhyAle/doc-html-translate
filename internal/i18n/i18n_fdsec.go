@@ -287,6 +287,20 @@ func init() {
 		"%s کھولنا منسوخ کر دیا گیا - کچھ تبدیل نہیں ہوا۔",
 		"已取消打开 %s - 未转换任何内容。")
 
+	Add("FileDO opened %s, but this computer's file system cannot create the file name sealed inside it (a reserved, too long or otherwise not allowed name). Nothing was converted and the original was not changed. To restore it under another name, open it with FileDO itself.",
+		"FileDO открыл %s, но файловая система этого компьютера не может создать имя файла, запечатанное внутри (зарезервированное, слишком длинное или иным образом недопустимое имя). Ничего не преобразовано, исходный файл не изменён. Чтобы восстановить его под другим именем, откройте его самим FileDO.",
+		"FileDO відкрив %s, але файлова система цього комп'ютера не може створити ім'я файлу, запечатане всередині (зарезервоване, надто довге або з іншої причини недопустиме ім'я). Нічого не перетворено, вихідний файл не змінено. Щоб відновити його під іншим іменем, відкрийте його самим FileDO.",
+		"FileDO hat %s geöffnet, aber das Dateisystem dieses Computers kann den darin versiegelten Dateinamen nicht anlegen (ein reservierter, zu langer oder anderweitig unzulässiger Name). Es wurde nichts konvertiert, und das Original wurde nicht verändert. Um die Datei unter einem anderen Namen wiederherzustellen, öffnen Sie sie mit FileDO selbst.",
+		"FileDO ha aperto %s, ma il file system di questo computer non può creare il nome di file sigillato al suo interno (un nome riservato, troppo lungo o comunque non consentito). Non è stato convertito nulla e l'originale non è stato modificato. Per ripristinarlo con un altro nome, aprilo con FileDO stesso.",
+		"FileDO abrió %s, pero el sistema de archivos de este equipo no puede crear el nombre de archivo sellado en su interior (un nombre reservado, demasiado largo o no permitido por otro motivo). No se convirtió nada y el original no se modificó. Para restaurarlo con otro nombre, ábrelo con el propio FileDO.",
+		"FileDO a ouvert %s, mais le système de fichiers de cet ordinateur ne peut pas créer le nom de fichier scellé à l'intérieur (un nom réservé, trop long ou autrement interdit). Rien n'a été converti et l'original n'a pas été modifié. Pour le restaurer sous un autre nom, ouvrez-le avec FileDO lui-même.",
+		"O FileDO abriu %s, mas o sistema de arquivos deste computador não consegue criar o nome de arquivo selado dentro dele (um nome reservado, longo demais ou não permitido por outro motivo). Nada foi convertido e o original não foi alterado. Para restaurá-lo com outro nome, abra-o no próprio FileDO.",
+		"فتح FileDO الملف %s، لكن نظام الملفات في هذا الكمبيوتر لا يستطيع إنشاء اسم الملف المختوم بداخله (اسم محجوز أو أطول من اللازم أو غير مسموح به لسبب آخر). لم يُحوَّل شيء ولم يتغيّر الأصل. لاستعادته باسم آخر، افتحه بـ FileDO نفسه.",
+		"FileDO ने %s को खोल लिया, लेकिन इस कंप्यूटर की फ़ाइल प्रणाली उसके अंदर सील किया गया फ़ाइल नाम नहीं बना सकती (आरक्षित, बहुत लंबा या किसी और कारण से अस्वीकार्य नाम)। कुछ भी रूपांतरित नहीं हुआ और मूल फ़ाइल नहीं बदली गई। इसे दूसरे नाम से बहाल करने के लिए इसे सीधे FileDO में खोलें।",
+		"FileDO %s খুলেছে, কিন্তু এই কম্পিউটারের ফাইল সিস্টেম এর ভেতরে সিল করা ফাইলের নামটি তৈরি করতে পারছে না (সংরক্ষিত, খুব লম্বা বা অন্য কোনো কারণে অননুমোদিত নাম)। কিছুই রূপান্তরিত হয়নি এবং মূল ফাইল বদলানো হয়নি। অন্য নামে পুনরুদ্ধার করতে এটি সরাসরি FileDO দিয়ে খুলুন।",
+		"FileDO نے %s کھول لی، لیکن اس کمپیوٹر کا فائل سسٹم اس کے اندر سیل کیا ہوا فائل نام نہیں بنا سکتا (محفوظ شدہ، بہت لمبا یا کسی اور وجہ سے ناقابلِ قبول نام)۔ کچھ بھی تبدیل نہیں ہوا اور اصل فائل میں کوئی تبدیلی نہیں ہوئی۔ اسے دوسرے نام سے بحال کرنے کے لیے اسے براہِ راست FileDO میں کھولیں۔",
+		"FileDO 已打开 %s，但这台电脑的文件系统无法创建其中封存的文件名（保留名称、过长或其他不允许的名称）。未转换任何内容，原文件未被更改。如需以其他名称还原，请直接用 FileDO 打开它。")
+
 	Add("FileDO stopped unexpectedly while opening %s.",
 		"FileDO неожиданно остановился при открытии %s.",
 		"FileDO несподівано зупинився під час відкриття %s.",

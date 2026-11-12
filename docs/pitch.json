@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "$comment": "The pitch catalog (ticket E0130, owner quiz 2026-11-10): the approved wording of the product story, one string per touchpoint, in the author languages. House-style repairs applied to the owner's catalog of 2026-11-09 (plain hyphen for the em dash, the mangled uk title 'Конвертер тарідер' repaired to 'конвертер і ридер'); the strings were accepted as the single copy source with no separate copy pass. The titles drop the template's 'for Windows' - the site's SEO gate caps a title at 60 characters, and the platform stands in the meta description and the operatingSystem facts. tests/site_pitch_test.go holds the landing surfaces against this file. The hub-card string is catalogued here as the approved wording but is applied on the hub (sza.od.ua) by the hub's own ticket - it is never edited here.",
+  "touchpoints": {
+    "title": "The product title on the landing head (<title>, og:title, twitter:title) and the title the page's own strings rewrite it to, on index.html and the ru and uk landings.",
+    "short_pitch": "The one-sentence pitch a store summary or a README lead opens with.",
+    "hub_card_description": "The SZA hub card's product description (applied on the hub, not here).",
+    "hero_tagline": "The landing hero tagline under the h1; its first sentence is the h1 itself."
+  },
+  "strings": {
+    "en": {
+      "title": "doc-html-translate - document converter and reader",
+      "short_pitch": "Turn books and documents into local HTML pages for instant reading and browser translation.",
+      "hub_card_description": "Convert EPUB, PDF, MOBI, FB2, comics and scanned images into clean local HTML. Read, search and translate in your browser - no API keys required. Desktop GUI, CLI and a Chromium extension.",
+      "hero_tagline": "Turn any book, document or comic into a local web page. Read it, search it and translate it with your browser's native engine - free, private, no keys required."
+    },
+    "ru": {
+      "title": "doc-html-translate - конвертер и ридер документов",
+      "short_pitch": "Превращение книг и документов в локальные HTML-страницы для чтения и перевода в браузере.",
+      "hub_card_description": "Конвертация EPUB, PDF, MOBI, FB2, комиксов и сканов в чистый локальный HTML. Чтение и перевод в браузере без API-ключей. Поддержка GUI, CLI и расширения Chromium.",
+      "hero_tagline": "Превращайте книги, документы и комиксы в локальные веб-страницы. Читайте, ищите и переводите встроенным движком браузера - бесплатно, приватно, без ключей."
+    },
+    "uk": {
+      "title": "doc-html-translate - конвертер і ридер документів",
+      "short_pitch": "Перетворення книжок і документів на локальні HTML-сторінки для читання та перекладу в браузері.",
+      "hub_card_description": "Конвертація EPUB, PDF, MOBI, FB2, коміксів та сканів у чистий локальний HTML. Читання та переклад у браузері без API-ключів. Підтримка GUI, CLI та розширення Chromium.",
+      "hero_tagline": "Перетворюйте книжки, документи та комікси на локальні веб-сторінки. Читайте, шукайте та перекладайте вбудованим рушієм браузера - безкоштовно, приватно, без ключів."
+    }
+  }
+}

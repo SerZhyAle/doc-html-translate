@@ -6,12 +6,14 @@
   One entry point for the build concept defined in DEV/RELEASE.md:
     1. build.ps1   - doc-html-translate.exe (CLI, icon + version embedded)
     2. build-ui.ps1 - doc-html-ui.exe (GUI launcher)
-    3. check.ps1   - the full quality gate (tests, lint, typos, ..)
+    3. check.ps1   - the gate: the fast tier (check.ps1 -Fast, every child 5 s or less) by default,
+                     the full gate (the Go and extension suites included) with -Release
     4. commit      - if the gate passed and there are changes, commit on the
                      current branch and append to DEV/COMMIT_LOG.md
 
-  The builds run before the gate on purpose: they rewrite tracked files (the two build/*.exe and
-  the generated icons), so building after the gate would leave HEAD on a tree the gate never read
+  The builds run before the gate on purpose: they rewrite tracked files (the generated icons; the
+  two build/*.exe are ignored - the release asset is the only published binary), so building after
+  the gate would leave HEAD on a tree the gate never read
   and scripts/release.ps1 could never go green. The gate's tree is then the commit's tree; the one
   path that changes after it is DEV/COMMIT_LOG.md, which needs the commit's hash and which
   release.ps1 allows by name.
@@ -25,15 +27,25 @@
 .PARAMETER NoCommit
   Run the gate + both builds but stop before committing (build-only smoke test).
 
+.PARAMETER Release
+  Run the full gate instead of the fast tier. Only a full-gate run writes temp/logs/gate-evidence.json,
+  which scripts/release.ps1 takes as the input of the tag step, so the release pre-flight and the
+  release's docs commit go through -Release. Between releases the full suites do not run (canon
+  TESTING_AND_QA section 2).
+
 .EXAMPLE
   ./scripts/build-local.ps1 -Message "fix: navbar position on index"
 
 .EXAMPLE
   ./scripts/build-local.ps1 -NoCommit
+
+.EXAMPLE
+  ./scripts/build-local.ps1 -Release -Message "docs: release 26.1101.1200"
 #>
 param(
     [string]$Message,
-    [switch]$NoCommit
+    [switch]$NoCommit,
+    [switch]$Release
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,8 +71,13 @@ try {
 }
 
 # ── Step 3: quality gate, over the tree the commit will hold ─
-Write-Host "== [3/4] check (the full gate) ==" -ForegroundColor Cyan
-./scripts/check.ps1
+if ($Release) {
+    Write-Host "== [3/4] check (the full gate, -Release) ==" -ForegroundColor Cyan
+    ./scripts/check.ps1
+} else {
+    Write-Host "== [3/4] check (the fast tier; the full gate runs with -Release) ==" -ForegroundColor Cyan
+    ./scripts/check.ps1 -Fast
+}
 # check.ps1 speaks CHECK-VERDICT: 0 pass, 3 pass with advisories (parity drift, named above),
 # 1 fail, 2 could not verify. Only the first two may be committed on: "could not verify" is not a
 # pass, however green the rest of the output looks.

@@ -15,21 +15,21 @@
   <meta property="og:locale:alternate" content="ru_RU">
   <meta property="og:locale:alternate" content="uk_UA">
   <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/docs.html">
-  <meta property="og:title" content="Doc-HTML-Translate Documentation">
+  <meta property="og:title" content="doc-html-translate Documentation">
   <meta property="og:description" content="Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.">
   <meta property="og:image" content="https://serzhyale.github.io/doc-html-translate/assets/social-card-1200x630.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="doc-html-translate logo and the line: turn any book, document or comic into a local web page, then translate it with your browser">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Doc-HTML-Translate Documentation">
-  <meta name="twitter:description" content="Install, usage, flags, and the recommended free Chrome translation workflow.">
+  <meta name="twitter:title" content="doc-html-translate Documentation">
+  <meta name="twitter:description" content="Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.">
   <meta name="twitter:image" content="https://serzhyale.github.io/doc-html-translate/assets/social-card-1200x630.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "Doc-HTML-Translate Documentation",
+    "headline": "doc-html-translate Documentation",
     "url": "https://serzhyale.github.io/doc-html-translate/docs.html",
     "inLanguage": "en",
     "description": "Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.",
@@ -64,7 +64,7 @@
     .copybox .cmt{color:var(--muted)}
     .small{color:var(--muted);font-size:.88rem}
   </style>
-  <title>Doc-HTML-Translate Documentation</title>
+  <title>doc-html-translate Documentation</title>
   <meta name="description" content="Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.">
 </head>
 <body>
@@ -150,10 +150,11 @@
     </div>
 
     <section id="reference">
+      <h2>Reference</h2>
       <div class="sec-tools"><button class="btn btn-ghost btn-sm" type="button" data-sec="open">Expand all</button><button class="btn btn-ghost btn-sm" type="button" data-sec="close">Collapse all</button></div>
 
       <details class="sec" id="formats">
-        <summary><span class="secnum">01</span>Supported Formats</summary>
+        <summary><span class="secnum">01</span><h3>Supported Formats</h3></summary>
         <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3, and CBZ/CBR/CB7/CBT comics. A reasonable spread, if we say so ourselves.</p>
         <div class="pills"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">TXT</span><span class="pill">Markdown</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">HTML</span><span class="pill">MOBI / AZW3</span><span class="pill">CBZ / CBR / CB7 / CBT</span></div>
         <p>Also <strong>comic archives</strong> (CBZ / CBR / CB7 / CBT): a container of page images with no text layer, opened page by page with OCR forced on, so the speech-bubble text is recognized and laid over each page as translatable plates. CBZ and CBT need nothing extra; CBR and CB7 require <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> installed (the same external-tool pattern as MOBI needing Calibre).</p>
@@ -164,12 +165,12 @@
       </details>
 
       <details class="sec" id="reading">
-        <summary><span class="secnum">02</span>Reading Experience</summary>
+        <summary><span class="secnum">02</span><h3>Reading Experience</h3></summary>
         <p>The generated HTML carries a small, fully client-side reader layer - no server to babysit, works happily on <code>file://</code>:</p>
         <ul>
           <li><strong>Reading themes</strong> - a toggle in the navbar (and on <code>index.html</code>) cycles Light / Sepia / Dark / Night. Your choice is stored in <code>localStorage</code> and applied on every page.</li>
           <li><strong>Reading position</strong> - your scroll is saved per book, so the app remembers where you stopped even when you don't. <code>index.html</code> shows a "Continue reading" link to the last page you were on, and the navbar carries a thin progress bar across the whole book - one that reads as a percentage on hover or keyboard focus.</li>
-          <li><strong>Reading comfort</strong> - line spacing and column width are selects in the same navbar, remembered with your theme and applied only once you pick one. A night-mode button swaps the light and dark themes in one click, a reset button returns the text size to its default, and the arrow keys and space bar turn pages at the scroll edges, just like PageUp/PageDown. Comics and scanned pages gain a per-session <strong>Fit width</strong> mode beside the Ctrl+wheel zoom, so a page fills the window without hand-tuning a percentage.</li>
+          <li><strong>Reading comfort</strong> - line spacing and column width are selects in the same navbar, remembered with your theme and applied only once you pick one. A night-mode button swaps the light and dark themes in one click, a reset button returns the text size to its default, and the arrow keys and space bar turn pages at the scroll edges, just like PageUp/PageDown. Comics and scanned pages gain a per-session <strong>Fit width</strong> mode, so a page fills the window without hand-tuning a percentage.</li>
           <li><strong>Search</strong> - the navbar's search panel finds a phrase on this page or across the whole book, and <kbd>Ctrl</kbd>+<kbd>F</kbd> opens it with the field focused (pressed again inside the field, it gives way to the browser's own find bar); multi-page output ships a local text index, so whole-book search works on <code>file://</code>. Results list context lines and the chosen match is highlighted; recognized OCR text over images is searchable where recognition produced it - image-only pages have no text to match.</li>
           <li><strong>Spending guard</strong> - for paid engines, <code>-max-cost N</code> turns the cost estimate (chars / 1e6 * $20) into a hard pre-flight limit: if the estimate exceeds N, translation is skipped and the book is still produced untranslated.</li>
         </ul>
@@ -177,7 +178,7 @@
       </details>
 
       <details class="sec" id="external-tools">
-        <summary><span class="secnum">03</span>Optional External Tools</summary>
+        <summary><span class="secnum">03</span><h3>Optional External Tools</h3></summary>
         <p>The app works out of the box for EPUB, TXT, FB2, RTF, HTML, Markdown. The tools below are strictly optional - install them only if you want full PDF image support and the extra formats.</p>
         <div class="table-wrap">
           <table>
@@ -216,7 +217,7 @@
       </details>
 
       <details class="sec" id="flags">
-        <summary><span class="secnum">04</span>Main Flags</summary>
+        <summary><span class="secnum">04</span><h3>Main Flags</h3></summary>
         <p class="small">All optional. The defaults are sensible, so you can ignore this whole table until you have an opinion.</p>
         <div class="table-wrap">
           <table>
@@ -228,6 +229,10 @@
               <tr><td><code>-noopen</code></td><td>false</td><td>Do not auto-open browser</td></tr>
               <tr><td><code>-google</code></td><td>false</td><td>Google Cloud Translation API (needs a saved API key; paid, so see <code>-max-cost</code>)</td></tr>
               <tr><td><code>-ollama</code></td><td>false</td><td>Local Ollama translation (needs a running local Ollama service with the chosen model)</td></tr>
+              <tr><td><code>-free</code></td><td>false</td><td>Alias of <code>-ollama</code></td></tr>
+              <tr><td><code>-ollama-model</code></td><td>gemma3:12b</td><td>Ollama model name</td></tr>
+              <tr><td><code>-ollama-parallel</code></td><td>1</td><td>Parallel batch requests</td></tr>
+              <tr><td><code>-ollama-ctx</code></td><td>8192</td><td>Ollama context size</td></tr>
               <tr><td><code>-ocr</code></td><td>false</td><td>OCR text inside document images and overlay it as translatable HTML (needs Tesseract)</td></tr>
               <tr><td><code>-ocr-lang</code></td><td>(-src)</td><td>OCR language(s), e.g. eng or eng+rus. Left empty it defaults from -src (else eng), and the app then checks the writing system on the page: where the data for it is installed the language is added rather than replaced (rus+eng), and where it is not the page gets no text plates and a line naming the pack to install. Pass this flag and that check never runs</td></tr>
               <tr><td><code>-ocr-langs</code></td><td>false</td><td>List installed/available OCR languages and exit</td></tr>
@@ -235,6 +240,7 @@
               <tr><td><code>-max-cost</code></td><td>0</td><td>Abort paid translation before sending if the estimated cost in USD exceeds N. When in doubt, 0 (no limit) is a perfectly respectable choice</td></tr>
               <tr><td><code>-split</code></td><td>5000</td><td>Split pages at N chars, 0 disables split</td></tr>
               <tr><td><code>-toc-depth</code></td><td>0</td><td>Table-of-contents nesting depth on index.html, 0 = unlimited, 1 = chapters only</td></tr>
+              <tr><td><code>-multipage</code></td><td>false</td><td>Produce multiple HTML pages with a table of contents instead of the default single page</td></tr>
               <tr><td><code>-folder</code></td><td>empty</td><td>Custom output parent folder</td></tr>
               <tr><td><code>-src</code></td><td>en</td><td>Source language</td></tr>
               <tr><td><code>-dst</code></td><td>ru</td><td>Target language</td></tr>
@@ -245,6 +251,8 @@
               <tr><td><code>-register-openwith</code></td><td>false</td><td>Add the app to the Windows "Open with" list and the <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>"Convert to HTML" right-click menu, without making it the default handler. The doc-html-ui app offers the same as a toggle under "Windows integration" and on its first-run question; it never adds it on its own.</td></tr>
               <tr><td><code>-report</code></td><td>false</td><td>Pack the recent run logs plus an environment summary into an archive for the author, print where it landed, and exit</td></tr>
               <tr><td><code>-fdsec-password-env</code></td><td>(empty)</td><td>For a FileDO secret file (<code>.fd-sec</code>): the <strong>name</strong> of an environment variable that holds its password, for unattended runs - never the password itself. The console and the app window ask for the password instead.</td></tr>
+              <tr><td><code>-v</code></td><td>false</td><td>Verbose output</td></tr>
+              <tr><td><code>-version</code></td><td>false</td><td>Print version and exit</td></tr>
             </tbody>
           </table>
         </div>
@@ -253,7 +261,7 @@
       </details>
 
       <details class="sec" id="logs">
-        <summary><span class="secnum">05</span>Send the logs of a failed conversion to the author</summary>
+        <summary><span class="secnum">05</span><h3>Send the logs of a failed conversion to the author</h3></summary>
         <p>When a conversion goes wrong, a description from memory is rarely enough to reproduce it. The app keeps its recent run logs on disk - up to 20 runs or 20 MB, oldest trimmed first - so you can pack them into one archive for the author, even an hour later or after a crash.</p>
         <dl class="req">
           <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span><span class="pill">Microsoft Store app</span><span class="pill">Browser extension</span></span></dd>
@@ -265,22 +273,23 @@
           </li>
           <li>Attach the archive to that message and press Send. The app never sends anything itself.</li>
         </ol>
-        <p>The archive is written to <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> and contains exactly three things:</p>
+        <p>The archive is written to <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> and contains exactly four things:</p>
         <ul>
-          <li><strong>environment.txt</strong> - version, edition, platform, interface language, whether Tesseract was found and which OCR languages are installed, and the default Ollama model, plus a "logs left out" line with their number when the size limit kept some run logs out of the archive. Always English, so the author reads one format.</li>
-          <li><strong>settings.json</strong> - the settings that shaped the last run.</li>
-          <li><strong>logs/</strong> - the recent run logs, newest first.</li>
+          <li><strong>environment.txt</strong> - the facts a program can read, one <code>KEY=value</code> line each: a schema version, the version, edition, platform, interface language, whether Tesseract was found and which OCR languages are installed, and the default Ollama model, plus a <code>logs_left_out</code> line with their number when the size limit kept some run logs out of the archive. Always English, so the author reads one format.</li>
+          <li><strong>report.txt</strong> - the same facts as labelled lines, for a person to read.</li>
+          <li><strong>settings.json</strong> - the settings that shaped the last run, without your output folder and your list of recent documents.</li>
+          <li><strong>logs/</strong> - the recent run logs, newest first. A log the size limit left out keeps its file name, and its text is one line saying how large it was. The log of a single run is capped at 5 MB: a longer run keeps its start and its end, and one line says how much of the middle was cut.</li>
         </ul>
-        <p>Everything in it is redacted first: anything shaped like a key, token, password or Google API key becomes <code>&lt;redacted&gt;</code>, and your own folders collapse to <code>%USERPROFILE%</code> and <code>%LOCALAPPDATA%</code>. <strong class="claim">Document file names are kept on purpose</strong> - a log that cannot be matched to a document usually cannot be acted on. Your Google API key is never in the archive; an automated test fails the build if it could be. The archive is capped at 15 MB, dropping the oldest logs first and telling you how many were left out.</p>
+        <p>Everything in it is redacted first: anything shaped like a key, token, password or Google API key becomes <code>&lt;redacted&gt;</code>, and your own folders collapse to <code>%USERPROFILE%</code> and <code>%LOCALAPPDATA%</code>. <strong class="claim">The names and titles of your documents never travel</strong> - a file name or a title becomes <code>&lt;document&gt;</code> and only the format stays, so if the book matters, say which one in your message. Your Google API key is never in the archive; an automated test fails the build if it could be. The archive is capped at 15 MB, dropping the oldest logs first and telling you how many were left out.</p>
         <p><strong class="claim">Nothing is ever sent automatically.</strong> The app opens no network connection for this; it hands you a file and an unsent message, you attach the archive and press Send. Use <strong>Open the archive</strong> in the same section to look inside first, and <strong>Clear stored logs</strong> if you would rather keep no run history on disk at all.</p>
         <p>On the command line, <code>-report</code> builds the same archive and prints where it landed.</p>
-        <p>The <strong class="claim">Browser extension</strong> has no log store to archive, so it offers the equivalent it can honestly give: a <strong>Copy diagnostics</strong> button in the About block of its options page. It copies a short English summary - extension version, browser, interface language, your option set, and the format, page count and last error of the most recent document - to the clipboard, ready to paste into a mail. It carries no document text and no list of your sites.</p>
+        <p>The <strong class="claim">Browser extension</strong> has no log store to archive, so it offers the equivalent it can honestly give: a <strong>Copy diagnostics</strong> button in the About block of its options page. It copies one JSON block to the clipboard, ready to paste into a mail: a schema version, extension version, browser, interface language, your option set, and the format, page count and last error of the most recent document, with the same facts as English lines inside it. <strong>Save diagnostics as a file</strong> writes the same block. It carries no document text and no list of your sites.</p>
         <div class="note"><span class="tag">Result</span><p>You hold one redacted archive, 15 MB at most, and an unsent message to the author. Nothing has left your PC until you press Send.</p></div>
         <p class="related"><span class="lbl">Related:</span> <a href="#flags">Main flags</a> (<code>-report</code>) · <a href="privacy.html">Privacy</a></p>
       </details>
 
       <details class="sec" id="secret-files">
-        <summary><span class="secnum">06</span>Open a FileDO secret file (.fd-sec) and convert what is inside</summary>
+        <summary><span class="secnum">06</span><h3>Open a FileDO secret file (.fd-sec) and convert what is inside</h3></summary>
         <p>A <code>.fd-sec</code> file is a <strong class="claim">FileDO secret file</strong>. The app asks for its password, decrypts it with the FileDO installed on your PC, and converts the document or picture inside as it would convert the original. You end up with an ordinary HTML book beside your documents.</p>
         <dl class="req">
           <dt>Available in</dt><dd><span class="pills"><span class="pill">Desktop app</span><span class="pill">Microsoft Store app</span></span></dd>
@@ -298,20 +307,67 @@
         <div class="note"><span class="tag">Result</span><p>The result is named after the secret file and is <strong class="claim">not encrypted</strong> - it sits beside your documents like any other conversion. The password goes only to the local FileDO and is never stored, logged, sent anywhere or shown on a command line.</p></div>
         <p class="related"><span class="lbl">Related:</span> <a href="privacy.html">Privacy</a> · <a href="#flags">Main flags</a> (<code>-fdsec-password-env</code>) · <a href="#formats">Supported formats</a></p>
       </details>
+
+      <details class="sec" id="cli-reference">
+        <summary><span class="secnum">07</span><h3>Exit codes, environment variables and limits</h3></summary>
+        <p>What the command line returns, which environment variables it reads and what it refuses - for scripts and unattended runs.</p>
+        <h4>Exit codes</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Code</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Done.</td></tr>
+              <tr><td><code>1</code></td><td>Bad arguments.</td></tr>
+              <tr><td><code>2</code></td><td>I/O error.</td></tr>
+              <tr><td><code>3</code></td><td>The document could not be parsed.</td></tr>
+              <tr><td><code>4</code></td><td>Translation failed, stopped part-way or could not start because the requested engine is unavailable - no Google key, Ollama not running. The book is still produced and opened, with the text left in the source language; a partial run says <code>partially translated, N of M pages</code>, and a segment the engine returned empty counts as untranslated.</td></tr>
+              <tr><td><code>130</code></td><td>Interrupted with Ctrl+C. The next run rebuilds the output.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Environment variables</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Variable</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>DOCHT_TESSERACT</code></td><td>The full path to the Tesseract program for the OCR overlay. The app looks here first, then for a <code>tesseract\tesseract.exe</code> next to the app, then on <code>PATH</code>. If none is found, conversion still completes, without overlays, and logs a hint.</td></tr>
+              <tr><td><code>DOCHT_TOOL_TIMEOUT_SCALE</code></td><td>A multiplier for the deadlines of the external helpers (pdftotext, Tesseract, Calibre, 7-Zip, ffmpeg/ImageMagick), which grow with the input size. On a slow machine or an unusually heavy file, <code>set DOCHT_TOOL_TIMEOUT_SCALE=3</code> allows three times as long.</td></tr>
+              <tr><td><code>DOCHT_FILEDO</code></td><td>The full path to FileDO for secret files (<code>.fd-sec</code>). It is used as given, instead of looking on <code>PATH</code> and in the install folders.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Input limits</h4>
+        <ul>
+          <li>The input must be a document file: a folder or a 0-byte file is refused before anything is written. A second conversion of the same output while one is running is refused rather than interleaved.</li>
+          <li>An image is decoded only when its header declares at most 100 megapixels and at most 32768 pixels per side: a larger TIFF is refused with a message naming the limit, and a larger picture on a page is still shown as is, with Tesseract reading it without plate colours or the rescue passes.</li>
+          <li>An archive (EPUB, CBZ, CBT, CBR, CB7) is checked from its listing before anything is unpacked: at most 20000 entries and 4 GB unpacked in total, else it is refused; a single file over 100 MB in an EPUB, or a comic page over 200 MB, is skipped with a warning naming it. CBR/CB7 are listed with 7-Zip first and only the accepted pages are unpacked. Symlinks inside an archive are never followed.</li>
+          <li>A TXT, Markdown, FB2, RTF or HTML document over 100 MB is refused before it is read, with a message naming the limit.</li>
+          <li>The browser extension applies the same archive and document limits.</li>
+        </ul>
+        <h4>The ownership record of an output folder</h4>
+        <p>Every output folder carries a small hidden ownership record (<code>.doc-html-translate.json</code>). The converter only reuses, rebuilds (<code>-force</code>) or cleans up after a failure a folder that it created for that same document. A folder of your own that happens to share the book's name is never touched: the output then goes to a sibling such as <code>book (pdf)</code>. The same happens when <code>book.epub</code> and <code>book.pdf</code> sit side by side, so each gets its own output.</p>
+        <p class="related"><span class="lbl">Related:</span> <a href="#flags">Main flags</a> · <a href="#external-tools">External tools</a> · <a href="#secret-files">FileDO secret files (.fd-sec)</a></p>
+      </details>
     </section>
 
     <section id="subject-index">
       <h2>Subject index</h2>
       <ul class="subject-index">
-        <li><a href="#external-tools">7-Zip</a></li>
-        <li><a href="#editions">Browser extension</a></li>
-        <li><a href="#external-tools">Calibre</a></li>
+        <li><a href="#external-tools">7-Zip - see External tools</a></li>
+        <li><a href="#editions">Browser extension - see Editions</a></li>
+        <li><a href="#external-tools">Calibre - see External tools</a></li>
         <li><a href="#editions">CLI</a></li>
         <li><a href="#formats">Comic archives (CBZ, CBR, CB7, CBT)</a></li>
         <li><a href="#workflow">Convert a file</a></li>
         <li><a href="#flags">Default handler (-register)</a></li>
         <li><a href="#editions">Desktop app</a></li>
         <li><a href="#editions">Editions</a></li>
+        <li><a href="#cli-reference">Environment variables (DOCHT_)</a></li>
+        <li><a href="#cli-reference">Exit codes</a></li>
         <li><a href="#external-tools">External tools</a></li>
         <li><a href="#external-tools">ffmpeg</a></li>
         <li><a href="#secret-files">FileDO secret files (.fd-sec)</a></li>
@@ -319,11 +375,13 @@
         <li><a href="#glossary">Glossary</a></li>
         <li><a href="#flags">Google Cloud translation (-google)</a></li>
         <li><a href="#formats">Images (OCR overlay)</a></li>
+        <li><a href="#cli-reference">Input limits</a></li>
         <li><a href="#flags">Interface language (-ui-lang)</a></li>
         <li><a href="#logs">Logs, sending to the author</a></li>
         <li><a href="#editions">Microsoft Store app</a></li>
         <li><a href="#flags">OCR (-ocr, -ocr-lang)</a></li>
         <li><a href="#flags">Ollama (-ollama)</a></li>
+        <li><a href="#cli-reference">Output folder, ownership record</a></li>
         <li><a href="#external-tools">pdftotext</a></li>
         <li><a href="#links">Project links and downloads</a></li>
         <li><a href="#quick-start">Quick start</a></li>
@@ -377,18 +435,19 @@
         <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Browser extension (Chrome Web Store)</a> · <a href="extension.html">extension page</a></li>
         <li><a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store app (MSIX)</a></li>
         <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Download the latest release</a> · <a href="install-trust.html">"Windows protected your PC"? What to click</a></li>
+        <li><a href="help/en/">Window help</a> - the pages the desktop window opens on F1 or its <code>?</code> button</li>
       </ul>
     </section>
 
     <div class="note"><div class="tag">Interface languages</div><p>The interface of the application and the extension is available in 13 languages: <span dir="ltr">en ru uk de it es fr pt ar hi bn ur zh</span>. English, Russian and Ukrainian are author-proofread; the other ten are machine-translated and unproofread - corrections are welcome at <a href="mailto:sza@ukr.net">sza@ukr.net</a>.</p></div>
 
-    <div class="note"><div class="tag">Related tool</div><p>For individual images, scans, and media that you need to view or sort, use <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener">Fast Media Sorter for Windows</a>. It complements this tool rather than replacing it.</p></div>
+    <div class="note"><div class="tag">Related tool</div><p>For individual images, scans, and media that you need to view or sort, use <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener">Fast Media Sorter &amp; Sharing for Windows</a>. It complements this tool rather than replacing it.</p></div>
   </main>
 
-  <footer class="site-footer"><div class="container"><h2>More tools by SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="support.html">Support</a></span></div></div></footer>
+  <footer class="site-footer"><div class="container"><h2>More tools by SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Sharing for Windows</b><span>Windows media and file manager</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">SerZhyAle on GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="https://github.com/SerZhyAle/doc-html-translate/issues">GitHub Issues</a> · <a href="support.html">Support</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{
-    en:{title:'Doc-HTML-Translate Documentation',desc:'Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.',copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',expand:'Expand all',collapse:'Collapse all'}}};</script>
+    en:{title:'doc-html-translate Documentation',desc:'Quick documentation for Doc-HTML-Translate: install, usage, flags, and recommended free Chrome translation workflow.',copied:'Copied',toLight:'Switch to light theme',toDark:'Switch to dark theme',toTop:'Scroll to top',expand:'Expand all',collapse:'Collapse all'}}};</script>
   <script src="assets/site.js"></script>
 </body>
 </html>

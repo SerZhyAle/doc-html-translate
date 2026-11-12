@@ -62,9 +62,10 @@
       });
       carryLang(l);
     }
+    // the share card (og:, twitter:) is never rewritten: a scraper reads the static tags, so they are the only card
     var t = str('title'), desc = str('desc');
-    if (t) { document.title = t; meta('meta[property="og:title"]', t); meta('meta[name="twitter:title"]', t); }
-    if (desc) { meta('meta[name="description"]', desc); meta('meta[property="og:description"]', desc); meta('meta[name="twitter:description"]', desc); }
+    if (t) document.title = t;
+    if (desc) meta('meta[name="description"]', desc);
     var top = $('toTop'); if (top && str('toTop')) top.setAttribute('aria-label', str('toTop'));
     each('[data-nav]', function (n) { if (str('nav')) n.setAttribute('aria-label', str('nav')); });
     each('[data-sec="open"]', function (b) { if (str('expand')) b.textContent = str('expand'); });
@@ -82,8 +83,20 @@
       var href = b.getAttribute('data-href');
       if (href) { location.href = href; return; }
       applyLang(l);
+      writeLangQuery(l);
     });
   });
+
+  // PAGE-STYLE 3.5: the chosen language goes into the address, so a shared link opens in it; lang= replaces a legacy l=
+  function writeLangQuery(l) {
+    if (!window.history || !history.replaceState || !window.URL) return;
+    try {
+      var u = new URL(location.href);
+      u.searchParams.delete('l');
+      u.searchParams.set('lang', norm(l) === 'ua' ? 'uk' : (norm(l) || 'en'));
+      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+    } catch (e) {}
+  }
 
   var themeBtn = $('themeBtn');
   if (themeBtn) themeBtn.addEventListener('click', function () {
@@ -145,14 +158,6 @@
       var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
       scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
     });
-  }
-
-  var tag = $('releaseTag');
-  if (tag && window.fetch) {
-    fetch('https://api.github.com/repos/SerZhyAle/doc-html-translate/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { if (j && j.tag_name) tag.textContent = ' ' + j.tag_name; })
-      .catch(function () {});
   }
 
   applyLang(d.getAttribute('data-lang'));

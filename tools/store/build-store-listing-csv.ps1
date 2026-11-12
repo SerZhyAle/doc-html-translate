@@ -9,32 +9,59 @@
   rows, exactly as exported. Those URLs point at images already uploaded to the dashboard; rewriting
   them detaches the assets and the listing loses its images.
 
-  Column order is never changed and no column is invented: a locale the Store does not yet know about
-  is dropped on import without an error message, so adding one here would look like it worked and
-  quietly do nothing. Add the locale in Partner Center, export again, then run this.
+  tools/store/listingData.csv is the authoritative listing file (AGENTS.md, WINDOWS-STORE rule 12):
+  the product's own export, patched in place. msix/out/store-import/ holds a gitignored copy of the
+  result for the dashboard's folder import, never a second source. tools/store/listingData.sample.csv
+  is the same export with every copy cell emptied, the fixture the round trip is proven on.
 
-  Encoding is UTF-8 **with** BOM, matching what Partner Center itself exports. Without the BOM the
-  dashboard reads Cyrillic, Arabic and CJK cells as mojibake and the import "succeeds" with ruined text.
+  Column order is never changed and no column is invented: an import cannot create a language, and a
+  locale the Store does not yet know about is dropped on import without an error message. So a shipped
+  language with no column in the export is refused here - add it in Partner Center, export again, then
+  run this.
+
+  The file is written in the dialect of the export it patches (WINDOWS-STORE 0.3 item B): its BOM or its
+  absence, its record break and its one in-cell break. Partner Center's own export is UTF-8 with a BOM
+  and CRLF between records and LF inside cells; without the BOM the dashboard reads Cyrillic, Arabic and
+  CJK cells as mojibake and the import "succeeds" with ruined text.
+
+  Nothing is written until every check has passed, and a refusal leaves the previous output as it was.
+  A run is refused - exit 1, one "refused:" line per reason, nothing written - for:
+    - a shipped language with no column in the export, or a column with no deck (rule 7);
+    - an export or an output whose record break is not one break, whose in-cell breaks are mixed, that holds a
+      lone carriage return, or whose last quoted cell is left open (rule 8, item B);
+    - a cell over its cap, whether the deck filled it or the export already held it: Feature 200,
+      ShortDescription 1000, Description 10000, ReleaseNotes 1500 (counted after CRLF normalisation), at
+      most 7 search terms and 21 words over SearchTerm1..7 (rule 9);
+    - a -Refresh of a field that does not exist or is not prose (rule 12).
+  Exit codes: 0 written (or the round trip is byte-identical); 1 refused, or the round trip differs, or an
+  error stopped the run. A missing file stops with a message and exit 1 as well.
 
 .PARAMETER Csv
   The export to patch. Default: tools/store/listingData.csv.
 
 .PARAMETER Out
-  Where to write. Default: in place.
+  Where to write. Default: in place; with -FillNothing, temp/store-roundtrip.csv, because a round trip
+  written over its own input compares a file with itself.
 
 .PARAMETER ImportFolder
   Copy the result next to the per-locale screenshots, as the folder you hand to the dashboard.
   Defaults to `msix/out/store-import`, which puts it beside the MSIX the same upload session needs -
   the two halves of a Partner Center submission live in one place instead of two, and neither is in
-  the repository (`msix/out/` is gitignored, like the `temp/` it used to sit in).
+  the repository (`msix/out/` is gitignored, like the `temp/` it used to sit in). An empty value skips
+  the copy; -FillNothing never copies.
+
+.PARAMETER ListingDir
+  The folder of per-language decks (<code>.txt). Default: tools/store/listing. The test points it at
+  synthetic decks.
 
 .PARAMETER SkipFields
   Field names to leave alone even when empty (e.g. ReleaseNotes during a copy-only edit).
 
 .PARAMETER Refresh
   Field names to overwrite even when the cell already has a value. `ReleaseNotes` is the one field
-  that is rewritten every release, so it needs this; everything else is fill-only on purpose. Never
-  pass a screenshot or logo field - those cells hold Partner Center's own asset URLs.
+  that is rewritten every release, so it needs this; everything else is fill-only on purpose. Every
+  cell it replaces is listed with the length it replaced. Never pass a screenshot or logo field - those
+  cells hold Partner Center's own asset URLs; the run refuses one.
 
 .PARAMETER FillNothing
   Parse and rewrite without filling anything. A byte-identical result proves the reader and writer
@@ -44,11 +71,14 @@
   .\tools\store\build-store-listing-csv.ps1 -FillNothing -Out temp\roundtrip.csv
 .EXAMPLE
   .\tools\store\build-store-listing-csv.ps1 -ImportFolder msix\out\store-import
+.EXAMPLE
+  .\tools\store\build-store-listing-csv.ps1 -Refresh ReleaseNotes
 #>
 param(
     [string]$Csv,
     [string]$Out,
     [string]$ImportFolder = "msix/out/store-import",
+    [string]$ListingDir,
     # Fill empty DesktopScreenshotN cells with the per-locale image file names from -ImportFolder,
     # so a locale that has no assets yet gets them attached by the import. Cells that already hold a
     # value are never touched: Partner Center puts its own asset URLs there, and rewriting one
@@ -68,14 +98,29 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot   = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$ListingDir = Join-Path $PSScriptRoot "listing"
-if (-not $Csv) { $Csv = Join-Path $PSScriptRoot "listingData.csv" }
-if (-not (Test-Path $Csv)) { throw "listing export not found: $Csv" }
+. (Join-Path $PSScriptRoot "store-listing-checks.ps1")
+
 # .NET file APIs resolve relative paths against the process directory, which PowerShell does not
 # keep in step with the session location - so make every path absolute before anything writes.
+# (Join-Path onto an already absolute path builds an invalid one, hence the rooted test.)
+function Resolve-FullPath([string]$p) {
+    if (-not [System.IO.Path]::IsPathRooted($p)) { $p = Join-Path (Get-Location) $p }
+    return [System.IO.Path]::GetFullPath($p)
+}
+
+if (-not $ListingDir) { $ListingDir = Join-Path $PSScriptRoot "listing" }
+$ListingDir = Resolve-FullPath $ListingDir
+if (-not $Csv) { $Csv = Join-Path $PSScriptRoot "listingData.csv" }
+if (-not (Test-Path $Csv)) { throw "listing export not found: $Csv" }
 $Csv = (Resolve-Path $Csv).Path
-if (-not $Out) { $Out = $Csv } else { $Out = [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Out)) }
-if ($ImportFolder) { $ImportFolder = [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $ImportFolder)) }
+if ($Out) { $Out = Resolve-FullPath $Out }
+elseif ($FillNothing) { $Out = Resolve-FullPath (Join-Path $RepoRoot "temp/store-roundtrip.csv") }
+else { $Out = $Csv }
+if ($ImportFolder) { $ImportFolder = Resolve-FullPath $ImportFolder }
+if ($FillNothing -and $Out -ieq $Csv) {
+    Write-Host "refused: -FillNothing with -Out equal to -Csv compares the file with itself; name another -Out" -ForegroundColor Red
+    exit 1
+}
 
 # language code -> Partner Center column header
 $Locale = [ordered]@{
@@ -83,55 +128,7 @@ $Locale = [ordered]@{
     pt = "pt-br"; ar = "ar"; hi = "hi"; bn = "bn"; ur = "ur"; zh = "zh-hans"
 }
 
-# ── CSV reader / writer (minimal quoting, so a no-op run is byte-identical) ──
-function Read-Csv([string]$path) {
-    $text = [System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))
-    $rows = New-Object System.Collections.ArrayList
-    $row  = New-Object System.Collections.ArrayList
-    $sb   = New-Object System.Text.StringBuilder
-    $inQuotes = $false
-    for ($i = 0; $i -lt $text.Length; $i++) {
-        $ch = $text[$i]
-        if ($inQuotes) {
-            if ($ch -eq '"') {
-                if ($i + 1 -lt $text.Length -and $text[$i + 1] -eq '"') { [void]$sb.Append('"'); $i++ }
-                else { $inQuotes = $false }
-            } else { [void]$sb.Append($ch) }
-            continue
-        }
-        switch ($ch) {
-            '"'  { $inQuotes = $true }
-            ','  { [void]$row.Add($sb.ToString()); $sb.Clear() | Out-Null }
-            "`r" { }
-            "`n" { [void]$row.Add($sb.ToString()); $sb.Clear() | Out-Null; [void]$rows.Add($row.ToArray()); $row.Clear() }
-            default { [void]$sb.Append($ch) }
-        }
-    }
-    if ($sb.Length -gt 0 -or $row.Count -gt 0) { [void]$row.Add($sb.ToString()); [void]$rows.Add($row.ToArray()) }
-    return $rows
-}
-
-function Format-Cell([string]$v) {
-    if ($v -match '[",\r\n]') { return '"' + $v.Replace('"', '""') + '"' }
-    return $v
-}
-
-# $trailing says whether the file ends with a newline after its last row. It is taken from the
-# export rather than assumed, because the -FillNothing round-trip guard compares bytes: Partner
-# Center exports without a final newline, and appending one made an otherwise byte-identical
-# rewrite report "round trip DIFFERS", which is the one signal that makes a patching run
-# trustworthy. A guard that cries wolf over two bytes teaches a reader to ignore it.
-function Write-Csv($rows, [string]$path, [string]$newline, [bool]$trailing = $true) {
-    $sb = New-Object System.Text.StringBuilder
-    for ($i = 0; $i -lt $rows.Count; $i++) {
-        [void]$sb.Append((($rows[$i] | ForEach-Object { Format-Cell $_ }) -join ','))
-        if ($i -lt $rows.Count - 1 -or $trailing) { [void]$sb.Append($newline) }
-    }
-    # UTF-8 *with* BOM - Partner Center's own export encoding; see the note in .DESCRIPTION.
-    [System.IO.File]::WriteAllText($path, $sb.ToString(), [System.Text.UTF8Encoding]::new($true))
-}
-
-# ── read the per-language sources ────────────────────────────────────────────
+# -- read the per-language sources --
 function Read-ListingSource([string]$path) {
     $fields = [ordered]@{}
     $name = $null
@@ -148,22 +145,41 @@ function Read-ListingSource([string]$path) {
     return $fields
 }
 
+# A refusal: one line per reason, nothing written, exit 1 (see .DESCRIPTION).
+function Stop-Refused([string[]]$reasons) {
+    foreach ($r in $reasons) { Write-Host "refused: $r" -ForegroundColor Red }
+    Write-Host "refused: nothing written" -ForegroundColor Red
+    exit 1
+}
+
+# decks, named by the path a reader can open
+$deckShown = if ($ListingDir.StartsWith($RepoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $ListingDir.Substring($RepoRoot.Length).TrimStart('\', '/').Replace('\', '/')
+} else { $ListingDir }
 $source = @{}
+$deckOf = @{}
 foreach ($code in $Locale.Keys) {
     $p = Join-Path $ListingDir "$code.txt"
+    $deckOf[$Locale[$code]] = "$deckShown/$code.txt"
     if (Test-Path $p) { $source[$Locale[$code]] = Read-ListingSource $p }
 }
 
-# ── patch ────────────────────────────────────────────────────────────────────
-$raw = [System.IO.File]::ReadAllText($Csv, [System.Text.UTF8Encoding]::new($false))
-$newline = if ($raw -match "`r`n") { "`r`n" } else { "`n" }
-$trailingNewline = $raw.EndsWith("`n")
-$rows = Read-Csv $Csv
+# -- read the export and its dialect --
+$bytes = [System.IO.File]::ReadAllBytes($Csv)
+$hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
+$skip = if ($hasBom) { 3 } else { 0 }
+# Strict: an export that is not valid UTF-8 would be rewritten with replacement characters.
+$raw = [System.Text.UTF8Encoding]::new($false, $true).GetString($bytes, $skip, $bytes.Length - $skip)
+$dialect = Get-CsvDialect $raw $hasBom
+$newline = $dialect.RecordBreak
+$rows = Read-Csv $raw
 if ($rows.Count -lt 2) { throw "export has no data rows: $Csv" }
 
 $header = $rows[0]
 $fieldCol = [array]::IndexOf($header, "Field")
 if ($fieldCol -lt 0) { throw "no 'Field' column in $Csv" }
+$typeCol = -1
+for ($i = 0; $i -lt $header.Count; $i++) { if ($header[$i] -match '^Type\b') { $typeCol = $i; break } }
 
 $present = @()
 $missing = @()
@@ -171,15 +187,40 @@ foreach ($tag in $Locale.Values) {
     if ($header -contains $tag) { $present += $tag } else { $missing += $tag }
 }
 
-# Asset rows must never be refreshed: their cells hold the URLs of images already uploaded to the
-# dashboard, and rewriting one detaches the asset.
-$assetFields = $rows | ForEach-Object { $_[$fieldCol] } | Where-Object { $_ -match 'Screenshot|Logo' }
-foreach ($f in $Refresh) {
-    if ($assetFields -contains $f) { throw "-Refresh $f would overwrite a listing-asset URL; refuse" }
+# -- refuse what cannot be patched safely, all reasons at once --
+$refusals = New-Object System.Collections.ArrayList
+foreach ($p in $dialect.Problems) { [void]$refusals.Add("export dialect: $p") }
+foreach ($tag in $missing) {
+    [void]$refusals.Add("no column for $tag in $(Split-Path -Leaf $Csv): the language is shipped, an import cannot create a column and would drop its copy - add it in Partner Center, export again")
+}
+if (-not $FillNothing) {
+    foreach ($tag in $present) {
+        if (-not $source.ContainsKey($tag)) {
+            [void]$refusals.Add("no deck for $tag ($($deckOf[$tag])): the column would stay empty")
+        }
+    }
 }
 
+# Asset rows must never be refreshed: their cells hold the URLs of images already uploaded to the
+# dashboard, and rewriting one detaches the asset. A prose row is a Text row; anything else (a
+# relative path or URL to a file in Partner Center) is not ours to rewrite.
+$fieldRows = @{}
+for ($r = 1; $r -lt $rows.Count; $r++) {
+    $name = $rows[$r][$fieldCol]
+    if ($name) { $fieldRows[$name] = $rows[$r] }
+}
+foreach ($f in $Refresh) {
+    if (-not $fieldRows.ContainsKey($f)) {
+        [void]$refusals.Add("-Refresh $f names no field of the export")
+    } elseif ($f -match 'Screenshot|Logo|Trailer' -or ($typeCol -ge 0 -and $typeCol -lt $fieldRows[$f].Count -and $fieldRows[$f][$typeCol] -ne 'Text')) {
+        [void]$refusals.Add("-Refresh $f would overwrite a listing-asset URL or file name, which is not prose")
+    }
+}
+if ($refusals.Count) { Stop-Refused $refusals.ToArray() }
+
+# -- patch --
 $filled = 0
-$refreshed = 0
+$replaced = New-Object System.Collections.ArrayList
 if (-not $FillNothing) {
     for ($r = 1; $r -lt $rows.Count; $r++) {
         $row = $rows[$r]
@@ -192,11 +233,15 @@ if (-not $FillNothing) {
             if ($row[$c] -ne "" -and -not $isRefresh) { continue }  # asset URLs live in these cells
             $value = $source[$tag][$field]
             if (-not $value) { continue }
+            # A deck holds LF; the file holds the export's own in-cell break throughout.
+            $value = ConvertTo-CellBreak $value $dialect.CellBreak
             # -ceq, not -eq: PowerShell compares strings case-insensitively, so a correction that
             # differs only in case - "doc-html-translate" to the reserved "Doc-HTML-Translate" - was
             # silently treated as "already up to date" and never written.
             if ($row[$c] -ceq $value) { continue }
-            if ($row[$c] -ne "") { $refreshed++ } else { $filled++ }
+            if ($row[$c] -ne "") {
+                [void]$replaced.Add([pscustomobject]@{ Tag = $tag; Field = $field; Old = (Get-CellLength $row[$c]); New = (Get-CellLength $value) })
+            } else { $filled++ }
             $row[$c] = $value
         }
         $rows[$r] = $row
@@ -229,26 +274,36 @@ if ($Screenshots -and -not $FillNothing) {
     }
 }
 
+# -- check what will be written, then write it --
+$refusals.Clear()
+foreach ($v in @(Get-CapViolations $rows $header $fieldCol $present $deckOf)) { [void]$refusals.Add("cap: $v") }
+$text = Format-Csv $rows $newline $dialect.Trailing
+$body = [System.Text.UTF8Encoding]::new($false).GetBytes($text)
+$outBytes = if ($dialect.Bom) { [byte[]](@(0xEF, 0xBB, 0xBF) + $body) } else { $body }
+foreach ($v in @(Test-CsvOutput $outBytes $dialect)) { [void]$refusals.Add("output dialect: $v") }
+if ($refusals.Count) { Stop-Refused $refusals.ToArray() }
+
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Out) | Out-Null
-Write-Csv $rows $Out $newline $trailingNewline
+[System.IO.File]::WriteAllBytes($Out, $outBytes)
 
 if ($FillNothing) {
-    $same = ([System.IO.File]::ReadAllBytes($Csv) -join ',') -eq ([System.IO.File]::ReadAllBytes($Out) -join ',')
+    $same = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Csv)) -ceq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Out))
     Write-Host ("round trip: {0}" -f $(if ($same) { "byte-identical" } else { "DIFFERS - do not trust a patching run" })) `
         -ForegroundColor $(if ($same) { "Green" } else { "Red" })
     if (-not $same) { exit 1 }
 } else {
-    Write-Host "filled $filled empty cells, refreshed $refreshed, attached $shots screenshots, across $($present.Count) locales -> $Out" -ForegroundColor Green
+    # A replace is never silent (WINDOWS-STORE rule 12): every cell that stood before, with its length.
+    if ($replaced.Count) {
+        Write-Host "-Refresh replaced $($replaced.Count) cells:" -ForegroundColor Yellow
+        foreach ($x in $replaced) { Write-Host ("  replaced {0} {1}: {2} -> {3} characters" -f $x.Tag, $x.Field, $x.Old, $x.New) -ForegroundColor Yellow }
+    }
+    Write-Host "filled $filled empty cells, refreshed $($replaced.Count), attached $shots screenshots, across $($present.Count) locales -> $Out" -ForegroundColor Green
 }
 
-if ($missing.Count) {
-    Write-Host ("locales not in this export (add them in Partner Center, then export again): {0}" -f ($missing -join ' ')) -ForegroundColor Yellow
-}
-
-if ($ImportFolder) {
+if ($ImportFolder -and -not $FillNothing) {
     New-Item -ItemType Directory -Force -Path $ImportFolder | Out-Null
     Copy-Item $Out (Join-Path $ImportFolder "listingData.csv") -Force
-    $shots = Get-ChildItem $PSScriptRoot -Filter *.png -File
-    foreach ($s in $shots) { Copy-Item $s.FullName (Join-Path $ImportFolder $s.Name) -Force }
-    Write-Host "import folder ready: $ImportFolder ($($shots.Count) images)" -ForegroundColor Cyan
+    $pngs = Get-ChildItem $PSScriptRoot -Filter *.png -File
+    foreach ($s in $pngs) { Copy-Item $s.FullName (Join-Path $ImportFolder $s.Name) -Force }
+    Write-Host "import folder ready: $ImportFolder ($($pngs.Count) images)" -ForegroundColor Cyan
 }

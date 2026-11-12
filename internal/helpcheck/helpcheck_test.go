@@ -3,6 +3,7 @@ package helpcheck
 import (
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -85,6 +86,23 @@ func mustFail(t *testing.T, r *Report, want string) {
 		}
 	}
 	t.Errorf("want a failure naming %q, got failures %q (advisories %q)", want, r.Failures, r.Advisories)
+}
+
+func TestAPageGitIgnoresFails(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not on PATH")
+	}
+	root := scratch(t)
+	if out, err := exec.Command("git", "-C", root, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, out)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte("*secret*\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "help", "en", "secret-file-password.html"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mustFail(t, run(t, root), "help/en/secret-file-password.html is ignored by git")
 }
 
 func TestTheRepositoryPasses(t *testing.T) {
@@ -394,5 +412,45 @@ func TestAnInputChangedAfterGenerationIsAnAdvisoryNotAFailure(t *testing.T) {
 	})
 	if r := run(t, root); len(r.Failures) != 0 || len(r.Advisories) != len(base.Advisories) {
 		t.Errorf("a script-only edit must keep the digest: failures %q, advisories %q (before: %q)", r.Failures, r.Advisories, base.Advisories)
+	}
+}
+
+// The full gate and the release pre-flight hold the set to its inputs (ticket E0125): the same difference that is an
+// advisory between releases is a failure under StrictFreshness, and the message names the command that clears it - the
+// full generator when a window input moved, the fast wording form when only text did.
+func TestAStaleSetFailsUnderStrictFreshness(t *testing.T) {
+	strict := func(t *testing.T, root string) *Report {
+		t.Helper()
+		r, err := RunWith(root, Options{StrictFreshness: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return r
+	}
+
+	if r := strict(t, scratch(t)); r.Code() != 0 {
+		t.Fatalf("a fresh set must pass under StrictFreshness: failures %q, advisories %q", r.Failures, r.Advisories)
+	}
+
+	root := scratch(t)
+	edit(t, root, UIPath, func(s string) string {
+		return strings.Replace(s, `<div class="head" data-help="main.header">`, `<div class="head" data-help="main.header" lang="en">`, 1)
+	})
+	r := strict(t, root)
+	mustFail(t, r, "ui.html (markup and style)")
+	mustFail(t, r, "node tools/helpgen/generate.mjs")
+	if len(r.Advisories) != 0 {
+		t.Errorf("a strict run reports the stale set as a failure, not also as an advisory: %q", r.Advisories)
+	}
+
+	root = scratch(t)
+	edit(t, root, CopyDir+"/converter.json", func(s string) string { return s + " " })
+	r = strict(t, root)
+	mustFail(t, r, "copy/converter.json")
+	mustFail(t, r, "node tools/helpgen/repage.mjs")
+	for _, f := range r.Failures {
+		if strings.Contains(f, "generate.mjs") {
+			t.Errorf("a wording-only change must not send the author to the full generator: %q", f)
+		}
 	}
 }

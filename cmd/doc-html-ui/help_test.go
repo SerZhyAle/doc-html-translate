@@ -117,9 +117,9 @@ func TestHelpKeepsTheServerAliveForAGrace(t *testing.T) {
 }
 
 // CONTEXT-HELP rule 2: the help button sits at the trailing corner of the header and nothing else is added to
-// that corner. Ticket 119 (SETTINGS-NAVIGATION 3.1) moved the theme and interface-language selects into the
-// first page, each with its own caption, and added the Pages button that appears only when the window is too
-// narrow for the rail; the header is now the Pages button, the three links and the help button.
+// that corner. Ticket 119 moved the theme and interface-language selects off the header and added the Pages
+// button that appears only when the window is too narrow for the rail; the header is the Pages button, the
+// three links and the help button. The two selects now live on the Interface page, once each.
 func TestHelpButtonIsTheOnlyAdditionToTheHeader(t *testing.T) {
 	start := strings.Index(uiHTML, `<div class="head"`)
 	end := strings.Index(uiHTML, `<div class="hint fail" id="cliWarn"`)
@@ -157,10 +157,18 @@ func TestHelpButtonIsTheOnlyAdditionToTheHeader(t *testing.T) {
 	if !strings.HasSuffix(strings.TrimSpace(header), "</svg></button>\n</div>") || !strings.Contains(header, `class="help-btn secondary head-help" id="btnHelp"`) {
 		t.Error("the help button is not the trailing control of the header")
 	}
-	// the selects live on the first page now, once each, with a visible caption
+	// the selects live on the Interface page, once each, with a visible caption
+	pageStart := strings.Index(uiHTML, `<section class="page" id="page-interface"`)
+	pageEnd := strings.Index(uiHTML, `<section class="page" id="page-advanced"`)
+	if pageStart < 0 || pageEnd < pageStart {
+		t.Fatal("the Interface page of ui.html was not found")
+	}
 	for _, id := range []string{"themeSwitch", "langSwitch"} {
 		if n := strings.Count(uiHTML, `id="`+id+`"`); n != 1 {
 			t.Errorf("%s appears %d times, want one editor", id, n)
+		}
+		if !strings.Contains(uiHTML[pageStart:pageEnd], `id="`+id+`"`) {
+			t.Errorf("%s is not on the Interface page", id)
 		}
 		if !strings.Contains(uiHTML, `<label for="`+id+`"`) {
 			t.Errorf("%s has no visible caption", id)

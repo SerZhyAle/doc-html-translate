@@ -15,9 +15,12 @@
   <meta property="og:image:height" content="768">
   <meta property="og:image:alt" content="doc-html-translate 桌面应用正在将文档转换为本地 HTML">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="doc-html-translate - Windows 文档转本地 HTML 转换器">
+  <meta name="twitter:description" content="把图书、文档、漫画和图片转换为本地 HTML，便于阅读并使用浏览器的页面翻译。">
+  <meta name="twitter:image" content="https://serzhyale.github.io/doc-html-translate/tools/store/gui-zh-hans.png">
   <link rel="alternate" hreflang="en" href="https://serzhyale.github.io/doc-html-translate/">
-  <link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/?lang=ru">
-  <link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/?lang=uk">
+  <link rel="alternate" hreflang="ru" href="https://serzhyale.github.io/doc-html-translate/ru/">
+  <link rel="alternate" hreflang="uk" href="https://serzhyale.github.io/doc-html-translate/uk/">
   <link rel="alternate" hreflang="de" href="https://serzhyale.github.io/doc-html-translate/de/">
   <link rel="alternate" hreflang="it" href="https://serzhyale.github.io/doc-html-translate/it/">
   <link rel="alternate" hreflang="es" href="https://serzhyale.github.io/doc-html-translate/es/">
@@ -58,6 +61,7 @@
     "operatingSystem": "Windows",
     "applicationCategory": "UtilitiesApplication",
     "downloadUrl": "https://github.com/SerZhyAle/doc-html-translate/releases/latest",
+    "softwareVersion": "26.1021.0300",
     "description": "把图书、文档、漫画和图片转换为本地 HTML，便于阅读并使用浏览器的页面翻译。",
     "license": "https://github.com/SerZhyAle/doc-html-translate/blob/main/LICENSE",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -75,14 +79,13 @@
   </header>
 
   <main class="container" id="top" tabindex="-1">
-    <nav class="langs" aria-label="语言"><a href="../?lang=en" lang="en" hreflang="en">English</a><a href="../?lang=ru" lang="ru" hreflang="ru">Русский</a><a href="../?lang=uk" lang="uk" hreflang="uk">Українська</a><a href="../de/" lang="de" hreflang="de">Deutsch</a><a href="../it/" lang="it" hreflang="it">Italiano</a><a href="../es/" lang="es" hreflang="es">Español</a><a href="../fr/" lang="fr" hreflang="fr">Français</a><a href="../pt/" lang="pt" hreflang="pt">Português</a><a href="../ar/" lang="ar" hreflang="ar">العربية</a><a href="../hi/" lang="hi" hreflang="hi">हिन्दी</a><a href="../bn/" lang="bn" hreflang="bn">বাংলা</a><a href="../ur/" lang="ur" hreflang="ur">اردو</a><span class="cur" lang="zh">中文</span></nav>
+    <nav class="langs" aria-label="语言"><a href="../" lang="en" hreflang="en">English</a><a href="../ru/" lang="ru" hreflang="ru">Русский</a><a href="../uk/" lang="uk" hreflang="uk">Українська</a><a href="../de/" lang="de" hreflang="de">Deutsch</a><a href="../it/" lang="it" hreflang="it">Italiano</a><a href="../es/" lang="es" hreflang="es">Español</a><a href="../fr/" lang="fr" hreflang="fr">Français</a><a href="../pt/" lang="pt" hreflang="pt">Português</a><a href="../ar/" lang="ar" hreflang="ar">العربية</a><a href="../hi/" lang="hi" hreflang="hi">हिन्दी</a><a href="../bn/" lang="bn" hreflang="bn">বাংলা</a><a href="../ur/" lang="ur" hreflang="ur">اردو</a><span class="cur" lang="zh">中文</span></nav>
     <section class="hero">
       <div class="identity"><img src="../assets/doc-html-translate.ico" width="72" height="72" alt=""><div><span class="name" dir="ltr">Doc-HTML-Translate<span class="dot">.</span></span><span class="eyebrow">Windows 文档转换器 · GUI · CLI · Chromium 扩展</span></div></div>
       <h1>把任何书籍、文档或漫画变成本地网页</h1>
       <span class="tagline">用浏览器自带的页面翻译阅读、搜索和翻译，免费，无需密钥。</span>
+      <div class="button-group hero-cta"><a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a><a class="btn btn-ghost btn-sm" href="#get">所有安装方式</a></div>
       <p class="lead">为用其他语言阅读书籍和文档的人而做：EPUB、PDF、MOBI、FB2、RTF、TXT、Markdown、HTML、漫画和图片会变成带目录与导航的本地 HTML。图片支持 OCR 文字识别。</p>
-      <p class="lead"><b>新功能：JPEG XL 图片</b> - 打开 <code dir="ltr">.jxl</code> 文件，或包含 JPEG XL 图片的书籍或漫画：它们会由内置解码器在本地解码，然后像其他图片一样显示、通过 OCR 识别并翻译。透明度会保留；动画文件显示第一帧。无需额外安装任何东西。</p>
-      <p class="lead"><b>新功能：FileDO 加密文件</b> - 打开 <code dir="ltr">.fd-sec</code> 文件：应用会询问密码，使用您电脑上已安装的 FileDO 解密，并像处理原文件一样转换其中的文档或图片。解密后的副本会立即删除；转换后的页面不加密。</p>
       <div class="demo workflow"><code dir="ltr">EPUB / PDF / FB2 / CBZ / ..</code><span class="arrow">→</span><code dir="ltr">local index.html</code><span class="arrow">→</span><span class="out" dir="ltr">Chrome / Edge</span><span class="arrow">→</span><span>阅读与翻译</span></div>
       <figure class="shot hero-video"><video controls muted playsinline preload="none" width="1280" height="720" poster="../assets/demo-poster.jpg" aria-label="演示，42 秒，无声：转换一本书、目录、阅读主题，以及漫画页面上的文字层。视频中的字幕为英文。"><source src="../assets/demo.mp4" type="video/mp4"></video><figcaption>演示，42 秒，无声：转换一本书、目录、阅读主题，以及漫画页面上的文字层。视频中的字幕为英文。</figcaption></figure>
       <div class="button-group help-links"><a class="btn btn-ghost btn-sm" href="../docs.html">英文文档</a></div>
@@ -92,12 +95,12 @@
       <h2>安装与运行</h2>
       <p class="whatfor">桌面应用（窗口 + 命令行）和浏览器扩展分别独立安装。所有方式均免费。</p>
       <div class="channels">
-        <a class="btn btn-primary btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
-        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"></span></a>
+        <a class="btn btn-ghost btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
+        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"> v26.1021.0300</span></a>
         <a class="btn btn-ghost btn-sm" href="../release-notes.html">版本说明</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">安装程序 setup.exe</a>
-        <a class="btn btn-ghost btn-sm" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store</a>
-        <a class="btn btn-ghost btn-sm" href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons</a>
+        <a class="btn btn-ghost btn-sm" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store<span data-rf="extension"> v26.1021.41</span></a>
+        <a class="btn btn-ghost btn-sm" href="https://microsoftedge.microsoft.com/addons/detail/document-page-translator/anokfnnfiboaccbbpfkdaphejnkkhajh" target="_blank" rel="noopener">Edge Add-ons<span data-rf="extension"> v26.1021.41</span></a>
       </div>
       <div class="install-grid">
         <ol class="quickstart"><li>从 Microsoft Store、通过 winget 或安装程序安装应用，也可以从 GitHub Releases 下载便携版 zip。</li><li>在应用窗口中打开受支持的文件，或使用下方命令。</li><li>应用生成 HTML 并在浏览器中打开；通过浏览器的“翻译”菜单进行翻译。</li></ol>
@@ -105,6 +108,12 @@
       </div>
       <div class="note"><div class="tag">重要</div><p>默认情况下，应用只转换并打开文件，不使用付费翻译。Google Cloud 与 Ollama 是单独的模式。</p></div>
       <div class="note" id="smartscreen"><div class="tag">Windows protected your PC?</div><p>安装程序和便携版程序没有代码签名，因此 Windows SmartScreen 可能会拦截首次运行。请点击 <strong>More info</strong>，然后点击 <strong>Run anyway</strong>（中文版 Windows 中这两处文字已译成中文）。Microsoft Store 版本由 Microsoft 签名，不会出现此窗口。<a href="../install-trust.html">原因说明，以及本应用绝不会做的事（英文）</a>。</p></div>
+    </section>
+
+    <section class="section" id="whats-new">
+      <h2 class="section-title"><span class="h">#</span> 版本说明</h2>
+      <p><b>新功能：JPEG XL 图片</b> - 打开 <code dir="ltr">.jxl</code> 文件，或包含 JPEG XL 图片的书籍或漫画：它们会由内置解码器在本地解码，然后像其他图片一样显示、通过 OCR 识别并翻译。透明度会保留；动画文件显示第一帧。无需额外安装任何东西。</p>
+      <p><b>新功能：FileDO 加密文件</b> - 打开 <code dir="ltr">.fd-sec</code> 文件：应用会询问密码，使用您电脑上已安装的 FileDO 解密，并像处理原文件一样转换其中的文档或图片。解密后的副本会立即删除；转换后的页面不加密。</p>
     </section>
 
     <section class="section" id="use-cases">
@@ -127,7 +136,7 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container"><h2>SZA 的更多工具</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="../support.html">支持（英文）</a></span></div></div></footer>
+  <footer class="site-footer"><div class="container"><h2>SZA 的更多工具</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android 媒体整理工具</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Sharing for Windows</b><span>Windows 媒体与文件管理器</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows 键盘布局修正工具</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows 存储命令行工具</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows 流媒体播放器</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows 托盘启动器</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI 开发方法论</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>作品集</span></a></div><div class="footer-bottom"><span dir="ltr">© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span dir="ltr"><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">SerZhyAle 的 GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="https://github.com/SerZhyAle/doc-html-translate/issues">GitHub Issues</a> · <a href="../support.html">支持（英文）</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="滚动到顶部"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{page:{"title": "doc-html-translate - Windows 文档转本地 HTML 转换器", "desc": "把图书、文档、漫画和图片转换为本地 HTML，便于阅读并使用浏览器的页面翻译。", "copied": "已复制", "toLight": "切换到浅色主题", "toDark": "切换到深色主题", "toTop": "滚动到顶部"}}};</script>
   <script src="../assets/site.js"></script>

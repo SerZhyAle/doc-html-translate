@@ -1363,7 +1363,7 @@ function applyViewerChromeI18n() {
   applyGlyphs(document.getElementById("toolbar"));
   applyGlyphs(document.getElementById("status"));
   // BUTTONS 2.0 section 4 rule 7: the tooltip names the supported shortcut (the chord is reader-search.js's).
-  $("btn-search").title = `${t("vSearch", "Search")} (${/Mac|iP(hone|ad|od)/.test(globalThis.navigator?.platform || "") ? "Cmd" : "Ctrl"}+F)`;
+  $("btn-search").title = `${t("vSearch", "Search")} (${/Mac|iP(hone|ad|od)/.test(globalThis.navigator?.platform || "") ? "⌘" : "Ctrl"}+F)`;
   document.title = t("viewerTitle", document.title);
 }
 

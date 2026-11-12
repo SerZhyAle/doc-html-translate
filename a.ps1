@@ -22,12 +22,12 @@
       COMMIT
         c    - quick commit + push branch (main needs -PublishSite)  (scripts/commit-push.ps1)
         cc   - quick commit, no push (auto timestamp msg)            (scripts/commit-push.ps1 -NoPush)
-        bl   - gated "сборка": build + full gate + commit           (scripts/build-local.ps1)   [-Message ".."]
+        bl   - gated "сборка": build + fast gate + commit           (scripts/build-local.ps1)   [-Message ".."] [-Release: full gate]
 
       CHECK
-        ch   - check: test + lint + typo (the gate)                  (scripts/check.ps1)
-        fc   - alias for ch (fast code check)
-        fu   - fast unit-test suite (go test ./...)                  (scripts/test.ps1)
+        ch   - check: the full gate, release tier (minutes)          (scripts/check.ps1)
+        fc   - fast check: the 5 s tier, in parallel                 (scripts/check.ps1 -Fast)
+        fu   - full Go suite, release tier (go test ./...)           (scripts/test.ps1)
         t    - alias for fu (tests)
         l    - golangci-lint only                                    (scripts/lint.ps1)
         ty   - typos spell-check only                                (scripts/typo.ps1)
@@ -36,7 +36,7 @@
         d    - fast build: both exes + stamp extension -> _APP       (build.ps1)
         db   - fast build, desktop only (no extension)               (build.ps1 -NoExtension)
         bd   - alias for db
-        dc   - gated build (runs the gate first)                     (build.ps1 -Gate)
+        dc   - gated build (runs the fast gate tier first)           (build.ps1 -Gate)
         cd   - alias for dc
         b    - build all: exes + extension + store zip               (build.ps1 -ExtZip)
         bp   - alias for b
@@ -104,12 +104,12 @@ $scripts = [ordered]@{
     # --- commit ---
     'c'    = @{ Group = 'Commit';        Path = 'scripts/commit-push.ps1';      Args = @{};                   Desc = 'quick commit + push branch (main: needs -PublishSite, it publishes the site)' }
     'cc'   = @{ Group = 'Commit';        Path = 'scripts/commit-push.ps1';      Args = @{ NoPush = $true };   Desc = 'quick commit, no push (auto timestamp msg)' }
-    'bl'   = @{ Group = 'Commit';        Path = 'scripts/build-local.ps1';      Args = @{};                   Desc = 'gated "сборка": build + gate + commit (needs -Message)' }
+    'bl'   = @{ Group = 'Commit';        Path = 'scripts/build-local.ps1';      Args = @{};                   Desc = 'gated "сборка": build + fast gate + commit (needs -Message; -Release: full gate)' }
 
     # --- check ---
-    'ch'   = @{ Group = 'Check';         Path = 'scripts/check.ps1';            Args = @{};                   Desc = 'check: test + lint + typo (the gate)' }
-    'fc'   = @{ Group = 'Check';         Path = 'scripts/check.ps1';            Args = @{};                   Desc = 'alias for ch' }
-    'fu'   = @{ Group = 'Check';         Path = 'scripts/test.ps1';             Args = @{};                   Desc = 'fast unit-test suite (go test ./...)' }
+    'ch'   = @{ Group = 'Check';         Path = 'scripts/check.ps1';            Args = @{};                   Desc = 'check: the full gate, release tier (minutes)' }
+    'fc'   = @{ Group = 'Check';         Path = 'scripts/check.ps1';            Args = @{ Fast = $true };     Desc = 'fast check: the 5 s tier, in parallel' }
+    'fu'   = @{ Group = 'Check';         Path = 'scripts/test.ps1';             Args = @{};                   Desc = 'full Go suite, release tier (go test ./...)' }
     't'    = @{ Group = 'Check';         Path = 'scripts/test.ps1';             Args = @{};                   Desc = 'alias for fu (tests)' }
     'l'    = @{ Group = 'Check';         Path = 'scripts/lint.ps1';             Args = @{};                   Desc = 'golangci-lint only' }
     'ty'   = @{ Group = 'Check';         Path = 'scripts/typo.ps1';             Args = @{};                   Desc = 'typos spell-check only' }
@@ -118,7 +118,7 @@ $scripts = [ordered]@{
     'd'    = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{};                   Desc = 'fast build: both exes + stamp extension -> _APP' }
     'db'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ NoExtension = $true }; Desc = 'fast build, desktop only (no extension)' }
     'bd'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ NoExtension = $true }; Desc = 'alias for db' }
-    'dc'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ Gate = $true };     Desc = 'gated build (runs the gate first)' }
+    'dc'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ Gate = $true };     Desc = 'gated build (runs the fast gate tier first)' }
     'cd'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ Gate = $true };     Desc = 'alias for dc' }
     'b'    = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ ExtZip = $true };   Desc = 'build all: exes + extension + store zip' }
     'bp'   = @{ Group = 'Build (app)';   Path = 'build.ps1';                    Args = @{ ExtZip = $true };   Desc = 'alias for b' }

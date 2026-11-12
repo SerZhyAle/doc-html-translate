@@ -1,0 +1,4461 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "screen-gui-converter-states-uk-dark",
+  "origin": "human",
+  "imageWidth": 1160,
+  "imageHeight": 1594,
+  "groups": [
+    {
+      "id": "g001",
+      "type": "title",
+      "transcript": "DOC-HTML-UI",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "g001-l1",
+          "kind": "box",
+          "points": [
+            [
+              16,
+              17
+            ],
+            [
+              132,
+              39
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g001-bounds",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g001-replace",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g002",
+      "type": "label",
+      "transcript": "v26.1028.0224",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "g002-l1",
+          "kind": "box",
+          "points": [
+            [
+              141,
+              20
+            ],
+            [
+              218,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g002-bounds",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g002-replace",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g003",
+      "type": "label",
+      "transcript": "SZA.od.ua",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 3,
+      "lines": [
+        {
+          "id": "g003-l1",
+          "kind": "box",
+          "points": [
+            [
+              227,
+              20
+            ],
+            [
+              281,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g003-bounds",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g003-replace",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g004",
+      "type": "label",
+      "transcript": "·",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 4,
+      "lines": [
+        {
+          "id": "g004-l1",
+          "kind": "box",
+          "points": [
+            [
+              286,
+              20
+            ],
+            [
+              290,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g004-bounds",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g004-replace",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g005",
+      "type": "label",
+      "transcript": "Сайт програми",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 5,
+      "lines": [
+        {
+          "id": "g005-l1",
+          "kind": "box",
+          "points": [
+            [
+              295,
+              20
+            ],
+            [
+              379,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g005-bounds",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            379,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g005-replace",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            379,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g006",
+      "type": "label",
+      "transcript": "·",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 6,
+      "lines": [
+        {
+          "id": "g006-l1",
+          "kind": "box",
+          "points": [
+            [
+              384,
+              20
+            ],
+            [
+              387,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g006-bounds",
+        "kind": "box",
+        "points": [
+          [
+            384,
+            20
+          ],
+          [
+            387,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g006-replace",
+        "kind": "box",
+        "points": [
+          [
+            384,
+            20
+          ],
+          [
+            387,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g007",
+      "type": "label",
+      "transcript": "Написати авторові",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 7,
+      "lines": [
+        {
+          "id": "g007-l1",
+          "kind": "box",
+          "points": [
+            [
+              392,
+              20
+            ],
+            [
+              496,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g007-bounds",
+        "kind": "box",
+        "points": [
+          [
+            392,
+            20
+          ],
+          [
+            496,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g007-replace",
+        "kind": "box",
+        "points": [
+          [
+            392,
+            20
+          ],
+          [
+            496,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g008",
+      "type": "title",
+      "transcript": "Конвертація",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 8,
+      "lines": [
+        {
+          "id": "g008-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              52
+            ],
+            [
+              281,
+              74
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g008-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            281,
+            74
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g008-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            281,
+            74
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g009",
+      "type": "label",
+      "transcript": "Конвертація",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 9,
+      "lines": [
+        {
+          "id": "g009-l1",
+          "kind": "box",
+          "points": [
+            [
+              62,
+              58
+            ],
+            [
+              142,
+              76
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g009-bounds",
+        "kind": "box",
+        "points": [
+          [
+            62,
+            58
+          ],
+          [
+            142,
+            76
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g009-replace",
+        "kind": "box",
+        "points": [
+          [
+            62,
+            58
+          ],
+          [
+            142,
+            76
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g010",
+      "type": "label",
+      "transcript": "Перетворює електронні книжки й документи на локальну HTML-книжку, яку можна читати й перекладати в браузері.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 10,
+      "lines": [
+        {
+          "id": "g010-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              78
+            ],
+            [
+              831,
+              94
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g010-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            831,
+            94
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g010-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            831,
+            94
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g011",
+      "type": "label",
+      "transcript": "Ollama",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 11,
+      "lines": [
+        {
+          "id": "g011-l1",
+          "kind": "box",
+          "points": [
+            [
+              81,
+              92
+            ],
+            [
+              123,
+              110
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g011-bounds",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g011-replace",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g012",
+      "type": "label",
+      "transcript": "КОМАНДНИЙ РЯДОК",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 12,
+      "lines": [
+        {
+          "id": "g012-l1",
+          "kind": "box",
+          "points": [
+            [
+              796,
+              110
+            ],
+            [
+              935,
+              127
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g012-bounds",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            110
+          ],
+          [
+            935,
+            127
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g012-replace",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            110
+          ],
+          [
+            935,
+            127
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g013",
+      "type": "paragraph",
+      "transcript": "Додати застосунок до Windows? Можна додати пункт «Convert to HTML» у меню правого кліку підтримуваних файлів і місце у списку «Відкрити за допомогою» або ще й зробити застосунок програмою за замовчуванням для них. Нічого не змінюється, доки ви не оберете це тут або пізніше на сторінці «Windows».",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 13,
+      "lines": [
+        {
+          "id": "g013-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              121
+            ],
+            [
+              718,
+              138
+            ]
+          ]
+        },
+        {
+          "id": "g013-l2",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              139
+            ],
+            [
+              715,
+              156
+            ]
+          ]
+        },
+        {
+          "id": "g013-l3",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              156
+            ],
+            [
+              764,
+              173
+            ]
+          ]
+        },
+        {
+          "id": "g013-l4",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              173
+            ],
+            [
+              305,
+              190
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g013-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            121
+          ],
+          [
+            764,
+            190
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g013-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            121
+          ],
+          [
+            764,
+            190
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g014",
+      "type": "label",
+      "transcript": "OCR зображень",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 14,
+      "lines": [
+        {
+          "id": "g014-l1",
+          "kind": "box",
+          "points": [
+            [
+              54,
+              126
+            ],
+            [
+              150,
+              144
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g014-bounds",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            126
+          ],
+          [
+            150,
+            144
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g014-replace",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            126
+          ],
+          [
+            150,
+            144
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g015",
+      "type": "paragraph",
+      "transcript": "\u0026 C:\\Tools\\doc-html-translate.e xe -split 0 -src en -dst ru -ui -lang uk",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 15,
+      "lines": [
+        {
+          "id": "g015-l1",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              144
+            ],
+            [
+              1007,
+              158
+            ]
+          ]
+        },
+        {
+          "id": "g015-l2",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              160
+            ],
+            [
+              1007,
+              174
+            ]
+          ]
+        },
+        {
+          "id": "g015-l3",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              175
+            ],
+            [
+              859,
+              189
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g015-bounds",
+        "kind": "box",
+        "points": [
+          [
+            807,
+            144
+          ],
+          [
+            1007,
+            189
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g015-replace",
+        "kind": "box",
+        "points": [
+          [
+            807,
+            144
+          ],
+          [
+            1007,
+            189
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g016",
+      "type": "label",
+      "transcript": "Копіювати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 16,
+      "lines": [
+        {
+          "id": "g016-l1",
+          "kind": "box",
+          "points": [
+            [
+              1068,
+              157
+            ],
+            [
+              1131,
+              175
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g016-bounds",
+        "kind": "box",
+        "points": [
+          [
+            1068,
+            157
+          ],
+          [
+            1131,
+            175
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g016-replace",
+        "kind": "box",
+        "points": [
+          [
+            1068,
+            157
+          ],
+          [
+            1131,
+            175
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g017",
+      "type": "label",
+      "transcript": "Windows",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 17,
+      "lines": [
+        {
+          "id": "g017-l1",
+          "kind": "box",
+          "points": [
+            [
+              75,
+              160
+            ],
+            [
+              129,
+              178
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g017-bounds",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g017-replace",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g018",
+      "type": "label",
+      "transcript": "Інтерфейс",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 18,
+      "lines": [
+        {
+          "id": "g018-l1",
+          "kind": "box",
+          "points": [
+            [
+              71,
+              194
+            ],
+            [
+              132,
+              212
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g018-bounds",
+        "kind": "box",
+        "points": [
+          [
+            71,
+            194
+          ],
+          [
+            132,
+            212
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g018-replace",
+        "kind": "box",
+        "points": [
+          [
+            71,
+            194
+          ],
+          [
+            132,
+            212
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g019",
+      "type": "label",
+      "transcript": "Ні, дякую",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 19,
+      "lines": [
+        {
+          "id": "g019-l1",
+          "kind": "box",
+          "points": [
+            [
+              230,
+              205
+            ],
+            [
+              286,
+              223
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g019-bounds",
+        "kind": "box",
+        "points": [
+          [
+            230,
+            205
+          ],
+          [
+            286,
+            223
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g019-replace",
+        "kind": "box",
+        "points": [
+          [
+            230,
+            205
+          ],
+          [
+            286,
+            223
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g020",
+      "type": "label",
+      "transcript": "Додати й зробити програмою за замовчуванням",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 20,
+      "lines": [
+        {
+          "id": "g020-l1",
+          "kind": "box",
+          "points": [
+            [
+              343,
+              205
+            ],
+            [
+              637,
+              223
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g020-bounds",
+        "kind": "box",
+        "points": [
+          [
+            343,
+            205
+          ],
+          [
+            637,
+            223
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g020-replace",
+        "kind": "box",
+        "points": [
+          [
+            343,
+            205
+          ],
+          [
+            637,
+            223
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g021",
+      "type": "label",
+      "transcript": "Додатково",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 21,
+      "lines": [
+        {
+          "id": "g021-l1",
+          "kind": "box",
+          "points": [
+            [
+              69,
+              228
+            ],
+            [
+              135,
+              246
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g021-bounds",
+        "kind": "box",
+        "points": [
+          [
+            69,
+            228
+          ],
+          [
+            135,
+            246
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g021-replace",
+        "kind": "box",
+        "points": [
+          [
+            69,
+            228
+          ],
+          [
+            135,
+            246
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g022",
+      "type": "label",
+      "transcript": "ЛОГ",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 22,
+      "lines": [
+        {
+          "id": "g022-l1",
+          "kind": "box",
+          "points": [
+            [
+              796,
+              230
+            ],
+            [
+              823,
+              247
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g022-bounds",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            230
+          ],
+          [
+            823,
+            247
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g022-replace",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            230
+          ],
+          [
+            823,
+            247
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g023",
+      "type": "label",
+      "transcript": "Додати пункт правого кліку",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 23,
+      "lines": [
+        {
+          "id": "g023-l1",
+          "kind": "box",
+          "points": [
+            [
+              230,
+              245
+            ],
+            [
+              409,
+              263
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g023-bounds",
+        "kind": "box",
+        "points": [
+          [
+            230,
+            245
+          ],
+          [
+            409,
+            263
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g023-replace",
+        "kind": "box",
+        "points": [
+          [
+            230,
+            245
+          ],
+          [
+            409,
+            263
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g024",
+      "type": "label",
+      "transcript": "Копіювати виділене",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 24,
+      "lines": [
+        {
+          "id": "g024-l1",
+          "kind": "box",
+          "points": [
+            [
+              850,
+              261
+            ],
+            [
+              970,
+              279
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g024-bounds",
+        "kind": "box",
+        "points": [
+          [
+            850,
+            261
+          ],
+          [
+            970,
+            279
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g024-replace",
+        "kind": "box",
+        "points": [
+          [
+            850,
+            261
+          ],
+          [
+            970,
+            279
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g025",
+      "type": "label",
+      "transcript": "У кінець журналу",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 25,
+      "lines": [
+        {
+          "id": "g025-l1",
+          "kind": "box",
+          "points": [
+            [
+              1027,
+              261
+            ],
+            [
+              1131,
+              279
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g025-bounds",
+        "kind": "box",
+        "points": [
+          [
+            1027,
+            261
+          ],
+          [
+            1131,
+            279
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g025-replace",
+        "kind": "box",
+        "points": [
+          [
+            1027,
+            261
+          ],
+          [
+            1131,
+            279
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g026",
+      "type": "label",
+      "transcript": "Про програму",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 26,
+      "lines": [
+        {
+          "id": "g026-l1",
+          "kind": "box",
+          "points": [
+            [
+              59,
+              262
+            ],
+            [
+              145,
+              280
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g026-bounds",
+        "kind": "box",
+        "points": [
+          [
+            59,
+            262
+          ],
+          [
+            145,
+            280
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g026-replace",
+        "kind": "box",
+        "points": [
+          [
+            59,
+            262
+          ],
+          [
+            145,
+            280
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g027",
+      "type": "label",
+      "transcript": "Перетягніть документ сюди або клацніть, щоб обрати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 27,
+      "lines": [
+        {
+          "id": "g027-l1",
+          "kind": "box",
+          "points": [
+            [
+              319,
+              345
+            ],
+            [
+              641,
+              363
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g027-bounds",
+        "kind": "box",
+        "points": [
+          [
+            319,
+            345
+          ],
+          [
+            641,
+            363
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g027-replace",
+        "kind": "box",
+        "points": [
+          [
+            319,
+            345
+          ],
+          [
+            641,
+            363
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g028",
+      "type": "label",
+      "transcript": "Конвертувати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 28,
+      "lines": [
+        {
+          "id": "g028-l1",
+          "kind": "box",
+          "points": [
+            [
+              217,
+              399
+            ],
+            [
+              319,
+              420
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g028-bounds",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            399
+          ],
+          [
+            319,
+            420
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g028-replace",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            399
+          ],
+          [
+            319,
+            420
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g029",
+      "type": "label",
+      "transcript": "І закрити це вікно",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 29,
+      "lines": [
+        {
+          "id": "g029-l1",
+          "kind": "box",
+          "points": [
+            [
+              373,
+              401
+            ],
+            [
+              482,
+              419
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g029-bounds",
+        "kind": "box",
+        "points": [
+          [
+            373,
+            401
+          ],
+          [
+            482,
+            419
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g029-replace",
+        "kind": "box",
+        "points": [
+          [
+            373,
+            401
+          ],
+          [
+            482,
+            419
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g030",
+      "type": "paragraph",
+      "transcript": "Підтримуються: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комікси (CBZ/CBR/CB7/CBT) та зображення (PNG/JPG/WebP/..). Для MOBI/AZW3 потрібен Calibre; для CBR/CB7 потрібен 7-Zip; для накладання тексту на зображення та комікси потрібен Tesseract. Секретні файли FileDO (.fd-sec) потребують FileDO.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 30,
+      "lines": [
+        {
+          "id": "g030-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              430
+            ],
+            [
+              745,
+              447
+            ]
+          ]
+        },
+        {
+          "id": "g030-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              447
+            ],
+            [
+              725,
+              464
+            ]
+          ]
+        },
+        {
+          "id": "g030-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              463
+            ],
+            [
+              777,
+              480
+            ]
+          ]
+        },
+        {
+          "id": "g030-l4",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              480
+            ],
+            [
+              219,
+              497
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g030-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            430
+          ],
+          [
+            777,
+            497
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g030-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            430
+          ],
+          [
+            777,
+            497
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g031",
+      "type": "label",
+      "transcript": "Очистити все",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 31,
+      "lines": [
+        {
+          "id": "g031-l1",
+          "kind": "box",
+          "points": [
+            [
+              687,
+              520
+            ],
+            [
+              767,
+              538
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g031-bounds",
+        "kind": "box",
+        "points": [
+          [
+            687,
+            520
+          ],
+          [
+            767,
+            538
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g031-replace",
+        "kind": "box",
+        "points": [
+          [
+            687,
+            520
+          ],
+          [
+            767,
+            538
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g032",
+      "type": "label",
+      "transcript": "НЕДАВНІ",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 32,
+      "lines": [
+        {
+          "id": "g032-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              521
+            ],
+            [
+              240,
+              538
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g032-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            521
+          ],
+          [
+            240,
+            538
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g032-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            521
+          ],
+          [
+            240,
+            538
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g033",
+      "type": "label",
+      "transcript": "Alice in Wonderland.epub",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 33,
+      "lines": [
+        {
+          "id": "g033-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              566
+            ],
+            [
+              330,
+              583
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g033-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            566
+          ],
+          [
+            330,
+            583
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g033-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            566
+          ],
+          [
+            330,
+            583
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g034",
+      "type": "label",
+      "transcript": "Pride and Prejudice.epub",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 34,
+      "lines": [
+        {
+          "id": "g034-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              607
+            ],
+            [
+              326,
+              624
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g034-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            607
+          ],
+          [
+            326,
+            624
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g034-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            607
+          ],
+          [
+            326,
+            624
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g035",
+      "type": "label",
+      "transcript": "Moby Dick.fb2",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 35,
+      "lines": [
+        {
+          "id": "g035-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              648
+            ],
+            [
+              270,
+              665
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g035-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            648
+          ],
+          [
+            270,
+            665
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g035-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            648
+          ],
+          [
+            270,
+            665
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g036",
+      "type": "label",
+      "transcript": "Очистити все",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 36,
+      "lines": [
+        {
+          "id": "g036-l1",
+          "kind": "box",
+          "points": [
+            [
+              687,
+              702
+            ],
+            [
+              767,
+              720
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g036-bounds",
+        "kind": "box",
+        "points": [
+          [
+            687,
+            702
+          ],
+          [
+            767,
+            720
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g036-replace",
+        "kind": "box",
+        "points": [
+          [
+            687,
+            702
+          ],
+          [
+            767,
+            720
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g037",
+      "type": "label",
+      "transcript": "ЧЕРГА",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 37,
+      "lines": [
+        {
+          "id": "g037-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              703
+            ],
+            [
+              220,
+              720
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g037-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            703
+          ],
+          [
+            220,
+            720
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g037-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            703
+          ],
+          [
+            220,
+            720
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g038",
+      "type": "label",
+      "transcript": "Чергу завершено: 1 готово, 1 з помилкою, 0 скасовано.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 38,
+      "lines": [
+        {
+          "id": "g038-l1",
+          "kind": "box",
+          "points": [
+            [
+              228,
+              703
+            ],
+            [
+              535,
+              720
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g038-bounds",
+        "kind": "box",
+        "points": [
+          [
+            228,
+            703
+          ],
+          [
+            535,
+            720
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g038-replace",
+        "kind": "box",
+        "points": [
+          [
+            228,
+            703
+          ],
+          [
+            535,
+            720
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g039",
+      "type": "label",
+      "transcript": "Відкрити результат",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 39,
+      "lines": [
+        {
+          "id": "g039-l1",
+          "kind": "box",
+          "points": [
+            [
+              527,
+              747
+            ],
+            [
+              641,
+              765
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g039-bounds",
+        "kind": "box",
+        "points": [
+          [
+            527,
+            747
+          ],
+          [
+            641,
+            765
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g039-replace",
+        "kind": "box",
+        "points": [
+          [
+            527,
+            747
+          ],
+          [
+            641,
+            765
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g040",
+      "type": "label",
+      "transcript": "Прибрати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 40,
+      "lines": [
+        {
+          "id": "g040-l1",
+          "kind": "box",
+          "points": [
+            [
+              698,
+              747
+            ],
+            [
+              758,
+              765
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g040-bounds",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            747
+          ],
+          [
+            758,
+            765
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g040-replace",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            747
+          ],
+          [
+            758,
+            765
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g041",
+      "type": "label",
+      "transcript": "Alice in Wonderland.epub",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 41,
+      "lines": [
+        {
+          "id": "g041-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              748
+            ],
+            [
+              330,
+              765
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g041-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            748
+          ],
+          [
+            330,
+            765
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g041-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            748
+          ],
+          [
+            330,
+            765
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g042",
+      "type": "label",
+      "transcript": "Готово",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 42,
+      "lines": [
+        {
+          "id": "g042-l1",
+          "kind": "box",
+          "points": [
+            [
+              444,
+              748
+            ],
+            [
+              483,
+              765
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g042-bounds",
+        "kind": "box",
+        "points": [
+          [
+            444,
+            748
+          ],
+          [
+            483,
+            765
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g042-replace",
+        "kind": "box",
+        "points": [
+          [
+            444,
+            748
+          ],
+          [
+            483,
+            765
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g043",
+      "type": "label",
+      "transcript": "Прибрати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 43,
+      "lines": [
+        {
+          "id": "g043-l1",
+          "kind": "box",
+          "points": [
+            [
+              698,
+              788
+            ],
+            [
+              758,
+              806
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g043-bounds",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            788
+          ],
+          [
+            758,
+            806
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g043-replace",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            788
+          ],
+          [
+            758,
+            806
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g044",
+      "type": "label",
+      "transcript": "Pride and Prejudice.epub",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 44,
+      "lines": [
+        {
+          "id": "g044-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              789
+            ],
+            [
+              326,
+              806
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g044-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            789
+          ],
+          [
+            326,
+            806
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g044-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            789
+          ],
+          [
+            326,
+            806
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g045",
+      "type": "label",
+      "transcript": "Помилка",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 45,
+      "lines": [
+        {
+          "id": "g045-l1",
+          "kind": "box",
+          "points": [
+            [
+              604,
+              789
+            ],
+            [
+              654,
+              806
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g045-bounds",
+        "kind": "box",
+        "points": [
+          [
+            604,
+            789
+          ],
+          [
+            654,
+            806
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g045-replace",
+        "kind": "box",
+        "points": [
+          [
+            604,
+            789
+          ],
+          [
+            654,
+            806
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g046",
+      "type": "label",
+      "transcript": "Прибрати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 46,
+      "lines": [
+        {
+          "id": "g046-l1",
+          "kind": "box",
+          "points": [
+            [
+              698,
+              829
+            ],
+            [
+              758,
+              847
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g046-bounds",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            829
+          ],
+          [
+            758,
+            847
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g046-replace",
+        "kind": "box",
+        "points": [
+          [
+            698,
+            829
+          ],
+          [
+            758,
+            847
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g047",
+      "type": "label",
+      "transcript": "Moby Dick.fb2",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 47,
+      "lines": [
+        {
+          "id": "g047-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              830
+            ],
+            [
+              270,
+              847
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g047-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            830
+          ],
+          [
+            270,
+            847
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g047-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            830
+          ],
+          [
+            270,
+            847
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g048",
+      "type": "label",
+      "transcript": "Очікує",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 48,
+      "lines": [
+        {
+          "id": "g048-l1",
+          "kind": "box",
+          "points": [
+            [
+              617,
+              830
+            ],
+            [
+              654,
+              847
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g048-bounds",
+        "kind": "box",
+        "points": [
+          [
+            617,
+            830
+          ],
+          [
+            654,
+            847
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g048-replace",
+        "kind": "box",
+        "points": [
+          [
+            617,
+            830
+          ],
+          [
+            654,
+            847
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g049",
+      "type": "paragraph",
+      "transcript": "Скільки файлів конвертуються одночасно. По одному - щоб OCR і переклад не заважали один одному.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 49,
+      "lines": [
+        {
+          "id": "g049-l1",
+          "kind": "box",
+          "points": [
+            [
+              524,
+              863
+            ],
+            [
+              778,
+              880
+            ]
+          ]
+        },
+        {
+          "id": "g049-l2",
+          "kind": "box",
+          "points": [
+            [
+              524,
+              880
+            ],
+            [
+              762,
+              897
+            ]
+          ]
+        },
+        {
+          "id": "g049-l3",
+          "kind": "box",
+          "points": [
+            [
+              524,
+              897
+            ],
+            [
+              600,
+              914
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g049-bounds",
+        "kind": "box",
+        "points": [
+          [
+            524,
+            863
+          ],
+          [
+            778,
+            914
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g049-replace",
+        "kind": "box",
+        "points": [
+          [
+            524,
+            863
+          ],
+          [
+            778,
+            914
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g050",
+      "type": "label",
+      "transcript": "Повторити невдалі",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 50,
+      "lines": [
+        {
+          "id": "g050-l1",
+          "kind": "box",
+          "points": [
+            [
+              217,
+              879
+            ],
+            [
+              331,
+              897
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g050-bounds",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            879
+          ],
+          [
+            331,
+            897
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g050-replace",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            879
+          ],
+          [
+            331,
+            897
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g051",
+      "type": "label",
+      "transcript": "Паралельно:",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 51,
+      "lines": [
+        {
+          "id": "g051-l1",
+          "kind": "box",
+          "points": [
+            [
+              359,
+              880
+            ],
+            [
+              429,
+              897
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g051-bounds",
+        "kind": "box",
+        "points": [
+          [
+            359,
+            880
+          ],
+          [
+            429,
+            897
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g051-replace",
+        "kind": "box",
+        "points": [
+          [
+            359,
+            880
+          ],
+          [
+            429,
+            897
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g052",
+      "type": "label",
+      "transcript": "1",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 52,
+      "lines": [
+        {
+          "id": "g052-l1",
+          "kind": "box",
+          "points": [
+            [
+              455,
+              880
+            ],
+            [
+              463,
+              898
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g052-bounds",
+        "kind": "box",
+        "points": [
+          [
+            455,
+            880
+          ],
+          [
+            463,
+            898
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g052-replace",
+        "kind": "box",
+        "points": [
+          [
+            455,
+            880
+          ],
+          [
+            463,
+            898
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g053",
+      "type": "label",
+      "transcript": "Огляд..",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 53,
+      "lines": [
+        {
+          "id": "g053-l1",
+          "kind": "box",
+          "points": [
+            [
+              726,
+              932
+            ],
+            [
+              767,
+              950
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g053-bounds",
+        "kind": "box",
+        "points": [
+          [
+            726,
+            932
+          ],
+          [
+            767,
+            950
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g053-replace",
+        "kind": "box",
+        "points": [
+          [
+            726,
+            932
+          ],
+          [
+            767,
+            950
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g054",
+      "type": "label",
+      "transcript": "Тека виводу:",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 54,
+      "lines": [
+        {
+          "id": "g054-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              933
+            ],
+            [
+              250,
+              950
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g054-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            933
+          ],
+          [
+            250,
+            950
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g054-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            933
+          ],
+          [
+            250,
+            950
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g055",
+      "type": "label",
+      "transcript": "Залиште порожнім - результат ляже поряд із джерелом",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 55,
+      "lines": [
+        {
+          "id": "g055-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              933
+            ],
+            [
+              618,
+              951
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g055-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            933
+          ],
+          [
+            618,
+            951
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g055-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            933
+          ],
+          [
+            618,
+            951
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g056",
+      "type": "paragraph",
+      "transcript": "Тека для результатів; кожен документ отримує в ній власну підтеку з його назвою. Порожньо = поряд із самим документом (перетягнутий файл спершу копіюється в теку застосунку, тож його результат опиниться там).",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 56,
+      "lines": [
+        {
+          "id": "g056-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              963
+            ],
+            [
+              758,
+              980
+            ]
+          ]
+        },
+        {
+          "id": "g056-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              980
+            ],
+            [
+              777,
+              997
+            ]
+          ]
+        },
+        {
+          "id": "g056-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              997
+            ],
+            [
+              206,
+              1014
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g056-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            963
+          ],
+          [
+            777,
+            1014
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g056-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            963
+          ],
+          [
+            777,
+            1014
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g057",
+      "type": "label",
+      "transcript": "ПЕРЕКЛАД",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 57,
+      "lines": [
+        {
+          "id": "g057-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1030
+            ],
+            [
+              251,
+              1047
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g057-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1030
+          ],
+          [
+            251,
+            1047
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g057-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1030
+          ],
+          [
+            251,
+            1047
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g058",
+      "type": "label",
+      "transcript": "Chrome (безкоштовно)",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 58,
+      "lines": [
+        {
+          "id": "g058-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1061
+            ],
+            [
+              345,
+              1079
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g058-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1061
+          ],
+          [
+            345,
+            1079
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g058-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1061
+          ],
+          [
+            345,
+            1079
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g059",
+      "type": "label",
+      "transcript": "Google Cloud",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 59,
+      "lines": [
+        {
+          "id": "g059-l1",
+          "kind": "box",
+          "points": [
+            [
+              390,
+              1061
+            ],
+            [
+              470,
+              1079
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g059-bounds",
+        "kind": "box",
+        "points": [
+          [
+            390,
+            1061
+          ],
+          [
+            470,
+            1079
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g059-replace",
+        "kind": "box",
+        "points": [
+          [
+            390,
+            1061
+          ],
+          [
+            470,
+            1079
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g060",
+      "type": "label",
+      "transcript": "Ollama (локально)",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 60,
+      "lines": [
+        {
+          "id": "g060-l1",
+          "kind": "box",
+          "points": [
+            [
+              515,
+              1061
+            ],
+            [
+              624,
+              1079
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g060-bounds",
+        "kind": "box",
+        "points": [
+          [
+            515,
+            1061
+          ],
+          [
+            624,
+            1079
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g060-replace",
+        "kind": "box",
+        "points": [
+          [
+            515,
+            1061
+          ],
+          [
+            624,
+            1079
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g061",
+      "type": "label",
+      "transcript": "Не перекладати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 61,
+      "lines": [
+        {
+          "id": "g061-l1",
+          "kind": "box",
+          "points": [
+            [
+              669,
+              1061
+            ],
+            [
+              765,
+              1079
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g061-bounds",
+        "kind": "box",
+        "points": [
+          [
+            669,
+            1061
+          ],
+          [
+            765,
+            1079
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g061-replace",
+        "kind": "box",
+        "points": [
+          [
+            669,
+            1061
+          ],
+          [
+            765,
+            1079
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g062",
+      "type": "paragraph",
+      "transcript": "Chrome (безкоштовно): лише конвертація, потім переклад у браузері - без API-ключа. Google/Ollama перекладають під час конвертації.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 62,
+      "lines": [
+        {
+          "id": "g062-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1090
+            ],
+            [
+              740,
+              1107
+            ]
+          ]
+        },
+        {
+          "id": "g062-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1107
+            ],
+            [
+              370,
+              1124
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g062-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1090
+          ],
+          [
+            740,
+            1124
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g062-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1090
+          ],
+          [
+            740,
+            1124
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g063",
+      "type": "label",
+      "transcript": "Мови:",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 63,
+      "lines": [
+        {
+          "id": "g063-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1139
+            ],
+            [
+              214,
+              1156
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g063-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1139
+          ],
+          [
+            214,
+            1156
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g063-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1139
+          ],
+          [
+            214,
+            1156
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g064",
+      "type": "label",
+      "transcript": "English (en)",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 64,
+      "lines": [
+        {
+          "id": "g064-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              1139
+            ],
+            [
+              350,
+              1157
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g064-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            1139
+          ],
+          [
+            350,
+            1157
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g064-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            1139
+          ],
+          [
+            350,
+            1157
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g065",
+      "type": "label",
+      "transcript": "Русский (ru)",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 65,
+      "lines": [
+        {
+          "id": "g065-l1",
+          "kind": "box",
+          "points": [
+            [
+              561,
+              1139
+            ],
+            [
+              632,
+              1157
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g065-bounds",
+        "kind": "box",
+        "points": [
+          [
+            561,
+            1139
+          ],
+          [
+            632,
+            1157
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g065-replace",
+        "kind": "box",
+        "points": [
+          [
+            561,
+            1139
+          ],
+          [
+            632,
+            1157
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g066",
+      "type": "paragraph",
+      "transcript": "Мова оригіналу - та, якою написано документ; мова перекладу - та, на яку перекладають Google або Ollama. «Chrome (безкоштовно)» і «Не перекладати» використовують лише мову оригіналу: вона задає мову OCR, поки там вибрано «Автоматично».",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 66,
+      "lines": [
+        {
+          "id": "g066-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1169
+            ],
+            [
+              739,
+              1186
+            ]
+          ]
+        },
+        {
+          "id": "g066-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1186
+            ],
+            [
+              751,
+              1203
+            ]
+          ]
+        },
+        {
+          "id": "g066-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1203
+            ],
+            [
+              433,
+              1220
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g066-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1169
+          ],
+          [
+            751,
+            1220
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g066-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1169
+          ],
+          [
+            751,
+            1220
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g067",
+      "type": "label",
+      "transcript": "Зберегти",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 67,
+      "lines": [
+        {
+          "id": "g067-l1",
+          "kind": "box",
+          "points": [
+            [
+              713,
+              1234
+            ],
+            [
+              767,
+              1252
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g067-bounds",
+        "kind": "box",
+        "points": [
+          [
+            713,
+            1234
+          ],
+          [
+            767,
+            1252
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g067-replace",
+        "kind": "box",
+        "points": [
+          [
+            713,
+            1234
+          ],
+          [
+            767,
+            1252
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g068",
+      "type": "label",
+      "transcript": "Ключ Google:",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 68,
+      "lines": [
+        {
+          "id": "g068-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1236
+            ],
+            [
+              255,
+              1253
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g068-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1236
+          ],
+          [
+            255,
+            1253
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g068-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1236
+          ],
+          [
+            255,
+            1253
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g069",
+      "type": "label",
+      "transcript": "Показати",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 69,
+      "lines": [
+        {
+          "id": "g069-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1273
+            ],
+            [
+              264,
+              1291
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g069-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1273
+          ],
+          [
+            264,
+            1291
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g069-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1273
+          ],
+          [
+            264,
+            1291
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g070",
+      "type": "paragraph",
+      "transcript": "Ключ ще не збережено. Вставте його та натисніть «Зберегти» (зберігається в C:\\Users\\demo\\AppData\\Local\\doc-html-translate\\google_api.key.dpapi) - він ніколи не залишає цей комп'ютер.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 70,
+      "lines": [
+        {
+          "id": "g070-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1302
+            ],
+            [
+              604,
+              1319
+            ]
+          ]
+        },
+        {
+          "id": "g070-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1319
+            ],
+            [
+              722,
+              1336
+            ]
+          ]
+        },
+        {
+          "id": "g070-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1335
+            ],
+            [
+              242,
+              1352
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g070-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1302
+          ],
+          [
+            722,
+            1352
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g070-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1302
+          ],
+          [
+            722,
+            1352
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g071",
+      "type": "label",
+      "transcript": "ПАРАМЕТРИ",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 71,
+      "lines": [
+        {
+          "id": "g071-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              1368
+            ],
+            [
+              261,
+              1385
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g071-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1368
+          ],
+          [
+            261,
+            1385
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g071-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            1368
+          ],
+          [
+            261,
+            1385
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g072",
+      "type": "label",
+      "transcript": "Одна сторінка (зміст доступний)",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 72,
+      "lines": [
+        {
+          "id": "g072-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1400
+            ],
+            [
+              400,
+              1418
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g072-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1400
+          ],
+          [
+            400,
+            1418
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g072-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1400
+          ],
+          [
+            400,
+            1418
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g073",
+      "type": "label",
+      "transcript": "Не відкривати браузер",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 73,
+      "lines": [
+        {
+          "id": "g073-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1400
+            ],
+            [
+              653,
+              1418
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g073-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1400
+          ],
+          [
+            653,
+            1418
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g073-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1400
+          ],
+          [
+            653,
+            1418
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g074",
+      "type": "paragraph",
+      "transcript": "Одна довга сторінка зі зв'язаним змістом зверху, а не по сторінці на розділ.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 74,
+      "lines": [
+        {
+          "id": "g074-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1420
+            ],
+            [
+              436,
+              1437
+            ]
+          ]
+        },
+        {
+          "id": "g074-l2",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1437
+            ],
+            [
+              396,
+              1454
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g074-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1420
+          ],
+          [
+            436,
+            1454
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g074-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1420
+          ],
+          [
+            436,
+            1454
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g075",
+      "type": "paragraph",
+      "transcript": "Конвертувати без відкриття результату; знайти його потім можна за шляхом виводу під полем вибору файлу.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 75,
+      "lines": [
+        {
+          "id": "g075-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1420
+            ],
+            [
+              774,
+              1437
+            ]
+          ]
+        },
+        {
+          "id": "g075-l2",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1437
+            ],
+            [
+              778,
+              1454
+            ]
+          ]
+        },
+        {
+          "id": "g075-l3",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1454
+            ],
+            [
+              596,
+              1471
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g075-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1420
+          ],
+          [
+            778,
+            1471
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g075-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1420
+          ],
+          [
+            778,
+            1471
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g076",
+      "type": "label",
+      "transcript": "Примусово переобробити",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 76,
+      "lines": [
+        {
+          "id": "g076-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1490
+            ],
+            [
+              367,
+              1508
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g076-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1490
+          ],
+          [
+            367,
+            1508
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g076-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1490
+          ],
+          [
+            367,
+            1508
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g077",
+      "type": "label",
+      "transcript": "Докладний лог",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 77,
+      "lines": [
+        {
+          "id": "g077-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1490
+            ],
+            [
+              606,
+              1508
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g077-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1490
+          ],
+          [
+            606,
+            1508
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g077-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1490
+          ],
+          [
+            606,
+            1508
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g078",
+      "type": "paragraph",
+      "transcript": "Перезібрати результат, навіть якщо для цього файла вже є готовий; інакше використовується наявний.",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 78,
+      "lines": [
+        {
+          "id": "g078-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1511
+            ],
+            [
+              462,
+              1528
+            ]
+          ]
+        },
+        {
+          "id": "g078-l2",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1527
+            ],
+            [
+              468,
+              1544
+            ]
+          ]
+        },
+        {
+          "id": "g078-l3",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1544
+            ],
+            [
+              257,
+              1561
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g078-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1511
+          ],
+          [
+            468,
+            1561
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g078-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1511
+          ],
+          [
+            468,
+            1561
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g079",
+      "type": "paragraph",
+      "transcript": "Копіювати повний журнал конвертера в панель журналу; саме його пакує «Надіслати журнали авторові».",
+      "language": "uk",
+      "direction": "ltr",
+      "readingOrder": 79,
+      "lines": [
+        {
+          "id": "g079-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1511
+            ],
+            [
+              740,
+              1528
+            ]
+          ]
+        },
+        {
+          "id": "g079-l2",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1527
+            ],
+            [
+              763,
+              1544
+            ]
+          ]
+        },
+        {
+          "id": "g079-l3",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1544
+            ],
+            [
+              624,
+              1561
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g079-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1511
+          ],
+          [
+            763,
+            1561
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g079-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1511
+          ],
+          [
+            763,
+            1561
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/screens (rendered DOM boxes)",
+    "annotatedOn": "2026-10-30",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

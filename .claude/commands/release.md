@@ -59,24 +59,30 @@ later session reads the file instead of guessing.
    release-notes page is assembled from that file at the release, never edited per ticket, and the check fails on
    an app tag with no record.
 
-**Step D - Preflight (free).** Confirm clean tree + green gate, and that the **gate evidence** line in the
-Step A output is green (the last `check.ps1` passed on HEAD's exact tree). Quote the **contract gate** line
+**Step D - Preflight (free).** This is where the full build and every test tier run - between releases only
+the fast tier does (AGENTS.md "Build, Test, Lint"). Confirm clean tree + green full gate, and that the **gate
+evidence** line in the Step A output is green (the last full `check.ps1` passed on HEAD's exact tree; a `-Fast`
+run writes no evidence). Quote the **contract gate** line
 of the same output - PASS, WARN, FAIL or UNVERIFIED (`scripts/contract-gate.ps1` against the catalog's
-registry) - in the report to the user, with every WARN it names. `release.ps1` exits 1 while either line
-blocks the tag. Commit anything outstanding:
+registry) - in the report to the user, with every WARN it names - and the **store preflight** line: PASS, MANUAL
+(the Store channel is unavailable; the Store step is manual and the release goes on) or BLOCKED (a pending
+submission, a version not above the live one, a price that is not Free). `release.ps1` exits 1 while any of the
+three lines blocks the tag. Run the `RELEASE` items the tickets since the last tag recorded (for example
+`node tools/uicheck/run.mjs` after a `ui.html` change, and `node tools/helpgen/generate.mjs --check` for the in-app help set - it builds the GUI and runs about two minutes; the screenshots wait for the release (CONTEXT-HELP rule 18 exception, ticket E0125) and the full gate's `help-check -Release` fails a stale set, so run `node tools/helpgen/generate.mjs` first when a window input moved and commit the set). Commit anything outstanding through the full gate:
 
 ```powershell
-./scripts/build-local.ps1 -Message "..."
+./scripts/build-local.ps1 -Release -Message "..."
 ```
 
 **Step E - Docs & site (free, local commit).** Update every surface via `/docs-sync` (manifest
 [DEV/DOCS_SURFACES.md](../../DEV/DOCS_SURFACES.md) - README.md, the `docs.*` en/ru/uk trio, `index.html`,
 `extension.html`, `extension/store/LISTING.md`, `extension/README.md`, `_locales/*/messages.json`, and the
 `release-notes.html` render from Step C) plus the
-`DEV/CHANGELOG.md` "What's new" entries from Step C, then commit via `build-local.ps1`.
+`DEV/CHANGELOG.md` "What's new" entries from Step C, then commit via `build-local.ps1 -Release`.
 
 **Step F - GitHub Release `[PAID]`.** Re-run `./scripts/release.ps1` and **refuse to push the tag** unless it
-exits 0: the gate-evidence line green and the contract gate at PASS or WARN. A contract-gate FAIL is fixed in
+exits 0: the gate-evidence line green, the contract gate at PASS or WARN and the store preflight not BLOCKED
+(an extension-only release pushes no `v*` tag and is not held by that line). A contract-gate FAIL is fixed in
 the catalog first (the contract change comes before the code, never after); UNVERIFIED means this machine
 cannot see the catalog, and the release is cut where it can. Then confirm, and push the tag (triggers
 `release.yml`):
@@ -98,23 +104,28 @@ wingetcreate update SerZhyAle.DocHtmlTranslate --version <ver> --urls <zip-url> 
 Sign the CLA on the PR if prompted. Details: [docs/how-i-posted-this-project-to-winget.md](../../docs/how-i-posted-this-project-to-winget.md).
 
 **Step H - Microsoft Store / MSIX `[PUBLIC]`.** Confirm, build the **unsigned** package, then upload
-by hand in Partner Center (no API for create/listing):
+by hand in Partner Center (the Store has a submission API and the `msstore` CLI, but this flow makes no write call through either):
 
 ```powershell
 ./msix/build-msix.ps1 -Tag v<ver>
 ```
 
-The identity defaults to the reserved `SZA.Doc-HTML-Translate` - pass none. `-Tag` refuses unless HEAD
-is the tag's commit and the tree is clean. Details: [msix/README.md](../../msix/README.md).
+The identity comes from `msix/identity.json` (the reserved `SZA.Doc-HTML-Translate`) - pass none. `-Tag`
+refuses unless HEAD is the tag's commit and the tree is clean. Before the tag, the `store preflight` line of the
+Step A output is the read-only check (WINDOWS-STORE 0.4 section D): MANUAL means the channel is unavailable and this
+step stays manual, BLOCKED stops the tag. It does not test a write (none is made), the credential's expiry unless
+`-StoreCredentialExpiry yyyy-MM-dd` is passed, the listing, the age rating or what Partner Center accepts at upload.
+After the tag, record its evidence line (the command is printed under step 4) in the publish-state: one line per run,
+no account identifiers or secrets. Never run `msstore` yourself in this flow. Details: [msix/README.md](../../msix/README.md).
 
 **Step I - Chrome / Edge extension `[PAID]` `[PUBLIC]`.** Chrome and Edge publish **independently** -
-separate tags, separate build-time versions. Push `ext-cws-v*` for Chrome (triggers `publish-cws.yml`)
-or `ext-edge-v*` for Edge (`publish-edge.yml`); each CI run does its own `npm run build`, which stamps
-a fresh version, so no manual bump is needed:
+separate tags, separate runs. Record the version first, so the site shows it and the tags name it; the build
+stamps the version its tag names and stops on any other, so no manual bump is needed:
 
 ```powershell
-git tag ext-cws-v<label>; git push origin ext-cws-v<label>    # Chrome only
-git tag ext-edge-v<label>; git push origin ext-edge-v<label>  # Edge only
+node extension/build.mjs record-version; ./scripts/release-notes.ps1 -Render   # then commit
+git tag ext-cws-v<version>; git push origin ext-cws-v<version>    # Chrome only (publish-cws.yml)
+git tag ext-edge-v<version>; git push origin ext-edge-v<version>  # Edge only (publish-edge.yml)
 ```
 
 Details: [extension/PUBLISHING.md](../../extension/PUBLISHING.md).

@@ -403,7 +403,7 @@ multiplied by `clamp(0.875, ui, 2)`; `--dht-ui` / `--ui` is 1 and no size select
   `--dht-bar-h`, so a bar that wraps never covers them. The index toolbar is not sticky and keeps a fixed place.
 - **External links.** The Go version link and the extension viewer's two outside links draw `nav.open-external` (a CSS
   mask in Go, an inline glyph in JS; `rtl: mirror`).
-- **Shortcuts.** The Search tooltip names the chord, "Search (Ctrl+F)", "Cmd+F" on macOS.
+- **Shortcuts.** The Search tooltip names the chord, "Search (Ctrl+F)", "⌘+F" on macOS (`INPUT-CHORD` 0.5 rule 5: the platform glyph for display; the chord itself is still Cmd+F) - the same string in both editions.
 
 Decisions recorded here (ticket 119): the bar stays an ordinary Tab row (no `role="toolbar"`); the reader pages get
 **no help button** (ticket 118 decision 5 stands); the Go reader's Ctrl+wheel page zoom (`navBarScript`, 50 to 300
@@ -512,9 +512,10 @@ tokens (`viewer.css` extends the token scope to them; `viewer-answers.js` builds
 - **Status Cancel.** A glyph and a caption on the shared button rule; the rule sets `display`, so `#status-stop[hidden]` says
   `display: none` again - without it the control showed on every page.
 
-Not part of this slice and still owed (also in `UI_PROFILE.md`, section 6): a help route for the extension (ticket 118
-decision 5), the password prompt and the little-text banners of the EPUB and PDF paths (the rule is applied; no encrypted PDF or
-image-only EPUB was opened in the harness).
+Not part of this slice and still owed (also in `UI_PROFILE.md`, section 6): the password prompt and the little-text banners of
+the EPUB and PDF paths (the rule is applied; no encrypted PDF or image-only EPUB was opened in the harness). The extension's
+help route is its existing "Guide & help" link to the site's extension guide, with no help pages of its own (owner decision of
+2026-10-30, `UI_PROFILE.md` section 4).
 
 ### Reader search (2026-09-29)
 
@@ -1155,10 +1156,23 @@ their own test where one exists.
   desktop reads `frame.grey()` (Go's JFIF weights), the extension `luma()` of the prepared canvas (the
   same 299/587/114 weights, truncated) - within one level of each other, and each edition's decoder
   already differs by more than that.
+  **The tall-word cut** is the third evidence of the same split (`OCR-PIPELINE` 1.7 A, narrowed by 1.10 A,
+  ticket E0128): the cut goes before a word whose box stands over `OCR_TYPE_SIZE_RATIO` (1.6, not the 2.5
+  the catalog text of 1.7 A once named) times the line's median word height **and which carries no letter
+  or digit** - `hasLetterOrDigit` == `/[\p{L}\p{N}]/u`, the outlier trim's own predicate, pinned on both
+  sides by the same `TestParityOCRClustering` row as the stroke cut. Height alone cut every honest labelled
+  line it acted on (33 of 33 on the desktop engine, 23 of 23 on the extension's) and no ratio separated them
+  from the stitches ([`DEV/research/RESEARCH_ocr-tall-word-letter-direction_2026-10-30.md`](../DEV/research/RESEARCH_ocr-tall-word-letter-direction_2026-10-30.md));
+  with the letter rule 2 of 33 and 1 of 23 are still cut and 11 of 13 and 8 of 8 stitches keep their cut.
+  The shared fixture `tests/testdata/ocr_balloon_stitch_cases.json` is read by `internal/ocr`
+  (`TestSplitWideGapsCutsWhereTheOutlineIsTheToken`) and `extension/test/ocr-cluster.test.mjs` alike.
   **Not covered, measured:** when the recognizer reads both outlines of a balloon pair as one token of
   their own (`ff`, `fj`, `})j`) no gap holds a stroke and the line stays stitched - the lab's
   `synth-side-by-side-balloons` is built with 16 px of padding so that it does not do this, and its
-  comment says why.
+  comment says why. The same holds when the boundary token carries a letter and no stroke crosses the
+  gap: the Superman page the tall-word cut was built for (ticket 67) reads its two boundary tokens as
+  `“J` and `A`, so since 1.10 its middle panel is one plate again - a named limit, owner decision of
+  2026-10-30 (the plate-level lab run belongs to the release).
 - **Overlay resolution constants** identical: `OCR_UPSCALE_DPI_FLOOR = 120`, `OCR_ASSUMED_PAGE_INCHES = 11`,
   `OCR_MIN_DECLARED_DPI = 70` and `OCR_UPSCALE_FACTOR = 2` (`tesseract.go` `ocrUpscaleDPIFloor` /
   `ocrAssumedPageInches` / `ocrMinDeclaredDPI` / `ocrUpscaleFactor` == `ocr-overlay.js`). Guarded by
@@ -1485,7 +1499,11 @@ their own test where one exists.
   choice in the popup rather than a value inferred from a translation flag, and the pass needs
   `osd.traineddata`, ~10 MB the extension neither vendors nor downloads today. The consequence is real
   and is not pretended away - a reader who never opens the popup gets the same transliterated debris on
-  a Cyrillic page that the desktop no longer produces. Tracked in ticket 121 (phase B).
+  a Cyrillic page that the desktop no longer produces. Measured 2026-10-30 (ticket E0121): with the
+  default `eng` the extension draws debris plates on 3 of the 5 Cyrillic corpus images, the desktop on 2,
+  and the discard record's refused share does not separate them from honest pages
+  ([`RESEARCH_ocr-rule10-extension-cyrillic_2026-10-30.md`](../DEV/research/RESEARCH_ocr-rule10-extension-cyrillic_2026-10-30.md));
+  a dated exception in the catalog registry.
   The desktop also **records** the check (OCR-OVERLAY 1.3 A, ticket 121 phase B): on every OCR run the
   run log says where the language came from (chosen with `-ocr-lang` or assumed) and what the check made
   of it, and the `DOCHT_OCR_DIAG` sidecar carries the same on each
@@ -1554,18 +1572,23 @@ constants - changing either is a cross-edition change; update all rows together.
 
 **Guard:** Guarded by `TestParityReportFields`.
 
-Both editions hand the author a `key: value` block, one field per line, and both write it **in English
+Both editions hand the author a labelled `label: value` block, one field per line (the desktop archive's
+`report.txt`, the `report` lines inside the extension's JSON envelope), and both write it **in English
 whatever the interface language is** - the author reads one format, and a summary they cannot read is
-worse than none. The two blocks are produced independently, so the labels they share are pinned here:
+worse than none. The two blocks are produced independently, so the labels they share are pinned here. Beside the
+block each edition carries the machine-readable summary of `DIAGNOSTIC-REPORT` 8 A and 8 B: the archive's
+`environment.txt` (`KEY=value` lines opening with `schema_version=1`) and the envelope's members (`schemaVersion: 1`,
+`app`, `environment`, `options`, `lastRun`); the two schema versions move together.
 
 | Element | Go app | Extension |
 |---|---|---|
-| Producer | [`report.Environment`](../internal/report/environment.go) -> `environment.txt` in the archive | [`reportText`](../extension/src/diagnostics.js) -> the clipboard |
+| Producer | [`report.ReportText`](../internal/report/environment.go) -> `report.txt` in the archive (the same facts as `report.Environment` -> `environment.txt`) | [`reportText`](../extension/src/diagnostics.js), carried by [`reportEnvelope`](../extension/src/diagnostics.js) -> the clipboard and the saved file |
 | Shared labels | `edition`, `version`, `platform`, `interface language`, `ocr` | same five, same spelling |
-| Rest of the block | `ocr languages`, `ocr data dir`, `ollama model`, and `logs left out` (only when the archive size rules left run logs out; additive, last line) | `user agent`, `auto reflow`, `theme`, `source language`, `ocr language`, `disabled hosts`, `last format`, `last pages`, `last error`, `last run at` |
+| Rest of the block | `ocr languages`, `ocr data dir`, `ollama model`, and `logs left out` (only when the archive size rules left run logs out; additive, last line; `logs_left_out=N` in `environment.txt`) | `user agent`, `auto reflow`, `theme`, `source language`, `ocr language`, `disabled hosts`, `last format`, `last pages`, `last error`, `last run at` |
 
 Renaming a shared label on one side only makes two reports that cannot be read the same way. Guarded by
-`TestParityReportFields`.
+`TestParityReportFields`, which also pins `SchemaVersion` (`internal/report/environment.go`) equal to `SCHEMA_VERSION`
+(`extension/src/diagnostics.js`).
 
 ### Contract variants (ticket 120, 2026-10-20)
 
@@ -1573,23 +1596,31 @@ The design record of the supported variants of shared contracts that are not UI 
 [UI_PROFILE.md](UI_PROFILE.md) section 4). Each is recorded as a permanent supported variant in the catalog registry,
 with a review condition and no deadline; the registry row names the clause and the proposal filed for it.
 
-- **Diagnostic report (`DIAGNOSTIC-REPORT`).** (1) *Carriers, 8 A:* the extension has no archive and no JSON envelope,
-  only the clipboard text and the saved `doc-html-translate-diagnostics.txt` - the sandbox hosts no run-log store (see
-  "Sending logs to the author differs in shape, by decision" under Intentional divergences, ADR-4). (2) *Environment
-  text, 2 and 8 B:* plain `key: value` lines with spaced English labels and no `schema_version` (absent means 1), the
-  table above, held by `TestParityReportFields`. (3) *User-authored names, 2 and 8 B:* the desktop run logs keep the
-  names of the documents and `settings.json` keeps the recent paths, because a log whose document cannot be
-  identified cannot be acted on (`internal/report/redact.go`; `TestRedactKeepsDocumentFileNames`,
-  `TestBuildRedactsRecentPathsInSettings`); profile names, credentials and tokens are redacted, and the export is
-  user-initiated and local. (4) *Placeholders, 3:* a personal path reads `%USERPROFILE%` or `%LOCALAPPDATA%`, not
-  `<USER>` or `<APP_DATA>`.
+- **Diagnostic report (`DIAGNOSTIC-REPORT`).** Conforming since ticket E0122 (Q3, 2026-10-30), the owner having chosen
+  conformance over three permanent variants: (1) *Carriers, 8 A:* the extension's clipboard and its saved
+  `doc-html-translate-diagnostics.json` carry the single JSON envelope with the readable lines beside the facts; the
+  extension still has no zip archive - the sandbox hosts no run-log store (see "Sending logs to the author differs in
+  shape, by decision" under Intentional divergences, ADR-4), and the envelope is the carrier the contract asks for
+  where a product has a clipboard surface. (2) *Environment summary, 2 and 8 B:* the desktop `environment.txt` is
+  `KEY=value` lines opening with `schema_version=1`, and the labelled block moved to its own entry `report.txt`
+  (`TestBuildProducesReadableArchive`, `TestParityReportFields`). (3) *User-authored names, 2 and 8 B:* a document
+  file name or title is replaced by a placeholder in every run log, at write time for the names the run registers
+  (`report.HideDocument`, `report.HideFolder`) and again when the archive is built for paths and `Title:` lines
+  (`internal/report/names.go`; `TestHideDocument*`, `TestRedactHidesDocumentFileNames`), and `settings.json` loses
+  `recent` and `output` (`TestBuildLeavesTheUsersNamesOutOfTheSettingsCopy`); the author cannot see which book a report
+  is about and asks in the message. (4) *Placeholders, 3:* a personal path reads `%USERPROFILE%` or `%LOCALAPPDATA%`,
+  not `<USER>` or `<APP_DATA>`; 0.15 accepts any placeholder without the profile name.
 - **Media classification (`MEDIA-CLASSIFICATION`).** The converter is a scoped reader, not a classifier: it
   converts what it is given and refuses binary content by signature. A `.svg` and a text `STREAM` file such as
   `.m3u8` are read as text and converted as prose, and `.tif`, `.cb7`, `.cbt`, `.azw3`, `.html` and `.htm` are
   converted although the contract's tables do not list them (`internal/pipeline/pipeline.go`).
-- **Secret files (`FDSEC-BEHAVIOUR` section 18).** FileDO's output is never read (invariant 8), so when it cannot write
-  the sealed name at the destination the product cannot say why: the I/O text names a full disk, no access or a file
-  in use, never this cause and never the sealed name; the original container is preserved and nothing is committed.
+- **Secret files (`FDSEC-BEHAVIOUR` sections 18 and 19).** FileDO's output is never forwarded (invariant 8) and the
+  restore reads one thing from its stderr: beside exit 5, the exact closed line `reason=destination-name`. With it the
+  product names the cause (the file name sealed inside cannot be created on this computer, nothing was converted, the
+  original is unchanged, open it with FileDO itself); without it - an older FileDO, a near-miss line, another exit
+  code - the plain I/O text stays (full disk, no access or a file in use). Neither message carries the sealed name; the
+  original container is preserved and nothing is committed. The product offers no alternative destination or name,
+  because its destination is a private work folder the user never sees.
 - **Demo video captions (`DOC-EXTERNAL-QUALITY` section 9 F).** `assets/demo.mp4` (made by `tools/store/make-demo.mjs`)
   shows the product's English interface with burned-in English captions, also on the RU and UK pages; the video's
   accessible name and the figcaption on all three languages say so.
@@ -1746,6 +1777,8 @@ in [`make-screenshot.ps1`](../tools/store/make-screenshot.ps1), and the extensio
 
 ## Intentional divergences (do NOT "fix")
 
+- **Close after conversion:** the desktop GUI can remember a choice to close its launcher after a successful conversion or queue. The extension converts inside its reader tab, which is the result, so it does not close that tab.
+
 - **In-app help.** F1, the `?` button and the help pages (CONTEXT-HELP, ticket 118) exist in the desktop GUI launcher only. The browser extension's popup, options and viewer and the converted reader pages are other interfaces of this product that the contract does not name; they get no help button and no F1 until the owner opens a follow-up ticket (decision 5 of ticket 118). No help code is ported between the editions.
 
 - **Update checks.** The desktop GUI offers a manual GitHub release check and an optional daily check,
@@ -1843,7 +1876,8 @@ These are by design. Do not "sync" them without a decision - document changes he
 - **Sending logs to the author differs in shape, by decision.** The desktop editions keep a bounded
   run-log store on disk ([`internal/report`](../internal/report/store.go)), pack it with the environment
   summary and the last run's settings into one archive, and hand off to the user's mail program - the GUI
-  About button and the CLI `-report` flag. The extension only **copies a text summary** to the clipboard
+  About button and the CLI `-report` flag. The extension only **copies a JSON diagnostic envelope** with the
+  readable summary inside it to the clipboard, or saves it as a file
   ([`diagnostics.js`](../extension/src/diagnostics.js), the options page's "Copy diagnostics"), because the
   browser sandbox hosts no run-log store worth archiving and no way to reveal a file or attach one
   (ticket ADR-4). Neither edition uploads anything. The field labels the two do share are pinned in

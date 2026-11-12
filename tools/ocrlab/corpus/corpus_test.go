@@ -320,3 +320,33 @@ func TestFetchSkipsPresentAndCorrect(t *testing.T) {
 		t.Errorf("expected skip, got %+v", results[0])
 	}
 }
+
+// The screenshot category (ticket E0121 phase C): a valid label with its own floor of 10, so nine own-UI scenes are a
+// shortfall that names it and ten are not.
+func TestScreenshotCategoryHasItsOwnFloor(t *testing.T) {
+	if !CatScreenshot.Valid() || CategoryMinimum(CatScreenshot) != 10 {
+		t.Fatalf("screenshot valid %v, floor %d: want true, 10", CatScreenshot.Valid(), CategoryMinimum(CatScreenshot))
+	}
+	shortOf := func(n int) bool {
+		var scenes []Scene
+		for i := 0; i < n; i++ {
+			scenes = append(scenes, scene("s"+string(rune('a'+i)), CatScreenshot))
+		}
+		ps := Validate(&Manifest{SchemaVersion: SchemaVersion, Scenes: scenes}, "")
+		if has(ps, RuleBadCategory, "") {
+			t.Fatalf("screenshot reported as a bad category: %v", ps)
+		}
+		for _, p := range ps {
+			if p.Rule == RuleCategoryShort && strings.HasPrefix(p.Detail, "screenshot:") {
+				return true
+			}
+		}
+		return false
+	}
+	if !shortOf(9) {
+		t.Error("nine screenshot scenes must report the screenshot floor")
+	}
+	if shortOf(10) {
+		t.Error("ten screenshot scenes meet the floor")
+	}
+}

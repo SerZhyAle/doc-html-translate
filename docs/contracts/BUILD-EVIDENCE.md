@@ -1,7 +1,7 @@
 # Pointer: BUILD-EVIDENCE
 
 - **Id:** `BUILD-EVIDENCE`
-- **Version:** 0.10 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 5 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer
 - **Owner:** FastMediaSorter Android
@@ -35,3 +35,5 @@ test. The local gate runs on a local build. What binds the two is this repo's ow
 
 **Conformance.** No vectors in the catalog. The tracked `build/*.exe` are version-checked but not proven to
 be built from the committed source; that gap is a dated exception in the catalog's registry.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.11.** Item C (one disclosed repeat of a tripped performance measurement) does not apply: no check here repeats a measurement.

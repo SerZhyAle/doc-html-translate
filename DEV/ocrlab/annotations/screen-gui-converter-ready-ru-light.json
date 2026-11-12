@@ -1,0 +1,3427 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "screen-gui-converter-ready-ru-light",
+  "origin": "human",
+  "imageWidth": 1160,
+  "imageHeight": 1148,
+  "groups": [
+    {
+      "id": "g001",
+      "type": "title",
+      "transcript": "DOC-HTML-UI",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 1,
+      "lines": [
+        {
+          "id": "g001-l1",
+          "kind": "box",
+          "points": [
+            [
+              16,
+              17
+            ],
+            [
+              132,
+              39
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g001-bounds",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g001-replace",
+        "kind": "box",
+        "points": [
+          [
+            16,
+            17
+          ],
+          [
+            132,
+            39
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g002",
+      "type": "label",
+      "transcript": "v26.1028.0224",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 2,
+      "lines": [
+        {
+          "id": "g002-l1",
+          "kind": "box",
+          "points": [
+            [
+              141,
+              20
+            ],
+            [
+              218,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g002-bounds",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g002-replace",
+        "kind": "box",
+        "points": [
+          [
+            141,
+            20
+          ],
+          [
+            218,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g003",
+      "type": "label",
+      "transcript": "SZA.od.ua",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 3,
+      "lines": [
+        {
+          "id": "g003-l1",
+          "kind": "box",
+          "points": [
+            [
+              227,
+              20
+            ],
+            [
+              281,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g003-bounds",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g003-replace",
+        "kind": "box",
+        "points": [
+          [
+            227,
+            20
+          ],
+          [
+            281,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g004",
+      "type": "label",
+      "transcript": "·",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 4,
+      "lines": [
+        {
+          "id": "g004-l1",
+          "kind": "box",
+          "points": [
+            [
+              286,
+              20
+            ],
+            [
+              290,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g004-bounds",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g004-replace",
+        "kind": "box",
+        "points": [
+          [
+            286,
+            20
+          ],
+          [
+            290,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g005",
+      "type": "label",
+      "transcript": "Сайт программы",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 5,
+      "lines": [
+        {
+          "id": "g005-l1",
+          "kind": "box",
+          "points": [
+            [
+              295,
+              20
+            ],
+            [
+              389,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g005-bounds",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            389,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g005-replace",
+        "kind": "box",
+        "points": [
+          [
+            295,
+            20
+          ],
+          [
+            389,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g006",
+      "type": "label",
+      "transcript": "·",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 6,
+      "lines": [
+        {
+          "id": "g006-l1",
+          "kind": "box",
+          "points": [
+            [
+              394,
+              20
+            ],
+            [
+              397,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g006-bounds",
+        "kind": "box",
+        "points": [
+          [
+            394,
+            20
+          ],
+          [
+            397,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g006-replace",
+        "kind": "box",
+        "points": [
+          [
+            394,
+            20
+          ],
+          [
+            397,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g007",
+      "type": "label",
+      "transcript": "Написать автору",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 7,
+      "lines": [
+        {
+          "id": "g007-l1",
+          "kind": "box",
+          "points": [
+            [
+              402,
+              20
+            ],
+            [
+              495,
+              36
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g007-bounds",
+        "kind": "box",
+        "points": [
+          [
+            402,
+            20
+          ],
+          [
+            495,
+            36
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g007-replace",
+        "kind": "box",
+        "points": [
+          [
+            402,
+            20
+          ],
+          [
+            495,
+            36
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g008",
+      "type": "title",
+      "transcript": "Конвертация",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 8,
+      "lines": [
+        {
+          "id": "g008-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              52
+            ],
+            [
+              287,
+              74
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g008-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            287,
+            74
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g008-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            52
+          ],
+          [
+            287,
+            74
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g009",
+      "type": "label",
+      "transcript": "Конвертация",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 9,
+      "lines": [
+        {
+          "id": "g009-l1",
+          "kind": "box",
+          "points": [
+            [
+              60,
+              58
+            ],
+            [
+              144,
+              76
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g009-bounds",
+        "kind": "box",
+        "points": [
+          [
+            60,
+            58
+          ],
+          [
+            144,
+            76
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g009-replace",
+        "kind": "box",
+        "points": [
+          [
+            60,
+            58
+          ],
+          [
+            144,
+            76
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g010",
+      "type": "label",
+      "transcript": "Превращает электронные книги и документы в локальную HTML-книгу, которую можно читать и переводить в браузере.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 10,
+      "lines": [
+        {
+          "id": "g010-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              78
+            ],
+            [
+              854,
+              94
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g010-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            854,
+            94
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g010-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            78
+          ],
+          [
+            854,
+            94
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g011",
+      "type": "label",
+      "transcript": "Ollama",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 11,
+      "lines": [
+        {
+          "id": "g011-l1",
+          "kind": "box",
+          "points": [
+            [
+              81,
+              92
+            ],
+            [
+              123,
+              110
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g011-bounds",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g011-replace",
+        "kind": "box",
+        "points": [
+          [
+            81,
+            92
+          ],
+          [
+            123,
+            110
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g012",
+      "type": "label",
+      "transcript": "КОМАНДНАЯ СТРОКА",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 12,
+      "lines": [
+        {
+          "id": "g012-l1",
+          "kind": "box",
+          "points": [
+            [
+              796,
+              110
+            ],
+            [
+              939,
+              127
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g012-bounds",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            110
+          ],
+          [
+            939,
+            127
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g012-replace",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            110
+          ],
+          [
+            939,
+            127
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g013",
+      "type": "label",
+      "transcript": "OCR картинок",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 13,
+      "lines": [
+        {
+          "id": "g013-l1",
+          "kind": "box",
+          "points": [
+            [
+              59,
+              126
+            ],
+            [
+              145,
+              144
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g013-bounds",
+        "kind": "box",
+        "points": [
+          [
+            59,
+            126
+          ],
+          [
+            145,
+            144
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g013-replace",
+        "kind": "box",
+        "points": [
+          [
+            59,
+            126
+          ],
+          [
+            145,
+            144
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g014",
+      "type": "label",
+      "transcript": "Alice in Wonderland.epub",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 14,
+      "lines": [
+        {
+          "id": "g014-l1",
+          "kind": "box",
+          "points": [
+            [
+              196,
+              137
+            ],
+            [
+              349,
+              155
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g014-bounds",
+        "kind": "box",
+        "points": [
+          [
+            196,
+            137
+          ],
+          [
+            349,
+            155
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g014-replace",
+        "kind": "box",
+        "points": [
+          [
+            196,
+            137
+          ],
+          [
+            349,
+            155
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g015",
+      "type": "paragraph",
+      "transcript": "\u0026 C:\\Tools\\doc-html-translate. exe -split 0 -src en -dst ru - ui-lang ru '--' 'C:\\Books\\Alic e in Wonderland.epub'",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 15,
+      "lines": [
+        {
+          "id": "g015-l1",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              144
+            ],
+            [
+              1001,
+              158
+            ]
+          ]
+        },
+        {
+          "id": "g015-l2",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              160
+            ],
+            [
+              1001,
+              174
+            ]
+          ]
+        },
+        {
+          "id": "g015-l3",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              175
+            ],
+            [
+              1001,
+              189
+            ]
+          ]
+        },
+        {
+          "id": "g015-l4",
+          "kind": "box",
+          "points": [
+            [
+              807,
+              190
+            ],
+            [
+              943,
+              204
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g015-bounds",
+        "kind": "box",
+        "points": [
+          [
+            807,
+            144
+          ],
+          [
+            1001,
+            204
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g015-replace",
+        "kind": "box",
+        "points": [
+          [
+            807,
+            144
+          ],
+          [
+            1001,
+            204
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g016",
+      "type": "label",
+      "transcript": "щёлкните, чтобы выбрать другой файл",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 16,
+      "lines": [
+        {
+          "id": "g016-l1",
+          "kind": "box",
+          "points": [
+            [
+              196,
+              156
+            ],
+            [
+              412,
+              173
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g016-bounds",
+        "kind": "box",
+        "points": [
+          [
+            196,
+            156
+          ],
+          [
+            412,
+            173
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g016-replace",
+        "kind": "box",
+        "points": [
+          [
+            196,
+            156
+          ],
+          [
+            412,
+            173
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g017",
+      "type": "label",
+      "transcript": "Windows",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 17,
+      "lines": [
+        {
+          "id": "g017-l1",
+          "kind": "box",
+          "points": [
+            [
+              75,
+              160
+            ],
+            [
+              129,
+              178
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g017-bounds",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g017-replace",
+        "kind": "box",
+        "points": [
+          [
+            75,
+            160
+          ],
+          [
+            129,
+            178
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g018",
+      "type": "label",
+      "transcript": "Копировать",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 18,
+      "lines": [
+        {
+          "id": "g018-l1",
+          "kind": "box",
+          "points": [
+            [
+              1060,
+              165
+            ],
+            [
+              1131,
+              183
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g018-bounds",
+        "kind": "box",
+        "points": [
+          [
+            1060,
+            165
+          ],
+          [
+            1131,
+            183
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g018-replace",
+        "kind": "box",
+        "points": [
+          [
+            1060,
+            165
+          ],
+          [
+            1131,
+            183
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g019",
+      "type": "label",
+      "transcript": "Интерфейс",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 19,
+      "lines": [
+        {
+          "id": "g019-l1",
+          "kind": "box",
+          "points": [
+            [
+              68,
+              194
+            ],
+            [
+              136,
+              212
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g019-bounds",
+        "kind": "box",
+        "points": [
+          [
+            68,
+            194
+          ],
+          [
+            136,
+            212
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g019-replace",
+        "kind": "box",
+        "points": [
+          [
+            68,
+            194
+          ],
+          [
+            136,
+            212
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g020",
+      "type": "label",
+      "transcript": "Конвертировать",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 20,
+      "lines": [
+        {
+          "id": "g020-l1",
+          "kind": "box",
+          "points": [
+            [
+              217,
+              212
+            ],
+            [
+              338,
+              233
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g020-bounds",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            212
+          ],
+          [
+            338,
+            233
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g020-replace",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            212
+          ],
+          [
+            338,
+            233
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g021",
+      "type": "label",
+      "transcript": "И закрыть это окно",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 21,
+      "lines": [
+        {
+          "id": "g021-l1",
+          "kind": "box",
+          "points": [
+            [
+              392,
+              214
+            ],
+            [
+              509,
+              232
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g021-bounds",
+        "kind": "box",
+        "points": [
+          [
+            392,
+            214
+          ],
+          [
+            509,
+            232
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g021-replace",
+        "kind": "box",
+        "points": [
+          [
+            392,
+            214
+          ],
+          [
+            509,
+            232
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g022",
+      "type": "label",
+      "transcript": "Дополнительно",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 22,
+      "lines": [
+        {
+          "id": "g022-l1",
+          "kind": "box",
+          "points": [
+            [
+              54,
+              228
+            ],
+            [
+              150,
+              246
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g022-bounds",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            228
+          ],
+          [
+            150,
+            246
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g022-replace",
+        "kind": "box",
+        "points": [
+          [
+            54,
+            228
+          ],
+          [
+            150,
+            246
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g023",
+      "type": "label",
+      "transcript": "Готово к конвертации.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 23,
+      "lines": [
+        {
+          "id": "g023-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              242
+            ],
+            [
+              313,
+              259
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g023-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            242
+          ],
+          [
+            313,
+            259
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g023-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            242
+          ],
+          [
+            313,
+            259
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g024",
+      "type": "label",
+      "transcript": "ЛОГ",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 24,
+      "lines": [
+        {
+          "id": "g024-l1",
+          "kind": "box",
+          "points": [
+            [
+              796,
+              246
+            ],
+            [
+              823,
+              263
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g024-bounds",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            246
+          ],
+          [
+            823,
+            263
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g024-replace",
+        "kind": "box",
+        "points": [
+          [
+            796,
+            246
+          ],
+          [
+            823,
+            263
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g025",
+      "type": "label",
+      "transcript": "О программе",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 25,
+      "lines": [
+        {
+          "id": "g025-l1",
+          "kind": "box",
+          "points": [
+            [
+              61,
+              262
+            ],
+            [
+              143,
+              280
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g025-bounds",
+        "kind": "box",
+        "points": [
+          [
+            61,
+            262
+          ],
+          [
+            143,
+            280
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g025-replace",
+        "kind": "box",
+        "points": [
+          [
+            61,
+            262
+          ],
+          [
+            143,
+            280
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g026",
+      "type": "paragraph",
+      "transcript": "Поддерживаются: EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, HTML, RTF, комиксы (CBZ/CBR/CB7/CBT) и изображения (PNG/JPG/WebP/..). Для MOBI/AZW3 нужен Calibre; для CBR/CB7 нужен 7-Zip; для наложения текста на изображения и комиксы нужен Tesseract. Секретные файлы FileDO (.fd-sec) требуют FileDO.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 26,
+      "lines": [
+        {
+          "id": "g026-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              263
+            ],
+            [
+              760,
+              280
+            ]
+          ]
+        },
+        {
+          "id": "g026-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              280
+            ],
+            [
+              768,
+              297
+            ]
+          ]
+        },
+        {
+          "id": "g026-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              297
+            ],
+            [
+              739,
+              314
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g026-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            263
+          ],
+          [
+            768,
+            314
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g026-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            263
+          ],
+          [
+            768,
+            314
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g027",
+      "type": "label",
+      "transcript": "Копировать выделенное",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 27,
+      "lines": [
+        {
+          "id": "g027-l1",
+          "kind": "box",
+          "points": [
+            [
+              833,
+              276
+            ],
+            [
+              981,
+              294
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g027-bounds",
+        "kind": "box",
+        "points": [
+          [
+            833,
+            276
+          ],
+          [
+            981,
+            294
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g027-replace",
+        "kind": "box",
+        "points": [
+          [
+            833,
+            276
+          ],
+          [
+            981,
+            294
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g028",
+      "type": "label",
+      "transcript": "В конец журнала",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 28,
+      "lines": [
+        {
+          "id": "g028-l1",
+          "kind": "box",
+          "points": [
+            [
+              833,
+              316
+            ],
+            [
+              935,
+              334
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g028-bounds",
+        "kind": "box",
+        "points": [
+          [
+            833,
+            316
+          ],
+          [
+            935,
+            334
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g028-replace",
+        "kind": "box",
+        "points": [
+          [
+            833,
+            316
+          ],
+          [
+            935,
+            334
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g029",
+      "type": "label",
+      "transcript": "Для этого файла уже есть результат конвертации.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 29,
+      "lines": [
+        {
+          "id": "g029-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              321
+            ],
+            [
+              455,
+              338
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g029-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            321
+          ],
+          [
+            455,
+            338
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g029-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            321
+          ],
+          [
+            455,
+            338
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g030",
+      "type": "label",
+      "transcript": "Открыть результат",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 30,
+      "lines": [
+        {
+          "id": "g030-l1",
+          "kind": "box",
+          "points": [
+            [
+              217,
+              353
+            ],
+            [
+              329,
+              371
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g030-bounds",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            353
+          ],
+          [
+            329,
+            371
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g030-replace",
+        "kind": "box",
+        "points": [
+          [
+            217,
+            353
+          ],
+          [
+            329,
+            371
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g031",
+      "type": "label",
+      "transcript": "Удалить предыдущий результат",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 31,
+      "lines": [
+        {
+          "id": "g031-l1",
+          "kind": "box",
+          "points": [
+            [
+              386,
+              353
+            ],
+            [
+              576,
+              371
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g031-bounds",
+        "kind": "box",
+        "points": [
+          [
+            386,
+            353
+          ],
+          [
+            576,
+            371
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g031-replace",
+        "kind": "box",
+        "points": [
+          [
+            386,
+            353
+          ],
+          [
+            576,
+            371
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g032",
+      "type": "label",
+      "transcript": "Сохранён в:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 32,
+      "lines": [
+        {
+          "id": "g032-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              394
+            ],
+            [
+              246,
+              411
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g032-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            394
+          ],
+          [
+            246,
+            411
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g032-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            394
+          ],
+          [
+            246,
+            411
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g033",
+      "type": "label",
+      "transcript": "C:\\Books\\Alice in Wonderland",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 33,
+      "lines": [
+        {
+          "id": "g033-l1",
+          "kind": "box",
+          "points": [
+            [
+              261,
+              397
+            ],
+            [
+              442,
+              411
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g033-bounds",
+        "kind": "box",
+        "points": [
+          [
+            261,
+            397
+          ],
+          [
+            442,
+            411
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g033-replace",
+        "kind": "box",
+        "points": [
+          [
+            261,
+            397
+          ],
+          [
+            442,
+            411
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g034",
+      "type": "label",
+      "transcript": "Очистить всё",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 34,
+      "lines": [
+        {
+          "id": "g034-l1",
+          "kind": "box",
+          "points": [
+            [
+              688,
+              441
+            ],
+            [
+              767,
+              459
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g034-bounds",
+        "kind": "box",
+        "points": [
+          [
+            688,
+            441
+          ],
+          [
+            767,
+            459
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g034-replace",
+        "kind": "box",
+        "points": [
+          [
+            688,
+            441
+          ],
+          [
+            767,
+            459
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g035",
+      "type": "label",
+      "transcript": "НЕДАВНИЕ",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 35,
+      "lines": [
+        {
+          "id": "g035-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              442
+            ],
+            [
+              253,
+              459
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g035-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            442
+          ],
+          [
+            253,
+            459
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g035-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            442
+          ],
+          [
+            253,
+            459
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g036",
+      "type": "label",
+      "transcript": "Alice in Wonderland.epub",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 36,
+      "lines": [
+        {
+          "id": "g036-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              487
+            ],
+            [
+              330,
+              504
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g036-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            487
+          ],
+          [
+            330,
+            504
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g036-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            487
+          ],
+          [
+            330,
+            504
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g037",
+      "type": "label",
+      "transcript": "Pride and Prejudice.epub",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 37,
+      "lines": [
+        {
+          "id": "g037-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              528
+            ],
+            [
+              326,
+              545
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g037-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            528
+          ],
+          [
+            326,
+            545
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g037-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            528
+          ],
+          [
+            326,
+            545
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g038",
+      "type": "label",
+      "transcript": "Moby Dick.fb2",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 38,
+      "lines": [
+        {
+          "id": "g038-l1",
+          "kind": "box",
+          "points": [
+            [
+              193,
+              569
+            ],
+            [
+              270,
+              586
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g038-bounds",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            569
+          ],
+          [
+            270,
+            586
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g038-replace",
+        "kind": "box",
+        "points": [
+          [
+            193,
+            569
+          ],
+          [
+            270,
+            586
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g039",
+      "type": "label",
+      "transcript": "Обзор..",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 39,
+      "lines": [
+        {
+          "id": "g039-l1",
+          "kind": "box",
+          "points": [
+            [
+              722,
+              619
+            ],
+            [
+              767,
+              637
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g039-bounds",
+        "kind": "box",
+        "points": [
+          [
+            722,
+            619
+          ],
+          [
+            767,
+            637
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g039-replace",
+        "kind": "box",
+        "points": [
+          [
+            722,
+            619
+          ],
+          [
+            767,
+            637
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g040",
+      "type": "label",
+      "transcript": "Папка вывода:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 40,
+      "lines": [
+        {
+          "id": "g040-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              620
+            ],
+            [
+              261,
+              637
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g040-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            620
+          ],
+          [
+            261,
+            637
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g040-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            620
+          ],
+          [
+            261,
+            637
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g041",
+      "type": "label",
+      "transcript": "Оставьте пустым - результат ляжет рядом с исходником",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 41,
+      "lines": [
+        {
+          "id": "g041-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              620
+            ],
+            [
+              619,
+              638
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g041-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            620
+          ],
+          [
+            619,
+            638
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g041-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            620
+          ],
+          [
+            619,
+            638
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g042",
+      "type": "paragraph",
+      "transcript": "Папка для результатов; каждый документ получает в ней свою подпапку с его именем. Пусто = рядом с самим документом (перетащенный файл сначала копируется в папку приложения, поэтому его результат окажется там).",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 42,
+      "lines": [
+        {
+          "id": "g042-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              650
+            ],
+            [
+              757,
+              667
+            ]
+          ]
+        },
+        {
+          "id": "g042-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              667
+            ],
+            [
+              767,
+              684
+            ]
+          ]
+        },
+        {
+          "id": "g042-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              684
+            ],
+            [
+              260,
+              701
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g042-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            650
+          ],
+          [
+            767,
+            701
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g042-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            650
+          ],
+          [
+            767,
+            701
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g043",
+      "type": "label",
+      "transcript": "ПЕРЕВОД",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 43,
+      "lines": [
+        {
+          "id": "g043-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              717
+            ],
+            [
+              241,
+              734
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g043-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            717
+          ],
+          [
+            241,
+            734
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g043-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            717
+          ],
+          [
+            241,
+            734
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g044",
+      "type": "label",
+      "transcript": "Chrome (бесплатно)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 44,
+      "lines": [
+        {
+          "id": "g044-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              748
+            ],
+            [
+              327,
+              766
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g044-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            748
+          ],
+          [
+            327,
+            766
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g044-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            748
+          ],
+          [
+            327,
+            766
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g045",
+      "type": "label",
+      "transcript": "Google Cloud",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 45,
+      "lines": [
+        {
+          "id": "g045-l1",
+          "kind": "box",
+          "points": [
+            [
+              372,
+              748
+            ],
+            [
+              452,
+              766
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g045-bounds",
+        "kind": "box",
+        "points": [
+          [
+            372,
+            748
+          ],
+          [
+            452,
+            766
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g045-replace",
+        "kind": "box",
+        "points": [
+          [
+            372,
+            748
+          ],
+          [
+            452,
+            766
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g046",
+      "type": "label",
+      "transcript": "Ollama (локально)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 46,
+      "lines": [
+        {
+          "id": "g046-l1",
+          "kind": "box",
+          "points": [
+            [
+              497,
+              748
+            ],
+            [
+              606,
+              766
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g046-bounds",
+        "kind": "box",
+        "points": [
+          [
+            497,
+            748
+          ],
+          [
+            606,
+            766
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g046-replace",
+        "kind": "box",
+        "points": [
+          [
+            497,
+            748
+          ],
+          [
+            606,
+            766
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g047",
+      "type": "label",
+      "transcript": "Не переводить",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 47,
+      "lines": [
+        {
+          "id": "g047-l1",
+          "kind": "box",
+          "points": [
+            [
+              651,
+              748
+            ],
+            [
+              742,
+              766
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g047-bounds",
+        "kind": "box",
+        "points": [
+          [
+            651,
+            748
+          ],
+          [
+            742,
+            766
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g047-replace",
+        "kind": "box",
+        "points": [
+          [
+            651,
+            748
+          ],
+          [
+            742,
+            766
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g048",
+      "type": "paragraph",
+      "transcript": "Chrome (бесплатно): только конвертация, затем перевод в браузере - без API-ключа. Google/Ollama переводят во время конвертации.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 48,
+      "lines": [
+        {
+          "id": "g048-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              777
+            ],
+            [
+              735,
+              794
+            ]
+          ]
+        },
+        {
+          "id": "g048-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              793
+            ],
+            [
+              370,
+              810
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g048-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            777
+          ],
+          [
+            735,
+            810
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g048-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            777
+          ],
+          [
+            735,
+            810
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g049",
+      "type": "label",
+      "transcript": "Языки:",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 49,
+      "lines": [
+        {
+          "id": "g049-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              826
+            ],
+            [
+              217,
+              843
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g049-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            826
+          ],
+          [
+            217,
+            843
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g049-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            826
+          ],
+          [
+            217,
+            843
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g050",
+      "type": "label",
+      "transcript": "English (en)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 50,
+      "lines": [
+        {
+          "id": "g050-l1",
+          "kind": "box",
+          "points": [
+            [
+              283,
+              826
+            ],
+            [
+              350,
+              844
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g050-bounds",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            826
+          ],
+          [
+            350,
+            844
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g050-replace",
+        "kind": "box",
+        "points": [
+          [
+            283,
+            826
+          ],
+          [
+            350,
+            844
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g051",
+      "type": "label",
+      "transcript": "Русский (ru)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 51,
+      "lines": [
+        {
+          "id": "g051-l1",
+          "kind": "box",
+          "points": [
+            [
+              561,
+              826
+            ],
+            [
+              632,
+              844
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g051-bounds",
+        "kind": "box",
+        "points": [
+          [
+            561,
+            826
+          ],
+          [
+            632,
+            844
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g051-replace",
+        "kind": "box",
+        "points": [
+          [
+            561,
+            826
+          ],
+          [
+            632,
+            844
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g052",
+      "type": "paragraph",
+      "transcript": "Исходный язык - тот, на котором написан документ; язык перевода - тот, на который переводят Google или Ollama. «Chrome (бесплатно)» и «Не переводить» используют только исходный: он задаёт язык OCR, пока там выбрано «Автоматически».",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 52,
+      "lines": [
+        {
+          "id": "g052-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              856
+            ],
+            [
+              779,
+              873
+            ]
+          ]
+        },
+        {
+          "id": "g052-l2",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              873
+            ],
+            [
+              766,
+              890
+            ]
+          ]
+        },
+        {
+          "id": "g052-l3",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              890
+            ],
+            [
+              354,
+              907
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g052-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            856
+          ],
+          [
+            779,
+            907
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g052-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            856
+          ],
+          [
+            779,
+            907
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g053",
+      "type": "label",
+      "transcript": "ПАРАМЕТРЫ",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 53,
+      "lines": [
+        {
+          "id": "g053-l1",
+          "kind": "box",
+          "points": [
+            [
+              180,
+              923
+            ],
+            [
+              263,
+              940
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g053-bounds",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            923
+          ],
+          [
+            263,
+            940
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g053-replace",
+        "kind": "box",
+        "points": [
+          [
+            180,
+            923
+          ],
+          [
+            263,
+            940
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g054",
+      "type": "label",
+      "transcript": "Одна страница (оглавление доступно)",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 54,
+      "lines": [
+        {
+          "id": "g054-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              954
+            ],
+            [
+              437,
+              972
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g054-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            954
+          ],
+          [
+            437,
+            972
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g054-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            954
+          ],
+          [
+            437,
+            972
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g055",
+      "type": "label",
+      "transcript": "Не открывать браузер",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 55,
+      "lines": [
+        {
+          "id": "g055-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              954
+            ],
+            [
+              650,
+              972
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g055-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            954
+          ],
+          [
+            650,
+            972
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g055-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            954
+          ],
+          [
+            650,
+            972
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g056",
+      "type": "paragraph",
+      "transcript": "Одна длинная страница со связанным оглавлением сверху, а не по странице на главу.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 56,
+      "lines": [
+        {
+          "id": "g056-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              975
+            ],
+            [
+              420,
+              992
+            ]
+          ]
+        },
+        {
+          "id": "g056-l2",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              991
+            ],
+            [
+              471,
+              1008
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g056-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            975
+          ],
+          [
+            471,
+            1008
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g056-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            975
+          ],
+          [
+            471,
+            1008
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g057",
+      "type": "paragraph",
+      "transcript": "Конвертировать без открытия результата; найти его потом можно по пути вывода под полем выбора файла.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 57,
+      "lines": [
+        {
+          "id": "g057-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              975
+            ],
+            [
+              748,
+              992
+            ]
+          ]
+        },
+        {
+          "id": "g057-l2",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              991
+            ],
+            [
+              762,
+              1008
+            ]
+          ]
+        },
+        {
+          "id": "g057-l3",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1008
+            ],
+            [
+              636,
+              1025
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g057-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            975
+          ],
+          [
+            762,
+            1025
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g057-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            975
+          ],
+          [
+            762,
+            1025
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g058",
+      "type": "label",
+      "transcript": "Принудительно переобработать",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 58,
+      "lines": [
+        {
+          "id": "g058-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1045
+            ],
+            [
+              403,
+              1063
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g058-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1045
+          ],
+          [
+            403,
+            1063
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g058-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1045
+          ],
+          [
+            403,
+            1063
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g059",
+      "type": "label",
+      "transcript": "Подробный лог",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 59,
+      "lines": [
+        {
+          "id": "g059-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1045
+            ],
+            [
+              611,
+              1063
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g059-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1045
+          ],
+          [
+            611,
+            1063
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g059-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1045
+          ],
+          [
+            611,
+            1063
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g060",
+      "type": "paragraph",
+      "transcript": "Пересобрать результат, даже если для этого файла уже есть готовый; иначе используется существующий.",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 60,
+      "lines": [
+        {
+          "id": "g060-l1",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1065
+            ],
+            [
+              453,
+              1082
+            ]
+          ]
+        },
+        {
+          "id": "g060-l2",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1082
+            ],
+            [
+              456,
+              1099
+            ]
+          ]
+        },
+        {
+          "id": "g060-l3",
+          "kind": "box",
+          "points": [
+            [
+              208,
+              1099
+            ],
+            [
+              295,
+              1116
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g060-bounds",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1065
+          ],
+          [
+            456,
+            1116
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g060-replace",
+        "kind": "box",
+        "points": [
+          [
+            208,
+            1065
+          ],
+          [
+            456,
+            1116
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g061",
+      "type": "paragraph",
+      "transcript": "Копировать полный журнал конвертера в панель журнала; именно его упаковывает «Отправить журналы автору».",
+      "language": "ru",
+      "direction": "ltr",
+      "readingOrder": 61,
+      "lines": [
+        {
+          "id": "g061-l1",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1065
+            ],
+            [
+              749,
+              1082
+            ]
+          ]
+        },
+        {
+          "id": "g061-l2",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1082
+            ],
+            [
+              749,
+              1099
+            ]
+          ]
+        },
+        {
+          "id": "g061-l3",
+          "kind": "box",
+          "points": [
+            [
+              516,
+              1099
+            ],
+            [
+              683,
+              1116
+            ]
+          ]
+        }
+      ],
+      "bounds": {
+        "id": "g061-bounds",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1065
+          ],
+          [
+            749,
+            1116
+          ]
+        ]
+      },
+      "replaceArea": {
+        "id": "g061-replace",
+        "kind": "box",
+        "points": [
+          [
+            516,
+            1065
+          ],
+          [
+            749,
+            1116
+          ]
+        ]
+      }
+    }
+  ],
+  "protected": null,
+  "ambiguity": "clear",
+  "review": {
+    "annotatedBy": "tools/ocrlab/screens (rendered DOM boxes)",
+    "annotatedOn": "2026-10-30",
+    "checkedBy": "",
+    "checkedOn": ""
+  }
+}

@@ -195,13 +195,6 @@ body {
 h2 { font-size: var(--fs-title); font-weight: 600; letter-spacing: .01em; }
 /* One purpose line under every page title (WINDOWS-UI section 2.3). */
 .purpose { margin-top: calc(2px * var(--s)); }
-/* First-page preferences: theme and interface language, the two settings SETTINGS-NAVIGATION 3.1
-   puts on the first page. Each has a visible caption and is the only editor of its value. */
-.prefs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap) var(--gap-group); }
-.pref { display: flex; align-items: center; gap: var(--gap); }
-.pref > label { font-size: var(--fs-note); color: var(--text-muted); }
-.pref select { max-width: calc(170px * var(--s)); font-weight: 600; }
-
 /* The window header: title, version, links and the help button at the trailing corner (CONTEXT-HELP
    rule 2); nothing else lives in that corner. */
 .head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--gap) calc(10px * var(--s)); margin-bottom: var(--gap); }
@@ -343,7 +336,8 @@ button.danger { background: var(--danger); color: var(--danger-ink); border-colo
 .drop .ph { font-size: var(--fs); color: var(--text-muted); }
 .drop .fname { font-size: var(--fs); color: var(--text-primary); font-weight: 600; word-break: break-all; }
 .drop .sub { font-size: var(--fs-note); color: var(--text-muted); margin-top: calc(2px * var(--s)); }
-.run-row { margin-top: var(--gap); }
+.run-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); margin-top: var(--gap); }
+.run-row .opt { align-self: center; margin-inline-start: calc((var(--tgt) - var(--box)) / 2); }
 .run-row .state-stack > button { font-size: calc(15px * var(--s) * var(--t)); }
 
 /* generic field row: caption, control, button. The row wraps whole items, so a button that does not
@@ -733,17 +727,6 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <!-- WINDOWS-UI section 2.3: the title, then one short line saying what the page is for. -->
         <p class="hint purpose" data-i18n="appPurpose">Converts e-books and documents into a local HTML book you can read and translate in the browser.</p>
     </div>
-    <!-- SETTINGS-NAVIGATION 3.1: theme and interface language are on the first page, each with its own caption and nowhere else. -->
-    <div class="prefs" data-help="main.header">
-        <div class="pref"><label for="themeSwitch" data-i18n="titleTheme">Theme</label>
-        <select id="themeSwitch" aria-label="Theme" data-i18n-aria="titleTheme">
-            <option value="system" data-i18n="themeSystem">System theme</option>
-            <option value="light" data-i18n="themeLight">Light</option>
-            <option value="dark" data-i18n="themeDark">Dark</option>
-        </select></div>
-        <div class="pref"><label for="langSwitch" data-i18n="titleUiLang">Interface language</label>
-        <select id="langSwitch" aria-label="Interface language" data-i18n-aria="titleUiLang"></select></div>
-    </div>
 </div>
 
 <div class="convert-cols">
@@ -771,11 +754,15 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
         <span class="sub" data-i18n="dropChooseAnother">click to choose another file</span>
     </span>
 </button>
-<div class="btn-row run-row">
-    <span class="state-stack" id="runStack" data-help="main.run">
+<div class="run-row" data-help="main.run">
+    <span class="state-stack" id="runStack">
         <button class="primary" id="btnRun" onclick="runPressed()" data-i18n-title="ttRunKbd" title="Convert (Ctrl+Enter)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg><span data-i18n="btnConvert">Convert</span></button>
         <button id="btnCancel" onclick="cancelPressed()" style="display:none" data-i18n-title="ttCancelKbd" title="Cancel the run (Esc)"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12,2C6.47,2 2,6.47 2,12s4.47,10 10,10 10,-4.47 10,-10S17.53,2 12,2zM17,15.59L15.59,17 12,13.41 8.41,17 7,15.59 10.59,12 7,8.41 8.41,7 12,10.59 15.59,7 17,8.41 13.41,12 17,15.59z"/></svg><span data-i18n="btnCancel">Cancel</span></button>
     </span>
+    <div class="opt">
+        <input type="checkbox" class="opt-box" id="chkCloseAfter">
+        <div class="opt-cell"><div class="opt-headrow"><label class="opt-name" for="chkCloseAfter"><span data-i18n="chkCloseAfter">And close this window</span></label></div></div>
+    </div>
 </div>
 <input type="hidden" id="inputFile">
 <div class="hint" id="readiness" role="status" aria-live="polite" data-help="main.status" style="display:none"></div>
@@ -989,6 +976,15 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
 <!-- ═══ page: Interface - size, text size and the controls profile (UI-SIZING) ═══ -->
 <section class="page" id="page-interface" role="tabpanel" aria-labelledby="tab-interface" data-help="settings.interface" hidden>
 <div class="page-head"><div class="page-title"><h2 data-i18n="pageInterface">Interface</h2><p class="hint purpose" data-i18n="purposeInterface">How large the controls and the text are, and how they are operated.</p></div></div>
+<!-- Theme and interface language live here, each with its own caption and nowhere else. -->
+<div class="field"><label for="themeSwitch" data-i18n="titleTheme">Theme</label>
+    <select id="themeSwitch" data-i18n-aria="titleTheme">
+        <option value="system" data-i18n="themeSystem">System theme</option>
+        <option value="light" data-i18n="themeLight">Light</option>
+        <option value="dark" data-i18n="themeDark">Dark</option>
+    </select></div>
+<div class="field"><label for="langSwitch" data-i18n="titleUiLang">Interface language</label>
+    <select id="langSwitch" data-i18n-aria="titleUiLang"></select></div>
 <div class="field"><label for="uiSize" data-i18n="lblUiSize">Interface size:</label>
     <select id="uiSize"><option value="compact" data-i18n="uiSizeCompact">Compact</option><option value="ordinary" data-i18n="uiSizeOrdinary" selected>Ordinary</option><option value="large" data-i18n="uiSizeLarge">Large</option><option value="xlarge" data-i18n="uiSizeXlarge">Extra large</option><option value="huge" data-i18n="uiSizeHuge">Huge</option></select></div>
 <div class="hint" data-i18n="hintUiSize">Scales the buttons, options, headers and menu together - text, icons, spacing and click targets.</div>
@@ -1251,7 +1247,8 @@ document.getElementById('themeSwitch').addEventListener('change', e => {
 // the first to be answered.
 //
 // BUTTONS 2.0 (ticket 119): every answer button carries its meaning's glyph before its caption
-// (recorded policy D6) on a neutral face. Meaning rides the glyph only: the affirmative in
+// (recorded policy D6) on a neutral face - except the notice dialog's "OK", a text-only answer
+// (ICON-SET 0.37 section 22 E). Meaning rides the glyph only: the affirmative in
 // state.ok (.ans-ok), a caution in state.warning (.ans-warn), Cancel / No / Close in the plain
 // ink. The acting button of an irreversible confirmation keeps the danger face (kind 'danger',
 // glyph in the face's own ink). Answers read in reading order - Cancel, then any Apply, then the
@@ -1365,7 +1362,7 @@ function openDialog(opts) {
 }
 // informDialog shows a notice with one button.
 function informDialog(title, message) {
-    return openDialog({title, message, surface: 'dlg-notice', buttons: [{id: 'ok', key: 'dlgOK', kind: 'ok', ans: 'ans-ok', glyph: 'action.confirm', focus: true}], cancel: 'ok'});
+    return openDialog({title, message, surface: 'dlg-notice', buttons: [{id: 'ok', key: 'dlgOK', kind: 'ok', focus: true}], cancel: 'ok'});
 }
 // confirmDialog asks a yes/no question; safe says whether "no" is the recommended answer. The
 // acting answer's face comes in as kind: 'danger' (an irreversible act - its verb is delete,
@@ -1823,6 +1820,7 @@ function collectSettings() {
         ollamaCtx:      el('ollamaCtx').value,
         singlePage:     el('chkSingle').checked,
         noOpen:         el('chkNoOpen').checked,
+        closeAfter:     el('chkCloseAfter').checked,
         force:          el('chkForce').checked,
         verbose:        el('chkVerbose').checked,
         ocr:            el('chkOCR').checked,
@@ -1872,6 +1870,7 @@ function applySettings(s) {
     }
     if (s.singlePage != null) el('chkSingle').checked = !!s.singlePage;
     if (s.noOpen  != null) el('chkNoOpen').checked  = !!s.noOpen;
+    if (s.closeAfter != null) el('chkCloseAfter').checked = !!s.closeAfter;
     if (s.force   != null) el('chkForce').checked   = !!s.force;
     if (s.verbose != null) el('chkVerbose').checked = !!s.verbose;
     if (s.ocr     != null) el('chkOCR').checked     = !!s.ocr;
@@ -2635,7 +2634,27 @@ async function convertSingle() {
             reportRunEnd(res ? res.end : null, append, {warning: res ? res.warning : false, reused: res ? res.reused : false, usable: outputStatus.exists});
         }
         if (queue.length) renderQueue();
+        if (singleSucceeded(res, outputStatus.exists)) await closeAfterSuccess();
     }
+}
+
+// Close only after a usable result, leaving errors and cancellations visible.
+function singleSucceeded(res, usable) {
+    return !!(res && !res.refused && res.end && (res.end.state === 'done' || (res.end.state === 'failed' && res.end.code === 4 && usable)));
+}
+function queueSucceeded(items) {
+    return items.some(it => it.state === 'done') && items.every(it => it.state === 'done' || it.state === 'skipped');
+}
+
+// Save the last change before closing the page, including a change made while the run was active.
+async function closeAfterSuccess() {
+    if (!el('chkCloseAfter').checked) return;
+    clearTimeout(saveTimer);
+    try {
+        const response = await api('/api/settings', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(collectSettings())});
+        if (!response.ok) return;
+    } catch (e) { return; }
+    window.close();
 }
 
 const MARK = '\x1edht:';
@@ -3039,6 +3058,7 @@ async function runQueue() {
     setQueueControls();
     renderQueue();
     log('\n' + t('queueSummary', summaryCounts()) + '\n', 'end');
+    if (queueSucceeded(queue)) await closeAfterSuccess();
 }
 
 // queueWorker takes the next waiting item until none is left or the queue was cancelled.
@@ -3317,6 +3337,16 @@ function trackWindowGeometry() {
 // catches a drag of the edge at once. The debounce collapses both into one save per burst.
 setInterval(trackWindowGeometry, 2000);
 window.addEventListener('resize', trackWindowGeometry);
+// APP-BEHAVIOUR rule 10 (0.14): the window also flushes once on pagehide, so a move, a resize or
+// a setting still inside its debounce is not lost when the window closes. keepalive lets the
+// request outlive the page; sendBeacon cannot carry the token header the server requires.
+window.addEventListener('pagehide', () => {
+    if (!settingsLoaded) return;
+    trackWindowGeometry();
+    clearTimeout(geomTimer);
+    clearTimeout(saveTimer);
+    api('/api/settings', {method: 'POST', keepalive: true, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(collectSettings())}).catch(()=>{});
+});
 
 // ── interface size and controls profile (UI-SIZING 1.1) ─
 // One resolver for every covered component: the root carries data-size (interface scale),

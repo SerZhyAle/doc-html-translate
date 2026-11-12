@@ -8,6 +8,7 @@
 //	ocrlab verify              validate the manifest, the media hashes and the coverage table
 //	ocrlab fetch [id..]        idempotently download licence-verified media
 //	ocrlab synth               regenerate the deterministic diagnostic scenes
+//	ocrlab screens             register the GUI window captures as screenshot scenes
 //	ocrlab seed <id..>         write an OCR-seeded annotation draft for a human to correct
 //	ocrlab run                 convert, render and record evidence (reuses identical earlier scenes)
 //	ocrlab reuse               the extension producer's lookup-and-copy of one reusable scene
@@ -42,6 +43,8 @@ Commands:
   add <img..>   register your own images (or any local file) as corpus scenes
   harvest       acquire candidate images and machine licence provenance for human review
   synth         regenerate the deterministic diagnostic scenes and their exact annotations
+  screens       register the GUI window captures of tools/ocrlab/screens/capture.mjs as screenshot
+                scenes, their truth the rendered DOM boxes
   seed <id..>   write an OCR-seeded annotation draft (never counts as truth)
   run           convert, render and record evidence for the selected scenes
   score <dir>   grade a saved run offline against the annotations
@@ -104,6 +107,8 @@ func main() {
 		err = cmdHarvest(args)
 	case "synth":
 		err = cmdSynth(args)
+	case "screens":
+		err = cmdScreens(args)
 	case "seed":
 		err = cmdSeed(args)
 	case "run":

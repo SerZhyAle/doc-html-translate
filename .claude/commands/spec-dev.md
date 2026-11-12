@@ -62,13 +62,16 @@ After all planned steps in a phase:
   inserted **before** the phase check below so one run validates code + tags.
 - **Phase done criteria:** run each checkbox. For the phase's verification rung, run the
   narrowest meaningful check the phase names (per `docs/VALIDATION.md`) - a compile / type-check,
-  a targeted test, or `./scripts/build.ps1 (UI: ./scripts/build-ui.ps1)` only when the phase touches packaging, resources, or wiring.
+  a targeted test, or `./scripts/check.ps1 -Fast -Plan <children>`, each 5 s or less (AGENTS.md "Build, Test,
+  Lint"). A phase that touches packaging, resources or wiring does not run `./scripts/build.ps1` between
+  releases: it records a `RELEASE` item naming that build, and the report says "not built until the release".
   Exit 0 → tick; non-zero → append the output tail and hard stop.
 - All ticked → flip the phase to ✅ Done, update the INDEX row + counter. Any unticked →
   leave 🚧, update the step counter only, hard stop.
 
 After all phases:
-- **Optional smoke (only `--verify-smoke`).** Run `/verify --build` once. PASS → proceed.
+- **Optional smoke (only `--verify-smoke`, and only when the owner names it or a release is being cut).** Run
+  `/verify --build` once - it builds, so between releases it is a `RELEASE` item, not a step. PASS → proceed.
   FAIL → abort the status flip, leave `In Progress`, log the failure.
 - **No manual-test gate** → flip strategic `Status:` to `Implemented`, add the date. No tags.
 - **Manual test is part of acceptance** → tags already inserted; flip status to

@@ -27,7 +27,7 @@ Object.defineProperty(globalThis, "navigator", {
   configurable: true,
 });
 
-const { recordRun, readRun, reportText } = await import("../src/diagnostics.js");
+const { recordRun, readRun, reportText, reportEnvelope, SCHEMA_VERSION } = await import("../src/diagnostics.js");
 
 test("reportText names the version and the last format", async () => {
   await recordRun({ format: "epub", pages: 42 });
@@ -111,4 +111,30 @@ test("reportText emits strictly count-only host metrics and expected fields only
   const allowedLine = lines.find((l) => l.startsWith("allowed hosts:"));
   assert.equal(disabledLine, "disabled hosts: 2");
   assert.equal(allowedLine, "allowed hosts: 1");
+});
+
+// DIAGNOSTIC-REPORT 8 A: the clipboard carries the single JSON envelope, and the readable lines
+// travel inside it (8 B). It stays count-only like the text.
+test("reportEnvelope is the JSON envelope with the readable lines beside the facts", async () => {
+  await recordRun({ format: "epub", pages: 12, error: "" });
+  const raw = await reportEnvelope("26.811.1600", {
+    theme: "dark", disabledHosts: ["secret-intranet.example.com", "b.com"], allowedHosts: ["private-library.example.com"],
+  });
+  const env = JSON.parse(raw);
+  assert.equal(env.schemaVersion, SCHEMA_VERSION);
+  assert.equal(env.schemaVersion, 1);
+  assert.match(env.timestamp, /^\d{4}-\d\d-\d\dT/);
+  assert.deepEqual(env.app, { id: "doc-html-translate", version: "26.811.1600", edition: "browser extension" });
+  assert.equal(env.environment.platform, "Win32");
+  assert.equal(env.options.theme, "dark");
+  assert.equal(env.options.disabledHosts, 2);
+  assert.equal(env.options.allowedHosts, 1);
+  assert.deepEqual(env.lastRun, { format: "epub", pages: 12, error: "", at: env.lastRun.at });
+  // The readable lines are exactly reportText's, so the two carriers cannot drift.
+  assert.deepEqual(env.report, (await reportText("26.811.1600", {
+    theme: "dark", disabledHosts: ["secret-intranet.example.com", "b.com"], allowedHosts: ["private-library.example.com"],
+  })).trimEnd().split("\n"));
+  assert.ok(!raw.includes("secret-intranet.example.com") && !raw.includes("private-library.example.com"),
+    `the envelope names a host:\n${raw}`);
+  assert.ok(!raw.includes("http"), `the envelope contains a URL:\n${raw}`);
 });

@@ -231,6 +231,46 @@ func TestPositioningEditionsListedUnderTheirDisplayNames(t *testing.T) {
 	}
 }
 
+// The page titles carry one spelling of the product's name, and the extension pages name the extension by its
+// store name (ticket E0111, owner 2026-11-08; docs/positioning.json names).
+func TestPositioningPublicNamesOnTitles(t *testing.T) {
+	var f struct {
+		Names struct {
+			Product   string `json:"product"`
+			Extension string `json:"extension"`
+		} `json:"names"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "docs", "positioning.json")), &f); err != nil || f.Names.Product == "" || f.Names.Extension == "" {
+		t.Fatalf("docs/positioning.json: names.product and names.extension are required (%v)", err)
+	}
+	var msgs map[string]struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "extension", "_locales", "en", "messages.json")), &msgs); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(msgs["appName"].Message, f.Names.Extension) {
+		t.Errorf("the extension's store name %q does not start with names.extension %q", msgs["appName"].Message, f.Names.Extension)
+	}
+	for _, p := range sitePages() {
+		doc := parseSitePage(t, p)
+		title := headTitle(doc)
+		ogTitle, _ := metaContent(doc, "property", "og:title")
+		site, _ := metaContent(doc, "property", "og:site_name")
+		if site != "" && site != f.Names.Product {
+			t.Errorf("%s: og:site_name %q, want %q", p, site, f.Names.Product)
+		}
+		for _, v := range []string{title, ogTitle} {
+			if strings.Contains(strings.ToLower(v), f.Names.Product) && !strings.Contains(v, f.Names.Product) {
+				t.Errorf("%s: the title %q spells the product another way, want %q", p, v, f.Names.Product)
+			}
+		}
+		if strings.HasPrefix(p, "extension") && !strings.Contains(title, f.Names.Extension) {
+			t.Errorf("%s: the title %q does not name the extension %q", p, title, f.Names.Extension)
+		}
+	}
+}
+
 func TestPositioningRetiredNamesAreGone(t *testing.T) {
 	f := loadPositioning(t)
 	for _, p := range positioningSurfaces() {

@@ -30,6 +30,9 @@ var categoryMinimum = map[Category]int{
 	CatTexture:  20,
 	CatDegraded: 20,
 	CatScript:   20,
+	// The screenshot floor is the owner's choice of 2026-10-30 (ticket E0121); the recommendation had been
+	// 20, in line with the smallest table categories.
+	CatScreenshot: 10,
 }
 
 // CategoryMinimum returns the floor for a category, 0 for an unknown one.

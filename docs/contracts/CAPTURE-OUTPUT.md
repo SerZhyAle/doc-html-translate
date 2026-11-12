@@ -1,7 +1,7 @@
 # Pointer: CAPTURE-OUTPUT
 
 - **Id:** `CAPTURE-OUTPUT`
-- **Version:** 0.6 draft
+- **Version:** 0.7 draft
 - **Home:** the shared contracts catalog, `capture-output/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - a reader of the `documents` kinds (`text`, `ocr_text`, `translation`) through the TXT input path; produces no file of any kind in rule 1's table
 
@@ -22,3 +22,5 @@ Out of the contract's scope by its own section 5, so not measured here: the conv
 **Conformance.** No vectors in the catalog yet (section 4 of the contract). Held by `internal/txt` (`TestExtractStripsUTF8BOM`, `TestExtractDecodesUTF16`, `TestExtract_CRLFLineEndings`, `TestExtract_OldMacCRLineEndings`) and by `extension/test/txt.test.mjs` with `legacy-text.test.mjs`, all run by `scripts/test.ps1`.
 
 **Review 2026-10-07 (ticket 108).** Sections 2 rule 16 and 5 read: the PNG time carrier and export placement clarification affect no shipped producer here. TXT imports accept BOM/CRLF. Developer screenshots are not shipped capture output. No catalog vectors exist.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.7.** Section 5 gains two outside lines; the second places the help and Store screenshots this repository renders of its own windows outside the contract. Nothing owed.

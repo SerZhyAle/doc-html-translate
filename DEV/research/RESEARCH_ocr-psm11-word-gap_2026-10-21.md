@@ -1,6 +1,6 @@
 # The word-gap rules at PSM 11: the 3.5 cut holds, the stroke test holds, the tall-word cut does not
 
-2026-10-21. Phase A (OC-2) of [`DEV/plan/121_2026-10-20_ocr-owed-evidence-and-rule-10-reverification.md`](../plan/121_2026-10-20_ocr-owed-evidence-and-rule-10-reverification.md).
+2026-10-21. Phase A (OC-2) of [`DEV/plan/done/E0121_ocr-owed-evidence-and-rule-10-reverification.md`](../plan/done/E0121_ocr-owed-evidence-and-rule-10-reverification.md).
 Follows [`ocr_word_gap_2026-09-12.md`](ocr_word_gap_2026-09-12.md) (PSM 3 only) and
 [`ocr_balloon_boundary_2026-09-25.md`](ocr_balloon_boundary_2026-09-25.md). No constant was moved and no
 code was changed by this phase.

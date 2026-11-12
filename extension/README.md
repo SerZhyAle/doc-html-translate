@@ -121,14 +121,15 @@ npm run vendor     # copies pdfjs + the Tesseract engine and eng.traineddata int
 npm run stamp      # sets manifest.json + package.json version to the date-time (yy.MMdd.HHmm) - run before reloading unpacked to see which build you're testing
 npm test           # unit-tests the pure modules (no browser needed)
 npm run appearance # regenerates the OCR overlay + theme palette regions of ocr-overlay.css / viewer.css from ../internal/appearance (zip refuses a stale region)
-npm run build      # stamp + appearance + vendor + zip -> dist/ (store-ready, auto-versioned)
+npm run build      # stamp + appearance + vendor + zip -> dist/ (store-ready; on a store tag, the version the tag names)
 npm run zip        # only zip (uses the current version)
 ```
 
 `vendor/` is generated and git-ignored; run `npm run vendor` before loading the extension. The version
 is a **date-time stamp** (`yy.MMdd.HHmm`, same scheme as the desktop `build.ps1`) - it shows in the popup
 and options footer and in `chrome://extensions`, so you can tell which build is loaded. `npm run build`
-re-stamps automatically; for local unpacked testing run `npm run stamp` then reload the extension.
+re-stamps automatically; for local unpacked testing run `npm run stamp` then reload the extension. A store
+build stamps the version its `ext-cws-v` / `ext-edge-v` tag names instead ([PUBLISHING.md](PUBLISHING.md)).
 
 ## Load unpacked (Chrome / Edge)
 

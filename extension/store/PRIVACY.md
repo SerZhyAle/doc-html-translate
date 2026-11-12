@@ -39,8 +39,8 @@ downloaded language is cached in the browser's storage for reuse. None of it lea
 is removed if you uninstall the extension.
 
 ## Diagnostics you copy yourself
-The options page carries a "Copy diagnostics" button. Pressing it writes a short English summary to your
-clipboard: the extension version, your browser and platform, the interface language, your current
+The options page carries a "Copy diagnostics" button. Pressing it writes a short summary to your
+clipboard, as one JSON block with the same facts as English lines inside it: the extension version, your browser and platform, the interface language, your current
 settings, and the format, page count and last error of the most recent document. It records no document
 text, no file name and no URL, and your per-site exceptions are reported as a count rather than as host
 names. The button adds no permission and sends nothing anywhere - it writes to the clipboard only, and

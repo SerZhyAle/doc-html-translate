@@ -27,7 +27,7 @@
       <img class="on-dark" src="converter-ready-dark.png" width="1200" height="1115" alt="The DOC-HTML-UI window with a book chosen: the file box and the Convert button, the status lines, the previous result, the recent list, the output folder, the translation engine and languages, the four options, the command line and the log, and the Help button in the top-right corner.">
       <img class="on-light" src="converter-ready-light.png" width="1200" height="1115" alt="">
       <a class="pin" style="--x:94.5%;--y:2.51%" href="#help" aria-label="1, Help (F1)">1</a>
-      <a class="pin" style="--x:81.94%;--y:9.15%" href="#header" aria-label="2, Theme / Interface language">2</a>
+      <a class="pin" style="--x:51.67%;--y:5.56%" href="#header" aria-label="2, Window header">2</a>
       <a class="pin" style="--x:16.33%;--y:11.19%" href="#drop" aria-label="3, Choose a file">3</a>
       <a class="pin" style="--x:19.67%;--y:19.98%" href="#run" aria-label="4, Convert">4</a>
       <a class="pin" style="--x:16.33%;--y:23.03%" href="#status" aria-label="5, Status lines">5</a>
@@ -82,13 +82,13 @@
     </details>
 
     <details class="el" id="header">
-      <summary><span class="mk">2</span><span><span class="name">Theme / Interface language</span><span class="one">How the window looks and which language it speaks.</span></span></summary>
+      <summary><span class="mk">2</span><span><span class="name">Window header</span><span class="one">The program name and version, the links, and the list of pages.</span></span></summary>
       <div class="full">
-        <p>At the start of the window is the list of pages; at its top, beside the page title, are two lists: the theme (<b>System theme</b>, <b>Light theme</b>, <b>Dark theme</b>) and the interface language (13 languages). The line under the title says what the page is for, and the links in the header lead to the product site, the SZA hub and a message to the author. In a narrow window the list of pages opens from the Pages button. The interface language is also the language of the reader's own buttons in the converted book; the text of the book keeps its own language.</p>
+        <p>At the start of the window is the list of pages. The line under each page title says what the page is for, and the links in the header lead to the product site, the SZA hub and a message to the author. In a narrow window the list of pages opens from the Pages button. The theme and the interface language are on the Interface page; the interface language is also the language of the reader's own buttons in the converted book, while the text of the book keeps its own language.</p>
         <dl class="facts">
-          <dt>Why</dt><dd>Until you choose, the window follows the system theme and the Windows language.</dd>
-          <dt>Next</dt><dd>A change applies at once and is remembered for next time. Nothing is converted or reloaded.</dd>
-          <dt>Undo</dt><dd>Pick the previous value in the same list.</dd>
+          <dt>Why</dt><dd>The header stays the same on every page, so the way to the help, the site and the other pages is always in the same place.</dd>
+          <dt>Next</dt><dd>Choosing a page only changes what the window shows. Nothing is converted, saved or reloaded.</dd>
+          <dt>Undo</dt><dd>Choose the previous page in the list.</dd>
         </dl>
       </div>
     </details>
@@ -109,7 +109,7 @@
     <details class="el" id="run">
       <summary><span class="mk">4</span><span><span class="name">Convert</span><span class="one">Starts the conversion; while it runs the same button is Cancel.</span></span></summary>
       <div class="full">
-        <p>Converts the chosen file into a folder of local HTML pages with a table of contents, then opens it in the browser unless <b>Don't open browser</b> is ticked. While a conversion runs the button becomes <b>Cancel</b> and a progress line names the stage and counts pages or images. If a finished result for the same file and the same options already exists, it is opened instead of rebuilt; <b>Force re-process</b> rebuilds.</p>
+        <p><b>And close this window</b> closes this window after a successful conversion or queue, including warnings. The choice is remembered; errors and cancellations leave it open. Converts the chosen file into a folder of local HTML pages with a table of contents, then opens it in the browser unless <b>Don't open browser</b> is ticked. While a conversion runs the button becomes <b>Cancel</b> and a progress line names the stage and counts pages or images. If a finished result for the same file and the same options already exists, it is opened instead of rebuilt; <b>Force re-process</b> rebuilds.</p>
         <dl class="facts">
           <dt>Why</dt><dd>It is the only button that writes files; everything above it is a choice.</dd>
           <dt>Next</dt><dd>The log fills, the progress line moves, and at the end the window says it is done, done with warnings, or what went wrong and what to do about it.</dd>
@@ -280,7 +280,7 @@
   </ul>
 
   <footer class="help-foot">
-    <span>Captured against DOC-HTML-UI 26.1020.2324, 2026-10-20.</span>
+    <span>Captured against DOC-HTML-UI 26.1028.0224, 2026-10-28.</span>
     <a href="index.html">Help index</a>
     <a href="mailto:sza@ukr.net">Ask a question or report a problem</a>
   </footer>

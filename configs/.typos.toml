@@ -20,6 +20,10 @@ extend-ignore-re = [
   # "var n=" reads "varn=". Scoped to the two exact fragments.
   "try\\{vart=localStorage",
   "\\{varn=\\(navigator",
+  # The recognizer's own token "OT" quoted in backticks as evidence in the tall-word note of ticket
+  # E0128 (a handwritten-notice stitch read as two letters). Scoped to the backticked token, so "OT"
+  # in prose stays a misspelling of "TO" / "OF" everywhere else.
+  "`OT`",
 ]
 
 # Project proper nouns / format acronyms typos misreads as misspellings.

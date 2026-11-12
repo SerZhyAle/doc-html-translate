@@ -22,6 +22,9 @@
   "check: PASS (n skipped: <child>, ..)", and a run in which every child answered so says
   "check: NOT APPLICABLE (n skipped: <child>, ..)" with exit 0.
 
+  The full gate runs scripts/help-check.ps1 with -Release, so an in-app help set older than its inputs fails; the fast
+  tier runs it bare and only advises (CONTEXT-HELP rule 18 exception, ticket E0125).
+
   Every run writes temp/logs/gate-evidence.json: the verdict, HEAD, the plan and every child's
   verdict, and the git tree hash of the working tree the gate read (untracked files included,
   exactly what `git add -A` would commit). The tree is hashed before the children run and again
@@ -35,9 +38,20 @@
   Test hook: the child scripts to run instead of the default set. The default set is the one
   configs/check-placement.jsonl declares for runner scripts/check.ps1. A subset run still writes
   evidence, with its plan in it, and scripts/release.ps1 refuses anything short of the full set.
+  With -Fast it narrows the fast tier to the children of the touched area.
+
+.PARAMETER Fast
+  The between-release tier (canon TESTING_AND_QA section 2: between releases nothing above 5 s runs).
+  Runs only the gate children whose configs/check-placement.jsonl record says "tier": "fast" (each
+  measured at 5 s or less), all at once, and prints each child's output in plan order. A child of the
+  release tier named in -Plan is refused (exit 2), never run. A fast run hashes no tree and writes no
+  gate evidence: it can never unlock the release, and it never overwrites the evidence of the last
+  full gate. The default (no switch) is the full gate - the release tier included - and it is what
+  scripts/build-local.ps1 -Release and the release pre-flight run.
 #>
 param(
-    [string[]]$Plan
+    [string[]]$Plan,
+    [switch]$Fast
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,14 +70,40 @@ $defaultPlan = @(
     'scripts/doc-registry.ps1'
     'scripts/site-addresses.ps1'
     'scripts/release-notes.ps1'
+    'scripts/capability-matrix.ps1'
     'scripts/security-posture.ps1'
     'scripts/help-check.ps1'
     'scripts/settings-inventory.ps1'
 )
-if (-not $Plan) { $Plan = $defaultPlan }
 # `pwsh -File check.ps1 -Plan a,b` binds "a,b" as one string; split it the way a call from inside
 # PowerShell would have.
 $Plan = @($Plan | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+
+if ($Fast) {
+    # The tier is read from the placement records, so the fast set has one home and the placement
+    # test holds every fast record to its measured seconds.
+    $tiers = @{}
+    if (Test-Path -LiteralPath 'configs/check-placement.jsonl') {
+        foreach ($l in Get-Content -LiteralPath 'configs/check-placement.jsonl' -Encoding utf8) {
+            if (-not $l.Trim()) { continue }
+            $r = $l | ConvertFrom-Json
+            if ($r.class -eq 'gate' -and $r.runner -eq 'scripts/check.ps1') { $tiers[$r.check] = $r.tier }
+        }
+    }
+    $fastPlan = @($defaultPlan | Where-Object { $tiers[$_] -eq 'fast' })
+    if (-not $fastPlan) { Exit-Verdict 'check' 2 'configs/check-placement.jsonl records no fast-tier gate child' }
+    if ($Plan) {
+        $Plan = @($Plan | ForEach-Object { ($_ -replace '\\', '/') -replace '^\./', '' })
+        $slow = @($Plan | Where-Object { $_ -notin $fastPlan })
+        if ($slow) {
+            Write-Host "not in the fast tier: $($slow -join ', ') - it runs in the full gate (scripts/check.ps1 with no -Fast), at the release"
+            Exit-Verdict 'check' 2 "not in the fast tier: $($slow -join ', ')"
+        }
+    } else {
+        $Plan = $fastPlan
+    }
+}
+if (-not $Plan) { $Plan = $defaultPlan }
 
 # ── gate evidence: the tree ──────────────────────────────────
 # The tree hash comes from a scratch copy of the index, so the real index (what the user staged)
@@ -93,20 +133,53 @@ function Get-WorkingTreeHash {
     }
 }
 
-# Hashed before any child runs: the tree the children are about to read.
-$treeBefore = Get-WorkingTreeHash
+# Hashed before any child runs: the tree the children are about to read. A fast run writes no
+# evidence, so it hashes nothing.
+$treeBefore = if ($Fast) { $null } else { Get-WorkingTreeHash }
 
 $pwsh = (Get-Process -Id $PID).Path
-Write-Subject 'check' "$($Plan.Count) child check(s), $(Get-TreeLabel); per-child subjects below"
+$tierLabel = if ($Fast) { 'fast tier, in parallel' } else { 'full gate' }
+Write-Subject 'check' "$($Plan.Count) child check(s), $tierLabel, $(Get-TreeLabel); per-child subjects below"
+
+# The fast tier runs its children at once; each one's output is collected and printed below in plan
+# order, so the log reads the same as a sequential run.
+$runs = $null
+if ($Fast) {
+    $here = (Get-Location).Path
+    $runs = @(0..($Plan.Count - 1) | ForEach-Object -ThrottleLimit ([Environment]::ProcessorCount) -Parallel {
+            Set-Location -LiteralPath $using:here
+            $child = ($using:Plan)[$_]
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            $out = @(& $using:pwsh -NoProfile -File $child *>&1 | ForEach-Object { "$_" })
+            [pscustomobject]@{ Index = $_; Lines = $out; Code = $LASTEXITCODE; Seconds = $sw.Elapsed.TotalSeconds }
+        } | Sort-Object Index)
+}
 
 $results = @()
-foreach ($child in $Plan) {
+for ($i = 0; $i -lt $Plan.Count; $i++) {
+    $child = $Plan[$i]
     $name = [System.IO.Path]::GetFileNameWithoutExtension($child)
     Write-Host ""
     Write-Host "== $name ==" -ForegroundColor Cyan
     $logFile = "temp/logs/check-$name.log"
-    $lines = @(& $pwsh -NoProfile -File $child *>&1 | Tee-Object -FilePath $logFile | ForEach-Object { Write-Host $_; "$_" })
-    $code = $LASTEXITCODE
+    if ($runs) {
+        $lines = @($runs[$i].Lines)
+        Set-Content -LiteralPath $logFile -Value $lines -Encoding utf8
+        foreach ($line in $lines) { Write-Host $line }
+        $code = $runs[$i].Code
+        $seconds = $runs[$i].Seconds
+    } else {
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        # The full gate holds the in-app help set to its inputs: a stale screenshot fails here, where the fast tier
+        # only advises (CONTEXT-HELP rule 18 exception, ticket E0125).
+        $childArgs = @()
+        if ((($child -replace '\\', '/') -replace '^\./', '') -eq 'scripts/help-check.ps1') { $childArgs += '-Release' }
+        $lines = @(& $pwsh -NoProfile -File $child @childArgs *>&1 | Tee-Object -FilePath $logFile | ForEach-Object { Write-Host $_; "$_" })
+        $code = $LASTEXITCODE
+        $seconds = $sw.Elapsed.TotalSeconds
+    }
+    # The wall time is the record the fast / release tier is judged from (configs/check-placement.jsonl).
+    Write-Host "$name took $([math]::Round($seconds, 1).ToString([cultureinfo]::InvariantCulture)) s" -ForegroundColor DarkGray
     # The child's own verdict line, when it printed one; a child that died without one is quoted
     # by its exit code, and an unknown code is read as a failure (CHECK-VERDICT section 6).
     $verdict = @($lines | Where-Object { $_ -match "^${name}: (PASS|FAIL|COULD NOT VERIFY|NOT APPLICABLE)" }) | Select-Object -Last 1
@@ -135,7 +208,7 @@ $detail = if ($named) { "$($named.Count): " + (($named | ForEach-Object Name) -j
 
 # Hashed again after the last child: a different tree means an edit landed while the gate ran, and
 # the children judged a mix of the two. That is not evidence about either, so it is not a pass.
-$treeAfter = Get-WorkingTreeHash
+$treeAfter = if ($Fast) { $null } else { Get-WorkingTreeHash }
 $treeMoved = $treeBefore -ne $treeAfter
 if ($treeMoved) {
     Write-Host "  the working tree changed while the gate ran (tree $treeBefore before, $treeAfter after)" -ForegroundColor Magenta
@@ -152,30 +225,32 @@ if ($code -eq 0 -and $skipped) {
     if ($skipped.Count -eq $results.Count) { $word = 'NOT APPLICABLE' }
 }
 
-$prevEap = $ErrorActionPreference
-$ErrorActionPreference = 'SilentlyContinue'
-$head = (& git rev-parse HEAD 2>$null)
-$dirty = [bool](& git status --porcelain 2>$null)
-$ErrorActionPreference = $prevEap
+if (-not $Fast) {
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    $head = (& git rev-parse HEAD 2>$null)
+    $dirty = [bool](& git status --porcelain 2>$null)
+    $ErrorActionPreference = $prevEap
 
-$evidence = [ordered]@{
-    verdict    = "check: $word" + $(if ($detail) { " ($detail)" } else { '' })
-    code       = $code
-    head       = if ($head) { $head.Trim() } else { $null }
-    # The tree scripts/release.ps1 matches against HEAD: empty when the tree moved under the gate.
-    tree       = if ($treeMoved) { $null } else { $treeAfter }
-    treeBefore = $treeBefore
-    treeAfter  = $treeAfter
-    dirty      = $dirty
-    time       = (Get-Date).ToString('o')
-    subject    = 'Go edition (windows/amd64) + extension edition (node); see each child banner'
-    # What ran, as given. release.ps1 compares it with configs/check-placement.jsonl itself rather
-    # than trusting fullPlan, which is here for a reader.
-    plan       = @($Plan)
-    fullPlan   = ($Plan.Count -eq $defaultPlan.Count) -and -not @($defaultPlan | Where-Object { $_ -notin $Plan })
-    children   = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict; notApplicable = $_.NotApplicable } })
+    $evidence = [ordered]@{
+        verdict    = "check: $word" + $(if ($detail) { " ($detail)" } else { '' })
+        code       = $code
+        head       = if ($head) { $head.Trim() } else { $null }
+        # The tree scripts/release.ps1 matches against HEAD: empty when the tree moved under the gate.
+        tree       = if ($treeMoved) { $null } else { $treeAfter }
+        treeBefore = $treeBefore
+        treeAfter  = $treeAfter
+        dirty      = $dirty
+        time       = (Get-Date).ToString('o')
+        subject    = 'Go edition (windows/amd64) + extension edition (node); see each child banner'
+        # What ran, as given. release.ps1 compares it with configs/check-placement.jsonl itself rather
+        # than trusting fullPlan, which is here for a reader.
+        plan       = @($Plan)
+        fullPlan   = ($Plan.Count -eq $defaultPlan.Count) -and -not @($defaultPlan | Where-Object { $_ -notin $Plan })
+        children   = @($results | ForEach-Object { [ordered]@{ name = $_.Name; code = $_.Code; verdict = $_.Verdict; notApplicable = $_.NotApplicable } })
+    }
+    $evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "temp/logs/gate-evidence.json" -Encoding utf8
 }
-$evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath "temp/logs/gate-evidence.json" -Encoding utf8
 
 Write-Host ""
 if ($word -eq 'NOT APPLICABLE') {

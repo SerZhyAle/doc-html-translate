@@ -10,7 +10,25 @@ node tools/helpgen/generate.mjs --locales en,ru    a subset (stale files of the 
 node tools/helpgen/generate.mjs --only converter   one page
 node tools/helpgen/generate.mjs --exe <path>       use an exe instead of building one
 node tools/helpgen/generate.mjs --check            regenerate into temp/helpgen/check-out and report what differs
+node tools/helpgen/repage.mjs                      the fast form: re-render the pages from the committed captures
+node tools/helpgen/repage.mjs --check              the same in memory; exit 1 when the committed pages differ
 ```
+
+`repage.mjs` is for a change of wording only (the copy deck's prose, `help.css`, the renderer). It builds nothing and
+opens no browser, so a call takes well under a second (0.07 s on 2026-10-29). It reuses the screenshots and the pin
+places in `captures.json`, so it refuses (exit 2, nothing written) when an input of the window changed after the last
+capture - `ui.html` markup or style, `i18n.js`, `generate.mjs`, `shots.mjs` - because the new pages and the images
+beside them would then disagree; that case is answered by `generate.mjs` alone. It also refreshes `freshness.json`,
+so the gate stops naming the wording inputs as newer than the set. It cannot see an edit of a selector, a pin mode, a
+setup or a capture kind in the copy deck (they decide where a pin sits); `generate.mjs --check` at the release
+compares its output with the full generator's byte for byte.
+
+Which one runs when (ticket E0125, owner decision 2026-10-30): a change of wording reaches both copies of the set in
+the same edit through `repage.mjs`. A change of what the window shows (`ui.html`, `i18n.js`, the capture code) leaves
+the screenshots and pin places to the release, because `generate.mjs` builds the GUI and takes about two minutes and
+nothing above 5 s runs between releases; CONTEXT-HELP rule 18 carries a dated exception for that half. Until then the
+screenshots show the previous window, `repage.mjs` refuses, `help-check` names the moved input, and the release
+pre-flight runs `generate.mjs` and then `generate.mjs --check`.
 
 Needs the Go toolchain, Node, and the Playwright Chromium of `tools/sitecheck` (`npm ci` there once). Run it from
 the repository root in PowerShell. It runs the real `doc-html-ui.exe` under a scratch profile
@@ -43,7 +61,9 @@ Into `cmd/doc-html-ui/help/` (embedded in the exe with `go:embed`, served under 
 
 `scripts/help-check.ps1` (`go run ./tools/helpcheck`) holds the surfaces of `ui.html` against the map, the pages
 against the locale set, the links, rule 12 (a page makes no request), the house text style, the two copies against
-each other and the freshness. The locales the GUI ships and the help does not have yet are the set baseline
+each other and the freshness: an advisory between releases, a failure under `-Release`
+(`scripts/help-check.ps1 -Release`, `go run ./tools/helpcheck -strict-freshness`), which the full gate and the release
+pre-flight use. The locales the GUI ships and the help does not have yet are the set baseline
 `configs/help-baseline.txt` (it may fall and never rise).
 
 ## Adding a locale

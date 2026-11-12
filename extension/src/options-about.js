@@ -6,7 +6,7 @@
 // local write, the file is a local download. No document text is ever in either (diagnostics.js).
 
 import { LINKS, UPDATE_SOURCES, RESOURCES, RELATED } from "./product-inventory.js";
-import { reportText } from "./diagnostics.js";
+import { reportEnvelope } from "./diagnostics.js";
 import { glyph } from "./glyphs.js";
 import { getOptions } from "./options-store.js";
 import { saveTextFile } from "./save-file.js";
@@ -85,13 +85,14 @@ export function renderAbout() {
 
 function setDiagStatus(text) { el("diag-status").textContent = text; }
 
-// The summary is English whatever the interface language is, so the author reads one format.
+// The summary is the JSON diagnostic envelope (DIAGNOSTIC-REPORT 8 A) with the readable lines inside it,
+// English whatever the interface language is, so the author reads one format.
 async function summary() {
-  return reportText(chrome.runtime.getManifest().version, await getOptions());
+  return reportEnvelope(chrome.runtime.getManifest().version, await getOptions());
 }
 
 // initDiagnostics wires the two actions. Copy puts the summary on the clipboard - a write from the reader's own
-// click needs no permission. Save hands the same text over as a file for a mail attachment or a bug report.
+// click needs no permission. Save hands the same envelope over as a file for a mail attachment or a bug report.
 export function initDiagnostics() {
   el("copy-diag").addEventListener("click", async () => {
     const text = await summary();
@@ -116,7 +117,7 @@ export function initDiagnostics() {
   });
   el("save-diag").addEventListener("click", async () => {
     try {
-      saveTextFile("doc-html-translate-diagnostics.txt", await summary(), "text/plain;charset=utf-8");
+      saveTextFile("doc-html-translate-diagnostics.json", await summary(), "application/json;charset=utf-8");
       setDiagStatus(msg("optDiagSaved", "Diagnostics file downloaded."));
     } catch (error) { setDiagStatus(error.message); }
   });

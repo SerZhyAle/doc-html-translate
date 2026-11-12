@@ -42,5 +42,9 @@ if ($code -notin 0, 1, 2) {
     Exit-Verdict 'settings-inventory' 2 "the check did not run (exit $code)"
 }
 $last = @($lines | Where-Object { $_ -match $verdictLine }) | Select-Object -Last 1
+# go run exits 1 for any non-zero exit of the program it ran (it prints "exit status 3"), so an advisory
+# or a COULD NOT VERIFY would arrive as FAIL: the tool's own verdict word carries the code (CHECK-VERDICT rule 2.5).
+$byWord = @{ 'PASS WITH ADVISORIES' = 3; 'COULD NOT VERIFY' = 2; 'FAIL' = 1; 'PASS' = 0 }
+if ($last -and $last -match '^settings-inventory: (PASS WITH ADVISORIES|COULD NOT VERIFY|FAIL|PASS)\b') { $code = $byWord[$Matches[1]] }
 $detail = if ($last -and $last -match '\((.*)\)\s*$') { $Matches[1] } else { '' }
 Exit-Verdict 'settings-inventory' $code $detail

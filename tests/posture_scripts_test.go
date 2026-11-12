@@ -54,7 +54,6 @@ const scratchPage = `<!doctype html>
 <html lang="en"><head>
 <link rel="canonical" href="https://example.test/site/">
 <link rel="alternate" hreflang="en" href="https://example.test/site/">
-<link rel="alternate" hreflang="ru" href="https://example.test/site/?l=ru">
 <link rel="alternate" hreflang="x-default" href="https://example.test/site/">
 <meta property="og:title" content="T"><meta property="og:description" content="D">
 <meta property="og:image" content="https://example.test/site/shot.png"><meta property="og:url" content="https://example.test/site/">
@@ -74,7 +73,7 @@ func TestDocRegistryOutcomes(t *testing.T) {
 	w("index.html", scratchPage)
 	w("README.md", "# scratch\n")
 	w("docs/DOCUMENT_REGISTRY.jsonl", strings.Join([]string{
-		`{"id":"site","title":"Site","category":"site","audience":"user","paths":["index.html"],"published":true,"indexable":true,"url":"/","languages":["en","ru"],"localized_urls":{"en":"/","ru":"/?l=ru"},"product_areas":["site"],"update_triggers":["site-page"],"generated":false}`,
+		`{"id":"site","title":"Site","category":"site","audience":"user","paths":["index.html"],"published":true,"indexable":true,"url":"/","languages":["en","ru"],"localized_urls":{"en":"/"},"product_areas":["site"],"update_triggers":["site-page"],"generated":false}`,
 		`{"id":"crawl","title":"Crawl files","category":"site","audience":"crawler","paths":["robots.txt","sitemap.xml"],"published":true,"indexable":false,"product_areas":["site"],"update_triggers":["site-page"],"generated":false}`,
 		`{"id":"readme","title":"Readme","category":"public","audience":"user","paths":["README.md"],"published":false,"indexable":false,"product_areas":["product"],"update_triggers":["user-feature"],"generated":false,"notes":"the repository front page, not a site page"}`,
 		`{"id":"registry","title":"Registry","category":"engineering","audience":"developer","paths":["docs/DOCUMENT_REGISTRY.jsonl"],"published":false,"indexable":false,"product_areas":["documentation"],"update_triggers":["document-added"],"generated":false,"notes":"tooling input kept in the repository"}`,
@@ -90,12 +89,23 @@ func TestDocRegistryOutcomes(t *testing.T) {
 	run("a hand-kept sitemap", 1, "doc-registry: FAIL", "sitemap.xml differs")
 	run("-Generate writes the sitemap, then the check passes", 0, "doc-registry: PASS (4 record(s)", "", "-Generate")
 	sitemap := readScratch(t, dir, "sitemap.xml")
-	for _, want := range []string{"<loc>https://example.test/site/</loc>", "<loc>https://example.test/site/?l=ru</loc>", `hreflang="x-default"`} {
+	for _, want := range []string{"<loc>https://example.test/site/</loc>", `hreflang="x-default"`} {
 		if !strings.Contains(sitemap, want) {
 			t.Fatalf("the generated sitemap lacks %q:\n%s", want, sitemap)
 		}
 	}
 	run("the generated sitemap is current", 0, "doc-registry: PASS", "")
+
+	// a query view of the page's own file is not its own canonical: neither an hreflang alternate
+	// nor a localized_urls value may announce it (canon PROMOTION section 3)
+	w("index.html", strings.Replace(scratchPage, `<link rel="alternate" hreflang="x-default"`, `<link rel="alternate" hreflang="ru" href="https://example.test/site/?l=ru">`+"\n"+`<link rel="alternate" hreflang="x-default"`, 1))
+	run("an hreflang alternate that is a query view", 1, "doc-registry: FAIL", "a query view of its own canonical")
+	w("index.html", scratchPage)
+	registry := readScratch(t, dir, "docs/DOCUMENT_REGISTRY.jsonl")
+	w("docs/DOCUMENT_REGISTRY.jsonl", strings.Replace(registry, `"localized_urls":{"en":"/"}`, `"localized_urls":{"en":"/","ru":"/?l=ru"}`, 1))
+	run("a localized_urls value that is a query view", 1, "doc-registry: FAIL", "declared address /?l=ru is served by none")
+	w("docs/DOCUMENT_REGISTRY.jsonl", registry)
+	run("the query views gone", 0, "doc-registry: PASS", "")
 
 	w("notes/todo.md", "# not registered\n")
 	run("a new document in no record", 1, "doc-registry: FAIL", "notes/todo.md is in no record")

@@ -1,7 +1,7 @@
 # Pointer: SITE-STRUCTURE
 
 - **Id:** `SITE-STRUCTURE`
-- **Version:** 0.3 (draft)
+- **Version:** 0.4 (draft)
 - **Home:** the shared contracts catalog, `product-site/SITE-STRUCTURE.md`, with the run-list `product-site/SITE-CHECKLIST.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - tier **guide** (owner decision, 2026-10-06, ticket 96); locale sets as published; read at 0.3 on 2026-10-20 (ticket 120)
 - **Wire carrier:** none - a page set, a navigation shape and an address scheme
@@ -32,3 +32,5 @@ satisfy the Support page type at the guide tier).
 
 **Conformance.** `tools/sitecheck --tree` (2026-10-20: `DONE`, info 10, pass 57, fail 1 = the kit `B4a`, na 2),
 `go test ./tests -run TestSite` (47 PASS), `scripts/site-addresses.ps1` and `scripts/release-notes.ps1`.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.4.** Section 9 A-H: Support stays a page linked from every footer, so item A is not used; no roadmap or readiness label on any page (H); below the Search threshold (C). Still partial on 8.C and 8.E (ticket 118).

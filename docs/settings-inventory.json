@@ -6,10 +6,10 @@
       "key": "lang",
       "control": "langSwitch",
       "kind": "select",
-      "page": "convert",
+      "page": "interface",
       "caption": "titleUiLang",
       "captionEN": "Interface language",
-      "help": "main.header",
+      "help": "settings.interface",
       "flags": [
         "-ui-lang"
       ]
@@ -172,6 +172,16 @@
       ]
     },
     {
+      "key": "closeAfter",
+      "control": "chkCloseAfter",
+      "kind": "checkbox",
+      "page": "convert",
+      "caption": "chkCloseAfter",
+      "captionEN": "And close this window",
+      "default": "false",
+      "help": "main.run"
+    },
+    {
       "key": "force",
       "control": "chkForce",
       "kind": "checkbox",
@@ -246,11 +256,11 @@
       "key": "theme",
       "control": "themeSwitch",
       "kind": "select",
-      "page": "convert",
+      "page": "interface",
       "caption": "titleTheme",
       "captionEN": "Theme",
       "default": "system",
-      "help": "main.header"
+      "help": "settings.interface"
     },
     {
       "key": "uiSize",

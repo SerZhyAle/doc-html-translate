@@ -1,7 +1,7 @@
 # Pointer: APP-STYLE
 
 - **Id:** `APP-STYLE`
-- **Version:** 0.13 draft
+- **Version:** 0.14 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - desktop GUI styling (`cmd/doc-html-ui`) and the reader theme palette
 - **Wire carrier:** none - theme palette tokens and CSS variables
@@ -43,3 +43,5 @@ conform, 6 are not applicable, no gap; `go test ./cmd/doc-html-ui` exit 0.
 (`TestPaletteTextMeetsWCAGAA`). Colour values are product-owned (section 6, 0.13), so this is no APP-STYLE
 deviation; only the glyph tone of the answer dialog differs from `ICON-RENDER`, and the catalog registry
 records that one row against `ICON-RENDER`.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.14.** The 2026-10-29 amendment (items A-E) decides this product's proposal on the fills-only reading already applied: no state-filled surface, every state keeps its word, and the rail selection owes no `surface.selected`. Nothing changes.

@@ -4,6 +4,9 @@
 // in one CHECK-VERDICT line.
 //
 //	go run ./tools/helpcheck                              the check, from the repository root (scripts/help-check.ps1 runs it)
+//	go run ./tools/helpcheck -strict-freshness            the same, and a set older than its inputs is a failure, not an
+//	                                                      advisory (the full gate and the release pre-flight, ticket E0125;
+//	                                                      scripts/help-check.ps1 -Release)
 //	go run ./tools/helpcheck -accept-baseline "<reason>"  the update path of configs/help-baseline.txt (CHECK-BASELINE
 //	                                                      rule 6): accepts the GUI locales that have no help pages yet,
 //	                                                      prints each one and records the reason beside it
@@ -26,6 +29,7 @@ import (
 
 func main() {
 	accept := flag.String("accept-baseline", "", "accept the GUI locales without help pages into the baseline, with this reason")
+	strict := flag.Bool("strict-freshness", false, "fail, instead of advising, when the help set is older than its inputs")
 	flag.Parse()
 
 	root, err := os.Getwd()
@@ -37,7 +41,7 @@ func main() {
 		return
 	}
 	fmt.Printf("help-check: subject = the in-app help of the GUI launcher (%s, %s) in %s\n", helpcheck.MapPath, helpcheck.MirrorDir+"/", root)
-	r, err := helpcheck.RunWith(root, helpcheck.Options{Committed: gitHead(root)})
+	r, err := helpcheck.RunWith(root, helpcheck.Options{Committed: gitHead(root), StrictFreshness: *strict})
 	if err != nil {
 		fmt.Println("help-check:", err)
 		verdict(2, "the help set cannot be read")

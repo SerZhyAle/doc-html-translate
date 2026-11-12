@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -142,7 +143,8 @@ func RunWith(root string, opt Options) (*Report, error) {
 		return nil, err
 	}
 	checkMirror(r, root)
-	checkFreshness(r, root)
+	checkTracked(r, root)
+	checkFreshness(r, root, opt.StrictFreshness)
 	return r, nil
 }
 
@@ -676,6 +678,34 @@ func checkMirror(r *Report, root string) {
 		if _, ok := a[rel]; !ok {
 			r.fail("%s/%s is in the site's copy but not in the embedded set", MirrorDir, rel)
 		}
+	}
+}
+
+// ── what git publishes ───────────────────────────────────────
+
+// The set reaches the exe and the site only through git, while every check above reads the working tree: a page that
+// git ignores passes them all and is missing from every published copy (rules 12 and 15). A tree that is not a git
+// checkout (a scratch copy) has nothing to publish, so the check has nothing to say there.
+func checkTracked(r *Report, root string) {
+	var paths []string
+	for _, dir := range []string{HelpDir, MirrorDir, CopyDir} {
+		_ = filepath.WalkDir(filepath.Join(root, filepath.FromSlash(dir)), func(p string, d os.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				if rel, rerr := filepath.Rel(root, p); rerr == nil {
+					paths = append(paths, filepath.ToSlash(rel))
+				}
+			}
+			return nil
+		})
+	}
+	cmd := exec.Command("git", "-C", root, "check-ignore", "--stdin")
+	cmd.Stdin = strings.NewReader(strings.Join(paths, "\n") + "\n")
+	out, err := cmd.Output()
+	if err != nil { // exit 1: no path is ignored; any other failure: no git, or not a checkout
+		return
+	}
+	for _, p := range strings.Fields(string(out)) {
+		r.fail("%s is ignored by git: the published copies would lack it (add a negation to .gitignore)", p)
 	}
 }
 

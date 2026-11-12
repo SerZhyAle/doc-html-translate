@@ -320,7 +320,7 @@ func TestReaderComfortControls(t *testing.T) {
 		// INPUT-PARITY: a Shift-modified arrow or PageUp/PageDown extends the selection and is
 		// the browser's; only Shift+Space turns a page back.
 		`if (e.shiftKey && e.key !== " ") return;`,
-		// Fit width: per-session like the zoom, applied as a class + zoom-compensated width.
+		// Fit width: per-session, applied as a class + width.
 		`"dht_fitw"`, `classList.toggle("dht-fitw"`, `--dht-fitw`,
 	} {
 		if !strings.Contains(navBarScript, want) {

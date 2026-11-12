@@ -818,6 +818,314 @@
       "note": "licence read from the Commons file page metadata by API, not by a person"
     },
     {
+      "id": "screen-gui-converter-ready-en-light",
+      "file": "screens/screen-gui-converter-ready-en-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-ready, locale en, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "8ac71d45bd685908f5ff529b3a187bf5415233614cb506098cf98f620c1b245b",
+      "bytes": 104245,
+      "width": 1160,
+      "height": 1115,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "screenshot"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-converter-ready-ru-light",
+      "file": "screens/screen-gui-converter-ready-ru-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-ready, locale ru, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "f89b7ddc74fdc673481cb6b9c712e8e677291a08bbca81841f873a1440d9b36a",
+      "bytes": 121139,
+      "width": 1160,
+      "height": 1148,
+      "languages": [
+        "ru"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-converter-ready-uk-light",
+      "file": "screens/screen-gui-converter-ready-uk-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-ready, locale uk, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "68b804b8bc7c1f32fd0eeef0a390e9be087883370efaeef00a81195827e2c2bf",
+      "bytes": 121092,
+      "width": 1160,
+      "height": 1165,
+      "languages": [
+        "uk"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-converter-states-en-dark",
+      "file": "screens/screen-gui-converter-states-en-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-states, locale en, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "ebca8e600764270665ffdbab01ddfe925588804933b3db5c138164f02019c8a3",
+      "bytes": 135749,
+      "width": 1160,
+      "height": 1493,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "screenshot"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-converter-states-ru-dark",
+      "file": "screens/screen-gui-converter-states-ru-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-states, locale ru, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "a48e177246a73e3d114496c08e09afa8c8cac23ab7e19415d6306b550568ada9",
+      "bytes": 160984,
+      "width": 1160,
+      "height": 1560,
+      "languages": [
+        "ru"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-converter-states-uk-dark",
+      "file": "screens/screen-gui-converter-states-uk-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state converter-states, locale uk, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "acccbc1986f3061146979149afd7773f70736310f4e08546c1f5b7049a27f982",
+      "bytes": 161095,
+      "width": 1160,
+      "height": 1594,
+      "languages": [
+        "uk"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-about-en-dark",
+      "file": "screens/screen-gui-page-about-en-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-about, locale en, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "754e6ac19238e1dc7fb5c962b5f123f91409c200c3d8a0dd3117c002037be15d",
+      "bytes": 65953,
+      "width": 1160,
+      "height": 922,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "screenshot"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-about-ru-dark",
+      "file": "screens/screen-gui-page-about-ru-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-about, locale ru, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "ea41165260cdde2526d85c786d4f2446dc7661ed5e3a6cb9d8ec319afacd0c9a",
+      "bytes": 75103,
+      "width": 1160,
+      "height": 922,
+      "languages": [
+        "ru"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-about-uk-dark",
+      "file": "screens/screen-gui-page-about-uk-dark.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-about, locale uk, theme dark",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "403f81385b16418a09491be2a25110299fa1a5ead3eceea1233df82b41732785",
+      "bytes": 75834,
+      "width": 1160,
+      "height": 922,
+      "languages": [
+        "uk"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-ocr-en-light",
+      "file": "screens/screen-gui-page-ocr-en-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-ocr, locale en, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "592cdb78bfc8b6b0db5492be98b0e31edae7bf44086d2147f7a74e9aed30a5dc",
+      "bytes": 35159,
+      "width": 1160,
+      "height": 760,
+      "languages": [
+        "en"
+      ],
+      "scripts": [
+        "Latn"
+      ],
+      "categories": [
+        "screenshot"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-ocr-ru-light",
+      "file": "screens/screen-gui-page-ocr-ru-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-ocr, locale ru, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "94a0638946effe548f7591a7f06611fa6f4bea292119f5eadf8bf9dc81ccede1",
+      "bytes": 39676,
+      "width": 1160,
+      "height": 760,
+      "languages": [
+        "ru"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "screen-gui-page-ocr-uk-light",
+      "file": "screens/screen-gui-page-ocr-uk-light.png",
+      "sourceUrl": "",
+      "sourceItem": "doc-html-ui 26.1028.0224 window, state page-ocr, locale uk, theme light",
+      "retrievedOn": "2026-10-30",
+      "licence": "OWN",
+      "licenceUrl": "",
+      "licenceVerifiedBy": "owner (own material; ticket E0121 decision)",
+      "licenceVerifiedOn": "2026-10-30",
+      "sha256": "c9ddda38fe152698314d6c3a7dd31c9a818e491b2508a09472620909c5e86513",
+      "bytes": 40418,
+      "width": 1160,
+      "height": 760,
+      "languages": [
+        "uk"
+      ],
+      "scripts": [
+        "Cyrl"
+      ],
+      "categories": [
+        "screenshot",
+        "script"
+      ],
+      "split": "dev"
+    },
+    {
       "id": "synth-adjacent-balloons",
       "file": "synthetic/synth-adjacent-balloons.png",
       "sourceUrl": "",

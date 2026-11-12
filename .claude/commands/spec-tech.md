@@ -212,8 +212,9 @@ unchecked.>
 ## Phase done criteria
 - [ ] Every `Step NN.*` is `[x] done`.
 - [ ] Narrowest meaningful check for this phase passes — pick the lowest sufficient rung from
-      `docs/VALIDATION.md` (a compile / type-check, a targeted test, or `./scripts/build.ps1 (UI: ./scripts/build-ui.ps1)` only when
-      this phase touches packaging, resources, or wiring). Name the actual command here.
+      `docs/VALIDATION.md` (a compile / type-check, a targeted test, or `./scripts/check.ps1 -Fast -Plan <children>`,
+      each 5 s or less; a phase that touches packaging, resources or wiring names `./scripts/build.ps1` as a
+      `RELEASE` item - between releases nothing slower runs). Name the actual command here.
 - [ ] Grep for `TODO(phase-<NN>)` returns zero hits.
 - [ ] Changelog entry added for every file in "Files touched".
 

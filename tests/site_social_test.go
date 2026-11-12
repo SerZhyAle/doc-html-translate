@@ -80,9 +80,20 @@ func TestLandingUsesTheSocialCard(t *testing.T) {
 var jsonLDRe = regexp.MustCompile(`(?s)<script type="application/ld\+json">(.*?)</script>`)
 
 // jsonLDForbidden are the keys and types the campaign never writes (ticket 111 section 2).
-var jsonLDForbidden = []string{"aggregateRating", "review", "softwareVersion", "FAQPage", "HowTo"}
+// softwareVersion is allowed only as the render of the newest docs/release-notes.json record
+// (scripts/release-notes.ps1 -Render, DOCUMENTATION_CONCEPT section 4), never typed by hand.
+var jsonLDForbidden = []string{"aggregateRating", "review", "FAQPage", "HowTo"}
 
 func TestSiteJSONLDIsTruthful(t *testing.T) {
+	var notes struct {
+		Releases []struct {
+			Version string `json:"version"`
+		} `json:"releases"`
+	}
+	if err := json.Unmarshal([]byte(readRepoFile(t, "docs", "release-notes.json")), &notes); err != nil || len(notes.Releases) == 0 {
+		t.Fatalf("docs/release-notes.json: no newest record to hold softwareVersion against (%v)", err)
+	}
+	newest := notes.Releases[0].Version
 	for _, p := range sitePages() {
 		blocks := jsonLDRe.FindAllStringSubmatch(readRepoFile(t, strings.Split(p, "/")...), -1)
 		if len(blocks) != 1 {
@@ -98,7 +109,12 @@ func TestSiteJSONLDIsTruthful(t *testing.T) {
 		collectJSONLDNames(v, found)
 		for _, bad := range jsonLDForbidden {
 			if found[bad] {
-				t.Errorf("%s: the JSON-LD block carries %q (no real rating, review or retyped version exists)", p, bad)
+				t.Errorf("%s: the JSON-LD block carries %q (no real rating or review exists)", p, bad)
+			}
+		}
+		if obj, ok := v.(map[string]any); ok {
+			if sv, has := obj["softwareVersion"]; has && sv != newest {
+				t.Errorf("%s: softwareVersion %v is not the newest release record %s (run scripts/release-notes.ps1 -Render)", p, sv, newest)
 			}
 		}
 	}

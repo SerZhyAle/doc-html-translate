@@ -19,6 +19,9 @@ then `canon.adoptedOn`; with neither parseable the age is unknown, treated as pa
 An equal digest owes no finding; a differing digest with unknown age is an error. This product
 has no stamp-age reader: it receives the plugin's checker rather than copying it. The stamp
 still carries its actual adoption values; no synchronization claim is written by hand.
+The delivered checker reads it that way since plugin 2026.10.29.10 (`tools/check-compliance.ps1`, `SZA-CANON03`
+"unknown age, treated as past 180 days"), so the registry exception for a checker that read an unknown age as zero
+is closed (2026-10-29, ticket 122).
 
 **Conformance.** No catalog vectors. The canon plugin owns the compliance reader and its tests;
 its missing-date case must be verified there, not implemented in this repository.

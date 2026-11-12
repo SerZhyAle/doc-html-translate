@@ -85,7 +85,12 @@ async function captures(session) {
   for (const c of CAPTURES) {
     const { page, close } = await session.page({ q: c.q, w: c.w || 1366, h: c.h || 768, scheme: c.scheme || 'light', forced: c.forced || 'none' });
     try {
-      if (c.theme) { await page.selectOption('#themeSwitch', c.theme).catch(() => {}); }
+      if (c.theme) {
+        // The theme select lives on the Interface page; go there, choose, and come back to the page under test.
+        await page.click('#tab-interface');
+        await page.selectOption('#themeSwitch', c.theme).catch(() => {});
+        await page.click('#tab-' + (c.q.page || 'convert'));
+      }
       if (c.click) await page.click(c.click);
       await page.waitForTimeout(150);
       await page.screenshot({ path: path.join(outDir, 'screenshots', c.name + '.png') });

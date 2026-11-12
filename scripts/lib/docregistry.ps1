@@ -133,19 +133,21 @@ function Get-PageAddresses([string]$FullPath) {
 
 function Get-AddressFile([string]$Href) { return ($Href -split '[?#]', 2)[0] }
 
-# The addresses one page file serves: its canonical first, then every hreflang alternate that is the
-# same file with a query (index.html?lang=ru), in the page's own order, without repeats.
+# The addresses one page file announces: its canonical only. A query view of the same file
+# (index.html?lang=ru) canonicalises to that file, so announcing it tells a crawler two contradictory
+# things (canon PROMOTION section 3); the reader still answers it, but no head or sitemap row names it.
 function Get-PageOwnAddresses($Page) {
     $own = [System.Collections.Generic.List[string]]::new()
-    if (-not $Page.Canonical) { return , $own.ToArray() }
-    $own.Add($Page.Canonical)
-    $file = Get-AddressFile $Page.Canonical
-    foreach ($a in $Page.Alternates) {
-        if ($a.Lang -eq 'x-default') { continue }
-        if ((Get-AddressFile $a.Href) -ne $file) { continue }
-        if (-not $own.Contains($a.Href)) { $own.Add($a.Href) }
-    }
+    if ($Page.Canonical) { $own.Add($Page.Canonical) }
     return , $own.ToArray()
+}
+
+# The hreflang alternates of a page that are a query view of the page's own file - the shape canon
+# PROMOTION section 3 forbids, since such a URL is not its own canonical.
+function Get-PageQueryAlternates($Page) {
+    if (-not $Page.Canonical) { return , @() }
+    $file = Get-AddressFile $Page.Canonical
+    return , @($Page.Alternates | Where-Object { $_.Href -ne $Page.Canonical -and (Get-AddressFile $_.Href) -eq $file })
 }
 
 function Get-ExcludedPaths($Record) {
@@ -176,7 +178,7 @@ function Get-PageLastMod([string]$Root, [string]$File) {
 }
 
 # The sitemap, rendered from the records that announce pages, in record order and path order. Each
-# address a page serves gets its own <url>, repeating the page's whole hreflang cluster including a
+# page's canonical gets its own <url>, repeating the page's whole hreflang cluster including a
 # self-reference - a version listed only as someone else's alternate is routinely left unindexed.
 # <priority> and <changefreq> are never written: Google ignores both (canon PROMOTION section 3).
 function Get-SitemapText([string]$Root, $Records, $Files) {

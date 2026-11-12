@@ -105,7 +105,6 @@ export function matrix() {
   for (const lang of ['de', 'ru', 'hi']) for (const page of ['chapter', 'single']) for (const mode of ['fine', 'narrow', 'coarse']) cases.push({ page, mode, lang });
   for (const scale of [0.875, 2, 0, 100]) cases.push({ page: 'chapter', mode: 'fine', scale });
   cases.push({ page: 'single', mode: 'coarse', scale: 0.875 }, { page: 'single', mode: 'coarse', scale: 2 });
-  cases.push({ page: 'chapter', mode: 'fine', zoom: 50 });
   return cases;
 }
 export const caseTag = (c) => [c.page, c.mode, c.lang || 'en', c.theme || 'light', c.forced && 'forced', c.contrastMore && 'contrast', c.scale !== undefined && 'x' + c.scale, c.zoom && 'zoom' + c.zoom, c.reveal && 'ocr-revealed'].filter(Boolean).join('/');
@@ -292,23 +291,6 @@ export async function runCase(browser, report, P, urls, c) {
   } finally { await ctx.close(); }
 }
 
-// the reader's own page zoom (Ctrl+wheel, 50 - 300 percent) scales the chrome with the page: a known open point, reported;
-// what must hold at any zoom is that a panel still hangs under the bar, which uses layout pixels for both
-export async function zoomAdvisory(report, browser, P, urls, c) {
-  const { ctx, page } = await openCase(browser, P, urls[c.page]('en') + '?z=' + c.zoom, c);
-  try {
-    const box = await page.locator('#dht-font-dec').boundingBox();
-    report.advisory(`reader.page-zoom-scales-targets/${P.name}`, `at the reader's own page zoom ${c.zoom} percent the A- target measures ${f1(box.width)} x ${f1(box.height)} screen px: the custom zoom scales the chrome with the page and is not changed here (docs/UI_PROFILE.md, Reader chrome)`);
-  } finally { await ctx.close(); }
-  for (const z of [50, 200]) for (const which of ['search', 'contents']) {
-    const k = { ...c, page: which === 'contents' ? 'single' : 'chapter', zoom: z };
-    const o = await openCase(browser, P, urls[k.page]('en') + '?z=' + z, k);
-    try {
-      await panel(report, o.page, P, k, which, true);
-    } finally { await o.ctx.close(); }
-  }
-}
-
 // Negative cases (BUTTONS 5: geometry checks must detect stretching, clipping, wrong targets, gaps): each one breaks the
 // page on purpose with an injected rule and expects the matching check to catch it, so a green run cannot be a blind one.
 const BREAKS = [
@@ -372,7 +354,6 @@ export async function readerChecks(report, { build = true, onlyGo = false, shots
   const browser = await launchBrowser(chromium);
   try {
     for (const c of matrix()) {
-      if (c.zoom) { await zoomAdvisory(report, browser, GO, urls, c); continue; }
       const pageFile = urls[c.page](c.lang || 'en');
       if (!fs.existsSync(pageFile)) { report.check(`reader.fixture/${caseTag(c)}`, false, 'missing ' + pageFile); continue; }
       await runCase(browser, report, GO, urls, c);

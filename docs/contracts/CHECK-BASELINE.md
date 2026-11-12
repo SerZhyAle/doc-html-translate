@@ -1,7 +1,7 @@
 # Pointer: CHECK-BASELINE
 
 - **Id:** `CHECK-BASELINE`
-- **Version:** 0.11 draft
+- **Version:** 0.12 draft
 - **Home:** the shared contracts catalog, `automated-checks/README.md` section 3 (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - one set baseline is in use: `configs/help-baseline.txt`
 - **Owner:** FastMediaSorter Android
@@ -29,3 +29,5 @@ the owner: whether a baseline whose identifiers are recomputed from the tree eac
 bounds, each with its measured value, which 0.11 puts out of scope.
 
 **Conformance.** `go test ./internal/helpcheck` and `scripts/help-check.ps1`.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.12.** Item B binds the committed-copy comparison to every set baseline: besides `configs/help-baseline.txt`, the shrink-only list `namedBeforeTheRule` in `tests/research_naming_test.go` is now compared with its copy at HEAD (`TestResearchLegacyNamesOnlyShrink`).

@@ -1,7 +1,7 @@
 # Pointer: DOC-INTERNAL-QUALITY, DOC-EXTERNAL-QUALITY
 
 - **Id:** `DOC-INTERNAL-QUALITY`, `DOC-EXTERNAL-QUALITY`
-- **Version:** 0.10 / 0.12 (draft)
+- **Version:** 0.11 / 0.13 (draft)
 - **Home:** the shared contracts catalog, `documentation-quality/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer of both - internal engineering docs, and a published site, README trio and store listings; the internal rules are `partial` at 0.10 (read 2026-10-20, ticket 120)
 - **Wire carrier:** none - a documentation tree and the checks that hold it
@@ -46,3 +46,7 @@ What this repo does to stay conformant:
 1-7 were implemented in [ticket 49](../../DEV/plan/done/49_2026-09-26_contract-doc-external-quality-gaps.md).
 Both dated exceptions in the shared registry are closed; the contract owner has the proposal above for
 the single-page site questions.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.11 / 0.13.** Internal J-L: the local registry beside the tracked one is the shape item K describes, and rules 2 and 3 are held by `scripts/doc-registry.ps1`, `scripts/doc-registry-local.ps1` and `TestDocLinks`. External M-P, R, S: the published help pages carry `noindex` and stay out of the sitemap (O); hreflang lists the `?lang=` URLs (S); the disclosed English-caption demo is allowed (P), so its variant is closed.
+
+**2026-11-08 (ticket E0111, site audit F1, owner's Q4 of 2026-10-30).** Section 8 item D as 0.13 item S left it says a page that answers `?lang=` lists those URLs in `hreflang`. This site's query views return the bytes of the English file and canonicalize to it, so they are no longer listed and `scripts/doc-registry.ps1` refuses one; the zero search reach for ru and uk on the seven one-URL pages is the owner's recorded choice. Dated exception in the catalog's registry; the catalog's `documentation-quality/PROPOSAL-2026-11-08-hreflang-query-views-canonical-elsewhere.md` asks for the sentence to be conditioned on the URL being its own canonical.

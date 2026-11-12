@@ -3,7 +3,8 @@
 //
 //	auditstand -SelfTest               matrix integrity, capability coverage, fixture presence
 //	auditstand -Fixtures [-Big]        build the synthetic corpus (deterministic)
-//	auditstand -Control                the whole probe set on the idle desktop, no app started
+//	auditstand -Control [-declared-load qemu-system-x86_64.exe]
+//	                                   the whole probe set on the idle desktop, no app started
 //	auditstand -Scene S03 [-Cycles N]  run one scene; pass only against a same-day control
 //	auditstand -Summary                campaign state; exit 0 only with every cell closed
 //	auditstand -Plan                   print the matrix state without judging anything
@@ -13,6 +14,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -21,7 +23,7 @@ const usage = `auditstand - the deep dynamic audit's measuring stand (ticket 113
 Usage:
   auditstand -SelfTest
   auditstand -Fixtures [-Big]
-  auditstand -Control
+  auditstand -Control [-declared-load <image[,image..]>]
   auditstand -BrowserCheck [-allow-key-inject]
   auditstand -Scene <id> [-Cycles N]
   auditstand -Summary
@@ -51,6 +53,9 @@ Common flags:
   -ui <path>         the GUI binary under test (recorded, used by the GUI scenes)
   -window <title>    the P1 window-marker substring (default DOC-HTML-UI)
   -probe-duration <d>  per-probe control duration (default 10s)
+  -declared-load <images>  with -Control: comma-separated executable file names of a named
+                     background load (e.g. qemu-system-x86_64.exe) the foreign-CPU rule tolerates;
+                     recorded as an advisory on the control and on every scene run against it
   -allow-key-inject  opt in to the keyboard-hook probe's injected keys (stand-owned desktop only)
   -isolation B-full  redirected folders and a hashed named-key registry backup
   -dry-run          with -Scene: print the backup plan without launching or touching registry
@@ -80,6 +85,7 @@ func main() {
 	ui := fs.String("ui", "", "GUI binary under test")
 	window := fs.String("window", "", "P1 window-marker substring")
 	probeDuration := fs.Duration("probe-duration", 10*time.Second, "per-probe control duration")
+	declaredLoad := fs.String("declared-load", "", "with -Control: comma-separated image names of a tolerated, named background load")
 	keyInjectFlag := fs.Bool("allow-key-inject", false, "opt in to the hook probe's key injection")
 	isolation := fs.String("isolation", "B-env", `isolation level recorded into every run: "B-env" (redirected environment; registry-touching scenes refuse), "B-full" or "A" once their step lands`)
 
@@ -146,6 +152,14 @@ func main() {
 	}
 	if (*dryRun && *scene == "") || (*big && !*fixtures) || *cycles < 1 || *probeDuration <= 0 {
 		emitVerdict("-Arguments", verdictCouldNotVerify, "-dry-run needs -Scene; -Big needs -Fixtures; cycles and probe duration must be positive")
+		os.Exit(2)
+	}
+	if *declaredLoad != "" && !*control {
+		emitVerdict("-Arguments", verdictCouldNotVerify, "-declared-load needs -Control; a scene inherits the declaration of the control it runs against")
+		os.Exit(2)
+	}
+	if env.declaredLoad, err = parseDeclaredLoad(*declaredLoad, "doc-html-translate.exe", "doc-html-ui.exe", filepath.Base(env.appPath), filepath.Base(env.uiPath)); err != nil {
+		emitVerdict("-Arguments", verdictCouldNotVerify, err.Error())
 		os.Exit(2)
 	}
 

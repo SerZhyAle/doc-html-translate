@@ -1,5 +1,10 @@
 {
   "$comment": "Facts of doc-html-translate typed once (SITE-REPRESENTATION rules 3 and 4). The pillars and their order are in POSITIONING.md. tests/site_positioning_test.go compares the pages with this file; a fact changed here fails the test until every page that states it is changed in the same edit.",
+  "names": {
+    "$comment": "The one spelling of each public name (ticket E0111, owner 2026-11-08): the product on every page title, og:title and og:site_name; the extension by its store name on the extension pages.",
+    "product": "doc-html-translate",
+    "extension": "Document Page Translator"
+  },
   "editions": [
     {
       "id": "desktop-app",

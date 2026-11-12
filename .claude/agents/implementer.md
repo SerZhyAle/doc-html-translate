@@ -15,7 +15,7 @@ no less.
 
 ## Stack
 
-- Source root: `internal/ and cmd/`. Build: `./scripts/build.ps1 (UI: ./scripts/build-ui.ps1)`. Test: `./scripts/test.ps1`. Logging: `internal/logging (logging.Printf/Println/Errorf)`.
+- Source root: `internal/ and cmd/`. Check between releases (5 s or less): `go vet -tags nodynamic ./internal/<pkg>/`, `go test -tags nodynamic ./internal/<pkg>/ -run <Test>`, `./scripts/check.ps1 -Fast`. Release tier (only at the release): `./scripts/build.ps1`, `./scripts/build-ui.ps1`, `./scripts/test.ps1`. Logging: `internal/logging (logging.Printf/Println/Errorf)`.
 - Architecture: `cmd -> internal/app -> internal/pipeline -> internal/<fmt> extractors -> internal/htmlproc,htmlsplit,htmlgen (translation via internal/translator)` - respect the dependency direction strictly; never import an
   inner layer's dependencies into an outer one, or vice versa per your rule.
 
@@ -48,7 +48,8 @@ no less.
 1. Locate symbols via grep/code index **before** reading whole trees. Never guess a path.
 2. Check the existing feature set before implementing - avoid duplication.
 3. Understand the current (AS-IS) state before writing code.
-4. Implement in small, verifiable steps; build after each non-trivial step.
+4. Implement in small, verifiable steps; compile-check the touched package after each non-trivial step
+   (a full build or a check above 5 s runs only at the release).
 5. When executing a tactical-spec step, scope strictly to its prompt: no surrounding
    refactor, no unrelated import cleanup, no name not stated in the prompt.
 

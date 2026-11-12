@@ -7,9 +7,11 @@ package tests
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -77,5 +79,37 @@ func TestResearchNoteNaming(t *testing.T) {
 	sort.Strings(gone)
 	for _, name := range gone {
 		t.Errorf("DEV/research/%s is listed in this test but no longer exists - drop it from the list", name)
+	}
+}
+
+// namedBeforeTheRule is a set baseline: accepted debt that may only shrink. CHECK-BASELINE 0.12
+// (amendment 2026-10-29 item B) binds every set baseline to a comparison with its committed copy,
+// so a new unprefixed note cannot be absorbed by adding its name here in the same change. The
+// committed copy is this file at HEAD; a name it lacks fails and is named.
+func TestResearchLegacyNamesOnlyShrink(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("input absent: git is not on PATH, so the committed copy cannot be read")
+	}
+	out, err := exec.Command("git", "-C", "..", "show", "HEAD:tests/research_naming_test.go").Output()
+	if err != nil {
+		t.Skip("input absent: tests/research_naming_test.go is not in HEAD yet")
+	}
+	block := regexp.MustCompile(`(?s)var namedBeforeTheRule = map\[string\]bool\{(.*?)\n\}`).FindSubmatch(out)
+	if block == nil {
+		t.Fatal("the committed tests/research_naming_test.go has no namedBeforeTheRule block to compare with")
+	}
+	committed := map[string]bool{}
+	for _, m := range regexp.MustCompile(`"([^"]+)":\s*true`).FindAllSubmatch(block[1], -1) {
+		committed[string(m[1])] = true
+	}
+	var added []string
+	for name := range namedBeforeTheRule {
+		if !committed[name] {
+			added = append(added, name)
+		}
+	}
+	sort.Strings(added)
+	if len(added) > 0 {
+		t.Errorf("namedBeforeTheRule gains %d name(s) over the committed file: %s - the list only shrinks; name the note RESEARCH_<topic-slug>_<YYYY-MM-DD>.md instead", len(added), strings.Join(added, ", "))
 	}
 }

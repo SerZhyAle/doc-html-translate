@@ -1,7 +1,7 @@
 # Pointer: REPO-STAMP
 
 - **Id:** `REPO-STAMP`
-- **Version:** 0.12 draft
+- **Version:** 0.13 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - [`.sza-canon.json`](../../.sza-canon.json) at the repository root
 - **Wire carrier:** none - `.sza-canon.json` JSON fields
@@ -28,3 +28,5 @@ run under PowerShell 7.
 180-day window on digest drift. This repository produces a stamp with a parseable first
 adoption date and implements no age reader. Its producer shape is unchanged; adoption
 and reconciliation dates are written only by the adoption run (rule 8). No catalog vectors.
+
+**Re-read 2026-10-29 (ticket E0126) at 0.13.** An optional `schemaVersion` carrier, absent = wire 1.0: `.sza-canon.json` stays a valid legacy stamp, and the adopt-canon writer adds `"1.0"` at the next re-sync.

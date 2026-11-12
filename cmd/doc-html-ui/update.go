@@ -134,6 +134,9 @@ func handleUpdateCheck(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if cache.Tag == "" || now.Sub(cache.FetchedAt) >= 6*time.Hour {
+		if input.Automatic {
+			logConsentAction("automatic update check (GitHub Releases)", "autoUpdates")
+		}
 		tag, err := fetchLatestRelease(r)
 		if err != nil {
 			_ = json.NewEncoder(w).Encode(updateReply{Status: "unavailable"})

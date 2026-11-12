@@ -12,10 +12,15 @@
     4. Fill manifest     (placeholders -> staging\AppxManifest.xml)
     5. makepri new       -> staging\resources.pri, which resolves the qualified asset names
     6. makeappx pack     -> out\<name>_<version>_x64.msix
-    7. -SelfSign (opt)   sign for LOCAL testing and print the install commands
+    7. read-back         open the packed archive and refuse it (delete it, throw) unless Identity, the
+                         version and PublisherDisplayName are the expected ones, no AppxSignature.p7x entry
+                         is present and THIRD-PARTY-NOTICES.txt is in it (msix\package-readback.ps1)
+    8. -SelfSign (opt)   sign for LOCAL testing into out\<name>_<version>_x64_selftest.msix and print the
+                         install commands
 
-  All three identity values default to the reserved Partner Center identity of this product,
-  so a STORE upload passes none of them. It passes -Tag instead and DOES NOT use -SelfSign -
+  All three identity values come from msix/identity.json, the reserved Partner Center identity of
+  this product (a run that finds no file stops before it builds), so a STORE upload passes none of
+  them. It passes -Tag instead and DOES NOT use -SelfSign -
   upload the unsigned .msix; Microsoft re-signs it during certification. An unsigned build
   without -Tag is refused: the Store package must hold exactly the tagged tree.
 
@@ -29,14 +34,15 @@
 #>
 param(
     # Package/Identity/Name - the frozen anchor reserved in Partner Center (Product > Product
-    # identity). Never change it for a Store build; a self-signed test that must not collide with
-    # an installed Store copy passes its own name (reinstall.ps1 does).
-    [string]$IdentityName = "SZA.Doc-HTML-Translate",
-    # Package/Identity/Publisher. Account-wide for the SZA publisher and identical across all
-    # SZA products, so it is the default. For -SelfSign this MUST equal the cert subject (it does).
-    [string]$Publisher = "CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD",
-    # Package/Properties/PublisherDisplayName (shown on the Store listing). Account-wide for SZA.
-    [string]$PublisherDisplayName = "SZA",
+    # identity), read from identity.json. Never change it for a Store build; a self-signed test that
+    # must not collide with an installed Store copy passes its own name (reinstall.ps1 does).
+    [string]$IdentityName,
+    # Package/Identity/Publisher, read from identity.json. Account-wide for the SZA publisher and
+    # identical across all SZA products. For -SelfSign this MUST equal the cert subject (it does).
+    [string]$Publisher,
+    # Package/Properties/PublisherDisplayName (shown on the Store listing), read from identity.json.
+    # Account-wide for SZA.
+    [string]$PublisherDisplayName,
     # Release build: the app tag (vYY.MMDD.HHmm). The version comes from the tag, and the build
     # refuses a HEAD that is not the tag's commit or a working tree with changes. Required for an
     # unsigned (Store) package; exclusive with -Stamp.
@@ -52,6 +58,24 @@ $script:RepoRoot = Split-Path -Parent $PSScriptRoot
 $Staging = Join-Path $PSScriptRoot "staging"
 $OutDir  = Join-Path $PSScriptRoot "out"
 
+# ── store identity (msix/identity.json) ──────────────────────
+# The one machine-readable record of this product's Store identity. A value the caller passes wins
+# (reinstall.ps1 passes a test -IdentityName); the rest come from the file. No file, no build.
+function Read-StoreIdentity([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Store identity file not found: $Path (it holds IdentityName, Publisher, PublisherDisplayName)"
+    }
+    $id = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    foreach ($key in 'IdentityName', 'Publisher', 'PublisherDisplayName') {
+        if (-not $id.$key) { throw "Store identity file $Path has no $key" }
+    }
+    return $id
+}
+$StoreIdentity = Read-StoreIdentity (Join-Path $PSScriptRoot "identity.json")
+if (-not $IdentityName)         { $IdentityName         = $StoreIdentity.IdentityName }
+if (-not $Publisher)            { $Publisher            = $StoreIdentity.Publisher }
+if (-not $PublisherDisplayName) { $PublisherDisplayName = $StoreIdentity.PublisherDisplayName }
+
 # ── tool discovery ───────────────────────────────────────────
 function Get-SdkTool([string]$Name) {
     $hit = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\$Name" -ErrorAction SilentlyContinue |
@@ -62,6 +86,7 @@ function Get-SdkTool([string]$Name) {
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 . (Join-Path $RepoRoot "scripts/lib/goversioninfo.ps1")
 . (Join-Path $RepoRoot "scripts/lib/gobuildtags.ps1")
+. (Join-Path $PSScriptRoot "package-readback.ps1")
 $MakeAppx = Get-SdkTool "makeappx.exe"
 $MakePri  = Get-SdkTool "makepri.exe"
 
@@ -101,6 +126,7 @@ if ($Stamp) {
 }
 # MSIX identity needs a 4-part version with revision 0 and each part <= 65535.
 # YY . MMDD . HHmm . 0   (monotonic over time, unique per minute, all parts in range).
+# scripts/release.ps1 maps the stamp the same way for the Store preflight; change both together.
 $MsixVersion = "{0}.{1}.{2}.0" -f $vMajor, ([int]($Stamp.Split('.')[1])), $vBuild
 Write-Host "Version: stamp=$Stamp  msix=$MsixVersion" -ForegroundColor Cyan
 
@@ -196,12 +222,26 @@ $pri.Save($PriConfig)
 if ($LASTEXITCODE -ne 0) { throw "makepri new failed" }
 
 # ── pack ─────────────────────────────────────────────────────
-$safeName = ($IdentityName -replace '[^A-Za-z0-9._-]', '_')
-$MsixOut = Join-Path $OutDir ("{0}_{1}_x64.msix" -f $safeName, $MsixVersion)
+# A self-signed test build has a file name of its own, so it can never overwrite the unsigned Store
+# package or be taken for it (WINDOWS-STORE rule 2).
+$safeName   = ($IdentityName -replace '[^A-Za-z0-9._-]', '_')
+$testSuffix = if ($SelfSign) { '_selftest' } else { '' }
+$MsixOut = Join-Path $OutDir ("{0}_{1}_x64{2}.msix" -f $safeName, $MsixVersion, $testSuffix)
 Write-Host "Packing $MsixOut ..." -ForegroundColor Cyan
 & $MakeAppx pack /d $Staging /p $MsixOut /o
 if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed" }
 Write-Host "Package created: $MsixOut" -ForegroundColor Green
+
+# Read-back (WINDOWS-STORE rules 1-4, rung 3): the packed archive must hold the reserved identity. An
+# unsigned build is judged against msix/identity.json even if the caller passed other values; a
+# self-signed test build against the values it wrote (reinstall.ps1 passes a test name). Signing runs
+# later, so the archive must hold no signature in either build.
+if ($SelfSign) {
+    $want = @{ IdentityName = $IdentityName; Publisher = $Publisher; PublisherDisplayName = $PublisherDisplayName }
+} else {
+    $want = @{ IdentityName = $StoreIdentity.IdentityName; Publisher = $StoreIdentity.Publisher; PublisherDisplayName = $StoreIdentity.PublisherDisplayName }
+}
+Assert-MsixReadback -Path $MsixOut @want -Version $MsixVersion
 
 # A release build whose tree moved while it ran did not build the tag.
 if ($Tag) {

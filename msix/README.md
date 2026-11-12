@@ -8,8 +8,9 @@ during certification) and a Store-signed build also reduces antivirus false posi
 | File | Role |
 | --- | --- |
 | [`AppxManifest.xml`](AppxManifest.xml) | Package manifest **template** - `runFullTrust`, file-type associations, visual assets. `{{...}}` placeholders are filled by the build script. |
-| [`build-msix.ps1`](build-msix.ps1) | go build (CLI + GUI) → version remap → visual assets (`tools/icongen -msix`) → fill manifest → `makepri new` (`resources.pri`) → `makeappx pack` → optional self-sign. |
-| `staging/`, `out/` | Generated (git-ignored). `out/*.msix` is what you upload. |
+| [`build-msix.ps1`](build-msix.ps1) | go build (CLI + GUI) → version remap → visual assets (`tools/icongen -msix`) → fill manifest → `makepri new` (`resources.pri`) → `makeappx pack` → read-back of the packed archive → optional self-sign. |
+| [`identity.json`](identity.json) | The product's Store identity in one machine-readable file: `IdentityName`, `Publisher`, `PublisherDisplayName`, `StoreId`, `PackageFamilyName`, `IarcRatingId`. The build script reads it; a run that finds no file stops before it builds. |
+| `staging/`, `out/` | Generated (git-ignored). `out/*.msix` without `_selftest` is what you upload. |
 
 ## What's in the package
 
@@ -64,10 +65,10 @@ This builds, packs, self-signs, and prints two commands. To install on this mach
 # once, as Administrator - trust the self-signed test cert:
 Import-Certificate -FilePath 'msix\out\doc-html-translate-test.cer' -CertStoreLocation Cert:\LocalMachine\Root
 # install (does NOT launch - start it from the Start menu afterwards):
-Add-AppxPackage 'msix\out\SZA.Doc-HTML-Translate_<version>_x64.msix'
+Add-AppxPackage 'msix\out\SZA.Doc-HTML-Translate_<version>_x64_selftest.msix'
 ```
 
-The package carries the Store identity `SZA.Doc-HTML-Translate` by default, so on a machine that has
+The package carries the Store identity `SZA.Doc-HTML-Translate` (from `identity.json`), so on a machine that has
 the Store copy installed the self-signed one cannot replace it. To test beside the Store copy, pass a
 test name: `-IdentityName SerZhyAle.DocHtmlTranslate` (what `reinstall.ps1` does).
 
@@ -79,7 +80,7 @@ test name you passed).
 ## Publisher identity (SZA account - portable across products)
 
 These two values are **account-wide** for the SZA publisher and identical for every SZA product,
-so they are already baked into `build-msix.ps1` as defaults - you do not pass them per build:
+so they live in `identity.json` and `build-msix.ps1` reads them - you do not pass them per build:
 
 | Value | Setting | Note |
 | --- | --- | --- |
@@ -87,7 +88,7 @@ so they are already baked into `build-msix.ps1` as defaults - you do not pass th
 | `SZA` | `Package/Properties/PublisherDisplayName` (`-PublisherDisplayName`) | same for all SZA products |
 
 Only `Package/Identity/Name` (`-IdentityName`) is **per-product**. This app's reserved name is
-`SZA.Doc-HTML-Translate` - a frozen anchor, and the script's default, so a Store build passes no identity.
+`SZA.Doc-HTML-Translate` - a frozen anchor, and the `IdentityName` of `identity.json`, so a Store build passes no identity.
 
 ## 2. Partner Center: account + identity
 
@@ -95,16 +96,16 @@ Only `Package/Identity/Name` (`-IdentityName`) is **per-product**. This app's re
    The SZA account already exists; registration was free (Individual).
 2. **Create a new product → MSIX or PWA app** → reserve the app name (e.g. *doc-html-translate*).
 3. **Product ▸ Product identity** → confirm the values match:
-   - `Package/Identity/Name` → `SZA.Doc-HTML-Translate` (this product; the `-IdentityName` default)
-   - `Package/Identity/Publisher` → must be `CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD` (the default)
-   - `Package/Properties/PublisherDisplayName` → must be `SZA` (the default)
+   - `Package/Identity/Name` → `SZA.Doc-HTML-Translate` (this product; `IdentityName` in `identity.json`)
+   - `Package/Identity/Publisher` → must be `CN=F98ACEDB-1E22-4C39-AF63-F9FCFE807DCD` (`Publisher` in `identity.json`)
+   - `Package/Properties/PublisherDisplayName` → must be `SZA` (`PublisherDisplayName` in `identity.json`)
 
    They must match **exactly** or the upload is rejected.
 
 ## 3. Build the Store package (unsigned) & upload
 
-All three identity values default to this product's reserved identity, so the Store build passes only
-the release tag it packages:
+All three identity values come from `identity.json` (this product's reserved identity), so the Store build
+passes only the release tag it packages:
 
 ```powershell
 .\msix\build-msix.ps1 -Tag v26.0612.0124
@@ -113,7 +114,18 @@ the release tag it packages:
 `-Tag` takes the version from the tag and refuses to build unless HEAD is the tag's commit and the
 working tree is clean (and fails if the build leaves it dirty): the package holds exactly the tree the
 GitHub Release was built from. An unsigned build without `-Tag` is refused. No `-SelfSign` - upload the
-**unsigned** `out\*.msix`; Microsoft signs it during certification.
+**unsigned** `out\*.msix` (the `*_selftest.msix` test build is never uploaded); Microsoft signs it during certification.
+
+The upload stays a manual step in Partner Center. The Store has a submission API and the `msstore` CLI, but this
+flow makes no write call through either. `identity.json` also holds the product's `StoreId` and
+`PackageFamilyName`, which the read-only Store preflight reads: `scripts/release.ps1` prints its verdict (the
+`store preflight` line - the sza plugin's shared `tools/Store-Preflight.ps1`, WINDOWS-STORE 0.4 section D) before the
+tag. It is BLOCKED on a pending submission, a version not above the live one or a price that is not Free; it is MANUAL,
+and never a block, when the channel is unconfigured, the credential is missing or expired or the token is refused. It
+does not test a write (none is made), the credential's expiry unless `-StoreCredentialExpiry yyyy-MM-dd` is passed, the
+listing, the age rating or what Partner Center accepts at upload. After the tag its evidence line goes into
+`DEV/RELEASE_STATE.md` through `scripts/release-state.ps1` (one line per run, no account identifiers or secrets). The
+credential is the owner's: configured in the owner's own terminal, never in this repository.
 
 ### Version mapping (important)
 
@@ -144,7 +156,8 @@ Monotonic over time and unique per minute. A development build can override the 
 doc-html-translate has its **own** IARC rating - **Global Rating ID
 `a759a909-53c4-8fef-8ef0-3f4f445d1125`** (the questionnaire was re-run for this app; the rating
 went live on the Microsoft storefront on 2026-06-21). Reuse this ID for future doc-html-translate
-updates whose questionnaire answers do not change; otherwise re-run the questionnaire.
+updates whose questionnaire answers do not change; otherwise re-run the questionnaire. The machine-readable
+copy of the ID is `IarcRatingId` in `identity.json`; change both together.
 
 The SZA account also has an older portable ID `7d9b315a-f211-8505-80d0-3f4bee633770` (first
 generated for FastMediaSorter). It does **not** apply here - doc-html-translate's answers

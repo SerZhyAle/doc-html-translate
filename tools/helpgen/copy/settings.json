@@ -115,8 +115,10 @@
     {
       "id": "interface", "shot": "interface", "sel": "#page-interface", "pin": "gt",
       "nameKey": "pageInterface",
-      "one": { "en": "How large the controls and the text are, and whether the window is made for a mouse or for touch.", "ru": "Насколько крупны элементы и текст и для мыши или для касания сделано окно.", "uk": "Наскільки великі елементи й текст і для миші чи для дотику зроблено вікно." },
+      "one": { "en": "The theme, the interface language, how large the controls and the text are, and whether the window is made for a mouse or for touch.", "ru": "Тема, язык интерфейса, насколько крупны элементы и текст и для мыши или для касания сделано окно.", "uk": "Тема, мова інтерфейсу, наскільки великі елементи й текст і для миші чи для дотику зроблено вікно." },
       "items": [
+        { "nameKey": "titleTheme", "one": { "en": "System theme, Light or Dark. Until you choose, the window follows the system theme.", "ru": "Системная тема, светлая или тёмная. Пока вы не выбрали, окно следует системной теме.", "uk": "Системна тема, світла або темна. Поки ви не обрали, вікно слідує системній темі." } },
+        { "nameKey": "titleUiLang", "one": { "en": "One of 13 languages; it applies at once. It is also the language of the reader's own buttons in the converted book. Until you choose, the window follows the Windows language.", "ru": "Один из 13 языков; применяется сразу. Это ещё и язык собственных кнопок читалки в готовой книге. Пока вы не выбрали, окно следует языку Windows.", "uk": "Одна з 13 мов; застосовується одразу. Це ще й мова власних кнопок читалки в готовій книзі. Поки ви не обрали, вікно слідує мові Windows." } },
         { "nameKey": "lblUiSize", "oneKey": "hintUiSize" },
         { "nameKey": "lblTextSize", "oneKey": "hintTextSize" },
         { "nameKey": "lblInputProfile", "oneKey": "hintInputProfile" }

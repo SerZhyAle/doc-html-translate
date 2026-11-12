@@ -15,6 +15,11 @@ records on 2026-10-20, all `judged`: 10 `gate`, 1 `build`, 1 `release`, 18 `hand
 they just produced), `release` (run by [`scripts/release.ps1`](../../scripts/release.ps1) before the tag step,
 because its input - the contracts catalog - exists only where a release is cut), `hand-run` (a named human or
 agent step, `tools/uicheck` among them: a real-browser measurement, ticket 119).
+Every `gate` record also carries three project-own fields (E0124, 2026-10-29; rule 2 admits a project's own
+fields, and no other program reads this registry): `tier` - `fast` (run between releases by
+`scripts/check.ps1 -Fast`) or `release` (only in the full gate, at the release) - with `seconds` and `timed`, the
+measured wall time and where it was measured; a `fast` record carries at most 5 s (canon `TESTING_AND_QA`
+section 2), and the placement test holds that.
 The class map and the explicit `perChangeRunner: none` declaration live in
 [`../../configs/check-runners.json`](../../configs/check-runners.json). `gate` maps to `hand-run`;
 `build`, `release` and `hand-run` retain the contract names.
@@ -30,7 +35,8 @@ rule 8 admits this explicit state. The paid CI workflows are release runners, no
   classes gets its record edited with a new `decided` date and a reason (rule 5).
 - [`../../tests/placement_test.go`](../../tests/placement_test.go) fails when a `gate` record is not in
   `check.ps1`'s plan, when the plan runs an unrecorded check, when a `build` record is not called by the
-  build scripts it names, when a `release` record is not called by `scripts/release.ps1`, or when a
+  build scripts it names, when a `release` record is not called by `scripts/release.ps1`, when a `gate`
+  record has no `tier` or a `fast` one has no measured time or more than 5 s, or when a
   script under `scripts/` or a tool under `tools/` that reports a `CHECK-VERDICT` verdict has no record
   (the scan covers `tools/**` since 2026-10-20).
 - A `seeded` record names the open ticket that owns judging it (rule 7). Every record here is `judged`.

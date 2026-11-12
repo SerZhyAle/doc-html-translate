@@ -80,16 +80,20 @@ const (
 	CatTexture  Category = "texture"  // text over imagery or texture
 	CatDegraded Category = "degraded" // skew, blur, scan noise, low DPI, compression, crop
 	CatScript   Category = "script"   // script and direction variants
+	// CatScreenshot is the product's own interface as captured from its window (ticket E0121 phase C,
+	// owner decision 2026-10-30: a category with its own floor, not a tag). Its truth geometry is the
+	// rendered DOM boxes, a source independent of OCR.
+	CatScreenshot Category = "screenshot"
 )
 
 var allCategories = []Category{
-	CatDocument, CatPoster, CatComic, CatCartoon, CatTexture, CatDegraded, CatScript,
+	CatDocument, CatPoster, CatComic, CatCartoon, CatTexture, CatDegraded, CatScript, CatScreenshot,
 }
 
 // Categories returns every known category in table order, for reporting.
 func Categories() []Category { return append([]Category(nil), allCategories...) }
 
-// Valid reports whether c is one of the seven table categories.
+// Valid reports whether c is one of the coverage table categories.
 func (c Category) Valid() bool {
 	for _, k := range allCategories {
 		if c == k {

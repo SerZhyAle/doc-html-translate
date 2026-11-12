@@ -16,21 +16,21 @@
   <meta property="og:locale:alternate" content="en_US">
   <meta property="og:locale:alternate" content="ru_RU">
   <meta property="og:url" content="https://serzhyale.github.io/doc-html-translate/docs.uk.html">
-  <meta property="og:title" content="Doc-HTML-Translate Документація">
+  <meta property="og:title" content="doc-html-translate Документація">
   <meta property="og:description" content="Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
   <meta property="og:image" content="https://serzhyale.github.io/doc-html-translate/assets/social-card-1200x630.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Логотип doc-html-translate і рядок: перетворіть будь-яку книгу, документ чи комікс на локальну вебсторінку та перекладіть її засобами браузера">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Doc-HTML-Translate Документація">
-  <meta name="twitter:description" content="Встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
+  <meta name="twitter:title" content="doc-html-translate Документація">
+  <meta name="twitter:description" content="Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
   <meta name="twitter:image" content="https://serzhyale.github.io/doc-html-translate/assets/social-card-1200x630.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "Doc-HTML-Translate Документація",
+    "headline": "doc-html-translate Документація",
     "url": "https://serzhyale.github.io/doc-html-translate/docs.uk.html",
     "inLanguage": "uk",
     "description": "Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.",
@@ -65,7 +65,7 @@
     .copybox .cmt{color:var(--muted)}
     .small{color:var(--muted);font-size:.88rem}
   </style>
-  <title>Doc-HTML-Translate Документація</title>
+  <title>doc-html-translate Документація</title>
   <meta name="description" content="Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.">
 </head>
 <body>
@@ -85,7 +85,7 @@
       <span class="eyebrow">Документація</span>
       <h1>Швидке локальне читання книг і безкоштовний переклад у Chrome</h1>
       <p class="lead">Конвертуйте EPUB/PDF та інші формати у локальні HTML-сторінки, потім читайте у Chrome і перекладайте вбудованим перекладачем браузера. Без API-ключа, без підписки і без зайвих церемоній.</p>
-      <p class="meta"><a href="./">Головна</a> · <a href="extension.html">Розширення</a> · <a href="#subject-index">Предметний покажчик</a> · <a href="#glossary">Глосарій</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">GitHub</a></p>
+      <p class="meta"><a href="./">Головна</a> · <a href="extension.html">Розширення</a> · <a href="#subject-index">Предметний покажчик</a> · <a href="#glossary">Глосарій</a> · <a href="https://github.com/SerZhyAle/doc-html-translate" target="_blank" rel="noopener">Репозиторій на GitHub</a></p>
     </section>
 
     <section id="editions">
@@ -151,10 +151,11 @@
     </div>
 
     <section id="reference">
+      <h2>Розділ довідки</h2>
       <div class="sec-tools"><button class="btn btn-ghost btn-sm" type="button" data-sec="open">Розгорнути все</button><button class="btn btn-ghost btn-sm" type="button" data-sec="close">Згорнути все</button></div>
 
       <details class="sec" id="formats">
-        <summary><span class="secnum">01</span>Підтримувані формати</summary>
+        <summary><span class="secnum">01</span><h3>Підтримувані формати</h3></summary>
         <p>EPUB, PDF, TXT, Markdown, FB2, RTF, HTML, MOBI, AZW3 і комікси CBZ/CBR/CB7/CBT. Набір, відверто кажучи, пристойний.</p>
         <div class="pills"><span class="pill">EPUB</span><span class="pill">PDF</span><span class="pill">TXT</span><span class="pill">Markdown</span><span class="pill">FB2</span><span class="pill">RTF</span><span class="pill">HTML</span><span class="pill">MOBI / AZW3</span><span class="pill">CBZ / CBR / CB7 / CBT</span></div>
         <p>А ще <strong>комікси</strong> (CBZ / CBR / CB7 / CBT): це контейнер зі сторінками-картинками без текстового шару, він відкривається сторінка за сторінкою з примусово ввімкненим OCR, тому текст у «бульбашках» розпізнається і лягає перекладними плашками поверх кожної сторінки. CBZ і CBT не потребують нічого додатково; CBR і CB7 потребують встановленого <a href="https://www.7-zip.org" target="_blank" rel="noopener">7-Zip</a> (той самий прийом із зовнішнім інструментом, що й MOBI з Calibre).</p>
@@ -165,12 +166,12 @@
       </details>
 
       <details class="sec" id="reading">
-        <summary><span class="secnum">02</span>Зручність читання</summary>
+        <summary><span class="secnum">02</span><h3>Зручність читання</h3></summary>
         <p>У згенерований HTML вбудовано невеликий клієнтський шар для читання - сервер няньчити не треба, спокійно працює через <code>file://</code>:</p>
         <ul>
           <li><strong>Теми читання</strong> - перемикач у навбарі (і на <code>index.html</code>) циклить Light / Sepia / Dark / Night. Вибір зберігається в <code>localStorage</code> і застосовується на кожній сторінці.</li>
           <li><strong>Позиція читання</strong> - прокручування зберігається для кожної книги, тож застосунок памʼятає, де ви зупинилися, навіть коли ви самі вже не памʼятаєте. На <code>index.html</code> з'являється посилання «Continue reading» на останню відкриту сторінку, а в навбарі - тонкий індикатор прогресу по всій книзі, що показує відсоток при наведенні або з клавіатури.</li>
-          <li><strong>Зручність читання</strong> - міжрядковий інтервал і ширина колонки обираються в тому ж навбарі й запам'ятовуються разом із темою, але набирають чинності лише після вибору. Кнопка нічного режиму одним кліком змінює світлу тему на темну й назад, кнопка скидання повертає розмір тексту до початкового, а стрілки та пробіл гортають сторінки біля країв прокрутки - так само, як PageUp/PageDown. Для коміксів і сканів є режим <strong>«За шириною вікна»</strong> поруч із масштабом через Ctrl+коліще: сторінка заповнює вікно без підбору відсотків.</li>
+          <li><strong>Зручність читання</strong> - міжрядковий інтервал і ширина колонки обираються в тому ж навбарі й запам'ятовуються разом із темою, але набирають чинності лише після вибору. Кнопка нічного режиму одним кліком змінює світлу тему на темну й назад, кнопка скидання повертає розмір тексту до початкового, а стрілки та пробіл гортають сторінки біля країв прокрутки - так само, як PageUp/PageDown. Для коміксів і сканів є режим <strong>«За шириною вікна»</strong>: сторінка заповнює вікно без підбору відсотків.</li>
           <li><strong>Пошук</strong> - пошукова панель навбара знаходить фразу на поточній сторінці або в усій книзі, а <kbd>Ctrl</kbd>+<kbd>F</kbd> відкриває її з курсором у полі (повторне натискання в полі поступається вбудованому пошуку браузера); багатосторінковий випуск несе локальний індекс, тож пошук по книзі працює на <code>file://</code>. Результати показують рядки контексту, вибраний збіг підсвічуюється, а розпізнаний OCR-текст над зображеннями можна шукати там, де розпізнавання його дало - у сторінок без тексту збігів немає.</li>
           <li><strong>Ліміт витрат</strong> - для платних рушіїв прапорець <code>-max-cost N</code> перетворює оцінку вартості (символи / 1e6 * $20) на жорсткий ліміт до відправлення: якщо оцінка перевищує N, переклад пропускається, а книга все одно збирається без перекладу.</li>
         </ul>
@@ -178,7 +179,7 @@
       </details>
 
       <details class="sec" id="external-tools">
-        <summary><span class="secnum">03</span>Додаткові зовнішні інструменти</summary>
+        <summary><span class="secnum">03</span><h3>Додаткові зовнішні інструменти</h3></summary>
         <p>Застосунок працює одразу для EPUB, TXT, FB2, RTF, HTML, Markdown. Інструменти нижче суто опціональні - ставте їх, лише якщо хочете повну підтримку зображень PDF та додаткових форматів.</p>
         <div class="table-wrap">
           <table>
@@ -215,7 +216,7 @@
       </details>
 
       <details class="sec" id="flags">
-        <summary><span class="secnum">04</span>Основні прапорці</summary>
+        <summary><span class="secnum">04</span><h3>Основні прапорці</h3></summary>
         <p class="small">Усі опціональні. Значення за замовчуванням розумні, тож цю таблицю можна ігнорувати, доки не зʼявиться власна думка.</p>
         <div class="table-wrap">
           <table>
@@ -225,6 +226,10 @@
               <tr><td><code>-noopen</code></td><td>false</td><td>Не відкривати браузер автоматично</td></tr>
               <tr><td><code>-google</code></td><td>false</td><td>Переклад через Google Cloud Translation API (потрібен збережений ключ API; платний, див. <code>-max-cost</code>)</td></tr>
               <tr><td><code>-ollama</code></td><td>false</td><td>Локальний переклад Ollama (потрібна запущена локальна служба Ollama з вибраною моделлю)</td></tr>
+              <tr><td><code>-free</code></td><td>false</td><td>Синонім <code>-ollama</code></td></tr>
+              <tr><td><code>-ollama-model</code></td><td>gemma3:12b</td><td>Назва моделі Ollama</td></tr>
+              <tr><td><code>-ollama-parallel</code></td><td>1</td><td>Кількість паралельних запитів</td></tr>
+              <tr><td><code>-ollama-ctx</code></td><td>8192</td><td>Розмір контексту Ollama</td></tr>
               <tr><td><code>-ocr</code></td><td>false</td><td>Розпізнати текст на зображеннях документа (OCR) і накласти його зверху справжнім перекладним HTML (потрібен Tesseract)</td></tr>
               <tr><td><code>-ocr-lang</code></td><td>(-src)</td><td>Мова(и) OCR, напр. eng або eng+rus. Якщо не задано - береться з -src (інакше eng), і застосунок перевіряє писемність сторінки: є дані для неї - мова додається, а не замінюється (rus+eng); немає - сторінка лишається без плашок, а в лог іде рядок із потрібним пакетом. Заданий прапорець цю перевірку вимикає</td></tr>
               <tr><td><code>-ocr-langs</code></td><td>false</td><td>Показати встановлені/доступні мови OCR і вийти</td></tr>
@@ -232,6 +237,7 @@
               <tr><td><code>-max-cost</code></td><td>0</td><td>Перервати платний переклад до відправлення, якщо оцінка вартості в USD перевищує N. Якщо сумніваєтеся, 0 (без ліміту) - цілком гідний вибір</td></tr>
               <tr><td><code>-split</code></td><td>5000</td><td>Розбиття сторінок за кількістю символів, 0 вимикає</td></tr>
               <tr><td><code>-toc-depth</code></td><td>0</td><td>Глибина вкладеності змісту на index.html, 0 = без обмежень, 1 = лише розділи</td></tr>
+              <tr><td><code>-multipage</code></td><td>false</td><td>Робити кілька HTML-сторінок зі змістом замість однієї типової сторінки</td></tr>
               <tr><td><code>-folder</code></td><td>empty</td><td>Папка для результату</td></tr>
               <tr><td><code>-src</code></td><td>en</td><td>Мова джерела</td></tr>
               <tr><td><code>-dst</code></td><td>ru</td><td>Мова перекладу</td></tr>
@@ -242,6 +248,8 @@
               <tr><td><code>-register-openwith</code></td><td>false</td><td>Додати застосунок до списку Windows «Відкрити за допомогою» і пункт правого кліку <svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M22 18v-2H8V4h2L7 1 4 4h2v2H2v2h4v8c0 1.1.9 2 2 2h8v2h-2l3 3 3-3h-2v-2h4zM10 8h6v6h2V8c0-1.1-.9-2-2-2h-6v2z"/></svg>«Convert to HTML» без призначення обробником за замовчуванням. Застосунок doc-html-ui пропонує те саме перемикачем у розділі «Інтеграція з Windows» і питанням під час першого запуску; сам по собі він нічого не додає.</td></tr>
               <tr><td><code>-report</code></td><td>false</td><td>Запакувати нещодавні журнали запусків і зведення про оточення в архів для автора, надрукувати шлях до нього та вийти</td></tr>
               <tr><td><code>-fdsec-password-env</code></td><td>(порожньо)</td><td>Для секретного файлу FileDO (<code>.fd-sec</code>): <strong>ім'я</strong> змінної середовища з його паролем, для запусків без участі людини - не сам пароль. Консоль і вікно застосунку запитують пароль самі.</td></tr>
+              <tr><td><code>-v</code></td><td>false</td><td>Докладний вивід</td></tr>
+              <tr><td><code>-version</code></td><td>false</td><td>Показати версію і вийти</td></tr>
             </tbody>
           </table>
         </div>
@@ -250,7 +258,7 @@
       </details>
 
       <details class="sec" id="logs">
-        <summary><span class="secnum">05</span>Надішліть авторові журнали невдалої конвертації</summary>
+        <summary><span class="secnum">05</span><h3>Надішліть авторові журнали невдалої конвертації</h3></summary>
         <p>Коли конвертація йде не так, опису з пам'яті зазвичай не досить, щоб відтворити проблему. Програма зберігає нещодавні журнали запусків на диску - до 20 запусків або 20 МБ, найстаріші видаляються першими, - тож їх можна запакувати в один архів для автора і за годину, і після падіння програми.</p>
         <dl class="req">
           <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span><span class="pill">Застосунок із Microsoft Store</span><span class="pill">Розширення для браузера</span></span></dd>
@@ -262,22 +270,23 @@
           </li>
           <li>Прикріпіть архів до цього листа й натисніть «Надіслати». Сама програма нічого не надсилає.</li>
         </ol>
-        <p>Архів пишеться в <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> і містить рівно три речі:</p>
+        <p>Архів пишеться в <code>%LOCALAPPDATA%\doc-html-translate\reports\</code> і містить рівно чотири речі:</p>
         <ul>
-          <li><strong>environment.txt</strong> - версія, видання, платформа, мова інтерфейсу, чи знайдено Tesseract і які мови OCR встановлено, типова модель Ollama, а також рядок «logs left out» з їх кількістю, якщо ліміт розміру залишив частину журналів запусків поза архівом. Завжди англійською, щоб автор читав один формат.</li>
-          <li><strong>settings.json</strong> - налаштування, з якими йшов останній запуск.</li>
-          <li><strong>logs/</strong> - нещодавні журнали запусків, свіжі першими.</li>
+          <li><strong>environment.txt</strong> - факти, які читає програма, по рядку <code>KEY=value</code> на кожен: версія схеми, версія, видання, платформа, мова інтерфейсу, чи знайдено Tesseract і які мови OCR встановлено, типова модель Ollama, а також рядок <code>logs_left_out</code> з їх кількістю, якщо ліміт розміру залишив частину журналів запусків поза архівом. Завжди англійською, щоб автор читав один формат.</li>
+          <li><strong>report.txt</strong> - ті самі факти підписаними рядками, для людини.</li>
+          <li><strong>settings.json</strong> - налаштування, з якими йшов останній запуск, без вашої теки виводу і списку нещодавніх документів.</li>
+          <li><strong>logs/</strong> - нещодавні журнали запусків, свіжі першими. Журнал, що не ввійшов через ліміт розміру, зберігає своє ім'я файлу, а замість тексту в ньому один рядок з його розміром. Журнал одного запуску обмежено 5 МБ: у довшого запуску лишаються початок і кінець, а один рядок повідомляє, скільки середини вирізано.</li>
         </ul>
-        <p>Увесь вміст проходить через редагування: будь-яке значення, схоже на ключ, токен, пароль чи ключ Google API, перетворюється на <code>&lt;redacted&gt;</code>, а ваші теки згортаються до <code>%USERPROFILE%</code> і <code>%LOCALAPPDATA%</code>. <strong class="claim">Імена файлів документів зберігаються навмисно</strong> - із журналом, який нема з чим зіставити, зазвичай нічого не вдієш. Ключа Google API в архіві немає ніколи; автоматичний тест не дасть йому туди потрапити. Розмір архіву обмежено 15 МБ: найстаріші журнали відкидаються першими, і вам повідомляють, скільки їх не вмістилося.</p>
+        <p>Увесь вміст проходить через редагування: будь-яке значення, схоже на ключ, токен, пароль чи ключ Google API, перетворюється на <code>&lt;redacted&gt;</code>, а ваші теки згортаються до <code>%USERPROFILE%</code> і <code>%LOCALAPPDATA%</code>. <strong class="claim">Імена й назви ваших документів нікуди не йдуть</strong> - ім'я файлу або назва замінюється на <code>&lt;document&gt;</code>, лишається тільки формат; якщо важливо, яка це книга, назвіть її в листі. Ключа Google API в архіві немає ніколи; автоматичний тест не дасть йому туди потрапити. Розмір архіву обмежено 15 МБ: найстаріші журнали відкидаються першими, і вам повідомляють, скільки їх не вмістилося.</p>
         <p><strong class="claim">Нічого не надсилається автоматично.</strong> Програма не відкриває для цього жодного мережевого з'єднання; вона дає вам файл і ненадісланого листа, а прикріплюєте архів і натискаєте «Надіслати» ви самі. Кнопка <strong>Відкрити архів</strong> у тому ж розділі дозволяє спершу зазирнути всередину, а <strong>Очистити журнали</strong> - взагалі не зберігати історію запусків на диску.</p>
         <p>У командному рядку той самий архів збирає прапорець <code>-report</code>, друкуючи, куди він ліг.</p>
-        <p>У <strong class="claim">розширення для браузера</strong> немає сховища журналів, тому воно пропонує те, що може дати чесно: кнопку <strong>Скопіювати діагностику</strong> в блоці «Про розширення» на сторінці налаштувань. Вона копіює в буфер обміну коротке зведення англійською - версія розширення, браузер, мова інтерфейсу, ваш набір налаштувань, а також формат, кількість сторінок і останню помилку останнього документа. Ні тексту документів, ні списку ваших сайтів там немає.</p>
+        <p>У <strong class="claim">розширення для браузера</strong> немає сховища журналів, тому воно пропонує те, що може дати чесно: кнопку <strong>Скопіювати діагностику</strong> в блоці «Про розширення» на сторінці налаштувань. Вона копіює в буфер обміну один блок JSON, готовий для вставлення в лист: версія схеми, версія розширення, браузер, мова інтерфейсу, ваш набір налаштувань, а також формат, кількість сторінок і остання помилка останнього документа; ті самі факти англійськими рядками лежать усередині нього. Кнопка <strong>Зберегти діагностику у файл</strong> записує той самий блок. Ні тексту документів, ні списку ваших сайтів там немає.</p>
         <div class="note"><span class="tag">Результат</span><p>У вас на руках один відредагований архів, не більше 15 МБ, і ненадісланий лист авторові. Поки ви не натиснете «Надіслати», з вашого комп'ютера нічого не пішло.</p></div>
         <p class="related"><span class="lbl">Пов'язане:</span> <a href="#flags">Основні прапорці</a> (<code>-report</code>) · <a href="privacy.html">Конфіденційність</a></p>
       </details>
 
       <details class="sec" id="secret-files">
-        <summary><span class="secnum">06</span>Відкрийте секретний файл FileDO (.fd-sec) і сконвертуйте те, що всередині</summary>
+        <summary><span class="secnum">06</span><h3>Відкрийте секретний файл FileDO (.fd-sec) і сконвертуйте те, що всередині</h3></summary>
         <p>Файл <code>.fd-sec</code> - це <strong class="claim">секретний файл FileDO</strong>. Застосунок запитає пароль, розшифрує файл встановленим на комп'ютері FileDO і сконвертує документ чи зображення всередині так само, як оригінал. Зрештою поруч із вашими документами лежить звичайна HTML-книжка.</p>
         <dl class="req">
           <dt>Доступно в</dt><dd><span class="pills"><span class="pill">Настільний застосунок</span><span class="pill">Застосунок із Microsoft Store</span></span></dd>
@@ -295,13 +304,58 @@
         <div class="note"><span class="tag">Результат</span><p>Результат називається за іменем секретного файлу й <strong class="claim">не зашифрований</strong> - він лежить поруч із вашими документами, як будь-яка інша конвертація. Пароль передається лише локальному FileDO і ніде не зберігається, не записується в журнал, не надсилається та не показується в командному рядку.</p></div>
         <p class="related"><span class="lbl">Пов'язане:</span> <a href="privacy.html">Конфіденційність</a> · <a href="#flags">Основні прапорці</a> (<code>-fdsec-password-env</code>) · <a href="#formats">Підтримувані формати</a></p>
       </details>
+
+      <details class="sec" id="cli-reference">
+        <summary><span class="secnum">07</span><h3>Коди виходу, змінні середовища та межі</h3></summary>
+        <p>Що повертає командний рядок, які змінні середовища він читає і що відхиляє - для скриптів і запусків без нагляду.</p>
+        <h4>Коди виходу</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Код</th><th>Значення</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>0</code></td><td>Готово.</td></tr>
+              <tr><td><code>1</code></td><td>Хибні аргументи.</td></tr>
+              <tr><td><code>2</code></td><td>Помилка введення-виведення.</td></tr>
+              <tr><td><code>3</code></td><td>Документ не вдалося розібрати.</td></tr>
+              <tr><td><code>4</code></td><td>Переклад не вдався, зупинився на півдорозі або не почався, бо обраний рушій недоступний - немає ключа Google, Ollama не запущена. Книгу все одно зібрано й відкрито, текст мовою оригіналу; частковий переклад повідомляє <code>перекладено частково, N з M сторінок</code>, а сегмент, який рушій повернув порожнім, вважається неперекладеним.</td></tr>
+              <tr><td><code>130</code></td><td>Перервано через Ctrl+C. Наступний запуск збере результат заново.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Змінні середовища</h4>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Змінна</th><th>Що робить</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>DOCHT_TESSERACT</code></td><td>Повний шлях до програми Tesseract для шару тексту OCR. Застосунок дивиться сюди насамперед, потім шукає <code>tesseract\tesseract.exe</code> поруч із собою, потім <code>PATH</code>. Якщо нічого не знайдено, конвертація все одно завершується, без шару тексту, а в журналі лишається підказка.</td></tr>
+              <tr><td><code>DOCHT_TOOL_TIMEOUT_SCALE</code></td><td>Множник для строків зовнішніх програм (pdftotext, Tesseract, Calibre, 7-Zip, ffmpeg/ImageMagick), які зростають із розміром вхідного файлу. На повільній машині чи для надто важкого файлу <code>set DOCHT_TOOL_TIMEOUT_SCALE=3</code> дає втричі більше часу.</td></tr>
+              <tr><td><code>DOCHT_FILEDO</code></td><td>Повний шлях до FileDO для секретних файлів (<code>.fd-sec</code>). Береться як є, замість пошуку в <code>PATH</code> і в теках встановлення.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Межі вхідних даних</h4>
+        <ul>
+          <li>На вхід потрібен файл документа: теку або файл нульового розміру відхилено ще до будь-якого запису. Друга конвертація в той самий результат, поки йде перша, відхиляється, а не змішується з нею.</li>
+          <li>Зображення декодується, лише якщо його заголовок оголошує не більше 100 мегапікселів і не більше 32768 пікселів на сторону: більший TIFF відхиляється з повідомленням, де названо межу, а більша картинка на сторінці все одно показується як є, і Tesseract читає її без добору кольору плашок і повторних проходів.</li>
+          <li>Архів (EPUB, CBZ, CBT, CBR, CB7) перевіряється за списком вмісту до розпакування: не більше 20000 записів і 4 ГБ у розпакованому вигляді, інакше його відхилено; окремий файл понад 100 МБ в EPUB або сторінка коміксу понад 200 МБ пропускається з попередженням, де названо файл. CBR/CB7 спершу перелічуються через 7-Zip, і розпаковуються лише прийняті сторінки. Символьні посилання всередині архіву ніколи не розіменовуються.</li>
+          <li>Документ TXT, Markdown, FB2, RTF або HTML понад 100 МБ відхиляється до читання з повідомленням, де названо межу.</li>
+          <li>Розширення для браузера застосовує ті самі межі для архівів і документів.</li>
+        </ul>
+        <h4>Запис про власника теки результату</h4>
+        <p>У кожній теці результату лежить прихований запис про власника (<code>.doc-html-translate.json</code>). Конвертер перевикористовує, перезбирає (<code>-force</code>) або видаляє після збою лише теку, яку сам створив для цього ж документа. Вашу власну теку з тим самим ім'ям, що й книга, він не чіпає ніколи: результат тоді потрапляє до сусідньої, наприклад <code>book (pdf)</code>. Так само розводяться <code>book.epub</code> і <code>book.pdf</code>, що лежать поруч.</p>
+        <p class="related"><span class="lbl">Пов'язане:</span> <a href="#flags">Основні прапорці</a> · <a href="#external-tools">Зовнішні інструменти</a> · <a href="#secret-files">Секретні файли FileDO (.fd-sec)</a></p>
+      </details>
     </section>
 
     <section id="subject-index">
       <h2>Предметний покажчик</h2>
       <ul class="subject-index">
-        <li><a href="#external-tools">7-Zip</a></li>
-        <li><a href="#external-tools">Calibre</a></li>
+        <li><a href="#external-tools">7-Zip - див. Зовнішні інструменти</a></li>
+        <li><a href="#external-tools">Calibre - див. Зовнішні інструменти</a></li>
         <li><a href="#editions">CLI</a></li>
         <li><a href="#external-tools">ffmpeg</a></li>
         <li><a href="#secret-files">Секретні файли FileDO (.fd-sec)</a></li>
@@ -312,13 +366,17 @@
         <li><a href="#glossary">Глосарій</a></li>
         <li><a href="#flags">Глибина змісту (-toc-depth)</a></li>
         <li><a href="#logs">Журнали, надсилання авторові</a></li>
+        <li><a href="#cli-reference">Запис про власника теки результату</a></li>
+        <li><a href="#cli-reference">Змінні середовища (DOCHT_)</a></li>
         <li><a href="#external-tools">Зовнішні інструменти</a></li>
         <li><a href="#formats">Зображення (шар тексту OCR)</a></li>
         <li><a href="#editions">Іпостасі застосунку</a></li>
+        <li><a href="#cli-reference">Коди виходу</a></li>
         <li><a href="#formats">Кодування TXT</a></li>
         <li><a href="#formats">Комікси (CBZ, CBR, CB7, CBT)</a></li>
         <li><a href="#workflow">Конвертація файлу</a></li>
         <li><a href="#reading">Ліміт витрат (-max-cost)</a></li>
+        <li><a href="#cli-reference">Межі вхідних даних</a></li>
         <li><a href="#flags">Мова інтерфейсу (-ui-lang)</a></li>
         <li><a href="#editions">Настільний застосунок</a></li>
         <li><a href="#flags">Обробник за замовчуванням (-register)</a></li>
@@ -329,7 +387,7 @@
         <li><a href="#formats">Підтримувані формати</a></li>
         <li><a href="#flags">Поділ на сторінки (-split)</a></li>
         <li><a href="#reference">Розділ довідки</a></li>
-        <li><a href="#editions">Розширення для браузера</a></li>
+        <li><a href="#editions">Розширення для браузера - див. Іпостасі застосунку</a></li>
         <li><a href="#reading">Теми читання</a></li>
         <li><a href="#editions">Застосунок із Microsoft Store</a></li>
         <li><a href="#quick-start">Швидкий старт</a></li>
@@ -372,18 +430,19 @@
         <li><a href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Розширення для браузера (Chrome Web Store)</a> · <a href="extension.html">сторінка розширення</a></li>
         <li><a href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Застосунок із Microsoft Store (MSIX)</a></li>
         <li><a href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">Завантажити останній реліз</a> · <a href="install-trust.html?lang=uk">«Windows protected your PC»? Що натиснути</a></li>
+        <li><a href="help/uk/">Довідка вікна</a> - сторінки, які вікно застосунку відкриває за F1 або кнопкою <code>?</code></li>
       </ul>
     </section>
 
     <div class="note"><div class="tag">Мови інтерфейсу</div><p>Інтерфейс застосунку та розширення доступний 13 мовами: <span dir="ltr">en ru uk de it es fr pt ar hi bn ur zh</span>. Англійська, російська та українська вичитані автором; решта десять перекладені машинно й не вичитані - виправлення надсилайте на <a href="mailto:sza@ukr.net">sza@ukr.net</a>.</p></div>
 
-    <div class="note"><div class="tag">Пов’язаний інструмент</div><p>Для окремих зображень, сканів і медіа, які потрібно переглянути чи відсортувати, підійде <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener">Fast Media Sorter for Windows</a>. Він доповнює цей інструмент, а не замінює його.</p></div>
+    <div class="note"><div class="tag">Пов’язаний інструмент</div><p>Для окремих зображень, сканів і медіа, які потрібно переглянути чи відсортувати, підійде <a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener">Fast Media Sorter &amp; Sharing for Windows</a>. Він доповнює цей інструмент, а не замінює його.</p></div>
   </main>
 
-  <footer class="site-footer"><div class="container"><h2>Інші інструменти SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter for Windows</b><span>Windows media sorter</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="support.html">Підтримка</a></span></div></div></footer>
+  <footer class="site-footer"><div class="container"><h2>Інші інструменти SZA</h2><div class="tools-grid"><a href="https://serzhyale.github.io/FastMediaSorter_mob_v2/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Organizer</b><span>Android media sorter</span></a><a href="https://serzhyale.github.io/FastMediaSorter_Lite/" target="_blank" rel="noopener"><b>Fast Media Sorter &amp; Sharing for Windows</b><span>Windows media and file manager</span></a><a href="https://serzhyale.github.io/CyrFlip/" target="_blank" rel="noopener"><b>CyrFlip</b><span>Windows layout fixer</span></a><a href="https://serzhyale.github.io/FileDO/" target="_blank" rel="noopener"><b>FileDO</b><span>Windows storage CLI</span></a><a href="https://serzhyale.github.io/StreamsPlayer/" target="_blank" rel="noopener"><b>STREAMS Player</b><span>Windows stream player</span></a><a href="https://serzhyale.github.io/OneClickRunner/" target="_blank" rel="noopener"><b>OneClickRunner</b><span>Windows tray launcher</span></a><a href="https://serzhyale.github.io/universal-agent-kit/" target="_blank" rel="noopener"><b>Universal Agent Kit</b><span>AI-dev methodology</span></a><a href="https://sza.od.ua" target="_blank" rel="noopener"><b>SZA</b><span>Portfolio</span></a></div><div class="footer-bottom"><span>© 2026 <a href="https://sza.od.ua">Serhii Zhyhunenko</a></span><span><a href="https://sza.od.ua">sza.od.ua</a> · <a href="https://github.com/SerZhyAle">SerZhyAle на GitHub</a> · <a href="mailto:sza@ukr.net">sza@ukr.net</a> · <a href="https://github.com/SerZhyAle/doc-html-translate/issues">GitHub Issues</a> · <a href="support.html">Підтримка</a></span></div></div></footer>
   <button class="to-top" id="toTop" type="button" aria-label="Scroll to top"><svg class="glyph" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8,11h3v10h2V11h3l-4,-4 -4,4zM4,3v2h16V3H4z"/></svg></button>
   <script>window.SITE={strings:{
-    ua:{title:'Doc-HTML-Translate Документація',desc:'Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',expand:'Розгорнути все',collapse:'Згорнути все'}}};</script>
+    ua:{title:'doc-html-translate Документація',desc:'Швидка документація Doc-HTML-Translate: встановлення, запуск, прапорці та безкоштовний сценарій перекладу через Chrome.',copied:'Скопійовано',toLight:'Світла тема',toDark:'Темна тема',toTop:'На початок сторінки',expand:'Розгорнути все',collapse:'Згорнути все'}}};</script>
   <script src="assets/site.js"></script>
 </body>
 </html>

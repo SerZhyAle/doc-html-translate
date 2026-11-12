@@ -1,7 +1,7 @@
 # Pointer: PAGE-STYLE
 
 - **Id:** `PAGE-STYLE`
-- **Version:** 3.1
+- **Version:** 3.5
 - **Home:** the shared contracts catalog, `product-web-pages/PAGE-STYLE.md`, reference kit `product-web-pages/reference/sza-kit.css` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - role "App - medium" (the distribution block is required); read at 3.1 on 2026-10-20 (ticket 120)
 - **Wire carrier:** `assets/sza-kit.css` - the one machine-checkable artifact of the domain
@@ -32,3 +32,7 @@ locale-list order and `sza-lang` write on the ten locale landings (until 2027-03
 **Conformance.** `tests/site_test.go` pins the kit bytes, resolver and page width; `tests/site_a11y_test.go` holds
 the target and motion rules; `tools/sitecheck --tree` and `tools/uicheck --only site` run the rendered checklist
 (2026-10-20: sitecheck `DONE` with the one `B4a` fail, uicheck 655 checks PASS).
+
+**Re-read 2026-10-29 (ticket E0126) at 3.5.** 3.2 adds the in-app help page role, 3.3 the kit `4aba1dee..` (re-vendor: ticket E0119, registry row until 2026-12-20), 3.4 the exchange mark (not used here), 3.5 the locale-query table and its bound: the query-reading pages give every row of it (`lang` over `l`, `ua` read as `uk`, a valid query over stored `sza-lang`), every writer emits `lang=uk`, and a page that reads no query owes no reader.
+
+**2026-11-08 (ticket E0111, site audit F5).** Section 4.10 and `SITE-EXPERIENCE` rule 13 ask for the release link to be resolved at run time; this site renders the version from `docs/release-notes.json` at the release, with `/releases/latest` as the durable link, as the canon's DOCUMENTATION_CONCEPT section 4 asks. Dated exception in the catalog's registry; `PROPOSAL-2026-11-08-release-facts-from-a-build-time-manifest.md` (filed by FMS_Win) asks for the same change.

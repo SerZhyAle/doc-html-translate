@@ -3,9 +3,9 @@ temp/
 *.test
 coverage.out
 *.exe
-# The two build/ exes are committed on purpose: they are this product's own release output and the
-# winget/MSIX manifests point a clone at them without a local Go toolchain.
-!build/*.exe
+# The machine's own Claude Code settings (the owner's choice, ticket E0111 F4); .claude/commands, agents and
+# settings.json stay versioned and public.
+.claude/settings.local.json
 # pdftotext and its three MinGW runtime DLLs are a vendored upstream binary (Xpdf 4.00 via Git for Windows, see internal/bundledtools/PROVENANCE.txt), not build
 # output - the converter shells out to them and they ship inside every package. The exe is tracked too:
 # the CI release build embeds only what a clean checkout holds (ticket 35).
@@ -39,3 +39,7 @@ DEV/DOCUMENT_REGISTRY.jsonl
 .env
 *token*
 *secret*
+# ..except the in-app help of the FileDO password dialog: a published page, not a secret (CONTEXT-HELP rules 12, 15).
+!cmd/doc-html-ui/help/*/secret-file-password*
+!help/*/secret-file-password*
+!tools/helpgen/copy/secret-file-password.json

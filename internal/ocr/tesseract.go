@@ -1057,9 +1057,9 @@ type ocrWord struct {
 // splitWideGaps cuts one recognizer line into the runs of words that belong to one another, at any
 // horizontal step wider than ocrMaxWordGapRatio times the line's own median word height, at any
 // narrower step a stroke crosses (strokeBetween), and before any word whose own box stands more
-// than ocrTypeSizeRatio above that same median - a box that tall reaches into a neighbouring row,
-// and no lettering of this line does. It returns the line itself when there is nothing to cut,
-// which is the answer on every ordinary line.
+// than ocrTypeSizeRatio above that same median when it carries no letter or digit - an outline glyph
+// that tall reaches into a neighbouring row, and no lettering of this line does. It returns the
+// line itself when there is nothing to cut, which is the answer on every ordinary line.
 //
 // The step is measured between the two boxes and not from left to right, so a right-to-left line is
 // read the same way round as a left-to-right one instead of producing a negative gap on every pair
@@ -1094,8 +1094,12 @@ func (l *ocrLine) splitWideGaps(ink *image.Gray) []*ocrLine {
 		// the same judgement trimOutlierWords makes about a line's artefact, applied at the cut
 		// stage where it separates the two regions instead of only hiding the box. The cut goes
 		// before the token: the token is the boundary itself, so it leads the next region's run.
-		// OCR-PIPELINE amendment 1.7 A.
-		tall := float64(w.y1-w.y0) > float64(med)*ocrTypeSizeRatio
+		// OCR-PIPELINE amendment 1.7 A. Only a token with no letter or digit counts (amendment 1.10
+		// A, the outlier trim's own predicate): a tall word that carries one is lettering - display
+		// type, an ascender, a box that swallowed artwork - and height alone split 33 of 33 honest
+		// lines it acted on in the labelled sample. The Superman page's two boundary tokens carry
+		// letters, so that page is a known limit of the rule.
+		tall := !hasLetterOrDigit(w.text) && float64(w.y1-w.y0) > float64(med)*ocrTypeSizeRatio
 		if wide || tall || strokeBetween(ink, prev, w, reach) {
 			runs = append(runs, cur)
 			byStroke = append(byStroke, !wide)

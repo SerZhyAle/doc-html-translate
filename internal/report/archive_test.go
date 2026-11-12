@@ -69,16 +69,29 @@ func TestBuildProducesReadableArchive(t *testing.T) {
 	if !ok {
 		t.Error("archive has no environment.txt")
 	}
-	if strings.Contains(env, "logs left out") {
-		t.Errorf("environment.txt claims logs were left out although none were:\n%s", env)
+	if strings.Contains(env, "logs_left_out") || strings.Contains(got["report.txt"], "logs left out") {
+		t.Errorf("the summary claims logs were left out although none were:\n%s\n%s", env, got["report.txt"])
 	}
 	if _, ok := got["settings.json"]; !ok {
 		t.Error("archive has no settings.json")
 	}
+	// DIAGNOSTIC-REPORT rule 2 and 8 B: environment.txt is what a program reads (KEY=value, the
+	// schema first), report.txt is what the author reads (label: value), same facts.
+	if !strings.HasPrefix(env, "schema_version=1\napp_version=26.0811.1400\n") {
+		t.Errorf("environment.txt begins %q, want schema_version then app_version", strings.SplitN(env, "\n", 3)[:2])
+	}
+	for _, line := range strings.Split(strings.TrimRight(env, "\n"), "\n") {
+		if k, _, ok := strings.Cut(line, "="); !ok || k == "" || strings.ContainsAny(k, " :") {
+			t.Errorf("environment.txt line %q is not KEY=value with a spaceless key", line)
+		}
+	}
+	if rep := got["report.txt"]; !strings.HasPrefix(rep, "version: 26.0811.1400\nedition: ") || !strings.Contains(rep, "\ninterface language: ") {
+		t.Errorf("report.txt is not the labelled block:\n%s", rep)
+	}
 	logs := 0
 	for name := range got {
 		switch {
-		case name == "environment.txt" || name == "settings.json":
+		case name == "environment.txt" || name == "report.txt" || name == "settings.json":
 		case strings.HasPrefix(name, "logs/"):
 			logs++
 		default:
@@ -108,8 +121,8 @@ func TestBuildDropsOldestLogsOverCap(t *testing.T) {
 	if _, ok := got[newest]; !ok {
 		t.Errorf("the newest log %q was dropped", newest)
 	}
-	if _, ok := got[oldest]; ok {
-		t.Errorf("the oldest log %q survived the cap", oldest)
+	if want := omittedMarker(6 << 20); got[oldest] != want {
+		t.Errorf("the oldest log %q holds %d bytes, want only the omission marker %q", oldest, len(got[oldest]), want)
 	}
 	info, err := os.Stat(path)
 	if err != nil {
@@ -133,13 +146,62 @@ func TestBuildRecordsLogsLeftOutInTheEnvironment(t *testing.T) {
 	if dropped != 2 {
 		t.Fatalf("dropped %d logs, want 2 (two 6 MB logs fit under the cap)", dropped)
 	}
-	env := entries(t, path)["environment.txt"]
+	got := entries(t, path)
+	env := got["environment.txt"]
 	lines := strings.Split(strings.TrimRight(env, "\n"), "\n")
-	if last, want := lines[len(lines)-1], "logs left out: 2"; last != want {
+	if last, want := lines[len(lines)-1], "logs_left_out=2"; last != want {
 		t.Errorf("last environment.txt line = %q, want %q (an additive key after the existing ones)\n%s", last, want, env)
 	}
-	if !strings.HasPrefix(env, "version: 26.0811.1400\n") {
-		t.Errorf("the existing keys moved: environment.txt begins %q", strings.SplitN(env, "\n", 2)[0])
+	if !strings.HasPrefix(env, "schema_version=1\napp_version=26.0811.1400\n") {
+		t.Errorf("environment.txt begins %q, want schema_version then app_version (DIAGNOSTIC-REPORT 8 B)", strings.SplitN(env, "\n", 3)[:2])
+	}
+	for _, line := range lines {
+		if k, _, ok := strings.Cut(line, "="); !ok || k == "" || strings.ContainsAny(k, " :") {
+			t.Errorf("environment.txt line %q is not KEY=value with a spaceless key", line)
+		}
+	}
+	rep := got["report.txt"]
+	rlines := strings.Split(strings.TrimRight(rep, "\n"), "\n")
+	if last, want := rlines[len(rlines)-1], "logs left out: 2"; last != want {
+		t.Errorf("last report.txt line = %q, want %q\n%s", last, want, rep)
+	}
+	if !strings.HasPrefix(rep, "version: 26.0811.1400\n") {
+		t.Errorf("the labelled report moved: report.txt begins %q", strings.SplitN(rep, "\n", 2)[0])
+	}
+}
+
+// DIAGNOSTIC-REPORT 0.15, amendment 2026-10-29 item 1: the frozen prefix, field order and separator,
+// reason archive_cap, and the size of the source as read - never its redacted size.
+func TestBuildLeavesTheOmissionMarkerInPlaceOfALogLeftOut(t *testing.T) {
+	if got, want := omittedMarker(42), "[Diag] LOG OMITTED | reason=archive_cap | source_bytes=42\n"; got != want {
+		t.Fatalf("omittedMarker(42) = %q, want %q", got, want)
+	}
+	setHome(t)
+	names := writeLogs(t, 4, 64)
+	logs, err := logFiles()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Room for two of the four logs: packLogs is driven with a small budget instead of 15 MiB of logs.
+	kept, dropped := packLogs(logs, 2*64)
+	if dropped != 2 {
+		t.Fatalf("dropped %d logs, want 2", dropped)
+	}
+	got := make(map[string]string, len(kept))
+	for _, e := range kept {
+		got[e.name] = string(e.data)
+	}
+	for i, n := range names {
+		entry, ok := got["logs/"+n]
+		switch {
+		case !ok:
+			t.Errorf("log %q has no entry: neither the log nor its omission marker", n)
+		case i < 2 && entry != omittedMarker(64):
+			t.Errorf("older log %q holds %q, want the omission marker %q", n, entry, omittedMarker(64))
+		case i >= 2 && entry != strings.Repeat("x", 64):
+			t.Errorf("newer log %q was not kept whole: %q", n, entry)
+		}
 	}
 }
 
@@ -175,8 +237,8 @@ func TestBuildSkipsAnOversizedLogWithoutReadingIt(t *testing.T) {
 		t.Errorf("Build allocated %d bytes: the %d byte log was read into memory", grew, int64(hugeBytes))
 	}
 	got := entries(t, path)
-	if _, ok := got["logs/"+filepath.Base(huge)]; ok {
-		t.Error("the oversized log was archived")
+	if entry, want := got["logs/"+filepath.Base(huge)], omittedMarker(hugeBytes); entry != want {
+		t.Errorf("the oversized log's entry holds %d bytes, want only the omission marker %q", len(entry), want)
 	}
 	for _, n := range names {
 		if _, ok := got["logs/"+n]; !ok {
@@ -275,9 +337,53 @@ func TestBuildRedactsRecentPathsInSettings(t *testing.T) {
 	if strings.Count(got, "%USERPROFILE%") != len(recent) {
 		t.Errorf("settings.json did not redact all recent paths: %q", got)
 	}
-	for _, name := range []string{"native.epub", "slash.epub", "url.epub"} {
-		if !strings.Contains(got, name) {
-			t.Errorf("document name %q was lost: %q", name, got)
+	// DIAGNOSTIC-REPORT 8 B: the paths keep their folders' variables and lose the document names.
+	for _, name := range []string{"native", "slash", "url"} {
+		if strings.Contains(got, name) {
+			t.Errorf("document name %q reached settings.json: %q", name, got)
+		}
+	}
+	if strings.Count(got, "<document>.epub") != len(recent) {
+		t.Errorf("settings.json did not replace all document names: %q", got)
+	}
+}
+
+// The settings copy is the author's view of how the app was configured, not of what the user
+// converted: the output folder and the recent documents leave it, every other setting stays.
+func TestBuildLeavesTheUsersNamesOutOfTheSettingsCopy(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 32)
+	opts := buildOpts()
+	opts.SettingsJSON = []byte(`{"tocDepth":3,"output":"D:\\Library\\Dune","recent":["D:\\Library\\Dune.epub","D:\\Library\\Emma.pdf"],"theme":"dark"}`)
+
+	path, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	got := entries(t, path)["settings.json"]
+	var settings map[string]any
+	if err := json.Unmarshal([]byte(got), &settings); err != nil {
+		t.Fatalf("settings.json is not JSON: %v\n%s", err, got)
+	}
+	for _, k := range []string{"output", "recent"} {
+		if _, present := settings[k]; present {
+			t.Errorf("settings.json still has %q: %s", k, got)
+		}
+	}
+	for _, name := range []string{"Dune", "Emma", "Library"} {
+		if strings.Contains(got, name) {
+			t.Errorf("%q reached settings.json: %s", name, got)
+		}
+	}
+	if settings["tocDepth"] != float64(3) || settings["theme"] != "dark" {
+		t.Errorf("other settings changed: %s", got)
+	}
+}
+
+func TestDropUserNamesLeavesNonObjectsAlone(t *testing.T) {
+	for _, in := range []string{`not json`, `[1,2]`, `null`, ``} {
+		if got := string(dropUserNames([]byte(in))); got != in {
+			t.Errorf("dropUserNames(%q) = %q, want the input back", in, got)
 		}
 	}
 }

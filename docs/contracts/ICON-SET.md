@@ -1,7 +1,7 @@
 # Pointer: ICON-SET
 
 - **Id:** `ICON-SET`
-- **Version:** 0.36 draft
+- **Version:** 0.37 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` section 2, data in `iconography/vocabulary.jsonl` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - opted in as a draft on 2026-09-25; every edition (converted book, GUI, extension, site); read at 0.36 on 2026-10-20 (ticket 120)
 - **Wire carrier:** `vocabulary.version` at build time (section 5); the drawings this product ships are vendored under `assets/glyphs/`
@@ -28,12 +28,14 @@ What this repo owes it:
 
 **Deviations, in the catalog registry (section 3).** Temporary, until 2026-12-31: further-language names (rule 3,
 section 13 B) - 54 (id, language) cells over 19 ids, ticket 122 - and the site's theme button glyph (ticket 119).
-Permanent variants, recorded in [`../UI_PROFILE.md`](../UI_PROFILE.md) section 4: the dialog affirmative "OK" drawn
-with `action.confirm` (decision D6 of ticket 119), and settings destinations that show the glyph of the nearest
-meaning under the destination's own topic name (decision D4). Section 2.8 (docs and site show the glyph beside the
+Permanent variants, recorded in [`../UI_PROFILE.md`](../UI_PROFILE.md) section 4: settings destinations that show
+the glyph of the nearest meaning under the destination's own topic name (decision D4). The dialog affirmative "OK"
+is text-only since ticket E0122 (Q4), so its variant of decision D6 is gone. Section 2.8 (docs and site show the glyph beside the
 name) was only sampled.
 
 **Conformance.** `tests/iconography_test.go` compares all vendored SVG bytes with the catalog when
 `SZA_CONTRACTS_ROOT` is set, and checks edition tables, inline copies, shared labels and the name guard above;
 `internal/htmlgen/glyphs_test.go` checks the reader controls in all thirteen languages. The catalog has no
 generated pixel vectors yet (section 3 rule 1).
+
+**Re-read 2026-10-29 (ticket E0126) at 0.37.** Section 22 C names action.convert, action.text-smaller, action.text-larger, view.text-layer and action.retry (de, fr) exactly as this product ships them. Item E reads a verb form that is another record's name as a substitution: the Russian "Отменить очередь" / "Отменить текущий" and the ru, uk and de "retry failed" captions were a dated exception, closed by ticket E0122 (Q4) with noun forms built on the record's name (ru "Отмена очереди" / "Отмена текущего" / "Повтор неудачных", uk "Повтор невдалих", de "Fehlgeschlagene erneut versuchen"), and the notice dialog's "OK" answer is text-only, so the OK-beside-`action.confirm` variant is closed too. The drawer variant stays dated debt (`nav.menu` has no exported glyph yet).

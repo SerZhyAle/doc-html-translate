@@ -201,6 +201,21 @@ func TestLogFailureWritesToTheLogStore(t *testing.T) {
 	}
 }
 
+// APP-BEHAVIOUR 0.13 rule 4, condition 4: an action a standing consent licenses is logged as taken
+// under that setting, in the same store.
+func TestLogConsentActionNamesItsSetting(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	logConsentAction("automatic update check (GitHub Releases)", "autoUpdates")
+	entries, err := os.ReadDir(report.LogsDir())
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("log store = %v, %v; want one GUI log", entries, err)
+	}
+	data, _ := os.ReadFile(filepath.Join(report.LogsDir(), entries[0].Name()))
+	if !strings.Contains(string(data), `automatic update check (GitHub Releases), under the setting "autoUpdates"`) {
+		t.Errorf("GUI log = %q", data)
+	}
+}
+
 // jsonString quotes a Windows path so it survives as a JSON string literal.
 func jsonString(s string) string {
 	b, _ := json.Marshal(s)

@@ -106,7 +106,9 @@ func runScene(env *runEnv, id sceneID, cycles int) (res sceneResult, resultErr e
 		return res, cannotVerify(err)
 	}
 	rec := &record{RunID: env.sceneRunID, Kind: "scene", Scene: string(id), SceneTitle: s.title, CreatedAt: time.Now(), Isolation: env.isolation, Valid: true}
-	env.watch = startValidityWatch()
+	// A scene inherits its control's declared background load: the relative budgets compare
+	// against that control's noise, so the scene tolerates exactly what the control tolerated.
+	env.watch = startValidityWatch(ctrl.DeclaredLoad)
 	// This finalizer covers scene errors as well as successes. Failed restoration is a P0
 	// finding, preserves the profile and exports, and prevents another scene from starting.
 	defer func() {
@@ -116,6 +118,10 @@ func runScene(env *runEnv, id sceneID, cycles int) (res sceneResult, resultErr e
 			if summary := env.watch.offenderSummary(); summary != "" {
 				appendNote(rec, "%s", summary)
 			}
+		}
+		rec.DeclaredLoad = ctrl.DeclaredLoad
+		if declared := env.watch.declaredLoadSummary(); declared != "" {
+			appendNote(rec, "advisory: %s", declared)
 		}
 		env.watch = nil
 		rec.ControlRef = ctrl.RunID
@@ -209,6 +215,9 @@ func runScene(env *runEnv, id sceneID, cycles int) (res sceneResult, resultErr e
 		if !sc.ok() {
 			fails = append(fails, fmt.Sprintf("toggle %s: observable=%v reverted=%v (%s)", sc.Toggle, sc.Observable, sc.Reverted, sc.Detail))
 		}
+	}
+	if len(ctrl.DeclaredLoad) > 0 {
+		advisories = append(advisories, declaredLoadAdvisory(ctrl.DeclaredLoad))
 	}
 	switch {
 	case len(fails) > 0:

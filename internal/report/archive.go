@@ -2,9 +2,11 @@ package report
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -35,8 +37,9 @@ type archiveEntry struct {
 
 // Build writes one archive - the environment summary, the redacted settings, and as many
 // recent run logs as fit under MaxArchiveBytes, newest first - and reports how many logs had
-// to be left out. When some were, environment.txt says so too (see leftOutLine), so a reader of
-// the archive alone is never told that the history it holds is the whole of it.
+// to be left out. When some were, environment.txt says so too (see leftOutLine) and each one leaves
+// omittedMarker in its place, so a reader of the archive alone is never told that the history it
+// holds is the whole of it.
 //
 // Every byte written here passes through Redact. This is the only route by which anything
 // leaves the machine, so the gate lives at the gate: a caller must never assemble an archive
@@ -48,21 +51,25 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 		return "", 0, fmt.Errorf("create report folder: %w", err)
 	}
 
-	env := Environment(opts.AppVersion, opts.Packaged)
+	fields := environmentFields(opts.AppVersion, opts.Packaged)
+	env, readable := renderEnvironment(fields), renderReport(fields)
 	var settings []byte
 	if len(opts.SettingsJSON) > 0 {
-		settings = RedactBytes(opts.SettingsJSON)
+		settings = RedactBytes(dropUserNames(opts.SettingsJSON))
 	}
 	logs, err := logFiles()
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return "", 0, fmt.Errorf("list run logs: %w", err)
 	}
 	// The logs are chosen before anything is written because the count of those left out belongs
-	// in environment.txt, which comes first. Its line is reserved at its widest: at most every log.
-	budget := MaxArchiveBytes - len(env) - len(settings) - len(leftOutLine(len(logs)))
+	// in environment.txt and report.txt, which come first. Their lines are reserved at their widest:
+	// at most every log, and so is the omission marker each log left out leaves in its place.
+	budget := MaxArchiveBytes - len(env) - len(readable) - len(settings) -
+		len(leftOutLine(len(logs))) - len(leftOutReportLine(len(logs))) - len(logs)*len(omittedMarker(math.MaxInt64))
 	kept, droppedLogs := packLogs(logs, budget)
 	if droppedLogs > 0 {
 		env += leftOutLine(droppedLogs)
+		readable += leftOutReportLine(droppedLogs)
 	}
 
 	f, path, err := createArchive(dir, opts.AppVersion, opts.At)
@@ -70,7 +77,7 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 		return "", 0, fmt.Errorf("create archive: %w", err)
 	}
 	zw := zip.NewWriter(f)
-	entries := []archiveEntry{{"environment.txt", []byte(env)}}
+	entries := []archiveEntry{{"environment.txt", []byte(env)}, {"report.txt", []byte(readable)}}
 	if len(opts.SettingsJSON) > 0 {
 		entries = append(entries, archiveEntry{"settings.json", settings})
 	}
@@ -98,29 +105,68 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 // It is appended after the existing keys: a reader matches keys by name and ignores the ones it
 // does not know (DIAGNOSTIC-REPORT 3), so adding one breaks none.
 func leftOutLine(n int) string {
+	return fmt.Sprintf("logs_left_out=%d\n", n)
+}
+
+// leftOutReportLine is the same fact in the labelled report.txt.
+func leftOutReportLine(n int) string {
 	return fmt.Sprintf("logs left out: %d\n", n)
 }
 
+// userNameKeys are the settings that hold a user's own names: the output folder (named after the
+// user's work) and the list of recent documents. DIAGNOSTIC-REPORT 8 B keeps both out of the copy.
+var userNameKeys = []string{"output", "recent"}
+
+// dropUserNames removes userNameKeys from the settings object. Settings that are not a JSON object
+// are returned as they are: Redact still runs over them, and nothing here guesses at their shape.
+func dropUserNames(raw []byte) []byte {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil || fields == nil {
+		return raw
+	}
+	for _, k := range userNameKeys {
+		delete(fields, k)
+	}
+	out, err := json.MarshalIndent(fields, "", "  ")
+	if err != nil {
+		return raw
+	}
+	return out
+}
+
+// omittedMarker is DIAGNOSTIC-REPORT 0.15's omission marker for a whole log left out because the
+// archive's size budget was reached. It stands under the log's own entry name, so a reader sees
+// which run is missing; the line itself carries no path, name or content of the log.
+func omittedMarker(sourceBytes int64) string {
+	return fmt.Sprintf("[Diag] LOG OMITTED | reason=archive_cap | source_bytes=%d\n", sourceBytes)
+}
+
 // packLogs redacts the run logs newest first and keeps as many as fit in budget bytes, reporting
-// how many it left out. The newest log is the run the report is about, so it is the last thing
-// to go; an older, smaller log may still fit after a larger one was dropped.
+// how many it left out; each one left out is replaced by omittedMarker. The newest log is the run
+// the report is about, so it is the last thing to go; an older, smaller log may still fit after a
+// larger one was dropped.
 func packLogs(logs []logFile, budget int) (kept []archiveEntry, leftOut int) {
 	sort.Slice(logs, func(i, j int) bool { return logs[i].name > logs[j].name })
+	omit := func(l logFile, sourceBytes int64) {
+		leftOut++
+		kept = append(kept, archiveEntry{"logs/" + l.name, []byte(omittedMarker(sourceBytes))})
+	}
 	for _, l := range logs {
 		// A log larger than the whole archive can never fit. Deciding that from the listing keeps
 		// it out of memory: reading it first and measuring afterwards would spend its full size,
 		// twice with the redacted copy, to reach the same answer.
 		if l.size > MaxArchiveBytes {
-			leftOut++
+			omit(l, l.size)
 			continue
 		}
 		data, readErr := os.ReadFile(filepath.Join(LogsDir(), l.name))
 		if readErr != nil {
 			continue
 		}
+		sourceBytes := int64(len(data))
 		data = RedactBytes(data)
 		if len(data) > budget {
-			leftOut++
+			omit(l, sourceBytes)
 			continue
 		}
 		budget -= len(data)

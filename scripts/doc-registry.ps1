@@ -29,7 +29,8 @@
   The site half (items 6-7)
     - every announced page carries the SEO block of canon section 3 (title, description,
       canonical, Open Graph with an image, a Twitter card, JSON-LD, one h1, and an hreflang cluster
-      where the record has more than one language);
+      where the record has more than one language), and no hreflang alternate is a query view of
+      the page's own canonical (canon PROMOTION section 3: only self-canonical URLs are announced);
     - sitemap.xml equals the sitemap rendered from the records. Item 8, notifying search engines,
       is a release step in DEV/RELEASE.md, once per release.
 
@@ -183,6 +184,7 @@ foreach ($entry in $read.Entries) {
         $h1 = [regex]::Matches($h, '<h1[\s>]', 'IgnoreCase').Count
         if ($h1 -ne 1) { Add-Finding "${at}: $f has $h1 <h1> (the SEO block wants exactly one)" }
         if (@($r.languages).Count -gt 1 -and $page.Alternates.Count -lt 2) { Add-Finding "${at}: $f has no hreflang cluster, and its record declares $(@($r.languages).Count) languages" }
+        foreach ($q in (Get-PageQueryAlternates $page)) { Add-Finding "${at}: $f names $($q.Href) as hreflang '$($q.Lang)', a query view of its own canonical - hreflang lists only URLs that are their own canonical" }
     }
 
     # a record that announces pages has an address, and every address it names is served

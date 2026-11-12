@@ -1,7 +1,9 @@
 {
   "schema": 1,
-  "about": "The source of release-notes.html (SITE-STRUCTURE rule 14: assembled at the release, never edited per ticket). One record per app release tag v<version>, newest first. A record is added in the release flow (.claude/commands/release.md, step C) before the tag is pushed; scripts/release-notes.ps1 -Render rewrites the marked block of release-notes.html from this file and the check fails on a hand-edited block. Plain text only; en, ru and uk are each required.",
-  "link": {"en": "Downloads and checksums on GitHub", "ru": "Файлы и контрольные суммы на GitHub", "uk": "Файли та контрольні суми на GitHub"},
+  "about": "The source of release-notes.html (SITE-STRUCTURE rule 14: assembled at the release, never edited per ticket). One record per app release tag v<version>, newest first. A record is added in the release flow (.claude/commands/release.md, step C) before the tag is pushed; scripts/release-notes.ps1 -Render rewrites the marked block of release-notes.html from this file and the check fails on a hand-edited block. Plain text only; en, ru and uk are each required. {version} in a label is the record's version. whatsNew heads the newest record's items on the landing (the marked block of index.html). extension.version is the version the Chrome Web Store and Edge Add-ons serve: written by `node extension/build.mjs record-version` before the ext-cws-v / ext-edge-v tags, which name it, and rendered beside the store buttons.",
+  "link": {"en": "Downloads and checksums for {version}", "ru": "Файлы и контрольные суммы для {version}", "uk": "Файли та контрольні суми для {version}"},
+  "whatsNew": {"en": "What's new in {version}", "ru": "Что нового в {version}", "uk": "Що нового в {version}"},
+  "extension": {"version": "26.1021.41"},
   "releases": [
     {
       "version": "26.1021.0300",
