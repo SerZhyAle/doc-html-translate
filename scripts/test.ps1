@@ -90,7 +90,10 @@ function Get-SkipReason([string]$key) {
 }
 
 try {
-    & go test -json ./... -count=1 2>&1 | ForEach-Object {
+    # -timeout 30m: the tests package converts the whole local corpus (TestConvertTestDoc, about 400 files and 1.1 GB)
+    # and needs about 10 minutes, which is go test's default per-package limit; a run that reaches it dies with
+    # "panic: test timed out" and hides every verdict of the package, so the limit is raised to name a real hang only.
+    & go test -json ./... -count=1 -timeout 30m 2>&1 | ForEach-Object {
         $line = "$_"
         $raw.WriteLine($line)
         if (-not $line.StartsWith('{')) { Out-Line $line; return }

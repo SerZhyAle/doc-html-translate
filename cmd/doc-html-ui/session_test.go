@@ -93,11 +93,13 @@ func TestUIRecentSectionAnchors(t *testing.T) {
 	for _, snippet := range []string{
 		`id="recentSection"`, `id="recentList"`, `id="btnRecentClear"`,
 		"function rememberRecent(", "function renderRecent(", "function scheduleRecentStatus(",
-		"rememberRecent(paths);",                // every pick lands in the list
-		"setInputPath(d.file); rememberRecent(", // the association-opened file too
-		"recent:         recentDocs,",           // rides the settings blob
-		"recentDocs = s.recent.filter(",         // and is restored from it
-		"api('/api/recent-status'",              // existence comes from the server
+		"rememberRecent(paths);",                     // every pick lands in the list
+		"if (files.length) receiveOpenPaths(files);", // the association-opened files too (ticket E0144): the
+		"function receiveOpenPaths(",                 // initial files and `open` both go through it,
+		"    rememberRecent(novel);",                 // and each one is remembered
+		"recent:         recentDocs,",                // rides the settings blob
+		"recentDocs = s.recent.filter(",              // and is restored from it
+		"api('/api/recent-status'",                   // existence comes from the server
 	} {
 		if !strings.Contains(uiHTML, snippet) {
 			t.Errorf("ui.html is missing %q - the recent list cannot work", snippet)

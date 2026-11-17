@@ -31,7 +31,7 @@
         "operatingSystem": "Windows 10, Windows 11",
         "applicationCategory": "UtilitiesApplication",
         "downloadUrl": "https://github.com/SerZhyAle/doc-html-translate/releases/latest",
-        "softwareVersion": "26.1112.2325",
+        "softwareVersion": "26.1117.1450",
         "description": "Convert books, documents, comics, and images to local HTML for reading and browser page translation. Windows app and Chromium extension.",
         "license": "https://github.com/SerZhyAle/doc-html-translate/blob/main/LICENSE",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -111,7 +111,7 @@
       <p class="whatfor"><span data-l="en">The desktop app (window + command line) and the browser extension install independently. Every option is free.</span><span data-l="ru">Настольное приложение (окно + командная строка) и расширение для браузера устанавливаются независимо. Все варианты бесплатны.</span><span data-l="ua">Настільний застосунок (вікно + командний рядок) і розширення для браузера встановлюються незалежно. Усі варіанти безкоштовні.</span></p>
       <div class="channels">
         <a class="btn btn-ghost btn-sm" href="https://apps.microsoft.com/detail/9PMHSWQPR6V1" target="_blank" rel="noopener">Microsoft Store</a>
-        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"> v26.1112.2325</span></a>
+        <a class="btn btn-ghost btn-sm" id="releaseLink" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener">GitHub Releases<span id="releaseTag"> v26.1117.1450</span></a>
         <a class="btn btn-ghost btn-sm" href="release-notes.html"><span data-l="en">Release notes</span><span data-l="ru">Что нового</span><span data-l="ua">Що нового</span></a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/SerZhyAle/doc-html-translate/releases/latest" target="_blank" rel="noopener"><span data-l="en">Setup installer (.exe)</span><span data-l="ru">Установщик setup.exe</span><span data-l="ua">Інсталятор setup.exe</span></a>
         <a class="btn btn-ghost btn-sm" href="https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic" target="_blank" rel="noopener">Chrome Web Store<span data-rf="extension"> v26.1113.22</span></a>
@@ -127,30 +127,24 @@
 
     <!-- release-notes:begin whatsnew (rendered from docs/release-notes.json by scripts/release-notes.ps1 -Render; edit the records there) -->
     <section class="section" id="whats-new">
-      <h2 class="section-title"><span class="h">#</span> <span data-l="en">What's new in 26.1112.2325</span><span data-l="ru">Что нового в 26.1112.2325</span><span data-l="ua">Що нового в 26.1112.2325</span></h2>
+      <h2 class="section-title"><span class="h">#</span> <span data-l="en">What's new in 26.1117.1450</span><span data-l="ru">Что нового в 26.1117.1450</span><span data-l="ua">Що нового в 26.1117.1450</span></h2>
       <ul data-l="en">
-        <li>A new option beside the convert button, &quot;And close this window&quot;, closes the window after a successful run or a finished queue (warnings count as success); after an error or a cancel the window stays open, and the choice is remembered.</li>
-        <li>Text recognition, in the desktop app and in the browser extension: a line with one oversized word - a drop cap, a display-type word, a tall letter - is no longer cut apart, so the word stays in its own line.</li>
-        <li>The diagnostic archive has a report.txt with the labelled facts, and environment.txt is KEY=value lines; the names of your documents are hidden in the run logs, and the settings copy leaves out the output folder and the recent documents. A run log over 5 MB keeps its first 1 MB and its last 4 MB or so. The extension copies and saves the diagnostics as one JSON file.</li>
-        <li>A FileDO secret file whose inner file name this computer cannot create now gets an exact message in every interface language: the file was opened, nothing was converted, the original is unchanged, open it with FileDO itself.</li>
-        <li>Windows: helper programs the app starts in the background, such as text recognition, run without a console window.</li>
-        <li>Closing the app window no longer leaves the app process running for another ten minutes because of the help map the window requests at start.</li>
+        <li>The command line takes verbs: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set and default-handler release. Each ends with a fixed exit code and, with --result, writes a JSON record for a script; a call of commands lists them all, and every older flag keeps working. The full reference is docs/CLI.md.</li>
+        <li>The app window can be driven from the command line: open --in puts the documents you name into the queue of the window that is already open, show brings it forward, status says whether it is running, and quit closes it (it waits while a conversion runs, unless --cancel-runs is given). A second launch hands its files to the running window instead of opening another one.</li>
+        <li>On a touch screen, the icon-only buttons of the reader pages and of the extension viewer, and the help buttons in the extension options, show their name beside the icon.</li>
+        <li>Extension: an update applied while the browser was closed no longer makes the right-click menu rebuild fail with duplicate-id errors, and a tab closed during a page-OCR run no longer logs a &quot;No tab with id&quot; error on the extension's error page.</li>
       </ul>
       <ul data-l="ru">
-        <li>Рядом с кнопкой запуска конвертации появилась опция «И закрыть это окно»: окно закрывается после успешного запуска или завершённой очереди (предупреждения считаются успехом), а после ошибки или отмены остаётся открытым; выбор запоминается.</li>
-        <li>Распознавание текста в приложении и в расширении: строка с одним крупным словом - буквицей, заголовочным шрифтом, высокой буквой - больше не разрезается, слово остаётся в своей строке.</li>
-        <li>В диагностическом архиве появился файл report.txt с подписанными фактами, а environment.txt записан строками КЛЮЧ=значение; названия ваших документов в журналах скрыты, а копия настроек не содержит папку вывода и недавние документы. Журнал больше 5 МБ хранит первый мегабайт и последние около 4 МБ. Расширение копирует и сохраняет диагностику одним JSON-файлом.</li>
-        <li>Секретный файл FileDO, внутреннее имя которого этот компьютер не может создать, теперь получает точное сообщение на каждом языке интерфейса: файл открыт, ничего не сконвертировано, исходный файл не изменён, откройте его самим FileDO.</li>
-        <li>Windows: вспомогательные программы, которые приложение запускает в фоне (например, распознавание текста), работают без окна консоли.</li>
-        <li>Закрытое окно приложения больше не оставляет процесс работать ещё десять минут из-за карты справки, которую окно запрашивает при запуске.</li>
+        <li>Командная строка принимает команды-глаголы: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set и default-handler release. Каждая завершается фиксированным кодом выхода и с --result записывает JSON-ответ для скрипта; команда commands перечисляет их все, а все прежние ключи продолжают работать. Полный справочник - docs/CLI.md.</li>
+        <li>Окном приложения можно управлять из командной строки: open --in кладёт названные документы в очередь уже открытого окна, show выводит его на передний план, status сообщает, запущено ли оно, а quit закрывает его (пока идёт конвертация, ждёт, если не указан --cancel-runs). Повторный запуск передаёт свои файлы работающему окну вместо открытия ещё одного.</li>
+        <li>На сенсорном экране кнопки без подписи на страницах для чтения и в просмотрщике расширения, а также кнопки справки в настройках расширения показывают своё название рядом со значком.</li>
+        <li>Расширение: обновление, применённое при закрытом браузере, больше не приводит к ошибкам «duplicate id» при перестроении контекстного меню, а вкладка, закрытая во время распознавания страницы, больше не пишет ошибку «No tab with id» на страницу ошибок расширения.</li>
       </ul>
       <ul data-l="ua">
-        <li>Поруч із кнопкою запуску конвертації з'явилася опція «І закрити це вікно»: вікно закривається після успішного запуску або завершеної черги (попередження вважаються успіхом), а після помилки чи скасування залишається відкритим; вибір запам'ятовується.</li>
-        <li>Розпізнавання тексту в застосунку й у розширенні: рядок з одним великим словом - буквицею, заголовковим шрифтом, високою літерою - більше не розрізається, слово залишається у своєму рядку.</li>
-        <li>У діагностичному архіві з'явився файл report.txt із підписаними фактами, а environment.txt записано рядками КЛЮЧ=значення; назви ваших документів у журналах приховано, а копія налаштувань не містить теку виводу та нещодавні документи. Журнал понад 5 МБ зберігає перший мегабайт і останні близько 4 МБ. Розширення копіює й зберігає діагностику одним JSON-файлом.</li>
-        <li>Секретний файл FileDO, внутрішню назву якого цей комп'ютер не може створити, тепер отримує точне повідомлення кожною мовою інтерфейсу: файл відкрито, нічого не сконвертовано, початковий файл не змінено, відкрийте його самим FileDO.</li>
-        <li>Windows: допоміжні програми, які застосунок запускає у фоні (наприклад, розпізнавання тексту), працюють без вікна консолі.</li>
-        <li>Закрите вікно застосунку більше не залишає процес працювати ще десять хвилин через мапу довідки, яку вікно запитує під час запуску.</li>
+        <li>Командний рядок приймає команди-дієслова: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set і default-handler release. Кожна завершується фіксованим кодом виходу й з --result записує JSON-відповідь для скрипту; команда commands перелічує їх усі, а всі попередні ключі продовжують працювати. Повний довідник - docs/CLI.md.</li>
+        <li>Вікном застосунку можна керувати з командного рядка: open --in кладе названі документи в чергу вже відкритого вікна, show виводить його на передній план, status повідомляє, чи воно запущене, а quit закриває його (поки триває конвертація, чекає, якщо не вказано --cancel-runs). Повторний запуск передає свої файли працюючому вікну замість відкриття ще одного.</li>
+        <li>На сенсорному екрані кнопки без підпису на сторінках для читання й у переглядачі розширення, а також кнопки довідки в налаштуваннях розширення показують свою назву поряд зі значком.</li>
+        <li>Розширення: оновлення, застосоване за закритого браузера, більше не призводить до помилок «duplicate id» під час перебудови контекстного меню, а вкладка, закрита під час розпізнавання сторінки, більше не пише помилку «No tab with id» на сторінку помилок розширення.</li>
       </ul>
     </section>
     <!-- release-notes:end whatsnew -->

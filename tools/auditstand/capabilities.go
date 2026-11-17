@@ -92,7 +92,10 @@ var capabilityInventory = []capabilityRow{
 		covers: []string{"cmd/doc-html-ui", "App wiring", "internal/app", "internal/config",
 			// Claimed under the GUI row when tickets 118 and 119 added them to AGENTS.md. No scene
 			// drives the page rail or F1 help yet: the claim records ownership, not measured coverage.
-			"GUI window structure", "In-app help"},
+			"GUI window structure", "In-app help",
+			// internal/readiness is the window's pre-flight for one document (ticket E0146); the GUI
+			// readiness scene (S01) reads the same Check the command `input check` calls.
+			"internal/readiness"},
 	},
 	{
 		id:     "cap-registration",

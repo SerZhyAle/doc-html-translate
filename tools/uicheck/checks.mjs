@@ -235,7 +235,8 @@ export async function options(session, report, { size = 'ordinary', input = 'poi
     const afterFocus = await state();
     await page.keyboard.press('Space');
     report.check('option.space-toggles', (await state()) === !afterFocus, 'Space toggled the focused checkbox');
-    report.check('option.focus-does-not-toggle', afterFocus === !before, 'focusing alone changed nothing');
+    // the state before the focus is the one the checkbox click left (!afterCap), whatever the heading carries
+    report.check('option.focus-does-not-toggle', afterFocus === !afterCap, 'focusing alone changed nothing');
     await page.keyboard.press('Space');
     // keyboard order: the checkbox, then its help button; the heading and explanation add no tab stops
     await page.focus('#chkOCR');

@@ -157,13 +157,14 @@ func TestInlineGlyphCopiesAreVerbatim(t *testing.T) {
 	pages := map[string][]string{
 		// The launcher's group markers are state triangles drawn by its own component (COLLAPSIBLE-GROUP 3.2), not
 		// the nav.expand / nav.collapse action chevrons, so those two are no longer carried; the rail and the new
-		// meanings are (ticket 119).
+		// meanings are (ticket 119). The OCR option heading no longer draws view.text-layer (ICON-RENDER section 25 rule 1,
+		// ticket E0150), so the launcher carries no copy of it.
 		"cmd/doc-html-ui/ui.html": {"action.swap", "content.document",
 			"nav.close", "action.cancel", "action.confirm", "action.delete", "action.clear-all", "action.remove",
 			"action.add", "action.choose-folder", "action.download", "action.email", "action.copy",
 			"action.translate", "nav.scroll-bottom", "nav.open-external", "action.convert", "action.save", "app.help",
 			"action.extract-text", "action.create-shortcut", "action.text-settings", "action.adjust", "app.info",
-			"nav.contents", "view.text-layer", "action.retry", "app.update", "nav.go-to"},
+			"nav.contents", "action.retry", "app.update", "nav.go-to"},
 		// the disclosure markers of the site are state triangles drawn by the page layer (COLLAPSIBLE-GROUP 3.2), no
 		// longer the nav.expand / nav.collapse action chevrons; site.css carries the external-link marker (BUTTONS 2.3)
 		"extension.html":  {"nav.go-to", "action.install"},

@@ -1,8 +1,8 @@
 {
   "about": "The digests of everything a help page or image is made from. The gate recomputes them; a difference means the set was not regenerated after an input changed (CONTEXT-HELP rule 18).",
-  "digest": "82d03cd9bf8772ffd864f48e20558096bb6ec57834ab13d4d47b0664a3dbe68e",
+  "digest": "9c869ca59cd7a36a51058d033590572fd07c08684e5828cdd91923cd18814c24",
   "inputs": {
-    "ui.html (markup and style)": "e6cb7a7a3e801df3c46b11b458318ebc3d7dd6b7e9bc31871c5022ce417d7bee",
+    "ui.html (markup and style)": "e97920209cef7e9738228cba2adaffd62aa1e476a8107d70cce23a25b984b159",
     "i18n.js": "cab777fc94f6b1353a9dde276e1e8986bd227d8cf5bef593c1ea6bf5334799f9",
     "help-map.json": "7328590a4039b2f681c2d3bf1e663d419ca9034c433643b5664158b0530300ab",
     "sza-kit.css": "aea958f805249d300b7417373e4cad18b44d7eed9765954df19ed710276c4c9e",

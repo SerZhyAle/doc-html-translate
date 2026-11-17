@@ -6,6 +6,30 @@
   "extension": {"version": "26.1113.22"},
   "releases": [
     {
+      "version": "26.1117.1450",
+      "date": "2026-11-17",
+      "notes": {
+        "en": [
+          "The command line takes verbs: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set and default-handler release. Each ends with a fixed exit code and, with --result, writes a JSON record for a script; a call of commands lists them all, and every older flag keeps working. The full reference is docs/CLI.md.",
+          "The app window can be driven from the command line: open --in puts the documents you name into the queue of the window that is already open, show brings it forward, status says whether it is running, and quit closes it (it waits while a conversion runs, unless --cancel-runs is given). A second launch hands its files to the running window instead of opening another one.",
+          "On a touch screen, the icon-only buttons of the reader pages and of the extension viewer, and the help buttons in the extension options, show their name beside the icon.",
+          "Extension: an update applied while the browser was closed no longer makes the right-click menu rebuild fail with duplicate-id errors, and a tab closed during a page-OCR run no longer logs a \"No tab with id\" error on the extension's error page."
+        ],
+        "ru": [
+          "Командная строка принимает команды-глаголы: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set и default-handler release. Каждая завершается фиксированным кодом выхода и с --result записывает JSON-ответ для скрипта; команда commands перечисляет их все, а все прежние ключи продолжают работать. Полный справочник - docs/CLI.md.",
+          "Окном приложения можно управлять из командной строки: open --in кладёт названные документы в очередь уже открытого окна, show выводит его на передний план, status сообщает, запущено ли оно, а quit закрывает его (пока идёт конвертация, ждёт, если не указан --cancel-runs). Повторный запуск передаёт свои файлы работающему окну вместо открытия ещё одного.",
+          "На сенсорном экране кнопки без подписи на страницах для чтения и в просмотрщике расширения, а также кнопки справки в настройках расширения показывают своё название рядом со значком.",
+          "Расширение: обновление, применённое при закрытом браузере, больше не приводит к ошибкам «duplicate id» при перестроении контекстного меню, а вкладка, закрытая во время распознавания страницы, больше не пишет ошибку «No tab with id» на страницу ошибок расширения."
+        ],
+        "uk": [
+          "Командний рядок приймає команди-дієслова: convert, output status, doctor, input check, ocr langs, ocr download, report build, integration add, default-handler set і default-handler release. Кожна завершується фіксованим кодом виходу й з --result записує JSON-відповідь для скрипту; команда commands перелічує їх усі, а всі попередні ключі продовжують працювати. Повний довідник - docs/CLI.md.",
+          "Вікном застосунку можна керувати з командного рядка: open --in кладе названі документи в чергу вже відкритого вікна, show виводить його на передній план, status повідомляє, чи воно запущене, а quit закриває його (поки триває конвертація, чекає, якщо не вказано --cancel-runs). Повторний запуск передає свої файли працюючому вікну замість відкриття ще одного.",
+          "На сенсорному екрані кнопки без підпису на сторінках для читання й у переглядачі розширення, а також кнопки довідки в налаштуваннях розширення показують свою назву поряд зі значком.",
+          "Розширення: оновлення, застосоване за закритого браузера, більше не призводить до помилок «duplicate id» під час перебудови контекстного меню, а вкладка, закрита під час розпізнавання сторінки, більше не пише помилку «No tab with id» на сторінку помилок розширення."
+        ]
+      }
+    },
+    {
       "version": "26.1112.2325",
       "date": "2026-11-12",
       "notes": {
