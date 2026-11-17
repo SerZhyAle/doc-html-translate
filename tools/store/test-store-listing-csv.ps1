@@ -361,6 +361,16 @@ Case 'the real decks fill the fixture inside every cap' {
     $r = Invoke-Builder @{ Csv = $sample; Out = (Join-Path $Work 'filled-sample.csv'); ImportFolder = '' }
     Assert-That ($r.Code -eq 0 -and $r.Log -match 'filled 312 empty cells') "exit $($r.Code): $($r.Log)"
 }
+Case '-VerifyExport passes on a re-export where every DesktopScreenshotN cell holds an asset URL' {
+    $r = Invoke-Fill -Extra @{ VerifyExport = $true }
+    Assert-That ($r.Code -eq 0 -and $r.Log -match 'verify-export: OK \(13 asset URLs') "exit $($r.Code): $($r.Log)"
+}
+Case '-VerifyExport refuses a bare filename or empty DesktopScreenshot1 after re-export' {
+    $r = Invoke-Fill -Export @{ Cells = @{ 'de|DesktopScreenshot1' = 'reading-view-de.png' } } -Extra @{ VerifyExport = $true } -InPlace
+    Assert-Refused $r @('de DesktopScreenshot1: expected uploaded asset URL after re-export') -InPlace
+    $rEmpty = Invoke-Fill -Export @{ Cells = @{ 'de|DesktopScreenshot1' = '' } } -Extra @{ VerifyExport = $true } -InPlace
+    Assert-Refused $rEmpty @('de DesktopScreenshot1: empty in re-export') -InPlace
+}
 
 if ($ownsWork) { Remove-Item -Recurse -Force $Work }
 Write-Host ("cases={0} failed={1}" -f $script:total, $script:failed)

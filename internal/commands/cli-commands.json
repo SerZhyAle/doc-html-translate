@@ -1,0 +1,632 @@
+{
+  "schemaVersion": 1,
+  "product": "doc-html-translate",
+  "exe": "doc-html-translate.exe",
+  "cliVersion": "1.0",
+  "commands": [
+    {
+      "name": "commands",
+      "aliases": [
+        { "spelling": "-h", "legacy": true },
+        { "spelling": "-help", "legacy": true },
+        { "spelling": "--help", "legacy": true }
+      ],
+      "summary": "Print the list of commands this product accepts.",
+      "synopsis": "doc-html-translate commands [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the manifest itself as JSON." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the manifest as one JSON file, written whole." }
+      ],
+      "returns": [],
+      "risk": "safe",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 5000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "printed" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe commands --json | ConvertFrom-Json", "expect": "exit 0; an object with a commands array" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -h", "expect": "exit 0; the flag usage text exactly as before the contract (a frozen spelling)" }
+      ],
+      "notes": "Both doc-html-translate.exe and doc-html-ui.exe answer this verb from their own copy of the manifest, before any window, setting, worker or log is touched. -h, -help and --help keep printing the flag usage of the conversion call, and the readable list of this verb begins with that same block.",
+      "since": "1.0"
+    },
+    {
+      "name": "version",
+      "aliases": [
+        { "spelling": "-version", "legacy": true },
+        { "spelling": "--version", "legacy": true }
+      ],
+      "summary": "Print the product name and its version; --json adds the version of the command set.",
+      "synopsis": "doc-html-translate version [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the product, its version and cliVersion as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the JSON object of --json as one file, written whole." }
+      ],
+      "returns": [
+        { "name": "product", "kind": "string", "description": "doc-html-translate" },
+        { "name": "version", "kind": "string", "description": "the build's version, the string a result record carries as toolVersion" },
+        { "name": "cliVersion", "kind": "string", "description": "MAJOR.MINOR of this command set" }
+      ],
+      "risk": "safe",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 5000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "printed" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" }
+      ],
+      "examples": [
+        { "shell": "cmd", "line": "doc-html-translate.exe version", "expect": "exit 0; one line: doc-html-translate <version>, byte-identical to -version (OCR-INVOCATION F)" },
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe version --json | ConvertFrom-Json).cliVersion", "expect": "1.0" }
+      ],
+      "notes": "Both executables answer this verb. Without --json the line is exactly the one -version prints, because OCR-INVOCATION F says nothing else goes to standard output; cliVersion is in --json, in the manifest and in commands --json.",
+      "since": "1.0"
+    },
+    {
+      "name": "status",
+      "aliases": [],
+      "summary": "Say whether the launcher is running and ready to take commands.",
+      "synopsis": "doc-html-translate status [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the response line itself." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the response data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "version", "kind": "string", "description": "the running launcher's version" },
+        { "name": "pid", "kind": "int", "description": "its process id" },
+        { "name": "windowOpen", "kind": "bool", "description": "whether its window is on the screen right now" },
+        { "name": "activeRuns", "kind": "int", "description": "conversions the window has running" },
+        { "name": "acceptsRestrictedCommands", "kind": "bool", "description": "always false: this product has no setting of rule 13 (safe launcher verbs are always accepted; forward:never verbs are not gated)" }
+      ],
+      "risk": "safe",
+      "coldStart": "refuse",
+      "wait": "done",
+      "timeoutMs": 2000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "always",
+      "exitCodes": [
+        { "code": 0, "meaning": "running and ready" },
+        { "code": 2, "meaning": "the running copy is older than the request's schema, or did not answer in time" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "not running (reason not-running), or busy (reason busy)" },
+        { "code": 12, "meaning": "the running copy runs elevated and the caller does not (reason elevation)" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe status --json | ConvertFrom-Json", "expect": "exit 0 with version, pid, windowOpen, activeRuns while the launcher runs; exit 11 (not-running) otherwise" },
+        { "shell": "cmd", "line": "doc-html-translate.exe status", "expect": "exit 0 when running, 11 when not running" }
+      ],
+      "notes": "Both executables forward this verb to the running launcher over the local command pipe. With no launcher running it exits 11 (reason not-running) and starts nothing.",
+      "since": "1.0"
+    },
+    {
+      "name": "show",
+      "aliases": [
+        { "spelling": "", "exe": "doc-html-ui.exe", "legacy": true, "answers": false }
+      ],
+      "summary": "Bring the launcher's browser app window forward (the window belongs to the browser process), starting the launcher when it is not running.",
+      "synopsis": "doc-html-ui show [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the response line itself." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the response data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "focused", "kind": "bool", "description": "whether Windows let the window take the foreground" },
+        { "name": "reopened", "kind": "bool", "description": "whether a window had to be opened because the launcher had none" }
+      ],
+      "risk": "safe",
+      "coldStart": "start",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "always",
+      "exe": "doc-html-ui.exe",
+      "exitCodes": [
+        { "code": 0, "meaning": "a window is on the screen; data.focused says whether it was raised" },
+        { "code": 1, "meaning": "the result file could not be written, or the server could not start" },
+        { "code": 2, "meaning": "the running copy is older or did not answer in time" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "busy: the launcher is closing" },
+        { "code": 12, "meaning": "the running copy runs elevated and the caller does not (reason elevation)" }
+      ],
+      "examples": [
+        { "shell": "cmd", "line": "start /wait doc-html-ui.exe show", "expect": "exit 0 (errorlevel 0)" },
+        { "shell": "powershell", "line": "(Start-Process .\\doc-html-ui.exe -ArgumentList 'show' -Wait -PassThru).ExitCode", "expect": "0 when the running launcher raised or reopened its window" }
+      ],
+      "notes": "The empty alias is the no-argument start of doc-html-ui.exe (Start menu tile, desktop shortcut, MSIX launch). The window belongs to the browser (--app window), so a refusal by Windows to foreground is never a failure (APP-COMMANDS 0.2 item N.2). Served by doc-html-ui.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "quit",
+      "aliases": [],
+      "summary": "Close the running launcher cleanly; with none running there is nothing to do.",
+      "synopsis": "doc-html-translate quit [--cancel-runs] [--json] [--result <path>]",
+      "args": [
+        { "name": "cancel-runs", "kind": "bool", "required": false, "default": false, "description": "Stop the conversions the window has running and close. Without it a launcher with a run in progress answers busy." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the response line itself." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the response data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "cancelledRuns", "kind": "int", "description": "conversions that were stopped" }
+      ],
+      "risk": "safe",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "always",
+      "exitCodes": [
+        { "code": 0, "meaning": "closed, or was not running" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 2, "meaning": "the running copy is older or did not answer in time" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "busy: a conversion is running and --cancel-runs was not given, or the launcher is already closing" },
+        { "code": 12, "meaning": "the running copy runs elevated and the caller does not (reason elevation)" }
+      ],
+      "examples": [
+        { "shell": "cmd", "line": "doc-html-translate.exe quit", "expect": "exit 0 when closed or not running; 11 when a conversion is active" },
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe quit --cancel-runs --json | ConvertFrom-Json", "expect": "exit 0 with cancelledRuns count" }
+      ],
+      "notes": "Both executables forward this verb to the running launcher over the local command pipe. With no launcher running it exits 0 with cancelledRuns: 0.",
+      "since": "1.0"
+    },
+    {
+      "name": "open",
+      "aliases": [],
+      "summary": "Put documents into the launcher's conversion queue, opening the launcher when it is not running.",
+      "synopsis": "doc-html-ui open --in <path> [--in <path> ..] [--json] [--result <path>]",
+      "args": [
+        { "name": "in", "kind": "path", "required": true, "description": "A document to queue; may repeat. A relative path is resolved against the caller's working directory." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the response line itself." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the response data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "queued", "kind": "int", "description": "documents added to the queue; a path already in it is not added twice" },
+        { "name": "reopened", "kind": "bool", "description": "whether a window had to be opened" }
+      ],
+      "risk": "safe",
+      "coldStart": "start",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "always",
+      "exe": "doc-html-ui.exe",
+      "defaultFor": "doc-html-ui.exe",
+      "exitCodes": [
+        { "code": 0, "meaning": "queued" },
+        { "code": 1, "meaning": "the result file could not be written, or the server could not start" },
+        { "code": 2, "meaning": "the running copy is older or did not answer in time" },
+        { "code": 10, "meaning": "no --in given, unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "a path does not exist (reason target-missing), or the launcher is closing (reason busy)" },
+        { "code": 12, "meaning": "the running copy runs elevated and the caller does not (reason elevation)" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "Start-Process .\\doc-html-ui.exe -ArgumentList 'open --in C:\\books\\a.epub --in C:\\books\\b.pdf' -Wait", "expect": "one window with two rows in the queue" },
+        { "shell": "cmd", "line": "start /wait doc-html-ui.exe C:\\books\\a.epub", "expect": "exit 0; the bare call (defaultFor) queues the file in the single launcher window" }
+      ],
+      "notes": "The bare call doc-html-ui.exe <path> that the MSIX file association and shortcuts use is this verb (defaultFor). Nothing is converted: the person starts the run in the window. Served by doc-html-ui.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "convert",
+      "aliases": [],
+      "summary": "Convert one document into clean local HTML, optionally translating it.",
+      "synopsis": "doc-html-translate convert <path> [options] [--result <path>]",
+      "args": [
+        { "name": "path", "kind": "path", "required": true, "positional": true, "description": "The document (one per run): .epub .pdf .txt .md .fb2 .rtf .html .htm .mobi .azw3 .cbz .cbr .cb7 .cbt, a still image, or a .fd-sec secret file." },
+        { "name": "notranslate", "kind": "bool", "required": false, "default": false, "description": "Convert only, skip translation." },
+        { "name": "google", "kind": "bool", "required": false, "default": false, "description": "Translate with Google Cloud Translation; the text is sent to Google. The verb requires --max-cost with it." },
+        { "name": "ollama", "kind": "bool", "required": false, "default": false, "aliases": [ "free" ], "description": "Translate with the local Ollama server." },
+        { "name": "ollama-model", "kind": "string", "required": false, "default": "gemma3:12b", "description": "Ollama model name." },
+        { "name": "ollama-parallel", "kind": "int", "required": false, "default": 1, "description": "Concurrent batch requests; a value below 1 is raised to 1 with a notice." },
+        { "name": "ollama-ctx", "kind": "int", "required": false, "default": 8192, "description": "Context window in tokens; a value below 512 is raised to 512 with a notice." },
+        { "name": "src", "kind": "string", "required": false, "default": "en", "description": "Source language code." },
+        { "name": "dst", "kind": "string", "required": false, "default": "ru", "description": "Target language code." },
+        { "name": "max-cost", "kind": "string", "required": false, "default": "0", "description": "Positive finite USD amount: the guard and the approval for a paid run. 0 means no limit, which the verb refuses together with --google; a negative, NaN or infinite value exits 10." },
+        { "name": "ocr", "kind": "bool", "required": false, "default": false, "description": "Recognize text inside document images and overlay it as translatable HTML (needs Tesseract)." },
+        { "name": "ocr-lang", "kind": "string", "required": false, "description": "Recognition language(s), for example eng or eng+rus; default is --src, else eng." },
+        { "name": "multipage", "kind": "bool", "required": false, "default": false, "description": "Write one page per chapter with a table of contents instead of the single page." },
+        { "name": "split", "kind": "int", "required": false, "default": 5000, "description": "Split pages at N characters for the browser's translation (0 disables)." },
+        { "name": "toc-depth", "kind": "int", "required": false, "default": 0, "description": "Nesting depth of the table of contents on index.html (0 = unlimited)." },
+        { "name": "folder", "kind": "path", "required": false, "description": "Output folder; default is beside the input. A caller that reads the result passes a fresh, empty folder (OCR-INVOCATION B2)." },
+        { "name": "force", "kind": "bool", "required": false, "default": false, "description": "Rebuild even when a finished, current result exists; the converter only ever rebuilds a folder that carries its own record." },
+        { "name": "noopen", "kind": "bool", "required": false, "default": false, "description": "Do not open the browser afterwards; scripts always pass it (OCR-INVOCATION B1)." },
+        { "name": "ui-lang", "kind": "enum", "required": false, "values": [ "en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh" ], "description": "Language of the console text and of the converted page's navigation; default is the Windows UI language." },
+        { "name": "fdsec-password-env", "kind": "string", "required": false, "description": "For a .fd-sec input: the NAME of an environment variable that holds its password, never the password. Without it the verb refuses (10) instead of asking." },
+        { "name": "v", "kind": "bool", "required": false, "default": false, "description": "Verbose output." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the response data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "outcome", "kind": "string", "description": "converted, translated, partial, skipped (translation asked for and not run: no key, estimate above --max-cost) or reused" },
+        { "name": "outputDir", "kind": "path", "description": "the output folder; its entry file is index.html" },
+        { "name": "entryFile", "kind": "path", "description": "index.html inside outputDir" },
+        { "name": "translation", "kind": "string", "description": "none, full or partial, as the record says" },
+        { "name": "complete", "kind": "object", "description": "the complete member of .doc-html-translate.json (completed, toolVersion, options, ocrForced, translation)" },
+        { "name": "exitCode", "kind": "int", "description": "the process exit code, repeated for a reader of the file" }
+      ],
+      "risk": "leaves-machine",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 0,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "defaultFor": "doc-html-translate.exe",
+      "exitCodes": [
+        { "code": 0, "meaning": "done: converted, fully translated, translation skipped, or reused" },
+        { "code": 1, "meaning": "bad arguments or a missing input; nothing was written" },
+        { "code": 2, "meaning": "I/O error, the output is locked by another conversion, or the result file could not be written; incomplete" },
+        { "code": 3, "meaning": "the input could not be read or parsed, a missing Calibre or 7-Zip included; incomplete" },
+        { "code": 4, "meaning": "translation failed, stopped part-way or could not start; the book is still produced" },
+        { "code": 10, "meaning": "usage: unknown option, --google without a positive --max-cost, a .fd-sec input without --fdsec-password-env" },
+        { "code": 130, "meaning": "stopped with Ctrl+C; incomplete, the next run rebuilds it" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe convert C:\\books\\a.epub --noopen --folder C:\\out\\job1 --result C:\\out\\job1.json; $LASTEXITCODE", "expect": "0; C:\\out\\job1 holds one folder with index.html and .doc-html-translate.json; job1.json names it" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -noopen -folder C:\\out\\job2 C:\\books\\a.epub", "expect": "the same conversion by the frozen bare call; the same exit code and the same output" },
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe convert .\\scan.pdf --noopen --ocr --ocr-lang eng --google --max-cost 2", "expect": "0 within the USD 2 guard; 4 when translation is unavailable" },
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe convert .\\a.epub --google --noopen; $LASTEXITCODE", "expect": "10; the message names --max-cost, nothing was converted" }
+      ],
+      "notes": "The exit table is OCR-INVOCATION section D, copied. The bare call doc-html-translate.exe [flags] <path> is this verb (defaultFor): it keeps the browser opening unless --noopen, the cost dialog, the password prompt and the pause for Enter after an error, none of which the verb ever does (rule 4). Several documents: one run per document. Only doc-html-translate.exe serves this verb; doc-html-ui.exe says so and exits 10.",
+      "since": "1.0"
+    },
+    {
+      "name": "output status",
+      "aliases": [],
+      "summary": "Say whether a finished result exists for a document and whether the options asked for now would reuse it.",
+      "synopsis": "doc-html-translate output status --in <path> [--folder <dir>] [result-shaping options] [--json] [--result <path>]",
+      "args": [
+        { "name": "in", "kind": "path", "required": true, "description": "The document whose result is asked about." },
+        { "name": "folder", "kind": "path", "required": false, "description": "The output folder the conversion used." },
+        { "name": "notranslate", "kind": "bool", "required": false, "default": false, "description": "As convert: the options whose reuse is checked." },
+        { "name": "google", "kind": "bool", "required": false, "default": false, "description": "As convert." },
+        { "name": "ollama", "kind": "bool", "required": false, "default": false, "description": "As convert." },
+        { "name": "ollama-model", "kind": "string", "required": false, "default": "gemma3:12b", "description": "As convert." },
+        { "name": "src", "kind": "string", "required": false, "default": "en", "description": "As convert." },
+        { "name": "dst", "kind": "string", "required": false, "default": "ru", "description": "As convert; it shapes the result only when an engine is asked for." },
+        { "name": "ocr", "kind": "bool", "required": false, "default": false, "description": "As convert." },
+        { "name": "ocr-lang", "kind": "string", "required": false, "description": "As convert." },
+        { "name": "multipage", "kind": "bool", "required": false, "default": false, "description": "As convert." },
+        { "name": "split", "kind": "int", "required": false, "default": 5000, "description": "As convert." },
+        { "name": "toc-depth", "kind": "int", "required": false, "default": 0, "description": "As convert." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "exists", "kind": "bool", "description": "a result that the converter owns exists for this input" },
+        { "name": "complete", "kind": "bool", "description": "its record carries complete" },
+        { "name": "stale", "kind": "bool", "description": "a run with the options asked for now would rebuild it" },
+        { "name": "reason", "kind": "string", "description": "why it would rebuild: no-record, source-changed, options-changed, partial or untranslated; absent when current" },
+        { "name": "outputDir", "kind": "path", "description": "the output folder when exists" },
+        { "name": "entryFile", "kind": "path", "description": "index.html inside it" },
+        { "name": "translation", "kind": "string", "description": "none, full or partial" },
+        { "name": "toolVersion", "kind": "string", "description": "the version that wrote it" }
+      ],
+      "risk": "reads-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 5000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "answered, including exists:false" },
+        { "code": 1, "meaning": "the status could not be read, or the result file could not be written" },
+        { "code": 10, "meaning": "no --in given, an unknown option, or a value the converter refuses" },
+        { "code": 11, "meaning": "the input file does not exist" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe output status --in C:\\books\\a.epub --json | ConvertFrom-Json).stale", "expect": "False when a finished result matches; True with a reason when a run would rebuild it, for example after the same input is asked for with another --dst and an engine" }
+      ],
+      "notes": "Without --json the data is printed as key: value lines. A folder that merely holds an index.html, a saved website or the user's own, is not a result: exists is false. The same code answers the app's window, so the two cannot disagree. Only doc-html-translate.exe serves this verb.",
+      "since": "1.0"
+    },
+    {
+      "name": "doctor",
+      "aliases": [],
+      "summary": "Say what this machine can do: which helper tools are found, which formats and OCR languages work.",
+      "synopsis": "doc-html-translate doctor [--ollama [--ollama-model <m>]] [--json] [--result <path>]",
+      "args": [
+        { "name": "ollama", "kind": "bool", "required": false, "default": false, "description": "Also ask the local Ollama server whether it answers and has the model. Without it nothing is requested from any service." },
+        { "name": "ollama-model", "kind": "string", "required": false, "default": "gemma3:12b", "description": "The model --ollama looks for." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "version", "kind": "string", "description": "this build's version" },
+        { "name": "packaged", "kind": "bool", "description": "running from an MSIX package" },
+        { "name": "tools", "kind": "object", "description": "tesseract, pdftotext, calibre, sevenzip and filedo, each with found (bool) and version (string, empty when the tool reports none); never a path" },
+        { "name": "formats", "kind": "array", "description": "each input format: ext, tool (the helper it cannot be read without, empty for none), ready (that helper is found) and, when there is one, optionalTool (a helper that only improves the result)" },
+        { "name": "ocrLangs", "kind": "array", "description": "the installed recognition language codes" },
+        { "name": "googleKeyPresent", "kind": "bool", "description": "a Google API key is stored; the key itself is never returned" },
+        { "name": "ollama", "kind": "object", "description": "model, reachable (the server answered) and modelPresent; present only with --ollama" }
+      ],
+      "risk": "safe",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "answered, whatever was found" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe doctor --json | ConvertFrom-Json).tools.calibre.found", "expect": "True or False; False means .mobi and .azw3 documents are not ready to convert here" },
+        { "shell": "cmd", "line": "doc-html-translate.exe doctor --ollama --json", "expect": "exit 0; the object also has an ollama member with reachable and modelPresent" }
+      ],
+      "notes": "This is the machine-readable capabilities query that OCR-INVOCATION section H.1 left open. It reports booleans, version numbers, extensions and language codes only - never a path, a document name or the Google key - and writes nothing. Without --ollama nothing is requested from any service; with it, one request goes to the local Ollama server and to no other. A tool's version is the number its own version query prints; FileDO has no such query and the pdftotext carried inside this program is not unpacked to be asked, so those two report an empty version. Without --json the data is printed as key: value lines. Both doc-html-translate.exe and doc-html-ui.exe answer this verb.",
+      "since": "1.0"
+    },
+    {
+      "name": "input check",
+      "aliases": [],
+      "summary": "Say whether one document can be converted here with the chosen engine and OCR, and name what is missing.",
+      "synopsis": "doc-html-translate input check --in <path> [--google | --ollama [--ollama-model <m>]] [--ocr [--ocr-lang <l>]] [--src <l>] [--json] [--result <path>]",
+      "args": [
+        { "name": "in", "kind": "path", "required": true, "description": "The document to check." },
+        { "name": "google", "kind": "bool", "required": false, "default": false, "description": "Check that a Google key is stored; it wins over --ollama." },
+        { "name": "ollama", "kind": "bool", "required": false, "default": false, "description": "Check that the local Ollama answers and has the model." },
+        { "name": "ollama-model", "kind": "string", "required": false, "default": "gemma3:12b", "description": "The model --ollama looks for." },
+        { "name": "ocr", "kind": "bool", "required": false, "default": false, "description": "Check that Tesseract and the language data are present." },
+        { "name": "ocr-lang", "kind": "string", "required": false, "description": "The recognition language(s) to check; default is --src, else eng." },
+        { "name": "src", "kind": "string", "required": false, "default": "en", "description": "Source language, which --ocr falls back to." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "state", "kind": "string", "description": "ready, optional (something is missing that only improves the result) or action (the run would fail or degrade)" },
+        { "name": "issues", "kind": "array", "description": "each: code, level (action or optional) and, when there is one, detail" }
+      ],
+      "risk": "reads-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "answered; state says whether a run would work" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 10, "meaning": "no --in given, an unknown option, or a value the converter refuses" },
+        { "code": 11, "meaning": "the file does not exist (reason target-missing)" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe input check --in C:\\books\\a.mobi --json | ConvertFrom-Json).state", "expect": "action when Calibre is not found, with an issue whose code is calibre" }
+      ],
+      "notes": "The same check answers the app's window, so the two cannot disagree. A folder, an empty file or a file that cannot be read is state action with the issue input (exit 0); only a path that does not exist exits 11. The options are read by the converter's own parser, so the defaults are the converter's. Without --json the data is printed as key: value lines. Both doc-html-translate.exe and doc-html-ui.exe answer this verb.",
+      "since": "1.0"
+    },
+    {
+      "name": "ocr langs",
+      "aliases": [
+        { "spelling": "-ocr-langs", "legacy": true }
+      ],
+      "summary": "List the recognition languages that are installed and the ones that can be downloaded.",
+      "synopsis": "doc-html-translate ocr langs [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "languages", "kind": "array", "description": "each language of the catalogue: code, name and installed (bool)" }
+      ],
+      "risk": "safe",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 5000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "listed" },
+        { "code": 1, "meaning": "the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe ocr langs --json | ConvertFrom-Json).languages | Where-Object installed", "expect": "the installed languages, one object each" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -ocr-langs", "expect": "the listing exactly as before; it is not part of a job (OCR-INVOCATION section F)" }
+      ],
+      "notes": "Without --json this prints the listing that -ocr-langs prints: the tessdata folders, then one line per language (the frozen spelling, as always, first prints the one timestamped line that begins every converter run). The data names no folder. Both doc-html-translate.exe and doc-html-ui.exe answer the verb; the frozen spelling -ocr-langs is the converter's.",
+      "since": "1.0"
+    },
+    {
+      "name": "ocr download",
+      "aliases": [
+        { "spelling": "-ocr-download", "legacy": true, "answers": false }
+      ],
+      "summary": "Download one recognition language pack into the per-user folder.",
+      "synopsis": "doc-html-translate ocr download --lang <code> [--json] [--result <path>]",
+      "args": [
+        { "name": "lang", "kind": "string", "required": true, "description": "A catalogue code, for example rus (ocr langs lists them); the pack is checked against its pinned digest." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "lang", "kind": "string", "description": "the code" },
+        { "name": "installed", "kind": "bool", "description": "true when the pack is in place, which it always is for exit 0" },
+        { "name": "downloaded", "kind": "bool", "description": "false when the verified pack was already there and nothing was fetched" }
+      ],
+      "risk": "leaves-machine",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 600000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "installed, or already installed" },
+        { "code": 1, "meaning": "the download or its verification failed, or the result file could not be written" },
+        { "code": 10, "meaning": "a code that is not in the catalogue (the sentence names the catalogue), no --lang, an unknown option or a value of the wrong kind" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe ocr download --lang rus --json; $LASTEXITCODE", "expect": "0 and installed:true; downloaded is false when the pack was already there" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -ocr-download rus", "expect": "exit 0; the frozen spelling prints its progress as before, and exits 1 for an unknown code" }
+      ],
+      "notes": "The one request goes to the Tesseract project's public tessdata_fast repository and names one catalogue file; no user content leaves the machine. timeoutMs is the download client's own limit. The frozen spelling -ocr-download <code> keeps exit 1 for an unknown code; the verb answers 10, a wrong value (rule 3). Served by doc-html-translate.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "report build",
+      "aliases": [
+        { "spelling": "-report", "legacy": true }
+      ],
+      "summary": "Pack the recent run logs and an environment summary into one archive for the author.",
+      "synopsis": "doc-html-translate report build [--out <path>] [--overwrite] [--json] [--result <path>]",
+      "args": [
+        { "name": "out", "kind": "path", "required": false, "description": "The archive or folder to write; default is the reports folder under the app's data folder. A folder (existing, or ending in a separator) receives the file named by DIAGNOSTIC-REPORT section 8 item A; a missing folder is refused (exit 11, reason target-missing) and never created. An existing target file is refused (exit 11, reason exists) without --overwrite." },
+        { "name": "overwrite", "kind": "bool", "required": false, "default": false, "description": "Replace an existing target file, whole. It skips only the refusal of an existing file." },
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "path", "kind": "path", "description": "the archive" },
+        { "name": "droppedLogs", "kind": "int", "description": "older logs that did not fit and were left out" }
+      ],
+      "risk": "writes-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 30000,
+      "interactive": false,
+      "idempotent": false,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "written" },
+        { "code": 1, "meaning": "the archive could not be built, or the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "the --out folder does not exist (reason target-missing), or the target file exists and --overwrite was not given (reason exists)" },
+        { "code": 13, "meaning": "no space for the archive" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "& .\\doc-html-translate.exe report build --out C:\\temp\\logs.zip; $LASTEXITCODE", "expect": "0 and C:\\temp\\logs.zip exists; 11 when it already did, unless --overwrite is given" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -report", "expect": "exit 0; the path of the archive on its own line (the frozen spelling)" }
+      ],
+      "notes": "The archive holds the environment summary and as many recent run logs as fit under 15 MiB, newest first, all redacted: no document name, key or personal path. Without --out it is written under the name DIAGNOSTIC-REPORT 8A gives it; with --out at the named file path, or inside an existing folder under the DIAGNOSTIC-REPORT 8A name (rule 9, item P.1, 0.3 item V), created or, with --overwrite, replaced whole through a temporary file. A path ending in a separator is a folder argument and a missing folder is never created. Each run is a new archive. Nothing is sent anywhere. Served by doc-html-translate.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "integration add",
+      "aliases": [
+        { "spelling": "", "legacy": true, "answers": false },
+        { "spelling": "-register-openwith", "legacy": true, "answers": false }
+      ],
+      "summary": "Add the right-click \"Convert to HTML\" entry and the \"Open with\" entry for every supported file type, without becoming the default handler.",
+      "synopsis": "doc-html-translate integration add [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "extensions", "kind": "array", "description": "the file types advertised in the Open with list" }
+      ],
+      "risk": "writes-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "added, or already in place" },
+        { "code": 1, "meaning": "the registry could not be written, or the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "refused under a Store package, which declares the associations itself (reason packaged); nothing was written" }
+      ],
+      "examples": [
+        { "shell": "cmd", "line": "doc-html-translate.exe -register-openwith", "expect": "exit 0; the entries exist (an installer calls this spelling)" },
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe integration add --json | ConvertFrom-Json).extensions", "expect": "the file types now in the Open with list" }
+      ],
+      "notes": "Writes per-user keys under HKCU only, needs no elevation and changes no default handler. Started with no arguments the program offers this and default-handler set as two y/N questions, read from standard input by a person at a console, and adds nothing when standard input is closed; that first-run flow is not a verb and keeps its questions. The verb never prompts. Under a Store package the registry is virtualized and the package manifest declares the associations, so the verb is refused (exit 11, reason packaged), never a silent success. Served by doc-html-translate.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "default-handler set",
+      "aliases": [
+        { "spelling": "-register", "legacy": true, "answers": false }
+      ],
+      "summary": "Make the product the default handler for the supported file types, and add the right-click entry.",
+      "synopsis": "doc-html-translate default-handler set [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "complete", "kind": "bool", "description": "every type now opens with the product" },
+        { "name": "default", "kind": "array", "description": "types the product is now the default for" },
+        { "name": "blocked", "kind": "array", "description": "types where Windows keeps the app the person chose earlier; only the person can change that" },
+        { "name": "unknown", "kind": "array", "description": "types whose handler could not be read" },
+        { "name": "failed", "kind": "array", "description": "types that could not be registered" }
+      ],
+      "risk": "writes-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "written; data.complete says whether Windows now uses the product for every type" },
+        { "code": 1, "meaning": "no type could be registered, the right-click entry could not be written, or the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "refused under a Store package, which declares the associations itself (reason packaged); nothing was written" }
+      ],
+      "examples": [
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe default-handler set --json | ConvertFrom-Json).blocked", "expect": "the types Windows keeps for the person's own earlier choice; only the person can change those" },
+        { "shell": "cmd", "line": "doc-html-translate.exe -register", "expect": "exit 0; the frozen spelling also offers Default apps in Settings and waits for Enter, at a console only" }
+      ],
+      "notes": "Windows protects the person's own choice with a hash no program may forge, so a type the person chose another app for is reported in blocked and never overridden. The verb never opens Settings and never pauses; the frozen spelling -register does both, only while standard output is a terminal. Per-user keys under HKCU only. Under a Store package the verb is refused (exit 11, reason packaged). Served by doc-html-translate.exe only.",
+      "since": "1.0"
+    },
+    {
+      "name": "default-handler release",
+      "aliases": [
+        { "spelling": "-unregister", "legacy": true }
+      ],
+      "summary": "Release the default-handler association, leaving the right-click entry and \"Open with\".",
+      "synopsis": "doc-html-translate default-handler release [--json] [--result <path>]",
+      "args": [
+        { "name": "json", "kind": "bool", "required": false, "default": false, "description": "Print the data as one JSON object." },
+        { "name": "result", "kind": "path", "required": false, "description": "Where to write the data as one JSON file, written whole." }
+      ],
+      "returns": [
+        { "name": "released", "kind": "array", "description": "types released, with the previous handler restored where one was saved" },
+        { "name": "stillDefault", "kind": "array", "description": "types Windows still opens with the product because the person chose it in Windows itself" }
+      ],
+      "risk": "writes-user-data",
+      "coldStart": "oneshot",
+      "wait": "done",
+      "timeoutMs": 10000,
+      "interactive": false,
+      "idempotent": true,
+      "forward": "never",
+      "exitCodes": [
+        { "code": 0, "meaning": "released, or there was nothing to release" },
+        { "code": 1, "meaning": "a type could not be released, or the result file could not be written" },
+        { "code": 10, "meaning": "unknown option, a value of the wrong kind, or a command line over the size bound" },
+        { "code": 11, "meaning": "refused under a Store package, which declares the associations itself (reason packaged); nothing was written" }
+      ],
+      "examples": [
+        { "shell": "cmd", "line": "doc-html-translate.exe -unregister", "expect": "exit 0 (an uninstaller calls this spelling)" },
+        { "shell": "powershell", "line": "(& .\\doc-html-translate.exe default-handler release --json | ConvertFrom-Json).stillDefault", "expect": "the types Windows still opens with the product because the person chose it in Windows itself" }
+      ],
+      "notes": "Gives back the handler saved when the product became the default, or removes the value when none was saved, and touches only the types that point at the product. The right-click entry and Open with stay; nothing here removes them. Under a Store package the verb is refused (exit 11, reason packaged). Served by doc-html-translate.exe only.",
+      "since": "1.0"
+    }
+  ]
+}

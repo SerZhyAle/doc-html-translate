@@ -2,7 +2,7 @@
 
 2026-09-25. Feeds Phase 07 Step 07.3 of
 [`DEV/plan/16_2026-08-11_ocr-visual-fidelity-lab.md`](../plan/done/16_2026-08-11_ocr-visual-fidelity-lab.md)
-([`PHASE_07__concealment-and-grouping.md`](../plan/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md)).
+([`PHASE_07__concealment-and-grouping.md`](../plan/done/16_2026-08-11_ocr-visual-fidelity-lab/PHASE_07__concealment-and-grouping.md)).
 Follows [`ocr_word_gap_2026-09-12.md`](ocr_word_gap_2026-09-12.md), which left this band open on purpose.
 
 ## The question

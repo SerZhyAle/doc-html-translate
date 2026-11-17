@@ -1,7 +1,7 @@
 # Pointer: ICON-SET
 
 - **Id:** `ICON-SET`
-- **Version:** 0.37 draft
+- **Version:** 0.41 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` section 2, data in `iconography/vocabulary.jsonl` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - opted in as a draft on 2026-09-25; every edition (converted book, GUI, extension, site); read at 0.36 on 2026-10-20 (ticket 120)
 - **Wire carrier:** `vocabulary.version` at build time (section 5); the drawings this product ships are vendored under `assets/glyphs/`
@@ -13,7 +13,7 @@ option help). No id this product draws is retired or deprecated.
 What this repo owes it:
 - One meaning, one glyph, one name (rules 1-3): the inventory is [`../GLYPH-MAP.md`](../GLYPH-MAP.md), every row
   `conforms`, `exception` or `artwork`. Paging is `media.previous` / `media.next`, never `nav.back` / `nav.forward`.
-  The vendored files (47 on 2026-10-20) are byte-identical to the catalog export, SHA-256 in
+  The vendored files (48 since 2026-10-21) are byte-identical to the catalog export, SHA-256 in
   [`../../assets/glyphs/PROVENANCE.txt`](../../assets/glyphs/PROVENANCE.txt).
 - A control's name is its meaning's name, never another meaning's word (rule 3). Fixed 2026-10-20: the Russian
   Cancel is "Отмена" (not `action.undo`'s word), the queue Clear names `action.clear-all`, the extension's Retry

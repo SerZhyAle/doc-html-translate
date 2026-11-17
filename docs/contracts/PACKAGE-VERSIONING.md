@@ -1,7 +1,7 @@
 # Pointer: PACKAGE-VERSIONING
 
 - **Id:** `PACKAGE-VERSIONING`
-- **Version:** 0.6 draft
+- **Version:** 0.8 draft
 - **Home:** the shared contracts catalog, `package-versioning/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - Windows desktop profile, registered `dotted` rendering
 - **Owner:** FastMediaSorter Android

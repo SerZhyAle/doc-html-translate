@@ -1,7 +1,7 @@
 # Pointer: SITE-EXPERIENCE
 
 - **Id:** `SITE-EXPERIENCE`
-- **Version:** 0.5 (draft)
+- **Version:** 0.6 (draft)
 - **Home:** the shared contracts catalog, `product-site/SITE-EXPERIENCE.md`, with the run-list `product-site/SITE-CHECKLIST.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - guide tier; there is no portal layer, the page layer is `assets/site.css`; read at 0.4 on 2026-10-20 (ticket 120)
 - **Wire carrier:** none - a stylesheet layer, a set of components and a behaviour contract

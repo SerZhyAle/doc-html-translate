@@ -60,6 +60,8 @@ var familyURLs = []string{
 	"https://serzhyale.github.io/StreamsPlayer/",
 	"https://serzhyale.github.io/OneClickRunner/",
 	"https://serzhyale.github.io/universal-agent-kit/",
+	"https://serzhyale.github.io/DeviceInfo_Android/",
+	"https://serzhyale.github.io/Tourist_Android/",
 	"https://sza.od.ua",
 }
 
@@ -73,6 +75,8 @@ var familyLabels = map[string]string{
 	"https://serzhyale.github.io/StreamsPlayer/":          "STREAMS Player",
 	"https://serzhyale.github.io/OneClickRunner/":         "OneClickRunner",
 	"https://serzhyale.github.io/universal-agent-kit/":    "Universal Agent Kit",
+	"https://serzhyale.github.io/DeviceInfo_Android/":     "DeviceInfo",
+	"https://serzhyale.github.io/Tourist_Android/":        "Tourist",
 }
 
 func TestSiteKitIsReferenceCopy(t *testing.T) {
@@ -195,6 +199,26 @@ func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 		if !strings.Contains(footer, "<b>Fast Media Sorter &amp; Sharing for Windows</b><span>"+windowsType+"</span>") {
 			t.Errorf("%s: the Windows card must read the SITE-FAMILY-MAP 1.10 Type cell %q", p, windowsType)
 		}
+		// The DeviceInfo row (1.14): the pages that keep the English Type cell pin it here; a landing's translated
+		// cell is the termbase term family-type-deviceinfo, pinned per language by
+		// TestSiteLandingFooterTypesAreInThePageLanguage.
+		if _, landing := landingWindowsType[strings.TrimSuffix(p, "/index.html")]; !landing {
+			const deviceInfoCard = `<a href="https://serzhyale.github.io/DeviceInfo_Android/" target="_blank" rel="noopener"><b>DeviceInfo</b><span>Android and Wear OS device information</span></a>`
+			if !strings.Contains(footer, deviceInfoCard) {
+				t.Errorf("%s: the DeviceInfo card must read the SITE-FAMILY-MAP 1.14 Type cell %q", p, "Android and Wear OS device information")
+			}
+		}
+		grid := regexp.MustCompile(`(?s)<div class="tools-grid">.*?</div>`).FindString(footer)
+		const touristURL = "https://serzhyale.github.io/Tourist_Android/"
+		if n := strings.Count(grid, `href="`+touristURL+`"`); n != 1 {
+			t.Errorf("%s: Tourist card appears %d times in the grid, want 1", p, n)
+		}
+		if _, landing := landingWindowsType[strings.TrimSuffix(p, "/index.html")]; !landing {
+			const touristCard = `<a href="https://serzhyale.github.io/Tourist_Android/" target="_blank" rel="noopener"><b>Tourist</b><span>Android and Wear OS hiking kit</span></a>`
+			if !strings.Contains(grid, touristCard) {
+				t.Errorf("%s: Tourist card lacks the SITE-FAMILY-MAP 1.15 English Type cell", p)
+			}
+		}
 		if strings.Contains(footer, `<a href="https://github.com/SerZhyAle">GitHub</a>`) {
 			t.Errorf("%s: the footer's link to the author's profile is labelled bare GitHub, the word the page uses for the repository (site audit F29)", p)
 		}
@@ -220,12 +244,31 @@ var landingWindowsType = map[string]string{
 }
 
 func TestSiteLandingFooterTypesAreInThePageLanguage(t *testing.T) {
-	english := []string{"Android media sorter", "Windows media and file manager", "Windows layout fixer", "Windows storage CLI", "Windows stream player", "Windows tray launcher", "AI-dev methodology"}
+	tb := loadTermbase(t)
+	var footerTerms []termEntry
+	for _, e := range tb.Terms {
+		if e.Scope == "footer" {
+			footerTerms = append(footerTerms, e)
+		}
+	}
+	if len(footerTerms) < 10 {
+		t.Fatalf("configs/termbase.json has only %d footer family-map terms, want 10", len(footerTerms))
+	}
+	english := []string{"Android media sorter", "Windows media and file manager", "Windows layout fixer", "Windows storage CLI", "Windows stream player", "Windows tray launcher", "AI-dev methodology", "Android and Wear OS device information", "Android and Wear OS hiking kit"}
 	for _, c := range localeLandings {
 		grid := regexp.MustCompile(`(?s)<div class="tools-grid">.*?</div>`).FindString(readRepoFile(t, c, "index.html"))
 		for _, cell := range english {
 			if strings.Contains(grid, "<span>"+cell+"</span>") {
 				t.Errorf("%s/index.html: the footer grid still reads %q in English", c, cell)
+			}
+		}
+		for _, term := range footerTerms {
+			want := term.Forms[c].Use
+			if term.ID == "family-type-tourist" && !strings.Contains(grid, `<b>Tourist</b><span>`+want+`</span>`) {
+				t.Errorf("%s/index.html: Tourist card lacks localized Type %q", c, want)
+			}
+			if !strings.Contains(grid, "<span>"+want+"</span>") {
+				t.Errorf("%s/index.html: footer grid lacks termbase Type %q (%s)", c, want, term.ID)
 			}
 		}
 	}

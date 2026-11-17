@@ -42,9 +42,17 @@ export async function siteChecks(report) {
             const after = getComputedStyle(e, '::after');
             out.push({ k: (e.className || e.tagName) + ' ' + (e.textContent || '').trim().slice(0, 18), w: r.w, h: r.h, radius: parseFloat(cs.borderTopLeftRadius), pill: cs.borderTopLeftRadius.includes('%'), shadow: cs.boxShadow, blank: e.target === '_blank' && e.classList.contains('btn'), marker: after.content, markerW: parseFloat(after.width) });
           }
-          return { items: out, coarse: matchMedia('(pointer: coarse)').matches, overflow: document.documentElement.scrollWidth > window.innerWidth + 1 };
+          return {
+            items: out,
+            coarse: matchMedia('(pointer: coarse)').matches,
+            overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+            themeCap: (() => { const b = document.getElementById('themeBtn'); return b ? getComputedStyle(b, '::after').content : ''; })(),
+            toTopTitle: (() => { const t = document.getElementById('toTop'); return t ? t.getAttribute('title') || '' : ''; })(),
+          };
         }, BUTTONISH);
         report.check(`site.profile/${tag}`, m.coarse === (mode === 'coarse'), `(pointer: coarse) is ${m.coarse}`);
+        report.check(`site.to-top-title/${tag}`, m.toTopTitle.length > 0, m.toTopTitle || 'missing #toTop title');
+        if (mode === 'coarse') report.check(`site.touch-theme-caption/${tag}`, !!m.themeCap && m.themeCap !== 'none' && m.themeCap !== 'normal' && /\p{L}/u.test(m.themeCap), `themeBtn ::after ${m.themeCap}`);
         for (const x of m.items) {
           report.check(`site.target/${tag} [${x.k}]`, x.h >= tgt - 1 && x.w >= Math.min(tgt, x.w) - 1 && (x.w >= tgt - 1 || !/theme-btn|to-top|seg/.test(x.k)), `${x.w.toFixed(0)} x ${x.h.toFixed(0)} px, floor ${tgt}`);
           report.check(`site.radius/${tag} [${x.k}]`, !x.pill && x.radius <= 4.5, `radius ${x.radius}`);

@@ -26,11 +26,13 @@ import (
 	"unicode/utf16"
 
 	"doc-html-translate/internal/browser"
+	"doc-html-translate/internal/commands"
 	"doc-html-translate/internal/config"
 	"doc-html-translate/internal/fdsec"
 	"doc-html-translate/internal/i18n"
 	"doc-html-translate/internal/ocr"
 	"doc-html-translate/internal/outputpath"
+	"doc-html-translate/internal/readiness"
 	"doc-html-translate/internal/report"
 	"doc-html-translate/internal/syslocale"
 	"doc-html-translate/internal/translator"
@@ -56,12 +58,31 @@ const cliName = "doc-html-translate.exe"
 // instead; the cap is a sanity backstop, not a real limit for any ebook/PDF.
 const maxDropBytes = 2 << 30 // 2 GiB
 
-var initialFile string
-
 func main() {
-	if len(os.Args) > 1 {
-		initialFile = os.Args[1]
+	// The command front reads the line first (APP-COMMANDS rules 1, 3 and 17): `commands`, `version` and the
+	// inspection verbs are answered before any server, window, setting or worker exists. For launcher verbs
+	// (`status`, `show`, `quit`, `open`) and bare starts ("" / <path>), single-instance coordination runs through
+	// Local\DocHtmlTranslateSingleInstance and the command pipe unless DOCHT_GUI_NO_WINDOW is set.
+	if handled, code := commands.Front(os.Args[1:], commands.Env{
+		Version: Version,
+		Open:    openConsole,
+		Launcher: &commands.LauncherHooks{
+			BypassSingleInstance: os.Getenv("DOCHT_GUI_NO_WINDOW") != "",
+			StartFirstInstance:   startFirstInstance,
+		},
+	}); handled {
+		os.Exit(code)
 	}
+
+	os.Exit(startFirstInstance(nil, os.Args[1:], nil))
+}
+
+func startFirstInstance(lock commands.InstanceLock, files []string, onReady func()) int {
+	if lock != nil {
+		defer lock.Release()
+	}
+	uiState.version = Version
+	uiState.setInitialFiles(files)
 
 	// A plain copy a killed or crashed conversion left behind must not outlive it.
 	fdsec.SweepStale()
@@ -69,20 +90,46 @@ func main() {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "listen: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	addr := ln.Addr().String()
+	noWindow := os.Getenv("DOCHT_GUI_NO_WINDOW") != ""
+	uiState.openWindow = func() {
+		if !noWindow {
+			go openAppWindow("http://" + addr)
+		}
+	}
 
 	srv := &http.Server{Handler: newAPIGuard(newMux(), addr, uiToken)}
+	uiState.onQuit = func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		_ = srv.Shutdown(ctx)
+		cancel()
+	}
+
+	if lock != nil && !noWindow {
+		if m, merr := commands.Load(); merr == nil {
+			lang := i18n.Resolve("", "", syslocale.Lang())
+			if ps, perr := commands.StartPipeServer("", func(line []byte) ([]byte, func()) {
+				return commands.HandlePipeRequest(context.Background(), m, uiState, lang, line)
+			}, lang); perr == nil {
+				defer ps.Close()
+			}
+		}
+	}
 
 	go watchHeartbeat(srv)
 	// DOCHT_GUI_NO_WINDOW serves and opens nothing: the help screenshot generator and UI-automation runs
 	// drive their own browser against this server (tools/helpgen, ticket 118). A user never sets it.
-	if os.Getenv("DOCHT_GUI_NO_WINDOW") == "" {
+	if !noWindow {
 		go openAppWindow("http://" + addr)
+	}
+	if onReady != nil {
+		onReady()
 	}
 
 	_ = srv.Serve(ln)
+	return 0
 }
 
 // uiToken is this launch's API secret. It is baked into the served page and nowhere else.
@@ -105,6 +152,8 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/assoc-status", getOnly(handleAssocStatus))
 	mux.HandleFunc("/api/ocr-langs", getOnly(handleOCRLangs))
 	mux.HandleFunc("/api/alive", getOnly(handleAlive))
+	mux.HandleFunc("/api/events", getOnly(uiState.handleEvents))
+	mux.HandleFunc("/api/events-ack", jsonPost(uiState.handleEventsAck))
 	mux.HandleFunc("/api/ping", postAction(handlePing))
 	mux.HandleFunc("/api/browse-file", postAction(handleBrowseFile))
 	mux.HandleFunc("/api/browse-folder", postAction(handleBrowseFolder))
@@ -173,8 +222,8 @@ func handleVersion(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"version": Version})
 }
 
-func handleInitial(w http.ResponseWriter, _ *http.Request) {
-	_ = json.NewEncoder(w).Encode(map[string]string{"file": initialFile})
+func handleInitial(w http.ResponseWriter, r *http.Request) {
+	uiState.handleInitial(w, r)
 }
 
 // busy marks a request that the watchdog must outlive, such as an open dialog.
@@ -476,22 +525,12 @@ func resolveOutputDir(input, folder string) (outputpath.Target, error) {
 
 // previousResult returns the output directory of an earlier conversion of input, if one
 // exists that the converter owns. A folder that merely contains an index.html - a saved
-// website, a user's own folder - is never reported, opened or deleted as a result.
+// website, a user's own folder - is never reported, opened or deleted as a result. The rule
+// lives in internal/outputpath, where the `output status` command asks the same question, so
+// the window and the command line cannot disagree.
 func previousResult(input, folder string) (string, error) {
-	target, err := resolveOutputDir(input, folder)
-	if err != nil {
-		return "", err
-	}
-	if !target.State.Ours() {
-		return "", errNoPreviousResult
-	}
-	if _, err := os.Stat(filepath.Join(target.Dir, "index.html")); err != nil {
-		return "", errNoPreviousResult
-	}
-	return target.Dir, nil
+	return outputpath.PreviousResult(input, folder)
 }
-
-var errNoPreviousResult = errors.New("no previous result found")
 
 // handleOutputStatus reports whether a previous conversion result exists for the
 // request's input/output, and whether it was built with different options than the
@@ -535,12 +574,7 @@ func optionsChanged(req runRequest, outputDir string) bool {
 	if err != nil {
 		return false
 	}
-	abs, err := filepath.Abs(cfg.InputFile)
-	if err != nil {
-		return false
-	}
-	reason, _ := outputpath.CheckReuse(outputDir, abs, outputpath.OptionsFor(cfg))
-	return reason == outputpath.ReuseOptionsChanged
+	return outputpath.OptionsChanged(cfg, outputDir)
 }
 
 // openTarget hands a path to the OS. Indirected so the guard below can be tested without
@@ -1096,13 +1130,7 @@ func cliAvailable() bool {
 // isPackaged reports whether the app runs from inside an MSIX/Store package.
 // Such installs live under ...\WindowsApps\... and virtualize HKCU writes, so the
 // -register flow is a no-op there (associations come from the package manifest).
-func isPackaged() bool {
-	exe, err := os.Executable()
-	if err != nil {
-		return false
-	}
-	return strings.Contains(strings.ToLower(exe), `\windowsapps\`)
-}
+func isPackaged() bool { return readiness.Packaged() }
 
 // ── native file/folder dialogs via PowerShell ───────────────
 

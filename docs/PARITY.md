@@ -390,9 +390,7 @@ multiplied by `clamp(0.875, ui, 2)`; `--dht-ui` / `--ui` is 1 and no size select
   themselves.
 - **Names.** The glyph precedes the caption (Next page included). Glyph-only commands (text size, reset, night, text
   layer, the single-page contents button) carry the meaning's name as `title` and `aria-label`. Search is
-  `action.search` and its word. **Fit width is word-only** (no vocabulary meaning; a private picture is not an
-  option) and so are Open file, Original PDF and the panels' Close (`nav.close` and `action.choose-file` are not
-  vendored; `BUTTONS` 2 rule 1 allows text-only).
+  `action.search` and its word. **Fit width, Open file, Original PDF, Select text and the panels' Close are word-only** (component policy under `ICON-RENDER` 0.26 section 28 item I and `BUTTONS` 2.3 section 2 rule 1: verbal commands without a catalog glyph stay text-only beside glyph commands; native `<select>` pickers are editors outside the command set). No boolean option heading in either edition draws a glyph (`ICON-RENDER` section 25 rule 1).
 - **State.** Toggles carry `aria-pressed`, the Search and Contents disclosures `aria-expanded` (they keep their action
   glyphs, as the GUI's Pages button does), a paging end with no page `aria-disabled="true"`. A selected control is a
   distinct face plus an inset bar along the block end in the ink colour - not colour alone. Forced colours replace
@@ -408,10 +406,13 @@ multiplied by `clamp(0.875, ui, 2)`; `--dht-ui` / `--ui` is 1 and no size select
 Decisions recorded here (ticket 119): the bar stays an ordinary Tab row (no `role="toolbar"`); the reader pages get
 **no help button** (ticket 118 decision 5 stands); the Go reader's Ctrl+wheel page zoom (`navBarScript`, 50 to 300
 percent) is **unchanged and an open decision for the owner** (`BUTTONS` 4 rule 7: bindings must not override browser
-ownership - and the zoom also scales the chrome's own targets, a 32 px target is 16 px at 50 percent); the touch naming
-route for glyph-only buttons (`BUTTONS` 8 rule 3) is not built - the tooltip is the only naming route; the extension
-viewer's notices, resume offer, export card and status Cancel were taken by the extension slice (X1, "Viewer notices and the
-export card" below); the contents tree rows
+ownership - and the zoom also scales the chrome's own targets, a 32 px target is 16 px at 50 percent); sighted touch naming for glyph-only buttons (`BUTTONS` 2.3 section 9 items
+A-E, section 11 item F, Q9 decision) uses CSS-only route D1 (`::after` `content: attr(title)` with `/ ""` AT fallback):
+under `@media (pointer: coarse)` on the reader bar and index toolbar, the extension viewer toolbar, the extension
+options `.opt-help` control and the official site (`#themeBtn`, `#toTop`), and under `html[data-input="touch"]` in the
+GUI launcher (`btnHelp`, `dlgHelp`, `btnSwap`, `.opt-help`); `#toTop` also carries a matching `title` (ticket E0150);
+the extension viewer's notices, resume offer, export card and status Cancel were taken by the extension slice (X1,
+"Viewer notices and the export card" below); the contents tree rows
 are navigation, not buttons (the extension's chevron `<button>` takes the target token). One extension fix rode along:
 the OCR group (`#grp-ocr`) is `hidden` until a document has plates, but a `display` rule beat `[hidden]`, so it was
 always visible - it now hides as documented.
@@ -460,8 +461,9 @@ Intentional differences (do NOT "fix"):
   (`SETTINGS-NAVIGATION` 4 rule 3). The file carries the page and groups (`ui`, so an export and an import round-trip); page
   viewports stay out, like reading positions.
 - **Input profile.** `ui-boot.js` reads the primary pointer once, in `<head>`, before the first paint (a coarse pointer or
-  none is touch); the saved setting is Automatic / Mouse and keyboard / Touch, as in the launcher. The viewer's toolbar and the
-  generated reader still use `@media (pointer: coarse)` with no selector (slice R1).
+  none is touch); the saved setting is Automatic / Mouse and keyboard / Touch, as in the launcher. The viewer's toolbar,
+  the extension options `.opt-help` caption, the generated reader and the official site use `@media (pointer: coarse)` with
+  no JavaScript event (ticket E0150).
 - **Diagnostics.** The clipboard summary stays (ADR-4: the browser sandbox has no run-log store) and a user-initiated
   "Save diagnostics as a file" hands over the same text through a Blob and an anchor, no `downloads` permission; the desktop
   edition's bundle is its logs archive. Neither contains document text.
@@ -1780,6 +1782,24 @@ in [`make-screenshot.ps1`](../tools/store/make-screenshot.ps1), and the extensio
 - **Close after conversion:** the desktop GUI can remember a choice to close its launcher after a successful conversion or queue. The extension converts inside its reader tab, which is the result, so it does not close that tab.
 
 - **In-app help.** F1, the `?` button and the help pages (CONTEXT-HELP, ticket 118) exist in the desktop GUI launcher only. The browser extension's popup, options and viewer and the converted reader pages are other interfaces of this product that the contract does not name; they get no help button and no F1 until the owner opens a follow-up ticket (decision 5 of ticket 118). No help code is ported between the editions.
+
+- **Command line.** The desktop executables answer a command line by the grammar of APP-COMMANDS rules 1 and 3
+  (`commands`, `version`, the manifest `docs/cli-commands.json` and the reference `docs/CLI.md`, ticket E0143), and the
+  later command groups extend it (tickets E0144 to E0147). The browser extension has no process command line - a
+  popup, an options page and a viewer tab are its only entry points - so it declines the whole contract; there is no
+  extension manifest of commands and no port of `internal/commands`. The frozen spellings (`-h`, `-help`, `--help`,
+  `-version`, `--version`) are the desktop converter's. The convert group (`convert`, `output status`, `--result`, ticket
+  E0145) is the desktop converter's too: the extension converts inside its reader tab, has no output folder and no
+  completion record to ask about, and so declines it; the rule that decides whether a result is reused
+  (`outputpath.CheckReuse`) stays a Go-side rule and is not ported. The inspection group (`doctor`, `input check`,
+  `ocr langs`, ticket E0146) is the desktop's too: it reports the helper programs, the Tesseract language data and the
+  local Ollama server that only the desktop app uses, and `internal/readiness` is the one check the window and the verb
+  share. The extension has no helper programs to find, keeps its own recognition-language list in its options page and
+  ships no command line, so it declines the group and ports nothing. The maintenance group (`ocr download`,
+  `report build`, `integration add`, `default-handler set`, `default-handler release`, ticket E0147) is the desktop's
+  too: it fetches the Tesseract language data of the desktop app, packs the desktop's run logs and writes the Windows
+  registry, and the extension has no Windows registry, no run-log store and no command line, so it declines the group
+  and ports nothing.
 
 - **Update checks.** The desktop GUI offers a manual GitHub release check and an optional daily check,
   off by default. The CLI has no update request. The MSIX GUI reports that Microsoft Store handles

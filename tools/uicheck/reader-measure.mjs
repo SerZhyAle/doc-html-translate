@@ -34,7 +34,10 @@ export function collect(P) {
       const r = e.getBoundingClientRect(), cs = getComputedStyle(e), g = e.querySelector('svg');
       const gb = g ? g.getBoundingClientRect() : null;
       const tag = e.tagName.toLowerCase();
-      const caption = [...e.childNodes].filter((n) => n.nodeType === 3 || (n.nodeType === 1 && n.tagName.toLowerCase() !== 'svg')).map((n) => n.textContent).join('').trim();
+      const after = getComputedStyle(e, '::after').content;
+      const afterCap = after && after !== 'none' && after !== 'normal' ? after.replace(/^["']|["']$/g, '').trim() : '';
+      const domCap = [...e.childNodes].filter((n) => n.nodeType === 3 || (n.nodeType === 1 && n.tagName.toLowerCase() !== 'svg' && getComputedStyle(n).display !== 'none')).map((n) => n.textContent).join('').trim();
+      const caption = [domCap, afterCap].filter(Boolean).join(' ').trim();
       out.controls.push({
         key: label(e), tag, kind: tag === 'a' ? 'link' : tag, icon: tag !== 'select' && tag !== 'input' && !caption, caption,
         x: r.x, y: r.y, w: r.width, h: r.height,

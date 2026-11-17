@@ -368,12 +368,31 @@
       }
     },
     {
+      "id": "net-app-command-pipe",
+      "edition": "app",
+      "kind": "listening",
+      "surface": "the launcher's local Windows named pipe (\\\\.\\pipe\\DocHtmlTranslate_Command_<userSid>_<sessionId>), no network port",
+      "defaultOn": true,
+      "turnedOnBy": "launching doc-html-ui as the session's first instance (skipped under DOCHT_GUI_NO_WINDOW)",
+      "lifetime": "the launcher's lifetime (until quit or heartbeat exit)",
+      "leaves": "nothing leaves the machine; PIPE_REJECT_REMOTE_CLIENTS and a per-user/session check restrict callers to the current Windows user and session",
+      "evidence": [
+        { "file": "internal/commands/ipc_windows.go", "contains": "pipeRejectRemoteClients" },
+        { "file": "cmd/doc-html-ui/main.go", "contains": "commands.StartPipeServer(" }
+      ],
+      "public": {
+        "en": "**A local command pipe inside your Windows session** - `doc-html-ui` listens on a Windows named pipe (no network port), restricted to your own user account and session, so opening another document or running `status`, `show`, `quit`, or `open` hands off to the running window instead of opening a second one.",
+        "ru": "**Локальный именованный канал команд в вашем сеансе Windows** - `doc-html-ui` слушает именованный канал Windows (без сетевого порта), доступный только вашей учётной записи и вашему сеансу, чтобы повторный запуск или команды `status`, `show`, `quit` и `open` обращались к уже открытому окну вместо создания второго.",
+        "uk": "**Локальний іменований канал команд у вашому сеансі Windows** - `doc-html-ui` слухає іменований канал Windows (без мережевого порту), доступний лише вашому обліковому запису й вашому сеансу, щоб повторний запуск або команди `status`, `show`, `quit` і `open` зверталися до вже відкритого вікна замість створення другого."
+      }
+    },
+    {
       "id": "net-app-google",
       "edition": "app",
       "kind": "outbound",
       "surface": "HTTPS to translation.googleapis.com (Google Cloud Translation API v2)",
       "defaultOn": false,
-      "turnedOnBy": "-google, or Google Cloud as the engine in the GUI, with the user's own API key; a set -max-cost is checked before any request, and without one a dialog asks above 1000 characters",
+      "turnedOnBy": "-google, or Google Cloud as the engine in the GUI, with the user's own API key; a set -max-cost is checked before any request, and without one a dialog asks above 1000 characters; a program that runs the command line types the same choice, and the convert command refuses -google without a positive -max-cost instead of opening the dialog (APP-COMMANDS rules 4 and 13)",
       "lifetime": "the conversion run",
       "leaves": "the extracted text of the book (pages, title, table-of-contents labels), to Google, with the user's key in the X-Goog-Api-Key header",
       "evidence": [
@@ -381,9 +400,9 @@
         { "file": "internal/translator/google.go", "contains": "X-Goog-Api-Key" }
       ],
       "public": {
-        "en": "**The internet, for Google translation** - only if you explicitly choose it: the extracted text is sent to the Google Cloud Translation API using a key you supply.",
-        "ru": "**Интернет, для перевода через Google** - только если вы явно его выберете: извлечённый текст отправляется в Google Cloud Translation API с ключом, который вы предоставляете сами.",
-        "uk": "**Інтернет, для перекладу через Google** - лише якщо ви явно його оберете: видобутий текст надсилається до Google Cloud Translation API з ключем, який ви надаєте самі."
+        "en": "**The internet, for Google translation** - only if you explicitly choose it: the extracted text is sent to the Google Cloud Translation API using a key you supply. A program that runs the command line can type that choice for you (`convert --google --max-cost <USD>`); it needs the same key and a spending cap.",
+        "ru": "**Интернет, для перевода через Google** - только если вы явно его выберете: извлечённый текст отправляется в Google Cloud Translation API с ключом, который вы предоставляете сами. Программа, запускающая командную строку, может ввести этот выбор за вас (`convert --google --max-cost <USD>`); ей нужен тот же ключ и лимит расходов.",
+        "uk": "**Інтернет, для перекладу через Google** - лише якщо ви явно його оберете: видобутий текст надсилається до Google Cloud Translation API з ключем, який ви надаєте самі. Програма, що запускає командний рядок, може ввести цей вибір за вас (`convert --google --max-cost <USD>`); їй потрібен той самий ключ і ліміт витрат."
       }
     },
     {
@@ -392,17 +411,17 @@
       "kind": "outbound",
       "surface": "HTTP to localhost:11434, the Ollama server the user runs",
       "defaultOn": false,
-      "turnedOnBy": "-ollama for translation, or selecting Ollama (local) in the GUI for a read-only model catalog check",
-      "lifetime": "the GUI readiness check or the conversion run",
+      "turnedOnBy": "-ollama for translation, or selecting Ollama (local) in the GUI for a read-only model catalog check; a program that runs the command line types the same option (convert --ollama), or asks the same read-only catalog check by name (doctor --ollama, input check --ollama); doctor without --ollama asks no service",
+      "lifetime": "the GUI readiness check, the doctor or input check command, or the conversion run",
       "leaves": "the readiness check sends no document text; conversion sends extracted text to the user's own machine only; the address is fixed at localhost",
       "evidence": [
         { "file": "internal/translator/ollama.go", "contains": "http://localhost:11434/api/generate" },
         { "file": "internal/translator/ollama_readiness.go", "contains": "http://localhost:11434/api/tags" }
       ],
       "public": {
-        "en": "**A local Ollama server** - only if you choose the Ollama option: the text is sent to the translation server on your own machine (`localhost:11434`), nowhere else.",
-        "ru": "**Локальный сервер Ollama** - только если вы выберете вариант Ollama: текст отправляется на сервер перевода на вашем собственном компьютере (`localhost:11434`) и больше никуда.",
-        "uk": "**Локальний сервер Ollama** - лише якщо ви оберете варіант Ollama: текст надсилається на сервер перекладу на вашому власному комп'ютері (`localhost:11434`) і більше нікуди."
+        "en": "**A local Ollama server** - only if you choose the Ollama option: the text is sent to the translation server on your own machine (`localhost:11434`), nowhere else. A program that runs the command line can choose it too (`convert --ollama`).",
+        "ru": "**Локальный сервер Ollama** - только если вы выберете вариант Ollama: текст отправляется на сервер перевода на вашем собственном компьютере (`localhost:11434`) и больше никуда. Программа, запускающая командную строку, тоже может его выбрать (`convert --ollama`).",
+        "uk": "**Локальний сервер Ollama** - лише якщо ви оберете варіант Ollama: текст надсилається на сервер перекладу на вашому власному комп'ютері (`localhost:11434`) і більше нікуди. Програма, що запускає командний рядок, теж може його обрати (`convert --ollama`)."
       }
     },
     {
@@ -411,7 +430,7 @@
       "kind": "outbound",
       "surface": "HTTPS GET to github.com/tesseract-ocr/tessdata_fast (raw files, tag 4.0.0)",
       "defaultOn": false,
-      "turnedOnBy": "-ocr-download with a language code, or Download beside a language in the GUI; catalogue codes only",
+      "turnedOnBy": "-ocr-download or the command ocr download with a language code, or Download beside a language in the GUI; catalogue codes only",
       "lifetime": "one download; the file is verified against a pinned SHA-256 digest and kept in the per-user folder",
       "leaves": "a request naming one language data file; no user content",
       "evidence": [
@@ -458,7 +477,7 @@
       "kind": "hand-off",
       "surface": "a mailto: link opened in the user's mail program, with the archive's path on the clipboard",
       "defaultOn": false,
-      "turnedOnBy": "Send logs to the author in the GUI; -report on the command line only writes the archive",
+      "turnedOnBy": "Send logs to the author in the GUI; -report and the command report build on the command line only write the archive",
       "lifetime": "one action",
       "leaves": "nothing by itself: the mail program shows an unsent message to the author; the redacted archive stays on disk until the user attaches it and presses Send",
       "evidence": [
@@ -646,7 +665,7 @@
       "target": "privacy.html",
       "block": "app-access",
       "format": "html-lists",
-      "rows": ["app-msix-runfulltrust", "app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "app-filedo-secret-files", "net-app-report-mail"],
+      "rows": ["app-msix-runfulltrust", "app-read-documents", "app-open-browser", "net-app-gui-server", "net-app-command-pipe", "net-app-google", "net-app-ollama", "net-app-ocr-languages", "net-app-update-check", "app-explorer-registration", "app-run-helpers", "app-filedo-secret-files", "net-app-report-mail"],
       "after": {
         "en": "With the default free browser translation, the app sends nothing at all.",
         "ru": "При бесплатном переводе в браузере, который используется по умолчанию, приложение вообще ничего не отправляет.",

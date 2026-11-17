@@ -354,9 +354,15 @@ func TestContractGateOutcomes(t *testing.T) {
 
 	setCatalog(registry("1.2", row("-", today), ""))
 	run("absent, with no exception", 1, "contract-gate: FAIL", "absent is not allowed")
-	setCatalog(registry("1.2", row("-", today), "| `FOO-FORMAT` | testprod | not adopted yet | a dated reason | 2026-12-31 |\n"))
-	run("absent, covered by an open exception", 3, "contract-gate: PASS WITH ADVISORIES", "covered by an open exception", "-Today", "2026-06-01")
-	run("the exception has expired", 1, "contract-gate: FAIL", "expired on 2026-12-31", "-Today", "2027-01-15")
+	for _, until := range []string{"2020-01-01", "", "9999-12-31", "permanent"} {
+		setCatalog(registry("1.2", row("-", today), "| `FOO-FORMAT` | testprod | not adopted yet | reason | "+until+" |\n"))
+		run("open exception regardless of Until "+until, 3, "contract-gate: PASS WITH ADVISORIES", "FOO-FORMAT: open exception for testprod - not adopted yet")
+	}
+	run("open exception covers absent contract", 3, "contract-gate: PASS WITH ADVISORIES", "neither implemented nor read; covered by an open exception")
+	setCatalog(registry("1.2", row("1.2", today), "| `FOO-FORMAT` | testprod | resolved | reason | closed |\n"))
+	run("closed exception is not open", 0, "contract-gate: PASS (1 contract(s)", "0 open exception(s)")
+	setCatalog(registry("1.2", row("1.2", today), "| `FOO-FORMAT` | testprod | ~~resolved~~ | reason | 2000-01-01 |\n"))
+	run("struck through exception is not open", 0, "contract-gate: PASS (1 contract(s)", "0 open exception(s)")
 
 	setCatalog(registry("1.2", row("1.2", today), ""))
 	w("docs/contracts/FOO-FORMAT.md", strings.Replace(pointer("1.2"), "consumer - reads it", "not applicable - never read here", 1))

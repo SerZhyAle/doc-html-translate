@@ -41,6 +41,10 @@ func findEbookConvert() string {
 // Available reports the same Calibre lookup used by Extract.
 func Available() bool { return findEbookConvert() != "" }
 
+// Path is the ebook-convert Extract would run, or "" when Calibre is not found. It is the same lookup as Available; the
+// capabilities report (internal/readiness) reads the tool's version through it.
+func Path() string { return findEbookConvert() }
+
 // Extract converts a MOBI or AZW3 file to EPUB via Calibre's ebook-convert,
 // then extracts the result using the EPUB pipeline.
 // Returns an error if Calibre is not installed or if the file is DRM-protected.

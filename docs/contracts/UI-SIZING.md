@@ -1,7 +1,7 @@
 # Pointer: UI-SIZING
 
 - **Id:** `UI-SIZING`
-- **Version:** 1.1 (the catalog's current text read on 2026-10-20)
+- **Version:** 1.2 (the catalog's current text read on 2026-11-15)
 - **Home:** the shared contracts catalog, `ui-sizing/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - the desktop launcher (`cmd/doc-html-ui`) implements and measures it (ticket 119, 2026-10-20); the browser extension, the generated reader chrome and the official site are planned slices dated in [`docs/UI_PROFILE.md`](../UI_PROFILE.md)
 - **Wire carrier:** none - component size, input profile and scale composition

@@ -1,7 +1,7 @@
 # Pointer: APP-STYLE
 
 - **Id:** `APP-STYLE`
-- **Version:** 0.14 draft
+- **Version:** 0.15 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - desktop GUI styling (`cmd/doc-html-ui`) and the reader theme palette
 - **Wire carrier:** none - theme palette tokens and CSS variables

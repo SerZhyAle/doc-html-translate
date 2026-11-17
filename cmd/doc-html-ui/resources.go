@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"doc-html-translate/internal/readiness"
 )
 
 // resourceFacts is what the About page's resource index shows: whether each helper the program can
 // use is found on this machine. The answers come from the same discovery functions the conversion
-// uses (readinessProbes), so the index and a real run never disagree, and the lookup is local - a
+// uses (readiness.Probes), so the index and a real run never disagree, and the lookup is local - a
 // path search and a file check. Opening About contacts nothing remote and sends nothing anywhere
 // (SETTINGS-NAVIGATION 3.4); Ollama is deliberately absent, because the only honest answer is a
 // request to its service, and that is a thing the reader's own run makes.
@@ -19,12 +21,12 @@ type resourceFacts struct {
 }
 
 func currentResources() resourceFacts {
-	_, ocrErr := readinessProbes.ocrLocate()
+	_, ocrErr := readiness.Probes.OCRLocate()
 	return resourceFacts{
 		Tesseract: ocrErr == nil,
-		Calibre:   readinessProbes.calibre(),
-		SevenZip:  readinessProbes.sevenZip(),
-		FileDO:    readinessProbes.filedo(),
+		Calibre:   readiness.Probes.Calibre(),
+		SevenZip:  readiness.Probes.SevenZip(),
+		FileDO:    readiness.Probes.FileDO(),
 	}
 }
 

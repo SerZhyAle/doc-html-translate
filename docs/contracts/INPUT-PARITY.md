@@ -1,7 +1,7 @@
 # Pointer: INPUT-PARITY
 
 - **Id:** `INPUT-PARITY`
-- **Version:** 0.5 draft
+- **Version:** 0.7 draft
 - **Home:** the shared contracts catalog, `input-controls/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, keyboard and mouse (adopted 2026-09-29, ticket 69; read at 0.4 on 2026-10-20, ticket 120)
 - **Owner:** shared (the keyboard and mouse columns are CyrFlip's; amendments through the catalog page)

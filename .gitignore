@@ -43,3 +43,6 @@ DEV/DOCUMENT_REGISTRY.jsonl
 !cmd/doc-html-ui/help/*/secret-file-password*
 !help/*/secret-file-password*
 !tools/helpgen/copy/secret-file-password.json
+
+# Local specification workspace and archive.
+/PLAN/

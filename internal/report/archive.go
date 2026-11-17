@@ -2,6 +2,7 @@ package report
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,9 +10,13 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
+
+	"doc-html-translate/internal/fsutil"
 )
 
 // MaxArchiveBytes caps the archive at what a mail provider will still carry - the common
@@ -28,6 +33,30 @@ type BuildOptions struct {
 	Packaged     bool
 	SettingsJSON []byte
 	At           time.Time
+	// Out is the file or existing folder the caller wants the archive in (ticket E0147, `report build --out`; folder
+	// branch ticket E0149, APP-COMMANDS 0.3 item V): empty writes to the app's reports folder. A folder (existing, or
+	// ending in a separator) receives the DIAGNOSTIC-REPORT 8A archive name; a missing folder is refused and never
+	// created. An existing target file is refused with ErrOutExists unless Overwrite replaces it whole.
+	Out       string
+	Overwrite bool
+}
+
+// The refusals of a caller-named Out. They are checked before anything is collected or written.
+var (
+	ErrOutExists        = errors.New("report: the output file already exists")
+	ErrOutFolderMissing = errors.New("report: the folder of the output file does not exist")
+)
+
+// IsNoSpace reports whether err is the system saying the disk is full: the command answers it as exit 13.
+func IsNoSpace(err error) bool {
+	var en syscall.Errno
+	if !errors.As(err, &en) {
+		return false
+	}
+	if runtime.GOOS == "windows" {
+		return en == 39 || en == 112 // ERROR_HANDLE_DISK_FULL, ERROR_DISK_FULL
+	}
+	return en == syscall.ENOSPC
 }
 
 type archiveEntry struct {
@@ -46,9 +75,18 @@ type archiveEntry struct {
 // of its own. Nothing from Dir() other than the log files is ever included - in particular
 // none of the credential files that live beside them.
 func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
+	// A caller-named target is judged before anything is collected, and never makes a folder.
+	out := ""
+	if opts.Out != "" {
+		if out, err = checkOut(opts.Out, opts.AppVersion, opts.At, opts.Overwrite); err != nil {
+			return "", 0, err
+		}
+	}
 	dir := filepath.Join(Dir(), "reports")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", 0, fmt.Errorf("create report folder: %w", err)
+	if out == "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return "", 0, fmt.Errorf("create report folder: %w", err)
+		}
 	}
 
 	fields := environmentFields(opts.AppVersion, opts.Packaged)
@@ -72,23 +110,36 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 		readable += leftOutReportLine(droppedLogs)
 	}
 
+	entries := []archiveEntry{{"environment.txt", []byte(env)}, {"report.txt", []byte(readable)}}
+	if len(opts.SettingsJSON) > 0 {
+		entries = append(entries, archiveEntry{"settings.json", settings})
+	}
+	entries = append(entries, kept...)
+
+	if out != "" {
+		// The archive is at most MaxArchiveBytes, so it is built in memory and handed over in one piece: created
+		// exclusively when nothing is to be replaced, written through a temporary file that is renamed when something is.
+		var buf bytes.Buffer
+		zw := zip.NewWriter(&buf)
+		if err := addEntries(zw, entries); err != nil {
+			return "", 0, fmt.Errorf("write archive: %w", err)
+		}
+		if err := zw.Close(); err != nil {
+			return "", 0, fmt.Errorf("finish archive: %w", err)
+		}
+		if err := deliver(out, buf.Bytes(), opts.Overwrite); err != nil {
+			return "", 0, err
+		}
+		return out, droppedLogs, nil
+	}
+
 	f, path, err := createArchive(dir, opts.AppVersion, opts.At)
 	if err != nil {
 		return "", 0, fmt.Errorf("create archive: %w", err)
 	}
 	zw := zip.NewWriter(f)
-	entries := []archiveEntry{{"environment.txt", []byte(env)}, {"report.txt", []byte(readable)}}
-	if len(opts.SettingsJSON) > 0 {
-		entries = append(entries, archiveEntry{"settings.json", settings})
-	}
-	for _, e := range append(entries, kept...) {
-		w, err := zw.Create(e.name)
-		if err == nil {
-			_, err = w.Write(e.data)
-		}
-		if err != nil {
-			return "", 0, closeFailed(zw, f, path, err)
-		}
+	if err := addEntries(zw, entries); err != nil {
+		return "", 0, closeFailed(zw, f, path, err)
 	}
 
 	if err := zw.Close(); err != nil {
@@ -99,6 +150,96 @@ func Build(opts BuildOptions) (path string, droppedLogs int, err error) {
 		return "", 0, fmt.Errorf("close archive: %w", err)
 	}
 	return path, droppedLogs, nil
+}
+
+// addEntries writes every entry into the archive, in order.
+func addEntries(zw *zip.Writer, entries []archiveEntry) error {
+	for _, e := range entries {
+		w, err := zw.Create(e.name)
+		if err == nil {
+			_, err = w.Write(e.data)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// checkOut resolves a caller-named target (file path or existing folder, APP-COMMANDS item P.1 and 0.3 item V) and
+// refuses what cannot be written: an existing file without overwrite, or a missing folder (including a path ending in
+// a separator whose folder does not exist). It returns the resolved absolute file path.
+func checkOut(out, version string, at time.Time, overwrite bool) (string, error) {
+	isFolder := len(out) > 0 && os.IsPathSeparator(out[len(out)-1])
+	abs, err := filepath.Abs(out)
+	if err != nil {
+		return "", fmt.Errorf("resolve output path: %w", err)
+	}
+	st, err := os.Stat(abs)
+	if isFolder || (err == nil && st.IsDir()) {
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				return "", ErrOutFolderMissing
+			}
+			return "", fmt.Errorf("check output folder: %w", err)
+		}
+		if !st.IsDir() {
+			return "", ErrOutFolderMissing
+		}
+		if at.IsZero() {
+			at = time.Now()
+		}
+		target := filepath.Join(abs, archiveName(version, at))
+		if _, terr := os.Stat(target); terr == nil {
+			if !overwrite {
+				return "", ErrOutExists
+			}
+			return target, nil
+		} else if !errors.Is(terr, fs.ErrNotExist) {
+			return "", fmt.Errorf("check output file: %w", terr)
+		}
+		return target, nil
+	}
+	switch {
+	case err == nil && !overwrite:
+		return "", ErrOutExists
+	case err == nil:
+		return abs, nil
+	case !errors.Is(err, fs.ErrNotExist):
+		return "", fmt.Errorf("check output file: %w", err)
+	}
+	if dst, derr := os.Stat(filepath.Dir(abs)); derr != nil || !dst.IsDir() {
+		return "", ErrOutFolderMissing
+	}
+	return abs, nil
+}
+
+// deliver puts the archive at out. Without overwrite the file is created exclusively - a file that appeared since checkOut
+// is still a refusal - and a half-written file is removed; with it the old file is replaced whole, or left as it was.
+func deliver(out string, data []byte, overwrite bool) error {
+	if overwrite {
+		if err := fsutil.WriteFile(out, data, 0o644); err != nil {
+			return fmt.Errorf("write archive: %w", err)
+		}
+		return nil
+	}
+	f, err := os.OpenFile(out, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+	if errors.Is(err, fs.ErrExist) {
+		return ErrOutExists
+	}
+	if err != nil {
+		return fmt.Errorf("create archive: %w", err)
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		_ = os.Remove(out)
+		return fmt.Errorf("write archive: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(out)
+		return fmt.Errorf("close archive: %w", err)
+	}
+	return nil
 }
 
 // leftOutLine is the key environment.txt gains when run logs did not make it into the archive.

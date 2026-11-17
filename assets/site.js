@@ -66,7 +66,7 @@
     var t = str('title'), desc = str('desc');
     if (t) document.title = t;
     if (desc) meta('meta[name="description"]', desc);
-    var top = $('toTop'); if (top && str('toTop')) top.setAttribute('aria-label', str('toTop'));
+    var top = $('toTop'); if (top && str('toTop')) { top.setAttribute('aria-label', str('toTop')); top.setAttribute('title', str('toTop')); }
     each('[data-nav]', function (n) { if (str('nav')) n.setAttribute('aria-label', str('nav')); });
     each('[data-sec="open"]', function (b) { if (str('expand')) b.textContent = str('expand'); });
     each('[data-sec="close"]', function (b) { if (str('collapse')) b.textContent = str('collapse'); });

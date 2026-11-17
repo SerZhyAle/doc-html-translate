@@ -57,8 +57,13 @@ var chromeUICSS = `
     font: inherit; font-size: var(--dht-fs); line-height: 1.35; text-align: center;
     text-decoration: none; overflow-wrap: anywhere; cursor: pointer;
   }
-  /* A glyph-only button is the square target itself: no padding, the glyph centred. */
+  /* A glyph-only button is the square target itself in pointer mode; under a coarse pointer it
+     reveals its localized title beside the glyph without altering the accessible name (BUTTONS 2.3 section 9 D1). */
   .dht-ico { padding: 0; }
+  @media (pointer: coarse) {
+    .dht-ico { padding: calc(4px * var(--dht-s)) var(--dht-pad); }
+    .dht-ico::after { content: attr(title); content: attr(title) / ""; }
+  }
   .dht-btn[hidden], .dht-group[hidden] { display: none; }
   /* APP-STYLE section 5: the hover tint stays outside the palette on purpose - a neutral grey that
      darkens a light face and lightens a dark one, so one value reads on all four reading themes while

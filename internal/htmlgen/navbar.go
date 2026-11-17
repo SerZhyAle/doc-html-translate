@@ -746,8 +746,9 @@ func chromeGroup(parts ...string) string {
 }
 
 // iconButton is a glyph-only command button: the meaning's drawing, and the meaning's localized name
-// as its tooltip and its accessible name (ICON-RENDER rule 8). state is the attribute run a toggle
-// carries (aria-pressed, hidden) with its leading space, "" for an immediate command.
+// as its tooltip and its accessible name (ICON-RENDER rule 8); under @media (pointer: coarse), CSS
+// reveals title as a visible touch caption via ::after (BUTTONS 2.3 section 9 D1). state is the
+// attribute run a toggle carries (aria-pressed, hidden) with its leading space, "" for a command.
 func iconButton(id, glyph, name, state string) string {
 	return fmt.Sprintf(`<button id="%[1]s" class="dht-btn dht-ico" type="button"%[2]s title="%[3]s" aria-label="%[3]s">%[4]s</button>`,
 		id, state, name, glyphSVG(glyph))

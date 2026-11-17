@@ -208,6 +208,37 @@ Why this workflow is popular (besides the obvious):
 | `-fdsec-password-env` | empty | For a FileDO secret file (`.fd-sec`): the **name** of an environment variable that holds its password, for unattended runs (never the password itself; the console and the app window ask instead) |
 | `-version` | `false` | Print version and exit |
 
+## Commands for scripts and agents
+
+Besides the flags above, `doc-html-translate.exe` takes commands that a script, a scheduler or a development agent can run and read. [`docs/CLI.md`](docs/CLI.md) lists every command; it is rendered from the manifest [`docs/cli-commands.json`](docs/cli-commands.json), and `doc-html-translate.exe commands --json` prints that same manifest as data.
+
+| Command | What it does |
+|---------|--------------|
+| `convert <path> [options] [--result <file>]` | The same conversion as `doc-html-translate.exe [flags] <path>`, with the options written `--name`. It never opens a dialog and never asks for a password: `--google` needs a positive `--max-cost`, and a `.fd-sec` document needs `--fdsec-password-env`, or it exits `10` and names the option. `--result` writes what the run produced - the outcome, the output folder, the entry page, the completion record and the exit code - as one JSON file, whole or not at all. The exit codes are the table of the converter. |
+| `output status --in <path> [--folder <dir>] [options] [--json]` | Whether a finished result exists for the document, whether it is complete and whether a run with these options would reuse it - the same answer the app's window gives. |
+| `doctor [--ollama] [--json]` | What this machine can do: the helper tools found (with versions, never a path), the input formats and the tool each needs, the installed OCR languages and whether a Google key is stored. With `--ollama` it also asks whether the local Ollama answers and has the model; without it nothing is requested from any service. |
+| `input check --in <path> [options] [--json]` | Whether one document is ready to convert with the chosen engine and OCR, and what is missing (`state` and `issues`) - the same check the app's window makes. |
+| `ocr langs [--json]` | The recognition languages, with the installed ones marked; `-ocr-langs` prints the same listing. |
+| `ocr download --lang <code> [--json]` | Downloads one recognition language pack into your user folder, checked against its pinned digest; a pack that is already there is not fetched again. `-ocr-download` does the same. |
+| `report build [--out <file>] [--overwrite] [--json]` | Packs the recent run logs and an environment summary into one archive for the author, with no document names. `--out` names the file (an existing one is refused unless `--overwrite`); `-report` does the same into the default folder. |
+| `integration add [--json]` | Adds the right-click **Convert to HTML** entry and **Open with** for the supported file types, without changing the default handler; `-register-openwith` does the same. |
+| `default-handler set [--json]` | Makes the app the default handler where Windows allows it and adds the right-click entry; `blocked` lists the types Windows keeps for your earlier choice. `-register` does the same and, at a console, also offers Default apps in Settings. |
+| `default-handler release [--json]` | Gives the association back and leaves the right-click entry and **Open with**; `-unregister` does the same. |
+| `commands`, `version` | The list of commands and the version; `--json` prints them as data. |
+
+The three commands that write the Windows registry (`integration add`, `default-handler set`, `default-handler release`) exit `11` in the Microsoft Store install, where the package declares the associations itself. None of the five asks a question or waits for Enter; the flags keep their prompts.
+
+```powershell
+doc-html-translate.exe convert "book.epub" --noopen --folder "D:\out" --result "D:\out\book.json"
+doc-html-translate.exe output status --in "book.epub" --folder "D:\out" --json
+doc-html-translate.exe doctor --json
+doc-html-translate.exe input check --in "book.mobi" --json
+doc-html-translate.exe ocr langs --json
+doc-html-translate.exe ocr download --lang rus --json
+doc-html-translate.exe report build --out "D:\logs\book-logs.zip" --json
+doc-html-translate.exe default-handler set --json
+```
+
 ## Google API Key
 
 For `-google` on Windows, save the key in `doc-html-ui`: tick **Google Translate**, paste the key and click **Save**. The app stores an encrypted DPAPI blob at `%LOCALAPPDATA%\doc-html-translate\google_api.key.dpapi` for the current Windows user. CLI and MSIX use the same per-user location. An older plaintext `google_api.key` next to the executable or in that app folder is migrated on first use and deleted. CLI-only users can put the key in that plaintext file for one-time migration. If Windows cannot open the protected key, paste and save it again; CLI-only users must remove the unusable blob before repeating the migration. DPAPI protects the file at rest; software already running as your user can still access the key. Non-Windows builds retain plaintext file behavior.

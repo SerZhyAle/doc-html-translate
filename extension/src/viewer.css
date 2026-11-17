@@ -155,8 +155,13 @@ body {
   border: 1px solid var(--border); border-radius: var(--radius);
   cursor: pointer;
 }
-/* A glyph-only button is the square target itself: no padding, the glyph centred. */
+/* A glyph-only button is the square target itself in pointer mode; under a coarse pointer it
+   reveals its localized title beside the glyph without altering the accessible name (BUTTONS 2.3 section 9 D1). */
 #toolbar button.ico { padding: 0; }
+@media (pointer: coarse) {
+  #toolbar button.ico { padding: calc(4px * var(--s)) var(--pad); }
+  #toolbar button.ico::after { content: attr(title); content: attr(title) / ""; }
+}
 /* Native editors keep their platform arrow and popup but take the target height; they are not buttons
    (BUTTONS section 6). */
 #toolbar select, #toolbar input, #search-panel select, #search-panel input {

@@ -126,6 +126,216 @@
       "forms": {
         "*": { "use": "Edge Add-ons", "avoid": ["Edge Addons", "Edge Add-on Store", "Edge Store"] }
       }
+    },
+    {
+      "id": "family-type-fms-android",
+      "concept": "Footer family-map Type label for Fast Media Sorter & Organizer (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Android media sorter" },
+        "ru": { "use": "Сортировщик медиа для Android" },
+        "uk": { "use": "Сортувальник медіа для Android" },
+        "de": { "use": "Android-Mediensortierer" },
+        "it": { "use": "Ordinatore di media per Android" },
+        "es": { "use": "Organizador de medios para Android" },
+        "fr": { "use": "Trieur de médias pour Android" },
+        "pt": { "use": "Organizador de multimédia para Android" },
+        "ar": { "use": "منظّم وسائط لنظام Android" },
+        "hi": { "use": "Android मीडिया सॉर्टर" },
+        "bn": { "use": "Android মিডিয়া সর্টার" },
+        "ur": { "use": "Android میڈیا سارٹر" },
+        "zh": { "use": "Android 媒体整理工具" }
+      }
+    },
+    {
+      "id": "family-type-fms-windows",
+      "concept": "Footer family-map Type label for Fast Media Sorter & Sharing for Windows (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Windows media and file manager" },
+        "ru": { "use": "Медиа- и файловый менеджер для Windows" },
+        "uk": { "use": "Медіа- та файловий менеджер для Windows" },
+        "de": { "use": "Medien- und Dateimanager für Windows" },
+        "it": { "use": "Gestore di media e file per Windows" },
+        "es": { "use": "Gestor de medios y archivos para Windows" },
+        "fr": { "use": "Gestionnaire de médias et de fichiers pour Windows" },
+        "pt": { "use": "Gestor de multimédia e ficheiros para Windows" },
+        "ar": { "use": "مدير وسائط وملفات لنظام Windows" },
+        "hi": { "use": "Windows मीडिया और फ़ाइल प्रबंधक" },
+        "bn": { "use": "Windows মিডিয়া ও ফাইল ম্যানেজার" },
+        "ur": { "use": "Windows میڈیا اور فائل مینیجر" },
+        "zh": { "use": "Windows 媒体与文件管理器" }
+      }
+    },
+    {
+      "id": "family-type-cyrflip",
+      "concept": "Footer family-map Type label for CyrFlip (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Windows layout fixer" },
+        "ru": { "use": "Исправление раскладки для Windows" },
+        "uk": { "use": "Виправлення розкладки для Windows" },
+        "de": { "use": "Tastaturlayout-Korrektur für Windows" },
+        "it": { "use": "Correttore del layout di tastiera per Windows" },
+        "es": { "use": "Corrector de distribución de teclado para Windows" },
+        "fr": { "use": "Correcteur de disposition du clavier pour Windows" },
+        "pt": { "use": "Corretor de esquema de teclado para Windows" },
+        "ar": { "use": "مصحّح تخطيط لوحة المفاتيح لنظام Windows" },
+        "hi": { "use": "Windows कीबोर्ड लेआउट सुधारक" },
+        "bn": { "use": "Windows কিবোর্ড লেআউট সংশোধক" },
+        "ur": { "use": "Windows کی بورڈ لے آؤٹ درست کنندہ" },
+        "zh": { "use": "Windows 键盘布局修正工具" }
+      }
+    },
+    {
+      "id": "family-type-filedo",
+      "concept": "Footer family-map Type label for FileDO (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Windows storage CLI" },
+        "ru": { "use": "CLI для хранилищ Windows" },
+        "uk": { "use": "CLI для сховищ Windows" },
+        "de": { "use": "Speicher-CLI für Windows" },
+        "it": { "use": "CLI di archiviazione per Windows" },
+        "es": { "use": "CLI de almacenamiento para Windows" },
+        "fr": { "use": "CLI de stockage pour Windows" },
+        "pt": { "use": "CLI de armazenamento para Windows" },
+        "ar": { "use": "أداة تخزين بسطر الأوامر لنظام Windows" },
+        "hi": { "use": "Windows स्टोरेज CLI" },
+        "bn": { "use": "Windows স্টোরেজ CLI" },
+        "ur": { "use": "Windows اسٹوریج CLI" },
+        "zh": { "use": "Windows 存储命令行工具" }
+      }
+    },
+    {
+      "id": "family-type-streams-player",
+      "concept": "Footer family-map Type label for STREAMS Player (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Windows stream player" },
+        "ru": { "use": "Проигрыватель потоков для Windows" },
+        "uk": { "use": "Програвач потоків для Windows" },
+        "de": { "use": "Stream-Player für Windows" },
+        "it": { "use": "Lettore di stream per Windows" },
+        "es": { "use": "Reproductor de streams para Windows" },
+        "fr": { "use": "Lecteur de flux pour Windows" },
+        "pt": { "use": "Leitor de streams para Windows" },
+        "ar": { "use": "مشغّل بثّ لنظام Windows" },
+        "hi": { "use": "Windows स्ट्रीम प्लेयर" },
+        "bn": { "use": "Windows স্ট্রিম প্লেয়ার" },
+        "ur": { "use": "Windows اسٹریم پلیئر" },
+        "zh": { "use": "Windows 流媒体播放器" }
+      }
+    },
+    {
+      "id": "family-type-oneclickrunner",
+      "concept": "Footer family-map Type label for OneClickRunner (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Windows tray launcher" },
+        "ru": { "use": "Трей-запускатор для Windows" },
+        "uk": { "use": "Трей-запускач для Windows" },
+        "de": { "use": "Tray-Starter für Windows" },
+        "it": { "use": "Avvio dalla barra di sistema di Windows" },
+        "es": { "use": "Lanzador en la bandeja de Windows" },
+        "fr": { "use": "Lanceur de la zone de notification de Windows" },
+        "pt": { "use": "Iniciador na área de notificação do Windows" },
+        "ar": { "use": "مشغّل برامج من علبة نظام Windows" },
+        "hi": { "use": "Windows ट्रे लॉन्चर" },
+        "bn": { "use": "Windows ট্রে লঞ্চার" },
+        "ur": { "use": "Windows ٹرے لانچر" },
+        "zh": { "use": "Windows 托盘启动器" }
+      }
+    },
+    {
+      "id": "family-type-universal-agent-kit",
+      "concept": "Footer family-map Type label for Universal Agent Kit (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "AI-dev methodology" },
+        "ru": { "use": "Методология AI-разработки" },
+        "uk": { "use": "Методологія AI-розробки" },
+        "de": { "use": "KI-Entwicklungsmethodik" },
+        "it": { "use": "Metodologia di sviluppo con IA" },
+        "es": { "use": "Metodología de desarrollo con IA" },
+        "fr": { "use": "Méthodologie de développement avec l'IA" },
+        "pt": { "use": "Metodologia de desenvolvimento com IA" },
+        "ar": { "use": "منهجية تطوير بالذكاء الاصطناعي" },
+        "hi": { "use": "AI विकास पद्धति" },
+        "bn": { "use": "AI ডেভেলপমেন্ট পদ্ধতি" },
+        "ur": { "use": "AI ڈیولپمنٹ کا طریقۂ کار" },
+        "zh": { "use": "AI 开发方法论" }
+      }
+    },
+    {
+      "id": "family-type-deviceinfo",
+      "concept": "Footer family-map Type label for DeviceInfo (SITE-FAMILY-MAP 1.14).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Android and Wear OS device information" },
+        "ru": { "use": "Информация об устройстве для Android и Wear OS" },
+        "uk": { "use": "Інформація про пристрій для Android і Wear OS" },
+        "de": { "use": "Geräteinformationen für Android und Wear OS" },
+        "it": { "use": "Informazioni sul dispositivo per Android e Wear OS" },
+        "es": { "use": "Información del dispositivo para Android y Wear OS" },
+        "fr": { "use": "Informations sur l'appareil pour Android et Wear OS" },
+        "pt": { "use": "Informações do dispositivo para Android e Wear OS" },
+        "ar": { "use": "معلومات الجهاز لنظامي Android وWear OS" },
+        "hi": { "use": "Android और Wear OS के लिए डिवाइस जानकारी" },
+        "bn": { "use": "Android ও Wear OS ডিভাইসের তথ্য" },
+        "ur": { "use": "Android اور Wear OS ڈیوائس کی معلومات" },
+        "zh": { "use": "Android 和 Wear OS 设备信息" }
+      }
+    },
+    {
+      "id": "family-type-tourist",
+      "concept": "Footer family-map Type label for Tourist (SITE-FAMILY-MAP 1.15).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Android and Wear OS hiking kit" },
+        "ru": { "use": "Набор для походов для Android и Wear OS" },
+        "uk": { "use": "Набір для походів для Android і Wear OS" },
+        "de": { "use": "Wanderausrüstung für Android und Wear OS" },
+        "it": { "use": "Kit per escursioni per Android e Wear OS" },
+        "es": { "use": "Kit de senderismo para Android y Wear OS" },
+        "fr": { "use": "Kit de randonnée pour Android et Wear OS" },
+        "pt": { "use": "Kit de caminhada para Android e Wear OS" },
+        "ar": { "use": "أدوات المشي لمسافات طويلة لنظامي Android وWear OS" },
+        "hi": { "use": "Android और Wear OS के लिए हाइकिंग किट" },
+        "bn": { "use": "Android ও Wear OS-এর জন্য হাইকিং কিট" },
+        "ur": { "use": "Android اور Wear OS کے لیے ہائیکنگ کٹ" },
+        "zh": { "use": "适用于 Android 和 Wear OS 的徒步工具包" }
+      }
+    },
+    {
+      "id": "family-type-sza-portfolio",
+      "concept": "Footer family-map Type label for SZA portfolio link (SITE-FAMILY-MAP 1.12).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Portfolio" },
+        "ru": { "use": "Портфолио" },
+        "uk": { "use": "Портфоліо" },
+        "de": { "use": "Portfolio" },
+        "it": { "use": "Portfolio" },
+        "es": { "use": "Portafolio" },
+        "fr": { "use": "Portfolio" },
+        "pt": { "use": "Portefólio" },
+        "ar": { "use": "معرض الأعمال" },
+        "hi": { "use": "पोर्टफ़ोलियो" },
+        "bn": { "use": "পোর্টফোলিও" },
+        "ur": { "use": "پورٹ فولیو" },
+        "zh": { "use": "作品集" }
+      }
     }
   ]
 }

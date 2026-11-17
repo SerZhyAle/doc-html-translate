@@ -495,3 +495,71 @@ func TestIconographyNamesAreNotAnotherMeaningsName(t *testing.T) {
 	}
 	t.Logf("checked %d (surface, language) strings of %d controls against %d catalog records", checked, len(controls), len(records))
 }
+
+// Sibling option headings on each settings surface draw a glyph uniformly or draw none
+// (ICON-RENDER section 25 rule 1 with BOOLEAN-OPTION 2.2 section 8; ticket E0150).
+func TestOptionHeadingGlyphUniformity(t *testing.T) {
+	labelRe := regexp.MustCompile(`(?s)<label\b[^>]*class="opt-name"[^>]*>(.*?)</label>`)
+	glyphRe := regexp.MustCompile(`(?:<svg\b|data-glyph=)`)
+	surfaces := [][]string{
+		{"cmd", "doc-html-ui", "ui.html"},
+		{"extension", "src", "options.html"},
+		{"extension", "src", "popup.html"},
+	}
+	for _, parts := range surfaces {
+		raw := readRepoFile(t, parts...)
+		matches := labelRe.FindAllStringSubmatch(raw, -1)
+		if len(matches) == 0 {
+			t.Fatalf("%s: no .opt-name option headings found", strings.Join(parts, "/"))
+		}
+		withGlyph := 0
+		for _, m := range matches {
+			if glyphRe.MatchString(m[1]) {
+				withGlyph++
+			}
+		}
+		if withGlyph != 0 && withGlyph != len(matches) {
+			t.Errorf("%s: mixed option-heading glyphs (%d of %d .opt-name headings draw a glyph; sibling set must be uniformly all or none)", strings.Join(parts, "/"), withGlyph, len(matches))
+		}
+	}
+}
+
+// Glyph-only commands carry a static title matching aria-label on the site and expose route D1
+// touch captions via CSS ::after under coarse pointer / GUI Touch profile (BUTTONS 2.3 section 9 & 11 F).
+func TestTouchNamingAndToTopTitle(t *testing.T) {
+	cssRules := []struct {
+		parts []string
+		want  string
+	}{
+		{[]string{"internal", "htmlgen", "chromecss.go"}, `.dht-ico::after { content: attr(title); content: attr(title) / ""; }`},
+		{[]string{"extension", "src", "viewer.css"}, `#toolbar button.ico::after { content: attr(title); content: attr(title) / ""; }`},
+		{[]string{"extension", "src", "ui-components.css"}, `.opt-help::after { content: attr(title); content: attr(title) / ""; }`},
+		{[]string{"cmd", "doc-html-ui", "ui.html"}, `html[data-input="touch"] .opt-help::after { content: attr(title); content: attr(title) / ""; }`},
+		{[]string{"assets", "site.css"}, `.theme-btn::after,.to-top::after{content:attr(title);content:attr(title) / ""}`},
+	}
+	for _, c := range cssRules {
+		if !strings.Contains(readRepoFile(t, c.parts...), c.want) {
+			t.Errorf("%s is missing route D1 touch caption rule %q", strings.Join(c.parts, "/"), c.want)
+		}
+	}
+	if !strings.Contains(readRepoFile(t, "assets", "site.js"), `top.setAttribute('title', str('toTop'))`) {
+		t.Error("assets/site.js does not update #toTop title on language switch")
+	}
+	pages := [][]string{
+		{"404.html"}, {"capability-matrix.html"}, {"capability-matrix.ru.html"}, {"capability-matrix.uk.html"},
+		{"docs.html"}, {"docs.ru.html"}, {"docs.uk.html"}, {"extension-privacy.html"}, {"extension.html"},
+		{"index.html"}, {"install-trust.html"}, {"privacy.html"}, {"release-notes.html"}, {"support.html"},
+	}
+	for _, code := range []string{"ar", "bn", "de", "es", "fr", "hi", "it", "pt", "ru", "uk", "ur", "zh"} {
+		pages = append(pages, []string{code, "index.html"})
+	}
+	topRe := regexp.MustCompile(`<button\b[^>]*id="toTop"[^>]*>`)
+	titleRe := regexp.MustCompile(`\btitle="([^"]+)"`)
+	for _, p := range pages {
+		raw := readRepoFile(t, p...)
+		btn := topRe.FindString(raw)
+		if btn == "" || titleRe.FindString(btn) == "" {
+			t.Errorf("%s: #toTop lacks a static title attribute: %q", strings.Join(p, "/"), btn)
+		}
+	}
+}

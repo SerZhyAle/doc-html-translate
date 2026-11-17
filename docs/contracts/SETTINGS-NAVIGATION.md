@@ -1,7 +1,7 @@
 # Pointer: SETTINGS-NAVIGATION
 
 - **Id:** `SETTINGS-NAVIGATION`
-- **Version:** 2.0 (the catalog's current text read on 2026-10-20)
+- **Version:** 2.3 (the catalog's current text read on 2026-11-15)
 - **Home:** the shared contracts catalog, `settings-navigation/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - the desktop launcher (`cmd/doc-html-ui`) implements and measures it (ticket 119, 2026-10-20); the browser extension, the generated reader chrome and the official site are planned slices dated in [`docs/UI_PROFILE.md`](../UI_PROFILE.md)
 - **Wire carrier:** none - settings navigation, page composition and presentation behavior

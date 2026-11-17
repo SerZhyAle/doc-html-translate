@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -17,6 +18,27 @@ import (
 // and the caller should exit 0 without reporting anything: help is a request, not a failure -
 // the same treatment -version already gets.
 var ErrHelp = flag.ErrHelp
+
+// helpSink is where -h writes its usage; nil means standard output. UsageText swaps it for a buffer.
+var helpSink io.Writer
+
+func helpWriter() io.Writer {
+	if helpSink != nil {
+		return helpSink
+	}
+	return os.Stdout
+}
+
+// UsageText returns the text -h prints, byte for byte, by running -h through the real parser. The command front
+// (internal/commands) begins the readable output of `commands` with it, so the alias and its verb cannot differ.
+// It is meant for the start of a process and is not safe for concurrent use.
+func UsageText() string {
+	var b bytes.Buffer
+	helpSink = &b
+	defer func() { helpSink = nil }()
+	_, _ = ParseArgs([]string{"-h"})
+	return b.String()
+}
 
 // ErrVersion is returned when -version was requested. The caller prints the version and exits 0.
 // It is a sentinel rather than an error text so a reworded message cannot turn the request into
@@ -109,7 +131,7 @@ func ParseArgs(args []string) (Config, error) {
 
 	if err := fs.Parse(permuteArgs(fs, args)); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			_, _ = os.Stdout.Write(out.Bytes())
+			_, _ = helpWriter().Write(out.Bytes())
 			return Config{}, ErrHelp
 		}
 		_, _ = os.Stderr.Write(out.Bytes())

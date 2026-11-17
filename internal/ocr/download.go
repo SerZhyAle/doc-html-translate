@@ -121,17 +121,26 @@ type Progress func(done, total int64)
 // DownloadContext is Download that stops when ctx ends and reports its progress. A cancelled
 // download leaves nothing behind, like any other failed one, and its error wraps ctx.Err().
 func DownloadContext(ctx context.Context, code string, progress Progress) error {
+	_, err := EnsureInstalled(ctx, code, progress)
+	return err
+}
+
+// EnsureInstalled is the body of DownloadContext and says whether it made a request: false when the verified copy was
+// already in the per-user folder (nothing was fetched, nothing was written), true when the pack was fetched. The command
+// `ocr download` answers that as `downloaded` (ticket E0147); the flag -ocr-download and the GUI go through DownloadContext
+// and are unchanged.
+func EnsureInstalled(ctx context.Context, code string, progress Progress) (fetched bool, err error) {
 	code = strings.TrimSpace(code)
 	if err := CheckLang(code); err != nil {
-		return err
+		return false, err
 	}
 	want, ok := packDigests[code]
 	if !ok {
-		return fmt.Errorf("ocr: no pinned digest for %q", code)
+		return false, fmt.Errorf("ocr: no pinned digest for %q", code)
 	}
 	dir := UserDataDir()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return &downloadError{kind: err, format: "Cannot write to the OCR language folder %s: %v", args: []any{dir, err}}
+		return false, &downloadError{kind: err, format: "Cannot write to the OCR language folder %s: %v", args: []any{dir, err}}
 	}
 	lock, _ := installLocks.LoadOrStore(code, &sync.Mutex{})
 	mu := lock.(*sync.Mutex)
@@ -140,10 +149,13 @@ func DownloadContext(ctx context.Context, code string, progress Progress) error 
 
 	final := langFile(dir, code)
 	if verifyPack(final, want) == nil {
-		return nil
+		return false, nil
 	}
 	removeStaleTemps(dir)
-	return fetchPack(ctx, code, dir, want, progress)
+	if err := fetchPack(ctx, code, dir, want, progress); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // fetchPack downloads one pack into dir through a verified temp file.

@@ -230,3 +230,33 @@ func TestSiteCarriesTheVisitorLanguageToEveryInPagePage(t *testing.T) {
 		}
 	}
 }
+
+// SITE-STRUCTURE 0.4 rule 3: capability-matrix.html must not be an orphan, and its three
+// language variants link to each other via an active-state language switcher.
+func TestSiteCapabilityMatrixReachableAndLinked(t *testing.T) {
+	indexBody := readRepoFile(t, "index.html")
+	for _, target := range []string{"capability-matrix.html", "capability-matrix.ru.html", "capability-matrix.uk.html"} {
+		if !strings.Contains(indexBody, `href="`+target+`"`) {
+			t.Errorf("index.html does not link %s (orphan under SITE-STRUCTURE 0.4 rule 3)", target)
+		}
+	}
+	matrixPages := []struct {
+		file string
+		self string
+	}{
+		{"capability-matrix.html", `<a href="capability-matrix.html" hreflang="en" data-set-lang="en" aria-current="true">EN</a>`},
+		{"capability-matrix.ru.html", `<a href="capability-matrix.ru.html" hreflang="ru" data-set-lang="ru" aria-current="true">RU</a>`},
+		{"capability-matrix.uk.html", `<a href="capability-matrix.uk.html" hreflang="uk" data-set-lang="ua" aria-current="true">UA</a>`},
+	}
+	for _, m := range matrixPages {
+		body := readRepoFile(t, m.file)
+		for _, target := range []string{"capability-matrix.html", "capability-matrix.ru.html", "capability-matrix.uk.html"} {
+			if !strings.Contains(body, `href="`+target+`"`) {
+				t.Errorf("%s: missing sibling language link to %s", m.file, target)
+			}
+		}
+		if !strings.Contains(body, m.self) {
+			t.Errorf("%s: language control does not mark active locale with aria-current=\"true\"", m.file)
+		}
+	}
+}

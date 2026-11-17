@@ -1,0 +1,60 @@
+Usage: doc-html-translate [flags] <file>
+
+Flags may be written before or after the file; both orders mean the same thing.
+A path that contains spaces needs quotes.
+
+  -dst string
+    	target language (default "ru")
+  -fdsec-password-env string
+    	for a FileDO secret file (.fd-sec): the name of an environment variable that holds its password (unattended runs; the console and the app window ask instead)
+  -folder string
+    	output folder (default: same directory as input file)
+  -force
+    	re-extract and re-translate even if output already exists (yes, all over again)
+  -free
+    	alias for -ollama: translate using local Ollama
+  -google
+    	translate using Google Translate API
+  -max-cost float
+    	abort paid translation before your wallet notices if the USD estimate exceeds N (0 = live dangerously, no limit)
+  -multipage
+    	produce multiple HTML pages with a table of contents instead of the default single page
+  -noopen
+    	do not open browser after conversion (batch mode)
+  -notranslate
+    	convert only, skip translation
+  -ocr
+    	OCR text inside document images and overlay it as translatable HTML (needs tesseract)
+  -ocr-download string
+    	download an OCR language pack (e.g. rus) into the per-user tessdata folder, then exit
+  -ocr-lang string
+    	OCR language(s) for -ocr, e.g. eng or eng+rus (default: -src, else eng)
+  -ocr-langs
+    	list installed and available OCR languages, then exit
+  -ollama
+    	translate using local Ollama (default model: gemma3:12b)
+  -ollama-ctx int
+    	context window size in tokens sent to Ollama (default 8192)
+  -ollama-model string
+    	Ollama model name (default "gemma3:12b")
+  -ollama-parallel int
+    	concurrent batch requests (set OLLAMA_NUM_PARALLEL=N on Ollama side too) (default 1)
+  -register
+    	register app as document handler in HKCU
+  -register-openwith
+    	add app to the Windows "Open with" list without making it the default handler
+  -report
+    	pack the recent run logs plus an environment summary into an archive for the author, then exit
+  -split int
+    	split pages at N chars for browser GT extension (0 = disable) (default 5000)
+  -src string
+    	source language (default "en")
+  -toc-depth int
+    	table-of-contents nesting depth shown on index.html (0 = unlimited)
+  -ui-lang string
+    	interface language for the console output and the converted page's navigation (default: the Windows UI language); one of: en ru uk de it es fr pt ar hi bn ur zh
+  -unregister
+    	release the default-handler association (leaves the right-click "Convert to HTML" entry and "Open with")
+  -v	verbose output - more than you ever wanted to know
+  -version
+    	print version and exit

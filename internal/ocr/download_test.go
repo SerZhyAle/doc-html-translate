@@ -300,3 +300,60 @@ func TestDownloadErrorsAreLocalized(t *testing.T) {
 		t.Errorf("en text = %q", got)
 	}
 }
+
+// Ticket E0147: `ocr download` answers whether it made a request. With the verified pack in the per-user folder the
+// answer is "no" and the transport is never touched: the server fails the test on any request.
+func TestEnsureInstalledFetchesNothingWhenThePackIsThere(t *testing.T) {
+	user, _ := dataDirs(t)
+	hits := packServer(t, packFixture, func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("an installed, verified pack reached the network")
+		http.Error(w, "must not be asked", http.StatusInternalServerError)
+	})
+	if err := os.MkdirAll(user, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(langFile(user, "rus"), packFixture, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fetched, err := EnsureInstalled(context.Background(), "rus", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fetched || hits.Load() != 0 {
+		t.Errorf("fetched = %v after %d requests, want false after none", fetched, hits.Load())
+	}
+	if files := listTree(t, user); len(files) != 1 {
+		t.Errorf("want exactly the pack that was there, got %v", files)
+	}
+}
+
+// With no pack the answer is "yes", after exactly one request, and the second call finds the pack and asks nobody.
+func TestEnsureInstalledFetchesOnceAndSaysSo(t *testing.T) {
+	user, _ := dataDirs(t)
+	hits := packServer(t, packFixture, nil)
+
+	fetched, err := EnsureInstalled(context.Background(), "rus", nil)
+	if err != nil || !fetched {
+		t.Fatalf("first call: fetched = %v, err = %v, want true and nil", fetched, err)
+	}
+	if err := verifyPack(langFile(user, "rus"), packDigests["rus"]); err != nil {
+		t.Errorf("installed pack does not verify: %v", err)
+	}
+	fetched, err = EnsureInstalled(context.Background(), "rus", nil)
+	if err != nil || fetched {
+		t.Errorf("second call: fetched = %v, err = %v, want false and nil", fetched, err)
+	}
+	if hits.Load() != 1 {
+		t.Errorf("requests = %d, want 1", hits.Load())
+	}
+}
+
+// A code outside the catalogue is refused with the catalogue's own error and nothing was fetched.
+func TestEnsureInstalledRefusesAnUnknownCode(t *testing.T) {
+	dataDirs(t)
+	hits := packServer(t, packFixture, nil)
+	fetched, err := EnsureInstalled(context.Background(), "../../x", nil)
+	if !errors.Is(err, ErrUnknownLang) || fetched || hits.Load() != 0 {
+		t.Errorf("fetched = %v, err = %v, requests = %d, want false, ErrUnknownLang, 0", fetched, err, hits.Load())
+	}
+}

@@ -1,7 +1,7 @@
 # Pointer: PAGE-STYLE
 
 - **Id:** `PAGE-STYLE`
-- **Version:** 3.5
+- **Version:** 3.10
 - **Home:** the shared contracts catalog, `product-web-pages/PAGE-STYLE.md`, reference kit `product-web-pages/reference/sza-kit.css` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - role "App - medium" (the distribution block is required); read at 3.1 on 2026-10-20 (ticket 120)
 - **Wire carrier:** `assets/sza-kit.css` - the one machine-checkable artifact of the domain

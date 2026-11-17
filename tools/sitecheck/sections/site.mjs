@@ -145,22 +145,30 @@ export async function heldAddresses(env) {
   await ctx.close();
 }
 
-// X - extracted text for the manual reading (RP 5-10, RP 12) and the version strings (EX 13)
+// X - release facts rendered from docs/release-notes.json (PAGE-STYLE 3.10, SITE-EXPERIENCE 0.6 rule 13)
 export async function versionStrings(env) {
   const { FILES, url, add, newCtx, open, readRaw } = env;
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPO, 'docs', 'release-notes.json'), 'utf8'));
+  const appVer = manifest.releases?.[0]?.version || '';
+  const extVer = manifest.extension?.version || '';
+  const allowedVersions = new Set([appVer, extVer].filter(Boolean));
+  const allowedTags = new Set([...allowedVersions].map((v) => 'v' + v));
   const ctx = await newCtx(); const out = {};
   for (const f of FILES) {
     const raw = await readRaw(ctx, f);
     const text = raw.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
-    out[f] = { versions: [...new Set(text.match(/\b\d{2}\.\d{3,4}\.\d{3,4}\b/g) || [])], tags: [...new Set(text.match(/\bv\d{2}\.\d{4}\.\d{4}\b/g) || [])] };
+    out[f] = { versions: [...new Set(text.match(/\b\d{2}\.\d{3,4}\.\d{3,4}\b/g) || [])], tags: [...new Set(text.match(/\bv\d{2}\.\d{3,4}\.\d{3,4}\b/g) || [])] };
   }
-  // The release-notes page is the dated history of the versions (SITE-STRUCTURE rule 14), not a claim about the current one.
-  const withV = Object.entries(out).filter(([f, v]) => f !== 'release-notes.html' && (v.versions.length || v.tags.length));
-  add('G4', 'all', withV.length ? 'fail' : 'pass', `a hard-coded version string on the pages: ${withV.length ? withV.map(([f, v]) => f + ' ' + [...v.versions, ...v.tags].join(',')).join('; ') : 'none (the release tag is fetched at run time into #releaseTag)'}`, { out });
+  const stale = Object.entries(out)
+    .filter(([f]) => f !== 'release-notes.html')
+    .map(([f, v]) => [f, [...v.versions.filter((x) => !allowedVersions.has(x)), ...v.tags.filter((t) => !allowedTags.has(t))]])
+    .filter(([, bad]) => bad.length);
+  add('G4', 'all', stale.length ? 'fail' : 'pass', `rendered release versions on pages match docs/release-notes.json (${appVer || 'none'}, ext ${extVer || 'none'}): ${stale.length ? stale.map(([f, bad]) => f + ' unexpected ' + bad.join(',')).join('; ') : 'all match'}`, { appVer, extVer, stale, out });
   const lp = await open(ctx, url('index.html'));
-  await lp.waitForFunction(() => (document.getElementById('releaseTag') || {}).textContent && document.getElementById('releaseTag').textContent.trim(), null, { timeout: 8000 }).catch(() => {});
-  const tag = await lp.evaluate(() => (document.getElementById('releaseTag') || {}).textContent);
-  add('G4b', 'landing', 'info', `release tag shown on the landing at run time: "${(tag || '').trim()}" (api.github.com contacted)`, { tag });
+  const tag = await lp.evaluate(() => (document.getElementById('releaseTag') || {}).textContent || '');
+  const trimmed = tag.trim();
+  const ok = !!appVer && trimmed === 'v' + appVer;
+  add('G4b', 'landing', ok ? 'pass' : 'fail', `build-time release tag on landing: "${trimmed}" (expected "v${appVer}" from docs/release-notes.json, no api.github.com call)`, { tag: trimmed, expected: 'v' + appVer });
   await lp.close();
   await ctx.close();
 }

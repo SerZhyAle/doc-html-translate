@@ -125,9 +125,10 @@ foreach ($r in $records) {
 }
 
 # ── the tags ──────────────────────────────────────────────────
-$tagLines = @(& git tag --list 'v[0-9]*' 2>$null)
+$tagLines = @(& git tag --list 'v[0-9]*' 'ext-*' 2>$null)
 if ($LASTEXITCODE -ne 0) { Exit-Verdict 'release-notes' 2 'git tag failed' }
-$tags = @($tagLines | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^v\d{2}\.\d{4}\.\d{4}$' })
+$allTags = @($tagLines | ForEach-Object { "$_".Trim() } | Where-Object { $_ })
+$tags = @($allTags | Where-Object { $_ -match '^v\d{2}\.\d{4}\.\d{4}$' })
 if (-not $tags.Count) {
     Write-Host "release-notes: this clone has no app release tags (v<version>); the notes cannot be held against them. Fetch the tags and run again."
     Exit-Verdict 'release-notes' 2 'no release tags in this clone'
@@ -140,8 +141,12 @@ foreach ($i in 0..([Math]::Max($records.Count, 1) - 1)) {
     if ($i -ge $records.Count) { break }
     $v = [string]$records[$i].version
     if ("v$v" -in $tags) { continue }
-    if ($i -eq 0) { Write-Host "  $v is the newest record and has no tag yet: read as the release in preparation." -ForegroundColor Yellow }
+    if ($i -eq 0) { Write-Host "  $v is the newest record and has no tag yet: read as the release in preparation (not rendered to pages)." -ForegroundColor Yellow }
     else { Add-Finding "$SourcePath $v has no tag v$v and is not the newest record" }
+}
+$publishedRecords = @($records | Where-Object { "v$($_.version)" -in $tags })
+if (-not $publishedRecords.Count) {
+    Add-Finding "${SourcePath}: no tagged release record exists to render"
 }
 
 # ── the render ────────────────────────────────────────────────
@@ -150,7 +155,7 @@ function ConvertTo-HtmlText([string]$s) { return $s.Replace('&', '&amp;').Replac
 function Get-Render {
     $sb = [System.Text.StringBuilder]::new()
     $null = $sb.Append("    <!-- release-notes:begin $Block (rendered from $SourcePath by scripts/release-notes.ps1 -Render; edit the records there) -->`n")
-    foreach ($r in $records) {
+    foreach ($r in $publishedRecords) {
         $v = [string]$r.version
         $id = 'v' + $v.Replace('.', '-')
         $null = $sb.Append("    <section class=`"release`" id=`"$id`">`n")
@@ -168,9 +173,10 @@ function Get-Render {
     return $sb.ToString()
 }
 
-# The items of the newest record, as the landing shows them below #get (ticket E0111, F6 and F67).
+# The items of the newest published record, as the landing shows them below #get (ticket E0111, F6 and F67).
 function Get-WhatsNewRender {
-    $r = $records[0]
+    if (-not $publishedRecords.Count) { return '' }
+    $r = $publishedRecords[0]
     $v = [string]$r.version
     $sb = [System.Text.StringBuilder]::new()
     $null = $sb.Append("    <!-- release-notes:begin whatsnew (rendered from $SourcePath by scripts/release-notes.ps1 -Render; edit the records there) -->`n")
@@ -230,13 +236,23 @@ $extensionVersion = [string]$data.extension.version
 if ($extensionVersion -and $extensionVersion -notmatch '^\d{2}\.[1-9]\d{2,3}\.(0|[1-9]\d{0,3})$') {
     Add-Finding "${SourcePath}: extension.version '$extensionVersion' is not the stores' integer shape YY.MDD.Hmm"
 }
-if ($records.Count -and [string]$records[0].version -match $versionRx) {
-    $v = [string]$records[0].version
+$publishedExtension = $extensionVersion
+if ($extensionVersion -and $extensionVersion -match '^\d{2}\.[1-9]\d{2,3}\.(0|[1-9]\d{0,3})$') {
+    $missingExtTags = @()
+    if ("ext-cws-v$extensionVersion" -notin $allTags) { $missingExtTags += "ext-cws-v$extensionVersion" }
+    if ("ext-edge-v$extensionVersion" -notin $allTags) { $missingExtTags += "ext-edge-v$extensionVersion" }
+    if ($missingExtTags.Count) {
+        Add-Finding "${SourcePath}: extension.version '$extensionVersion' is missing extension release tag(s): $($missingExtTags -join ', ') (never publish an untagged extension version)"
+        $publishedExtension = ''
+    }
+}
+if ($publishedRecords.Count -and [string]$publishedRecords[0].version -match $versionRx) {
+    $v = [string]$publishedRecords[0].version
     foreach ($f in $sitePages) {
         if (-not (Test-Path -LiteralPath $f)) { continue }
         $text = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $f), [Text.Encoding]::UTF8)
-        if (-not $extensionVersion -and $text.Contains('data-rf="extension"')) { Add-Finding "${f}: it shows the extension's version, and $SourcePath records none" }
-        $expected = Get-ReleaseFacts $text $v $extensionVersion
+        if (-not $publishedExtension -and $text.Contains('data-rf="extension"')) { Add-Finding "${f}: it shows the extension's version, and $SourcePath has no tagged extension release" }
+        $expected = Get-ReleaseFacts $text $v $publishedExtension
         if ($text -match 'release-notes:begin whatsnew\b') {
             foreach ($l in $Langs) { if ([string]::IsNullOrWhiteSpace([string]$data.whatsNew.($l.source))) { Add-Finding "${SourcePath}: whatsNew.$($l.source) (the heading of the landing's block) is missing" } }
             $block = '(?ms)^[ \t]*<!-- release-notes:begin whatsnew\b.*?<!-- release-notes:end whatsnew -->\r?\n'
@@ -252,7 +268,7 @@ if ($records.Count -and [string]$records[0].version -match $versionRx) {
             Write-Host "release-notes: rendered the release facts of $f (v$v)." -ForegroundColor Cyan
             $factPages++
         } else {
-            Add-Finding "${f}: its release facts are not the render of the newest record v$v (run scripts/release-notes.ps1 -Render; never type a version by hand)"
+            Add-Finding "${f}: its release facts are not the render of the newest published record v$v (run scripts/release-notes.ps1 -Render; never type a version by hand)"
         }
     }
 }

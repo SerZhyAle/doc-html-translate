@@ -36,7 +36,7 @@ How diagnostic bundles and support packages are assembled and sanitized:
   silent telemetry.
 
 **Deviations, in the catalog registry (section 3).** Temporary, until 2026-12-31: the retention of 20 run logs under
-20 MiB (the contract's default keeps 10 session logs; a size ceiling may be lower, a count is a default). The run-log
+20 MiB (`MaxLogFiles = 20`, `MaxTotalBytes = 20 << 20` in `internal/report/store.go:23-24`; the contract's default keeps 10 session logs, and section 8 item D lowers byte ceilings only). Design record (ticket E0151 item 8): each log file here records one conversion invocation rather than a long-lived application session, so a multi-file queue or retry sequence spans more than 10 short runs while the 20 MiB total budget and 5 MiB per-run compaction bound disk usage; keeping `MaxLogFiles = 20` (with a catalog proposal) or lowering the count to `10` is an owner call before 2026-12-31 (and avoids an uncompiled Go production edit between releases when `.sza-profile.json` declares no `commands.compileCheck`). The run-log
 marker row is closed by the head-and-tail compaction above (ticket E0122, Q1), and the three variants the 2026-10-20
 proposal asked for are closed by conforming (Q3): the extension's clipboard and file carry the JSON envelope (it
 still has no zip archive, ADR-4 in [`../PARITY.md`](../PARITY.md)), `environment.txt` is `KEY=value` with

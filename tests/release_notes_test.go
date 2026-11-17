@@ -73,13 +73,19 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 	run("a tag with no notes", 1, "release-notes: FAIL", "tag v26.0215.1200 has no record")
 	git("tag", "-d", "v26.0215.1200")
 
-	run("the newest record may be the release in preparation", 0, "release-notes: PASS", "")
+	run("the newest record is published with its tag", 0, "release-notes: PASS", "")
 	git("tag", "-d", "v26.0201.1000")
-	run("the newest record without its tag", 0, "release-notes: PASS", "no tag yet")
+	run("a page still renders an untagged newest record", 1, "release-notes: FAIL", "is not the render")
+	run("-Render omits untagged newest record from pages", 0, "release-notes: PASS", "not rendered to pages", "-Render")
+	if strings.Contains(readScratch(t, dir, "release-notes.html"), "26.0201.1000") {
+		t.Fatalf("untagged newest record must not remain rendered on release-notes.html")
+	}
+	run("the newest record without its tag is only prep when not rendered", 0, "release-notes: PASS", "not rendered to pages")
 	git("tag", "-d", "v26.0101.0900")
 	git("tag", "v26.0201.1000")
 	run("an older record without its tag", 1, "release-notes: FAIL", "26.0101.0900 has no tag v26.0101.0900")
 	git("tag", "v26.0101.0900")
+	run("-Render restores both tagged records", 0, "release-notes: PASS", "", "-Render")
 
 	broken := func(what, source, fragment string) {
 		w("docs/release-notes.json", source)
@@ -119,9 +125,13 @@ func TestReleaseNotesOutcomes(t *testing.T) {
 	landing := "<main>\n    <!-- release-notes:begin whatsnew -->\n    <!-- release-notes:end whatsnew -->\n<a>Chrome Web Store<span data-rf=\"extension\"></span></a>\n</main>\n"
 	w("landing.html", landing)
 	w("docs/release-notes.json", notesWith(`"whatsNew":{"en":"New in {version}","ru":"Новое в {version}","uk":"Нове в {version}"},`))
-	run("a page shows the extension's version and the source records none", 1, "release-notes: FAIL", "records none")
+	run("a page shows the extension's version and the source records none", 1, "release-notes: FAIL", "no tagged extension release")
 	full := notesWith(`"whatsNew":{"en":"New in {version}","ru":"Новое в {version}","uk":"Нове в {version}"},"extension":{"version":"26.1021.41"},`)
 	w("docs/release-notes.json", full)
+	run("an extension version without ext-cws-v / ext-edge-v tags fails", 1, "release-notes: FAIL", "missing extension release tag")
+	git("tag", "ext-cws-v26.1021.41")
+	run("an extension version without ext-edge-v tag still fails", 1, "release-notes: FAIL", "ext-edge-v26.1021.41")
+	git("tag", "ext-edge-v26.1021.41")
 	run("the landing is not rendered yet", 1, "release-notes: FAIL", "its release facts are not the render")
 	run("-Render fills the landing", 0, "release-notes: PASS", "", "-Render")
 	rendered := readScratch(t, dir, "landing.html")

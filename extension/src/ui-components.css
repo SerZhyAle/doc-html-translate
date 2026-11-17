@@ -173,6 +173,10 @@ select:disabled { opacity: 0.6; cursor: not-allowed; }
    toggles the option. */
 .opt-help-wrap { position: relative; display: inline-flex; }
 .opt-help { padding: 0; width: var(--tgt); height: var(--tgt); background: transparent; border-color: transparent; }
+@media (pointer: coarse) {
+  .opt-help { width: auto; height: auto; padding: calc(5px * var(--s)) var(--pad); border-color: var(--border-strong); background: var(--control); }
+  .opt-help::after { content: attr(title); content: attr(title) / ""; }
+}
 .opt-pop {
   position: absolute;
   z-index: 20;

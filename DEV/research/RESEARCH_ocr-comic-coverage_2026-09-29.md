@@ -1,6 +1,6 @@
 # The Safety-First page: where recognition hides, and the two changes it bought - 2026-09-29
 
-**Ticket:** [`67_2026-09-29_ocr-comic-coverage-safety-first`](../plan/67_2026-09-29_ocr-comic-coverage-safety-first.md)
+**Ticket:** [`67_2026-09-29_ocr-comic-coverage-safety-first`](../plan/done/67_2026-09-29_ocr-comic-coverage-safety-first.md)
 **Question:** ticket 66's R1 found four FAIL-level behaviours on one public-service Superman page
 (`test_doc/New_test/027f032012d82d5e01cc1cc083914fd9.jpg`, 505x720): two side-by-side balloons
 read as one interleaved plate, the display-lettering title banner bare, the "WHEW!" balloon bare,

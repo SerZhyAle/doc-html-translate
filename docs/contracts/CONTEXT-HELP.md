@@ -1,7 +1,7 @@
 # Pointer: CONTEXT-HELP
 
 - **Id:** `CONTEXT-HELP`
-- **Version:** 0.2 draft
+- **Version:** 0.4 draft
 - **Home:** the shared contracts catalog, `in-app-help/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the GUI launcher (`cmd/doc-html-ui`), adopted 2026-10-20 (ticket 118); `partial` until the owner's walk
 - **Wire carrier:** none - a key, a button, a help map file and a page anatomy

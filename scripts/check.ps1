@@ -74,6 +74,7 @@ $defaultPlan = @(
     'scripts/security-posture.ps1'
     'scripts/help-check.ps1'
     'scripts/settings-inventory.ps1'
+    'scripts/cli-doc.ps1'
 )
 # `pwsh -File check.ps1 -Plan a,b` binds "a,b" as one string; split it the way a call from inside
 # PowerShell would have.

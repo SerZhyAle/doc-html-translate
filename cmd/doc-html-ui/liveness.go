@@ -25,6 +25,12 @@ var activeRuns atomic.Int64
 // aliveStreams counts open /api/alive requests.
 var aliveStreams atomic.Int64
 
+// closing records that the launcher is shutting down (either via quit or heartbeat exit).
+var closing atomic.Bool
+
+func isClosing() bool { return closing.Load() }
+func setClosing()     { closing.Store(true) }
+
 const (
 	aliveGrace     = 90 * time.Second
 	aliveKeepalive = 20 * time.Second
@@ -82,9 +88,13 @@ func watchHeartbeat(srv *http.Server) {
 	lastPing.Store(time.Now().Unix())
 	for {
 		time.Sleep(watchdogTick)
+		if isClosing() {
+			return
+		}
 		if !shouldExit(time.Now()) {
 			continue
 		}
+		setClosing()
 		cancelAllRuns()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_ = srv.Shutdown(ctx)

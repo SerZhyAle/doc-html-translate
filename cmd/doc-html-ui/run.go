@@ -146,14 +146,23 @@ func answerRunSecret(key, value string, cancel bool) bool {
 	return err == nil
 }
 
-// cancelAllRuns stops every run; the GUI is going away.
-func cancelAllRuns() {
+// conversionsCount returns the number of conversions currently running.
+func conversionsCount() int {
 	runs.Lock()
 	defer runs.Unlock()
+	return len(runs.m)
+}
+
+// cancelAllRuns stops every run; the GUI is going away. Returns the number of runs cancelled.
+func cancelAllRuns() int {
+	runs.Lock()
+	defer runs.Unlock()
+	n := len(runs.m)
 	for _, r := range runs.m {
 		r.cancelled = true
 		r.cancel()
 	}
+	return n
 }
 
 func wasCancelled(key string) bool {

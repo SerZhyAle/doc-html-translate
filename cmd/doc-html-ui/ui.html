@@ -207,9 +207,17 @@ h1 { font-size: var(--fs-title); font-weight: 600; letter-spacing: .02em; }
 .head-help { margin-inline-start: auto; }
 .help-btn { padding: 0; width: var(--tgt); height: var(--tgt); }
 .help-btn .glyph { width: var(--glyph); height: var(--glyph); }
+html[data-input="touch"] .help-btn,
+html[data-input="touch"] .swap,
+html[data-input="touch"] .opt-help { width: auto; height: auto; padding: calc(5px * var(--s)) var(--pad); }
+html[data-input="touch"] .help-btn::after,
+html[data-input="touch"] .swap::after,
+html[data-input="touch"] .opt-help::after { content: attr(title); content: attr(title) / ""; }
+html[data-input="touch"] .opt-help { border-color: var(--border); background: var(--control); }
 .dlg form { position: relative; }
 .dlg-help { position: absolute; inset-block-start: calc(-10px * var(--s)); inset-inline-end: calc(-12px * var(--s)); }
 .dlg-help[hidden] { display: none; }
+html[data-input="touch"] .dlg-help { position: static; margin-top: var(--gap); }
 
 /* The muted note under a caption: what a setting does and what it costs (APP-SETTINGS rule 3). 12px
    at ordinary scale - the next smaller readable role - and it grows with the text enlargement. */
@@ -938,7 +946,7 @@ dialog.dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
     <input type="checkbox" class="opt-box" id="chkOCR" aria-describedby="chkOCRD">
     <div class="opt-cell">
         <div class="opt-headrow">
-            <label class="opt-name" for="chkOCR"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg><span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
+            <label class="opt-name" for="chkOCR"><span data-i18n="chkOCRLabel">Overlay translatable text on images</span></label>
             <span class="opt-help-wrap" data-opt-help="helpOptOcr" data-opt-name="chkOCRLabel"><button type="button" class="opt-help" aria-expanded="false"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11,18h2v-2h-2v2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8zM12,6c-2.21,0 -4,1.79 -4,4h2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,2 -3,1.75 -3,5h2c0,-2.25 3,-2.5 3,-5 0,-2.21 -1.79,-4 -4,-4z"/></svg></button><div class="opt-pop" role="note" hidden></div></span>
         </div>
         <p class="opt-expl" id="chkOCRD" data-i18n="hintOCR">Recognizes text baked into images (EPUB/PDF pages, or a standalone image you open directly) and lays it over them as real text, so translation covers pictures too. A standalone image is OCR'd automatically. Needs Tesseract installed.</p>
@@ -1438,6 +1446,39 @@ async function keepAlive() {
 }
 keepAlive();
 
+// Server-to-page channel for `open` commands forwarded by later launcher starts (ticket E0144).
+async function listenEvents() {
+    try {
+        const r = await api('/api/events');
+        if (!r.ok || !r.body) throw new Error('events ' + r.status);
+        const reader = r.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        for (;;) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, {stream: true});
+            for (;;) {
+                const nl = buf.indexOf('\n');
+                if (nl < 0) break;
+                const line = buf.slice(0, nl).trim();
+                buf = buf.slice(nl + 1);
+                if (!line) continue;
+                let msg;
+                try { msg = JSON.parse(line); } catch (_) { continue; }
+                if (msg && msg.type === 'open' && Array.isArray(msg.paths)) {
+                    const queued = receiveOpenPaths(msg.paths);
+                    if (msg.id) {
+                        api('/api/events-ack', {method: 'POST', body: JSON.stringify({id: msg.id, queued})}).catch(()=>{});
+                    }
+                }
+            }
+        }
+    } catch (e) { /* reopened below */ }
+    setTimeout(listenEvents, 2000);
+}
+listenEvents();
+
 // ── input file display ──────────────────────────────────
 function setInputPath(p) {
     document.getElementById('inputFile').value = p;
@@ -1589,7 +1630,8 @@ api('/api/version').then(r=>r.json()).then(d=>{
 }).catch(()=>{});
 
 api('/api/initial').then(r=>r.json()).then(d=>{
-    if (d.file) { setInputPath(d.file); rememberRecent([d.file]); }
+    const files = (Array.isArray(d.files) && d.files.length) ? d.files : (d.file ? [d.file] : []);
+    if (files.length) receiveOpenPaths(files);
 }).catch(()=>{});
 
 api('/api/env').then(r=>r.json()).then(d=>{
@@ -2807,6 +2849,44 @@ function addPickedPaths(paths) {
     }
     const added = addFilesToQueue(paths);
     if (added.length) { setInputPath(added[0].input); setStatus('dropStatus', ''); }
+}
+
+// receiveOpenPaths routes paths sent by `open` (or /api/initial) into the queue, promoting an
+// existing single-file input when a second distinct file arrives so nothing is overwritten.
+function receiveOpenPaths(paths) {
+    if (!Array.isArray(paths) || !paths.length) return 0;
+    const clean = paths.filter(p => typeof p === 'string' && p);
+    if (!clean.length) return 0;
+    const cur = document.getElementById('inputFile').value.trim();
+    const curKey = cur.toLowerCase();
+    if (!queue.length) {
+        if (cur) {
+            const novel = [];
+            const seen = new Set([curKey]);
+            for (const p of clean) {
+                const k = p.toLowerCase();
+                if (!seen.has(k)) { seen.add(k); novel.push(p); }
+            }
+            if (!novel.length) return 0;
+            rememberRecent(novel);
+            const added = addFilesToQueue([cur, ...novel]);
+            if (added.length) { setInputPath(added[0].input); setStatus('dropStatus', ''); }
+            return novel.length;
+        }
+        addPickedPaths(clean);
+        return clean.length;
+    }
+    const existingKeys = new Set(queue.map(it => it.input.toLowerCase()));
+    const novel = clean.filter(p => {
+        const k = p.toLowerCase();
+        if (existingKeys.has(k)) return false;
+        existingKeys.add(k);
+        return true;
+    });
+    if (!novel.length) return 0;
+    rememberRecent(novel);
+    const added = addFilesToQueue(novel);
+    return added.length;
 }
 
 // addFilesToQueue appends paths not already queued, in the order given, and returns the

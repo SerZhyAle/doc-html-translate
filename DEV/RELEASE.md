@@ -81,8 +81,9 @@ step by hand. `[PAID]` = uses paid GitHub Actions minutes; `[PUBLIC]` = publishe
    manifests blocks here.
    The header also prints the **contract gate** (`scripts/contract-gate.ps1`, read-only): every pointer in
    `docs/contracts/` against the catalog's registry - a current row verified since the last release, the
-   pointer's version equal to the catalog's or behind it with a reason, no expired exception. PASS and
-   WARN let the release go (a WARN names the row to re-verify); FAIL blocks it, and so does UNVERIFIED,
+   pointer's version equal to the catalog's or behind it with a reason. Each open exception and its
+   deviation produces a WARN; exception deadlines are not required. PASS and WARN let the release go;
+   FAIL blocks it, and so does UNVERIFIED,
    which is what a clone without the catalog gets - a release is cut on the machine that has it.
    The header also prints the **store preflight** (the sza plugin's shared `tools/Store-Preflight.ps1`, WINDOWS-STORE 0.4
    section D, ticket E0132 Part 2; read-only - the only Store call it can make is `msstore submission get`): PASS when

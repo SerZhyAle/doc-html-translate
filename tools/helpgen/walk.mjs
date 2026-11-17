@@ -97,7 +97,7 @@ try {
       await check(page, ctx, base('main', 'key'), url('converter'), () => page.keyboard.press('F1'));
       await check(page, ctx, base('main', 'button'), url('converter'), () => page.click('#btnHelp'));
       await page.focus('#btnHelp');
-      await check(page, ctx, base('main.help (focused button)', 'key'), url('converter', 'help'), () => page.keyboard.press('F1'));
+      await check(page, ctx, base('main.help (focused button)', 'key'), url('converter'), () => page.keyboard.press('F1'));
       // the states of the window that show the regions that appear only sometimes: the first-run question, a queue, the
       // Google key row and a finished result (the page's own functions, as the screenshots do)
       await page.evaluate((files) => {

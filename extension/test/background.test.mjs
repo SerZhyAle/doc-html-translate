@@ -10,7 +10,7 @@ const VIEWER = "chrome-extension://test/src/viewer.html";
 const on = {};                   // event name -> listeners
 const calls = {
   dynamicRules: [], sessionRules: [], menus: [], tabsCreated: [], tabsUpdated: [], insertCSS: [],
-  badgeTexts: [], badgeColors: [],
+  badgeTexts: [], badgeColors: [], uncheckedMenuErrors: [],
 };
 let storedOptions;               // what chrome.storage.local holds under "options"
 let failSessionRules = false;
@@ -20,6 +20,20 @@ const tabUrlById = new Map();    // what chrome.tabs.get hands the navigation li
 
 const event = (name) => ({ addListener: (fn) => { (on[name] ||= []).push(fn); } });
 const fire = (name, ...args) => (on[name] || []).map((fn) => fn(...args));
+
+// The menu fake behaves like Chrome's: a call is applied in order but its callback runs later, a
+// create with an id already registered is refused through runtime.lastError, and a refusal no
+// callback reads is what Chrome reports as "Unchecked runtime.lastError".
+function menuReply(cb, error) {
+  queueMicrotask(() => {
+    if (!cb) {
+      if (error) calls.uncheckedMenuErrors.push(error);
+      return;
+    }
+    globalThis.chrome.runtime.lastError = error ? { message: error } : undefined;
+    try { cb(); } finally { globalThis.chrome.runtime.lastError = undefined; }
+  });
+}
 
 globalThis.chrome = {
   runtime: {
@@ -52,8 +66,16 @@ globalThis.chrome = {
     },
   },
   contextMenus: {
-    removeAll: (cb) => { calls.menus.length = 0; cb(); },
-    create: (item) => { calls.menus.push(item); },
+    removeAll: (cb) => { calls.menus.length = 0; menuReply(cb); },
+    create: (item, cb) => {
+      if (calls.menus.some((m) => m.id === item.id)) {
+        menuReply(cb, `Cannot create item with duplicate id ${item.id}`);
+      } else {
+        calls.menus.push(item);
+        menuReply(cb);
+      }
+      return item.id;
+    },
     onClicked: event("menuClicked"),
   },
   tabs: {
@@ -110,6 +132,27 @@ test("install with default options clears interception and builds the context me
     ["convert-doc-link", "convert-doc-page", "ocr-image", "ocr-page"]);
   // A lone "&" is a mnemonic marker in a menu title; the worker has to double it to print one.
   assert.equal(calls.menus.find((m) => m.id === "ocr-image").title, "OCR && translate this image");
+});
+
+// onInstalled and onStartup can both fire in one worker start. Two interleaved rebuilds ran
+// removeAll, removeAll, then both create batches, and the second batch failed on every id with
+// "Unchecked runtime.lastError: Cannot create item with duplicate id".
+test("install and startup in one worker start leave one menu and no unchecked menu errors", async () => {
+  calls.uncheckedMenuErrors.length = 0;
+  const warned = [];
+  const warn = console.warn;
+  console.warn = (...a) => { warned.push(a.join(" ")); };
+  try {
+    fire("installed");
+    fire("startup");
+    await settle();
+  } finally {
+    console.warn = warn;
+  }
+  assert.deepEqual(calls.menus.map((m) => m.id),
+    ["sza-root", "ocr-image", "ocr-page", "convert-doc-link", "convert-doc-page"]);
+  assert.deepEqual(calls.uncheckedMenuErrors, []);
+  assert.deepEqual(warned.filter((w) => w.includes("context menu")), []);
 });
 
 test("enabling interception installs redirect rules that honour disabled hosts", async () => {
@@ -424,7 +467,9 @@ test("a navigation drops the tab's badge state and recomputes the passive off-st
   await settle();
   assert.equal(badgeText(9), "");
 
-  // And a tab that goes away drops its state entirely.
+  // And a tab that goes away drops its state without a paint: the browser refuses a call aimed at
+  // a closed tab with "No tab with id".
+  const paintsBefore = calls.badgeTexts.length;
   fire("tabRemoved", 9);
-  assert.equal(badgeText(9), "");
+  assert.equal(calls.badgeTexts.length, paintsBefore);
 });

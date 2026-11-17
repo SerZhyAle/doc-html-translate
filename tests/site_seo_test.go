@@ -10,7 +10,10 @@ package tests
 // address renders the ru strings; those are held to the same limits.
 
 import (
+	"encoding/json"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -93,6 +96,82 @@ func TestSiteSEOStringsAreRead(t *testing.T) {
 		p := c + "/index.html"
 		if m := siteStringRe.FindStringSubmatch(readRepoFile(t, c, "index.html")); m == nil || m[1] != "page" || m[3] == "" {
 			t.Errorf("%s: SITE.strings.page title and desc were not read", p)
+		}
+	}
+}
+
+// DOC-EXTERNAL-QUALITY 0.14 item U: every multilingual page whose ?lang= views canonicalize
+// together declares all offered languages in JSON-LD "inLanguage"; single-language pages
+// declare their single language.
+func TestSiteJSONLDInLanguage(t *testing.T) {
+	ldRe := regexp.MustCompile(`(?s)<script\s+type="application/ld\+json">\s*(\{.*?\})\s*</script>`)
+	expected := map[string][]string{
+		"index.html":                {"ar", "bn", "de", "en", "es", "fr", "hi", "it", "pt", "ru", "uk", "ur", "zh"},
+		"extension.html":            {"en", "ru", "uk"},
+		"extension-privacy.html":    {"en", "ru", "uk"},
+		"install-trust.html":        {"en", "ru", "uk"},
+		"privacy.html":              {"en", "ru", "uk"},
+		"release-notes.html":        {"en", "ru", "uk"},
+		"support.html":              {"en", "ru", "uk"},
+		"docs.html":                 {"en"},
+		"docs.ru.html":              {"ru"},
+		"docs.uk.html":              {"uk"},
+		"capability-matrix.html":    {"en"},
+		"capability-matrix.ru.html": {"ru"},
+		"capability-matrix.uk.html": {"uk"},
+	}
+	for _, c := range localeLandings {
+		expected[c+"/index.html"] = []string{c}
+	}
+	for page, want := range expected {
+		raw := readRepoFile(t, strings.Split(page, "/")...)
+		m := ldRe.FindStringSubmatch(raw)
+		if m == nil {
+			t.Errorf("%s: missing <script type=\"application/ld+json\"> block", page)
+			continue
+		}
+		var doc map[string]any
+		if err := json.Unmarshal([]byte(m[1]), &doc); err != nil {
+			t.Errorf("%s: invalid JSON-LD: %v", page, err)
+			continue
+		}
+		v, ok := doc["inLanguage"]
+		if !ok {
+			if graph, gok := doc["@graph"].([]any); gok {
+				for _, node := range graph {
+					if obj, ok2 := node.(map[string]any); ok2 {
+						if iv, iok := obj["inLanguage"]; iok {
+							v = iv
+							ok = true
+							break
+						}
+					}
+				}
+			}
+		}
+		if !ok {
+			t.Errorf("%s: JSON-LD lacks \"inLanguage\" (DOC-EXTERNAL-QUALITY 0.14 item U)", page)
+			continue
+		}
+		var got []string
+		switch x := v.(type) {
+		case string:
+			got = []string{x}
+		case []any:
+			for _, item := range x {
+				if s, ok := item.(string); ok {
+					got = append(got, s)
+				}
+			}
+		default:
+			t.Errorf("%s: unexpected JSON-LD inLanguage type %T", page, v)
+			continue
+		}
+		sort.Strings(got)
+		wantSorted := append([]string(nil), want...)
+		sort.Strings(wantSorted)
+		if !reflect.DeepEqual(got, wantSorted) {
+			t.Errorf("%s: JSON-LD inLanguage = %v, want %v", page, got, wantSorted)
 		}
 	}
 }

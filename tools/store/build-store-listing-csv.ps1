@@ -93,7 +93,8 @@ param(
     [switch]$Screenshots,
     [string[]]$SkipFields = @(),
     [string[]]$Refresh = @(),
-    [switch]$FillNothing
+    [switch]$FillNothing,
+    [switch]$VerifyExport
 )
 
 $ErrorActionPreference = "Stop"
@@ -192,6 +193,40 @@ $refusals = New-Object System.Collections.ArrayList
 foreach ($p in $dialect.Problems) { [void]$refusals.Add("export dialect: $p") }
 foreach ($tag in $missing) {
     [void]$refusals.Add("no column for $tag in $(Split-Path -Leaf $Csv): the language is shipped, an import cannot create a column and would drop its copy - add it in Partner Center, export again")
+}
+
+if ($VerifyExport) {
+    # WINDOWS-STORE 0.5 item A condition 3: verify a Partner Center re-export carries uploaded
+    # asset URLs (never bare local filenames) in every populated DesktopScreenshotN cell.
+    $urlCount = 0
+    $ds1ColErrors = 0
+    for ($r = 1; $r -lt $rows.Count; $r++) {
+        $row = $rows[$r]
+        $field = $row[$fieldCol]
+        if ($field -notmatch '^DesktopScreenshot\d+$') { continue }
+        foreach ($tag in $present) {
+            $col = [array]::IndexOf($header, $tag)
+            $cell = if ($col -lt $row.Count) { [string]$row[$col] } else { '' }
+            if ([string]::IsNullOrWhiteSpace($cell)) {
+                if ($field -eq 'DesktopScreenshot1') {
+                    [void]$refusals.Add("$tag ${field}: empty in re-export (expected uploaded Partner Center asset URL)")
+                    $ds1ColErrors++
+                }
+                continue
+            }
+            if ($cell -notmatch '^https?://\S+$') {
+                [void]$refusals.Add("$tag ${field}: expected uploaded asset URL after re-export, found '$cell'")
+            } else {
+                $urlCount++
+            }
+        }
+    }
+    if ($urlCount -eq 0 -and $ds1ColErrors -eq 0) {
+        [void]$refusals.Add("no uploaded asset URLs found in any DesktopScreenshotN cell of $(Split-Path -Leaf $Csv)")
+    }
+    if ($refusals.Count) { Stop-Refused $refusals.ToArray() }
+    Write-Host "verify-export: OK ($urlCount asset URLs verified across $($present.Count) locales)" -ForegroundColor Green
+    exit 0
 }
 if (-not $FillNothing) {
     foreach ($tag in $present) {

@@ -6,18 +6,20 @@ import (
 	"errors"
 	"net/http/httptest"
 	"testing"
+
+	"doc-html-translate/internal/readiness"
 )
 
 // The resource index answers from the conversion's own probes, so a missing helper is reported missing
 // and a found one found, and the endpoint needs no network (SETTINGS-NAVIGATION 3.4).
 func TestResourcesFollowTheReadinessProbes(t *testing.T) {
-	saved := readinessProbes
-	t.Cleanup(func() { readinessProbes = saved })
-	readinessProbes.calibre = func() bool { return true }
-	readinessProbes.sevenZip = func() bool { return false }
-	readinessProbes.filedo = func() bool { return false }
-	readinessProbes.ocrLocate = func() (string, error) { return "", errors.New("no tesseract") }
-	readinessProbes.ocrMissing = func(context.Context, string, string) []string { return nil }
+	saved := readiness.Probes
+	t.Cleanup(func() { readiness.Probes = saved })
+	readiness.Probes.Calibre = func() bool { return true }
+	readiness.Probes.SevenZip = func() bool { return false }
+	readiness.Probes.FileDO = func() bool { return false }
+	readiness.Probes.OCRLocate = func() (string, error) { return "", errors.New("no tesseract") }
+	readiness.Probes.OCRMissing = func(context.Context, string, string) []string { return nil }
 
 	rec := httptest.NewRecorder()
 	handleResources(rec, httptest.NewRequest("GET", "/api/resources", nil))

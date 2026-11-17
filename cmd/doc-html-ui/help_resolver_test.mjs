@@ -77,6 +77,21 @@ test('the key asks about the dialog in front, else about the region the focus is
     assert.deepEqual(help.contextOf(doc(null, null)), {surface: 'main', element: ''});
 });
 
+// CONTEXT-HELP item K: F1 pressed while the help button has the focus opens the beginning of the surface's help,
+// not the anchor of the button's own entry, even though the button (and its header) carry a [data-help] mark.
+test('F1 on the focused help button asks about the surface, never about the button\'s own entry', () => {
+    const button = {dataset: {help: 'main.help'}};
+    const header = {dataset: {help: 'main.header'}};
+    const doc = active => ({querySelector: () => null, activeElement: active});
+    const onButton = {closest: sel => (sel === 'button[data-help-open]' ? button : sel === '[data-help]' ? button : null)};
+    const underHeader = {closest: sel => (sel === 'button[data-help-open]' ? button : sel === '[data-help]' ? header : null)};
+    // a help link that is not a button (the About page's Help link) keeps the region it sits in
+    const aboutLink = {closest: sel => (sel === '[data-help]' ? header : null)};
+    assert.deepEqual(help.contextOf(doc(onButton)), {surface: 'main', element: ''});
+    assert.deepEqual(help.contextOf(doc(underHeader)), {surface: 'main', element: ''});
+    assert.deepEqual(help.contextOf(doc(aboutLink)), {surface: 'main', element: 'main.header'});
+});
+
 // The key and the button resolve through the same table: every region the window marks, and every surface it
 // can show a button for, has a target - nothing the button opens is something the key does not.
 test('every region of the map resolves in every language the set holds', () => {

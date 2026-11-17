@@ -28,7 +28,7 @@ after measured proof.
 | Browser extension: reader toolbar | yes (32 / 48; the toolbar, its search panel and the contents tree's chevron buttons) | yes | no - mode toggles are not options | no | no | implemented, measured on an FB2 document (R1, 2026-10-20) |
 | Browser extension: viewer notices, offers, export card, status Cancel | yes (the same 32 / 48 tokens; type from the tokens, never the reader's size) | yes (answers in reading order, one primary at most, neutral faces) | no | no | no | implemented, measured on a CBZ, a Markdown book and a broken PDF (X1, 2026-10-20) |
 | Generated reader chrome (converted book) | yes (32 / 48) | yes | no - mode toggles are not options | no - the table of contents is navigation | no | implemented, measured (R1, 2026-10-20); no size selector is exposed (owner decision, section 4); custom Ctrl+wheel zoom removed in slice Z (owner decision Q8, browser zoom takes chord) |
-| Official site | yes (44 fine / 48 coarse) | yes (with `PAGE-STYLE`) | no checkbox exists | yes (`details.sec`) | no - ordinary site navigation is out of scope | implemented in the page layer and measured (W1, 2026-10-20); the theme control's visible label and the kit's own gaps are open (section 6) |
+| Official site | yes (44 fine / 48 coarse) | yes (with `PAGE-STYLE`) | no checkbox exists | yes (`details.sec`) | no - ordinary site navigation is out of scope | implemented in the page layer and measured (W1, 2026-10-20); route D1 touch captions (`#themeBtn`, `#toTop`) and `#toTop` `title` added in tree (E0150, `uicheck` at next release); kit-owned gaps remain open (section 6) |
 | CLI | no graphical controls; `--help` is its own help | | | | | not applicable |
 
 ## 2. Size and input profile (UI-SIZING sections 2 and 4)
@@ -81,7 +81,7 @@ focus; the glyph carries the meaning (`state.ok` affirmative, `state.warning` ca
 **The drop zone is a drop target, not a command button** - a content card whose click is a convenience
 (recorded 2026-10-11 and kept).
 
-**Boolean options.** Eleven options use the `.opt` component: a leading vector checkbox (20 / 24 visible, hit
+**Boolean options.** Ten options in the desktop launcher (`cmd/doc-html-ui/ui.html`: three on `convert`, six across `ocr` and `windows`, one on `about`), plus three on the extension options page and three in the extension popup, use the `.opt` component: a leading vector checkbox (20 / 24 visible, hit
 area 32 / 48 by padding that a negative margin takes back), a heading label that is the activation region, the
 explanation below as the checkbox's description, optional local help. Local help exists only where the visible
 explanation is not enough - the OCR overlay and the default-handler option; every other option omits it
@@ -124,7 +124,7 @@ Command rows are task groups that flow from the reading start and wrap whole but
 pinned to the far end; every button of a visual line takes the line's height; widths are content widths. The glyph
 precedes the caption on every button that has one. Glyph-only commands (text size, reset, night, text layer, the
 single-page contents button) are the familiar repeated ones, each with a tooltip and an accessible name; Search is
-`action.search` and its word; **Fit width, Open file, Original PDF and the panels' Close are words** (the vocabulary has
+`action.search` and its word; **Fit width, Open file, Original PDF, Select text and the panels' Close are words** (component policy under `ICON-RENDER` 0.26 section 28 item I and `BUTTONS` 2.3 section 2 rule 1: verbal commands without a catalog glyph stay word-only beside glyph commands, and `<select>` pickers are editors outside the command set). No option heading draws a leading glyph (`ICON-RENDER` section 25 rule 1).
 no fit-width meaning; `nav.close` and `action.choose-file` are not vendored). Search and Contents are disclosures that
 keep their action glyphs and say `aria-expanded`; the mode toggles say `aria-pressed`; a selected control is a distinct
 face plus an inset bar along the block end in the ink colour, which forced colours swap for the system's selected pair;
@@ -197,8 +197,7 @@ Owner decisions of 2026-11-10 (ticket 119, questions Q8 to Q10, slice Z):
 - **Custom Ctrl+wheel zoom removed in the Go reader** (Q8; `BUTTONS` 4 rule 7: key and gesture bindings must not override
   the browser's; Go and extension editions converge, chrome targets keep their CSS size, `dht_zoom` sessionStorage and `?z=`
   parameters are retired; `Fit width` stays per-session via sessionStorage `dht_fitw` and `?w=`).
-- **Touch naming route for glyph-only buttons** (Q9; `BUTTONS` 8 rule 3): recorded as a dated exception to 2026-12-31 with
-  remediation ticket 119 and catalog proposal `buttons/PROPOSAL-2026-11-10-web-reading-page-touch-naming.md` asking whether
+- **Touch naming route for glyph-only buttons** (Q9; `BUTTONS` 2.3 section 9 & section 11 item F, ticket E0150): route D1 implemented via CSS `::after { content: attr(title); content: attr(title) / ""; }` under `@media (pointer: coarse)` (generated reader `.dht-ico`, extension viewer `#toolbar button.ico`, extension options `.opt-help`, official site `#themeBtn` and `#toTop` with static + dynamic `title`) and under `html[data-input="touch"]` in the GUI launcher (`btnHelp`, `dlgHelp`, `btnSwap`, `.opt-help`), keeping `aria-label` + `title` without double-speaking. Runtime caption width measurement in `tools/uicheck` waits for the next release.
   an accessible name (`aria-label`) and tooltip (`title`) suffice on a dedicated web reading page; if declined, a long-press
   discovery route will be built in both editions.
 - **Reader help entry** (Q10; ticket 118 decision 5): confirmed none; the reader keeps no help entry, and the version
@@ -264,10 +263,10 @@ From the browser extension (slice X1): the viewer's password prompt
 rule, not opened in the harness), the OCR language and download rows measured with a real
 download (the harness stubs the engine), the extensionless licence files linked from About (a real Chrome may offer them as a download
 instead of showing them), a real installed extension in Chrome or Edge, and the ten machine-translated locales' review of the new strings;
-from the reader chrome (R1) the owner's decision on the Ctrl+wheel page zoom (Q8, resolved: custom zoom removed in slice Z), the touch naming route for glyph-only buttons (Q9, dated exception to 2026-12-31 and proposal filed), the reader's help route (Q10, confirmed none; version link opens documentation on site), and the viewer's toolbar measured
+from the reader chrome (R1) the owner's decision on the Ctrl+wheel page zoom (Q8, resolved: custom zoom removed in slice Z), the touch naming route for glyph-only buttons (Q9, route D1 implemented in ticket E0150; `tools/uicheck` runtime proof owed at the next release), the reader's help route (Q10, confirmed none; version link opens documentation on site), and the viewer's toolbar measured
 on PDF, EPUB and comic loads (only an FB2 document and a stubbed `chrome.*` were measured; the notices were opened on a CBZ,
 a Markdown book and a broken PDF); the site's
-remaining items (the re-vendor of the catalog's current kit `4aba1dee`, which answered the kit-owned gaps of
+remaining items (the re-vendor of the catalog's current kit `d490abf3` of `PAGE-STYLE` 3.8, superseding `4aba1dee` of 3.3, which answered the kit-owned gaps of
 `product-web-pages/PROPOSAL-2026-10-20-doc-html-translate-kit-ui-contract-gaps.md` on 2026-10-29 as `PAGE-STYLE` 3.3, with
 the overrides it makes unnecessary dropped from `assets/site.css`, and the theme control's visible label and its
 vocabulary glyph; the header button below 480 px follows the kit's recorded header policy - by the owner's decision of

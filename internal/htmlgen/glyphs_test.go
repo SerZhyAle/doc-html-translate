@@ -98,12 +98,18 @@ func TestReaderControlsNameEveryGlyphOnlyControl(t *testing.T) {
 		html := readerControlsHTML() + buildSinglePageHeader("", "", 0, true)
 		for _, c := range controls {
 			m := regexp.MustCompile(`(?s)<button id="` + c.id + `"[^>]*>.*?</button>`).FindString(html)
-			if !strings.Contains(m, `aria-label="`+i18n.T(lang, c.name)+`"`) || !strings.Contains(m, `d="`+Glyphs[c.glyph]+`"`) {
-				t.Errorf("%s: %s should draw %s named %q: %s", lang, c.id, c.glyph, i18n.T(lang, c.name), m)
+			wantName := i18n.T(lang, c.name)
+			if !strings.Contains(m, `aria-label="`+wantName+`"`) || !strings.Contains(m, `title="`+wantName+`"`) || !strings.Contains(m, `d="`+Glyphs[c.glyph]+`"`) {
+				t.Errorf("%s: %s should draw %s named %q: %s", lang, c.id, c.glyph, wantName, m)
 			}
 		}
 		if !strings.Contains(html, `d="`+Glyphs["app.theme"]+`"`) {
 			t.Errorf("%s: the theme select does not show app.theme", lang)
+		}
+	}
+	for _, wantCSS := range []string{`@media (pointer: coarse)`, `.dht-ico { padding: calc(4px * var(--dht-s)) var(--dht-pad); }`, `.dht-ico::after { content: attr(title); content: attr(title) / ""; }`} {
+		if !strings.Contains(chromeUICSS, wantCSS) {
+			t.Errorf("chromeUICSS missing touch caption rule %q", wantCSS)
 		}
 	}
 	i18n.SetLanguage("en")

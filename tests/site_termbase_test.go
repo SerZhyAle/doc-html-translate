@@ -25,6 +25,7 @@ type termEntry struct {
 	ID       string              `json:"id"`
 	Concept  string              `json:"concept"`
 	Glossary bool                `json:"glossary"`
+	Scope    string              `json:"scope,omitempty"`
 	Forms    map[string]termForm `json:"forms"`
 }
 
@@ -139,9 +140,28 @@ func TestTermbaseShape(t *testing.T) {
 	}
 }
 
+// localeFooterTexts extracts the footer visible text of index.html ("en") and each localized landing.
+func localeFooterTexts(t *testing.T) map[string]string {
+	t.Helper()
+	footerOf := func(p string) string {
+		doc := parseSitePage(t, p)
+		f := findElement(doc, byAtom(atom.Footer))
+		if f == nil {
+			t.Fatalf("%s has no <footer>", p)
+		}
+		return visibleText(f, "", true)
+	}
+	out := map[string]string{"en": footerOf("index.html")}
+	for _, c := range localeLandings {
+		out[c] = footerOf(c + "/index.html")
+	}
+	return out
+}
+
 func TestSiteFollowsTermbase(t *testing.T) {
 	tb := loadTermbase(t)
 	texts := localeTexts(t)
+	footers := localeFooterTexts(t)
 	all := strings.Join(func() []string {
 		var s []string
 		for _, v := range texts {
@@ -150,8 +170,12 @@ func TestSiteFollowsTermbase(t *testing.T) {
 		return s
 	}(), "\n")
 	for _, e := range tb.Terms {
+		corpus := texts
+		if e.Scope == "footer" {
+			corpus = footers
+		}
 		for loc, f := range e.Forms {
-			text := texts[loc]
+			text := corpus[loc]
 			if loc == "*" {
 				text = all
 			}

@@ -125,8 +125,7 @@ function syncRules() {
   });
 }
 
-// Right-click actions. removeAll first so re-running onInstalled / onStartup never throws
-// on a duplicate id.
+// Right-click actions, rebuilt from scratch on onInstalled and onStartup (removeAll, then create).
 //   - "OCR & translate this image": on any image, opens the OCR overlay page for it.
 //   - "OCR every image on this page": recognizes the whole page in place, without leaving it.
 //     Offered on the image context too, because on the pages this is for - a webcomic, a scanned
@@ -160,49 +159,73 @@ function menuTitle(key, fallback) {
   return text.replace(/&/g, "&&");
 }
 
-function setupContextMenu() {
-  try {
-    chrome.contextMenus.removeAll(() => {
-      // The root carries the page-OCR patterns so it can never render as an empty submenu: where
-      // it is offered at all, the page-OCR child matches in every context the root declares.
-      chrome.contextMenus.create({
-        id: ROOT_MENU_ID,
-        title: menuTitle("rootMenu", "OCR & translate"),
-        contexts: ["page", "image", "link"],
-        documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
-      });
-      chrome.contextMenus.create({
-        id: OCR_MENU_ID,
-        parentId: ROOT_MENU_ID,
-        title: menuTitle("ocrImageMenu", "OCR & translate this image"),
-        contexts: ["image"],
-      });
-      chrome.contextMenus.create({
-        id: OCR_PAGE_MENU_ID,
-        parentId: ROOT_MENU_ID,
-        title: menuTitle("ocrPageMenu", "OCR every image on this page"),
-        contexts: ["page", "image", "link"],
-        documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
-      });
-      const convertTitle = menuTitle("convertDocMenu", "Convert with doc-html-translate");
-      chrome.contextMenus.create({
-        id: CONVERT_LINK_MENU_ID,
-        parentId: ROOT_MENU_ID,
-        title: convertTitle,
-        contexts: ["link"],
-        targetUrlPatterns: CONVERT_URL_PATTERNS,
-      });
-      chrome.contextMenus.create({
-        id: CONVERT_PAGE_MENU_ID,
-        parentId: ROOT_MENU_ID,
-        title: convertTitle,
-        contexts: ["page"],
-        documentUrlPatterns: CONVERT_URL_PATTERNS,
-      });
+function menuItems() {
+  const convertTitle = menuTitle("convertDocMenu", "Convert with doc-html-translate");
+  return [
+    // The root carries the page-OCR patterns so it can never render as an empty submenu: where
+    // it is offered at all, the page-OCR child matches in every context the root declares.
+    {
+      id: ROOT_MENU_ID,
+      title: menuTitle("rootMenu", "OCR & translate"),
+      contexts: ["page", "image", "link"],
+      documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
+    },
+    {
+      id: OCR_MENU_ID,
+      parentId: ROOT_MENU_ID,
+      title: menuTitle("ocrImageMenu", "OCR & translate this image"),
+      contexts: ["image"],
+    },
+    {
+      id: OCR_PAGE_MENU_ID,
+      parentId: ROOT_MENU_ID,
+      title: menuTitle("ocrPageMenu", "OCR every image on this page"),
+      contexts: ["page", "image", "link"],
+      documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
+    },
+    {
+      id: CONVERT_LINK_MENU_ID,
+      parentId: ROOT_MENU_ID,
+      title: convertTitle,
+      contexts: ["link"],
+      targetUrlPatterns: CONVERT_URL_PATTERNS,
+    },
+    {
+      id: CONVERT_PAGE_MENU_ID,
+      parentId: ROOT_MENU_ID,
+      title: convertTitle,
+      contexts: ["page"],
+      documentUrlPatterns: CONVERT_URL_PATTERNS,
+    },
+  ];
+}
+
+// menuCall runs one callback-style contextMenus call and resolves once the browser has applied it.
+// The callback reads runtime.lastError, so a refused call is logged here instead of surfacing as an
+// "Unchecked runtime.lastError" on the extension's error page.
+function menuCall(what, invoke) {
+  return new Promise((resolve) => {
+    invoke(() => {
+      const err = chrome.runtime.lastError;
+      if (err) console.warn(`context menu ${what} failed:`, err.message);
+      resolve();
     });
-  } catch (e) {
-    console.warn("context menu setup failed", e);
-  }
+  });
+}
+
+// Menu rebuilds run one at a time. onInstalled and onStartup can both fire in one worker start (an
+// update applied while the browser was closed), and two rebuilds interleaved as removeAll, removeAll,
+// create x5, create x5 - the second batch then failed on every id with "duplicate id".
+let menuTail = Promise.resolve();
+
+function setupContextMenu() {
+  menuTail = menuTail.then(async () => {
+    await menuCall("reset", (done) => chrome.contextMenus.removeAll(done));
+    for (const item of menuItems()) {
+      await menuCall(`item ${item.id}`, (done) => chrome.contextMenus.create(item, done));
+    }
+  }).catch((e) => console.warn("context menu setup failed", e));
+  return menuTail;
 }
 
 // Open a document URL in the reflow viewer. Encoding matches viewer.js's manual

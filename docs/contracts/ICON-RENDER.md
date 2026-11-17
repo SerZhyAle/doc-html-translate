@@ -1,9 +1,9 @@
 # Pointer: ICON-RENDER
 
 - **Id:** `ICON-RENDER`
-- **Version:** 0.24 draft
+- **Version:** 0.26 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` sections 3 and 10, `iconography/palette.json` (its path is in [`AGENTS.md`](../../AGENTS.md))
-- **Role:** consumer, opted in as a draft on 2026-09-25; read at 0.24 on 2026-10-20 (ticket 120)
+- **Role:** consumer, opted in as a draft on 2026-09-25; read at 0.26 on 2026-11-16 (ticket E0150)
 - **Wire carrier:** none - a picture, not a payload
 
 Since 0.20 every button surface rule lives in [`BUTTONS`](BUTTONS.md), and sizes follow
@@ -28,6 +28,11 @@ What this repo owes it:
 - Section 11 (0.22): one colour policy for settings destinations - the rails are monochrome and the navigation
   identity-ink permission is noted, not taken. Section 20 of 2026-10-17 (0.21): a group's state is the triangle
   of `COLLAPSIBLE-GROUP`, not an action glyph.
+- Section 25 and section 28 item I (0.26, ticket E0150): every sibling set draws a glyph on every member or on none
+  (the lone `view.text-layer` glyph on the OCR boolean option heading was removed across launcher, options and popup,
+  held by `TestOptionHeadingGlyphUniformity`). Mixed toolbars (reader bar, extension viewer toolbar, in-page OCR bar)
+  deliberately carry word-only text actions beside glyph-only actions under the section 28 item I component policy
+  recorded in [`UI_PROFILE.md`](../UI_PROFILE.md) and [`PARITY.md`](../PARITY.md).
 
 **Deviations, in the catalog registry.** Rule 4 (a toggle shows its state): the text-layer toggle draws
 `view.text-layer` in one form because the catalog has no `view.text-layer--off` drawing; the state rides
@@ -35,7 +40,7 @@ What this repo owes it:
 dialog uses the darker `#8a4b00` ink instead of the kit tone (measured: the kit tone is 2.72:1 on the light
 surface) - temporary, until 2026-12-31; this is the half of the old warning-text row that stays.
 
-**Conformance.** The catalog SVG files are compared by the product's iconography suite (47 of 47 identical on
-2026-10-20); the system-surface, RTL-paging and target rules are checked by `tests/icons_test.go`,
+**Conformance.** The catalog SVG files are compared by the product's iconography suite (48 of 48 identical since
+2026-10-21); the system-surface, RTL-paging and target rules are checked by `tests/icons_test.go`,
 `internal/htmlgen/navbar_test.go` and `tools/uicheck` (ticket 119). Not verified: the installed MSIX tile and
 taskbar look, the toolbar icon in Chrome and Edge, OS high contrast.

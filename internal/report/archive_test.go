@@ -3,12 +3,15 @@ package report
 import (
 	"archive/zip"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -435,6 +438,227 @@ func TestBuildNeverOverwritesAReport(t *testing.T) {
 	for _, p := range []string{first, second} {
 		if _, err := os.Stat(p); err != nil {
 			t.Errorf("report %q missing: %v", p, err)
+		}
+	}
+}
+
+// ---- ticket E0147: `report build --out` ----
+
+func outOpts(out string, overwrite bool) BuildOptions {
+	o := buildOpts()
+	o.Out, o.Overwrite = out, overwrite
+	return o
+}
+
+// The default build is what it was: the contract's name in the reports folder, nothing named by a caller.
+func TestBuildDefaultIsUnchanged(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+	opts := buildOpts()
+	path, _, err := Build(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(Dir(), "reports", archiveName(opts.AppVersion, opts.At)); path != want {
+		t.Errorf("path = %q, want %q", path, want)
+	}
+}
+
+// --out writes there or nowhere: the named file is a readable archive and the default folder was not made.
+func TestBuildOutWritesTheNamedFile(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 2, 32)
+	out := filepath.Join(t.TempDir(), "logs.zip")
+	path, dropped, err := Build(outOpts(out, false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if path != out || dropped != 0 {
+		t.Errorf("path = %q dropped = %d, want %q and 0", path, dropped, out)
+	}
+	got := entries(t, out)
+	for _, name := range []string{"environment.txt", "report.txt", "settings.json"} {
+		if _, ok := got[name]; !ok {
+			t.Errorf("archive has no %s: %v", name, got)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(Dir(), "reports")); !os.IsNotExist(err) {
+		t.Errorf("the default reports folder was made for a named target: %v", err)
+	}
+}
+
+// A file that is there is refused and left byte for byte as it was; nothing else lands beside it.
+func TestBuildOutRefusesAnExistingFile(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+	dir := t.TempDir()
+	out := filepath.Join(dir, "logs.zip")
+	if err := os.WriteFile(out, []byte("keep me"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Build(outOpts(out, false)); !errors.Is(err, ErrOutExists) {
+		t.Fatalf("err = %v, want ErrOutExists", err)
+	}
+	if b, _ := os.ReadFile(out); string(b) != "keep me" {
+		t.Errorf("the refused file was changed: %q", b)
+	}
+	if des, _ := os.ReadDir(dir); len(des) != 1 {
+		t.Errorf("a refusal left %d files, want 1", len(des))
+	}
+}
+
+// With overwrite the file is replaced whole, through a temporary file that does not stay behind.
+func TestBuildOutOverwriteReplacesWhole(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+	dir := t.TempDir()
+	out := filepath.Join(dir, "logs.zip")
+	if err := os.WriteFile(out, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Build(outOpts(out, true)); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := entries(t, out)["environment.txt"]; !ok {
+		t.Error("the replaced file is not the new archive")
+	}
+	if des, _ := os.ReadDir(dir); len(des) != 1 {
+		t.Errorf("the folder holds %d files after the replace, want 1", len(des))
+	}
+}
+
+// A replace that cannot finish leaves the old file as it was. On Windows a file held open cannot be renamed over.
+func TestBuildOutOverwriteFailureLeavesTheOldFile(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("a file held open can be replaced on this system")
+	}
+	setHome(t)
+	writeLogs(t, 1, 16)
+	dir := t.TempDir()
+	out := filepath.Join(dir, "logs.zip")
+	if err := os.WriteFile(out, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	held, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = held.Close() }()
+	if _, _, err := Build(outOpts(out, true)); err == nil {
+		t.Fatal("replacing a file held open succeeded")
+	}
+	if b, _ := os.ReadFile(out); string(b) != "old" {
+		t.Errorf("the old file was changed: %q", b)
+	}
+	if des, _ := os.ReadDir(dir); len(des) != 1 {
+		t.Errorf("a failed replace left %d files, want 1", len(des))
+	}
+}
+
+// An existing folder receives DIAGNOSTIC-REPORT 8A's file name (APP-COMMANDS item P.1 / 0.3 item V); an existing
+// generated target is refused without --overwrite and replaced with it; a missing folder (including one ending in a
+// separator) is refused and never made.
+func TestBuildOutAcceptsAFolderAndRefusesAMissingFolder(t *testing.T) {
+	setHome(t)
+	writeLogs(t, 1, 16)
+	dir := t.TempDir()
+	opts := outOpts(dir, false)
+	want := filepath.Join(dir, archiveName(opts.AppVersion, opts.At))
+	path, _, err := Build(opts)
+	if err != nil {
+		t.Fatalf("existing folder: %v", err)
+	}
+	if path != want {
+		t.Errorf("existing folder path = %q, want %q", path, want)
+	}
+	if _, ok := entries(t, want)["environment.txt"]; !ok {
+		t.Error("folder target did not write readable archive")
+	}
+
+	// Trailing separator is a folder argument too; an existing target inside is refused without overwrite, replaced with it.
+	if err := os.WriteFile(want, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	withSep := dir + string(os.PathSeparator)
+	if _, _, err := Build(outOpts(withSep, false)); !errors.Is(err, ErrOutExists) {
+		t.Errorf("existing archive in folder without overwrite: err = %v, want ErrOutExists", err)
+	}
+	if b, _ := os.ReadFile(want); string(b) != "old" {
+		t.Errorf("the refused file was changed: %q", b)
+	}
+	if path, _, err := Build(outOpts(withSep, true)); err != nil || path != want {
+		t.Errorf("folder with overwrite: path=%q err=%v, want %q nil", path, err, want)
+	}
+	if _, ok := entries(t, want)["environment.txt"]; !ok {
+		t.Error("folder overwrite did not replace archive")
+	}
+
+	// A missing folder (with or without a trailing separator) is never made.
+	missingDir := filepath.Join(dir, "nope") + string(os.PathSeparator)
+	if _, _, err := Build(outOpts(missingDir, false)); !errors.Is(err, ErrOutFolderMissing) {
+		t.Errorf("a missing folder with separator: err = %v, want ErrOutFolderMissing", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "nope")); !os.IsNotExist(err) {
+		t.Errorf("the missing folder was made: %v", err)
+	}
+	missing := filepath.Join(dir, "nope", "logs.zip")
+	if _, _, err := Build(outOpts(missing, false)); !errors.Is(err, ErrOutFolderMissing) {
+		t.Errorf("a missing folder: err = %v, want ErrOutFolderMissing", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "nope")); !os.IsNotExist(err) {
+		t.Errorf("the missing folder was made: %v", err)
+	}
+	// A file where the folder should be is a folder that is not there.
+	file := filepath.Join(dir, "afile")
+	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Build(outOpts(file+string(os.PathSeparator), false)); !errors.Is(err, ErrOutFolderMissing) {
+		t.Errorf("a file with separator as folder: err = %v, want ErrOutFolderMissing", err)
+	}
+	if _, _, err := Build(outOpts(filepath.Join(file, "logs.zip"), false)); !errors.Is(err, ErrOutFolderMissing) {
+		t.Errorf("a file as the folder: err = %v, want ErrOutFolderMissing", err)
+	}
+}
+
+// The archive of a caller-named file carries no document name: what the run registered is hidden in every entry.
+func TestBuildOutHidesRegisteredDocuments(t *testing.T) {
+	setHome(t)
+	forgetHidden(t)
+	HideDocument(`D:\Lib\Zanzibar Chronicles.epub`)
+	if err := os.MkdirAll(LogsDir(), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	log := `Converting D:\Lib\Zanzibar Chronicles.epub` + "\nTitle: Zanzibar Chronicles\n"
+	if err := os.WriteFile(RunLogPath(time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC), 1), []byte(log), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(t.TempDir(), "logs.zip")
+	if _, _, err := Build(outOpts(out, false)); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range entries(t, out) {
+		if strings.Contains(strings.ToLower(body), "zanzibar") {
+			t.Errorf("entry %s still names the document: %q", name, body)
+		}
+	}
+}
+
+// The disk-full errors of the system are the ones the command answers as exit 13.
+func TestIsNoSpace(t *testing.T) {
+	full := syscall.ENOSPC
+	if runtime.GOOS == "windows" {
+		full = syscall.Errno(112)
+	}
+	if !IsNoSpace(&os.PathError{Op: "write", Path: "x", Err: full}) {
+		t.Errorf("the disk-full errno %d was not told", full)
+	}
+	if !IsNoSpace(fmt.Errorf("write archive: %w", &os.PathError{Op: "write", Path: "x", Err: full})) {
+		t.Error("a wrapped disk-full error was not told")
+	}
+	for _, err := range []error{nil, os.ErrPermission, errors.New("disk full"), &os.PathError{Op: "write", Path: "x", Err: syscall.Errno(5)}} {
+		if IsNoSpace(err) {
+			t.Errorf("%v was taken for a full disk", err)
 		}
 	}
 }

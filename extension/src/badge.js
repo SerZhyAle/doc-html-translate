@@ -35,10 +35,18 @@ function state(tabId) {
   return e;
 }
 
+// The action calls are fire-and-forget, and the tab can close between the event that asked for a
+// repaint and the call landing - a page-OCR run still draining, a flash timer, an options change
+// walking every tab. The browser then rejects with "No tab with id", which is no failure of ours:
+// the cell went away with the tab. The rejection is swallowed so it never reaches the error page.
+function quiet(result) {
+  if (result && typeof result.catch === "function") result.catch(() => {});
+}
+
 function paint(tabId, text, color) {
   try {
-    chrome.action.setBadgeText({ tabId, text });
-    chrome.action.setBadgeBackgroundColor({ tabId, color });
+    quiet(chrome.action.setBadgeText({ tabId, text }));
+    if (color) quiet(chrome.action.setBadgeBackgroundColor({ tabId, color }));
   } catch { /* no action API in this context (tests) */ }
 }
 
@@ -124,6 +132,9 @@ export function tabNavigated(tabId) {
   paint(tabId, "");
 }
 
+// tabGone forgets a closed tab. Nothing is painted: the cell closed with the tab, and a paint
+// aimed at it is what used to raise "No tab with id".
 export function tabGone(tabId) {
-  tabNavigated(tabId);
+  dropFlash(tabId);
+  tabs.delete(tabId);
 }

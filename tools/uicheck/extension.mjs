@@ -181,7 +181,7 @@ export async function optionRowCases(browser, base, report, c) {
     for (const [pageId, id, named] of [['general', 'enabled', 'Reflow'], ['ocr', 'ocr-images', 'OCR'], ['sites', 'allow-remote', 'remote']]) {
       await page.evaluate((i) => document.getElementById('tab-' + i).click(), pageId);
       await page.waitForTimeout(60);
-      await R.optionGeometry(page, report, `${tag}/${id}`, { id, tgt: T.tgt, box: T.box, s: T.s, glyph: id === 'ocr-images' ? T.glyph : null });
+      await R.optionGeometry(page, report, `${tag}/${id}`, { id, tgt: T.tgt, box: T.box, s: T.s, glyph: null });
       if (c.interact) await R.optionInteraction(page, report, `${tag}/${id}`, { id, tgt: T.tgt, named: c.lang && c.lang !== 'en' ? '' : named });
     }
   } finally { await close(); }

@@ -1,7 +1,7 @@
 # Pointer: FDSEC-BEHAVIOUR, FDSEC-FORMAT
 
 - **Id:** `FDSEC-BEHAVIOUR`, `FDSEC-FORMAT`
-- **Version:** 1.7 / 1.5
+- **Version:** 1.9 / 1.6
 - **Home:** the shared contracts catalog, `secure-container/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, through the installed FileDO command line - never an implementation of the format (adopted 2026-10-06, ticket 94)
 - **Wire carrier:** FileDO's exit-code classes (`FDSEC-BEHAVIOUR` section 7.1); the container bytes are FileDO's alone

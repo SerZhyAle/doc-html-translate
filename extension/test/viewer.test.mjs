@@ -927,3 +927,15 @@ test("the status bar's Cancel carries its glyph and keeps its caption", async ()
   assert.equal(stop.textContent, "Cancel");
   assert.equal(stop.hidden, true, "it is shown only while a preparation runs");
 });
+
+test("every glyph-only toolbar button carries its localized title and coarse-pointer caption rule", async () => {
+  const { document } = await bootViewer("", async () => new Response("", { status: 404 }));
+  const buttons = [...document.querySelectorAll("#toolbar button.ico")];
+  assert.equal(buttons.length, 5);
+  for (const btn of buttons) {
+    assert.ok(btn.getAttribute("aria-label"), `${btn.id} lacks aria-label`);
+    assert.equal(btn.getAttribute("title"), btn.getAttribute("aria-label"), `${btn.id} title differs from aria-label`);
+  }
+  const css = fs.readFileSync(new URL("../src/viewer.css", import.meta.url), "utf8");
+  assert.match(css, /@media\s*\(pointer:\s*coarse\)[\s\S]*?#toolbar button\.ico::after\s*\{\s*content:\s*attr\(title\);\s*content:\s*attr\(title\)\s*\/\s*"";\s*\}/);
+});

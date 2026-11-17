@@ -1,6 +1,6 @@
 # CJK word join: where a recognized CJK line gets its spaces back, and which ones are real - 2026-09-29
 
-**Ticket:** [`75_2026-09-29_cjk-ocr-plates-split-by-spaces`](../plan/75_2026-09-29_cjk-ocr-plates-split-by-spaces.md)
+**Ticket:** [`75_2026-09-29_cjk-ocr-plates-split-by-spaces`](../plan/done/75_2026-09-29_cjk-ocr-plates-split-by-spaces.md)
 **Question:** both editions build a line's text by joining the recognizer's words with a space
 (OCR-PIPELINE 2.3). Japanese and Chinese are written without spaces, and Korean spaces words, not
 syllables, but Tesseract cuts CJK lettering into single characters or short runs. Which spaces

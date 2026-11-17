@@ -1,0 +1,9 @@
+# Flags of internal/config that are shipped but not yet an option or an alias of a verb in docs/cli-commands.json
+# (ticket E0143, APP-COMMANDS C13). Each line would be "<flag> <ticket>", the ticket that adds the verb carrying it. The
+# file may only shrink: TestEveryShippedSpellingIsInTheManifest fails on a flag the manifest now covers and on a flag that
+# is neither covered nor listed here.
+#
+# It is empty: E0145 (the convert verb with its 21 flags), E0146 (`ocr langs`, alias -ocr-langs) and E0147 (the maintenance
+# group: `ocr download`, `report build`, `integration add`, `default-handler set`, `default-handler release`) landed on
+# 2026-11-14, and no ticket is left that adds a verb, so TestPendingFlagsIsEmpty holds the file empty and pendingFlags
+# refuses any line.

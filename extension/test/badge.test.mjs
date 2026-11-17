@@ -117,6 +117,40 @@ test("a new job drops the previous job's flash, and re-enabling a site drops its
   assert.equal(lastText(8), "..", "the new job's begin drops the finished job's flash");
 });
 
+// The action API returns promises in MV3, and one aimed at a tab that has just closed rejects
+// with "No tab with id". A try/catch around the call never saw it, so it surfaced as
+// "Uncaught (in promise)" on the extension's error page.
+test("a paint the browser refuses for a closed tab is swallowed, and a closed tab is not painted", async () => {
+  const badge = await fresh();
+  const { setBadgeText, setBadgeBackgroundColor } = chrome.action;
+  const refuse = (list) => (a) => {
+    list.push(a);
+    return Promise.reject(new Error(`No tab with id: ${a.tabId}.`));
+  };
+  chrome.action.setBadgeText = refuse(calls.texts);
+  chrome.action.setBadgeBackgroundColor = refuse(calls.colors);
+  const unhandled = [];
+  const onUnhandled = (e) => { unhandled.push(e); };
+  process.on("unhandledRejection", onUnhandled);
+  try {
+    badge.tabJob(10, "convert", "begin");
+    badge.tabError(10);
+    badge.tabNavigated(10);
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+  } finally {
+    process.off("unhandledRejection", onUnhandled);
+    chrome.action.setBadgeText = setBadgeText;
+    chrome.action.setBadgeBackgroundColor = setBadgeBackgroundColor;
+  }
+  assert.deepEqual(unhandled, []);
+
+  badge.tabJob(11, "convert", "begin");
+  const before = calls.texts.length;
+  badge.tabGone(11);
+  assert.equal(calls.texts.length, before);
+});
+
 test("progress for a job the worker never began is ignored, not painted as a job", async () => {
   const badge = await fresh();
   // A restarted worker has no state; a stray progress report must not invent a running job.

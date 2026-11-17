@@ -21,11 +21,13 @@ export async function commandBoxes(page, scope = 'body') {
       b.parentNode.appendChild(clone);
       const natural = clone.getBoundingClientRect().width;
       clone.remove();
+      const after = getComputedStyle(b, '::after').content;
+      const capText = b.textContent + (after && after !== 'none' && after !== 'normal' ? after : '');
       out.push({
         id: b.id || (typeof b.className === 'string' && b.className) || b.textContent.trim().slice(0, 24),
         r, natural, radius: parseFloat(cs.borderTopLeftRadius), pill: cs.borderTopLeftRadius.includes('%'),
         clipped: b.scrollWidth > b.clientWidth + 1 || b.scrollHeight > b.clientHeight + 1,
-        iconOnly: !/\p{L}/u.test(b.textContent), glyphFirst: !!b.firstElementChild && (b.firstElementChild.matches('svg') || !!b.firstElementChild.querySelector('svg')),
+        iconOnly: !/\p{L}/u.test(capText), glyphFirst: !!b.firstElementChild && (b.firstElementChild.matches('svg') || !!b.firstElementChild.querySelector('svg')),
         hasGlyph: !!b.querySelector('svg'), fs: parseFloat(cs.fontSize), disabled: b.disabled,
       });
     }

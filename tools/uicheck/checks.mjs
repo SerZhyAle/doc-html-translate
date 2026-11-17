@@ -24,13 +24,15 @@ async function commandBoxes(page) {
       b.parentNode.appendChild(clone);
       const natural = clone.getBoundingClientRect().width;
       clone.remove();
+      const after = getComputedStyle(b, '::after').content;
+      const capText = b.textContent + (after && after !== 'none' && after !== 'normal' ? after : '');
       out.push({
         id: b.id || b.className || b.textContent.trim().slice(0, 24),
         r, natural,
         radius: parseFloat(cs.borderTopLeftRadius),
         pill: cs.borderTopLeftRadius.includes('%'),
         clipped: b.scrollWidth > b.clientWidth + 1 || b.scrollHeight > b.clientHeight + 1,
-        iconOnly: !/\p{L}/u.test(b.textContent),
+        iconOnly: !/\p{L}/u.test(capText),
         stacked: !!b.closest('.state-stack'),
         rowTop: b.parentElement.className,
       });
@@ -48,6 +50,10 @@ export async function buttonsGeometry(session, report, { size, input, text = 'or
     await prepare(page);
     const boxes = await commandBoxes(page);
     report.check(`buttons.found/${tag}`, boxes.length > 0, `${boxes.length} command buttons measured`);
+    if (input === 'touch') {
+      const bare = boxes.filter((b) => b.iconOnly);
+      report.check(`buttons.touch-named/${tag}`, bare.length === 0, bare.length ? bare.map((b) => b.id).join(', ') + ' lack visible touch caption' : 'every touch-profile command button carries a visible caption');
+    }
     for (const b of boxes) {
       const where = `${tag} [${b.id}]`;
       report.check(`buttons.target-height/${where}`, b.r.h >= tgt - 1, `${b.r.h.toFixed(1)} px, floor ${tgt.toFixed(1)}`);
@@ -174,7 +180,7 @@ export async function options(session, report, { size = 'ordinary', input = 'poi
         outline: U.contrast(U.over(U.rgba(cs.borderTopColor), U.bgOf(c)), U.bgOf(c)),
         captionContrast: U.textContrast(name), explContrast: U.textContrast(ex),
         explSize: parseFloat(getComputedStyle(ex).fontSize), captionSize: parseFloat(getComputedStyle(name).fontSize),
-        glyph: U.rect(name.querySelector('.glyph')),
+        glyph: name.querySelector('.glyph') ? U.rect(name.querySelector('.glyph')) : null,
         helpBtn: U.rect(document.querySelector('#page-ocr .opt-help')),
         described: c.getAttribute('aria-describedby'),
       };
@@ -187,21 +193,26 @@ export async function options(session, report, { size = 'ordinary', input = 'poi
     report.check(`option.contrast/${tag}`, geo.outline >= 3 && geo.captionContrast >= 4.5 && geo.explContrast >= 4.5, `outline ${geo.outline.toFixed(2)}:1, caption ${geo.captionContrast.toFixed(2)}:1, explanation ${geo.explContrast.toFixed(2)}:1`);
     report.check(`option.explanation-size/${tag}`, geo.explSize >= 12 * s - 0.5 && geo.explSize < geo.captionSize, `explanation ${geo.explSize.toFixed(1)} px, caption ${geo.captionSize.toFixed(1)} px`);
     report.check(`option.described-by/${tag}`, geo.described === 'chkOCRD', `aria-describedby=${geo.described}`);
+    report.check(`option.no-lone-heading-glyph/${tag}`, !geo.glyph, 'sibling option set carries uniformly no heading glyph');
     if (size !== 'ordinary' || input !== 'pointer') return;
 
     // activation regions toggle exactly once; the explanation, the gap and the help button never do
     const before = await state();
     await page.click('label[for="chkOCR"] span');
     report.check('option.caption-toggles-once', (await state()) === !before, 'a click on the caption toggled once');
-    await page.click('label[for="chkOCR"] .glyph');
-    report.check('option.glyph-toggles-once', (await state()) === before, 'a click on the glyph toggled once');
+    if (await page.$('label[for="chkOCR"] .glyph')) {
+      await page.click('label[for="chkOCR"] .glyph');
+      report.check('option.glyph-toggles-once', (await state()) === before, 'a click on the glyph toggled once');
+      await page.click('label[for="chkOCR"] span');
+    }
+    const afterCap = await state();
     await page.click('#chkOCR', { position: { x: tgt / 2, y: tgt / 2 } });
-    report.check('option.checkbox-toggles-once', (await state()) === !before, 'a click on the checkbox toggled once');
+    report.check('option.checkbox-toggles-once', (await state()) === !afterCap, 'a click on the checkbox toggled once');
     await page.click('#chkOCRD');
-    report.check('option.explanation-does-not-toggle', (await state()) === !before, 'a click on the explanation changed nothing');
+    report.check('option.explanation-does-not-toggle', (await state()) === !afterCap, 'a click on the explanation changed nothing');
     const hb = await page.$('#page-ocr .opt-help');
     await hb.click();
-    report.check('option.help-does-not-toggle', (await state()) === !before, 'a click on help changed nothing');
+    report.check('option.help-does-not-toggle', (await state()) === !afterCap, 'a click on help changed nothing');
     const full = await page.evaluate(() => { const p = document.querySelector('#page-ocr .opt-pop'); return { hidden: p.hidden, text: p.textContent, expanded: document.querySelector('#page-ocr .opt-help').getAttribute('aria-expanded') }; });
     report.check('option.help-full-on-click', !full.hidden && full.expanded === 'true' && full.text.includes('Off:'), 'activating help shows the full explanation (both states)');
     await page.keyboard.press('Escape');

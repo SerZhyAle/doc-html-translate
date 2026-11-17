@@ -25,6 +25,10 @@ func findPDFToText() string {
 	return findSystemPDFToText()
 }
 
+// SystemPDFToTextPath is the pdftotext found on PATH or in a well-known install folder, or "" - the bundled copy is not
+// looked at and nothing is unpacked, so the capabilities report (internal/readiness) can ask without writing anything.
+func SystemPDFToTextPath() string { return findSystemPDFToText() }
+
 // findSystemPDFToText is like findPDFToText but skips the bundled binary.
 // Used after the bundled copy has been blocked by antivirus.
 func findSystemPDFToText() string {

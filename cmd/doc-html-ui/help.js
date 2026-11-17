@@ -66,6 +66,9 @@
         const dlg = doc.querySelector('dialog[open]');
         if (dlg) return {surface: dlg.dataset.surface || '', element: ''};
         const active = doc.activeElement;
+        // F1 on the help button opens the beginning of the surface's help, never the entry that explains the
+        // button itself (CONTEXT-HELP item K); the button's own entry stays on the page.
+        if (active && active.closest && active.closest('button[data-help-open]')) return {surface: 'main', element: ''};
         const host = active && active.closest ? active.closest('[data-help]') : null;
         return {surface: 'main', element: host ? host.dataset.help : ''};
     }

@@ -171,20 +171,10 @@ func unattendedRun(noOpen, stdoutTerminal bool) bool {
 // ExitInterrupted is the exit code of a run stopped by Ctrl+C.
 const ExitInterrupted = pipeline.ExitInterrupted
 
-// printOCRLangs lists which OCR languages are installed and which can be downloaded.
+// printOCRLangs lists which OCR languages are installed and which can be downloaded. The listing is internal/ocr's, so
+// the command `ocr langs` prints the same text.
 func printOCRLangs() {
-	installed := map[string]bool{}
-	for _, c := range ocr.Installed() {
-		installed[c] = true
-	}
-	fmt.Println("OCR languages (tessdata:", strings.Join(ocr.DataDirs(), "; ")+")")
-	for _, l := range ocr.Available {
-		mark := "  available - download with: -ocr-download " + l.Code
-		if installed[l.Code] {
-			mark = "  installed"
-		}
-		fmt.Printf("  %-9s %-22s%s\n", l.Code, l.Name, mark)
-	}
+	fmt.Print(ocr.LangsText())
 }
 
 // printDefaultHandlerResult prints what "set as default handler" actually achieved. Writing

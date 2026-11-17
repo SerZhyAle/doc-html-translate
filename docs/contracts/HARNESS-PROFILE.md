@@ -1,7 +1,7 @@
 # Pointer: HARNESS-PROFILE
 
 - **Id:** `HARNESS-PROFILE`
-- **Version:** 0.14 draft
+- **Version:** 0.17 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - the canon's shipped harness (ticket ledger, leases, portfolio runner, probe gates) runs against this repository
 - **Wire carrier:** `.sza-profile.json` at the repository root, `"version": "1"` (wire 1.0)
@@ -13,7 +13,7 @@ journals under `DEV/plan/`, the queue files, `paths.probeBaseline`, the ticket g
 repository's own [`scripts/check.ps1`](../../scripts/check.ps1); the harness drives the ticket flow, not the build.
 
 **What this repo owes it.** A profile that the shipped reader accepts at its version, with keys the defaults
-declare. The file is not yet in git, so a clone has no profile until it is committed.
+declare. The file is committed (`.sza-profile.json` at the repository root), so a clone has the profile.
 
 **Conformance.** No catalog vectors are consumed; the shipped `_profile.ps1` validates the `version` carrier and
 the keys on every harness call.

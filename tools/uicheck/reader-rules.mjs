@@ -109,6 +109,10 @@ export function geometryRules(m, { coarse, scale = 1, versionKey = '.nav-version
   add('glyph-only-named', unnamed.length === 0, unnamed.length ? unnamed.map(label).join('; ') + ' have no accessible name' : 'every glyph-only control and select has an accessible name');
   const noTip = C.filter((c) => c.icon && !c.title);
   add('glyph-only-tooltip', noTip.length === 0, noTip.length ? noTip.map(label).join('; ') + ' have no tooltip' : 'every glyph-only button has a tooltip');
+  if (coarse) {
+    const bareTouch = C.filter((c) => c.kind === 'button' && !c.caption);
+    add('touch-icon-buttons-named', bareTouch.length === 0, bareTouch.length ? bareTouch.map(label).join('; ') + ' lack a visible touch caption' : 'every coarse-pointer button carries a visible caption');
+  }
 
   const ext = C.filter((c) => c.target === '_blank');
   add('external-link-semantics', ext.every((c) => c.kind === 'link' && c.href), ext.map(label).join('; ') || 'no external link in the bar');

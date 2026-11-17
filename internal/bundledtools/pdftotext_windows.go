@@ -24,6 +24,13 @@ var (
 	pdftotextPath string
 )
 
+// PDFToTextBundled reports whether this build carries a pdftotext.exe. It only looks into the embedded set: nothing is
+// unpacked and nothing is written, which the capabilities report relies on.
+func PDFToTextBundled() bool {
+	_, err := fs.Stat(pdftotextSet, "pdftotext/"+pdftotextExe)
+	return err == nil
+}
+
 // PDFToTextPath returns the path to the bundled pdftotext.exe, unpacking the bundled set into
 // a folder named after its content hash on first use (see extractSet). It re-extracts when the
 // cached file has gone, e.g. quarantined by antivirus after the first run. A build whose

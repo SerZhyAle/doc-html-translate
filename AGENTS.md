@@ -46,6 +46,7 @@ This repo's overlay shape (four overlay facts):
 1. Read README.md for product behavior and user-facing flags.
 2. Prefer script-based workflows from scripts/ instead of ad-hoc commands.
 3. For conversion logic changes, start in internal/pipeline/pipeline.go and trace into format-specific packages.
+4. Scripts and agents drive the product by its command line: read [docs/CLI.md](docs/CLI.md), and `doc-html-translate.exe commands --json` lists every command as data (APP-COMMANDS rule 20). The manifest is `docs/cli-commands.json`; `docs/CLI.md` is its render (`go run ./tools/clidoc -render`, held by `scripts/cli-doc.ps1`), never edited by hand.
 
 ## Build vs Release (READ THIS)
 
@@ -177,6 +178,7 @@ Notes:
   - EPUB chapters are normalized on the parsed tree (internal/epub normalize.go, links.go `rewriteLinks`), never by text replacement; the splitter retargets TOC entries and links through an id-to-part map
 - External helpers (pdftotext, Tesseract, Calibre, 7-Zip, ffmpeg/ImageMagick, FileDO):
   - internal/procrun: the one way to run a helper - per-tool size-scaled deadline (`DOCHT_TOOL_TIMEOUT_SCALE` multiplies it), process-tree kill (job object on Windows, process group elsewhere), capped output, one error type naming the tool. Every call takes the run's context, so Ctrl+C stops a helper at once and the run ends as interrupted. Do not call exec.Command for a helper directly.
+  - internal/readiness: what this machine can do, as data (ticket E0146) - `Check` is the window's pre-flight for one document (the GUI `/api/readiness` handler and the command `input check` both call it, so they cannot disagree) and `Diagnose` is `doctor` (helper tools found with version numbers, input formats and the tool each needs, OCR languages, whether a Google key is stored; no path, no key, no service asked unless `--ollama`). `Probes` are the same discovery functions a conversion uses, swapped by tests.
   - internal/bundledtools: the Windows-only bundled pdftotext, unpacked into a content-hash-named cache folder. Nothing is ever installed on the user's machine (tests/no_auto_install_test.go).
   - internal/fdsec: FileDO secret files (.fd-sec) - screened by length, decrypted by the installed FileDO (`DOCHT_FILEDO` -> PATH -> setup folder -> winget Links -> Store alias) into one private copy under the user's temp folder, password only in the child's environment, FileDO's output never forwarded (read: the banner build and, beside exit 5, the exact stderr line `reason=destination-name`, which gets its own message); the container stays the run's identity and the plain copy is gone as soon as the extractor has read it (pointer [docs/contracts/FDSEC.md](docs/contracts/FDSEC.md); `internal/pipeline/container.go` is the pre-stage, `cmd/doc-html-ui/fdsecanswer.go` the window's masked-password answer). A new GUI file named `*secret*` is gitignored - name it otherwise.
 - Translation:

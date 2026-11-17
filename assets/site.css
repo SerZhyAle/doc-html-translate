@@ -191,6 +191,14 @@ details.sec ul,details.sec ol{padding-left:1.3rem}
    external-link marker is the vendored nav.open-external drawing, drawn as a mask so it follows the text colour. */
 :root{--ui-tgt:44px;--ui-gap:8px;--ui-radius:4px}
 @media(pointer:coarse){:root{--ui-tgt:48px}}
+@media(pointer:coarse){
+  .site-header{flex-wrap:wrap}
+  .theme-btn,.to-top{width:auto;height:auto;min-width:var(--ui-tgt);min-height:var(--ui-tgt);max-width:calc(100vw - 36px);
+    padding:.35rem .75rem;gap:.45rem;font-family:var(--font-body);font-size:.82rem;font-weight:600;line-height:1.25}
+  .theme-btn{display:inline-flex;align-items:center;justify-content:center}
+  .to-top.show{display:inline-flex;align-items:center;justify-content:center}
+  .theme-btn::after,.to-top::after{content:attr(title);content:attr(title) / ""}
+}
 .btn,.btn-sm,.seg,.seg button,.seg a,.theme-btn,.copybox .copy,.to-top{border-radius:var(--ui-radius)}
 .btn:hover{transform:none}
 .btn-primary,.btn-primary:hover,.to-top{box-shadow:none}

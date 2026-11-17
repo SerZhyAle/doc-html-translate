@@ -17,10 +17,10 @@
           - two or more MAJOR versions behind (item 3);
           - neither implemented nor read, and no open exception covers it (item 2: absent is not
             allowed);
-          - an open exception for this product past its `until` date.
     WARN  - behind the catalog within one MAJOR (allowed with a dated reason in the row);
           - the registry row and the pointer disagree on the version;
-          - not adopted, but covered by an open, dated exception;
+          - not adopted, but covered by an open exception;
+          - each open exception, with its deviation;
           - a registry row for this product with no pointer in docs/contracts/.
 
   Item 5 (the conformance vectors ran in this suite) is reported, not judged: the catalog's
@@ -42,16 +42,12 @@
 .PARAMETER Product
   The product name as the registry's Product column spells it.
 
-.PARAMETER Today
-  Test hook: the date to judge exception expiry against (yyyy-MM-dd). Default: today.
-
 .EXAMPLE
   ./scripts/contract-gate.ps1
 #>
 param(
     [string]$Catalog,
-    [string]$Product = 'doc-html-translate',
-    [string]$Today
+    [string]$Product = 'doc-html-translate'
 )
 
 $ErrorActionPreference = "Stop"
@@ -80,8 +76,6 @@ if (-not $registryPath -or -not (Test-Path -LiteralPath $registryPath)) {
     Write-Host "contract-gate: verdict = UNVERIFIED"
     Exit-Verdict 'contract-gate' 2 'catalog not reachable'
 }
-
-$todayDate = if ($Today) { [datetime]::ParseExact($Today, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture) } else { (Get-Date).Date }
 
 # ── the registry's tables ────────────────────────────────────
 function Split-Row([string]$Line) {
@@ -124,7 +118,7 @@ foreach ($line in (Get-Content -LiteralPath $registryPath -Encoding utf8)) {
         3 {
             if ($c.Count -lt 5 -or $c[1] -notlike "$Product*") { continue }
             $closed = $c[2].StartsWith('~~') -or $c[4] -match '^(closed|-)$'
-            foreach ($id in (Get-Ids $c[0])) { $exceptions.Add([pscustomobject]@{ Id = $id; Until = $c[4]; Closed = $closed; Deviation = $c[2] }) }
+            foreach ($id in (Get-Ids $c[0])) { $exceptions.Add([pscustomobject]@{ Id = $id; Closed = $closed; Deviation = $c[2] }) }
         }
     }
 }
@@ -187,7 +181,7 @@ foreach ($id in ($pointers.Keys | Sort-Object)) {
     $held = Get-Version $row.Implements
     if (-not $held) { $held = Get-Version $row.Reads }
     if (-not $held) {
-        if ($open.Count -gt 0) { $warns.Add("${id}: neither implemented nor read; covered by an open exception until $($open[0].Until)") }
+        if ($open.Count -gt 0) { $warns.Add("${id}: neither implemented nor read; covered by an open exception") }
         else { $fails.Add("${id}: neither implemented nor read, and no open exception covers it (absent is not allowed)") }
     } elseif ($p.Version -and (Compare-Version $held $p.Version) -ne 0) {
         $warns.Add("${id}: the registry row says $held, $($p.File) says $($p.Version) - one of them is stale")
@@ -205,16 +199,7 @@ foreach ($id in ($pointers.Keys | Sort-Object)) {
 }
 
 foreach ($e in ($exceptions | Where-Object { -not $_.Closed })) {
-    $until = [datetime]::MinValue
-    if ($e.Until -match '^permanent\b') {
-        # RULES section 15: a permanent supported variant carries a review condition, not a fictitious
-        # deadline. It never expires, and a release verdict names it, so it is a warning and not silence.
-        $warns.Add("$($e.Id): a permanent variant of $Product stays open - $($e.Until)")
-    } elseif ([datetime]::TryParseExact($e.Until, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture, 'None', [ref]$until)) {
-        if ($until -lt $todayDate) { $fails.Add("$($e.Id): an open exception for $Product expired on $($e.Until) - an expired row is a violation") }
-    } else {
-        $fails.Add("$($e.Id): an open exception for $Product has no until date ('$($e.Until)')")
-    }
+    $warns.Add("$($e.Id): open exception for $Product - $($e.Deviation)")
 }
 foreach ($r in $adoption) {
     if ($r.Role -eq '-') { continue }

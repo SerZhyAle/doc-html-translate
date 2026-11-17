@@ -250,7 +250,7 @@ func buildSinglePageHeader(sourceName, title string, pageCount int, hasContents 
 	var contentsButton string
 	if hasContents {
 		label := html.EscapeString(i18n.S("Table of contents"))
-		contentsButton = fmt.Sprintf(`<button id="dht-contents-button" class="dht-btn dht-ico" type="button" aria-controls="dht-contents" aria-expanded="false" aria-label="%s" title="%s">%s</button>`, label, label, glyphSVG("nav.contents"))
+		contentsButton = iconButton("dht-contents-button", "nav.contents", label, ` aria-controls="dht-contents" aria-expanded="false"`)
 	}
 	if pageCount > 1 {
 		var opts strings.Builder
