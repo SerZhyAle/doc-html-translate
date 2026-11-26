@@ -93,6 +93,10 @@ func RepoOutputs(root string) ([]Output, error) {
 		// embedded by those packages.
 		{Path: "cmd/doc-html-ui/favicon.ico", Images: app},
 		{Path: "internal/htmlgen/favicon.ico", Images: app},
+		// The help set's tab icon, in both copies of the set (PRODUCT-IDENTITY rule 8); the help
+		// generator copies the same bytes from assets/doc-html-translate.ico.
+		{Path: "help/favicon.ico", Images: app},
+		{Path: "cmd/doc-html-ui/help/favicon.ico", Images: app},
 		{Path: "assets/convert-verb.ico", Images: verb},
 		{Path: "assets/document-type.ico", Images: doc},
 	}
@@ -102,8 +106,43 @@ func RepoOutputs(root string) ([]Output, error) {
 			Images: []image.Image{Mark(s, s, float64(s), Plated)},
 		})
 	}
+	// The Microsoft Store display images (PRODUCT-IDENTITY rules 4 and 6): the installed icon's
+	// picture on the navy, the mark in the middle 80% of the shorter side.
+	for _, l := range StoreLogos {
+		side := min(l.W, l.H)
+		outs = append(outs, Output{Path: l.Path, Images: []image.Image{Mark(l.W, l.H, float64(side)*0.8, OnBackground)}})
+	}
+	// The mark the social card composer (tools/store/make-social-card.ps1) lays on its plate.
+	outs = append(outs, Output{Path: SocialMarkPath, Images: []image.Image{Mark(SocialMarkSize, SocialMarkSize, SocialMarkSize, Plated)}})
+	// The 256x256 hub.card rendition for the sza.od.ua family map (PRODUCT-IDENTITY rules 2 and 9).
+	outs = append(outs, Output{Path: HubCardPath, Images: []image.Image{Mark(HubCardSize, HubCardSize, HubCardSize, Plated)}})
 	return outs, nil
 }
+
+// StoreLogo is one Microsoft Store display image of the listing.
+type StoreLogo struct {
+	Path string
+	W, H int
+}
+
+// StoreLogos are the listing's display images: the 1:1 tiles, the 1:1 box art and the 9:16
+// poster the Store offers.
+var StoreLogos = []StoreLogo{
+	{"tools/store/logos/tile-71x71.png", 71, 71},
+	{"tools/store/logos/tile-150x150.png", 150, 150},
+	{"tools/store/logos/tile-300x300.png", 300, 300},
+	{"tools/store/logos/boxart-1x1-1080x1080.png", 1080, 1080},
+	{"tools/store/logos/boxart-1x1-2160x2160.png", 2160, 2160},
+	{"tools/store/logos/poster-9x16-1440x2160.png", 1440, 2160},
+}
+
+// SocialMarkPath is the plated mark the social card is composed from, SocialMarkSize square.
+const (
+	SocialMarkPath = "assets/identity/out/social-mark-280.png"
+	SocialMarkSize = 280
+	HubCardPath    = "assets/identity/out/hub-card-256.png"
+	HubCardSize    = 256
+)
 
 // MSIXOutputs are the package's visual assets, relative to its Assets folder. The names carry
 // MRT qualifiers (scale-*, targetsize-*, altform-*), which Windows resolves only through the

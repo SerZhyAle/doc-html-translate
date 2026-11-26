@@ -77,19 +77,26 @@ governs.
 - **Access to all sites** (host access) - used solely to fetch the document you opened and the pictures
   you ask it to read, from whichever site or folder they come from, and to read the current site's name
   for switching the viewer on or off per site. No browsing data is read or transmitted.
-- **scripting** - used only when you choose *OCR every image on this page* from the right-click menu: the
-  extension then adds one script and its stylesheet to that one tab, lays the recognized text over the
-  page's pictures, and removes both when you stop. Nothing is added to a page without that click.
+- **scripting** - used only when you choose *OCR every image on this page* or *Save media file for
+  translation* from the right-click menu. For the first, the extension adds one script and its stylesheet
+  to that one tab, lays the recognized text over the page's pictures, and removes both when you stop. For
+  the second, it looks in the frame you clicked for the address of its media file and shows a short
+  status line. Nothing is added to a page without that click.
 - **offscreen** - the recognition engine for a page runs in a hidden page of the extension, opened for
   one run and closed when it ends; only the picture areas and the recognized text pass through it, and
   none of it leaves your device.
 - **contextMenus** - adds the extension's right-click actions: *OCR & translate this image* on a picture,
-  *OCR every image on this page* on a page, and *Convert with doc-html-translate* on a document link or
-  page.
+  *OCR every image on this page* on a page, *Save media file for translation* on a page or its media, and
+  *Convert with doc-html-translate* on a document link or page.
 - **storage** - used solely to remember, on this device, your settings (the viewer on or off, globally
   and per site, reading preferences, the interface language, whether remote images may load), which OCR
   languages you have downloaded, and the format, page count and last error of the most recent document
   for *Copy diagnostics*.
+- **downloads** (optional, asked only when you first use it) - used solely by *Save media file for
+  translation*: the file you right-clicked, or the media file of the frame you clicked, is saved into the
+  folder you named in the settings, inside your browser's download folder. The download is the browser's
+  own, from the site that serves the file; nothing else is read from your download list, and nothing is
+  sent anywhere.
 <!-- security-posture:end ext-permissions -->
 
 ## Children's privacy

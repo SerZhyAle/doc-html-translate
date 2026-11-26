@@ -1,7 +1,7 @@
 # Pointer: ICON-RENDER
 
 - **Id:** `ICON-RENDER`
-- **Version:** 0.26 draft
+- **Version:** 0.28 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` sections 3 and 10, `iconography/palette.json` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, opted in as a draft on 2026-09-25; read at 0.26 on 2026-11-16 (ticket E0150)
 - **Wire carrier:** none - a picture, not a payload
@@ -44,3 +44,5 @@ surface) - temporary, until 2026-12-31; this is the half of the old warning-text
 2026-10-21); the system-surface, RTL-paging and target rules are checked by `tests/icons_test.go`,
 `internal/htmlgen/navbar_test.go` and `tools/uicheck` (ticket 119). Not verified: the installed MSIX tile and
 taskbar look, the toolbar icon in Chrome and Edge, OS high contrast.
+
+Release re-verification: 2026-11-27: read 0.27-0.28 (both optional MAY; none taken). The generator now renders on amd64 and the icon render test passes. Both open rows stand.

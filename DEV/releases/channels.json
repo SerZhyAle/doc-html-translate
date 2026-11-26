@@ -1,0 +1,52 @@
+{
+  "schema": "1",
+  "packages": [
+    {
+      "id": "app",
+      "title": "Doc-HTML-Translate (Desktop App)"
+    },
+    {
+      "id": "extension",
+      "title": "Doc-HTML-Translate (Browser Extension)"
+    }
+  ],
+  "channels": [
+    {
+      "key": "github",
+      "channel": "github",
+      "package": "app",
+      "repo": "SerZhyAle/doc-html-translate",
+      "tagPrefix": "v"
+    },
+    {
+      "key": "winget",
+      "channel": "winget",
+      "package": "app",
+      "id": "SerZhyAle.DocHtmlTranslate"
+    },
+    {
+      "key": "msstore",
+      "channel": "msstore",
+      "package": "app",
+      "storeId": "9PMHSWQPR6V1"
+    },
+    {
+      "key": "installer",
+      "channel": "manual",
+      "package": "app",
+      "title": "Universal Windows installer (GitHub Release asset)"
+    },
+    {
+      "key": "chrome",
+      "channel": "chrome",
+      "package": "extension",
+      "id": "nmcckamdocainafmmompkbmelkpbnmic"
+    },
+    {
+      "key": "edge",
+      "channel": "edge",
+      "package": "extension",
+      "id": "anokfnnfiboaccbbpfkdaphejnkkhajh"
+    }
+  ]
+}

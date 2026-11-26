@@ -1,7 +1,7 @@
 # Pointer: RULE-DELIVERY
 
 - **Id:** `RULE-DELIVERY`
-- **Version:** 0.12 draft
+- **Version:** 0.13 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - receives the canon rule set through the `sza` Claude Code plugin
 - **Wire carrier:** plugin version, derived from the canon's `CANON_VERSION`
@@ -25,3 +25,5 @@ is closed (2026-10-29, ticket 122).
 
 **Conformance.** No catalog vectors. The canon plugin owns the compliance reader and its tests;
 its missing-date case must be verified there, not implemented in this repository.
+
+Release re-verification: 2026-11-27: read 0.13 item D (differing digest is a warning at any age). Delivered checker 2026.1126.9 does so: stamp 07837a36.. against canon a31b1bf4.., 37 days, warning, exit 0; reconciliation owed. No local reader.

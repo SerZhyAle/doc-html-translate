@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   "Релиз" (release) - prints the complete, ordered release checklist. RUNS NOTHING.
 
@@ -208,7 +208,6 @@ $storeSlug = if ($storeEvidence -and $storeEvidence.refusal) { ([string]$storeEv
 $storeDetail = ''
 if ($storeEvidence -and $storeEvidence.submission) { $storeDetail += "; submission $(([string]$storeEvidence.submission) -replace '[^A-Za-z-]', '')" }
 if ($storeEvidence -and $storeEvidence.pricing) { $storeDetail += "; price $(([string]$storeEvidence.pricing) -replace '[^A-Za-z-]', '')" }
-$storeNote = "Store preflight ${storeAt}: $storeMode$(if ($storeSlug) { " ($storeSlug)" })$storeDetail; package $msixVersion"
 $storeRefusals = @{
     'pending-submission'  = 'a submission is already pending or not published'
     'version-not-greater' = "package version $msixVersion is not greater than the live one"
@@ -299,7 +298,10 @@ Cmd  "./scripts/verify-exe-version.ps1 -Path (Get-ChildItem temp/release-$Versio
 Note "Attach the universal installer (CI does not build it): build locally from the tag, then upload."
 Note "-Tag takes the version from the tag and refuses unless HEAD is $tag and the tree is clean:"
 Cmd  "./scripts/build-installer.ps1 -Tag $tag"
-Cmd  "gh release upload $tag dist/doc-html-translate-setup-$Version.exe"
+Cmd  "`$setupName = ""doc-html-translate-setup-$Version.exe""; `$setupHash = (Get-FileHash -Algorithm SHA256 -LiteralPath ""dist/`$setupName"").Hash; ""`$setupHash  `$setupName"" | Set-Content -LiteralPath ""dist/`$setupName.sha256"" -Encoding ascii"
+Cmd  "gh release upload $tag ""dist/doc-html-translate-setup-$Version.exe"" ""dist/doc-html-translate-setup-$Version.exe.sha256"""
+Cmd  "./scripts/release-ledger.ps1 publish -Key github -Version $Version -State live -Ref $tag -Url https://github.com/SerZhyAle/doc-html-translate/releases/tag/$tag"
+Cmd  "./scripts/release-ledger.ps1 confirm -Key installer -Version $Version -State live -Ref $tag -Url https://github.com/SerZhyAle/doc-html-translate/releases/tag/$tag"
 Write-Host ""
 
 Step "3" "winget (Microsoft community index)  [PUBLIC]"
@@ -317,20 +319,24 @@ Note "To ALSO change description/tags: edit winget/ then 'wingetcreate submit wi
 Note "Then sign the CLA on the PR if prompted: gh pr comment <PR#> --repo microsoft/winget-pkgs --body ""@microsoft-github-policy-service agree"""
 Note "Replace the empty auto-generated PR body (wingetcreate leaves an unchecked template):"
 Cmd  "gh pr edit <PR#> --repo microsoft/winget-pkgs --body-file <notes>   # version, release URL, 'SHA256 verified via winget install', tick the checklist"
+Cmd  "./scripts/release-ledger.ps1 publish -Key winget -Version $Version -State submitted -Ref PR#<PR#>"
 Note "Details: docs/how-i-posted-this-project-to-winget.md"
 Write-Host ""
 
-Step "4" "Windows Store - MSIX  [PUBLIC]"
-Note "Build the UNSIGNED package from the tag (Microsoft re-signs at certification), then upload by hand."
-Note "The identity comes from msix/identity.json (reserved SZA.Doc-HTML-Translate); -Tag refuses unless HEAD is $tag and the tree is clean."
-Note "Not while the installer build of step 2 is running - both rewrite cmd/*/resource.syso."
-Cmd  "./msix/build-msix.ps1 -Tag $tag"
-Note "Upload msix/out/*.msix in Partner Center by hand: the Store has a submission API and the msstore CLI, but this flow makes no write call through either."
-Note "The header's 'store preflight' line is the read-only check before the tag (WINDOWS-STORE 0.4 section D): a pending submission, the version against the live one, the price. An unavailable channel only makes this step manual."
-Note "It does not test a write (none is made), the credential's expiry unless -StoreCredentialExpiry yyyy-MM-dd is passed from the owner's expiry list, the listing, the age rating, or what Partner Center accepts at upload."
-Note "After the tag is pushed, keep the preflight's evidence line in the publish-state (one line per run, no account data):"
-Cmd  "./scripts/release-state.ps1 -Channel Store -Status pending -Note ""$storeNote"""
-Note "Details: msix/README.md"
+Step "4" "Windows Store - submission  [PUBLIC]"
+Note "The agent-run Store submission channel (ticket E0156, WINDOWS-STORE section D, rules 22 to 26). The commit into certification is"
+Note "the owner's standing pre-authorization of 2026-11-17 - the one outward act it covers; the tag, winget, Chrome and Edge steps keep their own confirmations."
+Note "It refuses unless the store preflight passes in the SAME run and HEAD is $tag with a clean tree (the unsigned package is built from the tag inside it);"
+Note "it refreshes the 13 ReleaseNotes from tools/store/listing/*.txt (refresh the decks in step 1 first: en, ru, uk authored, the other ten machine-translated,"
+Note "the rule-16 accumulated What's new, folded to 1500, all 13 in the same edit), proves the draft read-back, commits behind -Commit, and records the evidence."
+Cmd  "./tools/store/submit-submission.ps1 -Tag $tag -Commit"
+Cmd  "./tools/store/submit-submission.ps1 -Tag $tag -Commit -CredentialExpiry yyyy-MM-dd   # with the expiry from the owner's expiry list"
+Note "Prepare only, no commit: the same command without -Commit leaves the draft in the Store and prints its identity and the console address."
+Note "Channel unavailable (CLI missing or unconfigured, credential missing or expired, token refused) -> exit 2, the manual path: the package and the listing"
+Note "import folder are built for a hand upload in Partner Center and the release goes on."
+Note "Every run appends to DEV/release-verdicts/<msixVersion>.store-submission.jsonl (rule 26) and records a publish event in the release ledger (DEV/releases/), no account identifiers or secrets."
+Note "The header's 'store preflight' line stays the read-only check before the tag; nothing is written to the Store before the tag is pushed."
+Note "Details: msix/README.md, tools/store/submit-submission.ps1 (its preflight is still the canon's shared tool: the step re-runs it, never edits it)."
 Write-Host ""
 
 Step "5" "Chrome / Edge extension  [PAID] [PUBLIC]"
@@ -340,12 +346,15 @@ Cmd  "node extension/build.mjs record-version; ./scripts/release-notes.ps1 -Rend
 Note "Chrome -> ext-cws-v<version> (publish-cws.yml); Edge -> ext-edge-v<version> (publish-edge.yml)."
 Cmd  "git tag ext-cws-v<version>; git push origin ext-cws-v<version>    # Chrome only"
 Cmd  "git tag ext-edge-v<version>; git push origin ext-edge-v<version>  # Edge only"
+Cmd  "./scripts/release-ledger.ps1 publish -Key chrome -Version <version> -State submitted -Ref ext-cws-v<version>"
+Cmd  "./scripts/release-ledger.ps1 publish -Key edge -Version <version> -State submitted -Ref ext-edge-v<version>"
 Note "Details: extension/PUBLISHING.md"
 Write-Host ""
 
 Step "6" "Verify"
 Cmd  "gh release view $tag --json assets"
 Cmd  "winget search SerZhyAle.DocHtmlTranslate   # appears ~30-60 min after winget PR merge"
+Cmd  "./scripts/release-ledger.ps1 probe         # read-only channel probe; updates DEV/releases/RELEASES.md"
 Note "Confirm Store listing updated and extension live in the Chrome/Edge dashboards."
 Note "Once per release, after the site is live - never per edit - tell search engines the sitemap changed:"
 Note "resubmit https://serzhyale.github.io/doc-html-translate/sitemap.xml in Google Search Console and Bing Webmaster Tools."

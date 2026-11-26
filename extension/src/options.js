@@ -16,6 +16,7 @@ import { bindGroups } from "./ui-groups.js";
 import { initNav } from "./options-nav.js";
 import { initSettingsTransfer } from "./options-data.js";
 import { renderAbout, initDiagnostics } from "./options-about.js";
+import { normalizeMediaFolder, DOWNLOADS_PERMISSION } from "./media-save.js";
 
 // UI languages the extension ships, by endonym - the only label that helps a reader who cannot
 // read the language currently on screen. Mirrors internal/i18n.Codes on the desktop side.
@@ -35,6 +36,9 @@ const siteModeEl = $("site-mode");
 const ocrImagesEl = $("ocr-images");
 const allowRemoteEl = $("allow-remote");
 const ocrLangsEl = $("ocr-langs");
+const mediaFolderEl = $("media-folder");
+const mediaAllowEl = $("media-allow");
+const mediaPermEl = $("media-perm");
 const INTERFACE_EDITORS = [["ui-size", "uiSize"], ["text-size", "textSize"], ["input-profile", "inputProfile"], ["chrome-theme", "chromeTheme"]];
 
 // Show the build's date-time version (yy.MMdd.HHmm) so you can tell what you're testing.
@@ -104,6 +108,17 @@ function renderSourceLangHint() {
   $("source-lang-hint").replaceChildren(before, code, after);
 }
 
+// renderMediaPermission says whether "Save media file for translation" may save, and offers the button only
+// while it may not. The permission is optional, so it can also be taken back from the browser's own page.
+async function renderMediaPermission() {
+  let held = false;
+  try { held = await chrome.permissions.contains(DOWNLOADS_PERMISSION); } catch { /* not held */ }
+  mediaAllowEl.hidden = held;
+  mediaPermEl.textContent = held
+    ? msg("optMediaAllowed", "Saving files is allowed.")
+    : msg("optMediaNotAllowed", "Saving files is not allowed yet: the browser asks once, the first time.");
+}
+
 // fillFields puts the stored options into the editors. It sets values only, so no change event fires.
 function fillFields(o) {
   enabledEl.checked = o.enabledByDefault;
@@ -112,6 +127,8 @@ function fillFields(o) {
   langEl.value = o.sourceLang;
   ocrImagesEl.checked = o.ocrImages;
   allowRemoteEl.checked = o.allowRemoteContent === true;
+  // An editor the reader is typing in keeps what they typed; it is normalized when they leave it.
+  if (document.activeElement !== mediaFolderEl) mediaFolderEl.value = normalizeMediaFolder(o.mediaFolder);
   for (const [id, key] of INTERFACE_EDITORS) {
     $(id).value = o[key];
     // A stored value this build does not offer leaves the select blank; show the default it falls back to.
@@ -142,6 +159,17 @@ function bindEditors() {
     flash("saved-theme");
   });
   langEl.addEventListener("change", () => update({ sourceLang: langEl.value }));
+  mediaFolderEl.addEventListener("change", async () => {
+    const folder = normalizeMediaFolder(mediaFolderEl.value);
+    mediaFolderEl.value = folder;
+    await update({ mediaFolder: folder });
+    flash("saved-media-folder");
+  });
+  mediaAllowEl.addEventListener("click", async () => {
+    // Asked from the click itself: the browser shows its permission prompt only during a gesture.
+    try { await chrome.permissions.request(DOWNLOADS_PERMISSION); } catch { /* the state line says what holds */ }
+    renderMediaPermission();
+  });
   // The interface settings apply at once, without a restart: the root's attributes change and
   // ui-sizing.css does the rest, so every open component takes the new size or theme together.
   for (const [id, key] of INTERFACE_EDITORS) {
@@ -176,6 +204,7 @@ async function renderSettings() {
   $("ui-lang").value = (await chrome.storage.local.get("uiLang")).uiLang || "";
   renderLangList();
   renderSourceLangHint();
+  renderMediaPermission();
   renderAbout();
   refreshOptionHelp();
 }
@@ -224,8 +253,12 @@ async function init() {
   fillFields(o);
   renderSourceLangHint();
   renderLangList();
+  renderMediaPermission();
   renderAbout();
   bindEditors();
+  // The permission can be granted from the right-click menu or taken back from the browser's page.
+  if (chrome.permissions.onAdded) chrome.permissions.onAdded.addListener(renderMediaPermission);
+  if (chrome.permissions.onRemoved) chrome.permissions.onRemoved.addListener(renderMediaPermission);
   followStorage();
   initOptionHelp();
   initDiagnostics();

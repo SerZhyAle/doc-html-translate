@@ -91,6 +91,7 @@ const STUB = (cfg) => {
     tabs: { query: async () => [{ url: cfg.tabUrl, id: 1 }], create: (a) => { log.created.push(a); }, getCurrent: async () => ({ id: 1 }) },
     extension: { isAllowedFileSchemeAccess: (cb) => cb(cfg.fileAccess !== false) },
     scripting: noop,
+    permissions: { contains: async () => false, request: async () => true, onAdded: noop, onRemoved: noop },
   };
 };
 

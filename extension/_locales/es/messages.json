@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "Traductor de páginas de documentos",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "Reconocer el texto de todas las imágenes de esta página",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "Guardar archivo multimedia para traducir",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "Carpeta para guardar archivos multimedia",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "Dónde coloca el archivo la opción del menú contextual \"Guardar archivo multimedia para traducir\": una carpeta dentro de la carpeta de descargas del navegador (por ejemplo, Media for translation). Déjala vacía para guardar directamente en la carpeta de descargas. Cualquier tipo de archivo se guarda tal cual.",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "Permitir guardar archivos",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "Guardar archivos está permitido.",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "Guardar archivos aún no está permitido: el navegador lo pregunta una vez, la primera vez.",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "Guardar archivos no está permitido. Permítelo en la configuración de la extensión.",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "No se encontró aquí ningún archivo multimedia para guardar.",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "No se pudo guardar el archivo multimedia: {1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "Guardando el archivo multimedia en {1}",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "Guardando los archivos multimedia ({1}) en {2}",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "Descargas",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "Leyendo..",

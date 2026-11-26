@@ -95,8 +95,12 @@ translate comic pages
 ocr translate image
 
 @@ReleaseNotes
-- JPEG XL pictures (.jxl) are now supported: standalone images, pictures inside books and comic pages are decoded locally, then recognized and translated like any other image (animated files show their first frame).
-- New window layout: a side menu with seven pages, plus interface size, text size and mouse or touch controls.
-- F1 or the ? button opens a help page for the part of the window you are in.
-- Larger controls for touch in converted books; in the reader, Shift+Space turns pages and Shift+arrow keys extend a text selection.
-- Security: the app no longer loads a libjxl.dll found in the working folder or on PATH.
+- Help pages now carry the program's icon and show the icon of each button they explain; the Store pictures show the same icon as the installed app.
+- The command line takes commands (convert, output status, doctor, input check and more) with fixed exit codes and an optional JSON result; all older options keep working.
+- The open window can be driven from the command line (open, show, status, quit); a second launch hands its files to the running window.
+- On a touch screen, icon-only buttons in converted books show their names.
+- A new option, "And close this window", closes the window after a successful run.
+- Text recognition no longer cuts apart a line with one oversized word, such as a drop cap.
+- The diagnostic archive has a clearer report and hides the names of your documents.
+- Helper programs run without a console window, and closing the window ends the app.
+- JPEG XL (.jxl) pictures are supported; the window has a side menu, and F1 opens help for the part you are in.

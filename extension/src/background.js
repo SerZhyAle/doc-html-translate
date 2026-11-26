@@ -16,6 +16,7 @@ import * as badge from "./badge.js";
 // The whole-page OCR broker attaches its own message and tab listeners on import; this file only
 // owns the menu entry that starts it. See DEV/plan/done/2026-09-19_page-ocr-overlay.md.
 import { startRun as startPageOcr } from "./page-ocr.js";
+import { saveMedia, requestDownloads, hookDownloadNaming } from "./media-save.js";
 
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
@@ -132,6 +133,10 @@ function syncRules() {
 //     archive - a right-click almost always lands on a picture, and a page-only entry would be
 //     unreachable exactly where the feature belongs. On the link context too, so the root item
 //     below always has at least one visible child.
+//   - "Save media file for translation": saves the right-clicked picture, video or audio - or the
+//     file the frame shows, or its largest one - into the folder named in the settings
+//     (media-save.js). Offered wherever the root is, for the same reason as the page run: on a
+//     photo or video site the click rarely lands on the media element itself.
 //   - "Convert with doc-html-translate": on a link to a supported document, or on the page
 //     when viewing one directly, opens it in the reflow viewer. Always available even when
 //     auto-interception is off (the default), so it is how users convert on demand.
@@ -143,6 +148,10 @@ function syncRules() {
 const ROOT_MENU_ID = "sza-root";
 const OCR_MENU_ID = "ocr-image";
 const OCR_PAGE_MENU_ID = "ocr-page";
+const SAVE_MEDIA_MENU_ID = "save-media";
+// Every context the root and the save action appear in. A right-click on a video or an audio
+// player is neither "page" nor "image", and one inside an embedded frame is "frame".
+const ROOT_CONTEXTS = ["page", "image", "link", "video", "audio", "frame"];
 
 // The whole-page run needs a document the extension may be injected into. A chrome:// page, the
 // Web Store and a PDF Chrome renders itself are none of those, and an entry that always fails is
@@ -163,11 +172,11 @@ function menuItems() {
   const convertTitle = menuTitle("convertDocMenu", "Convert with doc-html-translate");
   return [
     // The root carries the page-OCR patterns so it can never render as an empty submenu: where
-    // it is offered at all, the page-OCR child matches in every context the root declares.
+    // it is offered at all, the save-media child matches in every context the root declares.
     {
       id: ROOT_MENU_ID,
       title: menuTitle("rootMenu", "OCR & translate"),
-      contexts: ["page", "image", "link"],
+      contexts: ROOT_CONTEXTS,
       documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
     },
     {
@@ -181,6 +190,13 @@ function menuItems() {
       parentId: ROOT_MENU_ID,
       title: menuTitle("ocrPageMenu", "OCR every image on this page"),
       contexts: ["page", "image", "link"],
+      documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
+    },
+    {
+      id: SAVE_MEDIA_MENU_ID,
+      parentId: ROOT_MENU_ID,
+      title: menuTitle("saveMediaMenu", "Save media file for translation"),
+      contexts: ROOT_CONTEXTS,
       documentUrlPatterns: PAGE_OCR_URL_PATTERNS,
     },
     {
@@ -236,6 +252,12 @@ function openInViewer(url) {
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === SAVE_MEDIA_MENU_ID) {
+    // The permission request goes first, while the click still counts as the reader's gesture.
+    const granted = requestDownloads();
+    saveMedia(info, tab, granted).catch((e) => console.warn("save media failed", e));
+    return;
+  }
   if (info.menuItemId === OCR_PAGE_MENU_ID) {
     if (tab && tab.id != null) startPageOcr(tab.id);
     return;
@@ -248,6 +270,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === CONVERT_LINK_MENU_ID) openInViewer(info.linkUrl);
   else if (info.menuItemId === CONVERT_PAGE_MENU_ID) openInViewer(info.pageUrl);
 });
+
+// The file-name listener of "Save media file for translation" exists only while the optional
+// downloads permission is held: hooked at start when it is, and the moment it is granted.
+hookDownloadNaming();
+if (chrome.permissions && chrome.permissions.onAdded) chrome.permissions.onAdded.addListener(() => hookDownloadNaming());
 
 chrome.runtime.onInstalled.addListener(() => { syncRules(); setupContextMenu(); });
 chrome.runtime.onStartup.addListener(() => { syncRules(); setupContextMenu(); });

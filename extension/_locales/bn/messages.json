@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "নথি পৃষ্ঠা অনুবাদক",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "এই পাতার সব ছবির লেখা শনাক্ত করুন",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "অনুবাদের জন্য মিডিয়া ফাইল সংরক্ষণ করুন",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "মিডিয়া ফাইল সংরক্ষণের ফোল্ডার",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "রাইট-ক্লিক মেনুর \"অনুবাদের জন্য মিডিয়া ফাইল সংরক্ষণ করুন\" ফাইলটি কোথায় রাখে: ব্রাউজারের ডাউনলোড ফোল্ডারের ভেতরে একটি ফোল্ডার (যেমন Media for translation)। সরাসরি ডাউনলোড ফোল্ডারে সংরক্ষণ করতে এটি খালি রাখুন। যেকোনো ধরনের ফাইল যেমন আছে তেমনই সংরক্ষিত হয়।",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "ফাইল সংরক্ষণের অনুমতি দিন",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "ফাইল সংরক্ষণের অনুমতি আছে।",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "ফাইল সংরক্ষণের অনুমতি এখনও নেই: ব্রাউজার প্রথমবার একবার জিজ্ঞাসা করে।",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "ফাইল সংরক্ষণের অনুমতি নেই। এক্সটেনশনের সেটিংসে অনুমতি দিন।",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "এখানে সংরক্ষণ করার মতো কোনো মিডিয়া ফাইল পাওয়া যায়নি।",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "মিডিয়া ফাইল সংরক্ষণ করা যায়নি: {1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "মিডিয়া ফাইল {1}-এ সংরক্ষণ করা হচ্ছে",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "মিডিয়া ফাইল ({1}) {2}-এ সংরক্ষণ করা হচ্ছে",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "ডাউনলোড",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "পড়া হচ্ছে..",

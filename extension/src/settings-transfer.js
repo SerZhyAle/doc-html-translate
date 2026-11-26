@@ -4,6 +4,7 @@ import { DEFAULT_OPTIONS } from "./defaults.js";
 import {
   UI_SIZES, TEXT_SIZES, INPUT_PROFILES, CHROME_THEMES, DEFAULT_UI_STATE, normalizeUiState, pick,
 } from "./ui-settings.js";
+import { normalizeMediaFolder } from "./media-save.js";
 
 export const SETTINGS_FORMAT = "doc-html-translate-extension-settings";
 // Version 2 added the interface settings (size, text size, controls, interface theme) and the
@@ -13,7 +14,9 @@ const READABLE_VERSIONS = [1, 2];
 const OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 // What a version 1 file carried. Anything beyond these is optional on import.
 const INTERFACE_KEYS = ["uiSize", "textSize", "inputProfile", "chromeTheme"];
-const REQUIRED_KEYS = OPTION_KEYS.filter((key) => !INTERFACE_KEYS.includes(key));
+// Keys added after version 2 shipped: a file written before them still imports, and the default fills in.
+const LATER_KEYS = ["mediaFolder"];
+const REQUIRED_KEYS = OPTION_KEYS.filter((key) => !INTERFACE_KEYS.includes(key) && !LATER_KEYS.includes(key));
 const UI_LANGS = new Set(["", "en", "ru", "uk", "de", "it", "es", "fr", "pt", "ar", "hi", "bn", "ur", "zh"]);
 const SOURCE_LANGS = new Set(["auto", "en", "ru", "uk", "fr", "de", "es", "it", "pt", "zh", "ja", "ko", "ar"]);
 const THEMES = new Set(["light", "sepia", "dark", "night"]);
@@ -72,6 +75,10 @@ export function validateSettingsFile(value) {
         options[key].some((host) => typeof host !== "string" || !HOST.test(host) || host !== host.toLowerCase()) ||
         new Set(options[key]).size !== options[key].length) throw new Error(`Invalid ${key} list`);
   }
+  if ("mediaFolder" in options &&
+      (typeof options.mediaFolder !== "string" || normalizeMediaFolder(options.mediaFolder) !== options.mediaFolder)) {
+    throw new Error("Invalid media folder");
+  }
   if (!UI_LANGS.has(value.uiLang)) throw new Error("Invalid interface language");
   if ("ui" in value) object(value.ui, "Interface state");
   return {
@@ -83,6 +90,7 @@ export function validateSettingsFile(value) {
 
 export function makeSettingsFile(storedOptions, uiLang = "", uiState = DEFAULT_UI_STATE) {
   const options = Object.fromEntries(OPTION_KEYS.map((key) => [key, storedOptions?.[key] ?? DEFAULT_OPTIONS[key]]));
+  options.mediaFolder = normalizeMediaFolder(options.mediaFolder);
   const file = {
     format: SETTINGS_FORMAT, version: SETTINGS_VERSION,
     options: { ...options, ...interfaceSettings(options) },

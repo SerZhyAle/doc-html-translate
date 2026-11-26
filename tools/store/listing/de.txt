@@ -101,9 +101,13 @@ comic übersetzen
 text im bild übersetzen
 
 @@ReleaseNotes
-- JPEG-XL-Bilder (.jxl) werden jetzt unterstützt: Einzelbilder, Bilder in Büchern und Comic-Seiten werden lokal dekodiert, dann wie jedes andere Bild erkannt und übersetzt (bei Animationen wird das erste Bild gezeigt).
-- Neues Fensterlayout: Seitenmenü mit sieben Seiten sowie Oberflächengröße, Textgröße und Maus- oder Touch-Bedienung.
-- F1 oder die Schaltfläche ? öffnet eine Hilfeseite zum Bereich des Fensters, in dem Sie sich befinden.
-- Größere Bedienelemente für Touch in konvertierten Büchern; im Leser blättert Umschalt+Leertaste, und Umschalt+Pfeiltasten erweitern die Textauswahl.
-- Sicherheit: Die App lädt keine libjxl.dll mehr aus dem Arbeitsordner oder aus PATH.
+- Die Hilfeseiten zeigen jetzt das Programmsymbol und das Symbol jeder erklärten Schaltfläche; die Store-Bilder zeigen dasselbe Symbol wie die installierte App.
+- Die Befehlszeile kennt Befehle (convert, output status, doctor, input check und weitere) mit festen Rückgabecodes und optionalem JSON-Ergebnis; alle älteren Optionen funktionieren weiter.
+- Das offene Fenster lässt sich über die Befehlszeile steuern (open, show, status, quit); ein zweiter Start übergibt seine Dateien an das laufende Fenster.
+- Auf Touchscreens zeigen reine Symbolschaltflächen in konvertierten Büchern ihre Namen.
+- Die neue Option „Und dieses Fenster schließen“ schließt das Fenster nach einem erfolgreichen Lauf.
+- Die Texterkennung zerschneidet eine Zeile mit einem übergroßen Wort, etwa einer Initiale, nicht mehr.
+- Das Diagnosearchiv hat einen klareren Bericht und verbirgt die Namen Ihrer Dokumente.
+- Hilfsprogramme laufen ohne Konsolenfenster, und das Schließen des Fensters beendet die App.
+- JPEG-XL-Bilder (.jxl) werden unterstützt; das Fenster hat ein Seitenmenü, F1 öffnet die passende Hilfe.
 - Diese Übersetzung ist maschinell erstellt und nicht lektoriert - Korrekturen willkommen an sza@ukr.net.

@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "文档页面翻译器",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "识别此页面所有图片中的文字",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "保存媒体文件以供翻译",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "媒体文件保存文件夹",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "右键菜单“保存媒体文件以供翻译”将文件放在哪里：浏览器下载文件夹中的一个文件夹（例如 Media for translation）。留空则直接保存到下载文件夹。任何类型的文件都按原样保存。",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "允许保存文件",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "已允许保存文件。",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "尚未允许保存文件：浏览器会在第一次使用时询问一次。",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "不允许保存文件。请在扩展程序设置中允许。",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "此处未找到可保存的媒体文件。",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "无法保存媒体文件：{1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "正在将媒体文件保存到 {1}",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "正在将媒体文件（{1} 个）保存到 {2}",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "下载",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "正在读取..",

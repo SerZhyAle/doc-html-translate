@@ -71,6 +71,7 @@ Each JS module re-implements the named Go code. A change to one side is a change
 | HTML sanitize -> fragment | (EPUB-only in Go: `epub.go` normalize) | [`extension/src/sanitize.js`](../extension/src/sanitize.js) |
 | OCR overlay (recognize -> plates) | [`internal/ocr/overlay.go`](../internal/ocr/overlay.go), `tesseract.go` | [`extension/src/ocr-overlay.js`](../extension/src/ocr-overlay.js) (recognition) + [`ocr-plates.js`](../extension/src/ocr-plates.js) (plates) + `ocr-overlay.css` (overlay rules generated from `internal/appearance`) |
 | OCR line clustering + text filter | [`internal/ocr/tesseract.go`](../internal/ocr/tesseract.go), [`text.go`](../internal/ocr/text.go) (`isTranslatable`) | [`extension/src/ocr-cluster.js`](../extension/src/ocr-cluster.js), [`ocr-text.js`](../extension/src/ocr-text.js) (`isTranslatable`) |
+| Save a web page's media file for translation | (none - extension-only by design, see Intentional divergences) | [`extension/src/media-save.js`](../extension/src/media-save.js) (menu action, frame scan, download naming) |
 | Whole-page OCR on a live web page | (none - extension-only by design, see Intentional divergences) | [`extension/src/page-ocr.js`](../extension/src/page-ocr.js) (broker), [`page-agent.js`](../extension/src/page-agent.js) (in-page), [`ocr-host.js`](../extension/src/ocr-host.js) (engine host) |
 | OCR halftone-screen detection (rescue rung, additive line sweep) | [`internal/ocr/screen.go`](../internal/ocr/screen.go) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) | [`extension/src/ocr-screen.js`](../extension/src/ocr-screen.js) (`screenPitch`, `mergeScreenBlocks`, `refineAcceptedBoxes`) |
 | OCR plate concealment mode (fill / reconstruct / mask) | [`internal/ocr/conceal.go`](../internal/ocr/conceal.go) (`measureRing`, `decideMode`, `plateBackground`) | [`extension/src/ocr-conceal.js`](../extension/src/ocr-conceal.js) (`measureRing`, `decideMode`, `plateBackground`) |
@@ -1902,6 +1903,12 @@ These are by design. Do not "sync" them without a decision - document changes he
   browser sandbox hosts no run-log store worth archiving and no way to reveal a file or attach one
   (ticket ADR-4). Neither edition uploads anything. The field labels the two do share are pinned in
   [Report field labels](#report-field-labels).
+- **Saving a web page's media file for translation is extension-only.** The right-click *Save media
+  file for translation* takes the clicked picture, video or audio - or the frame's own file, or its
+  largest one - and saves it into a folder inside the browser's download folder (the option
+  `mediaFolder`), behind the optional `downloads` permission ([`media-save.js`](../extension/src/media-save.js),
+  ticket D2HTML-0171). The desktop app has no live page to save from: it is the tool the saved file is
+  then given to, so it needs no counterpart and no `mediaFolder` setting.
 - **Whole-page OCR on a live web page is extension-only, and there must not be a desktop
   counterpart.** The reader right-clicks an ordinary page - a webcomic, a scanned archive, a gallery -
   and every picture on it is recognized in place, the plates drawn over the art in the page the reader

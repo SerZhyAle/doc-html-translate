@@ -49,7 +49,11 @@ export function inputDigests() {
   for (const f of fs.readdirSync(path.join(HERE, 'copy')).sort()) {
     parts['copy/' + f] = sha(lf(fs.readFileSync(path.join(HERE, 'copy', f), 'utf8')));
   }
-  for (const f of ['generate.mjs', 'render.mjs', 'shots.mjs', 'dict.mjs', 'page.js']) {
+  // The product's picture and the glyphs the entries show (PRODUCT-IDENTITY rule 8).
+  parts['identity/help-head.svg'] = sha(fs.readFileSync(path.join(REPO, 'assets', 'identity', 'out', 'help-head.svg')));
+  for (const f of fs.readdirSync(path.join(REPO, 'assets', 'glyphs')).filter((x) => x.endsWith('.svg')).sort()) {
+    parts['glyphs/' + f] = sha(fs.readFileSync(path.join(REPO, 'assets', 'glyphs', f)));
+  }  for (const f of ['generate.mjs', 'render.mjs', 'shots.mjs', 'dict.mjs', 'page.js']) {
     parts['generator/' + f] = sha(lf(fs.readFileSync(path.join(HERE, f), 'utf8')));
   }
   const names = Object.keys(parts).sort();
@@ -173,6 +177,7 @@ async function main() {
   put('sza-kit.css', fs.readFileSync(path.join(REPO, 'assets', 'sza-kit.css')));
   put('help.css', fs.readFileSync(path.join(HERE, 'vendor', 'help.css')));
   put('page.js', fs.readFileSync(path.join(HERE, 'page.js')));
+  put('favicon.ico', fs.readFileSync(path.join(REPO, 'assets', 'doc-html-translate.ico')));
   const prior = fs.existsSync(path.join(OUT, 'captures.json')) ? readJSON(path.join(OUT, 'captures.json')) : { captures: {} };
   put('captures.json', JSON.stringify({
     about: 'Written by tools/helpgen/generate.mjs. Per locale and page: the captures, their size and the pin place of every element in percent of the image, taken from the real window (CONTEXT-HELP rule 14).',

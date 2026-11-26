@@ -25,7 +25,7 @@
   ],
   "elements": [
     {
-      "id": "help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
+      "id": "help", "glyph": "app.help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
       "nameKey": "titleHelp",
       "one": { "en": "Opens this page without closing the question.", "ru": "Открывает эту страницу, не закрывая вопрос.", "uk": "Відкриває цю сторінку, не закриваючи питання." },
       "text": { "en": "The question stays open and waits while you read. {kbd:F1} does the same.", "ru": "Вопрос остаётся открытым и ждёт, пока вы читаете. {kbd:F1} делает то же самое.", "uk": "Питання лишається відкритим і чекає, поки ви читаєте. {kbd:F1} робить те саме." }
@@ -43,7 +43,7 @@
       "next": { "en": "With a maximum cost set under Advanced, an estimate within it is accepted without asking; an estimate above it skips the translation and converts the book without one.", "ru": "Если в «Дополнительно» задана максимальная стоимость, оценка в её пределах принимается без вопроса; оценка выше предела пропускает перевод, и книга конвертируется без него.", "uk": "Якщо в «Додатково» задано максимальну вартість, оцінка в її межах приймається без питання; оцінка вище межі пропускає переклад, і книга конвертується без нього." }
     },
     {
-      "id": "yes", "shot": "dialog", "sel": "#dlgActions button[value=yes]", "pin": "b",
+      "id": "yes", "glyph": "action.translate", "shot": "dialog", "sel": "#dlgActions button[value=yes]", "pin": "b",
       "nameKey": "costYes",
       "one": { "en": "Sends the text to Google and pays for the translation.", "ru": "Отправляет текст в Google и оплачивает перевод.", "uk": "Надсилає текст до Google і оплачує переклад." },
       "text": { "en": "The pages are translated by Google Cloud Translation with your own key while the book is built, and the book is saved already translated.", "ru": "Страницы переводит Google Cloud Translation по вашему ключу, пока строится книга, и книга сохраняется уже переведённой.", "uk": "Сторінки перекладає Google Cloud Translation за вашим ключем, поки будується книга, і книга зберігається вже перекладеною." },
@@ -51,7 +51,7 @@
       "undo": { "en": "What Google has charged cannot be taken back. {k:btnCancel} stops the rest, and the pages already sent are paid for.", "ru": "Списанное Google не вернуть. {k:btnCancel} останавливает остаток, а уже отправленные страницы оплачены.", "uk": "Списане Google не повернути. {k:btnCancel} зупиняє решту, а вже надіслані сторінки оплачені." }
     },
     {
-      "id": "no", "shot": "dialog", "sel": "#dlgActions button[value=no]", "pin": "b",
+      "id": "no", "glyph": "action.cancel", "shot": "dialog", "sel": "#dlgActions button[value=no]", "pin": "b",
       "nameKey": "costNo",
       "one": { "en": "Converts the book without translating it. Nothing is sent.", "ru": "Конвертирует книгу без перевода. Ничего не отправляется.", "uk": "Конвертує книгу без перекладу. Нічого не надсилається." },
       "text": { "en": "The book is converted exactly as with the free engine; you can still translate it in Chrome afterwards. Closing the question or pressing {kbd:Esc} is the same answer.", "ru": "Книга конвертируется так же, как с бесплатным вариантом; потом её всё равно можно перевести в Chrome. Закрыть вопрос или нажать {kbd:Esc} - тот же ответ.", "uk": "Книга конвертується так само, як з безкоштовним варіантом; потім її все одно можна перекласти в Chrome. Закрити питання чи натиснути {kbd:Esc} - та сама відповідь." },

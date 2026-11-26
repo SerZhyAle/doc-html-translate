@@ -101,6 +101,7 @@ When you open a supported document, this extension converts its text into a clea
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
 - 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. The plates cover the lettering they replace, and a plate that would span most of a picture is split back into its own lines, so a screenshot or a form keeps its layout. English works offline; more languages download on demand.
+- 💾 **Save media for translation**: Right-click a picture, video, audio or a page and choose "Save media file for translation" - the file is saved into a folder you pick inside the browser's download folder. The permission is asked on first use.
 - 🔒 **Local conversion**: Documents are converted on your device and never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 - 🌐 **Choose sites for automatic reflow**: Automatic interception starts off. If enabled, it covers all sites except those you disable by default, or only the sites you list. Switch modes without losing either list.
@@ -136,20 +137,27 @@ row there in the same commit and run `scripts/security-posture.ps1 -Render`; the
   document's origin is unknowable before the user opens the file, no fixed narrower match-pattern set is
   possible, and `activeTab` cannot grant the cross-origin fetch because the viewer is an extension page
   rather than the document's origin - so `<all_urls>` is the minimum that works for this single purpose.
-- scripting: only for the "OCR every image on this page" action the user starts from the right-click
-  menu. On that click the extension injects one script and its stylesheet into that one tab; the script
+- scripting: only for two actions the user starts from the right-click menu. "OCR every image on this
+  page": on that click the extension injects one script and its stylesheet into that one tab; the script
   collects the page's images, draws the recognized text over them, and removes itself when the user
-  stops. Nothing is injected without that explicit action, and there is no declared content script.
+  stops. "Save media file for translation": on that click one function runs in the clicked frame to find
+  the address of its media file, and a short status line is shown. Nothing is injected without one of
+  those explicit actions, and there is no declared content script.
 - offscreen: the OCR engine (bundled Tesseract, WebAssembly) needs a document to run in, and it must not
   run in the reader's page. The extension creates one offscreen document for the duration of a run and
   closes it when the run ends. Only image regions and the recognized text cross to it.
 - contextMenus: the extension's actions are started from the right-click menu - "OCR & translate this
-  image" on an image, "OCR every image on this page" on a page, and "Convert with doc-html-translate" on
-  a document link or page.
+  image" on an image, "OCR every image on this page" on a page, "Save media file for translation" on a
+  page or its media, and "Convert with doc-html-translate" on a document link or page.
 - storage: to remember the user's on/off choice, per-site exceptions, reading preferences (font, theme),
   interface language and remote-image setting, which OCR languages have been downloaded, and the format,
   page count and last error of the most recent document for the "Copy diagnostics" button. Nothing stored
   leaves the device.
+- downloads (optional): optional, requested only when the user first chooses "Save media file for
+  translation" from the right-click menu or presses "Allow saving files" in the options. It saves the one
+  file the user right-clicked - or the media file found in the clicked frame - into the folder named in
+  the options, inside the browser's download folder, under the file name the browser itself determines.
+  The extension does not read, search or change the user's other downloads.
 <!-- security-posture:end ext-justifications -->
 
 **Do not enumerate the formats in the declarativeNetRequest justification** - Chrome rejected this
@@ -195,7 +203,7 @@ the screenshot description) per language.
   - EN: Right-click, "Translate to ..", done - the document is converted on your device.
   - RU: Правый клик, «Перевести на ..», готово - документ преобразуется на вашем устройстве.
   - UK: Правий клік, «Перекласти на ..», готово - документ перетворюється на вашому пристрої.
-- Small promo tile 440x280 (optional), marquee 1400x560 (optional).
+- Chrome small promo tile: `extension/store/chrome-promo-small.png` (440x280), generated by `scripts/generate-icon.ps1`. Upload it in the Chrome developer dashboard at the next authorized Chrome release. Marquee 1400x560 is optional and is not supplied.
 - Hosted privacy-policy URL: **already prepared** at `extension-privacy.html` in the repo root - once the
   GitHub Pages site is deployed it is served at
   `https://serzhyale.github.io/doc-html-translate/extension-privacy.html`. Paste that exact URL (a

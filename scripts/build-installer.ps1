@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Build a single universal Windows setup.exe (Inno Setup) that installs on both x86 and
   x64 Windows. Local and free: no gate, no commit, no push, no Store upload.
@@ -65,6 +65,7 @@ $Iscc = Get-Iscc
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 . (Join-Path $PSScriptRoot "lib/goversioninfo.ps1")
 . (Join-Path $PSScriptRoot "lib/gobuildtags.ps1")
+. (Join-Path $PSScriptRoot "lib/release-ledger.ps1")
 
 # ── release tree (ticket 37) ─────────────────────────────────
 # -Tag: HEAD must be the tag's commit and nothing may be uncommitted, so the working tree the build
@@ -179,3 +180,6 @@ Write-Host ""
 Write-Host "Installer built: $setup" -ForegroundColor Green
 Write-Host "Universal x86/x64, per-user (no admin). Copy it to any Windows PC and run." -ForegroundColor DarkGray
 Write-Host "Local build - nothing committed, pushed, or published." -ForegroundColor DarkGray
+
+$ledgerKind = if ($Tag) { 'release' } else { 'debug' }
+Invoke-ReleaseLedgerBuild -Package 'app' -Flavor 'installer' -Kind $ledgerKind -Version $Stamp -Artifact $setup

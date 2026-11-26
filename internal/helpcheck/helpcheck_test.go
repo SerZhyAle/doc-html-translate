@@ -18,6 +18,7 @@ const repoRoot = "../.."
 var gateFiles = []string{
 	"cmd/doc-html-ui/help", "help", "cmd/doc-html-ui/ui.html", "cmd/doc-html-ui/main.go", "cmd/doc-html-ui/i18n.js",
 	"configs/help-baseline.txt", "tools/helpgen", "assets/sza-kit.css", "index.html", "docs.html", "docs.ru.html", "docs.uk.html",
+	"assets/identity/out/help-head.svg", "assets/glyphs",
 }
 
 func scratch(t *testing.T) string {

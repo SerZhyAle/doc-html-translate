@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "दस्तावेज़ पृष्ठ अनुवादक",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "इस पृष्ठ की सभी छवियों का पाठ पहचानें",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "अनुवाद के लिए मीडिया फ़ाइल सहेजें",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "मीडिया फ़ाइलें सहेजने का फ़ोल्डर",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "राइट-क्लिक मेनू का \"अनुवाद के लिए मीडिया फ़ाइल सहेजें\" फ़ाइल कहाँ रखता है: ब्राउज़र के डाउनलोड फ़ोल्डर के अंदर एक फ़ोल्डर (उदाहरण के लिए, Media for translation)। सीधे डाउनलोड फ़ोल्डर में सहेजने के लिए इसे खाली छोड़ें। हर प्रकार की फ़ाइल जैसी है वैसी ही सहेजी जाती है।",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "फ़ाइलें सहेजने की अनुमति दें",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "फ़ाइलें सहेजने की अनुमति है।",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "फ़ाइलें सहेजने की अनुमति अभी नहीं है: ब्राउज़र पहली बार एक बार पूछता है।",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "फ़ाइलें सहेजने की अनुमति नहीं है। एक्सटेंशन की सेटिंग में इसकी अनुमति दें।",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "यहाँ सहेजने के लिए कोई मीडिया फ़ाइल नहीं मिली।",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "मीडिया फ़ाइल सहेजी नहीं जा सकी: {1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "मीडिया फ़ाइल {1} में सहेजी जा रही है",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "मीडिया फ़ाइलें ({1}) {2} में सहेजी जा रही हैं",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "डाउनलोड",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "पढ़ा जा रहा है..",

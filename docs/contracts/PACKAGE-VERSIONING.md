@@ -1,7 +1,7 @@
 # Pointer: PACKAGE-VERSIONING
 
 - **Id:** `PACKAGE-VERSIONING`
-- **Version:** 0.8 draft
+- **Version:** 0.11 draft
 - **Home:** the shared contracts catalog, `package-versioning/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer - Windows desktop profile, registered `dotted` rendering
 - **Owner:** FastMediaSorter Android
@@ -25,3 +25,5 @@ executable versions. No extension release or artifact build was performed by tic
 **Re-read 2026-10-29 (ticket E0126) at 0.6.** Android band table only; nothing owed.
 
 **2026-11-08 (ticket E0111, site audit F15; canon RELEASE_AND_DISTRIBUTION section 4).** The edition's pinned instant moves from the CI run's clock to before the tag: `node extension/build.mjs record-version` computes it and records it in `docs/release-notes.json`, the `ext-cws-v<version>` / `ext-edge-v<version>` tags name it, and the store build stamps exactly that and stops on any other (`extension/scripts/release-version.mjs`, `extension/test/release-version.test.mjs`). The rendering is unchanged, E1-E4 hold, and no shipped version changes; the two open items of the rung 2a / E4 exception stand.
+
+Release re-verification: 2026-11-27: read 0.9-0.11 (Android families, offset family, edition label, IP Manager); no Windows desktop or edition rule changed. Derivations unchanged since 2026-11-17; version tests pass. Rung 2a / E4 row stands.

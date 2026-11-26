@@ -170,6 +170,27 @@
       }
     },
     {
+      "id": "family-type-fms-web",
+      "concept": "Footer family-map Type label for FastMediaSorter for Web (SITE-FAMILY-MAP 1.16).",
+      "glossary": false,
+      "scope": "footer",
+      "forms": {
+        "en": { "use": "Browser media sorter" },
+        "ru": { "use": "Сортировщик медиа в браузере" },
+        "uk": { "use": "Сортувальник медіа в браузері" },
+        "de": { "use": "Mediensortierer im Browser" },
+        "it": { "use": "Ordinatore di media nel browser" },
+        "es": { "use": "Organizador de medios en el navegador" },
+        "fr": { "use": "Trieur de médias dans le navigateur" },
+        "pt": { "use": "Organizador de multimédia no navegador" },
+        "ar": { "use": "منظّم وسائط في المتصفّح" },
+        "hi": { "use": "ब्राउज़र मीडिया सॉर्टर" },
+        "bn": { "use": "ব্রাউজার মিডিয়া সর্টার" },
+        "ur": { "use": "براؤزر میڈیا سارٹر" },
+        "zh": { "use": "浏览器媒体整理工具" }
+      }
+    },
+    {
       "id": "family-type-cyrflip",
       "concept": "Footer family-map Type label for CyrFlip (SITE-FAMILY-MAP 1.12).",
       "glossary": false,

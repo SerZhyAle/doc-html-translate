@@ -129,7 +129,15 @@ test("install with default options clears interception and builds the context me
   const roots = calls.menus.filter((m) => !m.parentId);
   assert.deepEqual(roots.map((m) => m.id), ["sza-root"]);
   assert.deepEqual(calls.menus.filter((m) => m.parentId === "sza-root").map((m) => m.id).sort(),
-    ["convert-doc-link", "convert-doc-page", "ocr-image", "ocr-page"]);
+    ["convert-doc-link", "convert-doc-page", "ocr-image", "ocr-page", "save-media"]);
+  // The save action is offered wherever the root is, so the root never opens an empty submenu -
+  // on a video, an audio player or inside a frame too.
+  const root = calls.menus.find((m) => m.id === "sza-root");
+  const save = calls.menus.find((m) => m.id === "save-media");
+  assert.deepEqual(save.contexts, root.contexts);
+  assert.deepEqual(save.documentUrlPatterns, root.documentUrlPatterns);
+  for (const ctx of ["page", "image", "video", "audio", "frame"]) assert.ok(root.contexts.includes(ctx), ctx);
+  assert.equal(save.title, "Save media file for translation");
   // A lone "&" is a mnemonic marker in a menu title; the worker has to double it to print one.
   assert.equal(calls.menus.find((m) => m.id === "ocr-image").title, "OCR && translate this image");
 });
@@ -150,7 +158,7 @@ test("install and startup in one worker start leave one menu and no unchecked me
     console.warn = warn;
   }
   assert.deepEqual(calls.menus.map((m) => m.id),
-    ["sza-root", "ocr-image", "ocr-page", "convert-doc-link", "convert-doc-page"]);
+    ["sza-root", "ocr-image", "ocr-page", "save-media", "convert-doc-link", "convert-doc-page"]);
   assert.deepEqual(calls.uncheckedMenuErrors, []);
   assert.deepEqual(warned.filter((w) => w.includes("context menu")), []);
 });

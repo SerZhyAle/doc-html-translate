@@ -100,6 +100,7 @@ function main() {
   out.set('sza-kit.css', fs.readFileSync(path.join(REPO, 'assets', 'sza-kit.css')));
   out.set('help.css', fs.readFileSync(path.join(HERE, 'vendor', 'help.css')));
   out.set('page.js', fs.readFileSync(path.join(HERE, 'page.js')));
+  out.set('favicon.ico', fs.readFileSync(path.join(REPO, 'assets', 'doc-html-translate.ico')));
   out.set('freshness.json', Buffer.from(JSON.stringify({ about: recorded.about, digest, inputs: parts }, null, 2) + '\n'));
 
   const differ = [...out].filter(([rel, data]) => !same(data, path.join(HELP, rel)) || !same(data, path.join(MIRROR, rel))).map(([rel]) => rel);

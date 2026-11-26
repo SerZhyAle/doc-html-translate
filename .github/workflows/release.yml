@@ -216,10 +216,12 @@ jobs:
           # Both executables embed the bundled pdftotext runtime (GPL / MIT); its licences travel
           # beside the standalone .exe assets as well as inside the zip.
           Copy-Item THIRD-PARTY-NOTICES.txt dist/THIRD-PARTY-NOTICES.txt
-          $cliHash = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$cliName").Hash
-          $uiHash  = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$uiName").Hash
-          "$cliHash  $cliName" | Set-Content -LiteralPath "dist/$cliName.sha256" -Encoding ascii
-          "$uiHash  $uiName"   | Set-Content -LiteralPath "dist/$uiName.sha256"  -Encoding ascii
+          $cliHash     = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$cliName").Hash
+          $uiHash      = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$uiName").Hash
+          $noticesHash = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/THIRD-PARTY-NOTICES.txt").Hash
+          "$cliHash  $cliName"                  | Set-Content -LiteralPath "dist/$cliName.sha256"            -Encoding ascii
+          "$uiHash  $uiName"                    | Set-Content -LiteralPath "dist/$uiName.sha256"             -Encoding ascii
+          "$noticesHash  THIRD-PARTY-NOTICES.txt" | Set-Content -LiteralPath "dist/THIRD-PARTY-NOTICES.txt.sha256" -Encoding ascii
 
           "name=$name"          | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "sha256=$hash"        | Out-File -FilePath $env:GITHUB_OUTPUT -Append
@@ -284,4 +286,5 @@ jobs:
             dist/${{ steps.pkg.outputs.name }}
             dist/${{ steps.pkg.outputs.name }}.sha256
             dist/THIRD-PARTY-NOTICES.txt
+            dist/THIRD-PARTY-NOTICES.txt.sha256
           body_path: ${{ steps.notes.outputs.path }}

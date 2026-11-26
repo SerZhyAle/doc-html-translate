@@ -54,6 +54,27 @@ func InputDigests(root string) (parts map[string]string, digest string, err erro
 		}
 		parts[name] = sha(b)
 	}
+	// The product's picture and the glyphs the entries show (PRODUCT-IDENTITY rule 8), as
+	// tools/helpgen/generate.mjs counts them.
+	head, err := read("assets/identity/out/help-head.svg")
+	if err != nil {
+		return nil, "", err
+	}
+	parts["identity/help-head.svg"] = sha(head)
+	glyphs, err := os.ReadDir(filepath.Join(root, "assets", "glyphs"))
+	if err != nil {
+		return nil, "", err
+	}
+	for _, g := range glyphs {
+		if g.IsDir() || !strings.HasSuffix(g.Name(), ".svg") {
+			continue
+		}
+		b, err := read("assets/glyphs/" + g.Name())
+		if err != nil {
+			return nil, "", err
+		}
+		parts["glyphs/"+g.Name()] = sha(b)
+	}
 	entries, err := os.ReadDir(filepath.Join(root, filepath.FromSlash(CopyDir)))
 	if err != nil {
 		return nil, "", err

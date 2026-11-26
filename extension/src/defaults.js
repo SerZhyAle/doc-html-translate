@@ -21,6 +21,10 @@ export const DEFAULT_OPTIONS = {
   // must not tell anyone it was opened. The desktop app has no equivalent - its output is a
   // local file the browser opens under its own rules (docs/PARITY.md).
   allowRemoteContent: false,
+  // Where "Save media file for translation" puts a file: a folder inside the browser's download
+  // folder, "" for the download folder itself (media-save.js). Browser-only: the desktop app
+  // converts files it is given and has no page to save from (docs/PARITY.md).
+  mediaFolder: "Media for translation",
   // How this extension's own pages are drawn (ui-settings.js lists the values). The reading
   // theme above is the document's; these are the chrome's, and the desktop launcher keeps the
   // same four under the same meanings.

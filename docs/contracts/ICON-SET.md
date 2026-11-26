@@ -1,7 +1,7 @@
 # Pointer: ICON-SET
 
 - **Id:** `ICON-SET`
-- **Version:** 0.41 draft
+- **Version:** 0.46 draft
 - **Home:** the shared contracts catalog, `iconography/README.md` section 2, data in `iconography/vocabulary.jsonl` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - opted in as a draft on 2026-09-25; every edition (converted book, GUI, extension, site); read at 0.36 on 2026-10-20 (ticket 120)
 - **Wire carrier:** `vocabulary.version` at build time (section 5); the drawings this product ships are vendored under `assets/glyphs/`
@@ -39,3 +39,5 @@ name) was only sampled.
 generated pixel vectors yet (section 3 rule 1).
 
 **Re-read 2026-10-29 (ticket E0126) at 0.37.** Section 22 C names action.convert, action.text-smaller, action.text-larger, view.text-layer and action.retry (de, fr) exactly as this product ships them. Item E reads a verb form that is another record's name as a substitution: the Russian "Отменить очередь" / "Отменить текущий" and the ru, uk and de "retry failed" captions were a dated exception, closed by ticket E0122 (Q4) with noun forms built on the record's name (ru "Отмена очереди" / "Отмена текущего" / "Повтор неудачных", uk "Повтор невдалих", de "Fehlgeschlagene erneut versuchen"), and the notice dialog's "OK" answer is text-only, so the OK-beside-`action.confirm` variant is closed too. The drawer variant stays dated debt (`nav.menu` has no exported glyph yet).
+
+Release re-verification: 2026-11-27: read 0.42-0.46; 48 of 48 vendored glyphs match the catalog, glyph tests pass; app.logo and action.rename not drawn, nav.menu exported but not drawn; permission button mapped in GLYPH-MAP.

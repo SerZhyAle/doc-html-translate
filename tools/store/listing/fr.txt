@@ -101,9 +101,13 @@ traduire bande dessinée
 traduire texte image
 
 @@ReleaseNotes
-- Les images JPEG XL (.jxl) sont désormais prises en charge : images seules, images dans les livres et pages de bandes dessinées sont décodées en local, puis reconnues et traduites comme n'importe quelle autre image (une animation affiche sa première image).
-- Nouvelle disposition de la fenêtre : menu latéral de sept pages, avec taille de l'interface, taille du texte et commandes souris ou tactile.
-- F1 ou le bouton ? ouvre une page d'aide sur la partie de la fenêtre où vous vous trouvez.
-- Commandes plus grandes pour le tactile dans les livres convertis ; dans le lecteur, Maj+Espace tourne les pages et Maj+flèches étendent la sélection de texte.
-- Sécurité : l'application ne charge plus une libjxl.dll trouvée dans le dossier de travail ou dans PATH.
+- Les pages d'aide affichent désormais l'icône du programme et celle de chaque bouton expliqué ; les images du Store montrent la même icône que l'application installée.
+- La ligne de commande accepte des commandes (convert, output status, doctor, input check, etc.) avec des codes de sortie fixes et un résultat JSON facultatif ; les anciennes options restent valables.
+- La fenêtre ouverte se pilote en ligne de commande (open, show, status, quit) ; un second lancement transmet ses fichiers à la fenêtre en cours.
+- Sur écran tactile, les boutons à icône seule des livres convertis affichent leur nom.
+- La nouvelle option « Et fermer cette fenêtre » ferme la fenêtre après une exécution réussie.
+- La reconnaissance ne découpe plus une ligne contenant un mot très grand, comme une lettrine.
+- L'archive de diagnostic offre un rapport plus clair et masque les noms de vos documents.
+- Les programmes auxiliaires s'exécutent sans console, et fermer la fenêtre arrête l'application.
+- Les images JPEG XL (.jxl) sont prises en charge ; la fenêtre a un menu latéral et F1 ouvre l'aide.
 - Cette traduction est automatique et non relue - corrections bienvenues à sza@ukr.net.

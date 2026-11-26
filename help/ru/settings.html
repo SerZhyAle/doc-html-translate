@@ -6,6 +6,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
 <title>Справка - Настройки</title>
+<link rel="icon" href="../favicon.ico">
 <script src="../page.js"></script>
 <link rel="stylesheet" href="../sza-kit.css">
 <link rel="stylesheet" href="../help.css">
@@ -18,7 +19,7 @@
   </nav>
   <header class="hero">
     <p class="kicker">Справка по окну</p>
-    <h1>Настройки</h1>
+    <h1><svg class="product" width="40" height="40" aria-hidden="true" focusable="false" style="vertical-align:middle;margin-inline-end:.45em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#1E3A8A" d="M 9.75,1.5 L 38.25,1.5 C 42.806,1.5 46.5,5.194 46.5,9.75 L 46.5,38.25 C 46.5,42.806 42.806,46.5 38.25,46.5 L 9.75,46.5 C 5.194,46.5 1.5,42.806 1.5,38.25 L 1.5,9.75 C 1.5,5.194 5.194,1.5 9.75,1.5 Z"/><path fill="#FFFFFF" d="M 11,5 L 28,5 L 37,14 L 37,43 L 11,43 Z"/><path fill="#A9B8E0" d="M 28,5 L 28,14 L 37,14 Z"/><path fill="#1E3A8A" d="M 21.327,23.562 L 16.977,29 L 21.327,34.438 L 18.673,36.562 L 12.623,29 L 18.673,21.438 Z"/><path fill="#1E3A8A" d="M 29.327,21.438 L 35.377,29 L 29.327,36.562 L 26.673,34.438 L 31.023,29 L 26.673,23.562 Z"/><path fill="#1E3A8A" d="M 26.969,21.792 L 23.769,36.792 L 21.031,36.208 L 24.231,21.208 Z"/></svg>Настройки</h1>
     <p class="lead">Настройки окна лежат на страницах, список которых стоит в начале окна. Выберите страницу, и её настройки появятся на месте; окно помнит, на какой странице вы были. В узком окне тот же список открывается кнопкой «Страницы».</p>
   </header>
 
@@ -83,7 +84,7 @@
   <div class="elements">
 
     <details class="el" id="advanced">
-      <summary><span class="mk">1</span><span><span class="name">Дополнительно</span><span class="one">Разбивка книги на блоки, глубина оглавления и предел стоимости.</span></span></summary>
+      <summary><span class="mk">1</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M3,17v2h6v-2H3zM3,5v2h10V5H3zM13,21v-2h8v-2h-8v-2h-2v6h2zM7,9v2H3v2h4v2h2V9H7zM21,13v-2H11v2h10zM15,9h2V7h4V5h-4V3h-2v6z"/></svg>Дополнительно</span><span class="one">Разбивка книги на блоки, глубина оглавления и предел стоимости.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Размер блока</b> - Символов на блок; <code>0</code> отключает разбиение. Если сомневаетесь - <code>0</code>.</li>
@@ -98,7 +99,7 @@
     </details>
 
     <details class="el" id="ollama">
-      <summary><span class="mk">2</span><span><span class="name">Ollama</span><span class="one">Локальная модель, которая переводит, когда выбран движок Ollama.</span></span></summary>
+      <summary><span class="mk">2</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M12.87,15.07l-2.54,-2.51 0.03,-0.03c1.74,-1.94 2.98,-4.17 3.71,-6.53L17,6L17,4h-7L10,2L8,2v2L1,4v1.99h11.17C11.5,7.92 10.44,9.75 9,11.35 8.07,10.32 7.3,9.19 6.69,8h-2c0.73,1.63 1.73,3.17 2.98,4.56l-5.09,5.02L4,19l5,-5 3.11,3.11 0.76,-2.04zM18.5,10h-2L12,22h2l1.12,-3h4.75L21,22h2l-4.5,-12zM15.88,17l1.62,-4.33L19.12,17h-3.24z"/></svg>Ollama</span><span class="one">Локальная модель, которая переводит, когда выбран движок Ollama.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Модель</b> - Модель, уже скачанная в ваш локальный Ollama; по умолчанию <code>gemma3:12b</code>. Модель побольше переводит лучше, но требует больше памяти и работает медленнее.</li>
@@ -114,7 +115,7 @@
     </details>
 
     <details class="el" id="ocr">
-      <summary><span class="mk">3</span><span><span class="name">OCR картинок</span><span class="one">Делает текст внутри картинок доступным для перевода.</span></span></summary>
+      <summary><span class="mk">3</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M4.5,9h3c0.6,0 1,0.5 1,1v4c0,0.5 -0.4,1 -1,1h-3c-0.6,0 -1,-0.5 -1,-1v-4c0,-0.5 0.4,-1 1,-1zM5,10.5v3h2v-3zM13.5,9h-3c-0.6,0 -1,0.5 -1,1v4c0,0.5 0.4,1 1,1h3c0.6,0 1,-0.5 1,-1v-0.5h-3.5v-3h3.5V10c0,-0.5 -0.4,-1 -1,-1zM15.5,9v6h1.5v-2h1.1l1.4,2h1.7l-1.5,-2.1c0.5,-0.2 0.8,-0.7 0.8,-1.2V10c0,-0.6 -0.5,-1 -1,-1zM17,10.5h2v1h-2z"/></svg>OCR картинок</span><span class="one">Делает текст внутри картинок доступным для перевода.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Наложить переводимый текст поверх изображений</b> - Распознаёт текст, впечатанный в изображения (в EPUB/PDF или в отдельном файле-картинке, открытом напрямую), и накладывает его поверх как настоящий текст, чтобы перевод охватывал и картинки. Отдельная картинка распознаётся автоматически. Нужен установленный Tesseract.</li>
@@ -131,7 +132,7 @@
     </details>
 
     <details class="el" id="integration">
-      <summary><span class="mk">4</span><span><span class="name">Windows</span><span class="one">Необязательные связи программы с Windows; обе выключены, пока вы их не включите.</span></span></summary>
+      <summary><span class="mk">4</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13zM6.8 19.6V14.7H12.8V16.3H8.4V19.6zM12.8 12.8 16.5 15.5 12.8 18.2z"/></svg>Windows</span><span class="one">Необязательные связи программы с Windows; обе выключены, пока вы их не включите.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Пункт правого клика «Convert to HTML» и «Открыть с помощью»</b> - По желанию. Добавляет команду «Convert to HTML» в меню правого клика поддерживаемых файлов и показывает приложение в списке «Открыть с помощью». Программы по умолчанию остаются прежними.</li>
@@ -147,7 +148,7 @@
     </details>
 
     <details class="el" id="interface">
-      <summary><span class="mk">5</span><span><span class="name">Интерфейс</span><span class="one">Тема, язык интерфейса, насколько крупны элементы и текст и для мыши или для касания сделано окно.</span></span></summary>
+      <summary><span class="mk">5</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z"/></svg>Интерфейс</span><span class="one">Тема, язык интерфейса, насколько крупны элементы и текст и для мыши или для касания сделано окно.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Тема</b> - Системная тема, светлая или тёмная. Пока вы не выбрали, окно следует системной теме.</li>
@@ -165,7 +166,7 @@
     </details>
 
     <details class="el" id="about">
-      <summary><span class="mk">6</span><span><span class="name">О программе</span><span class="one">Что установлено, обновления, вспомогательные программы, связанные продукты и способ попросить помощи с проблемой.</span></span></summary>
+      <summary><span class="mk">6</span><span><span class="name"><svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>О программе</span><span class="one">Что установлено, обновления, вспомогательные программы, связанные продукты и способ попросить помощи с проблемой.</span></span></summary>
       <div class="full">
         <ul>
           <li><b>Версия / Издание / Лицензия</b> - Версия, портативное это издание или из Microsoft Store, и лицензия (MIT).</li>
@@ -196,7 +197,7 @@
   </ul>
 
   <footer class="help-foot">
-    <span>Снято с DOC-HTML-UI 26.1117.1423, 2026-11-17.</span>
+    <span>Снято с DOC-HTML-UI 26.1126.2354, 2026-11-26.</span>
     <a href="index.html">Содержание справки</a>
     <a href="mailto:sza@ukr.net">Задать вопрос или сообщить о проблеме</a>
   </footer>

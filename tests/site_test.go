@@ -55,6 +55,7 @@ func sitePages() []string {
 var familyURLs = []string{
 	"https://serzhyale.github.io/FastMediaSorter_mob_v2/",
 	"https://serzhyale.github.io/FastMediaSorter_Lite/",
+	"https://serzhyale.github.io/FastMediaSorter_WEB/",
 	"https://serzhyale.github.io/CyrFlip/",
 	"https://serzhyale.github.io/FileDO/",
 	"https://serzhyale.github.io/StreamsPlayer/",
@@ -70,6 +71,7 @@ var familyURLs = []string{
 var familyLabels = map[string]string{
 	"https://serzhyale.github.io/FastMediaSorter_mob_v2/": "Fast Media Sorter &amp; Organizer",
 	"https://serzhyale.github.io/FastMediaSorter_Lite/":   "Fast Media Sorter &amp; Sharing for Windows",
+	"https://serzhyale.github.io/FastMediaSorter_WEB/":    "FastMediaSorter for Web",
 	"https://serzhyale.github.io/CyrFlip/":                "CyrFlip",
 	"https://serzhyale.github.io/FileDO/":                 "FileDO",
 	"https://serzhyale.github.io/StreamsPlayer/":          "STREAMS Player",
@@ -213,6 +215,19 @@ func TestSiteFooterCarriesTheFamilyMap(t *testing.T) {
 		if n := strings.Count(grid, `href="`+touristURL+`"`); n != 1 {
 			t.Errorf("%s: Tourist card appears %d times in the grid, want 1", p, n)
 		}
+		// The FastMediaSorter for Web row (1.16): one card in the grid, the English Type cell on the
+		// non-landing pages; a landing's translated cell is the termbase term family-type-fms-web,
+		// pinned per language by TestSiteLandingFooterTypesAreInThePageLanguage.
+		const fmsWebURL = "https://serzhyale.github.io/FastMediaSorter_WEB/"
+		if n := strings.Count(grid, `href="`+fmsWebURL+`"`); n != 1 {
+			t.Errorf("%s: FastMediaSorter for Web card appears %d times in the grid, want 1", p, n)
+		}
+		if _, landing := landingWindowsType[strings.TrimSuffix(p, "/index.html")]; !landing {
+			const fmsWebCard = `<a href="https://serzhyale.github.io/FastMediaSorter_WEB/" target="_blank" rel="noopener"><b>FastMediaSorter for Web</b><span>Browser media sorter</span></a>`
+			if !strings.Contains(grid, fmsWebCard) {
+				t.Errorf("%s: the FastMediaSorter for Web card must read the SITE-FAMILY-MAP 1.16 Type cell %q", p, "Browser media sorter")
+			}
+		}
 		if _, landing := landingWindowsType[strings.TrimSuffix(p, "/index.html")]; !landing {
 			const touristCard = `<a href="https://serzhyale.github.io/Tourist_Android/" target="_blank" rel="noopener"><b>Tourist</b><span>Android and Wear OS hiking kit</span></a>`
 			if !strings.Contains(grid, touristCard) {
@@ -254,7 +269,7 @@ func TestSiteLandingFooterTypesAreInThePageLanguage(t *testing.T) {
 	if len(footerTerms) < 10 {
 		t.Fatalf("configs/termbase.json has only %d footer family-map terms, want 10", len(footerTerms))
 	}
-	english := []string{"Android media sorter", "Windows media and file manager", "Windows layout fixer", "Windows storage CLI", "Windows stream player", "Windows tray launcher", "AI-dev methodology", "Android and Wear OS device information", "Android and Wear OS hiking kit"}
+	english := []string{"Android media sorter", "Windows media and file manager", "Windows layout fixer", "Windows storage CLI", "Windows stream player", "Windows tray launcher", "AI-dev methodology", "Android and Wear OS device information", "Android and Wear OS hiking kit", "Browser media sorter"}
 	for _, c := range localeLandings {
 		grid := regexp.MustCompile(`(?s)<div class="tools-grid">.*?</div>`).FindString(readRepoFile(t, c, "index.html"))
 		for _, cell := range english {

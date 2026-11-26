@@ -37,7 +37,7 @@
   ],
   "elements": [
     {
-      "id": "help", "shot": "ready", "sel": "#btnHelp", "pin": "l",
+      "id": "help", "glyph": "app.help", "shot": "ready", "sel": "#btnHelp", "pin": "l",
       "nameKey": "titleHelp",
       "one": { "en": "Opens the help for the part of the window you are in.", "ru": "Открывает справку о той части окна, где вы находитесь.", "uk": "Відкриває довідку про ту частину вікна, де ви перебуваєте." },
       "text": {
@@ -51,7 +51,7 @@
       "shortcut": { "en": "{kbd:F1} does the same from anywhere in the window.", "ru": "{kbd:F1} делает то же самое из любого места окна.", "uk": "{kbd:F1} робить те саме з будь-якого місця вікна." }
     },
     {
-      "id": "header", "shot": "ready", "sel": [".head"], "pin": "b",
+      "id": "header", "glyph": "nav.contents", "shot": "ready", "sel": [".head"], "pin": "b",
       "name": { "en": "Window header", "ru": "Шапка окна", "uk": "Шапка вікна" },
       "one": { "en": "The program name and version, the links, and the list of pages.", "ru": "Название и версия программы, ссылки и список страниц.", "uk": "Назва й версія програми, посилання та список сторінок." },
       "text": {
@@ -64,7 +64,7 @@
       "undo": { "en": "Choose the previous page in the list.", "ru": "Выберите прежнюю страницу в списке.", "uk": "Виберіть попередню сторінку в списку." }
     },
     {
-      "id": "drop", "shot": "ready", "sel": "#dropZone", "pin": "gt",
+      "id": "drop", "glyph": "content.document", "shot": "ready", "sel": "#dropZone", "pin": "gt",
       "name": { "en": "Choose a file", "ru": "Выбор файла", "uk": "Вибір файла" },
       "one": { "en": "The document to convert: click to choose it, or drop it on the window.", "ru": "Документ для конвертации: щёлкните, чтобы выбрать, или перетащите его на окно.", "uk": "Документ для конвертації: клацніть, щоб вибрати, або перетягніть його на вікно." },
       "text": {
@@ -78,7 +78,7 @@
       "shortcut": { "en": "{kbd:Ctrl+Shift+F} puts the keyboard on this box.", "ru": "{kbd:Ctrl+Shift+F} ставит клавиатурный фокус на это поле.", "uk": "{kbd:Ctrl+Shift+F} ставить клавіатурний фокус на це поле." }
     },
     {
-      "id": "run", "shot": "ready", "sel": "#btnRun", "pin": "in",
+      "id": "run", "glyph": "action.convert", "shot": "ready", "sel": "#btnRun", "pin": "in",
       "nameKey": "btnConvert",
       "one": { "en": "Starts the conversion; while it runs the same button is Cancel.", "ru": "Запускает конвертацию; пока она идёт, эта же кнопка - «Отмена».", "uk": "Запускає конвертацію; доки вона йде, ця сама кнопка - «Скасувати»." },
       "text": {
@@ -105,7 +105,7 @@
       "undo": { "en": "These lines only report; they change nothing.", "ru": "Эти строки только сообщают; ничего не меняют.", "uk": "Ці рядки лише повідомляють; нічого не змінюють." }
     },
     {
-      "id": "previous", "shot": "ready", "sel": "#prevResultHint", "pin": "gt",
+      "id": "previous", "glyph": ["nav.open-external", "action.delete"], "shot": "ready", "sel": "#prevResultHint", "pin": "gt",
       "name": { "en": "Previous result", "ru": "Предыдущий результат", "uk": "Попередній результат" },
       "one": { "en": "Shown when this file has already been converted.", "ru": "Показывается, если этот файл уже был сконвертирован.", "uk": "Показується, якщо цей файл уже було сконвертовано." },
       "text": {
@@ -118,7 +118,7 @@
       "undo": { "en": "A deleted result cannot be brought back; the next {k:btnConvert} builds it again from the original.", "ru": "Удалённый результат не вернуть; следующая {k:btnConvert} соберёт его заново из оригинала.", "uk": "Видалений результат не повернути; наступне {k:btnConvert} збере його знову з оригіналу." }
     },
     {
-      "id": "recent", "shot": "ready", "sel": "#recentSection", "pin": "gt",
+      "id": "recent", "glyph": "action.clear-all", "shot": "ready", "sel": "#recentSection", "pin": "gt",
       "nameKey": "secRecent",
       "one": { "en": "The last eight documents you chose or dropped.", "ru": "Последние восемь документов, которые вы выбирали или перетаскивали.", "uk": "Останні вісім документів, які ви вибирали чи перетягували." },
       "text": {
@@ -131,7 +131,7 @@
       "undo": { "en": "A forgotten list cannot be brought back; choose the files again.", "ru": "Забытый список не вернуть; выберите файлы заново.", "uk": "Забутий список не повернути; виберіть файли знову." }
     },
     {
-      "id": "output", "shot": "ready", "sel": "#outputRow", "pin": "gt",
+      "id": "output", "glyph": "action.choose-folder", "shot": "ready", "sel": "#outputRow", "pin": "gt",
       "nameKey": "lblOutput",
       "oneKey": "hintOutput",
       "text": {
@@ -157,7 +157,7 @@
       "undo": { "en": "Switch back at any time. An existing translated result stays as it was until you rebuild it.", "ru": "Переключитесь обратно в любой момент. Готовый переведённый результат остаётся прежним, пока вы его не пересоберёте.", "uk": "Перемкніться назад будь-коли. Готовий перекладений результат лишається таким, як був, доки ви його не перезберете." }
     },
     {
-      "id": "languages", "shot": "ready", "sel": "#langsRow", "pin": "gt",
+      "id": "languages", "glyph": "action.swap", "shot": "ready", "sel": "#langsRow", "pin": "gt",
       "nameKey": "lblLanguages",
       "oneKey": "hintLangs",
       "text": {
@@ -184,7 +184,7 @@
       "undo": { "en": "Tick or untick again. Results already built are not changed.", "ru": "Отметьте или снимите отметку снова. Уже собранные результаты не меняются.", "uk": "Позначте або зніміть позначку знову. Уже зібрані результати не змінюються." }
     },
     {
-      "id": "command", "shot": "ready", "sel": ".cmdbar", "pin": "t",
+      "id": "command", "glyph": "action.copy", "shot": "ready", "sel": ".cmdbar", "pin": "t",
       "nameKey": "secCmdLine",
       "one": { "en": "The exact command this window will run.", "ru": "Точная команда, которую запустит это окно.", "uk": "Точна команда, яку запустить це вікно." },
       "text": {
@@ -196,7 +196,7 @@
       "next": { "en": "Nothing runs until you press {k:btnConvert}.", "ru": "Ничего не запускается, пока вы не нажали {k:btnConvert}.", "uk": "Нічого не запускається, доки ви не натиснули {k:btnConvert}." }
     },
     {
-      "id": "log", "shot": "ready", "sel": [".log-head", "#logArea"], "pin": "t",
+      "id": "log", "glyph": ["action.copy", "nav.scroll-bottom"], "shot": "ready", "sel": [".log-head", "#logArea"], "pin": "t",
       "nameKey": "secLog",
       "one": { "en": "What the converter reports while it works.", "ru": "Что сообщает конвертер, пока работает.", "uk": "Що повідомляє конвертер, поки працює." },
       "text": {
@@ -208,7 +208,7 @@
       "next": { "en": "Each run writes its own log to a folder on this computer; see the About page.", "ru": "Каждый запуск пишет свой журнал в папку на этом компьютере; см. страницу «О программе».", "uk": "Кожен запуск пише свій журнал до теки на цьому комп'ютері; див. сторінку «Про програму»." }
     },
     {
-      "id": "first-run", "shot": "states", "sel": "#assocPrompt", "pin": "gt",
+      "id": "first-run", "glyph": ["action.add", "action.cancel"], "shot": "states", "sel": "#assocPrompt", "pin": "gt",
       "name": { "en": "Windows question", "ru": "Вопрос о Windows", "uk": "Питання про Windows" },
       "one": { "en": "Asked once, on the first start: should the app add itself to Windows?", "ru": "Задаётся один раз, при первом запуске: добавлять ли программу в Windows?", "uk": "Ставиться один раз, під час першого запуску: чи додавати програму до Windows?" },
       "text": {
@@ -221,7 +221,7 @@
       "undo": { "en": "Switch the entries off again on the Windows page.", "ru": "Отключите пункты снова на странице Windows.", "uk": "Вимкніть пункти знову в групі «Інтеграція з Windows»." }
     },
     {
-      "id": "queue", "shot": "states", "sel": "#queueSection", "pin": "gt",
+      "id": "queue", "glyph": ["action.retry", "action.cancel", "action.clear-all"], "shot": "states", "sel": "#queueSection", "pin": "gt",
       "nameKey": "secQueue",
       "one": { "en": "Several files converted one after another.", "ru": "Несколько файлов, конвертируемых один за другим.", "uk": "Кілька файлів, що конвертуються один за одним." },
       "text": {
@@ -234,7 +234,7 @@
       "undo": { "en": "{k:queueRemoveItem} takes one file out of the queue and {k:queueClear} empties it; the files themselves stay on disk.", "ru": "{k:queueRemoveItem} убирает один файл из очереди, {k:queueClear} очищает её; сами файлы остаются на диске.", "uk": "{k:queueRemoveItem} прибирає один файл із черги, {k:queueClear} очищає її; самі файли лишаються на диску." }
     },
     {
-      "id": "google-key", "shot": "states", "sel": "#googleKeySection", "pin": "gt",
+      "id": "google-key", "glyph": "action.save", "shot": "states", "sel": "#googleKeySection", "pin": "gt",
       "nameKey": "lblGoogleKey",
       "one": { "en": "Shown only with the Google Cloud engine: your Cloud Translation key.", "ru": "Показывается только с движком Google Cloud: ваш ключ Cloud Translation.", "uk": "Показується лише з рушієм Google Cloud: ваш ключ Cloud Translation." },
       "text": {

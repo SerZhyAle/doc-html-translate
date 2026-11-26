@@ -1,6 +1,6 @@
 # auditstand - the deep dynamic audit's measuring stand
 
-The instrument of ticket [113](../../DEV/plan/E0113_dynamic-behaviour-audit.md): it
+The instrument of ticket [113](../../DEV/plan/D2HTML-0113_dynamic-behaviour-audit.md): it
 measures what the built desktop program *does* to the user, the UI thread and the rest of Windows
 while a person uses it - responsiveness, wrapped errors, no system blocking, leaks,
 understandability. The strategic spec owns the why and the budgets; the tactical folder

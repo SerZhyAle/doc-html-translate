@@ -1,7 +1,7 @@
 # Pointer: INPUT-PARITY
 
 - **Id:** `INPUT-PARITY`
-- **Version:** 0.7 draft
+- **Version:** 0.9 draft
 - **Home:** the shared contracts catalog, `input-controls/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, keyboard and mouse (adopted 2026-09-29, ticket 69; read at 0.4 on 2026-10-20, ticket 120)
 - **Owner:** shared (the keyboard and mouse columns are CyrFlip's; amendments through the catalog page)
@@ -45,3 +45,5 @@ shortcut table and the arrow-key walkers are pinned by the GUI's own tests; focu
 `TestFocusRingIsNeverSuppressed`.
 
 **Re-read 2026-10-29 (ticket E0126) at 0.5, with `INPUT-CHORD` 0.5.** `INPUT-PARITY` items F-H: nothing owed - the readers keep page, next/previous, search and cancel, `help` = F1 is the GUI's and the readers have no help surface. `INPUT-CHORD` item D answers the question above: a chord that is only shown follows rule 5 and owes nothing else, so the decline narrows to everything but display. The French cancel tooltip now reads `Esc`, and on macOS the reader and extension search tooltips show `⌘+F`.
+
+Release re-verification: 2026-11-27: read to 0.9 (item N, readers bind Ctrl+F, the GUI has no search; 0.9 is Wear/touch-lock only, not applicable). New save-media action is a browser menu item. Hover-text row stands.

@@ -100,9 +100,13 @@ traduzir quadrinhos
 traduzir texto de imagem
 
 @@ReleaseNotes
-- Agora há suporte a imagens JPEG XL (.jxl): imagens avulsas, imagens dentro de livros e páginas de quadrinhos são decodificadas localmente e depois reconhecidas e traduzidas como qualquer outra imagem (em animações, o primeiro quadro é exibido).
-- Novo layout da janela: menu lateral com sete páginas, além do tamanho da interface, do tamanho do texto e dos controles para mouse ou toque.
-- F1 ou o botão ? abre uma página de ajuda sobre a parte da janela em que você está.
-- Controles maiores para toque nos livros convertidos; no leitor, Shift+Espaço muda de página e Shift+setas ampliam a seleção de texto.
-- Segurança: o aplicativo não carrega mais uma libjxl.dll encontrada na pasta de trabalho ou no PATH.
+- As páginas de ajuda mostram agora o ícone do programa e o de cada botão explicado; as imagens da Store usam o mesmo ícone da aplicação instalada.
+- A linha de comandos aceita comandos (convert, output status, doctor, input check e outros) com códigos de saída fixos e resultado JSON opcional; as opções antigas continuam a funcionar.
+- A janela aberta pode ser comandada pela linha de comandos (open, show, status, quit); um segundo arranque entrega os ficheiros à janela em execução.
+- Em ecrãs táteis, os botões só com ícone dos livros convertidos mostram o nome.
+- A nova opção «E fechar esta janela» fecha a janela após uma execução bem-sucedida.
+- O reconhecimento já não parte uma linha com uma palavra muito grande, como uma capitular.
+- O arquivo de diagnóstico tem um relatório mais claro e oculta os nomes dos seus documentos.
+- Os programas auxiliares correm sem janela de consola, e fechar a janela termina a aplicação.
+- Imagens JPEG XL (.jxl) são suportadas; a janela tem um menu lateral e F1 abre a ajuda.
 - Esta tradução é automática e não revista - correções para sza@ukr.net.

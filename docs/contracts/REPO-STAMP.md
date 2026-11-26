@@ -1,7 +1,7 @@
 # Pointer: REPO-STAMP
 
 - **Id:** `REPO-STAMP`
-- **Version:** 0.13 draft
+- **Version:** 0.14 draft
 - **Home:** the shared contracts catalog, `rule-adoption/README.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** producer - [`.sza-canon.json`](../../.sza-canon.json) at the repository root
 - **Wire carrier:** none - `.sza-canon.json` JSON fields
@@ -30,3 +30,5 @@ adoption date and implements no age reader. Its producer shape is unchanged; ado
 and reconciliation dates are written only by the adoption run (rule 8). No catalog vectors.
 
 **Re-read 2026-10-29 (ticket E0126) at 0.13.** An optional `schemaVersion` carrier, absent = wire 1.0: `.sza-canon.json` stays a valid legacy stamp, and the adopt-canon writer adds `"1.0"` at the next re-sync.
+
+Release re-verification: 2026-11-27: read 0.14 items A to C. Stamp unchanged since 2026-11-17, parses, required keys present, 4 exemptions each with id, path, reason and no until; docDigests absent (changed docs unknown), written by the next adopt-canon run.

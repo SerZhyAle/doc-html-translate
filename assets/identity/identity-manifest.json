@@ -1,0 +1,1151 @@
+{
+  "schemaVersion": 1,
+  "product": "doc-html-translate",
+  "family": null,
+  "master": {
+    "svg": "assets/identity/master/mark.svg",
+    "small": "assets/identity/master/mark-small.svg",
+    "medium": "assets/identity/master/mark-medium.svg",
+    "background": "#1E3A8A",
+    "sha256": "7bd016757608735b81f10da057dfb1d51720b2a02327fa372a7569eb544fd867"
+  },
+  "generator": "pwsh -NoProfile -File scripts/generate-icon.ps1",
+  "renditions": [
+    {
+      "surface": "app.exe-ico",
+      "path": "assets/doc-html-translate.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "app.installer-ico",
+      "path": "assets/doc-html-translate.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "app.titlebar",
+      "path": "cmd/doc-html-ui/favicon.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "other.book-favicon",
+      "path": "internal/htmlgen/favicon.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3",
+      "source": "generated from the master by pwsh -NoProfile -File scripts/generate-icon.ps1 (the browser-tab icon of a converted book)",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "web.favicon-ico",
+      "path": "assets/doc-html-translate.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "site.identity",
+      "path": "assets/doc-html-translate.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "web.og-image",
+      "path": "assets/social-card-1200x630.png",
+      "format": "png",
+      "width": 1200,
+      "height": 630,
+      "sha256": "b52d2224855d510bc54756ad22ad7d74d4516fdd782b4c42b287cabf0c29c45a"
+    },
+    {
+      "surface": "github.social-preview",
+      "path": "assets/social-card-1280x640.png",
+      "format": "png",
+      "width": 1280,
+      "height": 640,
+      "sha256": "4fc72dddc2196937dba102402c380881c41972e6521ee66c3ef24394d99d1be1"
+    },
+    {
+      "surface": "ext.chrome.promo-small",
+      "path": "extension/store/chrome-promo-small.png",
+      "format": "png",
+      "width": 440,
+      "height": 280,
+      "sha256": "8d7501ec12035bafe0346062441f219bf827fba476d835de6cfcab3ead450fdd"
+    },
+    {
+      "surface": "help.head",
+      "path": "assets/identity/out/help-head.svg",
+      "format": "svg",
+      "sha256": "fbf6851c2cb011930c213bc86dc826947cd53aef4540be350506bf97d7494e47"
+    },
+    {
+      "surface": "web.favicon-ico",
+      "path": "help/favicon.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "web.favicon-ico",
+      "path": "cmd/doc-html-ui/help/favicon.ico",
+      "format": "ico",
+      "width": 256,
+      "height": 256,
+      "sha256": "bca58b383882e980134ba201112d878a06ede9764e620ff0f06f373b421122e3"
+    },
+    {
+      "surface": "other.social-mark",
+      "path": "assets/identity/out/social-mark-280.png",
+      "format": "png",
+      "width": 280,
+      "height": 280,
+      "sha256": "2390bece7d8c7ab579f706ce73243ac0565e26bc7aa6d7f51bc66b4983e9f45b",
+      "source": "generated from the master by pwsh -NoProfile -File scripts/generate-icon.ps1 (the plate of the social card)",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "hub.card",
+      "path": "assets/identity/out/hub-card-256.png",
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "sha256": "4210de553f13d4e33de8579dfc949396e7fe806e7f02b5d0031149deaa905dd3"
+    },
+    {
+      "surface": "ext.chrome.icon",
+      "path": "extension/icons/icon16.png",
+      "format": "png",
+      "width": 16,
+      "height": 16,
+      "sha256": "5ab2124affca2f6815dda9f608025e17d4fa7b0fb2f695cfb94568934ca6be66"
+    },
+    {
+      "surface": "ext.chrome.icon",
+      "path": "extension/icons/icon32.png",
+      "format": "png",
+      "width": 32,
+      "height": 32,
+      "sha256": "4965815564b7a36e58717bdc13a845177bed3f6b3bf8412050e9db9242ce5bdb"
+    },
+    {
+      "surface": "ext.chrome.icon",
+      "path": "extension/icons/icon48.png",
+      "format": "png",
+      "width": 48,
+      "height": 48,
+      "sha256": "db189518d799081a98c2f81caadf95bc6b04061e86e6bdc83ea8b960c1b391a6"
+    },
+    {
+      "surface": "ext.chrome.icon",
+      "path": "extension/icons/icon128.png",
+      "format": "png",
+      "width": 128,
+      "height": 128,
+      "sha256": "b5591d5ae56eff51ed126f4a8d1ac463b21c0f39fa31d67187f3850d9bc53516"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/tile-71x71.png",
+      "format": "png",
+      "width": 71,
+      "height": 71,
+      "sha256": "fca7f00ef5f65adf7d75ca348baf944d3741e54b9d625e5dc987a096d30b100d"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/tile-150x150.png",
+      "format": "png",
+      "width": 150,
+      "height": 150,
+      "sha256": "b6d5db6a6ed4b71f98c80aca71b30a5fa1169cb774c1e6724d4ce8ddaf13f5ab"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/tile-300x300.png",
+      "format": "png",
+      "width": 300,
+      "height": 300,
+      "sha256": "6153bb8311d17545ba0e77da8f17995eb3d050e4c3fb1e98b68d0cd4e350a717"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/boxart-1x1-1080x1080.png",
+      "format": "png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "81804bdb50bbe846580a9f6ded71a150b447a95726d71b88312ca5fd2d884cb1"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/boxart-1x1-2160x2160.png",
+      "format": "png",
+      "width": 2160,
+      "height": 2160,
+      "sha256": "667e07f0223a3b38c0e80896a98d37cb69b3279f8908d693f8425bcd9d4a40d6"
+    },
+    {
+      "surface": "store.ms.logo",
+      "path": "tools/store/logos/poster-9x16-1440x2160.png",
+      "format": "png",
+      "width": 1440,
+      "height": 2160,
+      "sha256": "d94369d8e4881be7d38301a6c8b4cda80294c572ca8f756d6e90c50827140db1"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-16.png",
+      "format": "png",
+      "width": 16,
+      "height": 16,
+      "sha256": "3471943984386132fb3df15ed0a68938f85a433676d741197dd97c6d715de59c"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-16_altform-unplated.png",
+      "format": "png",
+      "width": 16,
+      "height": 16,
+      "sha256": "5ab2124affca2f6815dda9f608025e17d4fa7b0fb2f695cfb94568934ca6be66"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-16_altform-lightunplated.png",
+      "format": "png",
+      "width": 16,
+      "height": 16,
+      "sha256": "5ab2124affca2f6815dda9f608025e17d4fa7b0fb2f695cfb94568934ca6be66"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-24.png",
+      "format": "png",
+      "width": 24,
+      "height": 24,
+      "sha256": "cb840461c8ad467b88a0241a54c2983e3f96a2da6b688368b31bf172045cf29e"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-24_altform-unplated.png",
+      "format": "png",
+      "width": 24,
+      "height": 24,
+      "sha256": "64edd3363628f76f57da30c5047cd1d35002ceb31a0ed4ad07bd981ea2f7d84c"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-24_altform-lightunplated.png",
+      "format": "png",
+      "width": 24,
+      "height": 24,
+      "sha256": "64edd3363628f76f57da30c5047cd1d35002ceb31a0ed4ad07bd981ea2f7d84c"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-32.png",
+      "format": "png",
+      "width": 32,
+      "height": 32,
+      "sha256": "5cd899485bd7c7262a171bdada95c6610b7d2e61bf004019b38260ab6a4520cb"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-32_altform-unplated.png",
+      "format": "png",
+      "width": 32,
+      "height": 32,
+      "sha256": "4965815564b7a36e58717bdc13a845177bed3f6b3bf8412050e9db9242ce5bdb"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-32_altform-lightunplated.png",
+      "format": "png",
+      "width": 32,
+      "height": 32,
+      "sha256": "4965815564b7a36e58717bdc13a845177bed3f6b3bf8412050e9db9242ce5bdb"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-48.png",
+      "format": "png",
+      "width": 48,
+      "height": 48,
+      "sha256": "777dc781128a63093c6da16d0c840502469d90e068b5d2c808653c9883fbe662"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-48_altform-unplated.png",
+      "format": "png",
+      "width": 48,
+      "height": 48,
+      "sha256": "db189518d799081a98c2f81caadf95bc6b04061e86e6bdc83ea8b960c1b391a6"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-48_altform-lightunplated.png",
+      "format": "png",
+      "width": 48,
+      "height": 48,
+      "sha256": "db189518d799081a98c2f81caadf95bc6b04061e86e6bdc83ea8b960c1b391a6"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-256.png",
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "sha256": "71d2b27200728e0dfb12ea35d6a2f315e52093cc867018e0bdff54f7c360f3c1"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-256_altform-unplated.png",
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "sha256": "4210de553f13d4e33de8579dfc949396e7fe806e7f02b5d0031149deaa905dd3"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.targetsize-256_altform-lightunplated.png",
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "sha256": "4210de553f13d4e33de8579dfc949396e7fe806e7f02b5d0031149deaa905dd3"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.scale-100.png",
+      "format": "png",
+      "width": 44,
+      "height": 44,
+      "sha256": "1f6108153f0d9e40f094d6b611c67fc0502df8d2c0e2412a1c3147f7bae48b7c"
+    },
+    {
+      "surface": "msix.storelogo",
+      "path": "assets/identity/out/msix/StoreLogo.scale-100.png",
+      "format": "png",
+      "width": 50,
+      "height": 50,
+      "sha256": "89fcbd65804a7406a34807d4c79c401ce15bb9e886b69968f3e849ebd1eebab3"
+    },
+    {
+      "surface": "other.msix-square71",
+      "path": "assets/identity/out/msix/Square71x71Logo.scale-100.png",
+      "format": "png",
+      "width": 71,
+      "height": 71,
+      "sha256": "96fcf6ec15d1e2bb3812199f429f5db75194886db80e570d5b946bae18acb8a7",
+      "source": "generated from the master by pwsh -NoProfile -File scripts/generate-icon.ps1 (the MSIX small tile, a size the surface list has no id for)",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "msix.square150",
+      "path": "assets/identity/out/msix/Square150x150Logo.scale-100.png",
+      "format": "png",
+      "width": 150,
+      "height": 150,
+      "sha256": "30f9c233f8807941e503a5004acf2d80f7e0326580fa7416e90dba159a863d7b"
+    },
+    {
+      "surface": "msix.wide310",
+      "path": "assets/identity/out/msix/Wide310x150Logo.scale-100.png",
+      "format": "png",
+      "width": 310,
+      "height": 150,
+      "sha256": "802eff20d2df97ee6e4b85a8e439be97d5a5bb94a7fcd764f4d14c9a180f15da"
+    },
+    {
+      "surface": "msix.square44",
+      "path": "assets/identity/out/msix/Square44x44Logo.scale-200.png",
+      "format": "png",
+      "width": 88,
+      "height": 88,
+      "sha256": "d904a5c259979bbdcf7a3c4af825f1fca4e5d8831df7844344df989b45d7b966"
+    },
+    {
+      "surface": "msix.storelogo",
+      "path": "assets/identity/out/msix/StoreLogo.scale-200.png",
+      "format": "png",
+      "width": 100,
+      "height": 100,
+      "sha256": "ce3f4be1d18a663e095194fd7460fe4df45cab4db1c95582b66b1c0bfea3b8d9"
+    },
+    {
+      "surface": "other.msix-square71",
+      "path": "assets/identity/out/msix/Square71x71Logo.scale-200.png",
+      "format": "png",
+      "width": 142,
+      "height": 142,
+      "sha256": "ae52291682fc8e05d3af298224de183597ce4380f6d420b7755ad7d91ddea68a",
+      "source": "generated from the master by pwsh -NoProfile -File scripts/generate-icon.ps1 (the MSIX small tile, a size the surface list has no id for)",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "msix.square150",
+      "path": "assets/identity/out/msix/Square150x150Logo.scale-200.png",
+      "format": "png",
+      "width": 300,
+      "height": 300,
+      "sha256": "886f8cb8c53ea03d98fb85db5b86b32b35d0f1a5c5eecf9abf86bbd15a3903a1"
+    },
+    {
+      "surface": "msix.wide310",
+      "path": "assets/identity/out/msix/Wide310x150Logo.scale-200.png",
+      "format": "png",
+      "width": 620,
+      "height": 300,
+      "sha256": "0e53708326976d632e9e2cd9a93725be48a0ae983c8959d965e887e8ead1eb33"
+    },
+    {
+      "surface": "other.demo-video",
+      "path": "assets/demo.mp4",
+      "format": "mp4",
+      "sha256": "a02656e2826d514a89e066c733bfd6f3b24ef454c8b5d1b5080f43bcefada78c",
+      "source": "tools/store/make-demo.ps1 - a recording of the real build in headless Chrome",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.demo-gif",
+      "path": "assets/demo.gif",
+      "format": "gif",
+      "width": 800,
+      "height": 450,
+      "sha256": "79c5a58680ada9212eb16c8d0ed55c7994b68c68b2cede5af59a42a24c18d2e2",
+      "source": "tools/store/make-demo.ps1 - a recording of the real build in headless Chrome",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.demo-poster",
+      "path": "assets/demo-poster.jpg",
+      "format": "jpg",
+      "width": 1280,
+      "height": 720,
+      "sha256": "5bd6e27d3276734177aebd7df8dde6b4dbec2cd7427e4a89a25c4ea5e10a82ea",
+      "source": "tools/store/make-demo.ps1 - a recording of the real build in headless Chrome",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-about-en-us",
+      "path": "tools/store/docs-about-en-us.png",
+      "format": "png",
+      "width": 668,
+      "height": 155,
+      "sha256": "a91d6bfbd184c2272fd15b69e6667632cc36d50f2e1306d83adfa757d6e2f11a",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-about-ru",
+      "path": "tools/store/docs-about-ru.png",
+      "format": "png",
+      "width": 668,
+      "height": 155,
+      "sha256": "4de8fc723b87e39ad97bbd697d2d34794221921838135b76192c6175f7cd49f8",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-about-uk",
+      "path": "tools/store/docs-about-uk.png",
+      "format": "png",
+      "width": 668,
+      "height": 155,
+      "sha256": "e02c334bac7ed582d3f79a2344a6a05e55ce911892359755f6dece523fd64fdd",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-password-en-us",
+      "path": "tools/store/docs-password-en-us.png",
+      "format": "png",
+      "width": 512,
+      "height": 224,
+      "sha256": "57bc8476fad8db9d760732e32f9c851f06503a645a954a609e680692a2c8c178",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-password-ru",
+      "path": "tools/store/docs-password-ru.png",
+      "format": "png",
+      "width": 560,
+      "height": 244,
+      "sha256": "ff7df99055484c567d76bd86e9c822b6747e057fd29d143bc55ad43f96075f09",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-docs-password-uk",
+      "path": "tools/store/docs-password-uk.png",
+      "format": "png",
+      "width": 560,
+      "height": 244,
+      "sha256": "6d954371dc7997981c69c6a299346e63e1a1ed28d7bf93a61bd25ee80bca3073",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-ar",
+      "path": "tools/store/gui-ar.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "9683f4db2e03a5f271a0c055103c6f6f32edd9299af77c6830df7a6c4f47603d",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-bn",
+      "path": "tools/store/gui-bn.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "5ed214dda97c38aa99c221c6091dde83e6acd1faa25e29be073509f4dba989cd",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-de",
+      "path": "tools/store/gui-de.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "d3769d973bbde5f3624f9173f928f45b8a89e91a85950a432d70ea6da646d718",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-en-us",
+      "path": "tools/store/gui-en-us.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "8e403dceb2676cd4a079ad00eeb7f672d90c897252bf7d9ced6ee57819433bbe",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-es",
+      "path": "tools/store/gui-es.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "cb47adaf491b71184a36414f0138786a72a594d3e70cd602e1491911772373e3",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-fr",
+      "path": "tools/store/gui-fr.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "3e002596dfaf775a8f847963b37bf81d68fed10d4c1edbe890379759a53fb66e",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-hi",
+      "path": "tools/store/gui-hi.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "9a944020fdfe1e1cd671096ab48b7fedf7ffa10d2bdbb1aff6f0c457e6f648af",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-it",
+      "path": "tools/store/gui-it.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "e1c768c788dfda9ae40d4865e55c1119f7e42192b2ac89d56fb97cb988e870df",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-pt-br",
+      "path": "tools/store/gui-pt-br.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "61cad97bb1739477ee80521b5e94f8f550ead87c4af4065d8a33da937c225c96",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-ru",
+      "path": "tools/store/gui-ru.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "327211c6a3051cf7e77a1c42f54c9edd5e41a681b70041c40a0c66cfb07f4c36",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-uk",
+      "path": "tools/store/gui-uk.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "87837d389de020c976501f6d6d561cf3487a54e7b0c62bdf0e00c62f09b7b7c9",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-ur",
+      "path": "tools/store/gui-ur.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "671712877751364fd8be799fbdabfd80aea4401d350ca31015144090165c4582",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-gui-zh-hans",
+      "path": "tools/store/gui-zh-hans.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "e26db3eefedfd050e2afba1fbca2d706d7220a08112e4511e01cfb1effa8b442",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-ar",
+      "path": "tools/store/reading-view-ar.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "be2bb71c403818dc6a13f52342220a13a7e876563b00d6720d3d9e26806c4e1f",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-bn",
+      "path": "tools/store/reading-view-bn.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "22f8cc50374773146ec5a691adf5a7e5e4f6dbe4bb2b846bd8ff5a22a8720a35",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-de",
+      "path": "tools/store/reading-view-de.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "5f0077f09f9d504806c24150b881ea6b7999bc39b6b398c0b38a41110c34d3ea",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-en-us",
+      "path": "tools/store/reading-view-en-us.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "7315ee551167da551c19cadfe77c4aa864b16c2810f544160b700aff68d47baf",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-es",
+      "path": "tools/store/reading-view-es.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "5394ff1b3369ddc932418309d1294e741416e15b149b9d1af020b1559af65d7f",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-fr",
+      "path": "tools/store/reading-view-fr.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "3eb520e04db01671d20b927691ce03cc7a3cce5cf239b7f97c9cc4ad5ccedefc",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-hi",
+      "path": "tools/store/reading-view-hi.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "c7220621fbd97b0e22540ce5f638fa79e8fb50a1fb5a53ab03b24b85d6e4b21b",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-it",
+      "path": "tools/store/reading-view-it.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "dffcf9918f60d4929f15c45869cd6f0a027b4167bde985ac1d348818846f3827",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-pt-br",
+      "path": "tools/store/reading-view-pt-br.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "1706253e7c3052a2e4694f83a8c15b19208bf6a78bf1bcf3761a2c9246e8b716",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-ru",
+      "path": "tools/store/reading-view-ru.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "50f7c5a32973a36534686e3765e89dfc47223efea856bfb290914960dccf836d",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-uk",
+      "path": "tools/store/reading-view-uk.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "84eabd31feef210258d027ce70b83caad3590231760cffdab63347d635769550",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-ur",
+      "path": "tools/store/reading-view-ur.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "43eacf5701a044ed24d2b6e24e7cc31d6ce8061822e56957841771ff29dbf642",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-reading-view-zh-hans",
+      "path": "tools/store/reading-view-zh-hans.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "1c0f285a18a5ff0470eb1452c14dc89b1e864d509fba71dc99a0b8bfe1cf85c9",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-ar",
+      "path": "tools/store/table-of-contents-ar.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "0d13a06c5edb92dae0dc98e8a59da2009b752ae03ac801287ef8cfc517b25953",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-bn",
+      "path": "tools/store/table-of-contents-bn.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "1e198a29583164b827c0e396be91ddbdb33e0020d3ef2c255a10c99e8f0b23e3",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-de",
+      "path": "tools/store/table-of-contents-de.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "d58f1c0d581916e3efab6dc83af7ab115a3b03b5d56b2d79c29d1f38210783b9",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-en-us",
+      "path": "tools/store/table-of-contents-en-us.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "186d6b430e4dc61ac05af6d7ccc868213e080f6a03edf86652617939351c9b22",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-es",
+      "path": "tools/store/table-of-contents-es.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "f3b2bc4fd3a155b1b4ac8710cff82746bd2f8e9755eb2860dcd1b04296bc68f5",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-fr",
+      "path": "tools/store/table-of-contents-fr.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "96ca550fc8bd17865b29a6dc33429c565c00450e2b1ec1264d8bdadda0a32091",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-hi",
+      "path": "tools/store/table-of-contents-hi.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "5852cb7d3db5e799350f36554ebcd8ac0fd427d1944d80192d5ec83bfd78b679",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-it",
+      "path": "tools/store/table-of-contents-it.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "d6e8793ed8bfb604e2868959142070787451996385576891f3eb287557098732",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-pt-br",
+      "path": "tools/store/table-of-contents-pt-br.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "41e56f7516cf1ee3d7d5bd53ecc2df0c72857aa09c107cb7b00b75b7e69e47fc",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-ru",
+      "path": "tools/store/table-of-contents-ru.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "2b343220d88169ef51b4c0b3b8913607a1046bee3fbccde6c90f57f76e1c4ea2",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-uk",
+      "path": "tools/store/table-of-contents-uk.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "ee501f3519c5daa5f01c479528dbfe883a28a2e27d2f4a5217fc86c4601b90d4",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-ur",
+      "path": "tools/store/table-of-contents-ur.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "0da50c9d1f833f512dffbbb917e8cf2463e02d3a5348419f18b8e7b7a5e21e8e",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.store-screenshot-table-of-contents-zh-hans",
+      "path": "tools/store/table-of-contents-zh-hans.png",
+      "format": "png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "e0b60c32bb6e501b4c32b75da7bf95bc69366ac2a49811956bb05b22b19dad0a",
+      "source": "tools/store/make-screenshot.ps1 - captured from the real build",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-ar",
+      "path": "extension/store/screenshots/shot1-ar.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "e1abbb37f65c35c4f23ef4a91d8dad1d9feb39b5a4d947e1d36d12c2a9905f41",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-bn",
+      "path": "extension/store/screenshots/shot1-bn.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "ca6aa7466b52b61bc3b0eff7b580be2d83c8c92b0f472487047fc9b1be646516",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-de",
+      "path": "extension/store/screenshots/shot1-de.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "4fe97c3669e5cfb9dee645a130f7ac4689e091a26de5fdca833df9a90fa1ee25",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-en",
+      "path": "extension/store/screenshots/shot1-en.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "c15c9e2474441f1a8da19cb35e4664fd5861553db9f12930b0e6cb25c30cc49b",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-es",
+      "path": "extension/store/screenshots/shot1-es.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "dbfaf9b6c1840bb10a1ee31277062c9d400f2a8d1ab661adb1e39f271c8b6e75",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-fr",
+      "path": "extension/store/screenshots/shot1-fr.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "538fbfdbaa687228c96a6f65f661f5dd03b69c3b5ae340c60bd2f9a3038bd8c9",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-hi",
+      "path": "extension/store/screenshots/shot1-hi.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "ee6fed77e00d9e909ba8de2a367e7e2ae1c4f4a7756a53f881321cf2abc108af",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-it",
+      "path": "extension/store/screenshots/shot1-it.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "13e6c8935cb03bedf7b7c8a91cb5c94a7f65518e7dd71ec174fbca71a0125e9f",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-pt",
+      "path": "extension/store/screenshots/shot1-pt.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "aecc95dcd1d2ce721d677aa8685e25a8000075f4c697c8421cc2f44de98e47ac",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-ru",
+      "path": "extension/store/screenshots/shot1-ru.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "a49c8b6f90ee64bf1cc47d12af9123ea33ef72efaa77c465381e45cc5c2f2982",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-uk",
+      "path": "extension/store/screenshots/shot1-uk.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "7104cbeabaf2bf3e60f0f55ca9f0e1ec90a8302e2ebaeda3c4892e1a876c024e",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-ur",
+      "path": "extension/store/screenshots/shot1-ur.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "d11e3c623996c7cbf1471957264e4763aabe8ca602ff1ab87658582ab2b0de30",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot1-zh",
+      "path": "extension/store/screenshots/shot1-zh.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "a4ff5aa4bad596c585b0ecebd65ad418b0e281d840303cfec58ebd00c359afb5",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-ar",
+      "path": "extension/store/screenshots/shot2-ar.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "3d5a7ca267c3688c7ac3a8aa728179eba404db2e583bdc07e02710813b50784b",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-bn",
+      "path": "extension/store/screenshots/shot2-bn.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "280841d27eabdc538a3540c1611f2419675927727cbc758b4e6da4547540fb28",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-de",
+      "path": "extension/store/screenshots/shot2-de.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "0f9ae0848acdc7a83e9dc3fcff553ab6ee6e4001656cb6b0b0c420e657fb79a1",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-en",
+      "path": "extension/store/screenshots/shot2-en.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "80aafe5d6cd6d80c267b61b3e4699d629e75e3d3140749bb9c4730542aa1e27a",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-es",
+      "path": "extension/store/screenshots/shot2-es.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "aa534917dd404c02004ec04c1ac56ed6585bf914eee6644456c26984207893bf",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-fr",
+      "path": "extension/store/screenshots/shot2-fr.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "62b128d202b2e8f220aed9d1b534d912394b38d3de49675c18bb6bfaf75c4052",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-hi",
+      "path": "extension/store/screenshots/shot2-hi.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "923be3e7c8061ade6e810d302c1e6c84d8f4bd8f995a4565f972f27e2ec6ec3f",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-it",
+      "path": "extension/store/screenshots/shot2-it.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "69a52aad6affa70c70e2a1a280ff54cb32b743820f1a76cf08998bf06db34079",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-pt",
+      "path": "extension/store/screenshots/shot2-pt.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "0ff18b64207c31af0d421a679b92f17bed0acc4fb63f63935a61a849107ad47a",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-ru",
+      "path": "extension/store/screenshots/shot2-ru.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "ccbc4352aac1c8e8c8c076360e19c5b8cec472650d9de46cb09c4b267845ee24",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-uk",
+      "path": "extension/store/screenshots/shot2-uk.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "a446b86fcf5bfe514a806d0712f64d57931be955114efe55226f27c3c615818a",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-ur",
+      "path": "extension/store/screenshots/shot2-ur.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "0e762fb2dab0e2d2c77a5954d0da53e0bd146ea6f8a047341adf406956eb8dd6",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    },
+    {
+      "surface": "other.ext-screenshot-shot2-zh",
+      "path": "extension/store/screenshots/shot2-zh.png",
+      "format": "png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "5097b98acfe2d00b8280ae7f38e6c24d6e268ae91894fb087ddda2d410317166",
+      "source": "extension/scripts/make-screenshots.mjs - captured from the real extension",
+      "licence": "own work of the product, under the repository's licence"
+    }
+  ]
+}

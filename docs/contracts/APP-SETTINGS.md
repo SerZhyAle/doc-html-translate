@@ -1,7 +1,7 @@
 # Pointer: APP-SETTINGS
 
 - **Id:** `APP-SETTINGS`
-- **Version:** 0.8 draft
+- **Version:** 0.9 draft
 - **Home:** the shared contracts catalog, `desktop-app-ux/APP-SETTINGS.md` (its path is in [`AGENTS.md`](../../AGENTS.md))
 - **Role:** consumer, `partial` - the GUI launcher's settings surface (`cmd/doc-html-ui`), adopted 2026-10-05 (ticket 93), read at 0.7 on 2026-10-20 (ticket 120)
 - **Wire carrier:** none - a shipped user-facing surface (the GUI's saved blob is this product's own store, wire: none)
@@ -56,3 +56,5 @@ law: keys by name, an unknown key ignored, an unknown enum to its default, a cor
 overwritten, bounded geometry. No catalog vectors exist.
 
 **Re-read 2026-10-29 (ticket E0126) at 0.8.** Rule 9 is amended to what the launcher does - a main-window settings surface steps back one layer on Escape and never closes - so its variant is closed; the no-search variant closes under `WINDOWS-UI` 0.11 section 16 B (each persisted setting sits on one named rail page, `docs/settings-inventory.json`). Rule 1 (second instance) stays a dated exception.
+
+Release re-verification: 2026-11-27: read 0.9 (draft-field allowance, nothing owed). GUI tests and settings inventory pass. Partial: rule 1 (D2HTML-0144 hand check owed) and the theme/language page row.

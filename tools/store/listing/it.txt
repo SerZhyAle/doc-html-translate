@@ -100,9 +100,13 @@ tradurre fumetto
 tradurre testo da immagine
 
 @@ReleaseNotes
-- Ora sono supportate le immagini JPEG XL (.jxl): immagini singole, immagini nei libri e pagine di fumetti vengono decodificate in locale, poi riconosciute e tradotte come qualsiasi altra immagine (nelle animazioni si mostra il primo fotogramma).
-- Nuova disposizione della finestra: menu laterale con sette pagine, più dimensione dell'interfaccia, dimensione del testo e controlli per mouse o touch.
-- F1 o il pulsante ? apre una pagina di aiuto sulla parte della finestra in cui ti trovi.
-- Controlli più grandi per il touch nei libri convertiti; nel lettore Maiusc+Spazio cambia pagina e Maiusc+frecce estendono la selezione del testo.
-- Sicurezza: l'app non carica più una libjxl.dll trovata nella cartella di lavoro o in PATH.
+- Le pagine della guida mostrano ora l'icona del programma e quella di ogni pulsante spiegato; le immagini dello Store usano la stessa icona dell'app installata.
+- La riga di comando accetta comandi (convert, output status, doctor, input check e altri) con codici di uscita fissi e risultato JSON facoltativo; le vecchie opzioni continuano a funzionare.
+- La finestra aperta si può controllare da riga di comando (open, show, status, quit); un secondo avvio passa i suoi file alla finestra in esecuzione.
+- Sul touch screen i pulsanti con sola icona dei libri convertiti mostrano il loro nome.
+- La nuova opzione «E chiudi questa finestra» chiude la finestra dopo un'esecuzione riuscita.
+- Il riconoscimento non spezza più una riga con una parola molto grande, come un capolettera.
+- L'archivio diagnostico ha un rapporto più chiaro e nasconde i nomi dei tuoi documenti.
+- I programmi ausiliari girano senza console, e chiudendo la finestra l'app termina.
+- Le immagini JPEG XL (.jxl) sono supportate; la finestra ha un menu laterale e F1 apre la guida.
 - Questa traduzione è automatica e non revisionata - correzioni benvenute a sza@ukr.net.

@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "دستاویزی صفحہ مترجم",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "اس صفحے کی تمام تصاویر کا متن پہچانیں",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "ترجمے کے لیے میڈیا فائل محفوظ کریں",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "میڈیا فائلیں محفوظ کرنے کا فولڈر",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "رائٹ کلک مینو کا \"ترجمے کے لیے میڈیا فائل محفوظ کریں\" فائل کہاں رکھتا ہے: براؤزر کے ڈاؤن لوڈ فولڈر کے اندر ایک فولڈر (مثلاً Media for translation)۔ سیدھے ڈاؤن لوڈ فولڈر میں محفوظ کرنے کے لیے اسے خالی چھوڑیں۔ ہر قسم کی فائل جیسی ہے ویسی ہی محفوظ ہوتی ہے۔",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "فائلیں محفوظ کرنے کی اجازت دیں",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "فائلیں محفوظ کرنے کی اجازت ہے۔",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "فائلیں محفوظ کرنے کی ابھی اجازت نہیں: براؤزر پہلی بار ایک دفعہ پوچھتا ہے۔",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "فائلیں محفوظ کرنے کی اجازت نہیں۔ ایکسٹینشن کی ترتیبات میں اجازت دیں۔",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "یہاں محفوظ کرنے کے لیے کوئی میڈیا فائل نہیں ملی۔",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "میڈیا فائل محفوظ نہیں ہو سکی: {1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "میڈیا فائل {1} میں محفوظ ہو رہی ہے",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "میڈیا فائلیں ({1}) {2} میں محفوظ ہو رہی ہیں",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "ڈاؤن لوڈز",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "پڑھا جا رہا ہے..",

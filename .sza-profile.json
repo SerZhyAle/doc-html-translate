@@ -9,19 +9,29 @@
     "journal": "DEV/plan/spec-catalog.jsonl",
     "journalArchive": "DEV/plan/spec-catalog-archive.jsonl",
     "burnedIds": "DEV/plan/spec-catalog-burned-ids.jsonl",
-    "releaseQueue": "DEV/plan/PQ_QUEUE.md",
-    "releaseReady": "DEV/plan/PQ_READY.md",
-    "releaseQueueDone": "DEV/plan/PQ_DONE.md",
+    "releaseQueue": "DEV/plan/RELEASE_QUEUE.md",
+    "releasesDir": "DEV/releases",
     "probeBaseline": "DEV/plan/probe-baseline.txt"
   },
   "grammar": {
-    "ticketIdPattern": "^E\\d{4}$",
-    "specFilePattern": "^DEV/plan/(done/)?E\\d{4}_(?!spec_)",
-    "specFileTemplate": "DEV/plan/{0}_{1}.md"
+    "ticketIdPattern": "^D2HTML-\\d{4}$",
+    "specFilePattern": "^DEV/plan/(done/)?(?:D2HTML-\\d{4}|E\\d{4})_(?!spec_)",
+    "specFileTemplate": "DEV/plan/{0}_{1}.md",
+    "legacyTicketIdPatterns": [
+      "^E\\d{4}$"
+    ]
   },
   "probes": {
     "enabled": false,
-    "scanRoots": ["cmd", "internal", "extension/src"],
-    "sourceRoots": ["cmd", "internal", "extension/src"]
+    "scanRoots": [
+      "cmd",
+      "internal",
+      "extension/src"
+    ],
+    "sourceRoots": [
+      "cmd",
+      "internal",
+      "extension/src"
+    ]
   }
 }

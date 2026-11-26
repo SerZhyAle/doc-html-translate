@@ -5,10 +5,19 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Draw every committed system-surface icon from the product mark and the vendored glyphs
-# (internal/iconart, ICON-RENDER rule 9): the program ICO and its two favicon copies, the
-# Explorer verb and document-type ICOs embedded beside it, and the extension's action icons.
-# They are render targets - tests/icons_test.go fails when one drifts from this output.
+# The one generator of PRODUCT-IDENTITY 0.1 (docs/contracts/PRODUCT-IDENTITY.md): every picture of the
+# product is drawn from the one mark (internal/iconart/mark.go) and the vendored glyphs (ICON-RENDER rule 9).
+#   1. go run ./tools/icongen - the master and its reduced forms as SVG (assets/identity/master), the help-page
+#      head, the program ICO and its favicon copies, the Explorer verb and document-type ICOs, the extension's
+#      action icons, the Microsoft Store display images (tools/store/logos) and the social card's mark;
+#   2. tools/store/make-social-card.ps1 - the Open Graph card and the GitHub social preview, composed from that mark;
+#   3. tools/store/make-chrome-promo.ps1 - the Chrome tile from the mark and extension screenshot;
+#   4. go run ./tools/icongen -manifest - assets/identity/identity-manifest.json, every picture with its SHA-256.
+# All are render targets - tests/icons_test.go fails when an icon drifts from this output, and the catalog's
+# reference checker (P:/Contracts/product-identity/reference/Test-ProductIdentity.ps1) fails when a file drifts from
+# the manifest. Rerun this after a store screenshot or the demo is regenerated: the manifest records their hashes too.
+# The MSIX logos are drawn into the package by msix/build-msix.ps1 (icongen -msix). The help pages inline the head
+# picture: run node tools/helpgen/repage.mjs after a change of the mark.
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $repoRoot
@@ -16,11 +25,17 @@ try {
     # A caller may have left GOOS/GOARCH set for a cross build; the generator runs here.
     $savedArch = $env:GOARCH; $savedOS = $env:GOOS
     Remove-Item Env:GOARCH, Env:GOOS -ErrorAction SilentlyContinue
+    # amd64 draws, as the test suite and CI do: the 386 toolchain rounds some large renditions differently.
+    $env:GOARCH = 'amd64'
     try {
         go run ./tools/icongen | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "icongen failed" }
+        & (Join-Path $repoRoot "tools/store/make-social-card.ps1") | Out-Null
+        & (Join-Path $repoRoot "tools/store/make-chrome-promo.ps1") | Out-Null
+        go run ./tools/icongen -manifest | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "icongen -manifest failed" }
     } finally {
-        if ($savedArch) { $env:GOARCH = $savedArch }
+        if ($savedArch) { $env:GOARCH = $savedArch } else { Remove-Item Env:GOARCH -ErrorAction SilentlyContinue }
         if ($savedOS) { $env:GOOS = $savedOS }
     }
 } finally {
@@ -36,4 +51,4 @@ if ($Output) {
     }
 }
 
-Write-Host "Icons generated: assets/doc-html-translate.ico, convert-verb.ico, document-type.ico, extension/icons"
+Write-Host "Identity generated: assets/identity (master, manifest), program and favicon ICOs, verb and document-type ICOs, extension icons, store logos, social cards"

@@ -116,15 +116,21 @@ working tree is clean (and fails if the build leaves it dirty): the package hold
 GitHub Release was built from. An unsigned build without `-Tag` is refused. No `-SelfSign` - upload the
 **unsigned** `out\*.msix` (the `*_selftest.msix` test build is never uploaded); Microsoft signs it during certification.
 
-The upload stays a manual step in Partner Center. The Store has a submission API and the `msstore` CLI, but this
-flow makes no write call through either. `identity.json` also holds the product's `StoreId` and
+The submission itself is the agent-run Store step of the release (`tools/store/submit-submission.ps1`, ticket E0156,
+WINDOWS-STORE section D, rules 19 to 26): it re-runs the read-only store preflight inline, refuses a pending submission
+its own record does not hold, uploads this package into the draft, refreshes the thirteen `ReleaseNotes` from the
+listing decks, proves the draft read-back, and commits for certification behind the distinct `-Commit` switch (the
+commit is the owner's standing pre-authorization of 2026-11-17, recorded in ticket E0156 and the catalog registry; the
+tag, winget and extension commits keep their own confirmations). An unavailable channel falls back to the manual path
+(exit 2): this package, and the listing import folder built with refreshed notes, are handed over for a Partner Center
+upload by hand. `identity.json` also holds the product's `StoreId` and
 `PackageFamilyName`, which the read-only Store preflight reads: `scripts/release.ps1` prints its verdict (the
 `store preflight` line - the sza plugin's shared `tools/Store-Preflight.ps1`, WINDOWS-STORE 0.4 section D) before the
 tag. It is BLOCKED on a pending submission, a version not above the live one or a price that is not Free; it is MANUAL,
-and never a block, when the channel is unconfigured, the credential is missing or expired or the token is refused. It
-does not test a write (none is made), the credential's expiry unless `-StoreCredentialExpiry yyyy-MM-dd` is passed, the
-listing, the age rating or what Partner Center accepts at upload. After the tag its evidence line goes into
-`DEV/RELEASE_STATE.md` through `scripts/release-state.ps1` (one line per run, no account identifiers or secrets). The
+and never a block, when the channel is unconfigured, the credential is missing or expired or the token is refused - and
+the preflight line itself still makes no write (the write lives in the channel step, which re-runs the preflight). After the
+tag the channel step's evidence goes into `DEV/release-verdicts/<version>.store-submission.jsonl` (rule 26) and
+the release ledger (`DEV/releases/`, via `scripts/release-ledger.ps1`, no account identifiers or secrets). The
 credential is the owner's: configured in the owner's own terminal, never in this repository.
 
 ### Version mapping (important)

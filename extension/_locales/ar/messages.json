@@ -28,7 +28,7 @@
     "description": "Extension name shown in Chrome and on the store listing."
   },
   "appShortName": {
-    "message": "DocTranslate",
+    "message": "مترجم صفحات المستندات",
     "description": "Short name used where space is limited (e.g. the new-tab apps grid)."
   },
   "appDesc": {
@@ -511,6 +511,54 @@
   "ocrPageMenu": {
     "message": "استخراج النص من كل صور هذه الصفحة",
     "description": "Right-click context-menu item that recognizes every image on the current page."
+  },
+  "saveMediaMenu": {
+    "message": "حفظ ملف الوسائط للترجمة",
+    "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
+  },
+  "optMediaFolder": {
+    "message": "مجلد حفظ ملفات الوسائط",
+    "description": "Options page: label of the text field naming the folder media files are saved to."
+  },
+  "optMediaFolderHint": {
+    "message": "المكان الذي يضع فيه أمر القائمة \"حفظ ملف الوسائط للترجمة\" الملف: مجلد داخل مجلد التنزيلات في المتصفح (مثل Media for translation). اتركه فارغًا للحفظ مباشرة في مجلد التنزيلات. يُحفظ أي نوع من الملفات كما هو.",
+    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  },
+  "optMediaAllow": {
+    "message": "السماح بحفظ الملفات",
+    "description": "Options page: button that asks the browser for permission to save files."
+  },
+  "optMediaAllowed": {
+    "message": "حفظ الملفات مسموح.",
+    "description": "Options page: status line when the browser lets the extension save files."
+  },
+  "optMediaNotAllowed": {
+    "message": "حفظ الملفات غير مسموح بعد: يسأل المتصفح مرة واحدة، عند أول استخدام.",
+    "description": "Options page: status line when the browser has not yet let the extension save files."
+  },
+  "mediaSavePermissionRefused": {
+    "message": "حفظ الملفات غير مسموح. اسمح به في إعدادات الإضافة.",
+    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  },
+  "mediaSaveNoneFound": {
+    "message": "لم يُعثر هنا على ملف وسائط لحفظه.",
+    "description": "Notice shown on the page when no media file was found to save."
+  },
+  "mediaSaveFailed": {
+    "message": "تعذّر حفظ ملف الوسائط: {1}",
+    "description": "Notice shown on the page when saving failed. {1} is the browser's error text."
+  },
+  "mediaSaveStarted": {
+    "message": "جارٍ حفظ ملف الوسائط في {1}",
+    "description": "Notice shown on the page when the download started. {1} is the folder, such as Downloads/Media for translation."
+  },
+  "mediaSaveStartedMany": {
+    "message": "جارٍ حفظ ملفات الوسائط ({1}) في {2}",
+    "description": "Notice shown on the page when several media files are being saved; {1} is their number, {2} the folder."
+  },
+  "mediaSaveDownloads": {
+    "message": "التنزيلات",
+    "description": "The browser's download folder, as the first part of the folder shown in a notice."
   },
   "pageOcrBadge": {
     "message": "جارٍ القراءة..",

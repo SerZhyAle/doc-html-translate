@@ -1,10 +1,11 @@
-param(
+﻿param(
     [string]$Output = "build/doc-html-ui.exe"
 )
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/goversioninfo.ps1")
 . (Join-Path $PSScriptRoot "lib/gobuildtags.ps1")
+. (Join-Path $PSScriptRoot "lib/release-ledger.ps1")
 
 function New-VersionResourceFile {
     param(
@@ -97,3 +98,5 @@ Write-Host "Copied to $deployDir"
 . (Join-Path $PSScriptRoot "lib/tessdata.ps1")
 Install-EngTessdata -DestDir (Split-Path -Parent $absOutput)
 Install-EngTessdata -DestDir $deployDir
+
+Invoke-ReleaseLedgerBuild -Package 'app' -Flavor 'ui' -Kind 'debug' -Version $version -Artifact $Output

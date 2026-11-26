@@ -61,7 +61,7 @@
   ],
   "elements": [
     {
-      "id": "advanced", "shot": "advanced", "sel": "#page-advanced", "pin": "gt",
+      "id": "advanced", "glyph": "action.adjust", "shot": "advanced", "sel": "#page-advanced", "pin": "gt",
       "nameKey": "pageAdvanced",
       "one": { "en": "Splitting the book into chunks, the depth of the contents and a cost limit.", "ru": "Разбивка книги на блоки, глубина оглавления и предел стоимости.", "uk": "Розбивка книги на блоки, глибина змісту й межа вартості." },
       "items": [
@@ -73,7 +73,7 @@
       "undo": { "en": "Set the field back to 0.", "ru": "Верните в поле 0.", "uk": "Поверніть у полі 0." }
     },
     {
-      "id": "ollama", "shot": "ollama", "sel": "#page-ollama", "pin": "gt",
+      "id": "ollama", "glyph": "action.translate", "shot": "ollama", "sel": "#page-ollama", "pin": "gt",
       "nameKey": "pageOllama",
       "one": { "en": "The local model that translates when the engine is Ollama.", "ru": "Локальная модель, которая переводит, когда выбран движок Ollama.", "uk": "Локальна модель, яка перекладає, коли вибрано рушій Ollama." },
       "items": [
@@ -86,7 +86,7 @@
       "undo": { "en": "Type the default back: gemma3:12b, 1 and 8192.", "ru": "Верните значения по умолчанию: gemma3:12b, 1 и 8192.", "uk": "Поверніть значення за замовчуванням: gemma3:12b, 1 і 8192." }
     },
     {
-      "id": "ocr", "shot": "ocr", "sel": "#page-ocr", "pin": "gt",
+      "id": "ocr", "glyph": "action.extract-text", "shot": "ocr", "sel": "#page-ocr", "pin": "gt",
       "nameKey": "pageOcr",
       "one": { "en": "Makes the text inside pictures translatable.", "ru": "Делает текст внутри картинок доступным для перевода.", "uk": "Робить текст усередині картинок доступним для перекладу." },
       "items": [
@@ -100,7 +100,7 @@
       "note": { "kind": "care", "text": { "en": "The overlay needs Tesseract installed. The status line under the file box tells you when it is missing.", "ru": "Для наложения нужен установленный Tesseract. Когда его нет, об этом говорит строка состояния под полем файла.", "uk": "Для накладання потрібен установлений Tesseract. Коли його немає, про це каже рядок стану під полем файла." } }
     },
     {
-      "id": "integration", "shot": "windows", "sel": "#page-windows", "pin": "gt",
+      "id": "integration", "glyph": "action.create-shortcut", "shot": "windows", "sel": "#page-windows", "pin": "gt",
       "nameKey": "pageWindows",
       "one": { "en": "Optional links between the app and Windows; both are off until you switch them on.", "ru": "Необязательные связи программы с Windows; обе выключены, пока вы их не включите.", "uk": "Необов'язкові зв'язки програми з Windows; обидва вимкнені, доки ви їх не ввімкнете." },
       "items": [
@@ -113,7 +113,7 @@
       "undo": { "en": "Switch the same entry off again; the app removes what it added.", "ru": "Выключите тот же пункт снова; программа убирает то, что добавила.", "uk": "Вимкніть той самий пункт знову; програма прибирає те, що додала." }
     },
     {
-      "id": "interface", "shot": "interface", "sel": "#page-interface", "pin": "gt",
+      "id": "interface", "glyph": "action.text-settings", "shot": "interface", "sel": "#page-interface", "pin": "gt",
       "nameKey": "pageInterface",
       "one": { "en": "The theme, the interface language, how large the controls and the text are, and whether the window is made for a mouse or for touch.", "ru": "Тема, язык интерфейса, насколько крупны элементы и текст и для мыши или для касания сделано окно.", "uk": "Тема, мова інтерфейсу, наскільки великі елементи й текст і для миші чи для дотику зроблено вікно." },
       "items": [
@@ -128,7 +128,7 @@
       "undo": { "en": "Pick Ordinary and Automatic again.", "ru": "Снова выберите «Обычный» и «Автоматически».", "uk": "Знову виберіть «Звичайний» і «Автоматично»." }
     },
     {
-      "id": "about", "shot": "about", "sel": "#page-about", "pin": "gt",
+      "id": "about", "glyph": "app.info", "shot": "about", "sel": "#page-about", "pin": "gt",
       "nameKey": "pageAbout",
       "one": { "en": "What is installed, updates, the helper programs, related products and the way to ask for help with a problem.", "ru": "Что установлено, обновления, вспомогательные программы, связанные продукты и способ попросить помощи с проблемой.", "uk": "Що встановлено, оновлення, допоміжні програми, пов'язані продукти та спосіб попросити допомоги з проблемою." },
       "items": [

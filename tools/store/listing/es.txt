@@ -100,9 +100,13 @@ traducir cómic
 traducir texto de imagen
 
 @@ReleaseNotes
-- Ahora se admiten imágenes JPEG XL (.jxl): las imágenes sueltas, las de los libros y las páginas de cómics se decodifican en local y luego se reconocen y traducen como cualquier otra imagen (en las animaciones se muestra el primer fotograma).
-- Nueva disposición de la ventana: menú lateral con siete páginas, además del tamaño de la interfaz, el tamaño del texto y los controles para ratón o táctil.
-- F1 o el botón ? abre una página de ayuda sobre la parte de la ventana en la que estás.
-- Controles más grandes para el táctil en los libros convertidos; en el lector, Mayús+Espacio cambia de página y Mayús+flechas amplían la selección de texto.
-- Seguridad: la aplicación ya no carga una libjxl.dll encontrada en la carpeta de trabajo o en PATH.
+- Las páginas de ayuda muestran ahora el icono del programa y el de cada botón que explican; las imágenes de la Store usan el mismo icono que la aplicación instalada.
+- La línea de comandos admite órdenes (convert, output status, doctor, input check y más) con códigos de salida fijos y resultado JSON opcional; las opciones anteriores siguen funcionando.
+- La ventana abierta se puede manejar desde la línea de comandos (open, show, status, quit); un segundo inicio entrega sus archivos a la ventana en marcha.
+- En pantallas táctiles, los botones de solo icono de los libros convertidos muestran su nombre.
+- La nueva opción «Y cerrar esta ventana» cierra la ventana tras una ejecución correcta.
+- El reconocimiento ya no parte una línea con una palabra muy grande, como una capitular.
+- El archivo de diagnóstico tiene un informe más claro y oculta los nombres de tus documentos.
+- Los programas auxiliares se ejecutan sin ventana de consola, y al cerrar la ventana termina la aplicación.
+- Se admiten imágenes JPEG XL (.jxl); la ventana tiene menú lateral y F1 abre la ayuda de la parte actual.
 - Esta traducción es automática y no está revisada - correcciones a sza@ukr.net.

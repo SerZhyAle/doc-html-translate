@@ -6,8 +6,10 @@
 // same input draws the same pixels. The only things on screen that are not drawn here are the
 // product's own output: the converted pages and the console lines of the real binary.
 
+import fs from "node:fs";
+
 // Site tokens, assets/sza-kit.css: --bg, --text, --text-2, --acc, --gold. The plate blue is the
-// mark's own, as in tools/store/make-logos.ps1.
+// mark's own (internal/iconart, the master's declared background).
 export const PALETTE = {
   bg: "#0a0f0a", text: "#f1f5ee", text2: "#c3ccbc", muted: "#94a08c",
   acc: "#3fb950", gold: "#e3b341", plate: "#1e3a8a",
@@ -205,15 +207,15 @@ const BASE_CSS = `
   body::before{content:"";position:absolute;inset:0;
     background:radial-gradient(ellipse 75% 110% at 5% 0%,rgba(63,185,80,.33),transparent 70%),
                radial-gradient(ellipse 60% 90% at 100% 100%,rgba(227,179,65,.22),transparent 70%)}
-  .plate{position:relative;flex:none;background:${PALETTE.plate};border:3px solid rgba(255,255,255,.27);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700;line-height:.98}
+  .mark{flex:none;display:block}
   .gold{color:${PALETTE.gold}}
 `;
 
-// The mark is the one in tools/store/make-logos.ps1: white bold DOC over HTML on the brand blue.
+// The mark is the product's master (assets/identity/master/mark.svg, PRODUCT-IDENTITY rule 6), inlined at the
+// size asked - the same picture as the program icon, never redrawn here.
 function plate(size) {
-  const fs = Math.round(size * 0.236);
-  return `<div class="plate" style="width:${size}px;height:${size}px;border-radius:${Math.round(size * 0.157)}px;font-size:${fs}px"><span>DOC</span><span>HTML</span></div>`;
+  const svg = fs.readFileSync(new URL("../../assets/identity/master/mark.svg", import.meta.url), "utf8").trim();
+  return svg.replace("<svg ", `<svg class="mark" width="${size}" height="${size}" aria-hidden="true" `);
 }
 
 export function introHtml() {

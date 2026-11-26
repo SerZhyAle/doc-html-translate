@@ -58,3 +58,11 @@ hand at the release, and the digest check in the gate (advisory in the fast tier
 200 percent scaling, high contrast, a screen reader) rides ticket 93's pending pass.
 
 **Re-read 2026-10-29 (ticket E0126) at 0.2.** Section 7 A-J: no `inherit` or `ask: "off"` surface; the index answers at `help/<locale>/` and every published page carries `noindex` and stays out of the sitemap (F, G); `help.css` is the reference byte for byte (the item I chevron is the catalog's). Two forms are stated rather than changed: rung 2 is held by input digests as a gate advisory, not a failure (D), and the generator aborts on an element with empty bounds instead of recording it absent (C).
+
+**0.6 section 11 items Q and R, 2026-11-20 (ticket D2HTML-0162).** Q: every page carries the product's picture beside
+its title - the `help.head` rendition of [`PRODUCT-IDENTITY.md`](PRODUCT-IDENTITY.md), inlined by
+`tools/helpgen/render.mjs` - and links the product's favicon (`help/favicon.ico`). R: an element entry that names a
+control drawn with an ICON-SET glyph shows that glyph (`glyph` in the copy deck, the vendored `assets/glyphs/<id>.svg`
+in the page's text colour), 29 entries over the five pages, measured from the glyphs the window draws in each region.
+Both inputs are in the help set's freshness digest (the generator and `internal/helpcheck` alike). The committed set
+shows them from the next release's `node tools/helpgen/generate.mjs`; the rest of 0.5 and 0.6 is not re-read here.

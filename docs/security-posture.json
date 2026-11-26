@@ -62,11 +62,13 @@
       "declares": "permission:scripting",
       "declaredIn": "extension/manifest.json, permissions",
       "consumers": [
-        "OCR every image on this page: on that click one script and its stylesheet are injected into that one tab, and removed when the user stops"
+        "OCR every image on this page: on that click one script and its stylesheet are injected into that one tab, and removed when the user stops",
+        "Save media file for translation: on that click one function looks for the media file in the clicked frame and returns its address, and a short status line is shown in the tab"
       ],
       "evidence": [
         { "file": "extension/src/page-ocr.js", "contains": "chrome.scripting.executeScript" },
-        { "file": "extension/src/page-ocr.js", "contains": "chrome.scripting.removeCSS" }
+        { "file": "extension/src/page-ocr.js", "contains": "chrome.scripting.removeCSS" },
+        { "file": "extension/src/media-save.js", "contains": "func: findFrameMedia" }
       ],
       "shownAtRequest": false,
       "shownWhere": "the browser's own install prompt; the sentence is on the store privacy forms and the privacy pages",
@@ -76,12 +78,12 @@
         { "file": "extension/_locales/uk/messages.json", "contains": "\"Розпізнати текст на всіх зображеннях сторінки\"" }
       ],
       "public": {
-        "en": "**scripting** - used only when you choose *OCR every image on this page* from the right-click menu: the extension then adds one script and its stylesheet to that one tab, lays the recognized text over the page's pictures, and removes both when you stop. Nothing is added to a page without that click.",
-        "ru": "**scripting** - используется только когда вы выбираете в контекстном меню *Распознать текст на всех изображениях страницы*: тогда расширение добавляет в эту вкладку один скрипт и его таблицу стилей, накладывает распознанный текст на изображения страницы и убирает и то и другое, когда вы останавливаете распознавание. Без этого щелчка на страницу ничего не добавляется.",
-        "uk": "**scripting** - використовується лише тоді, коли ви обираєте в контекстному меню *Розпізнати текст на всіх зображеннях сторінки*: тоді розширення додає до цієї вкладки один скрипт і його таблицю стилів, накладає розпізнаний текст на зображення сторінки й прибирає і те, і інше, коли ви зупиняєте розпізнавання. Без цього клацання до сторінки нічого не додається."
+        "en": "**scripting** - used only when you choose *OCR every image on this page* or *Save media file for translation* from the right-click menu. For the first, the extension adds one script and its stylesheet to that one tab, lays the recognized text over the page's pictures, and removes both when you stop. For the second, it looks in the frame you clicked for the address of its media file and shows a short status line. Nothing is added to a page without that click.",
+        "ru": "**scripting** - используется только когда вы выбираете в контекстном меню *Распознать текст на всех изображениях страницы* или *Сохранить медиафайл для перевода*. В первом случае расширение добавляет в эту вкладку один скрипт и его таблицу стилей, накладывает распознанный текст на изображения страницы и убирает и то и другое, когда вы останавливаете распознавание. Во втором - ищет в кадре, по которому вы щёлкнули, адрес его медиафайла и показывает короткую строку состояния. Без этого щелчка на страницу ничего не добавляется.",
+        "uk": "**scripting** - використовується лише тоді, коли ви обираєте в контекстному меню *Розпізнати текст на всіх зображеннях сторінки* або *Зберегти медіафайл для перекладу*. У першому випадку розширення додає до цієї вкладки один скрипт і його таблицю стилів, накладає розпізнаний текст на зображення сторінки й прибирає і те, і інше, коли ви зупиняєте розпізнавання. У другому - шукає в кадрі, на якому ви клацнули, адресу його медіафайлу й показує короткий рядок стану. Без цього клацання до сторінки нічого не додається."
       },
       "storeLabel": "scripting",
-      "storeJustification": "only for the \"OCR every image on this page\" action the user starts from the right-click menu. On that click the extension injects one script and its stylesheet into that one tab; the script collects the page's images, draws the recognized text over them, and removes itself when the user stops. Nothing is injected without that explicit action, and there is no declared content script."
+      "storeJustification": "only for two actions the user starts from the right-click menu. \"OCR every image on this page\": on that click the extension injects one script and its stylesheet into that one tab; the script collects the page's images, draws the recognized text over them, and removes itself when the user stops. \"Save media file for translation\": on that click one function runs in the clicked frame to find the address of its media file, and a short status line is shown. Nothing is injected without one of those explicit actions, and there is no declared content script."
     },
     {
       "id": "ext-offscreen",
@@ -113,6 +115,7 @@
       "consumers": [
         "OCR & translate this image, on an image",
         "OCR every image on this page, on a page",
+        "Save media file for translation, on a page, a picture, a video, an audio player or a frame",
         "Convert with doc-html-translate, on a document link or page"
       ],
       "evidence": [
@@ -129,12 +132,12 @@
         { "file": "extension/_locales/uk/messages.json", "contains": "\"Відкрити через doc-html-translate\"" }
       ],
       "public": {
-        "en": "**contextMenus** - adds the extension's right-click actions: *OCR & translate this image* on a picture, *OCR every image on this page* on a page, and *Convert with doc-html-translate* on a document link or page.",
-        "ru": "**contextMenus** - добавляет действия расширения в контекстное меню: *Распознать и перевести это изображение* для изображения, *Распознать текст на всех изображениях страницы* для страницы и *Открыть через doc-html-translate* для ссылки на документ или страницы.",
-        "uk": "**contextMenus** - додає дії розширення до контекстного меню: *Розпізнати й перекласти це зображення* для зображення, *Розпізнати текст на всіх зображеннях сторінки* для сторінки та *Відкрити через doc-html-translate* для посилання на документ або сторінки."
+        "en": "**contextMenus** - adds the extension's right-click actions: *OCR & translate this image* on a picture, *OCR every image on this page* on a page, *Save media file for translation* on a page or its media, and *Convert with doc-html-translate* on a document link or page.",
+        "ru": "**contextMenus** - добавляет действия расширения в контекстное меню: *Распознать и перевести это изображение* для изображения, *Распознать текст на всех изображениях страницы* для страницы, *Сохранить медиафайл для перевода* для страницы или её медиафайла и *Открыть через doc-html-translate* для ссылки на документ или страницы.",
+        "uk": "**contextMenus** - додає дії розширення до контекстного меню: *Розпізнати й перекласти це зображення* для зображення, *Розпізнати текст на всіх зображеннях сторінки* для сторінки, *Зберегти медіафайл для перекладу* для сторінки або її медіафайлу та *Відкрити через doc-html-translate* для посилання на документ або сторінки."
       },
       "storeLabel": "contextMenus",
-      "storeJustification": "the extension's actions are started from the right-click menu - \"OCR & translate this image\" on an image, \"OCR every image on this page\" on a page, and \"Convert with doc-html-translate\" on a document link or page."
+      "storeJustification": "the extension's actions are started from the right-click menu - \"OCR & translate this image\" on an image, \"OCR every image on this page\" on a page, \"Save media file for translation\" on a page or its media, and \"Convert with doc-html-translate\" on a document link or page."
     },
     {
       "id": "ext-storage",
@@ -165,6 +168,35 @@
       },
       "storeLabel": "storage",
       "storeJustification": "to remember the user's on/off choice, per-site exceptions, reading preferences (font, theme), interface language and remote-image setting, which OCR languages have been downloaded, and the format, page count and last error of the most recent document for the \"Copy diagnostics\" button. Nothing stored leaves the device."
+    },
+    {
+      "id": "ext-downloads-optional",
+      "edition": "extension",
+      "declares": "optional-permission:downloads",
+      "declaredIn": "extension/manifest.json, optional_permissions",
+      "consumers": [
+        "Save media file for translation: the one file the user right-clicked, or the media file found in the clicked frame, is saved into the folder named in the settings, inside the browser's download folder"
+      ],
+      "evidence": [
+        { "file": "extension/src/media-save.js", "contains": "chrome.downloads.download" },
+        { "file": "extension/src/media-save.js", "contains": "chrome.downloads.onDeterminingFilename.addListener" },
+        { "file": "extension/src/media-save.js", "contains": "chrome.permissions.request(DOWNLOADS_PERMISSION)" }
+      ],
+      "shownAtRequest": true,
+      "shownWhere": "the browser's own permission prompt, the first time Save media file for translation is used or the Allow saving files button on the settings page is pressed; the settings page says whether it is held",
+      "shownText": [
+        { "file": "extension/_locales/en/messages.json", "contains": "\"Save media file for translation\"" },
+        { "file": "extension/_locales/en/messages.json", "contains": "\"Allow saving files\"" },
+        { "file": "extension/_locales/ru/messages.json", "contains": "\"Сохранить медиафайл для перевода\"" },
+        { "file": "extension/_locales/uk/messages.json", "contains": "\"Зберегти медіафайл для перекладу\"" }
+      ],
+      "public": {
+        "en": "**downloads** (optional, asked only when you first use it) - used solely by *Save media file for translation*: the file you right-clicked, or the media file of the frame you clicked, is saved into the folder you named in the settings, inside your browser's download folder. The download is the browser's own, from the site that serves the file; nothing else is read from your download list, and nothing is sent anywhere.",
+        "ru": "**downloads** (необязательное, запрашивается только при первом использовании) - используется исключительно действием *Сохранить медиафайл для перевода*: файл, по которому вы щёлкнули, или медиафайл кадра, по которому вы щёлкнули, сохраняется в папку, указанную в настройках, внутри папки загрузок браузера. Загрузку выполняет сам браузер с сайта, который отдаёт файл; больше ничего из списка загрузок не читается и никуда не отправляется.",
+        "uk": "**downloads** (необов'язковий, запитується лише під час першого використання) - використовується виключно дією *Зберегти медіафайл для перекладу*: файл, на якому ви клацнули, або медіафайл кадру, на якому ви клацнули, зберігається в теку, вказану в налаштуваннях, усередині теки завантажень браузера. Завантаження виконує сам браузер із сайту, який віддає файл; більше нічого зі списку завантажень не читається й нікуди не надсилається."
+      },
+      "storeLabel": "downloads (optional)",
+      "storeJustification": "optional, requested only when the user first chooses \"Save media file for translation\" from the right-click menu or presses \"Allow saving files\" in the options. It saves the one file the user right-clicked - or the media file found in the clicked frame - into the folder named in the options, inside the browser's download folder, under the file name the browser itself determines. The extension does not read, search or change the user's other downloads."
     },
     {
       "id": "app-msix-runfulltrust",
@@ -716,7 +748,7 @@
       "target": "extension-privacy.html",
       "block": "ext-permissions",
       "format": "html-lists",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
     },
     {
       "target": "extension/store/PRIVACY.md",
@@ -731,13 +763,13 @@
       "target": "extension/store/PRIVACY.md",
       "block": "ext-permissions",
       "format": "md-list",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
     },
     {
       "target": "extension/store/LISTING.md",
       "block": "ext-justifications",
       "format": "md-justifications",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
     },
     {
       "target": "msix/README.md",

@@ -144,7 +144,7 @@ $scripts = [ordered]@{
     's'    = @{ Group = 'Release / tool';Path = 'scripts/bootstrap-tools.ps1';  Args = @{};                   Desc = 'setup dev tools (golangci-lint + typos)' }
     'icon' = @{ Group = 'Release / tool';Path = 'scripts/generate-icon.ps1';    Args = @{};                   Desc = 'redraw the system-surface icons (internal/iconart)' }
     'log'  = @{ Group = 'Release / tool';Path = 'scripts/add_to_dev_log.ps1';   Args = @{};                   Desc = 'append a DEV/CHANGELOG.md row (-Target -Description; Path auto)' }
-    'rs'   = @{ Group = 'Release / tool';Path = 'scripts/release-state.ps1';     Args = @{};                   Desc = 'show/set release publish-state (DEV/RELEASE_STATE.md)' }
+    'rs'   = @{ Group = 'Release / tool';Path = 'scripts/release-ledger.ps1';    Args = @{};                   Desc = 'show/update release ledger (DEV/releases/RELEASES.md)' }
     'v'    = @{ Group = 'Release / tool';Path = 'scripts/verify-html.ps1';        Args = @{};                   Desc = 'headless-verify converted HTML (-Path folder/file)' }
     'pc'   = @{ Group = 'Check';         Path = 'scripts/parity-check.ps1';       Args = @{};                   Desc = 'warn on Go<->JS cross-edition drift (advisory)' }
 }

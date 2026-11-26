@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Build a Microsoft Store (MSIX) package for doc-html-translate.
 
@@ -86,6 +86,7 @@ function Get-SdkTool([string]$Name) {
 if (-not (Get-Command go -ErrorAction SilentlyContinue))            { throw "go not on PATH." }
 . (Join-Path $RepoRoot "scripts/lib/goversioninfo.ps1")
 . (Join-Path $RepoRoot "scripts/lib/gobuildtags.ps1")
+. (Join-Path $RepoRoot "scripts/lib/release-ledger.ps1")
 . (Join-Path $PSScriptRoot "package-readback.ps1")
 $MakeAppx = Get-SdkTool "makeappx.exe"
 $MakePri  = Get-SdkTool "makepri.exe"
@@ -279,3 +280,7 @@ if ($SelfSign) {
     Write-Host "Unsigned package ready to UPLOAD to Partner Center (Microsoft re-signs at certification)." -ForegroundColor Green
     Write-Host "For a local smoke test instead, re-run with -SelfSign." -ForegroundColor DarkGray
 }
+
+$ledgerKind = if ($SelfSign) { 'test' } else { 'release' }
+$ledgerFlavor = if ($SelfSign) { 'msix-selftest' } else { 'msix' }
+Invoke-ReleaseLedgerBuild -Package 'app' -Flavor $ledgerFlavor -Kind $ledgerKind -Version $Stamp -Artifact $MsixOut

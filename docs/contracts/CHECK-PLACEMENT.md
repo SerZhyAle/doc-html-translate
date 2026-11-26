@@ -9,8 +9,8 @@
 Every check declares which runner owns it, one JSON Lines record per check, and the declaration is
 compared with the wiring in both directions.
 
-**This repo's registry:** [`../../configs/check-placement.jsonl`](../../configs/check-placement.jsonl) - 30
-records on 2026-10-20, all `judged`: 10 `gate`, 1 `build`, 1 `release`, 18 `hand-run`. Classes used here:
+**This repo's registry:** [`../../configs/check-placement.jsonl`](../../configs/check-placement.jsonl) - 37
+records on 2026-11-27, all `judged`: 13 `gate`, 1 `build`, 1 `release`, 22 `hand-run`. Classes used here:
 `gate` (run by [`scripts/check.ps1`](../../scripts/check.ps1)), `build` (run by the build scripts on the artifact
 they just produced), `release` (run by [`scripts/release.ps1`](../../scripts/release.ps1) before the tag step,
 because its input - the contracts catalog - exists only where a release is cut), `hand-run` (a named human or

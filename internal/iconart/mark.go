@@ -113,6 +113,10 @@ const (
 	// OnPlatform: the sheet alone on transparency, for the MSIX plated forms and tiles
 	// that Windows draws on the manifest BackgroundColor (the same navy).
 	OnPlatform
+	// OnBackground: the plated mark on a canvas filled edge to edge with the navy - the store
+	// display images and every composed graphic (PRODUCT-IDENTITY rule 6: the background is the
+	// master's declared background colour).
+	OnBackground
 )
 
 // Mark draws the mark in a w x h image, the mark's square box of side box centred in it.
@@ -120,23 +124,31 @@ func Mark(w, h int, box float64, form MarkForm) *image.RGBA {
 	cv := newCanvas(w, h)
 	d := drawingFor(box)
 	t := transform{scale: box / d.grid, dx: (float64(w) - box) / 2, dy: (float64(h) - box) / 2}
-	if form == Plated {
-		inset := 0.0
-		if box >= 32 {
-			inset = d.insetR
-		}
-		cv.fill(d.plate(inset), t, Navy)
+	if form == OnBackground {
+		cv.fill(polygon(point{0, 0}, point{float64(w), 0}, point{float64(w), float64(h)}, point{0, float64(h)}), transform{scale: 1}, Navy)
+	}
+	if form != OnPlatform {
+		cv.fill(d.plate(plateInset(d, box)), t, Navy)
 	}
 	cv.fill(d.sheet, t, Sheet)
 	cv.fill(d.fold, t, Fold)
 	for _, c := range d.code {
-		if form == Plated {
+		if form != OnPlatform {
 			cv.fill(c, t, Navy)
 		} else {
 			cv.erase(c, t)
 		}
 	}
 	return cv.img
+}
+
+// plateInset is the plate's margin in grid units: none at the smallest sizes, where every
+// pixel counts.
+func plateInset(d markDrawing, box float64) float64 {
+	if box >= 32 {
+		return d.insetR
+	}
+	return 0
 }
 
 // Glyph draws a vocabulary glyph (24-unit path data) in one colour at size px, transparent

@@ -100,22 +100,20 @@ function ConvertTo-FileUrl([string]$p) { "file:///" + ($p -replace '\\','/' -rep
 # own language and direction. A mirrored document body would silently break Chrome's page
 # translation offer - the product's entire free workflow - so a wrong frame must fail the run
 # rather than reach a store listing.
-# Returns $true when the page carried chrome to check; split content pages have none.
-function Assert-ChromeDirection([string]$htmlPath, [string]$lang, [bool]$expectRtl) {
+function Assert-ChromeDirection([string]$htmlPath, [string]$lang, [bool]$expectRtl, [string]$chromeClass) {
     $html = Get-Content -LiteralPath $htmlPath -Raw
     if ($html -match '<html[^>]*\sdir="rtl"') {
         throw "SCREENSHOT-RTL: the document root is mirrored in $htmlPath - only the chrome may mirror"
     }
-    $navbar = [regex]::Match($html, '<div class="dht-navbar"[^>]*>')
-    if (-not $navbar.Success) { return $false }
-    if ($navbar.Value -notmatch ('lang="' + [regex]::Escape($lang) + '"')) {
-        throw "SCREENSHOT-RTL: chrome in $htmlPath does not carry lang=""$lang"" ($($navbar.Value))"
+    $chrome = [regex]::Match($html, '<div class="' + [regex]::Escape($chromeClass) + '"[^>]*>')
+    if (-not $chrome.Success) { throw "SCREENSHOT-RTL: $chromeClass missing in $htmlPath" }
+    if ($chrome.Value -notmatch ('lang="' + [regex]::Escape($lang) + '"')) {
+        throw "SCREENSHOT-RTL: chrome in $htmlPath does not carry lang=""$lang"" ($($chrome.Value))"
     }
-    $chromeRtl = $navbar.Value -match 'dir="rtl"'
+    $chromeRtl = $chrome.Value -match 'dir="rtl"'
     if ($chromeRtl -ne $expectRtl) {
         throw "SCREENSHOT-RTL: chrome dir=rtl is $chromeRtl but $lang expects $expectRtl in $htmlPath"
     }
-    return $true
 }
 
 Add-Type -AssemblyName System.Drawing
@@ -132,20 +130,19 @@ foreach ($lang in $Language) {
     Set-Content -LiteralPath $srcMd -Value $sample -Encoding utf8
 
     Write-Host "Converting sample ($lang)..." -ForegroundColor Cyan
-    & $Cli -notranslate -noopen -force -ui-lang $lang "$srcMd"
+    & $Cli -notranslate -noopen -force -multipage -ui-lang $lang "$srcMd"
     if ($LASTEXITCODE -ne 0) { throw "conversion failed for $lang" }
 
     $bookDir = Join-Path $langDir "Alice in Wonderland"
     # page_002 is Chapter I (text-rich reading view); index.html is the TOC.
     $shots = @(
-        @{ page = "page_002.html"; out = "reading-view-$locale.png" },
-        @{ page = "index.html";    out = "table-of-contents-$locale.png" }
+        @{ page = "page_002.html"; out = "reading-view-$locale.png";      chrome = "dht-navbar" },
+        @{ page = "index.html";    out = "table-of-contents-$locale.png"; chrome = "dht-toolbar" }
     )
     $expectRtl = $RtlLanguages -contains $lang
-    $checked = 0
     foreach ($s in $shots) {
         $pagePath = Join-Path $bookDir $s.page
-        if (Assert-ChromeDirection $pagePath $lang $expectRtl) { $checked++ }
+        Assert-ChromeDirection $pagePath $lang $expectRtl $s.chrome
         $outPath = Join-Path $OutDir $s.out
         Remove-Item $outPath -ErrorAction SilentlyContinue
         & $Edge --headless=new --disable-gpu --no-first-run --hide-scrollbars `
@@ -157,6 +154,5 @@ foreach ($lang in $Language) {
         Write-Host ("  {0,-34} {1}x{2}" -f $s.out, $img.Width, $img.Height) -ForegroundColor Green
         $img.Dispose()
     }
-    if ($checked -eq 0) { throw "SCREENSHOT-RTL: no captured page carried chrome for $lang - nothing was verified" }
 }
 Write-Host "Screenshots written to $OutDir" -ForegroundColor Cyan

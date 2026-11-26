@@ -41,6 +41,7 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $ext = Join-Path $repo "extension"
+. (Join-Path $PSScriptRoot "lib/release-ledger.ps1")
 
 function Invoke-Native {
     param([string]$What, [scriptblock]$Cmd)
@@ -83,3 +84,8 @@ if ($Zip) {
 }
 Write-Host "Load unpacked from 'extension/' (chrome://extensions -> Reload) - version shows in the popup." -ForegroundColor DarkGray
 Write-Host "Local build - nothing published. To publish, run the extension release flow." -ForegroundColor DarkGray
+
+$ledgerKind = if ($Zip) { 'release' } else { 'debug' }
+$ledgerFlavor = if ($Zip) { 'zip' } else { 'unpacked' }
+$ledgerArtifact = if ($Zip) { 'extension/dist/doc-html-translate-extension.zip' } else { '' }
+Invoke-ReleaseLedgerBuild -Package 'extension' -Flavor $ledgerFlavor -Kind $ledgerKind -Version $version -Artifact $ledgerArtifact

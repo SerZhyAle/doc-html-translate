@@ -26,7 +26,7 @@
   ],
   "elements": [
     {
-      "id": "help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
+      "id": "help", "glyph": "app.help", "shot": "dialog", "sel": "#dlgHelp", "pin": "b",
       "nameKey": "titleHelp",
       "one": { "en": "Opens this page without closing the question.", "ru": "Открывает эту страницу, не закрывая вопрос.", "uk": "Відкриває цю сторінку, не закриваючи питання." },
       "text": { "en": "The question stays open and waits while you read. {kbd:F1} does the same.", "ru": "Вопрос остаётся открытым и ждёт, пока вы читаете. {kbd:F1} делает то же самое.", "uk": "Питання лишається відкритим і чекає, поки ви читаєте. {kbd:F1} робить те саме." }
@@ -47,20 +47,20 @@
       "next": { "en": "The same line is added to the log of the window.", "ru": "Та же строка добавляется в журнал окна.", "uk": "Той самий рядок додається до журналу вікна." }
     },
     {
-      "id": "send", "shot": "dialog", "sel": "#dlgActions button[value=send]", "pin": "b",
+      "id": "send", "glyph": "action.email", "shot": "dialog", "sel": "#dlgActions button[value=send]", "pin": "b",
       "nameKey": "btnSendLogs",
       "oneKey": "sendLogsAttachHint",
       "text": { "en": "Packs the stored logs into one archive, puts its path on the clipboard and starts a message to the author. The archive is attached by you; nothing is sent by itself.", "ru": "Упаковывает сохранённые журналы в один архив, кладёт его путь в буфер обмена и начинает письмо автору. Архив прикладываете вы; само ничего не отправляется.", "uk": "Пакує збережені журнали в один архів, кладе його шлях у буфер обміну й починає лист авторові. Архів додаєте ви; саме нічого не надсилається." },
       "undo": { "en": "Close the mail window without sending, and nothing leaves your computer.", "ru": "Закройте окно письма, не отправляя, и ничего не покинет ваш компьютер.", "uk": "Закрийте вікно листа, не надсилаючи, і нічого не залишить ваш комп'ютер." }
     },
     {
-      "id": "retry", "shot": "dialog", "sel": "#dlgActions button[value=retry]", "pin": "b",
+      "id": "retry", "glyph": "action.retry", "shot": "dialog", "sel": "#dlgActions button[value=retry]", "pin": "b",
       "nameKey": "btnRetry",
       "one": { "en": "Runs the same conversion again with the same settings.", "ru": "Запускает ту же конвертацию снова с теми же настройками.", "uk": "Запускає ту саму конвертацію знову з тими самими налаштуваннями." },
       "text": { "en": "What the failed run wrote is rebuilt, because a run that did not finish leaves no completion record.", "ru": "То, что записал неудавшийся запуск, собирается заново: у незавершённого запуска нет отметки о завершении.", "uk": "Те, що записав невдалий запуск, збирається заново: у незавершеного запуску немає позначки про завершення." }
     },
     {
-      "id": "close", "shot": "dialog", "sel": "#dlgActions button[value=close]", "pin": "b",
+      "id": "close", "glyph": "nav.close", "shot": "dialog", "sel": "#dlgActions button[value=close]", "pin": "b",
       "nameKey": "dlgClose",
       "one": { "en": "Closes the question; nothing else changes.", "ru": "Закрывает вопрос; больше ничего не меняется.", "uk": "Закриває питання; більше нічого не змінюється." },
       "text": { "en": "The log keeps the cause, and what was written stays in the output folder; the next {k:btnConvert} rebuilds it. Pressing {kbd:Esc} is the same answer.", "ru": "Журнал сохраняет причину, а записанное остаётся в папке вывода; следующая {k:btnConvert} соберёт всё заново. Нажатие {kbd:Esc} - тот же ответ.", "uk": "Журнал зберігає причину, а записане лишається в теці виводу; наступне {k:btnConvert} збере все заново. Натискання {kbd:Esc} - та сама відповідь." },

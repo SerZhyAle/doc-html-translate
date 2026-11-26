@@ -4,7 +4,7 @@
   social preview (1280x640), from one layout.
 
 .DESCRIPTION
-  Brand mark (white bold "DOC / HTML" on the brand blue #1E3A8A plate, as in make-logos.ps1), the product
+  The product mark (internal/iconart, the plated form at 280 px, the same picture as the program icon), the product
   name and the one-sentence job statement of docs/POSITIONING.md, on the site's dark palette (assets/sza-kit.css
   tokens). WPF in PowerShell, Segoe UI from Windows, no network, no external font; the same input renders the
   same pixels. Output: assets/social-card-1200x630.png and assets/social-card-1280x640.png.
@@ -29,7 +29,7 @@ $Accent  = "free, no key, no account"
 
 # Layout, in pixels of the safe box.
 $SafeW = 1100; $SafeH = 520
-$Plate = 280; $Gap = 64; $Radius = 44
+$Plate = 280; $Gap = 64
 $TaglineSize = 38; $TaglineLead = 1.3
 
 function New-Brush([int]$Rgb, [int]$Alpha = 255) {
@@ -62,31 +62,19 @@ function New-Text([string]$Text, [double]$Size, [Windows.FontWeight]$Weight, $Br
         [Windows.FlowDirection]::LeftToRight, (New-Typeface $Weight), $Size, $Brush, 1.0)
 }
 
-# The mark: lines centred by their ink (cap height), not by the font's line box, so the block sits in the
-# middle of the plate whatever Segoe UI's ascent and descent are.
+# The mark: the plated product mark drawn by internal/iconart (assets/identity/out/social-mark-280.png, written by
+# scripts/generate-icon.ps1 before this script runs), laid on the plate box unscaled - PRODUCT-IDENTITY rule 6, the card
+# is composed from the master, never drawn here.
 function Add-Mark($ctx, [double]$Left, [double]$Top, [double]$Size) {
-    $white = New-Brush 0xFFFFFF
-    $fill = New-Brush 0x1E3A8A
-    $edge = New-Object Windows.Media.Pen((New-Brush 0xFFFFFF 70), 3)
-    $edge.Freeze()
-    $ctx.DrawRoundedRectangle($fill, $edge, (New-Object Windows.Rect($Left, $Top, $Size, $Size)), $Radius, $Radius)
-
-    $lines = "DOC", "HTML"
-    $ref = 100.0
-    $widest = ($lines | ForEach-Object { (New-Text $_ $ref ([Windows.FontWeights]::Bold) $white).BuildGeometry((New-Object Windows.Point(0, 0))).Bounds.Width } | Measure-Object -Maximum).Maximum
-    $fs = $ref * ($Size * 0.74) / $widest
-    $gapPx = $fs * 0.14
-    $inks = foreach ($l in $lines) {
-        $t = New-Text $l $fs ([Windows.FontWeights]::Bold) $white
-        [pscustomobject]@{ Text = $t; Ink = $t.BuildGeometry((New-Object Windows.Point(0, 0))).Bounds }
-    }
-    $total = ($inks | ForEach-Object { $_.Ink.Height } | Measure-Object -Sum).Sum + $gapPx * ($inks.Count - 1)
-    $inkTop = $Top + ($Size - $total) / 2
-    foreach ($i in $inks) {
-        $inkLeft = $Left + ($Size - $i.Ink.Width) / 2
-        $ctx.DrawText($i.Text, (New-Object Windows.Point(($inkLeft - $i.Ink.X), ($inkTop - $i.Ink.Y))))
-        $inkTop += $i.Ink.Height + $gapPx
-    }
+    $png = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\..\assets\identity\out\social-mark-280.png"))
+    if (-not (Test-Path -LiteralPath $png)) { throw "missing $png - run scripts/generate-icon.ps1" }
+    $bmp = New-Object Windows.Media.Imaging.BitmapImage
+    $bmp.BeginInit()
+    $bmp.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+    $bmp.UriSource = New-Object Uri $png
+    $bmp.EndInit()
+    $bmp.Freeze()
+    $ctx.DrawImage($bmp, (New-Object Windows.Rect($Left, $Top, $Size, $Size)))
 }
 
 function New-CardPng([string]$Path, [int]$W, [int]$H) {

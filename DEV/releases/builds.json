@@ -1,0 +1,48 @@
+{
+  "schema": "1",
+  "builds": [
+    {
+      "package": "app",
+      "flavor": "cli",
+      "kind": "debug",
+      "version": "26.1127.0020",
+      "builtAt": "2026-11-27T00:20:38+01:00",
+      "artifact": "build/doc-html-translate.exe",
+      "sha256": "85bf9eaa63184344b75bee1f28e6e16207fab541d34aaaf14aab1b5e64343adb"
+    },
+    {
+      "package": "app",
+      "flavor": "installer",
+      "kind": "debug",
+      "version": "26.1126.2321",
+      "builtAt": "2026-11-26T23:21:53+01:00",
+      "artifact": "dist/doc-html-translate-setup-26.1126.2321.exe",
+      "sha256": "6dc95183cca51df3e0625169f3606c27343d2ba1be48f10d0e027e2991747969"
+    },
+    {
+      "package": "app",
+      "flavor": "msix-selftest",
+      "kind": "test",
+      "version": "26.1126.2333",
+      "builtAt": "2026-11-26T23:33:08+01:00",
+      "artifact": "msix/out/SerZhyAle.DocHtmlTranslate_26.1126.2333.0_x64_selftest.msix",
+      "sha256": "219391f12971443ccecb4d52f2cb5e986afba098deee68868cfeacd7b3be0cbc"
+    },
+    {
+      "package": "app",
+      "flavor": "ui",
+      "kind": "debug",
+      "version": "26.1127.0020",
+      "builtAt": "2026-11-27T00:20:43+01:00",
+      "artifact": "build/doc-html-ui.exe",
+      "sha256": "87beb1d83dfe6d65a15144a9a7b95a68114fec9deb447ec38553f81a76ca033b"
+    },
+    {
+      "package": "extension",
+      "flavor": "unpacked",
+      "kind": "debug",
+      "version": "26.1126.2333",
+      "builtAt": "2026-11-26T23:33:58+01:00"
+    }
+  ]
+}

@@ -1,7 +1,29 @@
 // Renders one help page (CONTEXT-HELP rule 8: title, what it is for, the screenshot, the order, the elements,
 // related, footer) from a copy-deck page, the GUI dictionary, the chrome strings and the capture's pin positions.
 // The output is plain HTML that reads completely with the script off; page.js only enhances it.
+import fs from 'node:fs';
+import path from 'node:path';
 import { word } from './dict.mjs';
+
+const ROOT = path.resolve(import.meta.dirname, '..', '..');
+// PRODUCT-IDENTITY rule 8 (CONTEXT-HELP 0.6 item Q): the product's picture beside every page title - the help.head
+// rendition of the identity manifest, inlined so the page makes no request for it. It stands beside the title text,
+// so it is hidden from assistive technology (rule 11).
+export const HEAD_SVG = path.join(ROOT, 'assets', 'identity', 'out', 'help-head.svg');
+function productMark() {
+  const svg = fs.readFileSync(HEAD_SVG, 'utf8').trim().replace(/\r?\n/g, '');
+  return svg.replace('<svg ', '<svg class="product" width="40" height="40" aria-hidden="true" focusable="false" style="vertical-align:middle;margin-inline-end:.45em" ');
+}
+// CONTEXT-HELP 0.6 item R: an entry that names a control drawn with an ICON-SET glyph shows that glyph - the same
+// vendored SVG the window draws (assets/glyphs/<id>.svg), in the page's text colour.
+export const GLYPH_DIR = path.join(ROOT, 'assets', 'glyphs');
+function glyph(id) {
+  const raw = fs.readFileSync(path.join(GLYPH_DIR, `${id}.svg`), 'utf8');
+  const d = raw.match(/\bd="([^"]+)"/);
+  if (!d) throw new Error(`assets/glyphs/${id}.svg has no path data`);
+  return `<svg class="gl" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" style="vertical-align:-.25em;margin-inline-end:.35em"><path fill="currentColor" d="${d[1]}"/></svg>`;
+}
+const glyphsOf = (e) => (e.glyph == null ? [] : [].concat(e.glyph)).map(glyph).join('');
 
 export const SITE = 'https://serzhyale.github.io/doc-html-translate/';
 export const PORTAL = 'https://sza.od.ua';
@@ -95,6 +117,7 @@ function head(pg, titleText, depth) {
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
 <title>${esc(c.docTitle.replace('{name}', titleText))}</title>
+<link rel="icon" href="${depth}favicon.ico">
 <script src="${depth}page.js"></script>
 <link rel="stylesheet" href="${depth}sza-kit.css">
 <link rel="stylesheet" href="${depth}help.css">
@@ -161,7 +184,7 @@ ${pins}
       body.push(`        <div class="note"><span class="tag">${esc(tag)}</span><p>${pg.expand(pg.pick(e.note.text), numbers)}</p></div>`);
     }
     return `    <details class="el" id="${e.id}">
-      <summary><span class="mk">${numbers[e.id]}</span><span><span class="name">${pg.nameOf(e)}</span><span class="one">${pg.oneOf(e)}</span></span></summary>
+      <summary><span class="mk">${numbers[e.id]}</span><span><span class="name">${glyphsOf(e)}${pg.nameOf(e)}</span><span class="one">${pg.oneOf(e)}</span></span></summary>
       <div class="full">
 ${body.join('\n')}
       </div>
@@ -178,7 +201,7 @@ ${body.join('\n')}
   </nav>
   <header class="hero">
     <p class="kicker">${esc(c.kicker[page.kind])}</p>
-    <h1>${esc(title)}</h1>
+    <h1>${productMark()}${esc(title)}</h1>
     <p class="lead">${pg.expand(pg.pick(page.lead), numbers)}</p>
   </header>
 
@@ -217,7 +240,7 @@ export function renderIndex({ index, pg, pages, version, date, pageTitles }) {
 
   <header class="hero">
     <p class="kicker">${esc(c.kicker.index)}</p>
-    <h1>${esc(title)}</h1>
+    <h1>${productMark()}${esc(title)}</h1>
     <p class="lead">${esc(c.indexLead)}</p>
   </header>
 
