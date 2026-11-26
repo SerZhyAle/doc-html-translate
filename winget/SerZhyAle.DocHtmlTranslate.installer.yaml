@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 
 PackageIdentifier: SerZhyAle.DocHtmlTranslate
-PackageVersion: "26.1117.1450"
+PackageVersion: "26.1126.2358"
 InstallerType: zip
 NestedInstallerType: portable
 NestedInstallerFiles:
@@ -11,8 +11,8 @@ NestedInstallerFiles:
   PortableCommandAlias: doc-html-ui
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/SerZhyAle/doc-html-translate/releases/download/v26.1117.1450/doc-html-translate-26.1117.1450-windows-x64.zip
-  InstallerSha256: 92FFF9065CCC3D3802E068A063CD578C1379FA5B6272CCFA6CF1BA14571D95D3
+  InstallerUrl: https://github.com/SerZhyAle/doc-html-translate/releases/download/v26.1126.2358/doc-html-translate-26.1126.2358-windows-x64.zip
+  InstallerSha256: ABE5FD51F43286AB9F51CE3A6833349371503AB610D484780877E919EE1FA02A
 ManifestType: installer
 ManifestVersion: 1.12.0
-ReleaseDate: 2026-11-17
+ReleaseDate: 2026-11-26

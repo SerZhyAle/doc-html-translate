@@ -21,6 +21,24 @@
     },
     {
       "package": "app",
+      "flavor": "installer",
+      "kind": "release",
+      "version": "26.1126.2358",
+      "builtAt": "2026-11-27T00:34:53+01:00",
+      "artifact": "temp/release-26.1126.2358/dist/doc-html-translate-setup-26.1126.2358.exe",
+      "sha256": "f7a0c482734ff3d23489eef03d77b1a17393f2b9822bebb6204db49996ddf13e"
+    },
+    {
+      "package": "app",
+      "flavor": "msix",
+      "kind": "release",
+      "version": "26.1126.2358",
+      "builtAt": "2026-11-27T00:34:43+01:00",
+      "artifact": "msix/out/SZA.Doc-HTML-Translate_26.1126.2358.0_x64.msix",
+      "sha256": "d276fefe6fc74a16e0700124aac43d8af5a044d38662e62903fb055e6dac04ef"
+    },
+    {
+      "package": "app",
       "flavor": "msix-selftest",
       "kind": "test",
       "version": "26.1126.2333",

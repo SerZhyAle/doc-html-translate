@@ -8,12 +8,12 @@ What each package was built as last, what each channel carries, and every public
 
 | Package | Channel | Kind | Live | Since | In flight | Ref |
 | --- | --- | --- | --- | --- | --- | --- |
-| app | github | github | 26.1117.1450 | 2026-11-17 | - | [v26.1117.1450](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1117.1450) |
-| app | winget | winget | 26.1117.1450 | 2026-11-18 | - | [link](https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/SerZhyAle/DocHtmlTranslate/26.1117.1450) |
-| app | msstore | msstore | 26.1117.1450.0 | 2026-11-18 | - | [Submission 14](https://apps.microsoft.com/detail/9PMHSWQPR6V1) |
-| app | installer (Universal Windows installer (GitHub Release asset)) | manual | 26.1117.1450 | 2026-11-17 | - | [v26.1117.1450](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1117.1450) |
-| extension | chrome | chrome | 26.1117.1543 | 2026-11-18 | - | [link](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic) |
-| extension | edge | edge | 26.1113.22 | 2026-11-18 | 26.1117.1543 blocked (2026-11-18) | [ext-edge-v26.1117.1543](https://microsoftedge.microsoft.com/addons/detail/anokfnnfiboaccbbpfkdaphejnkkhajh) |
+| app | github | github | 26.1126.2358 | 2026-11-27 | - | [v26.1126.2358](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1126.2358) |
+| app | winget | winget | 26.1117.1450 | 2026-11-18 | 26.1126.2358 submitted (2026-11-27) | [PR#490566](https://github.com/microsoft/winget-pkgs/pull/490566) |
+| app | msstore | msstore | 26.1117.1450.0 | 2026-11-18 | 26.1126.2358 pending (2026-11-27) | v26.1126.2358 |
+| app | installer (Universal Windows installer (GitHub Release asset)) | manual | 26.1126.2358 | 2026-11-27 | - | [v26.1126.2358](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1126.2358) |
+| extension | chrome | chrome | 26.1117.1543 | 2026-11-18 | 26.1126.2356 blocked (2026-11-27) | ext-cws-v26.1126.2356 |
+| extension | edge | edge | 26.1113.22 | 2026-11-18 | 26.1126.2356 submitted (2026-11-27); 26.1117.1543 blocked (2026-11-18) | ext-edge-v26.1126.2356 |
 
 ## Last builds
 
@@ -21,6 +21,8 @@ What each package was built as last, what each channel carries, and every public
 | --- | --- | --- | --- | --- | --- |
 | app | cli | debug | 26.1127.0020 | 2026-11-27 00:20:38+01:00 | build/doc-html-translate.exe |
 | app | installer | debug | 26.1126.2321 | 2026-11-26 23:21:53+01:00 | dist/doc-html-translate-setup-26.1126.2321.exe |
+| app | installer | release | 26.1126.2358 | 2026-11-27 00:34:53+01:00 | temp/release-26.1126.2358/dist/doc-html-translate-setup-26.1126.2358.exe |
+| app | msix | release | 26.1126.2358 | 2026-11-27 00:34:43+01:00 | msix/out/SZA.Doc-HTML-Translate_26.1126.2358.0_x64.msix |
 | app | msix-selftest | test | 26.1126.2333 | 2026-11-26 23:33:08+01:00 | msix/out/SerZhyAle.DocHtmlTranslate_26.1126.2333.0_x64_selftest.msix |
 | app | ui | debug | 26.1127.0020 | 2026-11-27 00:20:43+01:00 | build/doc-html-ui.exe |
 | extension | unpacked | debug | 26.1126.2333 | 2026-11-26 23:33:58+01:00 | - |
@@ -29,6 +31,12 @@ What each package was built as last, what each channel carries, and every public
 
 | When | Package | Channel | Version | State | Source | Ref | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-27 00:47:25+01:00 | app | msstore | 26.1126.2358 | pending | release | v26.1126.2358 | package and listing import folder built from the tag in msix/out; machine channel not usable (metadata JSON above the command-line limit) and the Partner Center product page did not load; manual upload owed |
+| 2026-11-27 00:47:24+01:00 | extension | chrome | 26.1126.2356 | blocked | release | ext-cws-v26.1126.2356 | package uploaded; publish refused INVALID_ITEM_METADATA: the downloads permission justification is owed in the developer dashboard, which asked for a Google sign-in |
+| 2026-11-27 00:38:03+01:00 | extension | edge | 26.1126.2356 | submitted | release | ext-edge-v26.1126.2356 | - |
+| 2026-11-27 00:38:02+01:00 | app | winget | 26.1126.2358 | submitted | release | [PR#490566](https://github.com/microsoft/winget-pkgs/pull/490566) | - |
+| 2026-11-27 00:34:54+01:00 | app | installer | 26.1126.2358 | live | manual | [v26.1126.2358](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1126.2358) | - |
+| 2026-11-27 00:34:54+01:00 | app | github | 26.1126.2358 | live | release | [v26.1126.2358](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1126.2358) | - |
 | 2026-11-18 23:02:06+01:00 | extension | edge | 26.1117.1543 | blocked | manual | [ext-edge-v26.1117.1543](https://microsoftedge.microsoft.com/addons/detail/anokfnnfiboaccbbpfkdaphejnkkhajh) | Migrated from DEV/RELEASE_STATE.md (2026-11-17 15:45): publish-edge run 44106343944 FAILED at publish (InProgressSubmission while 26.1113.22 cert was in progress) |
 | 2026-11-18 23:01:32+01:00 | extension | edge | 26.1113.22 | live | import | [link](https://microsoftedge.microsoft.com/addons/detail/anokfnnfiboaccbbpfkdaphejnkkhajh) | - |
 | 2026-11-18 23:01:32+01:00 | extension | chrome | 26.1117.1543 | live | import | [link](https://chromewebstore.google.com/detail/nmcckamdocainafmmompkbmelkpbnmic) | - |
