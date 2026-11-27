@@ -12,8 +12,8 @@ What each package was built as last, what each channel carries, and every public
 | app | winget | winget | 26.1117.1450 | 2026-11-18 | 26.1126.2358 submitted (2026-11-27) | [PR#490566](https://github.com/microsoft/winget-pkgs/pull/490566) |
 | app | msstore | msstore | 26.1117.1450.0 | 2026-11-18 | 26.1126.2358 pending (2026-11-27) | v26.1126.2358 |
 | app | installer (Universal Windows installer (GitHub Release asset)) | manual | 26.1126.2358 | 2026-11-27 | - | [v26.1126.2358](https://github.com/SerZhyAle/doc-html-translate/releases/tag/v26.1126.2358) |
-| extension | chrome | chrome | 26.1117.1543 | 2026-11-18 | 26.1126.2356 blocked (2026-11-27) | ext-cws-v26.1126.2356 |
-| extension | edge | edge | 26.1113.22 | 2026-11-18 | 26.1126.2356 submitted (2026-11-27); 26.1117.1543 blocked (2026-11-18) | ext-edge-v26.1126.2356 |
+| extension | chrome | chrome | 26.1117.1543 | 2026-11-18 | 26.1127.133 submitted (2026-11-27); 26.1126.2356 blocked (2026-11-27) | ext-cws-v26.1127.133 |
+| extension | edge | edge | 26.1113.22 | 2026-11-18 | 26.1127.133 blocked (2026-11-27); 26.1126.2356 submitted (2026-11-27); 26.1117.1543 blocked (2026-11-18) | ext-edge-v26.1127.133 |
 
 ## Last builds
 
@@ -31,6 +31,8 @@ What each package was built as last, what each channel carries, and every public
 
 | When | Package | Channel | Version | State | Source | Ref | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-27 02:00:27+01:00 | extension | edge | 26.1127.133 | blocked | release | ext-edge-v26.1127.133 | package uploaded; publish refused InProgressSubmission while 26.1126.2356 is in certification; rerun run 45919944729 --failed after it clears |
+| 2026-11-27 02:00:27+01:00 | extension | chrome | 26.1127.133 | submitted | release | ext-cws-v26.1127.133 | no downloads permission; PENDING_REVIEW |
 | 2026-11-27 00:47:25+01:00 | app | msstore | 26.1126.2358 | pending | release | v26.1126.2358 | package and listing import folder built from the tag in msix/out; machine channel not usable (metadata JSON above the command-line limit) and the Partner Center product page did not load; manual upload owed |
 | 2026-11-27 00:47:24+01:00 | extension | chrome | 26.1126.2356 | blocked | release | ext-cws-v26.1126.2356 | package uploaded; publish refused INVALID_ITEM_METADATA: the downloads permission justification is owed in the developer dashboard, which asked for a Google sign-in |
 | 2026-11-27 00:38:03+01:00 | extension | edge | 26.1126.2356 | submitted | release | ext-edge-v26.1126.2356 | - |
