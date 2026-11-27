@@ -516,29 +516,29 @@
     "message": "Guardar archivo multimedia para traducir",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "Carpeta para guardar archivos multimedia",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "Guardando archivos multimedia",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "Dónde coloca el archivo la opción del menú contextual \"Guardar archivo multimedia para traducir\": una carpeta dentro de la carpeta de descargas del navegador (por ejemplo, Media for translation). Déjala vacía para guardar directamente en la carpeta de descargas. Cualquier tipo de archivo se guarda tal cual.",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "Guardando {1} de {2}..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "Permitir guardar archivos",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - guardado en la carpeta de descargas",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "Guardar archivos está permitido.",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - no se pudo guardar: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "Guardar archivos aún no está permitido: el navegador lo pregunta una vez, la primera vez.",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "Si el navegador pregunta si permitir varias descargas, permítelo. Cierra esta pestaña cuando terminen las descargas.",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "Guardar archivos no está permitido. Permítelo en la configuración de la extensión.",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "No hay nada que guardar. Usa de nuevo el comando del menú contextual.",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "No se encontró aquí ningún archivo multimedia para guardar.",

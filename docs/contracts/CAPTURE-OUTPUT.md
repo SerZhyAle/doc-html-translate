@@ -24,3 +24,5 @@ Out of the contract's scope by its own section 5, so not measured here: the conv
 **Review 2026-10-07 (ticket 108).** Sections 2 rule 16 and 5 read: the PNG time carrier and export placement clarification affect no shipped producer here. TXT imports accept BOM/CRLF. Developer screenshots are not shipped capture output. No catalog vectors exist.
 
 **Re-read 2026-10-29 (ticket E0126) at 0.7.** Section 5 gains two outside lines; the second places the help and Store screenshots this repository renders of its own windows outside the contract. Nothing owed.
+
+2026-11-27: the media file is now saved without the `downloads` permission, under the server's or the address's name (`fileNameFor`) into the download folder; the collision suffix is still the browser's, so the exception stands.

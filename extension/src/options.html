@@ -110,20 +110,6 @@
           <!-- Filled by options.js: the attribute name stays a code literal inside the translated sentence. -->
           <p class="hint" id="source-lang-hint">Sets <code>&lt;html lang&gt;</code> so the browser offers the right translation. Auto-detect works for most documents (EPUBs also use their declared language) - and guesses right more often than not.</p>
         </div>
-
-        <!-- "Save media file for translation" (media-save.js): the folder, kept inside the browser's download
-             folder because that is the only place an extension may write, and the optional downloads permission
-             the action needs. The right-click entry sends the reader here when the browser would not ask from
-             the menu. -->
-        <div class="field" id="media-field">
-          <label for="media-folder" data-i18n="optMediaFolder">Folder for saving media files</label>
-          <div class="row"><input type="text" id="media-folder" spellcheck="false" autocomplete="off" maxlength="200"><span class="saved" id="saved-media-folder" role="status" data-saved-key="optSaved" data-saved-fallback="Saved"></span></div>
-          <p class="hint" data-i18n="optMediaFolderHint">Where the right-click "Save media file for translation" puts the file: a folder inside the browser's download folder (for example, Media for translation). Leave it empty to save straight into the download folder. Any file type is saved as it is.</p>
-          <div class="btn-row">
-            <button type="button" id="media-allow"><span data-glyph="action.save"></span><span data-i18n="optMediaAllow">Allow saving files</span></button>
-          </div>
-          <p class="hint" id="media-perm" role="status" aria-live="polite"></p>
-        </div>
       </section>
 
       <section class="page" id="page-ocr" role="tabpanel" aria-labelledby="tab-ocr" hidden>

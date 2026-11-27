@@ -516,29 +516,29 @@
     "message": "Salva file multimediale da tradurre",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "Cartella per i file multimediali salvati",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "Salvataggio dei file multimediali",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "Dove la voce del menu contestuale \"Salva file multimediale da tradurre\" mette il file: una cartella dentro la cartella dei download del browser (per esempio, Media for translation). Lasciala vuota per salvare direttamente nella cartella dei download. Ogni tipo di file viene salvato così com'è.",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "Salvataggio {1} di {2}..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "Consenti il salvataggio dei file",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - salvato nella cartella dei download",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "Il salvataggio dei file è consentito.",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - impossibile salvare: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "Il salvataggio dei file non è ancora consentito: il browser lo chiede una volta, la prima volta.",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "Se il browser chiede se consentire più download, consentilo. Chiudi questa scheda quando i download sono terminati.",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "Il salvataggio dei file non è consentito. Consentilo nelle impostazioni dell'estensione.",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "Niente da salvare. Usa di nuovo il comando del menu contestuale.",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "Nessun file multimediale da salvare trovato qui.",

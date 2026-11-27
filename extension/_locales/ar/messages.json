@@ -516,29 +516,29 @@
     "message": "حفظ ملف الوسائط للترجمة",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "مجلد حفظ ملفات الوسائط",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "حفظ ملفات الوسائط",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "المكان الذي يضع فيه أمر القائمة \"حفظ ملف الوسائط للترجمة\" الملف: مجلد داخل مجلد التنزيلات في المتصفح (مثل Media for translation). اتركه فارغًا للحفظ مباشرة في مجلد التنزيلات. يُحفظ أي نوع من الملفات كما هو.",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "جارٍ حفظ {1} من {2}..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "السماح بحفظ الملفات",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - حُفظ في مجلد التنزيلات",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "حفظ الملفات مسموح.",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - تعذّر الحفظ: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "حفظ الملفات غير مسموح بعد: يسأل المتصفح مرة واحدة، عند أول استخدام.",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "إذا سأل المتصفح عن السماح بعدة تنزيلات فاسمح بها. أغلق علامة التبويب هذه عند انتهاء التنزيلات.",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "حفظ الملفات غير مسموح. اسمح به في إعدادات الإضافة.",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "لا يوجد ما يُحفظ. استخدم أمر القائمة السياقية مرة أخرى.",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "لم يُعثر هنا على ملف وسائط لحفظه.",

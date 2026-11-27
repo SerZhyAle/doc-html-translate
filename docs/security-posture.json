@@ -40,21 +40,23 @@
       "consumers": [
         "the viewer fetches the opened document's bytes, from whatever origin serves it, with the reader's cookies for that site",
         "the OCR actions fetch the image the user picked, or the pictures of the page the user started them on",
+        "Save media file for translation reads the media file the user chose, with the reader's cookies for that site, and hands it to the browser as a download",
         "the popup reads the active tab's host name for the per-site on/off switch"
       ],
       "evidence": [
         { "file": "extension/src/viewer.js", "contains": "fetch(url, { credentials: \"include\" })" },
-        { "file": "extension/src/ocr-overlay.js", "contains": "async function fetchToBlob" }
+        { "file": "extension/src/ocr-overlay.js", "contains": "async function fetchToBlob" },
+        { "file": "extension/src/save.js", "contains": "fetch(url, { credentials: \"include\" })" }
       ],
       "shownAtRequest": false,
       "shownWhere": "the browser's own install prompt (read and change data on all sites); the sentence is on the store privacy forms and the privacy pages",
       "public": {
-        "en": "**Access to all sites** (host access) - used solely to fetch the document you opened and the pictures you ask it to read, from whichever site or folder they come from, and to read the current site's name for switching the viewer on or off per site. No browsing data is read or transmitted.",
-        "ru": "**Доступ ко всем сайтам** (host access) - используется исключительно для того, чтобы загрузить открытый вами документ и изображения, которые вы просите распознать, с того сайта или из той папки, откуда они получены, и чтобы прочитать имя текущего сайта для включения и выключения просмотрщика на отдельных сайтах. Данные о просмотре не читаются и не передаются.",
-        "uk": "**Доступ до всіх сайтів** (host access) - використовується виключно для того, щоб завантажити відкритий вами документ і зображення, які ви просите розпізнати, з того сайту або з тієї теки, звідки вони отримані, і щоб прочитати ім'я поточного сайту для ввімкнення й вимкнення переглядача на окремих сайтах. Дані про перегляд не читаються й не передаються."
+        "en": "**Access to all sites** (host access) - used solely to fetch the document you opened, the pictures you ask it to read and the media file you ask it to save, from whichever site or folder they come from, and to read the current site's name for switching the viewer on or off per site. No browsing data is read or transmitted.",
+        "ru": "**Доступ ко всем сайтам** (host access) - используется исключительно для того, чтобы загрузить открытый вами документ, изображения, которые вы просите распознать, и медиафайл, который вы просите сохранить, с того сайта или из той папки, откуда они получены, и чтобы прочитать имя текущего сайта для включения и выключения просмотрщика на отдельных сайтах. Данные о просмотре не читаются и не передаются.",
+        "uk": "**Доступ до всіх сайтів** (host access) - використовується виключно для того, щоб завантажити відкритий вами документ, зображення, які ви просите розпізнати, і медіафайл, який ви просите зберегти, з того сайту або з тієї теки, звідки вони отримані, і щоб прочитати ім'я поточного сайту для ввімкнення й вимкнення переглядача на окремих сайтах. Дані про перегляд не читаються й не передаються."
       },
       "storeLabel": "host_permissions (`<all_urls>`)",
-      "storeJustification": "required because the viewer fetches the opened document's bytes for local rendering and the file can live on any origin, because the OCR actions fetch the image the user picked (or the pictures of the page the user started them on) from whatever site serves them, and because the toolbar popup reads the active tab's hostname for the per-site on/off toggle. (The redirect itself does not consume host permissions.) No page content is read or transmitted. Because the opened document's origin is unknowable before the user opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the cross-origin fetch because the viewer is an extension page rather than the document's origin - so `<all_urls>` is the minimum that works for this single purpose."
+      "storeJustification": "required because the viewer fetches the opened document's bytes for local rendering and the file can live on any origin, because the OCR actions fetch the image the user picked (or the pictures of the page the user started them on) from whatever site serves them, because \"Save media file for translation\" reads the media file the user chose from the site that serves it and hands it to the browser as a download, and because the toolbar popup reads the active tab's hostname for the per-site on/off toggle. (The redirect itself does not consume host permissions.) No page content is read or transmitted. Because the opened document's origin is unknowable before the user opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the cross-origin fetch because the viewer is an extension page rather than the document's origin - so `<all_urls>` is the minimum that works for this single purpose."
     },
     {
       "id": "ext-scripting",
@@ -168,35 +170,6 @@
       },
       "storeLabel": "storage",
       "storeJustification": "to remember the user's on/off choice, per-site exceptions, reading preferences (font, theme), interface language and remote-image setting, which OCR languages have been downloaded, and the format, page count and last error of the most recent document for the \"Copy diagnostics\" button. Nothing stored leaves the device."
-    },
-    {
-      "id": "ext-downloads-optional",
-      "edition": "extension",
-      "declares": "optional-permission:downloads",
-      "declaredIn": "extension/manifest.json, optional_permissions",
-      "consumers": [
-        "Save media file for translation: the one file the user right-clicked, or the media file found in the clicked frame, is saved into the folder named in the settings, inside the browser's download folder"
-      ],
-      "evidence": [
-        { "file": "extension/src/media-save.js", "contains": "chrome.downloads.download" },
-        { "file": "extension/src/media-save.js", "contains": "chrome.downloads.onDeterminingFilename.addListener" },
-        { "file": "extension/src/media-save.js", "contains": "chrome.permissions.request(DOWNLOADS_PERMISSION)" }
-      ],
-      "shownAtRequest": true,
-      "shownWhere": "the browser's own permission prompt, the first time Save media file for translation is used or the Allow saving files button on the settings page is pressed; the settings page says whether it is held",
-      "shownText": [
-        { "file": "extension/_locales/en/messages.json", "contains": "\"Save media file for translation\"" },
-        { "file": "extension/_locales/en/messages.json", "contains": "\"Allow saving files\"" },
-        { "file": "extension/_locales/ru/messages.json", "contains": "\"Сохранить медиафайл для перевода\"" },
-        { "file": "extension/_locales/uk/messages.json", "contains": "\"Зберегти медіафайл для перекладу\"" }
-      ],
-      "public": {
-        "en": "**downloads** (optional, asked only when you first use it) - used solely by *Save media file for translation*: the file you right-clicked, or the media file of the frame you clicked, is saved into the folder you named in the settings, inside your browser's download folder. The download is the browser's own, from the site that serves the file; nothing else is read from your download list, and nothing is sent anywhere.",
-        "ru": "**downloads** (необязательное, запрашивается только при первом использовании) - используется исключительно действием *Сохранить медиафайл для перевода*: файл, по которому вы щёлкнули, или медиафайл кадра, по которому вы щёлкнули, сохраняется в папку, указанную в настройках, внутри папки загрузок браузера. Загрузку выполняет сам браузер с сайта, который отдаёт файл; больше ничего из списка загрузок не читается и никуда не отправляется.",
-        "uk": "**downloads** (необов'язковий, запитується лише під час першого використання) - використовується виключно дією *Зберегти медіафайл для перекладу*: файл, на якому ви клацнули, або медіафайл кадру, на якому ви клацнули, зберігається в теку, вказану в налаштуваннях, усередині теки завантажень браузера. Завантаження виконує сам браузер із сайту, який віддає файл; більше нічого зі списку завантажень не читається й нікуди не надсилається."
-      },
-      "storeLabel": "downloads (optional)",
-      "storeJustification": "optional, requested only when the user first chooses \"Save media file for translation\" from the right-click menu or presses \"Allow saving files\" in the options. It saves the one file the user right-clicked - or the media file found in the clicked frame - into the folder named in the options, inside the browser's download folder, under the file name the browser itself determines. The extension does not read, search or change the user's other downloads."
     },
     {
       "id": "app-msix-runfulltrust",
@@ -590,6 +563,29 @@
       }
     },
     {
+      "id": "net-ext-save-media",
+      "edition": "extension",
+      "kind": "outbound",
+      "surface": "the media file the user chose to save",
+      "defaultOn": false,
+      "turnedOnBy": "Save media file for translation in the right-click menu",
+      "lifetime": "that one action, in the page of the extension that saves the files",
+      "leaves": "a request for each file to the site that serves it, with the reader's cookies for that site",
+      "evidence": [
+        { "file": "extension/src/save.js", "contains": "fetch(url, { credentials: \"include\" })" }
+      ],
+      "shownText": [
+        { "file": "extension/_locales/en/messages.json", "contains": "\"Save media file for translation\"" },
+        { "file": "extension/_locales/ru/messages.json", "contains": "\"Сохранить медиафайл для перевода\"" },
+        { "file": "extension/_locales/uk/messages.json", "contains": "\"Зберегти медіафайл для перекладу\"" }
+      ],
+      "public": {
+        "en": "**A media file you save** - *Save media file for translation* asks the site that serves the file for it, with your cookies for that site, and hands it to your browser as a download. It happens only when you choose the command, and nothing is sent anywhere else.",
+        "ru": "**Медиафайл, который вы сохраняете** - действие *Сохранить медиафайл для перевода* запрашивает файл у сайта, который его отдаёт, с вашими cookie для этого сайта и передаёт его браузеру как загрузку. Это происходит только когда вы выбираете команду, и никуда больше ничего не отправляется.",
+        "uk": "**Медіафайл, який ви зберігаєте** - дія *Зберегти медіафайл для перекладу* запитує файл у сайту, який його віддає, з вашими cookie для цього сайту й передає його браузеру як завантаження. Це відбувається лише коли ви обираєте команду, і більше нікуди нічого не надсилається."
+      }
+    },
+    {
       "id": "net-ext-ocr-languages",
       "edition": "extension",
       "kind": "outbound",
@@ -737,7 +733,7 @@
       "target": "extension-privacy.html",
       "block": "ext-network",
       "format": "html-lists",
-      "rows": ["net-ext-document", "net-ext-images", "net-ext-remote-content", "net-ext-ocr-languages"],
+      "rows": ["net-ext-document", "net-ext-images", "net-ext-remote-content", "net-ext-save-media", "net-ext-ocr-languages"],
       "after": {
         "en": "Nothing else leaves your browser: the extension has no server of its own. Translation is done by your browser's built-in feature, which you start yourself and which your browser vendor's privacy policy governs.",
         "ru": "Больше ничего не покидает ваш браузер: у расширения нет собственного сервера. Перевод выполняет встроенная функция вашего браузера, которую вы запускаете сами и на которую распространяется политика конфиденциальности производителя браузера.",
@@ -748,13 +744,13 @@
       "target": "extension-privacy.html",
       "block": "ext-permissions",
       "format": "html-lists",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
     },
     {
       "target": "extension/store/PRIVACY.md",
       "block": "ext-network",
       "format": "md-list",
-      "rows": ["net-ext-document", "net-ext-images", "net-ext-remote-content", "net-ext-ocr-languages"],
+      "rows": ["net-ext-document", "net-ext-images", "net-ext-remote-content", "net-ext-save-media", "net-ext-ocr-languages"],
       "after": {
         "en": "Nothing else leaves your browser: the extension has no server of its own. Translation is done by your browser's built-in feature, which you start yourself and which your browser vendor's privacy policy governs."
       }
@@ -763,13 +759,13 @@
       "target": "extension/store/PRIVACY.md",
       "block": "ext-permissions",
       "format": "md-list",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
     },
     {
       "target": "extension/store/LISTING.md",
       "block": "ext-justifications",
       "format": "md-justifications",
-      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage", "ext-downloads-optional"]
+      "rows": ["ext-declarativenetrequest", "ext-host-all-urls", "ext-scripting", "ext-offscreen", "ext-contextmenus", "ext-storage"]
     },
     {
       "target": "msix/README.md",

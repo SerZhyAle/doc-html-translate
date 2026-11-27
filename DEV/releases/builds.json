@@ -5,10 +5,10 @@
       "package": "app",
       "flavor": "cli",
       "kind": "debug",
-      "version": "26.1127.0020",
-      "builtAt": "2026-11-27T00:20:38+01:00",
+      "version": "26.1127.0150",
+      "builtAt": "2026-11-27T01:50:38+01:00",
       "artifact": "build/doc-html-translate.exe",
-      "sha256": "85bf9eaa63184344b75bee1f28e6e16207fab541d34aaaf14aab1b5e64343adb"
+      "sha256": "fe85206fb16344630a2134f94dcd6a78c0ea93406880982d19f372762bff554b"
     },
     {
       "package": "app",
@@ -50,10 +50,10 @@
       "package": "app",
       "flavor": "ui",
       "kind": "debug",
-      "version": "26.1127.0020",
-      "builtAt": "2026-11-27T00:20:43+01:00",
+      "version": "26.1127.0150",
+      "builtAt": "2026-11-27T01:50:41+01:00",
       "artifact": "build/doc-html-ui.exe",
-      "sha256": "87beb1d83dfe6d65a15144a9a7b95a68114fec9deb447ec38553f81a76ca033b"
+      "sha256": "ef15ffc830f8fc574eaa2b08537fd82520dd1354d42cbe7961ee8ca0310b9c15"
     },
     {
       "package": "extension",

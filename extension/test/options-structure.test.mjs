@@ -114,7 +114,7 @@ test("every glyph the pages name is a vocabulary glyph of the extension's table"
 });
 
 test("each page loads the boot script first and its module last, with no inline script or style", () => {
-  for (const file of ["options.html", "popup.html", "ocr.html"]) {
+  for (const file of ["options.html", "popup.html", "ocr.html", "save.html"]) {
     const html = fs.readFileSync(path.join(src, file), "utf8");
     assert.match(html, /<html[^>]*\bdata-boot\b/, `${file}: held until ready`);
     assert.ok(html.indexOf("ui-boot.js") < html.indexOf("</head>"), `${file}: ui-boot.js runs before the first paint`);

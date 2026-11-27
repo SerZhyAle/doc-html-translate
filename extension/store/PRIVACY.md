@@ -60,6 +60,9 @@ either site mode when automatic interception is enabled.
 - **Images a document points at on the internet** - blocked until you choose *Load them* for that
   document or turn on *Load remote images in documents*, so opening a document does not tell its author
   or a tracker that you opened it.
+- **A media file you save** - *Save media file for translation* asks the site that serves the file for
+  it, with your cookies for that site, and hands it to your browser as a download. It happens only when
+  you choose the command, and nothing is sent anywhere else.
 - **tessdata.projectnaptha.com, for extra OCR languages** - only when you click *Download* for a
   language: its data file is fetched, as data and not code, from that public open-source host and cached
   on your device. English ships inside the extension.
@@ -74,9 +77,10 @@ governs.
 - **declarativeNetRequest** - used solely to open a document you open in the browser in the extension's
   local viewer instead, and to let *Open original* show it the browser's own way. The rules redirect
   addresses only; no page content is read.
-- **Access to all sites** (host access) - used solely to fetch the document you opened and the pictures
-  you ask it to read, from whichever site or folder they come from, and to read the current site's name
-  for switching the viewer on or off per site. No browsing data is read or transmitted.
+- **Access to all sites** (host access) - used solely to fetch the document you opened, the pictures you
+  ask it to read and the media file you ask it to save, from whichever site or folder they come from, and
+  to read the current site's name for switching the viewer on or off per site. No browsing data is read
+  or transmitted.
 - **scripting** - used only when you choose *OCR every image on this page* or *Save media file for
   translation* from the right-click menu. For the first, the extension adds one script and its stylesheet
   to that one tab, lays the recognized text over the page's pictures, and removes both when you stop. For
@@ -92,11 +96,6 @@ governs.
   and per site, reading preferences, the interface language, whether remote images may load), which OCR
   languages you have downloaded, and the format, page count and last error of the most recent document
   for *Copy diagnostics*.
-- **downloads** (optional, asked only when you first use it) - used solely by *Save media file for
-  translation*: the file you right-clicked, or the media file of the frame you clicked, is saved into the
-  folder you named in the settings, inside your browser's download folder. The download is the browser's
-  own, from the site that serves the file; nothing else is read from your download list, and nothing is
-  sent anywhere.
 <!-- security-posture:end ext-permissions -->
 
 ## Children's privacy

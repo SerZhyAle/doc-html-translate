@@ -101,7 +101,7 @@ When you open a supported document, this extension converts its text into a clea
 - 🔀 **Table of Contents**: Automatically imports the document's original outline as a collapsible navigation tree.
 - 🎨 **Reading Mode**: Customize your reading experience with light, sepia, dark, and night themes, and adjustable font sizes.
 - 🖼️ **Image OCR - translate text in pictures**: Right-click any image ("OCR & translate this image"), open a local image file with the "Open file" button, or turn on "Use OCR for images" for PDFs and EPUBs - the extension recognizes the text baked into pictures and lays it over them as real text, so the browser's "Translate page" translates that too. The plates cover the lettering they replace, and a plate that would span most of a picture is split back into its own lines, so a screenshot or a form keeps its layout. English works offline; more languages download on demand.
-- 💾 **Save media for translation**: Right-click a picture, video, audio or a page and choose "Save media file for translation" - the file is saved into a folder you pick inside the browser's download folder. The permission is asked on first use.
+- 💾 **Save media for translation**: Right-click a picture, video, audio or a page and choose "Save media file for translation" - the file goes to your browser's download folder, with no extra permission.
 - 🔒 **Local conversion**: Documents are converted on your device and never uploaded to any server.
 - 🔄 **One-Click Original**: Instantly toggle back to the browser's native viewer with a single click.
 - 🌐 **Choose sites for automatic reflow**: Automatic interception starts off. If enabled, it covers all sites except those you disable by default, or only the sites you list. Switch modes without losing either list.
@@ -131,12 +131,14 @@ row there in the same commit and run `scripts/security-posture.ps1 -Render`; the
   not read or modify the content of any site.
 - host_permissions (`<all_urls>`): required because the viewer fetches the opened document's bytes for
   local rendering and the file can live on any origin, because the OCR actions fetch the image the user
-  picked (or the pictures of the page the user started them on) from whatever site serves them, and
-  because the toolbar popup reads the active tab's hostname for the per-site on/off toggle. (The redirect
-  itself does not consume host permissions.) No page content is read or transmitted. Because the opened
-  document's origin is unknowable before the user opens the file, no fixed narrower match-pattern set is
-  possible, and `activeTab` cannot grant the cross-origin fetch because the viewer is an extension page
-  rather than the document's origin - so `<all_urls>` is the minimum that works for this single purpose.
+  picked (or the pictures of the page the user started them on) from whatever site serves them, because
+  "Save media file for translation" reads the media file the user chose from the site that serves it and
+  hands it to the browser as a download, and because the toolbar popup reads the active tab's hostname
+  for the per-site on/off toggle. (The redirect itself does not consume host permissions.) No page
+  content is read or transmitted. Because the opened document's origin is unknowable before the user
+  opens the file, no fixed narrower match-pattern set is possible, and `activeTab` cannot grant the
+  cross-origin fetch because the viewer is an extension page rather than the document's origin - so
+  `<all_urls>` is the minimum that works for this single purpose.
 - scripting: only for two actions the user starts from the right-click menu. "OCR every image on this
   page": on that click the extension injects one script and its stylesheet into that one tab; the script
   collects the page's images, draws the recognized text over them, and removes itself when the user
@@ -153,11 +155,6 @@ row there in the same commit and run `scripts/security-posture.ps1 -Render`; the
   interface language and remote-image setting, which OCR languages have been downloaded, and the format,
   page count and last error of the most recent document for the "Copy diagnostics" button. Nothing stored
   leaves the device.
-- downloads (optional): optional, requested only when the user first chooses "Save media file for
-  translation" from the right-click menu or presses "Allow saving files" in the options. It saves the one
-  file the user right-clicked - or the media file found in the clicked frame - into the folder named in
-  the options, inside the browser's download folder, under the file name the browser itself determines.
-  The extension does not read, search or change the user's other downloads.
 <!-- security-posture:end ext-justifications -->
 
 **Do not enumerate the formats in the declarativeNetRequest justification** - Chrome rejected this

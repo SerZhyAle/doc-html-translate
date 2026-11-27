@@ -16,7 +16,7 @@ import * as badge from "./badge.js";
 // The whole-page OCR broker attaches its own message and tab listeners on import; this file only
 // owns the menu entry that starts it. See DEV/plan/done/2026-09-19_page-ocr-overlay.md.
 import { startRun as startPageOcr } from "./page-ocr.js";
-import { saveMedia, requestDownloads, hookDownloadNaming } from "./media-save.js";
+import { saveMedia } from "./media-save.js";
 
 const RULE_HTTPS = 1;
 const RULE_FILE = 2;
@@ -134,7 +134,7 @@ function syncRules() {
 //     unreachable exactly where the feature belongs. On the link context too, so the root item
 //     below always has at least one visible child.
 //   - "Save media file for translation": saves the right-clicked picture, video or audio - or the
-//     file the frame shows, or its largest one - into the folder named in the settings
+//     file the frame shows, or its largest one - into the browser's download folder
 //     (media-save.js). Offered wherever the root is, for the same reason as the page run: on a
 //     photo or video site the click rarely lands on the media element itself.
 //   - "Convert with doc-html-translate": on a link to a supported document, or on the page
@@ -253,9 +253,7 @@ function openInViewer(url) {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === SAVE_MEDIA_MENU_ID) {
-    // The permission request goes first, while the click still counts as the reader's gesture.
-    const granted = requestDownloads();
-    saveMedia(info, tab, granted).catch((e) => console.warn("save media failed", e));
+    saveMedia(info, tab).catch((e) => console.warn("save media failed", e));
     return;
   }
   if (info.menuItemId === OCR_PAGE_MENU_ID) {
@@ -270,11 +268,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === CONVERT_LINK_MENU_ID) openInViewer(info.linkUrl);
   else if (info.menuItemId === CONVERT_PAGE_MENU_ID) openInViewer(info.pageUrl);
 });
-
-// The file-name listener of "Save media file for translation" exists only while the optional
-// downloads permission is held: hooked at start when it is, and the moment it is granted.
-hookDownloadNaming();
-if (chrome.permissions && chrome.permissions.onAdded) chrome.permissions.onAdded.addListener(() => hookDownloadNaming());
 
 chrome.runtime.onInstalled.addListener(() => { syncRules(); setupContextMenu(); });
 chrome.runtime.onStartup.addListener(() => { syncRules(); setupContextMenu(); });

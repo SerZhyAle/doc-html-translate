@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html data-boot>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="savePageTitle">Saving media files</title>
+  <link rel="stylesheet" href="chrome-palette.css">
+  <link rel="stylesheet" href="ui-sizing.css">
+  <link rel="stylesheet" href="ui-components.css">
+  <link rel="stylesheet" href="save.css">
+  <script src="ui-boot.js"></script>
+</head>
+<body>
+  <main>
+    <h1 data-i18n="savePageTitle">Saving media files</h1>
+    <p id="status" role="status" aria-live="polite"></p>
+    <ul id="files"></ul>
+    <p id="hint" class="hint" data-i18n="savePageKeepOpen" hidden>If the browser asks whether to allow several downloads, allow it. Close this tab when the downloads finish.</p>
+    <div class="btn-row">
+      <button type="button" id="close"><span data-glyph="nav.close"></span><span data-i18n="dlgClose">Close</span></button>
+    </div>
+  </main>
+  <script type="module" src="save.js"></script>
+</body>
+</html>

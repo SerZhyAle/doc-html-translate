@@ -516,29 +516,29 @@
     "message": "保存媒体文件以供翻译",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "媒体文件保存文件夹",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "正在保存媒体文件",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "右键菜单“保存媒体文件以供翻译”将文件放在哪里：浏览器下载文件夹中的一个文件夹（例如 Media for translation）。留空则直接保存到下载文件夹。任何类型的文件都按原样保存。",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "正在保存第 {1} 个，共 {2} 个..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "允许保存文件",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - 已保存到下载文件夹",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "已允许保存文件。",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - 无法保存：{2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "尚未允许保存文件：浏览器会在第一次使用时询问一次。",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "如果浏览器询问是否允许多个下载，请选择允许。下载完成后关闭此标签页。",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "不允许保存文件。请在扩展程序设置中允许。",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "没有可保存的内容。请再次使用右键菜单命令。",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "此处未找到可保存的媒体文件。",

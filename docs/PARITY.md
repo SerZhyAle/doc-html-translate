@@ -1905,10 +1905,11 @@ These are by design. Do not "sync" them without a decision - document changes he
   [Report field labels](#report-field-labels).
 - **Saving a web page's media file for translation is extension-only.** The right-click *Save media
   file for translation* takes the clicked picture, video or audio - or the frame's own file, or its
-  largest one - and saves it into a folder inside the browser's download folder (the option
-  `mediaFolder`), behind the optional `downloads` permission ([`media-save.js`](../extension/src/media-save.js),
-  ticket D2HTML-0171). The desktop app has no live page to save from: it is the tool the saved file is
-  then given to, so it needs no counterpart and no `mediaFolder` setting.
+  largest one - and saves it into the browser's download folder under the file's own name, with no
+  permission beyond the host access the extension already holds: the addresses go to a page of the
+  extension ([`save.js`](../extension/src/save.js)) that reads each file and hands it to the browser
+  ([`media-save.js`](../extension/src/media-save.js), ticket D2HTML-0171). The desktop app has no live
+  page to save from: it is the tool the saved file is then given to, so it needs no counterpart.
 - **Whole-page OCR on a live web page is extension-only, and there must not be a desktop
   counterpart.** The reader right-clicks an ordinary page - a webcomic, a scanned archive, a gallery -
   and every picture on it is recognized in place, the plates drawn over the art in the page the reader

@@ -19,12 +19,12 @@ What each package was built as last, what each channel carries, and every public
 
 | Package | Flavor | Kind | Version | Built | Artifact |
 | --- | --- | --- | --- | --- | --- |
-| app | cli | debug | 26.1127.0020 | 2026-11-27 00:20:38+01:00 | build/doc-html-translate.exe |
+| app | cli | debug | 26.1127.0150 | 2026-11-27 01:50:38+01:00 | build/doc-html-translate.exe |
 | app | installer | debug | 26.1126.2321 | 2026-11-26 23:21:53+01:00 | dist/doc-html-translate-setup-26.1126.2321.exe |
 | app | installer | release | 26.1126.2358 | 2026-11-27 00:34:53+01:00 | temp/release-26.1126.2358/dist/doc-html-translate-setup-26.1126.2358.exe |
 | app | msix | release | 26.1126.2358 | 2026-11-27 00:34:43+01:00 | msix/out/SZA.Doc-HTML-Translate_26.1126.2358.0_x64.msix |
 | app | msix-selftest | test | 26.1126.2333 | 2026-11-26 23:33:08+01:00 | msix/out/SerZhyAle.DocHtmlTranslate_26.1126.2333.0_x64_selftest.msix |
-| app | ui | debug | 26.1127.0020 | 2026-11-27 00:20:43+01:00 | build/doc-html-ui.exe |
+| app | ui | debug | 26.1127.0150 | 2026-11-27 01:50:41+01:00 | build/doc-html-ui.exe |
 | extension | unpacked | debug | 26.1126.2333 | 2026-11-26 23:33:58+01:00 | - |
 
 ## History

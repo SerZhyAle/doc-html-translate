@@ -1,41 +1,23 @@
-// "Save media file for translation" (media-save.js, ticket D2HTML-0171): which file a right-click
-// saves, where it goes, and what the reader sees when it cannot be saved. The browser is a fake
-// that records what the module asked of it.
+// "Save media file for translation" (media-save.js, ticket D2HTML-0171): which files a right-click
+// saves, the page that is handed them, the names they get, and what the reader sees when nothing can
+// be saved. The browser is a fake that records what the module asked of it.
 
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { parseHTML } from "linkedom";
 
-const calls = { scripts: [], downloads: [], suggests: [], optionsOpened: 0, stored: [] };
-let stored = {};                 // chrome.storage.local
+const calls = { scripts: [], tabs: [], jobs: [] };
 let frameResult = null;          // what findFrameMedia "returns" from the page
 let carouselResult = null;       // what findCarouselMedia "returns"
 let frameThrows = false;         // the page refuses injection
-let permissionAnswer = true;     // chrome.permissions.request
-let permissionThrows = false;
-let permissionHeld = false;      // chrome.permissions.contains
-const filenameListeners = [];
+let tabThrows = false;           // the browser refuses to open the saving page
 
 globalThis.chrome = {
-  runtime: {
-    id: "ext-id",
-    openOptionsPage: async () => { calls.optionsOpened++; },
-  },
+  runtime: { id: "ext-id", getURL: (p) => `chrome-extension://ext-id/${p}` },
   i18n: { getMessage: () => "" },
-  storage: {
-    local: {
-      get: async (key) => (key in stored ? { [key]: stored[key] } : {}),
-      set: async (obj) => { Object.assign(stored, obj); calls.stored.push(obj); },
-    },
-  },
-  permissions: {
-    request: (p) => {
-      if (permissionThrows) throw new Error("This function must be called during a user gesture");
-      assert.deepEqual(p, { permissions: ["downloads"] });
-      return Promise.resolve(permissionAnswer);
-    },
-    contains: async () => permissionHeld,
-  },
+  storage: { session: { set: async (obj) => { calls.jobs.push(obj); } } },
+  tabs: { create: async (arg) => { if (tabThrows) throw new Error("No window"); calls.tabs.push(arg); return { id: 11 }; } },
   scripting: {
     executeScript: async (arg) => {
       calls.scripts.push(arg);
@@ -50,54 +32,44 @@ globalThis.chrome = {
       return [{ result: undefined }];
     },
   },
-  downloads: {
-    download: async (arg) => { calls.downloads.push(arg); return 7; },
-    onDeterminingFilename: { addListener: (fn) => filenameListeners.push(fn) },
-  },
 };
 
 const media = await import("../src/media-save.js");
-const { normalizeMediaFolder, directFileUrl, clickedMediaUrl, savableUrl, findFrameMedia, findCarouselMedia, saveMedia, requestDownloads } = media;
+const { directFileUrl, clickedMediaUrl, savableUrl, findFrameMedia, findCarouselMedia, saveMedia, fileNameFor, JOB_PREFIX } = media;
 
 beforeEach(() => {
   calls.scripts.length = 0;
-  calls.downloads.length = 0;
-  calls.suggests.length = 0;
-  calls.stored.length = 0;
-  calls.optionsOpened = 0;
-  stored = {};
+  calls.tabs.length = 0;
+  calls.jobs.length = 0;
   frameResult = null;
   carouselResult = null;
   frameThrows = false;
-  permissionAnswer = true;
-  permissionThrows = false;
-  permissionHeld = false;
+  tabThrows = false;
 });
-
-// nameAs fires the browser's file-name question for a download and returns what the module suggested.
-function nameAs(item) {
-  const got = [];
-  for (const fn of filenameListeners) fn({ byExtensionId: "ext-id", ...item }, (s) => got.push(s));
-  return got;
-}
 
 function notices() {
   return calls.scripts.filter((s) => s.func && s.func.name === "showPageNotice").map((s) => s.args[0]);
 }
 
-test("the folder is made relative and safe for the downloads API", () => {
-  assert.equal(normalizeMediaFolder("Media for translation"), "Media for translation");
-  assert.equal(normalizeMediaFolder("  a\\b//c/ "), "a/b/c");
-  assert.equal(normalizeMediaFolder("C:\\Users\\me\\Translate"), "Users/me/Translate");
-  assert.equal(normalizeMediaFolder("../../etc/./x"), "etc/x");
-  assert.equal(normalizeMediaFolder("bad<>:\"|?*name. "), "bad_______name");
-  assert.equal(normalizeMediaFolder("con/aux1/nul"), "_con/aux1/_nul");
-  assert.equal(normalizeMediaFolder(""), "");
-  assert.equal(normalizeMediaFolder(undefined), "");
-  assert.ok(normalizeMediaFolder("x".repeat(500)).length <= 200);
+// lastJob is the addresses handed to the saving page, with the key its tab was opened on.
+function lastJob() {
+  const [key, job] = Object.entries(calls.jobs.at(-1))[0];
+  assert.ok(key.startsWith(JOB_PREFIX));
+  assert.equal(calls.tabs.at(-1).url, `chrome-extension://ext-id/src/save.html#${key.slice(JOB_PREFIX.length)}`);
+  return job.urls;
+}
+
+test("the extension asks for no downloads permission, declared or optional", () => {
+  const manifest = JSON.parse(fs.readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
+  const asked = [...manifest.permissions, ...(manifest.optional_permissions || [])];
+  assert.ok(!asked.includes("downloads"));
+  for (const file of ["media-save.js", "save.js", "background.js", "options.js"]) {
+    const source = fs.readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8");
+    assert.ok(!/chrome\.(downloads|permissions)\b/.test(source), `${file} calls no downloads or permissions API`);
+  }
 });
 
-test("only addresses the downloads API can fetch are savable; a page's blob is not", () => {
+test("only addresses the extension can read are savable; a page's blob is not", () => {
   assert.ok(savableUrl("https://cdn.test/a.jpg"));
   assert.ok(savableUrl("data:image/png;base64,AAAA"));
   assert.ok(savableUrl("file:///C:/x.mkv"));
@@ -177,56 +149,57 @@ test("a page saves its largest file: a measured size first, an estimate where no
   assert.equal(findFrameMedia(), null);
 });
 
-test("a right-clicked picture is saved into the default folder under the browser's own file name", async () => {
+test("a right-clicked picture goes to a saving page in a background tab", async () => {
   const info = { menuItemId: "save-media", mediaType: "image", srcUrl: "https://cdn.test/p.jpg?stp=1", frameId: 0 };
-  const res = await saveMedia(info, { id: 5 }, requestDownloads());
+  const res = await saveMedia(info, { id: 5, index: 2 });
   assert.equal(res.ok, true);
-  assert.deepEqual(calls.downloads, [{ url: "https://cdn.test/p.jpg?stp=1", conflictAction: "uniquify", saveAs: false }]);
+  assert.deepEqual(lastJob(), ["https://cdn.test/p.jpg?stp=1"]);
+  assert.deepEqual({ ...calls.tabs[0], url: undefined }, { url: undefined, active: false, openerTabId: 5, index: 3 });
   assert.ok(!calls.scripts.some((s) => s.func && s.func.name === "findFrameMedia"), "the clicked picture needs no page scan");
-  assert.deepEqual(nameAs({ url: "https://cdn.test/p.jpg?stp=1", filename: "p.jpg" }),
-    [{ filename: "Media for translation/p.jpg", conflictAction: "uniquify" }]);
-  // Asked once: a second question about the same address is someone else's download.
-  assert.deepEqual(nameAs({ url: "https://cdn.test/p.jpg?stp=1", filename: "p.jpg" }), []);
-  assert.match(notices().at(-1), /Downloads\/Media for translation/);
-});
-
-test("other downloads keep the name the browser chose", async () => {
-  await saveMedia({ mediaType: "image", srcUrl: "https://cdn.test/q.png" }, { id: 5 }, Promise.resolve(true));
-  assert.deepEqual(nameAs({ url: "https://cdn.test/q.png", filename: "q.png", byExtensionId: undefined }), []);
-  assert.deepEqual(nameAs({ url: "https://elsewhere.test/r.zip", filename: "r.zip" }), []);
-});
-
-test("the stored folder is used, and an empty one saves straight into the download folder", async () => {
-  stored.options = { mediaFolder: "Translate/In" };
-  await saveMedia({ mediaType: "video", srcUrl: "https://cdn.test/v.mp4" }, { id: 5 }, Promise.resolve(true));
-  assert.deepEqual(nameAs({ url: "https://cdn.test/v.mp4", filename: "v.mp4" }),
-    [{ filename: "Translate/In/v.mp4", conflictAction: "uniquify" }]);
-
-  stored.options = { mediaFolder: "" };
-  await saveMedia({ mediaType: "audio", srcUrl: "https://cdn.test/a.ogg" }, { id: 5 }, Promise.resolve(true));
-  assert.deepEqual(nameAs({ url: "https://cdn.test/a.ogg", filename: "a.ogg" }), []);
   assert.equal(notices().at(-1), "Saving the media file to Downloads");
 });
 
 test("a click beside the media scans the clicked frame and saves what it found", async () => {
   frameResult = { url: "https://cdn.test/found.jpg", from: "frame" };
-  const res = await saveMedia({ frameId: 3, pageUrl: "https://site.test/p/1" }, { id: 9 }, Promise.resolve(true));
+  const res = await saveMedia({ frameId: 3, pageUrl: "https://site.test/p/1" }, { id: 9 });
   assert.equal(res.ok, true);
   const scan = calls.scripts.find((s) => s.func && s.func.name === "findFrameMedia");
   assert.deepEqual(scan.target, { tabId: 9, frameIds: [3] });
-  assert.equal(calls.downloads.at(-1).url, "https://cdn.test/found.jpg");
+  assert.deepEqual(lastJob(), ["https://cdn.test/found.jpg"]);
 });
 
 test("a frame the extension cannot read falls back to its address only when that names a file", async () => {
   frameThrows = true;
-  await saveMedia({ frameId: 0, pageUrl: "https://x.test/files/scan.tiff" }, { id: 9 }, Promise.resolve(true));
-  assert.equal(calls.downloads.at(-1).url, "https://x.test/files/scan.tiff");
+  await saveMedia({ frameId: 0, pageUrl: "https://x.test/files/scan.tiff" }, { id: 9 });
+  assert.deepEqual(lastJob(), ["https://x.test/files/scan.tiff"]);
 
-  calls.downloads.length = 0;
-  const res = await saveMedia({ frameId: 0, pageUrl: "https://x.test/page.php" }, { id: 9 }, Promise.resolve(true));
+  calls.tabs.length = 0;
+  const res = await saveMedia({ frameId: 0, pageUrl: "https://x.test/page.php" }, { id: 9 });
   assert.deepEqual(res, { ok: false, reason: "none" });
-  assert.equal(calls.downloads.length, 0);
+  assert.equal(calls.tabs.length, 0);
   assert.equal(notices().at(-1), "No media file found here to save.");
+});
+
+test("a file takes the server's name, else the address's, with the type's extension when it has none", () => {
+  const url = "https://cdn.test/v/1_n.jpg?stp=1";
+  assert.equal(fileNameFor({ url, disposition: null, type: "image/jpeg" }), "1_n.jpg");
+  assert.equal(fileNameFor({ url, disposition: 'attachment; filename="My photo.png"' }), "My photo.png");
+  assert.equal(fileNameFor({ url, disposition: "attachment; filename*=UTF-8''%D1%84%D0%BE%D1%82%D0%BE.webp" }), "фото.webp");
+  assert.equal(fileNameFor({ url, disposition: "inline; filename=plain.gif" }), "plain.gif");
+  assert.equal(fileNameFor({ url: "https://cdn.test/media/abc", type: "video/mp4; codecs=avc1" }), "abc.mp4");
+  assert.equal(fileNameFor({ url: "data:image/png;base64,AAAA", type: "image/png" }), "media.png");
+  assert.equal(fileNameFor({ url: "https://cdn.test/", type: "application/x-unknown" }), "media");
+  assert.equal(fileNameFor({ url: "https://x.test/data/book.weird-ext" }), "book.weird-ext");
+});
+
+test("a name from outside cannot leave the download folder or break on Windows", () => {
+  const url = "https://cdn.test/x.jpg";
+  assert.equal(fileNameFor({ url, disposition: 'attachment; filename="..\\\\..\\\\evil.exe"' }), "_.._evil.exe");
+  assert.equal(fileNameFor({ url, disposition: 'attachment; filename="a<b>:c|?.png"' }), "a_b_c_.png");
+  assert.equal(fileNameFor({ url, disposition: 'attachment; filename="con.png"' }), "_con.png");
+  assert.equal(fileNameFor({ url: "https://cdn.test/%2E%2E%2Fsecret.txt" }), "_secret.txt");
+  const long = fileNameFor({ url: `https://cdn.test/${"x".repeat(400)}.jpeg` });
+  assert.ok(long.length <= 150 && long.endsWith(".jpeg"));
 });
 
 // fakeCarousel is a page whose slider keeps only the current slide and its neighbours, 600px wide,
@@ -301,47 +274,18 @@ test("only the clicked file's own carousel is expanded, and a grid of pictures i
   assert.equal(await findCarouselMedia("", 0), null);
 });
 
-test("every file of a carousel is saved under the browser's own names", async () => {
+test("every file of a carousel goes to a saving page in front", async () => {
   carouselResult = { urls: ["https://cdn.test/1_n.jpg", "https://cdn.test/2_n.jpg", "blob:https://site.test/3"] };
-  const res = await saveMedia({ frameId: 0, mediaType: "image", srcUrl: "https://cdn.test/1_n.jpg" }, { id: 5 }, Promise.resolve(true));
+  const res = await saveMedia({ frameId: 0, mediaType: "image", srcUrl: "https://cdn.test/1_n.jpg" }, { id: 5 });
   assert.deepEqual(res.urls, ["https://cdn.test/1_n.jpg", "https://cdn.test/2_n.jpg"]);
-  assert.deepEqual(calls.downloads.map((d) => d.url), res.urls);
-  assert.deepEqual(nameAs({ url: "https://cdn.test/2_n.jpg", filename: "2_n.jpg" }),
-    [{ filename: "Media for translation/2_n.jpg", conflictAction: "uniquify" }]);
-  assert.equal(notices().at(-1), "Saving the media files (2) to Downloads/Media for translation");
+  assert.deepEqual(lastJob(), res.urls);
+  assert.equal(calls.tabs[0].active, true);
+  assert.equal(notices().at(-1), "Saving the media files (2) to Downloads");
 });
 
-test("nothing is saved without the permission: a refusal says so, a browser that would not ask opens the settings", async () => {
-  permissionAnswer = false;
-  const refused = await saveMedia({ mediaType: "image", srcUrl: "https://cdn.test/p.jpg" }, { id: 5 }, requestDownloads());
-  assert.deepEqual(refused, { ok: false, reason: "permission" });
-  assert.equal(calls.downloads.length, 0);
-  assert.match(notices().at(-1), /not allowed/);
-
-  permissionThrows = true;
-  const unasked = await saveMedia({ mediaType: "image", srcUrl: "https://cdn.test/p.jpg" }, { id: 5 }, requestDownloads());
-  assert.deepEqual(unasked, { ok: false, reason: "permission" });
-  assert.equal(calls.optionsOpened, 1);
-  assert.equal(stored.uiState.page, "general", "the settings open on the page with the folder and the button");
-  assert.equal(calls.downloads.length, 0);
-});
-
-test("a permission held already counts even when the browser would not ask from the menu", async () => {
-  permissionThrows = true;
-  permissionHeld = true;
-  assert.equal(await requestDownloads(), true);
-  permissionHeld = false;
-  assert.equal(await requestDownloads(), null);
-});
-
-test("a download the browser refuses is reported on the page", async () => {
-  const download = chrome.downloads.download;
-  chrome.downloads.download = async () => { throw new Error("Invalid URL"); };
-  try {
-    const res = await saveMedia({ mediaType: "image", srcUrl: "https://cdn.test/p.jpg" }, { id: 5 }, Promise.resolve(true));
-    assert.deepEqual(res, { ok: false, reason: "download" });
-    assert.equal(notices().at(-1), "Could not save the media file: Invalid URL");
-  } finally {
-    chrome.downloads.download = download;
-  }
+test("a saving page the browser will not open is reported on the page", async () => {
+  tabThrows = true;
+  const res = await saveMedia({ mediaType: "image", srcUrl: "https://cdn.test/p.jpg" }, { id: 5 });
+  assert.deepEqual(res, { ok: false, reason: "page" });
+  assert.equal(notices().at(-1), "Could not save the media file: No window");
 });

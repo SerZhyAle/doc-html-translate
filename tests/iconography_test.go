@@ -120,7 +120,7 @@ func TestEditionGlyphTablesAreTheVendoredDrawings(t *testing.T) {
 func TestExtensionDrawsOnlyTabledGlyphs(t *testing.T) {
 	table := extensionGlyphs(t)
 	used := map[string]bool{}
-	for _, f := range []string{"viewer.html", "popup.html", "options.html", "ocr.html"} {
+	for _, f := range []string{"viewer.html", "popup.html", "options.html", "ocr.html", "save.html"} {
 		for _, m := range regexp.MustCompile(`data-glyph="([^"]+)"`).FindAllStringSubmatch(readRepoFile(t, "extension", "src", f), -1) {
 			used[m[1]] = true
 		}

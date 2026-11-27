@@ -25,22 +25,12 @@ test("the interface settings and the remembered page and groups round-trip", () 
   assert.deepEqual(changedSettings(makeSettingsFile(DEFAULT_OPTIONS, "", DEFAULT_UI_STATE), restored).sort(), ["chromeTheme", "inputProfile", "textSize", "uiLang", "uiSize", "ui"].sort());
 });
 
-test("the media folder round-trips, a file from before it still imports, and an unsafe one is refused", () => {
-  const source = { ...DEFAULT_OPTIONS, mediaFolder: "Translate/In" };
-  const restored = validateSettingsFile(JSON.parse(JSON.stringify(makeSettingsFile(source, ""))));
-  assert.equal(restored.options.mediaFolder, "Translate/In");
-
-  const older = makeSettingsFile(DEFAULT_OPTIONS, "");
-  delete older.options.mediaFolder;
-  assert.ok(!("mediaFolder" in validateSettingsFile(older).options));
-
-  for (const bad of ["../outside", "C:\\abs", 5]) {
-    const file = makeSettingsFile(DEFAULT_OPTIONS, "");
-    file.options.mediaFolder = bad;
-    assert.throws(() => validateSettingsFile(file), /media folder/);
-  }
-  // A stored value typed before normalization is exported in its safe form, not refused.
-  assert.equal(makeSettingsFile({ ...DEFAULT_OPTIONS, mediaFolder: " a\\b " }, "").options.mediaFolder, "a/b");
+test("a file that carries the retired media folder still imports, and the value is dropped", () => {
+  const file = makeSettingsFile(DEFAULT_OPTIONS, "");
+  assert.ok(!("mediaFolder" in file.options));
+  file.options.mediaFolder = "Translate/In";
+  const restored = validateSettingsFile(JSON.parse(JSON.stringify(file)));
+  assert.ok(!("mediaFolder" in restored.options));
 });
 
 test("page viewports stay out of the file: they belong to one device", () => {

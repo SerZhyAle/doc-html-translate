@@ -198,12 +198,10 @@ real, translatable HTML, so one **Translate page** covers pictures too. Ways in:
   just the page -> **Save media file for translation**. The extension saves the item you clicked; if
   you clicked beside it, the file the frame shows by itself (an image or a video opened directly), or
   else the largest file of the frame - by the size the browser measured, or estimated from the
-  picture's pixels or the video's length. Any file type is saved as it is, under the name the browser
-  gives it, into the folder set in Options (*Folder for saving media files*, default
-  `Media for translation`) inside the browser's download folder - an extension cannot write anywhere
-  else. The browser asks once for the optional *downloads* permission, the first time; Options shows
-  whether it is held and offers **Allow saving files**. A streamed video (a `blob:` address) cannot
-  be saved this way.
+  picture's pixels or the video's length. Any file type is saved as it is, under the file's own name,
+  into the browser's download folder. No extra permission is asked for: a page of the extension opens
+  beside your tab, reads the file with the access the extension already has and hands it to the
+  browser, then closes itself. A streamed video (a `blob:` address) cannot be saved this way.
 - **A local image file:** click **Open file** in the viewer (or *Open a document..* in the popup) and pick
   a PNG / JPEG / GIF / BMP / WebP / JPEG XL (.jxl). It is OCR'd on open regardless of the *Use OCR for images* toggle -
   opening a bare image is itself the request to read its text. There is deliberately **no** file-type

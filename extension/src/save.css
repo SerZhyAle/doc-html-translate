@@ -1,0 +1,7 @@
+/* save.html - the short-lived page that saves the files of "Save media file for translation". */
+body { margin: 0; background: var(--bg); color: var(--text-primary); font: var(--fs) / 1.5 system-ui, sans-serif; }
+main { max-width: calc(720px * var(--s)); margin: 0 auto; padding: calc(24px * var(--s)) var(--pad); }
+h1 { font-size: calc(var(--fs) * 1.4); margin: 0 0 calc(12px * var(--s)); }
+#files { margin: 0 0 calc(12px * var(--s)); padding-inline-start: calc(20px * var(--s)); overflow-wrap: anywhere; }
+.hint { color: var(--text-muted); }
+.btn-row { margin-top: var(--pad); }

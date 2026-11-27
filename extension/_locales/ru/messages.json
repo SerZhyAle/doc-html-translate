@@ -532,29 +532,29 @@
     "message": "Сохранить медиафайл для перевода",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "Папка для сохранения медиафайлов",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "Сохранение медиафайлов",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "Куда пункт контекстного меню «Сохранить медиафайл для перевода» кладёт файл: папка внутри папки загрузок браузера (например, Media for translation). Оставьте поле пустым, чтобы сохранять прямо в папку загрузок. Файл любого типа сохраняется как есть.",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "Сохраняется {1} из {2}..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "Разрешить сохранение файлов",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - сохранён в папку загрузок",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "Сохранение файлов разрешено.",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - не удалось сохранить: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "Сохранение файлов ещё не разрешено: браузер спросит один раз, при первом использовании.",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "Если браузер спросит, разрешить ли несколько загрузок, разрешите. Закройте эту вкладку, когда загрузки завершатся.",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "Сохранение файлов не разрешено. Разрешите его в настройках расширения.",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "Сохранять нечего. Вызовите команду контекстного меню ещё раз.",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "Здесь не найден медиафайл для сохранения.",

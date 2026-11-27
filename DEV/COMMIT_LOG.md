@@ -1750,3 +1750,68 @@ Changed files:
 - ur/index.html
 - zh/index.html
 
+| 2026-11-27 01:59:11 | main | cfdd76e | release(extension): 26.1127.133 - save media files without the downloads permission
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> |
+
+Changed files:
+- DEV/CHANGELOG.md
+- DEV/releases/RELEASES.md
+- DEV/releases/builds.json
+- ar/index.html
+- bn/index.html
+- configs/check-placement.jsonl
+- de/index.html
+- docs/GLYPH-MAP.md
+- docs/PARITY.md
+- docs/SECURITY_POSTURE.md
+- docs/contracts/CAPTURE-OUTPUT.md
+- docs/release-notes.json
+- docs/security-posture.json
+- es/index.html
+- extension-privacy.html
+- extension.html
+- extension/README.md
+- extension/_locales/ar/messages.json
+- extension/_locales/bn/messages.json
+- extension/_locales/de/messages.json
+- extension/_locales/en/messages.json
+- extension/_locales/es/messages.json
+- extension/_locales/fr/messages.json
+- extension/_locales/hi/messages.json
+- extension/_locales/it/messages.json
+- extension/_locales/pt/messages.json
+- extension/_locales/ru/messages.json
+- extension/_locales/uk/messages.json
+- extension/_locales/ur/messages.json
+- extension/_locales/zh_CN/messages.json
+- extension/manifest.json
+- extension/src/background.js
+- extension/src/defaults.js
+- extension/src/media-save.js
+- extension/src/options.html
+- extension/src/options.js
+- extension/src/save-file.js
+- extension/src/save.css
+- extension/src/save.html
+- extension/src/save.js
+- extension/src/settings-transfer.js
+- extension/store/LISTING.md
+- extension/store/PRIVACY.md
+- extension/test/i18n.test.mjs
+- extension/test/media-save.test.mjs
+- extension/test/options-structure.test.mjs
+- extension/test/settings-transfer.test.mjs
+- fr/index.html
+- hi/index.html
+- index.html
+- it/index.html
+- pt/index.html
+- release-notes.html
+- ru/index.html
+- tests/iconography_test.go
+- tools/uicheck/save-media-e2e.mjs
+- uk/index.html
+- ur/index.html
+- zh/index.html
+

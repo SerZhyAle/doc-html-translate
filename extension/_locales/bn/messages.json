@@ -516,29 +516,29 @@
     "message": "অনুবাদের জন্য মিডিয়া ফাইল সংরক্ষণ করুন",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "মিডিয়া ফাইল সংরক্ষণের ফোল্ডার",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "মিডিয়া ফাইল সংরক্ষণ করা হচ্ছে",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "রাইট-ক্লিক মেনুর \"অনুবাদের জন্য মিডিয়া ফাইল সংরক্ষণ করুন\" ফাইলটি কোথায় রাখে: ব্রাউজারের ডাউনলোড ফোল্ডারের ভেতরে একটি ফোল্ডার (যেমন Media for translation)। সরাসরি ডাউনলোড ফোল্ডারে সংরক্ষণ করতে এটি খালি রাখুন। যেকোনো ধরনের ফাইল যেমন আছে তেমনই সংরক্ষিত হয়।",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "{2}টির মধ্যে {1}টি সংরক্ষণ করা হচ্ছে..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "ফাইল সংরক্ষণের অনুমতি দিন",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - ডাউনলোড ফোল্ডারে সংরক্ষিত",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "ফাইল সংরক্ষণের অনুমতি আছে।",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - সংরক্ষণ করা যায়নি: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "ফাইল সংরক্ষণের অনুমতি এখনও নেই: ব্রাউজার প্রথমবার একবার জিজ্ঞাসা করে।",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "ব্রাউজার একাধিক ডাউনলোডের অনুমতি চাইলে অনুমতি দিন। ডাউনলোড শেষ হলে এই ট্যাব বন্ধ করুন।",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "ফাইল সংরক্ষণের অনুমতি নেই। এক্সটেনশনের সেটিংসে অনুমতি দিন।",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "সংরক্ষণের কিছু নেই। কনটেক্সট মেনুর কমান্ডটি আবার ব্যবহার করুন।",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "এখানে সংরক্ষণ করার মতো কোনো মিডিয়া ফাইল পাওয়া যায়নি।",

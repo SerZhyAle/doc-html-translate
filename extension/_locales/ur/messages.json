@@ -516,29 +516,29 @@
     "message": "ترجمے کے لیے میڈیا فائل محفوظ کریں",
     "description": "Right-click context-menu item that saves the clicked picture, video or audio - or the largest media file of the page or frame - into the folder set in the options."
   },
-  "optMediaFolder": {
-    "message": "میڈیا فائلیں محفوظ کرنے کا فولڈر",
-    "description": "Options page: label of the text field naming the folder media files are saved to."
+  "savePageTitle": {
+    "message": "میڈیا فائلیں محفوظ ہو رہی ہیں",
+    "description": "Title of the page that saves the media files."
   },
-  "optMediaFolderHint": {
-    "message": "رائٹ کلک مینو کا \"ترجمے کے لیے میڈیا فائل محفوظ کریں\" فائل کہاں رکھتا ہے: براؤزر کے ڈاؤن لوڈ فولڈر کے اندر ایک فولڈر (مثلاً Media for translation)۔ سیدھے ڈاؤن لوڈ فولڈر میں محفوظ کرنے کے لیے اسے خالی چھوڑیں۔ ہر قسم کی فائل جیسی ہے ویسی ہی محفوظ ہوتی ہے۔",
-    "description": "Options page: hint under the media folder field. \"Media for translation\" is the default folder name and stays in English."
+  "savePageSaving": {
+    "message": "{2} میں سے {1} محفوظ ہو رہی ہے..",
+    "description": "Progress on the saving page. {1} is the file number, {2} the number of files."
   },
-  "optMediaAllow": {
-    "message": "فائلیں محفوظ کرنے کی اجازت دیں",
-    "description": "Options page: button that asks the browser for permission to save files."
+  "savePageItemSaved": {
+    "message": "{1} - ڈاؤن لوڈ فولڈر میں محفوظ ہو گئی",
+    "description": "One saved file on the saving page. {1} is the file name."
   },
-  "optMediaAllowed": {
-    "message": "فائلیں محفوظ کرنے کی اجازت ہے۔",
-    "description": "Options page: status line when the browser lets the extension save files."
+  "savePageItemFailed": {
+    "message": "{1} - محفوظ نہیں ہو سکی: {2}",
+    "description": "One file that could not be saved. {1} is the file name, {2} the reason."
   },
-  "optMediaNotAllowed": {
-    "message": "فائلیں محفوظ کرنے کی ابھی اجازت نہیں: براؤزر پہلی بار ایک دفعہ پوچھتا ہے۔",
-    "description": "Options page: status line when the browser has not yet let the extension save files."
+  "savePageKeepOpen": {
+    "message": "اگر براؤزر کئی ڈاؤن لوڈز کی اجازت پوچھے تو اجازت دیں۔ ڈاؤن لوڈ مکمل ہونے پر یہ ٹیب بند کر دیں۔",
+    "description": "Hint on the saving page when several files are saved."
   },
-  "mediaSavePermissionRefused": {
-    "message": "فائلیں محفوظ کرنے کی اجازت نہیں۔ ایکسٹینشن کی ترتیبات میں اجازت دیں۔",
-    "description": "Notice shown on the page when the reader refused the file-saving permission."
+  "savePageNothing": {
+    "message": "محفوظ کرنے کو کچھ نہیں۔ سیاق و سباق کے مینو کی کمانڈ دوبارہ استعمال کریں۔",
+    "description": "Shown when the saving page is opened with nothing left to save."
   },
   "mediaSaveNoneFound": {
     "message": "یہاں محفوظ کرنے کے لیے کوئی میڈیا فائل نہیں ملی۔",

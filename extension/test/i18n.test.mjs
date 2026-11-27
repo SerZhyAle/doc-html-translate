@@ -57,7 +57,7 @@ test("every data-i18n key used in markup is defined", () => {
   // (ui-help.js); they are resolved at run time, so only this scan sees a key that does not exist.
   const attr = /data-(?:i18n(?:-title|-ph|-aria)?|opt-help|opt-name)="([A-Za-z0-9_]+)"/g;
   let seen = 0;
-  for (const file of ["viewer.html", "options.html", "popup.html", "ocr.html"]) {
+  for (const file of ["viewer.html", "options.html", "popup.html", "ocr.html", "save.html"]) {
     const html = fs.readFileSync(path.join(srcDir, file), "utf8");
     for (const m of html.matchAll(attr)) {
       seen++;
@@ -126,7 +126,7 @@ test("the popup, options and OCR page styles mirror for right-to-left languages"
     assert.ok(css.length > 200, `${file}: no styles found - the scan is wrong`);
     for (const line of css.split("\n")) assert.doesNotMatch(line, physical, `${file}: ${line.trim()}`);
   }
-  for (const file of ["popup.html", "options.html", "ocr.html"]) {
+  for (const file of ["popup.html", "options.html", "ocr.html", "save.html"]) {
     const html = fs.readFileSync(path.join(srcDir, file), "utf8");
     assert.doesNotMatch(html, /<style[\s>]/, `${file}: styles belong in the shared sheets, not inline`);
     for (const m of html.matchAll(/\sstyle="([^"]*)"/g)) assert.doesNotMatch(m[1], physical, `${file}: ${m[1]}`);

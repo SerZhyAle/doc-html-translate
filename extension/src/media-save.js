@@ -1,6 +1,6 @@
 // media-save.js - "Save media file for translation", the right-click action that puts the file a page
-// shows into a folder the reader named in the settings, for translating it somewhere else (the
-// desktop app, an OCR tool). Ticket D2HTML-0171.
+// shows into the browser's download folder, for translating it somewhere else (the desktop app, an
+// OCR tool). Ticket D2HTML-0171.
 //
 // What is saved, in order:
 //   0. every large file of a carousel, when the clicked file is one of its slides or, with no file
@@ -12,42 +12,29 @@
 //   4. when the frame cannot be read at all, its own address if that names a file rather than a page.
 // Any extension is saved as it is; nothing is converted.
 //
-// Where: the browser lets an extension write only inside its download folder, so the setting is a
-// folder there ("" = the download folder itself). The browser picks the file name - from the
-// server's headers, the address and the type - and this module only puts the folder in front of it.
-//
-// The "downloads" permission is optional: declaring it outright would make the browser switch the
-// extension off on update for every existing user until they accept a new warning. It is asked for
-// the first time the action is used (or from the settings page), and never before.
+// How: no extra permission. The extension's own page (save.html) reads the file with the host access
+// the extension already holds and hands it to the browser behind a link with the `download` attribute
+// (save-file.js), under the file's own name. A service worker has no document for such a link, so this
+// module only finds the addresses, leaves them in session storage and opens that page.
 
-import { DEFAULT_OPTIONS } from "./defaults.js";
-
-export const DOWNLOADS_PERMISSION ={ permissions: ["downloads"] };
 const NOTICE_MS = 4000;
-const PENDING_MS = 120000;
 const CAROUSEL_STEP_MS = 400;
-const MAX_FOLDER_LENGTH = 200;
+const MAX_NAME_LENGTH = 150;
+const FALLBACK_NAME = "media";
+// Where the addresses wait for the page that saves them.
+export const JOB_PREFIX = "mediaJob:";
 const WEB_PAGE_EXTS = new Set(["html", "htm", "xhtml", "shtml", "php", "asp", "aspx", "jsp", "cgi"]);
 const WINDOWS_RESERVED = /^(con|prn|aux|nul|com\d|lpt\d)$/i;
+// The extension a file gets when neither the server nor the address names one.
+const TYPE_EXTS = {
+  "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp", "image/avif": "avif",
+  "image/jxl": "jxl", "image/bmp": "bmp", "image/tiff": "tif", "image/svg+xml": "svg",
+  "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogv", "video/quicktime": "mov",
+  "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/wav": "wav", "audio/webm": "weba",
+  "application/pdf": "pdf",
+};
 
-// normalizeMediaFolder turns what the reader typed into a folder path the downloads API accepts:
-// relative, "/"-separated, no drive letter, no "." or ".." segment, no character Windows refuses in a
-// name, no trailing dot or space. An empty result means the download folder itself.
-export function normalizeMediaFolder(raw) {
-  const text = String(raw ?? "").trim().replace(/^[a-zA-Z]:/, "");
-  const parts = [];
-  for (const piece of text.split(/[\\/]+/)) {
-    let seg = piece.replace(/[\u0000-\u001f<>:"|?*]/g, "_").trim().replace(/^\.+/, "").replace(/[. ]+$/, "");
-    if (!seg) continue;
-    if (WINDOWS_RESERVED.test(seg)) seg = `_${seg}`;
-    parts.push(seg);
-  }
-  let out = parts.join("/");
-  if (out.length > MAX_FOLDER_LENGTH) out = out.slice(0, MAX_FOLDER_LENGTH).replace(/[/. ]+$/, "");
-  return out;
-}
-
-// savableUrl says whether the downloads API can fetch an address on its own. A blob: address belongs
+// savableUrl says whether the extension can read an address on its own. A blob: address belongs
 // to the page that made it (a streamed video is one) and is not reachable from outside the page.
 export function savableUrl(url) {
   return typeof url === "string" && /^(https?:|file:|data:)/i.test(url);
@@ -284,30 +271,51 @@ function notify(tabId, text) {
     target: { tabId },
     func: showPageNotice,
     args: [text, NOTICE_MS],
-  }).catch(() => { /* a page the extension may not touch - the download bar still shows the file */ });
+  }).catch(() => { /* a page the extension may not touch - the saving page still says what happened */ });
 }
 
-// Downloads this module started, by address, with the folder each goes to. The browser asks for the
-// file name a moment after the download starts; the entry is dropped then, or after a while if the
-// download never got that far.
-const pendingFolders = new Map();
-let namingHooked = false;
-
-function nameDownload(item, suggest) {
-  if (!item || item.byExtensionId !== chrome.runtime.id || !pendingFolders.has(item.url)) return;
-  const folder = pendingFolders.get(item.url);
-  pendingFolders.delete(item.url);
-  if (!folder) return;
-  const name = String(item.filename || "").split(/[\\/]/).pop() || "download";
-  suggest({ filename: `${folder}/${name}`, conflictAction: "uniquify" });
+// dispositionName is the file name a server offers in Content-Disposition, "" when it offers none.
+function dispositionName(value) {
+  const encoded = /filename\*\s*=\s*[\w-]*'[\w-]*'([^;]+)/i.exec(value);
+  if (encoded) {
+    try { return decodeURIComponent(encoded[1].trim()); } catch { /* a broken escape - the plain name */ }
+  }
+  const quoted = /filename\s*=\s*"((?:\\.|[^"\\])*)"/i.exec(value);
+  if (quoted) return quoted[1].replace(/\\(.)/g, "$1");
+  const bare = /filename\s*=\s*([^;"]+)/i.exec(value);
+  return bare ? bare[1].trim() : "";
 }
 
-// hookDownloadNaming registers the file-name listener once the downloads API is there - at start when
-// the permission is already held, or right after it is granted.
-export function hookDownloadNaming() {
-  if (namingHooked || !globalThis.chrome || !chrome.downloads || !chrome.downloads.onDeterminingFilename) return;
-  chrome.downloads.onDeterminingFilename.addListener(nameDownload);
-  namingHooked = true;
+// addressName is the last path segment of a web or file address; a data: address names nothing.
+function addressName(url) {
+  let parsed;
+  try { parsed = new URL(url); } catch { return ""; }
+  if (!/^(https?|file):$/.test(parsed.protocol)) return "";
+  const last = parsed.pathname.split("/").pop() || "";
+  try { return decodeURIComponent(last); } catch { return last; }
+}
+
+// cleanName makes one file name Windows accepts: no separator or reserved character, no leading dot,
+// no trailing dot or space, bounded length with the extension kept.
+function cleanName(raw) {
+  let name = String(raw || "").replace(/[\u0000-\u001f<>:"/\\|?*]+/g, "_").trim().replace(/^\.+/, "").replace(/[. ]+$/, "");
+  if (!name) return "";
+  if (WINDOWS_RESERVED.test(name.split(".")[0])) name = `_${name}`;
+  if (name.length > MAX_NAME_LENGTH) {
+    const dot = name.lastIndexOf(".");
+    const ext = dot > 0 && name.length - dot <= 12 ? name.slice(dot) : "";
+    name = name.slice(0, MAX_NAME_LENGTH - ext.length).replace(/[. ]+$/, "") + ext;
+  }
+  return name;
+}
+
+// fileNameFor is the name a saved file gets: the server's, else the address's, else "media", with an
+// extension from the content type when the name carries none. The name is otherwise left as it is.
+export function fileNameFor({ url, disposition, type }) {
+  const name = cleanName(dispositionName(String(disposition || ""))) || cleanName(addressName(url)) || FALLBACK_NAME;
+  if (/\.[A-Za-z0-9]{1,8}$/.test(name)) return name;
+  const ext = TYPE_EXTS[String(type || "").split(";")[0].trim().toLowerCase()];
+  return ext ? `${name}.${ext}` : name;
 }
 
 // pickTargets finds what to save for one right-click: a whole carousel, else one file, else nothing.
@@ -333,89 +341,30 @@ async function pickTargets(info, tab) {
   }
 }
 
-// mediaFolderOption is the stored folder, or the default one for a profile that never set it.
-async function mediaFolderOption() {
-  let raw = DEFAULT_OPTIONS.mediaFolder;
-  try {
-    const got = await chrome.storage.local.get("options");
-    if (got.options && typeof got.options.mediaFolder === "string") raw = got.options.mediaFolder;
-  } catch { /* storage unreadable - the default folder */ }
-  return normalizeMediaFolder(raw);
-}
-
-// openMediaSettings opens the settings on the page that holds the folder and the permission button.
-async function openMediaSettings() {
-  try {
-    const got = await chrome.storage.local.get("uiState");
-    const state = got.uiState && typeof got.uiState === "object" ? got.uiState : {};
-    await chrome.storage.local.set({ uiState: { ...state, page: "general" } });
-  } catch { /* the page opens where it was last left */ }
-  try { await chrome.runtime.openOptionsPage(); } catch { /* nothing else to show */ }
-}
-
-// requestDownloads asks for the optional permission. It must be the first thing a click handler
-// does: the browser accepts the request only while the click still counts as the reader's gesture.
-// Resolves to true (held or granted), false (refused) or null (the browser would not ask from here).
-export function requestDownloads() {
-  let asked;
-  try { asked = chrome.permissions.request(DOWNLOADS_PERMISSION); } catch (e) { asked = Promise.reject(e); }
-  return Promise.resolve(asked).then((granted) => granted === true, async () => {
-    // The request was refused for want of a gesture; a permission held already still counts.
-    try { return (await chrome.permissions.contains(DOWNLOADS_PERMISSION)) ? true : null; } catch { return null; }
-  });
-}
-
-// saveMedia is the menu action. `granted` is requestDownloads()'s answer, started before anything
-// else in the click handler.
-export async function saveMedia(info, tab, granted) {
+// saveMedia is the menu action: find the files, then open the page that saves them. One file is saved
+// in a background tab that closes itself; several open the tab in front, where the browser may ask
+// whether to allow more than one download.
+export async function saveMedia(info, tab) {
   const tabId = tab && tab.id != null ? tab.id : null;
   if (tabId == null) return { ok: false, reason: "no-tab" };
-  const allowed = await granted;
-  if (allowed !== true) {
-    // Refused, or the browser would not ask from the menu: the settings page asks with a button.
-    if (allowed === null) await openMediaSettings();
-    else await notify(tabId, message("mediaSavePermissionRefused", "Saving files is not allowed. Allow it in the extension's settings."));
-    return { ok: false, reason: "permission" };
-  }
-  hookDownloadNaming();
   const urls = await pickTargets(info, tab);
   if (!urls.length) {
     await notify(tabId, message("mediaSaveNoneFound", "No media file found here to save."));
     return { ok: false, reason: "none" };
   }
-  if (!chrome.downloads || !chrome.downloads.download) {
-    await notify(tabId, message("mediaSaveFailed", "Could not save the media file: {1}", "downloads API unavailable - reopen the browser"));
-    return { ok: false, reason: "api" };
-  }
-  const folder = await mediaFolderOption();
-  const saved = [];
-  let failure = "";
-  for (const url of urls) {
-    try { await startDownload(url, folder); saved.push(url); }
-    catch (e) { failure = String((e && e.message) || e); }
-  }
-  if (failure) {
-    await notify(tabId, message("mediaSaveFailed", "Could not save the media file: {1}", failure));
-    return { ok: false, reason: "download" };
-  }
-  const where = folder ? `${message("mediaSaveDownloads", "Downloads")}/${folder}` : message("mediaSaveDownloads", "Downloads");
-  await notify(tabId, saved.length > 1
-    ? message("mediaSaveStartedMany", "Saving the media files ({1}) to {2}", saved.length, where)
-    : message("mediaSaveStarted", "Saving the media file to {1}", where));
-  return { ok: true, urls: saved, folder };
-}
-
-// startDownload hands one address to the browser, remembering the folder for the file-name question.
-// The name itself is left as the browser chose it.
-async function startDownload(url, folder) {
-  pendingFolders.set(url, folder);
-  const forget = setTimeout(() => pendingFolders.delete(url), PENDING_MS);
-  // A worker timer is a number; a test runner's is an object that must not hold the process open.
-  if (forget && typeof forget.unref === "function") forget.unref();
   try {
-    await chrome.downloads.download({ url, conflictAction: "uniquify", saveAs: false });
+    const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    await chrome.storage.session.set({ [JOB_PREFIX + id]: { urls } });
+    const page = { url: `${chrome.runtime.getURL("src/save.html")}#${id}`, active: urls.length > 1, openerTabId: tabId };
+    if (Number.isInteger(tab.index)) page.index = tab.index + 1;
+    await chrome.tabs.create(page);
   } catch (e) {
-    pendingFolders.delete(url);
-    throw e;
+    await notify(tabId, message("mediaSaveFailed", "Could not save the media file: {1}", String((e && e.message) || e)));
+    return { ok: false, reason: "page" };
   }
+  const where = message("mediaSaveDownloads", "Downloads");
+  await notify(tabId, urls.length > 1
+    ? message("mediaSaveStartedMany", "Saving the media files ({1}) to {2}", urls.length, where)
+    : message("mediaSaveStarted", "Saving the media file to {1}", where));
+  return { ok: true, urls };
 }

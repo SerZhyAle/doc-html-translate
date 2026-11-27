@@ -13,9 +13,6 @@
     "storage",
     "contextMenus"
   ],
-  "optional_permissions": [
-    "downloads"
-  ],
   "host_permissions": [
     "<all_urls>"
   ],

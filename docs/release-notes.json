@@ -3,26 +3,26 @@
   "about": "The source of release-notes.html (SITE-STRUCTURE rule 14: assembled at the release, never edited per ticket). One record per app release tag v<version>, newest first. A record is added in the release flow (.claude/commands/release.md, step C) before the tag is pushed; scripts/release-notes.ps1 -Render rewrites the marked block of release-notes.html from this file and the check fails on a hand-edited block. Plain text only; en, ru and uk are each required. {version} in a label is the record's version. whatsNew heads the newest record's items on the landing (the marked block of index.html). extension.version is the version the Chrome Web Store and Edge Add-ons serve: written by `node extension/build.mjs record-version` before the ext-cws-v / ext-edge-v tags, which name it, and rendered beside the store buttons.",
   "link": {"en": "Downloads and checksums for {version}", "ru": "Файлы и контрольные суммы для {version}", "uk": "Файли та контрольні суми для {version}"},
   "whatsNew": {"en": "What's new in {version}", "ru": "Что нового в {version}", "uk": "Що нового в {version}"},
-  "extension": {"version": "26.1126.2356"},
+  "extension": {"version": "26.1127.133"},
   "releases": [
     {
       "version": "26.1126.2358",
       "date": "2026-11-26",
       "notes": {
         "en": [
-          "Browser extension: a new right-click command under \"OCR & translate\", \"Save media file for translation\", saves the picture, video or audio you clicked - or the frame's own or largest media file - into a folder inside the browser's download folder. The folder is set on the General page of the options, and the permission to save files is asked on first use.",
+          "Browser extension: a new right-click command under \"OCR & translate\", \"Save media file for translation\", saves the picture, video or audio you clicked - or the frame's own or largest media file - into the browser's download folder, under the file's own name. No new permission is needed.",
           "In-app help: every page now carries the program's icon, and a described control is shown with the icon found on its button.",
           "Downloads: the installer and the third-party notices now come with SHA-256 checksum files, like the program files.",
           "The Microsoft Store pictures and the link preview of the site now show the same icon as the installed program."
         ],
         "ru": [
-          "Расширение: новый пункт контекстного меню в разделе «Распознать и перевести» - «Сохранить медиафайл для перевода» - сохраняет картинку, видео или аудио, по которым вы щёлкнули, либо собственный или самый большой медиафайл фрейма, в папку внутри папки загрузок браузера. Папка задаётся на странице настроек «Общие», разрешение на сохранение файлов запрашивается при первом использовании.",
+          "Расширение: новый пункт контекстного меню в разделе «Распознать и перевести» - «Сохранить медиафайл для перевода» - сохраняет картинку, видео или аудио, по которым вы щёлкнули, либо собственный или самый большой медиафайл фрейма, в папку загрузок браузера под собственным именем файла. Новых разрешений не требуется.",
           "Справка в программе: на каждой странице теперь есть значок программы, а описанный элемент управления показан со значком с его кнопки.",
           "Загрузки: у установщика и у уведомлений о сторонних компонентах теперь есть файлы контрольных сумм SHA-256, как и у файлов программы.",
           "Картинки в Microsoft Store и превью ссылки на сайт показывают тот же значок, что и установленная программа."
         ],
         "uk": [
-          "Розширення: нова команда контекстного меню в розділі «Розпізнати й перекласти» - «Зберегти медіафайл для перекладу» - зберігає зображення, відео або аудіо, по яких ви клацнули, чи власний або найбільший медіафайл фрейму, у папку всередині папки завантажень браузера. Папку задають на сторінці налаштувань «Загальні», дозвіл на збереження файлів запитується під час першого використання.",
+          "Розширення: нова команда контекстного меню в розділі «Розпізнати й перекласти» - «Зберегти медіафайл для перекладу» - зберігає зображення, відео або аудіо, по яких ви клацнули, чи власний або найбільший медіафайл фрейму, у папку завантажень браузера під власною назвою файлу. Нових дозволів не потрібно.",
           "Довідка в програмі: на кожній сторінці тепер є значок програми, а описаний елемент керування показано зі значком з його кнопки.",
           "Завантаження: інсталятор і повідомлення про сторонні компоненти тепер мають файли контрольних сум SHA-256, як і файли програми.",
           "Зображення в Microsoft Store та попередній перегляд посилання на сайт показують той самий значок, що й встановлена програма."
